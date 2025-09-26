@@ -29,7 +29,7 @@ class AuditService:
         self.thresholds = thresholds
         self._audit_history: Dict[str, List[AnalysisResult]] = {}
 
-    def audit_service(
+    async def audit_service(
         self,
         service: ServiceInfo,
         profile: AuditProfile,
@@ -58,7 +58,7 @@ class AuditService:
             results = {}
             for dimension, analyzer in analyzer_providers.items():
                 logger.debug(f"Analyzing {dimension} for service {service.name}")
-                results[dimension] = analyzer.analyze(service)
+                results[dimension] = await analyzer.analyze(service)
 
             # Calculate overall scores
             overall_score = self._calculate_overall_score(results, profile)

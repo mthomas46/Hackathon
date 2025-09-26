@@ -161,3 +161,48 @@ class Service:
             "last_seen": self._last_seen.isoformat(),
             "status": self._status,
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Service':
+        """Create Service from dictionary."""
+        service = cls(
+            service_id=ServiceId(data["service_id"]),
+            name=data["name"],
+            description=data["description"],
+            category=data["category"],
+            base_url=data.get("base_url"),
+            openapi_url=data.get("openapi_url"),
+            metadata=data.get("metadata", {}),
+        )
+
+        # Set additional fields if provided
+        if "status" in data:
+            service._status = data["status"]
+        if "capabilities" in data and data["capabilities"]:
+            # Note: This is simplified - in a real implementation you'd need to create ServiceCapability objects
+            pass
+        if "endpoints" in data and data["endpoints"]:
+            # Note: This is simplified - in a real implementation you'd need to create ServiceEndpoint objects
+            pass
+        if "registered_at" in data:
+            from datetime import datetime
+            service._registered_at = datetime.fromisoformat(data["registered_at"])
+        if "last_seen" in data:
+            from datetime import datetime
+            service._last_seen = datetime.fromisoformat(data["last_seen"])
+
+        return service
+
+    def __eq__(self, other) -> bool:
+        """Check equality based on service_id."""
+        if not isinstance(other, Service):
+            return False
+        return self._service_id == other._service_id
+
+    def __hash__(self) -> int:
+        """Hash based on service_id."""
+        return hash(self._service_id)
+
+    def __str__(self) -> str:
+        """String representation of the service."""
+        return f"Service(id={self._service_id.value}, name={self._name}, category={self._category}, status={self._status})"

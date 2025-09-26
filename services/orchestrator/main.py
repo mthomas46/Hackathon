@@ -18,7 +18,7 @@ if parent_dir not in sys.path:
 from services.shared.infrastructure.config import load_service_config
 
 # Shared utilities
-from services.shared.utilities.utilities import setup_common_middleware
+from services.shared.infrastructure.utilities import setup_common_middleware
 
 from .domain.health_monitoring.services import (
     HealthCheckService,

@@ -20,6 +20,12 @@ from ..shared_utils import (
 from ..utils.display_helpers import print_kv as _print_kv
 from ..utils.display_helpers import print_list as _print_list
 from ..utils.display_helpers import save_data as _save_data
+from ...domain.exceptions import (
+    CliError,
+    CliNetworkError,
+    CliValidationError,
+    CliTimeoutError,
+)
 
 
 class ServiceActions:
@@ -241,13 +247,7 @@ class ServiceActions:
 
         async def put_document():
             content = Prompt.ask("Content")
-            metadata_raw = Prompt.ask("Metadata JSON (optional)", default="{}")
-            import json
-
-            try:
-                metadata = json.loads(metadata_raw) if metadata_raw else {}
-            except Exception:
-                metadata = {}
+            metadata = self._parse_metadata_input()
             url = f"{self.clients.doc_store_url()}/documents"
             rx = await self.clients.post_json(
                 url, {"content": content, "metadata": metadata}
@@ -267,22 +267,10 @@ class ServiceActions:
             _print_kv(self.console, "Config", rx)
 
         async def db_probe():
-            import time as _t
+            temp_id = self._generate_temp_id()
+            created = await self._create_test_document(temp_id)
+            fetched = await self._fetch_test_document(created, temp_id)
 
-            temp_id = f"cli:{int(_t.time())}"
-            create_url = f"{self.clients.doc_store_url()}/documents"
-            created = await self.clients.post_json(
-                create_url,
-                {
-                    "id": temp_id,
-                    "content": "cli-db-probe",
-                    "metadata": {"source": "cli"},
-                },
-            )
-            get_url = (
-                f"{self.clients.doc_store_url()}/documents/{created.get('id', temp_id)}"
-            )
-            fetched = await self.clients.get_json(get_url)
             _print_kv(
                 self.console,
                 "DB Probe",
@@ -292,9 +280,8 @@ class ServiceActions:
         async def download_document():
             doc_id = Prompt.ask("Document ID")
             fmt = Prompt.ask("Format (json|txt|md)", default="json")
-            path = Prompt.ask(
-                "Output path", default=f"./{doc_id.replace(':','_')}.{fmt}"
-            )
+            path = self._generate_download_path(doc_id, fmt)
+
             url = f"{self.clients.doc_store_url()}/documents/{doc_id}"
             data = await self.clients.get_json(url)
             await _save_data(self.console, data, fmt, path, content_key="content")
@@ -825,6 +812,63 @@ class ServiceActions:
             ("View cache keys", view_cache),
             ("Clear cache", clear_cache),
         ]
+
+    # -----------------
+    # Action builders - Helper methods to reduce complexity
+    # -----------------
+
+    def _parse_metadata_input(self) -> Dict[str, Any]:
+        """Parse metadata JSON input with proper error handling."""
+        metadata_raw = Prompt.ask("Metadata JSON (optional)", default="{}")
+        if not metadata_raw.strip():
+            return {}
+
+        try:
+            import json
+            parsed = json.loads(metadata_raw)
+            if not isinstance(parsed, dict):
+                raise CliValidationError("Metadata must be a JSON object")
+            return parsed
+        except json.JSONDecodeError as e:
+            raise CliValidationError(f"Invalid JSON format: {e}") from e
+        except Exception as e:
+            raise CliValidationError(f"Error parsing metadata: {e}") from e
+
+    def _generate_temp_id(self) -> str:
+        """Generate temporary document ID for testing."""
+        import time
+        return f"cli:{int(time.time())}"
+
+    async def _create_test_document(self, temp_id: str) -> Dict[str, Any]:
+        """Create test document for database probe."""
+        try:
+            create_url = f"{self.clients.doc_store_url()}/documents"
+            return await self.clients.post_json(
+                create_url,
+                {
+                    "id": temp_id,
+                    "content": "cli-db-probe",
+                    "metadata": {"source": "cli"},
+                },
+            )
+        except Exception as e:
+            raise CliNetworkError(f"Failed to create test document: {e}") from e
+
+    async def _fetch_test_document(self, created: Dict[str, Any], temp_id: str) -> Dict[str, Any]:
+        """Fetch test document for verification."""
+        try:
+            doc_id = created.get('id', temp_id)
+            get_url = f"{self.clients.doc_store_url()}/documents/{doc_id}"
+            return await self.clients.get_json(get_url)
+        except Exception as e:
+            raise CliNetworkError(f"Failed to fetch test document: {e}") from e
+
+    def _generate_download_path(self, doc_id: str, fmt: str) -> str:
+        """Generate download path for document."""
+        safe_id = doc_id.replace(':', '_')
+        return Prompt.ask(
+            "Output path", default=f"./{safe_id}.{fmt}"
+        )
 
     # -----------------
     # Display utilities

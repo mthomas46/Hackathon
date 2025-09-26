@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-from services.shared.utilities import BaseService
+from services.shared.domain.services.base_service import BaseService
 
 from ..entities.service import Service
 from ..value_objects.service_capability import ServiceCapability
