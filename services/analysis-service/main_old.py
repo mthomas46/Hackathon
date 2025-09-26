@@ -3274,23 +3274,26 @@ def determine_pr_risk_level(health_score: float) -> str:
         return "high"
 
 
-def generate_pr_recommendations(pr_report: dict) -> list:
-    """Generate high-level recommendations for the pull request."""
+def _generate_risk_based_recommendations(risk_level: str) -> list:
+    """Generate recommendations based on risk level."""
     recommendations = []
 
-    pr_report.get("health_score", 0.5)
-    risk_level = pr_report.get("risk_level", "medium")
-
     if risk_level == "high":
-        recommendations.append("🚨 High-risk changes detected - consider breaking into smaller PRs")
-        recommendations.append("📋 Schedule thorough code review with senior developers")
-
+        recommendations.extend([
+            "🚨 High-risk changes detected - consider breaking into smaller PRs",
+            "📋 Schedule thorough code review with senior developers"
+        ])
     elif risk_level == "medium":
-        recommendations.append("⚠️ Medium-risk changes - ensure adequate test coverage")
-        recommendations.append("👥 Consider pair programming for complex sections")
+        recommendations.extend([
+            "⚠️ Medium-risk changes - ensure adequate test coverage",
+            "👥 Consider pair programming for complex sections"
+        ])
 
-    # Specific recommendations based on analysis
-    code_analysis = pr_report.get("code_analysis", {})
+    return recommendations
+
+def _generate_code_analysis_recommendations(code_analysis: dict) -> list:
+    """Generate recommendations based on code analysis."""
+    recommendations = []
 
     if code_analysis.get("change_metrics", {}).get("lines_added", 0) > config.limits.max_lines_added_threshold:
         recommendations.append("📊 Large PR detected - consider splitting into smaller, focused changes")
@@ -3298,15 +3301,41 @@ def generate_pr_recommendations(pr_report: dict) -> list:
     if code_analysis.get("file_types", {}).get("test", 0) == 0:
         recommendations.append("🧪 Consider adding tests for the changes introduced")
 
-    # Commit analysis recommendations
-    commit_analysis = pr_report.get("commit_analysis", {})
+    return recommendations
+
+def _generate_commit_analysis_recommendations(commit_analysis: dict) -> list:
+    """Generate recommendations based on commit analysis."""
+    recommendations = []
+
     if commit_analysis.get("message_quality", {}).get("poor_messages", 0) > 0:
         recommendations.append("✍️ Improve commit message quality for better project history")
 
-    # Quality recommendations
-    quality_analysis = pr_report.get("quality_analysis", {})
+    return recommendations
+
+def _generate_quality_analysis_recommendations(quality_analysis: dict) -> list:
+    """Generate recommendations based on quality analysis."""
+    recommendations = []
+
     if quality_analysis.get("quality_score", 1.0) < 0.7:
         recommendations.append("🔧 Address code quality issues before merging")
+
+    return recommendations
+
+def generate_pr_recommendations(pr_report: dict) -> list:
+    """Generate high-level recommendations for the pull request."""
+    recommendations = []
+
+    risk_level = pr_report.get("risk_level", "medium")
+    recommendations.extend(_generate_risk_based_recommendations(risk_level))
+
+    code_analysis = pr_report.get("code_analysis", {})
+    recommendations.extend(_generate_code_analysis_recommendations(code_analysis))
+
+    commit_analysis = pr_report.get("commit_analysis", {})
+    recommendations.extend(_generate_commit_analysis_recommendations(commit_analysis))
+
+    quality_analysis = pr_report.get("quality_analysis", {})
+    recommendations.extend(_generate_quality_analysis_recommendations(quality_analysis))
 
     return recommendations
 
