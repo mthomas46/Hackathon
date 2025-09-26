@@ -19,10 +19,27 @@ class DocumentService:
     async def create_document(self, document_id: str, content: str,
                             metadata: Optional[Dict[str, Any]] = None,
                             tags: Optional[List[str]] = None) -> Document:
-        """Create a new document with standardized logging.
+        """Create a new document with business logic validation and logging.
 
-        Error handling standardization: Uses consistent logging patterns
-        with structured context across all services.
+        Performs document creation with proper validation, metadata handling,
+        and standardized logging for observability.
+
+        Args:
+            document_id: Unique identifier for the document
+            content: Text content of the document
+            metadata: Optional metadata dictionary (author, created_date, etc.)
+            tags: Optional list of tags for categorization
+
+        Returns:
+            Document: The created and persisted document instance
+
+        Raises:
+            ValueError: If document validation fails
+            Exception: If repository save operation fails
+
+        Note:
+            Error handling standardization: Uses consistent logging patterns
+            with structured context across all services.
         """
         operation_name = "create_document"
         log_operation_start(operation_name, {
@@ -73,7 +90,15 @@ class DocumentService:
         return document
 
     async def tag_document(self, document_id: str, tags: List[str]) -> bool:
-        """Add tags to a document."""
+        """Add tags to an existing document.
+
+        Args:
+            document_id: Unique identifier of the document to tag
+            tags: List of tag strings to add to the document
+
+        Returns:
+            bool: True if tagging was successful, False if document not found
+        """
         document = await self._repository.find_by_id(document_id)
         if not document:
             return False
@@ -84,11 +109,25 @@ class DocumentService:
 
     async def search_documents(self, query: str, filters: Optional[Dict[str, Any]] = None,
                              limit: int = 50) -> List[Document]:
-        """Search documents with business logic."""
+        """Search documents using text query and optional filters.
+
+        Args:
+            query: Search query string to match against document content
+            filters: Optional dictionary of filter criteria (tags, metadata, etc.)
+            limit: Maximum number of results to return (default: 50)
+
+        Returns:
+            List[Document]: List of documents matching the search criteria
+        """
         return await self._repository.search(query, filters, limit)
 
     async def get_document_statistics(self) -> Dict[str, Any]:
-        """Get document statistics."""
+        """Get comprehensive document collection statistics.
+
+        Returns:
+            Dict[str, Any]: Statistics including total count, and other
+                           business-relevant metrics about the document collection
+        """
         total_count = await self._repository.count()
         # Additional business logic for statistics could go here
         return {

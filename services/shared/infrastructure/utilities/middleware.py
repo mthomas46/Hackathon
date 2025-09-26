@@ -144,6 +144,28 @@ class ServiceMiddleware:
         return middlewares
 
 
+class MiddlewareManager:
+    """Manager for configuring middleware across services."""
+
+    def __init__(self, service_name: str, **kwargs):
+        """Initialize middleware manager.
+
+        Args:
+            service_name: Name of the service
+            **kwargs: Additional configuration options
+        """
+        self.service_name = service_name
+        self.config = kwargs
+
+    def get_middlewares(self):
+        """Get list of middleware factories for this service."""
+        return [
+            lambda app: RequestIdMiddleware(app),
+            lambda app: RequestMetricsMiddleware(app, self.service_name),
+            lambda app: RateLimitMiddleware(app),
+        ]
+
+
 # Convenience function for setting up common middleware
 def setup_common_middleware(app, service_name: str, **kwargs):
     """Setup common middleware for a FastAPI application.
