@@ -107,16 +107,18 @@ class AIToolSelector:
 
     def _determine_primary_action(self, task_lower: str) -> str:
         """Determine the primary action from task description."""
-        if any(word in task_lower for word in ["create", "generate", "build", "make"]):
-            return "create"
-        elif any(word in task_lower for word in ["read", "get", "retrieve", "fetch"]):
-            return "read"
-        elif any(word in task_lower for word in ["update", "modify", "change", "edit"]):
-            return "update"
-        elif any(word in task_lower for word in ["delete", "remove", "destroy"]):
-            return "delete"
-        elif any(word in task_lower for word in ["analyze", "process", "review", "check"]):
-            return "analyze"
+        action_mappings = {
+            "create": ["create", "generate", "build", "make"],
+            "read": ["read", "get", "retrieve", "fetch"],
+            "update": ["update", "modify", "change", "edit"],
+            "delete": ["delete", "remove", "destroy"],
+            "analyze": ["analyze", "process", "review", "check"]
+        }
+
+        for action, keywords in action_mappings.items():
+            if any(word in task_lower for word in keywords):
+                return action
+
         return "analyze"
 
     def _determine_data_types(self, task_lower: str) -> List[str]:
