@@ -173,22 +173,12 @@ def get_orchestrator_url() -> str:
 
 def get_summarizer_hub_url() -> str:
     """Get summarizer hub service URL from config/env with fallback."""
-    return get_config_value(
-        "SUMMARIZER_HUB_URL",
-        "http://summarizer-hub:5060",
-        section="services",
-        env_key=_SUMMARIZER_HUB_URL_ENV,
-    )
+    return _get_service_url("summarizer_hub")
 
 
 def get_log_collector_url() -> str:
     """Get log collector service URL from config/env with fallback."""
-    return get_config_value(
-        "LOG_COLLECTOR_URL",
-        "http://log-collector:5080",
-        section="services",
-        env_key=_LOG_COLLECTOR_URL_ENV,
-    )
+    return _get_service_url("log_collector")
 
 
 def get_prompt_store_url() -> str:
@@ -208,89 +198,47 @@ def get_bedrock_proxy_url() -> str:
 
 def get_code_analyzer_url() -> str:
     """Get code analyzer service URL from config/env with fallback."""
-    return get_config_value(
-        "CODE_ANALYZER_URL",
-        "http://code-analyzer:5030",
-        section="services",
-        env_key=_CODE_ANALYZER_URL_ENV,
-    )
+    return _get_service_url("code_analyzer")
 
 
 def get_discovery_agent_url() -> str:
     """Get discovery agent service URL from config/env with fallback."""
-    return get_config_value(
-        "DISCOVERY_AGENT_URL",
-        "http://discovery-agent:5070",
-        section="services",
-        env_key=_DISCOVERY_AGENT_URL_ENV,
-    )
+    return _get_service_url("discovery_agent")
 
 
 def get_github_mcp_url() -> str:
     """Get GitHub MCP service URL from config/env with fallback."""
-    return get_config_value(
-        "GITHUB_MCP_URL",
-        "http://github-mcp:5090",
-        section="services",
-        env_key=_GITHUB_MCP_URL_ENV,
-    )
+    return _get_service_url("github_mcp")
 
 
 def get_interpreter_url() -> str:
     """Get interpreter service URL from config/env with fallback."""
-    return get_config_value(
-        "INTERPRETER_URL",
-        "http://interpreter:5100",
-        section="services",
-        env_key=_INTERPRETER_URL_ENV,
-    )
+    return _get_service_url("interpreter")
 
 
 def get_memory_agent_url() -> str:
     """Get memory agent service URL from config/env with fallback."""
-    return get_config_value(
-        "MEMORY_AGENT_URL",
-        "http://memory-agent:5120",
-        section="services",
-        env_key=_MEMORY_AGENT_URL_ENV,
-    )
+    return _get_service_url("memory_agent")
 
 
 def get_notification_service_url() -> str:
     """Get notification service URL from config/env with fallback."""
-    return get_config_value(
-        "NOTIFICATION_SERVICE_URL",
-        "http://notification-service:5130",
-        section="services",
-        env_key=_NOTIFICATION_SERVICE_URL_ENV,
-    )
+    return _get_service_url("notification_service")
 
 
 def get_secure_analyzer_url() -> str:
     """Get secure analyzer service URL from config/env with fallback."""
-    return get_config_value(
-        "SECURE_ANALYZER_URL",
-        "http://secure-analyzer:5140",
-        section="services",
-        env_key=_SECURE_ANALYZER_URL_ENV,
-    )
+    return _get_service_url("secure_analyzer")
 
 
 def get_source_agent_url() -> str:
     """Get source agent service URL from config/env with fallback."""
-    return get_config_value(
-        "SOURCE_AGENT_URL",
-        "http://source-agent:5150",
-        section="services",
-        env_key=_SOURCE_AGENT_URL_ENV,
-    )
+    return _get_service_url("source_agent")
 
 
 def get_cli_url() -> str:
     """Get CLI service URL from config/env with fallback."""
-    return get_config_value(
-        "CLI_URL", "http://localhost:8000", section="services", env_key=_CLI_URL_ENV
-    )
+    return _get_service_url("cli")
 
 
 def get_frontend_clients(timeout: int = _DEFAULT_TIMEOUT) -> ServiceClients:
