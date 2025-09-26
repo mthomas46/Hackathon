@@ -10,16 +10,43 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import httpx
+# DRY refactoring: Import shared ServiceClients for standardized HTTP communication
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+try:
+    from infrastructure.external.clients.clients import ServiceClients
+except ImportError:
+    try:
+        from integrations.clients.clients import ServiceClients
+    except ImportError:
+        import httpx
+        ServiceClients = None
+
 from simulation.domain.analysis.analysis_result import AnalysisResult, AnalysisType
 
 
 class SimulationAnalyzer:
     """Analyzer for simulation data and execution results."""
 
-    def __init__(self, http_client: Optional[httpx.AsyncClient] = None):
-        """Initialize the analyzer with optional HTTP client."""
-        self.http_client = http_client or httpx.AsyncClient(timeout=30.0)
+    def __init__(self, http_client=None):
+        """Initialize the analyzer with optional HTTP client.
+
+        DRY refactoring: Uses shared ServiceClients for standardized resilience patterns.
+        """
+        if ServiceClients:
+            # DRY refactoring: Use shared ServiceClients instead of direct httpx
+            self.http_client = ServiceClients(timeout=30.0)  # 30 second timeout for analysis
+            self._use_shared_client = True
+        else:
+            # Fallback: direct httpx client (for backward compatibility)
+            if http_client:
+                self.http_client = http_client
+            else:
+                import httpx
+                self.http_client = httpx.AsyncClient(timeout=30.0)
+            self._use_shared_client = False
+
         self._is_docker_environment = self._detect_docker_environment()
         self.service_urls = self._configure_service_urls()
 
@@ -526,10 +553,12 @@ class SimulationAnalyzer:
                 "summarizer_hub", "http://localhost:5160"
             )
 
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
+            # DRY refactoring: Use instance http_client instead of creating new httpx client
+            if self._use_shared_client:
+                # Use ServiceClients post_json method
+                result = await self.http_client.post_json(
                     f"{summarizer_url}/api/v1/recommendations",
-                    json={
+                    {
                         "documents": documents,
                         "recommendation_types": [
                             "consolidation",
@@ -537,21 +566,43 @@ class SimulationAnalyzer:
                             "outdated",
                             "quality",
                         ],
-                    },
+                    }
                 )
-
-                if response.status_code == 200:
-                    result = response.json()
-                    if result.get("success"):
-                        return result.get("recommendations", [])
-                    else:
-                        print(
+                if result.get("success"):
+                    return result.get("recommendations", [])
+                else:
+                    print(
                             f"Summarizer Hub error: {result.get('error', 'Unknown error')}"
                         )
                         return []
-                else:
-                    print(f"Summarizer Hub request failed: {response.status_code}")
-                    return []
+            else:
+                # Fallback: original httpx implementation
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.post(
+                        f"{summarizer_url}/api/v1/recommendations",
+                        json={
+                            "documents": documents,
+                            "recommendation_types": [
+                                "consolidation",
+                                "duplicate",
+                                "outdated",
+                                "quality",
+                            ],
+                        },
+                    )
+
+                    if response.status_code == 200:
+                        result = response.json()
+                        if result.get("success"):
+                            return result.get("recommendations", [])
+                        else:
+                            print(
+                                f"Summarizer Hub error: {result.get('error', 'Unknown error')}"
+                            )
+                            return []
+                    else:
+                        print(f"Summarizer Hub request failed: {response.status_code}")
+                        return []
 
         except Exception as e:
             print(f"Error communicating with Summarizer Hub: {e}")
@@ -593,22 +644,25 @@ class SimulationAnalyzer:
                 "analysis_service", "http://localhost:5020"
             )
 
-            async with httpx.AsyncClient(
-                timeout=60.0
-            ) as client:  # Longer timeout for report generation
-                response = await client.post(
-                    f"{analysis_url}/api/v1/analyze/generate-report",
-                    json={
-                        "simulation_id": simulation_id,
-                        "documents": documents,
-                        "report_type": "comprehensive_simulation_analysis",
-                        "include_markdown": True,
-                        "include_json": True,
-                    },
-                )
-
-                if response.status_code == 200:
-                    result = response.json()
+            # DRY refactoring: Use ServiceClients with extended timeout for report generation
+            if self._use_shared_client:
+                # Create temporary ServiceClients instance with extended timeout
+                import sys
+                from pathlib import Path
+                sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+                try:
+                    from infrastructure.external.clients.clients import ServiceClients as TempServiceClients
+                    temp_client = TempServiceClients(timeout=60.0)  # 60 second timeout for report generation
+                    result = await temp_client.post_json(
+                        f"{analysis_url}/api/v1/analyze/generate-report",
+                        {
+                            "simulation_id": simulation_id,
+                            "documents": documents,
+                            "report_type": "comprehensive_simulation_analysis",
+                            "include_markdown": True,
+                            "include_json": True,
+                        }
+                    )
                     if result.get("success") and result.get("report"):
                         return result["report"]
                     else:
@@ -616,11 +670,62 @@ class SimulationAnalyzer:
                             f"Analysis service report generation failed: {result.get('error', 'Unknown error')}"
                         )
                         return None
-                else:
-                    print(
-                        f"Analysis service report request failed: {response.status_code} - {response.text}"
+                except ImportError:
+                    # Fallback to httpx if ServiceClients not available
+                    import httpx
+                    async with httpx.AsyncClient(timeout=60.0) as client:
+                        response = await client.post(
+                            f"{analysis_url}/api/v1/analyze/generate-report",
+                            json={
+                                "simulation_id": simulation_id,
+                                "documents": documents,
+                                "report_type": "comprehensive_simulation_analysis",
+                                "include_markdown": True,
+                                "include_json": True,
+                            },
+                        )
+                        if response.status_code == 200:
+                            result = response.json()
+                            if result.get("success") and result.get("report"):
+                                return result["report"]
+                            else:
+                                print(
+                                    f"Analysis service report generation failed: {result.get('error', 'Unknown error')}"
+                                )
+                                return None
+                        else:
+                            print(
+                                f"Analysis service report request failed: {response.status_code} - {response.text}"
+                            )
+                            return None
+            else:
+                # Fallback: original httpx implementation
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.post(
+                        f"{analysis_url}/api/v1/analyze/generate-report",
+                        json={
+                            "simulation_id": simulation_id,
+                            "documents": documents,
+                            "report_type": "comprehensive_simulation_analysis",
+                            "include_markdown": True,
+                            "include_json": True,
+                        },
                     )
-                    return None
+
+                    if response.status_code == 200:
+                        result = response.json()
+                        if result.get("success") and result.get("report"):
+                            return result["report"]
+                        else:
+                            print(
+                                f"Analysis service report generation failed: {result.get('error', 'Unknown error')}"
+                            )
+                            return None
+                    else:
+                        print(
+                            f"Analysis service report request failed: {response.status_code} - {response.text}"
+                        )
+                        return None
 
         except Exception as e:
             print(f"Error requesting analysis report from analysis-service: {e}")
@@ -755,17 +860,29 @@ class SimulationAnalyzer:
         try:
             doc_store_url = self.service_urls.get("doc_store", "http://localhost:5000")
 
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    f"{doc_store_url}/api/documents",
-                    json=document,
-                    headers={"Content-Type": "application/json"},
-                )
-
-                if response.status_code not in [200, 201]:
-                    print(
-                        f"Failed to save to doc-store: {response.status_code} - {response.text}"
+            # DRY refactoring: Use ServiceClients for document storage
+            if self._use_shared_client:
+                try:
+                    result = await self.http_client.post_json(
+                        f"{doc_store_url}/api/documents",
+                        document
                     )
+                    # ServiceClients handles success/failure internally
+                except Exception as e:
+                    print(f"Failed to save to doc-store: {e}")
+            else:
+                # Fallback: original httpx implementation
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.post(
+                        f"{doc_store_url}/api/documents",
+                        json=document,
+                        headers={"Content-Type": "application/json"},
+                    )
+
+                    if response.status_code not in [200, 201]:
+                        print(
+                            f"Failed to save to doc-store: {response.status_code} - {response.text}"
+                        )
 
         except Exception as e:
             print(f"Error saving to doc-store: {e}")
