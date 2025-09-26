@@ -18,7 +18,7 @@ project_root = services_dir.parent   # project root
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(services_dir))
 
-from services.discovery_agent.domain.services.tool_discovery import ToolDiscoveryService  # type: ignore
+from domain.services.tool_discovery import ToolDiscoveryService
 
 
 class TestToolDiscoveryService:

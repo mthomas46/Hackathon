@@ -16,10 +16,10 @@ project_root = services_dir.parent   # project root
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(services_dir))
 
-from services.discovery_agent.domain.value_objects import (
+from domain.value_objects import (
     DiscoverySpec, HttpMethod, ApiPath, EndpointMetadata, ServiceMetadata
 )
-from services.discovery_agent.domain.exceptions import (
+from domain.exceptions import (
     DiscoveryConfigurationError, MalformedUrlError,
     InvalidOpenApiSpecError, UnsupportedApiVersionError
 )
