@@ -456,10 +456,175 @@ class CLICommands:
         except Exception:
             return False
 
+    def _initialize_command_dispatcher(self):
+        """Initialize the command dispatcher mapping."""
+        self._command_dispatcher = {
+            # Numbered menu options
+            "1": self._handle_docstore_management,
+            "2": self._handle_analysis_reports,
+            "3": self._handle_source_agent,
+            "4": self._handle_architecture_digitizer,
+            "5": self._handle_workflow_orchestration,
+            "6": self._handle_interpreter_management,
+            "7": self._handle_summarizer_hub,
+            "8": self._handle_bedrock_proxy,
+            "9": self._handle_secure_analyzer,
+            "10": self._handle_code_analyzer,
+            "11": self._handle_health_status,
+            "12": self._handle_orchestrator_management,
+            "13": self._handle_infrastructure,
+            "14": self._handle_notification_service,
+            "15": self._handle_log_collector,
+            "16": self._handle_bulk_operations,
+            "17": self._handle_discovery_agent,
+            "18": self._handle_memory_agent,
+            "19": self._handle_config_management,
+            "20": self._handle_deployment_controls,
+            "21": self._handle_advanced_monitoring,
+            "22": self._handle_analytics_testing,
+            "23": self._handle_prompt_management,
+
+            # Special commands
+            "s": self._handle_settings,
+            "c": self._handle_cache_management,
+        }
+
+        self._exit_commands = ["q", "quit", "exit"]
+
+    async def _dispatch_command(self, choice: str) -> bool:
+        """Dispatch command to appropriate handler. Returns True if should continue, False to exit."""
+        if choice.lower() in self._exit_commands:
+            return False
+
+        handler = self._command_dispatcher.get(choice.lower())
+        if handler:
+            await handler()
+        else:
+            self.console.print("[red]Invalid option. Please try again.[/red]")
+
+        return True
+
+    # Command handlers - each handles a single menu option
+    async def _handle_docstore_management(self):
+        """Handle docstore management menu."""
+        await self.docstore_manager.docstore_management_menu()
+
+    async def _handle_analysis_reports(self):
+        """Handle analysis reports menu."""
+        await self.analysis_manager.analysis_reports_menu()
+
+    async def _handle_source_agent(self):
+        """Handle source agent menu."""
+        await self.source_agent_manager.source_agent_menu()
+
+    async def _handle_architecture_digitizer(self):
+        """Handle architecture digitizer menu."""
+        await self.architecture_digitizer_manager.architecture_digitizer_menu()
+
+    async def _handle_workflow_orchestration(self):
+        """Handle workflow orchestration menu."""
+        workflow_manager = WorkflowManager(self.console, self.clients)
+        await workflow_manager.workflow_orchestration_menu()
+
+    async def _handle_interpreter_management(self):
+        """Handle interpreter management menu."""
+        await self.interpreter_manager.interpreter_management_menu()
+
+    async def _handle_summarizer_hub(self):
+        """Handle summarizer hub menu."""
+        await self.summarizer_hub_manager.summarizer_hub_menu()
+
+    async def _handle_bedrock_proxy(self):
+        """Handle bedrock proxy menu."""
+        await self.bedrock_proxy_manager.bedrock_proxy_menu()
+
+    async def _handle_secure_analyzer(self):
+        """Handle secure analyzer menu."""
+        await self.secure_analyzer_manager.secure_analyzer_menu()
+
+    async def _handle_code_analyzer(self):
+        """Handle code analyzer menu."""
+        await self.code_analyzer_manager.code_analyzer_menu()
+
+    async def _handle_health_status(self):
+        """Handle health status display."""
+        await self.display_health_status()
+
+    async def _handle_orchestrator_management(self):
+        """Handle orchestrator management menu."""
+        await self.orchestrator_manager.orchestrator_management_menu()
+
+    async def _handle_infrastructure(self):
+        """Handle infrastructure menu."""
+        await self.infrastructure_manager.infrastructure_menu()
+
+    async def _handle_notification_service(self):
+        """Handle notification service menu."""
+        await self.notification_service_manager.notification_service_menu()
+
+    async def _handle_log_collector(self):
+        """Handle log collector menu."""
+        await self.log_collector_manager.log_collector_menu()
+
+    async def _handle_bulk_operations(self):
+        """Handle bulk operations menu."""
+        bulk_ops_manager = BulkOperationsManager(self.console, self.clients)
+        await bulk_ops_manager.bulk_operations_menu()
+
+    async def _handle_discovery_agent(self):
+        """Handle discovery agent menu."""
+        await self.discovery_agent_manager.discovery_agent_menu()
+
+    async def _handle_memory_agent(self):
+        """Handle memory agent menu."""
+        await self.memory_agent_manager.memory_agent_menu()
+
+    async def _handle_config_management(self):
+        """Handle config management menu."""
+        await self.config_manager.config_management_menu()
+
+    async def _handle_deployment_controls(self):
+        """Handle deployment controls menu."""
+        await self.deployment_manager.deployment_controls_menu()
+
+    async def _handle_advanced_monitoring(self):
+        """Handle advanced monitoring menu."""
+        await self.advanced_monitoring_manager.advanced_monitoring_menu()
+
+    async def _handle_analytics_testing(self):
+        """Handle analytics testing menu."""
+        await self.analytics_testing_menu()
+
+    async def _handle_prompt_management(self):
+        """Handle prompt management menu."""
+        prompt_manager = PromptManager(self.console, self.clients)
+        await prompt_manager.prompt_management_menu()
+
+    async def _handle_settings(self):
+        """Handle settings menu."""
+        await self.settings_manager.run_menu_loop(
+            "Settings & Service Status", use_interactive=True
+        )
+
+    async def _handle_cache_management(self):
+        """Handle cache management menu."""
+        await self.cache_management_menu()
+
+    async def _process_menu_choice(self, choice: str) -> bool:
+        """Process a menu choice and return whether to continue."""
+        should_continue = await self._dispatch_command(choice)
+
+        # Add a small pause between menu interactions
+        if should_continue:
+            await asyncio.sleep(0.5)
+
+        return should_continue
+
     async def run(self):
         """Main CLI loop with enhanced error handling and interrupt support."""
         self.print_header()
         self.setup_interrupt_handling()
+        self._initialize_command_dispatcher()
 
         try:
             while True:
@@ -469,70 +634,9 @@ class CLICommands:
                 self.print_menu()
                 choice = self.get_choice()
 
-                if choice == "1":
-                    await self.docstore_manager.docstore_management_menu()
-                elif choice == "2":
-                    await self.analysis_manager.analysis_reports_menu()
-                elif choice == "3":
-                    await self.source_agent_manager.source_agent_menu()
-                elif choice == "4":
-                    await self.architecture_digitizer_manager.architecture_digitizer_menu()
-                elif choice == "5":
-                    workflow_manager = WorkflowManager(self.console, self.clients)
-                    await workflow_manager.workflow_orchestration_menu()
-                elif choice == "6":
-                    await self.interpreter_manager.interpreter_management_menu()
-                elif choice == "7":
-                    await self.summarizer_hub_manager.summarizer_hub_menu()
-                elif choice == "8":
-                    await self.bedrock_proxy_manager.bedrock_proxy_menu()
-                elif choice == "9":
-                    await self.secure_analyzer_manager.secure_analyzer_menu()
-                elif choice == "10":
-                    await self.code_analyzer_manager.code_analyzer_menu()
-                elif choice == "11":
-                    await self.display_health_status()
-                elif choice == "12":
-                    await self.orchestrator_manager.orchestrator_management_menu()
-                elif choice == "13":
-                    await self.infrastructure_manager.infrastructure_menu()
-                elif choice == "14":
-                    await self.notification_service_manager.notification_service_menu()
-                elif choice == "15":
-                    await self.log_collector_manager.log_collector_menu()
-                elif choice == "16":
-                    bulk_ops_manager = BulkOperationsManager(self.console, self.clients)
-                    await bulk_ops_manager.bulk_operations_menu()
-                elif choice == "17":
-                    await self.discovery_agent_manager.discovery_agent_menu()
-                elif choice == "18":
-                    await self.memory_agent_manager.memory_agent_menu()
-                elif choice == "19":
-                    await self.config_manager.config_management_menu()
-                elif choice == "20":
-                    await self.deployment_manager.deployment_controls_menu()
-                elif choice == "21":
-                    await self.advanced_monitoring_manager.advanced_monitoring_menu()
-                elif choice == "22":
-                    await self.analytics_testing_menu()
-                elif choice == "23":
-                    prompt_manager = PromptManager(self.console, self.clients)
-                    await prompt_manager.prompt_management_menu()
-                elif choice.lower() == "s":
-                    await self.settings_manager.run_menu_loop(
-                        "Settings & Service Status", use_interactive=True
-                    )
-                elif choice.lower() == "c":
-                    await self.cache_management_menu()
-                elif choice.lower() in ["q", "quit", "exit"]:
+                if not await self._process_menu_choice(choice):
                     self.console.print("[bold blue]Goodbye! 👋[/bold blue]")
                     break
-                else:
-                    self.console.print("[red]Invalid option. Please try again.[/red]")
-
-                # Add a small pause between menu interactions
-                if not choice.lower() in ["q", "quit", "exit"]:
-                    await asyncio.sleep(0.5)
 
         except KeyboardInterrupt:
             self.console.print("\n[yellow]⚠️  Operation interrupted by user[/yellow]")
@@ -544,8 +648,51 @@ class CLICommands:
             self.console.print("[dim]Cleaning up...[/dim]")
             await self.cache_invalidate()  # Clear cache on exit
 
+    def _initialize_cache_command_dispatcher(self):
+        """Initialize cache command dispatcher."""
+        self._cache_command_dispatcher = {
+            "1": self._handle_show_cache_stats,
+            "2": self._handle_clear_all_cache,
+            "3": self._handle_clear_service_cache,
+            "4": self._handle_set_cache_ttl,
+        }
+
+    async def _handle_show_cache_stats(self):
+        """Handle show cache statistics."""
+        await self._show_cache_stats()
+        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+
+    async def _handle_clear_all_cache(self):
+        """Handle clear all cache."""
+        await self.cache_invalidate()
+        self.console.print("[green]✅ All cache cleared[/green]")
+        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+
+    async def _handle_clear_service_cache(self):
+        """Handle clear service cache."""
+        pattern = Prompt.ask("Service pattern (e.g., 'docstore', 'analysis')")
+        await self.cache_invalidate(pattern)
+        self.console.print(
+            f"[green]✅ Cache cleared for pattern: {pattern}[/green]"
+        )
+        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+
+    async def _handle_set_cache_ttl(self):
+        """Handle set cache TTL."""
+        ttl = Prompt.ask("Cache TTL in seconds", default=str(self._cache_ttl))
+        try:
+            self._cache_ttl = int(ttl)
+            self.console.print(
+                f"[green]✅ Cache TTL set to {ttl} seconds[/green]"
+            )
+        except ValueError:
+            self.console.print("[red]❌ Invalid TTL value[/red]")
+        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+
     async def cache_management_menu(self):
         """Cache management submenu."""
+        self._initialize_cache_command_dispatcher()
+
         while True:
             menu = create_menu_table("Cache Management", ["Option", "Description"])
             add_menu_rows(
@@ -562,32 +709,12 @@ class CLICommands:
 
             choice = self.get_choice()
 
-            if choice == "1":
-                await self._show_cache_stats()
-                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
-            elif choice == "2":
-                await self.cache_invalidate()
-                self.console.print("[green]✅ All cache cleared[/green]")
-                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
-            elif choice == "3":
-                pattern = Prompt.ask("Service pattern (e.g., 'docstore', 'analysis')")
-                await self.cache_invalidate(pattern)
-                self.console.print(
-                    f"[green]✅ Cache cleared for pattern: {pattern}[/green]"
-                )
-                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
-            elif choice == "4":
-                ttl = Prompt.ask("Cache TTL in seconds", default=str(self._cache_ttl))
-                try:
-                    self._cache_ttl = int(ttl)
-                    self.console.print(
-                        f"[green]✅ Cache TTL set to {ttl} seconds[/green]"
-                    )
-                except ValueError:
-                    self.console.print("[red]❌ Invalid TTL value[/red]")
-                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
-            elif choice.lower() in ["b", "back"]:
+            if choice.lower() in ["b", "back"]:
                 break
+
+            handler = self._cache_command_dispatcher.get(choice)
+            if handler:
+                await handler()
             else:
                 self.console.print("[red]Invalid option. Please try again.[/red]")
 

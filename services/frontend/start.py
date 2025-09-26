@@ -41,16 +41,16 @@ try:
 
     if __name__ == "__main__":
         port = int(os.environ.get("SERVICE_PORT", 3000))
-        print(f"Starting frontend service on port {port}")
+        logger.info(f"Starting frontend service on port {port}")
         uvicorn.run(app, host="127.0.0.1", port=port)
 
 except ImportError as e:
-    print(f"Import error in frontend service: {e}")
-    print(f"Current working directory: {os.getcwd()}")
-    print(f"Python path: {sys.path}")
+    logger.error(f"Import error in frontend service: {e}")
+    logger.info(f"Current working directory: {os.getcwd()}")
+    logger.info(f"Python path: {sys.path}")
     sys.exit(1)
 except Exception as e:
-    print(f"Error starting frontend service: {e}")
+    logger.error(f"Error starting frontend service: {e}")
     import traceback
 
     traceback.print_exc()
