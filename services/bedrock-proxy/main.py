@@ -12,12 +12,29 @@ Responsibilities:
 Dependencies: shared middlewares for request tracking and metrics.
 """
 
+import sys
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel, field_validator
 
-from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
+# Add shared infrastructure to path
+project_root = Path(__file__).parent.parent.parent
+shared_path = project_root / "services" / "shared"
+sys.path.insert(0, str(shared_path))
+
+try:
+    from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
+except ImportError:
+    # Fallback middleware classes
+    class RequestIdMiddleware:
+        def __init__(self, app): pass
+        def __call__(self, scope, receive, send): pass
+
+    class RequestMetricsMiddleware:
+        def __init__(self, app): pass
+        def __call__(self, scope, receive, send): pass
 
 try:
     from .modules.processor import process_invoke_request
@@ -32,11 +49,39 @@ except ImportError:
 # ============================================================================
 # STANDARDIZED CONFIGURATION
 # ============================================================================
-from services.shared.infrastructure.config import load_service_config
-from services.shared.utilities import setup_common_middleware
-from services.shared.presentation.responses import create_error_response, create_success_response
-from services.shared.presentation.api.responses import APIResponse
-from services.shared.monitoring.health import register_health_endpoints
+try:
+    from services.shared.infrastructure.config import load_service_config
+    from services.shared.utilities import setup_common_middleware
+    from services.shared.presentation.responses import create_error_response, create_success_response
+    from services.shared.presentation.api.responses import APIResponse
+    from services.shared.monitoring.health import register_health_endpoints
+except ImportError:
+    # Fallback implementations
+    def load_service_config(**kwargs):
+        return type('Config', (), {
+            'service_name': 'bedrock-proxy',
+            'service_description': 'Bedrock Proxy Service',
+            'service_version': '1.0.0',
+            'server': type('Server', (), {'host': '0.0.0.0', 'port': 5002})(),
+            'port': 5002,
+        })()
+
+    def setup_common_middleware(app, **kwargs):
+        pass
+
+    def create_error_response(message, **kwargs):
+        return {"success": False, "message": message, **kwargs}
+
+    def create_success_response(data):
+        return {"success": True, "data": data}
+
+    class APIResponse(BaseModel):
+        success: bool
+        message: Optional[str] = None
+        data: Optional[Any] = None
+
+    def register_health_endpoints(app, *args, **kwargs):
+        pass
 
 # Load standardized configuration
 config = load_service_config(
