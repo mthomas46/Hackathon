@@ -383,15 +383,40 @@ class DiscoveryAgentMonitoring:
         """Generate monitoring recommendations based on metrics"""
         recommendations = []
 
-        # Performance recommendations
+        # Add performance-based recommendations
+        recommendations.extend(self._generate_performance_recommendations())
+
+        # Add error rate recommendations
+        recommendations.extend(self._generate_error_rate_recommendations())
+
+        # Add coverage recommendations
+        recommendations.extend(self._generate_coverage_recommendations())
+
+        # Add security recommendations
+        recommendations.extend(self._generate_security_recommendations())
+
+        # Add general recommendations
+        recommendations.extend(self._generate_general_recommendations())
+
+        return recommendations
+
+    def _generate_performance_recommendations(self) -> list:
+        """Generate performance-related recommendations."""
+        recommendations = []
         avg_time = self._calculate_avg_discovery_time()
+
         if avg_time > 2.0:
             recommendations.append(
                 "Discovery operations are slow - optimize service health checks"
             )
 
-        # Error rate recommendations
+        return recommendations
+
+    def _generate_error_rate_recommendations(self) -> list:
+        """Generate error rate recommendations."""
+        recommendations = []
         error_rate = self._calculate_error_rate()
+
         if error_rate > 10:
             recommendations.append(
                 "High error rate detected - investigate service connectivity"
@@ -399,29 +424,38 @@ class DiscoveryAgentMonitoring:
         elif error_rate > 5:
             recommendations.append("Moderate error rate - monitor service stability")
 
-        # Coverage recommendations
+        return recommendations
+
+    def _generate_coverage_recommendations(self) -> list:
+        """Generate coverage-related recommendations."""
+        recommendations = []
+
         if self.metrics["tools_discovered"] < 50:
             recommendations.append(
                 "Low tool discovery count - verify service OpenAPI specifications"
             )
 
-        # Security recommendations
+        return recommendations
+
+    def _generate_security_recommendations(self) -> list:
+        """Generate security-related recommendations."""
+        recommendations = []
+
         if self.metrics["security_scans"] == 0:
             recommendations.append(
                 "No security scans performed - implement regular security scanning"
             )
 
-        # General recommendations
-        recommendations.extend(
-            [
-                "Implement automated alerting for discovery failures",
-                "Set up regular performance benchmarking",
-                "Create automated dashboard updates",
-                "Implement trend analysis and capacity planning",
-            ]
-        )
-
         return recommendations
+
+    def _generate_general_recommendations(self) -> list:
+        """Generate general monitoring recommendations."""
+        return [
+            "Implement automated alerting for discovery failures",
+            "Set up regular performance benchmarking",
+            "Create automated dashboard updates",
+            "Implement trend analysis and capacity planning",
+        ]
 
 
 # Create singleton instance

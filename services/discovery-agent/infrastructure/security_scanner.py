@@ -155,38 +155,62 @@ class ToolSecurityScanner:
         """
         vulnerabilities = []
 
+        # Check for privileged operation risks
+        vulnerabilities.extend(self._check_privileged_operation_risks(tool))
+
+        # Check for credential exposure risks
+        vulnerabilities.extend(self._check_credential_exposure_risks(tool))
+
+        return vulnerabilities
+
+    def _check_privileged_operation_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Check for privileged operations that may lack authorization."""
+        vulnerabilities = []
         path = tool.get("path", "").lower()
 
-        # Admin/management endpoints without auth
         if any(word in path for word in ["admin", "manage", "config", "delete"]):
-            vulnerabilities.append(
-                {
-                    "type": "privileged_operation_risk",
-                    "severity": "high",
-                    "description": f"Privileged operation '{tool['path']}' may lack proper authorization",
-                    "location": "path",
-                    "mitigation": "Implement role-based access control and authentication",
-                }
-            )
+            vulnerabilities.append({
+                "type": "privileged_operation_risk",
+                "severity": "high",
+                "description": f"Privileged operation '{tool['path']}' may lack proper authorization",
+                "location": "path",
+                "mitigation": "Implement role-based access control and authentication",
+            })
 
-        # Check for auth-related parameters
+        return vulnerabilities
+
+    def _check_credential_exposure_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Check for sensitive parameters exposed in insecure locations."""
+        vulnerabilities = []
+
         for param in tool.get("parameters", {}).get("properties", {}):
             param_name = param.lower()
 
-            if any(
-                word in param_name for word in ["token", "password", "key", "secret"]
-            ):
-                # Check if parameter is in query string (insecure)
-                if param in tool.get("parameters", {}).get("query", []):
-                    vulnerabilities.append(
-                        {
-                            "type": "credential_exposure_risk",
-                            "severity": "high",
-                            "description": f"Sensitive parameter '{param}' passed in URL/query",
-                            "location": f"parameter:{param}",
-                            "mitigation": "Move sensitive parameters to request body or headers",
-                        }
-                    )
+            if self._is_sensitive_parameter(param_name):
+                vulnerabilities.extend(
+                    self._check_parameter_location_risks(tool, param)
+                )
+
+        return vulnerabilities
+
+    def _is_sensitive_parameter(self, param_name: str) -> bool:
+        """Check if a parameter name indicates sensitive data."""
+        sensitive_keywords = ["token", "password", "key", "secret"]
+        return any(word in param_name for word in sensitive_keywords)
+
+    def _check_parameter_location_risks(self, tool: Dict[str, Any], param: str) -> List[Dict[str, Any]]:
+        """Check if sensitive parameters are in insecure locations."""
+        vulnerabilities = []
+
+        # Check if parameter is in query string (insecure)
+        if param in tool.get("parameters", {}).get("query", []):
+            vulnerabilities.append({
+                "type": "credential_exposure_risk",
+                "severity": "high",
+                "description": f"Sensitive parameter '{param}' passed in URL/query",
+                "location": f"parameter:{param}",
+                "mitigation": "Move sensitive parameters to request body or headers",
+            })
 
         return vulnerabilities
 
