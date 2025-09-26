@@ -1,0 +1,654 @@
+{
+  "service_name": "discovery-agent",
+  "overall_score": 42.53,
+  "grade": "F",
+  "dimensions": {
+    "architecture": 77.32,
+    "code_quality": 70.11,
+    "performance": 83.0,
+    "maintainability": 69.85,
+    "documentation_quality": 70.0,
+    "dry_principles": 60.0,
+    "kiss_principles": 53.0
+  },
+  "architecture": "ArchitectureAnalysisResult(score=77.32, ddd_compliance=100, rest_compliance=80.0, layer_separation=100.0, ddd_issues=['🚨 MISSING ROUTES: presentation/routes/ directory required for DDD+REST', '📏 OVERSIZED FILES: 1 files exceed 1000 lines', '📭 EMPTY DOMAIN DIR: domain/entities/ exists but contains no Python files', '📭 EMPTY DOMAIN DIR: domain/repositories/ exists but contains no Python files', '🚨 ABSTRACTION VIOLATION: infrastructure/security_scanner.py directly instantiates domain objects', '🗂️ EMPTY DIRECTORIES: 10 empty directories found', '📦 REQUIREMENTS: No requirements/dependency files found', '🐳 DOCKER/INFRA: Service not referenced in Makefile', '🔄 DRY: Found 316 code duplication patterns', '🎯 KISS: Found 11 overly complex methods (>15 cyclomatic complexity)', '🎯 KISS: Found 4 classes violating Single Responsibility Principle', 'DDD patterns implementation could be improved', 'REST API could follow more best practices', '🚨 CRITICAL: Business logic in presentation layer: presentation/api/routes.py', \"🚨 MISSING DDD LAYERS: ['application', 'infrastructure', 'presentation'] - all four layers required\", '🚨 MISSING ROUTES: presentation/routes/ directory required for DDD+REST', '📏 OVERSIZED FILES: 16 files exceed 1000 lines', '🚨 CRITICAL: application/ layer missing - required for DDD use case orchestration', '🗂️ EMPTY DIRECTORIES: 1 empty directories found', '🐳 DOCKER/INFRA: Dockerfile missing EXPOSE instruction', '🐳 DOCKER/INFRA: Service missing port configuration', '🐳 DOCKER/INFRA: Dockerfile missing HEALTHCHECK instruction', '🔄 DRY: Found 704 code duplication patterns', '🎯 KISS: Found 32 overly complex methods (>15 cyclomatic complexity)', '🎯 KISS: Found 14 classes violating Single Responsibility Principle', 'DDD patterns implementation could be improved', 'REST API could follow more best practices', '🚨 STRICT VIOLATION: 1 presentation files contain business logic'], ddd_recommendations=['📁 CREATE: presentation/routes/ directory with domain-organized route files', '🔨 REFACTOR: Split oversized files: main.py (1061 lines)', '📝 IMPLEMENT: Add domain logic to domain/entities/ directory', '📝 IMPLEMENT: Add domain logic to domain/repositories/ directory', '🔄 REFACTOR: Use dependency injection in infrastructure layer instead of direct domain instantiation', '🧹 CLEANUP: Remove or populate empty directories: logs, application/queries, application/commands', '📦 DEPENDENCIES: Review and update dependency management files', '🔄 Extract common code into shared utilities or base classes', '🧩 Refactor complex methods into smaller, focused functions', '📦 Split multi-responsibility classes into focused components', '🎯 Implement proper DDD patterns: entities, value objects, aggregates, domain events', '📡 Implement REST best practices: proper HTTP methods, status codes, HATEOAS, content negotiation', '🔄 REFACTOR: Move business logic from presentation/api/routes.py to domain/ or application/ layers', '📁 CREATE: Missing DDD layers: application, infrastructure, presentation', '📁 CREATE: presentation/routes/ directory with domain-organized route files', '🔨 REFACTOR: Split oversized files: main.py (2242 lines), modules/managers/services/analysis_manager.py (1051 lines), modules/managers/services/infrastructure_manager.py (1330 lines)', '📁 CREATE: application/ layer with handlers, commands, queries', '🧹 CLEANUP: Remove or populate empty directories: logs', '🔄 Extract common code into shared utilities or base classes', '🚨 Standardize error handling patterns across the service', '🧩 Refactor complex methods into smaller, focused functions', '📦 Split multi-responsibility classes into focused components', '🎯 Implement proper DDD patterns: entities, value objects, aggregates, domain events', '📡 Implement REST best practices: proper HTTP methods, status codes, HATEOAS, content negotiation'], file_metrics={}, test_quality={'coverage_score': 0, 'quality_score': 0, 'structure_score': 0, 'total_score': 0, 'recommendations': []}, linting_quality={'pylint_score': 0, 'flake8_issues': 0, 'total_issues': 0, 'issues_by_type': {}, 'recommendations': []}, endpoint_analysis={'total_endpoints': 2, 'rest_compliant_endpoints': 0, 'openapi_compliant_endpoints': 0, 'project_standard_compliant_endpoints': 1, 'endpoint_issues': [], 'rest_violations': ['Low REST compliance score', 'Low REST compliance score'], 'openapi_violations': ['Low OpenAPI compliance score', 'Low OpenAPI compliance score'], 'standard_violations': ['Low project standards compliance'], 'endpoint_details': [{'method': 'POST', 'path': '/api/v1/discover/services', 'function': 'discover_services_v1', 'file': 'services/discovery-agent/main.py', 'line_number': 722}, {'method': 'ON_EVENT', 'path': 'startup', 'function': 'startup_event', 'file': 'services/discovery-agent/main.py', 'line_number': 1048}], 'compliant_endpoints': [], 'non_compliant_endpoints': [{'method': 'POST', 'path': '/api/v1/discover/services', 'function': 'discover_services_v1', 'file': 'services/discovery-agent/main.py', 'line_number': 722, 'issues': ['REST compliance issues', 'OpenAPI documentation issues']}, {'method': 'ON_EVENT', 'path': 'startup', 'function': 'startup_event', 'file': 'services/discovery-agent/main.py', 'line_number': 1048, 'issues': ['REST compliance issues', 'OpenAPI documentation issues', 'Project standard violations']}], 'rest_compliance_score': 0.0, 'openapi_compliance_score': 0.0, 'project_standards_compliance_score': 50.0, 'endpoint_detection_validation': {'total_fastapi_files_found': 2, 'detection_gaps': [], 'recommendations': []}}, complexity_analysis={'high_complexity_functions': [], 'total_functions_analyzed': 0, 'complexity_distribution': {'low': 0, 'medium': 0, 'high': 0, 'very_high': 0}, 'average_complexity': 0.0, 'recommendations': []}, dependency_coupling={'import_dependencies': {}, 'coupling_score': 0, 'recommendations': []}, dead_code_analysis={'dead_code_lines': 0, 'unused_functions': [], 'recommendations': []}, test_quality_metrics={'total_test_files': 0, 'test_naming_issues': 0, 'recommendations': []}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'documentation_score': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 0.0, 'undocumented_functions': 0, 'recommendations': []}, configuration_management={'hardcoded_values': 0, 'security_issues': 0, 'recommendations': []}, logging_practices={'logging_usage': 0, 'error_logging': 0, 'recommendations': []}, directory_analysis={}, issues=['Empty directories detected - clean up unnecessary directories', 'Requirements/dependency files need review or updates'], recommendations=['🗂️ CLEANUP: Remove empty directories or add necessary files', '📦 DEPENDENCIES: Add/update requirements.txt and consider pyproject.toml', '🔒 LOCK FILES: Use poetry.lock or requirements-lock.txt for reproducible builds', '📚 DOCUMENTATION: Create comprehensive README.md with required sections', '📖 SECTIONS: Add title, description, requirements, config, infrastructure, ecosystem, features', '🔗 LINKS: Add cross-references to related documentation and services', '📝 FORMATTING: Use proper markdown formatting with headers, lists, and code blocks', '🤖 LLM: Structure content for AI consumption with clear sections and semantic markup'], detailed_issues=[{'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/main.py', 'description': 'File exceeds line limit: 1061 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/logs', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/application/queries', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/application/commands', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/infrastructure/repositories', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/infrastructure/api', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/value_objects', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/repositories', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/entities', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/presentation/web', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/presentation/api', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/application/handlers/ai_tool_selector.py', 'description': \"Function '_rule_based_task_analysis' has cyclomatic complexity 42 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 108}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/infrastructure/security_scanner.py', 'description': \"Function '_analyze_injection_risks' has cyclomatic complexity 32 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 87}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/infrastructure/security_scanner.py', 'description': \"Function '_analyze_auth_risks' has cyclomatic complexity 24 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 147}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/infrastructure/monitoring_service.py', 'description': \"Function '_generate_monitoring_recommendations' has cyclomatic complexity 14 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 382}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services.py', 'description': \"Function 'analyze_openapi_spec' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 34}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/tool_discovery.py', 'description': \"Function '_extract_endpoints' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 138}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/tool_discovery.py', 'description': \"Function '_categorize_crud_operations' has cyclomatic complexity 12 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 262}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/tool_discovery.py', 'description': \"Function '_categorize_business_operations' has cyclomatic complexity 17 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 292}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/tool_discovery.py', 'description': \"Function '_categorize_service_specific_operations' has cyclomatic complexity 11 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 329}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/tool_discovery.py', 'description': \"Function '_extract_tool_parameters' has cyclomatic complexity 25 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 407}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/shared_utils.py', 'description': \"Function 'extract_endpoints_from_spec' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 168}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': 'File exceeds line limit: 2242 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/analysis_manager.py', 'description': 'File exceeds line limit: 1051 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/infrastructure_manager.py', 'description': 'File exceeds line limit: 1330 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/bedrock_proxy_manager.py', 'description': 'File exceeds line limit: 1494 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/docstore_manager.py', 'description': 'File exceeds line limit: 1330 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/memory_agent_manager.py', 'description': 'File exceeds line limit: 1177 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/bulk_operations_manager.py', 'description': 'File exceeds line limit: 1570 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/summarizer_hub_manager.py', 'description': 'File exceeds line limit: 1174 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/source_agent_manager.py', 'description': 'File exceeds line limit: 1141 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/deployment_manager.py', 'description': 'File exceeds line limit: 1577 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/discovery_agent_manager.py', 'description': 'File exceeds line limit: 1018 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/code_analyzer_manager.py', 'description': 'File exceeds line limit: 1401 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/interpreter_manager.py', 'description': 'File exceeds line limit: 1008 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/secure_analyzer_manager.py', 'description': 'File exceeds line limit: 1196 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/log_collector_manager.py', 'description': 'File exceeds line limit: 1375 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/notification_service_manager.py', 'description': 'File exceeds line limit: 1082 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/logs', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': \"Function 'interactive' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 189}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': \"Function 'list_memory' has cyclomatic complexity 11 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 765}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': \"Function 'detect_content' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 802}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': \"Function 'ensemble_summarize' has cyclomatic complexity 20 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 875}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': \"Function 'test_provider' has cyclomatic complexity 14 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 928}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': \"Function 'scan_security' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 1007}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': \"Function 'send_notification' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 1085}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': \"Function 'analyze_docs' has cyclomatic complexity 12 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 1288}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': \"Function 'discover_tools' has cyclomatic complexity 42 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 1521}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/shared_utils.py', 'description': \"Function 'validate_prompt_data' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 221}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/docstore_manager.py', 'description': \"Function 'display_search_results' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 724}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/formatters/status_formatters.py', 'description': \"Function 'format_operation_result' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 43}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/formatters/display_utils.py', 'description': \"Function 'show_dict' has cyclomatic complexity 14 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 87}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/formatters/table_formatters.py', 'description': \"Function '_format_status' has cyclomatic complexity 13 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 109}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/utils/error_utils.py', 'description': \"Function 'handle_cli_error' has cyclomatic complexity 19 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 13}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/utils/error_utils.py', 'description': \"Function 'create_user_friendly_error_message' has cyclomatic complexity 13 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 69}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/utils/display_helpers.py', 'description': \"Function 'print_list' has cyclomatic complexity 13 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 16}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/interpreter_adapter.py', 'description': \"Function 'format_response' has cyclomatic complexity 23 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 278}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/interpreter_adapter.py', 'description': \"Function '_format_execution_response' has cyclomatic complexity 14 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 360}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/interpreter_adapter.py', 'description': \"Function '_format_test_response' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 425}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/service_registry.py', 'description': \"Function '_display_health_summary' has cyclomatic complexity 15 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 207}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/service_registry.py', 'description': \"Function 'display_ecosystem_overview' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 292}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/memory_agent_adapter.py', 'description': \"Function 'format_response' has cyclomatic complexity 20 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 298}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/frontend_adapter.py', 'description': \"Function 'format_response' has cyclomatic complexity 26 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 260}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/bedrock_proxy_adapter.py', 'description': \"Function 'format_response' has cyclomatic complexity 26 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 256}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/doc_store_adapter.py', 'description': \"Function 'format_response' has cyclomatic complexity 20 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 267}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/discovery_agent_adapter.py', 'description': \"Function 'format_response' has cyclomatic complexity 23 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 270}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/discovery_agent_adapter.py', 'description': \"Function '_format_topology_response' has cyclomatic complexity 16 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 375}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/handlers/service_actions.py', 'description': \"Function '_source_agent_actions' has cyclomatic complexity 74 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 326}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/handlers/service_actions.py', 'description': \"Function 'bulk_actions' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 770}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/handlers/service_actions.py', 'description': \"Function '_print_list' has cyclomatic complexity 13 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 876}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/base/base_formatter.py', 'description': \"Function 'format_dict' has cyclomatic complexity 16 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 80}], empty_directories=50.0, requirements_file=70.0, docker_infrastructure=95.0, dry_principles=60.0, kiss_principles=53.0, ddd_patterns=30.0, rest_best_practices=50.0, documentation_quality=70.0)",
+  "code_quality": "CodeQualityAnalysisResult(score=70.11, complexity_score=81.0, testing_score=20.0, linting_score=100, duplication_score=70.566768039812, security_score=100, dry_principle_score=60.0, kiss_principle_score=98.0, test_coverage=0, cyclomatic_complexity={'high_complexity_functions': [{'function': '_rule_based_task_analysis', 'file': 'application/handlers/ai_tool_selector.py', 'complexity': 23}], 'total_functions_analyzed': 258, 'complexity_distribution': {'low': 214, 'medium': 32, 'high': 11, 'very_high': 1}, 'average_complexity': 3.2635658914728682, 'recommendations': ['Refactor 1 high-complexity functions']}, test_quality_metrics={'total_test_files': 4, 'test_naming_issues': 83, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 2, 'mock_usage': 2, 'recommendations': ['Fix 83 poorly named test functions']}, linting_quality={'pylint_score': 0, 'flake8_issues': 125, 'total_issues': 125, 'issues_by_type': {}, 'recommendations': []}, duplication_analysis={'total_duplicate_blocks': 299, 'duplicate_lines': 1196, 'total_lines_analyzed': 7234, 'duplication_rate': 16.533038429637823, 'recommendations': ['High duplication rate (16.5%) - consider refactoring']}, issues=['Insufficient test coverage', 'Code duplication detected'], recommendations=['Increase test coverage to at least 70.0%', 'Reduce code duplication through refactoring'])",
+  "performance": "PerformanceAnalysisResult(score=83.0, system_metrics_score=75.0, database_score=70.0, resource_usage_score=97.0, system_metrics={'cpu_percent': 24.3, 'memory_percent': 54.5, 'memory_used_gb': 31.280731201171875, 'disk_read_mb': 299389.29296875, 'disk_write_mb': 201508.73828125, 'network_sent_mb': 2164.1181640625, 'network_recv_mb': 1652.0830078125, 'process_memory_percent': 0.09217262268066406, 'process_cpu_percent': 0.8, 'timestamp': 1758877099.936179}, database_performance={'has_database_layer': False, 'connection_pooling': False, 'query_optimization': False, 'caching_strategy': False, 'migration_scripts': False, 'performance_issues': [], 'recommendations': []}, resource_usage={'file_handle_leaks': 0, 'memory_leaks_potential': 2, 'resource_management_issues': 0, 'context_manager_usage': 127, 'exception_handling_resources': 0, 'large_objects': ['main.py', 'application/handlers/ai_tool_selector.py', 'infrastructure/performance_optimizer.py', 'domain/services/semantic_analyzer.py', 'domain/services/tool_discovery.py'], 'resource_intensive_operations': ['main.py:803', 'main.py:806', 'main.py:821', 'main.py:824', 'ai_tool_selector.py:227', 'ai_tool_selector.py:305', 'ai_tool_selector.py:369', 'ai_tool_selector.py:389', 'ai_tool_selector.py:427', 'ai_tool_selector.py:433', 'performance_optimizer.py:47', 'performance_optimizer.py:48', 'performance_optimizer.py:118', 'performance_optimizer.py:119', 'performance_optimizer.py:120', 'performance_optimizer.py:465', 'performance_optimizer.py:470', 'performance_optimizer.py:485', 'performance_optimizer.py:487', 'performance_optimizer.py:489', 'performance_optimizer.py:534', 'monitoring_service.py:296', 'monitoring_service.py:306', 'monitoring_service.py:321', 'monitoring_service.py:335', 'monitoring_service.py:348', 'monitoring_service.py:354', 'langgraph_integration.py:387', 'semantic_analyzer.py:265', 'semantic_analyzer.py:397', 'semantic_analyzer.py:411', 'semantic_analyzer.py:430', 'tool_registry.py:38', 'tool_registry.py:88', 'tool_registry.py:189', 'tool_discovery.py:592'], 'recommendations': ['Review 2 potential memory leaks with global variables', 'Consider splitting 5 large files for better resource management']}, performance_indicators={'cpu_health': 'good', 'memory_health': 'good', 'disk_health': 'high', 'network_health': 'high', 'overall_performance': 'moderate'}, issues=[], recommendations=['Optimize system resource usage - monitor CPU, memory, and I/O', 'Improve database performance - add connection pooling and query optimization'])",
+  "maintainability": "MaintainabilityAnalysisResult(score=69.85, documentation_score=20.0, organization_score=100, error_handling_score=99.0, devops_readiness_score=100, scalability_score=100, linting_quality={'pylint_score': 0, 'flake8_issues': 125, 'total_issues': 125, 'issues_by_type': {}, 'recommendations': []}, test_quality={'coverage_score': 0, 'quality_score': 8, 'structure_score': 0, 'total_score': 8, 'recommendations': []}, test_quality_metrics={'total_test_files': 4, 'test_naming_issues': 83, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 2, 'mock_usage': 2, 'recommendations': ['Fix 83 poorly named test functions']}, domain_boundaries={'leaks_detected': 2, 'boundary_violations': ['infrastructure/security_scanner.py', 'infrastructure/monitoring_service.py'], 'layer_integrity': False, 'recommendations': ['Fix 2 domain boundary violations']}, api_documentation={'endpoints_documented': 0, 'total_endpoints': 0, 'documentation_score': 0, 'missing_summaries': 0, 'missing_descriptions': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 97.82608695652173, 'undocumented_functions': 1, 'undocumented_classes': 0, 'total_functions': 46, 'total_classes': 59, 'recommendations': ['Add docstrings to 1 undocumented functions']}, configuration_management={'hardcoded_values': 70, 'environment_variables': 1, 'config_files': 1, 'security_issues': 70, 'recommendations': ['Replace 70 hardcoded values with environment variables']}, logging_practices={'logging_usage': 2, 'error_logging': 3, 'structured_logging': 0, 'missing_error_logs': 64, 'logging_levels_used': {'DEBUG', 'ERROR', 'INFO', 'WARNING'}, 'recommendations': ['Add error logging to 64 exception handlers']}, issues=['Insufficient documentation coverage'], recommendations=['Increase docstring coverage to at least 80.0%'], architecture_quality_score=40.0)",
+  "documentation_quality": {},
+  "dry_principles": {},
+  "kiss_principles": {},
+  "recommendations": [
+    "🚨 CRITICAL: Service requires immediate attention - score below 60",
+    "🗂️ CLEANUP: Remove empty directories or add necessary files",
+    "📦 DEPENDENCIES: Add/update requirements.txt and consider pyproject.toml",
+    "🔒 LOCK FILES: Use poetry.lock or requirements-lock.txt for reproducible builds",
+    "📚 DOCUMENTATION: Create comprehensive README.md with required sections",
+    "📖 SECTIONS: Add title, description, requirements, config, infrastructure, ecosystem, features",
+    "🔗 LINKS: Add cross-references to related documentation and services",
+    "📝 FORMATTING: Use proper markdown formatting with headers, lists, and code blocks",
+    "🤖 LLM: Structure content for AI consumption with clear sections and semantic markup",
+    "Address: Empty directories detected - clean up unnecessary directories",
+    "Address: Requirements/dependency files need review or updates",
+    "Increase test coverage to at least 70.0%",
+    "Reduce code duplication through refactoring",
+    "Address: Insufficient test coverage",
+    "Address: Code duplication detected",
+    "Optimize system resource usage - monitor CPU, memory, and I/O",
+    "Improve database performance - add connection pooling and query optimization",
+    "Increase docstring coverage to at least 80.0%",
+    "Address: Insufficient documentation coverage"
+  ],
+  "critical_issues": [],
+  "detailed_issues": [
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/main.py",
+      "description": "File exceeds line limit: 1061 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/logs",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/application/queries",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/application/commands",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/infrastructure/repositories",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/infrastructure/api",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/value_objects",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/repositories",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/entities",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/presentation/web",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/presentation/api",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/application/handlers/ai_tool_selector.py",
+      "description": "Function '_rule_based_task_analysis' has cyclomatic complexity 42 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 108
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/infrastructure/security_scanner.py",
+      "description": "Function '_analyze_injection_risks' has cyclomatic complexity 32 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 87
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/infrastructure/security_scanner.py",
+      "description": "Function '_analyze_auth_risks' has cyclomatic complexity 24 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 147
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/infrastructure/monitoring_service.py",
+      "description": "Function '_generate_monitoring_recommendations' has cyclomatic complexity 14 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 382
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services.py",
+      "description": "Function 'analyze_openapi_spec' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 34
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/tool_discovery.py",
+      "description": "Function '_extract_endpoints' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 138
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/tool_discovery.py",
+      "description": "Function '_categorize_crud_operations' has cyclomatic complexity 12 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 262
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/tool_discovery.py",
+      "description": "Function '_categorize_business_operations' has cyclomatic complexity 17 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 292
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/tool_discovery.py",
+      "description": "Function '_categorize_service_specific_operations' has cyclomatic complexity 11 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 329
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/tool_discovery.py",
+      "description": "Function '_extract_tool_parameters' has cyclomatic complexity 25 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 407
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent/domain/services/shared_utils.py",
+      "description": "Function 'extract_endpoints_from_spec' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 168
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "File exceeds line limit: 2242 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/analysis_manager.py",
+      "description": "File exceeds line limit: 1051 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/infrastructure_manager.py",
+      "description": "File exceeds line limit: 1330 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/bedrock_proxy_manager.py",
+      "description": "File exceeds line limit: 1494 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/docstore_manager.py",
+      "description": "File exceeds line limit: 1330 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/memory_agent_manager.py",
+      "description": "File exceeds line limit: 1177 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/bulk_operations_manager.py",
+      "description": "File exceeds line limit: 1570 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/summarizer_hub_manager.py",
+      "description": "File exceeds line limit: 1174 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/source_agent_manager.py",
+      "description": "File exceeds line limit: 1141 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/deployment_manager.py",
+      "description": "File exceeds line limit: 1577 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/discovery_agent_manager.py",
+      "description": "File exceeds line limit: 1018 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/code_analyzer_manager.py",
+      "description": "File exceeds line limit: 1401 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/interpreter_manager.py",
+      "description": "File exceeds line limit: 1008 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/secure_analyzer_manager.py",
+      "description": "File exceeds line limit: 1196 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/log_collector_manager.py",
+      "description": "File exceeds line limit: 1375 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/notification_service_manager.py",
+      "description": "File exceeds line limit: 1082 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/logs",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "Function 'interactive' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 189
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "Function 'list_memory' has cyclomatic complexity 11 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 765
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "Function 'detect_content' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 802
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "Function 'ensemble_summarize' has cyclomatic complexity 20 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 875
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "Function 'test_provider' has cyclomatic complexity 14 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 928
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "Function 'scan_security' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 1007
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "Function 'send_notification' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 1085
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "Function 'analyze_docs' has cyclomatic complexity 12 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 1288
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "Function 'discover_tools' has cyclomatic complexity 42 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 1521
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/shared_utils.py",
+      "description": "Function 'validate_prompt_data' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 221
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/docstore_manager.py",
+      "description": "Function 'display_search_results' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 724
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/formatters/status_formatters.py",
+      "description": "Function 'format_operation_result' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 43
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/formatters/display_utils.py",
+      "description": "Function 'show_dict' has cyclomatic complexity 14 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 87
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/formatters/table_formatters.py",
+      "description": "Function '_format_status' has cyclomatic complexity 13 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 109
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/utils/error_utils.py",
+      "description": "Function 'handle_cli_error' has cyclomatic complexity 19 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 13
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/utils/error_utils.py",
+      "description": "Function 'create_user_friendly_error_message' has cyclomatic complexity 13 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 69
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/utils/display_helpers.py",
+      "description": "Function 'print_list' has cyclomatic complexity 13 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 16
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/interpreter_adapter.py",
+      "description": "Function 'format_response' has cyclomatic complexity 23 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 278
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/interpreter_adapter.py",
+      "description": "Function '_format_execution_response' has cyclomatic complexity 14 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 360
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/interpreter_adapter.py",
+      "description": "Function '_format_test_response' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 425
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/service_registry.py",
+      "description": "Function '_display_health_summary' has cyclomatic complexity 15 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 207
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/service_registry.py",
+      "description": "Function 'display_ecosystem_overview' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 292
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/memory_agent_adapter.py",
+      "description": "Function 'format_response' has cyclomatic complexity 20 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 298
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/frontend_adapter.py",
+      "description": "Function 'format_response' has cyclomatic complexity 26 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 260
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/bedrock_proxy_adapter.py",
+      "description": "Function 'format_response' has cyclomatic complexity 26 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 256
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/doc_store_adapter.py",
+      "description": "Function 'format_response' has cyclomatic complexity 20 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 267
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/discovery_agent_adapter.py",
+      "description": "Function 'format_response' has cyclomatic complexity 23 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 270
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/adapters/discovery_agent_adapter.py",
+      "description": "Function '_format_topology_response' has cyclomatic complexity 16 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 375
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/handlers/service_actions.py",
+      "description": "Function '_source_agent_actions' has cyclomatic complexity 74 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 326
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/handlers/service_actions.py",
+      "description": "Function 'bulk_actions' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 770
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/handlers/service_actions.py",
+      "description": "Function '_print_list' has cyclomatic complexity 13 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 876
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/base/base_formatter.py",
+      "description": "Function 'format_dict' has cyclomatic complexity 16 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 80
+    }
+  ],
+  "critical_issues_count": 0,
+  "estimated_effort_days": 4.5,
+  "analysis_timestamp": "2025-09-26T03:58:20.627520",
+  "metadata": {
+    "service_info": {
+      "name": "discovery-agent",
+      "path": "/Users/mykalthomas/Documents/work/Hackathon/services/discovery-agent",
+      "type": "python",
+      "status": "unknown",
+      "metadata": {},
+      "discovered_at": "2025-09-26T03:58:14.199218",
+      "last_audited_at": null
+    },
+    "profile_used": "strict",
+    "profile_intensity": "strict",
+    "thresholds_applied": {
+      "excellent_score": 90.0,
+      "good_score": 80.0,
+      "passing_score": 70.0,
+      "critical_score": 50.0,
+      "dimensions": {
+        "architecture": {
+          "min_score": 60.0,
+          "target_score": 80.0,
+          "ddd_compliance_required": 70.0,
+          "rest_compliance_required": 75.0,
+          "layer_separation_required": 70.0,
+          "routes_score_required": 8.0
+        },
+        "code_quality": {
+          "min_score": 65.0,
+          "target_score": 85.0,
+          "complexity_max": 10,
+          "test_coverage_required": 70.0,
+          "linting_score_required": 7.0
+        },
+        "performance": {
+          "min_score": 70.0,
+          "target_score": 85.0,
+          "memory_threshold_mb": 500,
+          "cpu_threshold_percent": 80,
+          "response_time_max_ms": 1000
+        },
+        "maintainability": {
+          "min_score": 65.0,
+          "target_score": 80.0,
+          "docstring_coverage_required": 80.0,
+          "max_file_size_lines": 1000,
+          "dead_code_tolerance_percent": 5.0
+        }
+      },
+      "critical_issues": {
+        "max_critical_issues": 2,
+        "max_high_priority_issues": 5,
+        "max_medium_priority_issues": 10
+      },
+      "file_limits": {
+        "max_lines_per_file": 1000,
+        "max_functions_per_file": 20,
+        "max_classes_per_file": 10,
+        "max_imports_per_file": 20
+      },
+      "analysis_limits": {}
+    },
+    "audit_timestamp": null,
+    "use_case": "audit_service",
+    "service_discovered_at": "2025-09-26T03:58:14.199218",
+    "audit_duration_seconds": 6.428704738616943
+  }
+}

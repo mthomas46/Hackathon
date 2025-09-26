@@ -42,6 +42,7 @@ try:
     from config import AuditProfile, get_thresholds_for_profile
     from domain.entities.service_info import ServiceInfo
     from .base_analyzer import BaseAnalyzer
+    from ..resource_optimizer import get_resource_optimizer
 except ImportError:
     import sys
     from pathlib import Path
@@ -51,6 +52,7 @@ except ImportError:
     from config import AuditProfile
     from config.thresholds import get_thresholds_for_profile
     from infrastructure.analyzers.base_analyzer import BaseAnalyzer
+    from infrastructure.resource_optimizer import get_resource_optimizer
 
     # Create a simple ServiceInfo if models doesn't exist
     from dataclasses import dataclass
@@ -725,12 +727,28 @@ class ArchitectureAnalyzer(BaseAnalyzer):
                 progress.update(analysis_task, total=len(python_files_to_analyze),
                               description=f"📊 Analyzing {len(python_files_to_analyze)} Python files in {service.name}")
 
-                # Process files in batches for better performance with detailed progress
-                batch_size = min(20, len(python_files_to_analyze))  # Process in batches of 20
-                total_batches = (len(python_files_to_analyze) + batch_size - 1) // batch_size
+                # Get optimal batch size from resource optimizer
+                try:
+                    resource_optimizer = get_resource_optimizer()
+                    # Get file sizes for better optimization
+                    file_sizes_mb = []
+                    for file_path in python_files_to_analyze[:100]:  # Sample first 100 files
+                        try:
+                            file_sizes_mb.append(file_path.stat().st_size / (1024 * 1024))
+                        except OSError:
+                            file_sizes_mb.append(0.1)  # Default small size
 
-                logger.info("🔄 Processing %d files in %d batches (batch size: %d)",
-                           len(python_files_to_analyze), total_batches, batch_size)
+                    batch_size = resource_optimizer.get_batch_size_for_files(len(python_files_to_analyze), file_sizes_mb)
+                    batch_size = min(batch_size, len(python_files_to_analyze))  # Don't exceed file count
+
+                    logger.info("🔄 Resource-optimized processing: %d files in batches (size: %d, optimized for system resources)",
+                               len(python_files_to_analyze), batch_size)
+                except Exception as e:
+                    # Fallback to conservative defaults if optimizer fails
+                    logger.warning(f"⚠️ Resource optimizer failed ({e}), using conservative defaults")
+                    batch_size = min(20, len(python_files_to_analyze))
+
+                total_batches = (len(python_files_to_analyze) + batch_size - 1) // batch_size
 
                 batch_start_time = time.time()
 

@@ -54,7 +54,6 @@ from infrastructure.analyzers import (
     PerformanceAnalyzer, MaintainabilityAnalyzer
 )
 from infrastructure.file_system import FileSystemService
-from infrastructure.resource_optimizer import get_resource_optimizer
 from config.profiles import profile_manager
 from config.thresholds import get_thresholds_for_profile
 
@@ -341,11 +340,6 @@ def main():
     bulk_parser.add_argument('--full', action='store_true',
                               help='Full audit mode - analyze all files in service directory (no limits)')
 
-    # Resources/optimization command
-    resources_parser = subparsers.add_parser('resources', help='Display system resources and optimization recommendations')
-    resources_parser.add_argument('--service', help='Analyze a specific service for workload optimization')
-    resources_parser.add_argument('--full', action='store_true', help='Consider full audit mode for optimization')
-
     args = parser.parse_args()
 
     if not args.command:
@@ -454,10 +448,6 @@ def main():
             orchestrator = AuditOrchestrator()
             asyncio.run(_handle_bulk_audit(args, orchestrator))
 
-        elif args.command == 'resources':
-            # Display system resources and optimization recommendations
-            _handle_resources_command(args)
-
     except Exception as e:
         logger.error(f"Command failed: {e}")
         if getattr(args, 'verbose', False):
@@ -500,58 +490,8 @@ async def _handle_bulk_audit(args, orchestrator):
         return
 
     profile_name = getattr(args, 'profile', 'strict')
+    max_parallel = getattr(args, 'max_parallel', 3)
     output_format = getattr(args, 'output', 'rich')
-
-    # Get optimal parallel workers from resource optimizer
-    try:
-        resource_optimizer = get_resource_optimizer()
-        # Sample one service to get workload characteristics for optimization
-        sample_service_path = None
-        if services:
-            try:
-                from infrastructure.file_system.service_discovery_service import ServiceDiscoveryService
-                discovery_service = ServiceDiscoveryService()
-                discovered_services = discovery_service.discover_services()
-                service_info = next((s for s in discovered_services if s.name == services[0]), None)
-                if service_info:
-                    sample_service_path = service_info.path
-            except Exception as discovery_error:
-                logger.debug(f"Service discovery for optimization failed: {discovery_error}")
-                # Try manual path construction
-                from pathlib import Path
-                potential_path = Path("services") / services[0]
-                if potential_path.exists():
-                    sample_service_path = potential_path
-
-        if sample_service_path:
-            optimization_settings = resource_optimizer.get_optimal_settings(sample_service_path, getattr(args, 'full', False))
-            optimal_workers = optimization_settings['optimization_profile']['parallel_workers']
-
-            # Use optimal workers unless user explicitly set max_parallel
-            # Since argparse sets default=3, we need to check if it was actually specified
-            if hasattr(args, 'max_parallel') and args.max_parallel != 3:  # 3 is the default
-                # User explicitly set max_parallel
-                max_parallel = args.max_parallel
-            else:
-                # Use optimal workers
-                max_parallel = optimal_workers
-
-            # Store optimization info for later display
-            optimization_info = {
-                'optimal_workers': optimal_workers,
-                'recommendations': optimization_settings.get('recommendations', [])
-            }
-
-            # Log optimization info
-            logger.info(f"🎯 Resource optimization: {optimal_workers} parallel workers recommended")
-            for rec in optimization_info['recommendations']:
-                logger.info(f"💡 {rec}")
-        else:
-            max_parallel = getattr(args, 'max_parallel', 3)
-            optimization_info = None
-    except Exception as e:
-        logger.warning(f"⚠️ Resource optimizer failed ({e}), using default parallel workers")
-        max_parallel = getattr(args, 'max_parallel', 3)
 
     if HAS_RICH and orchestrator.console:
         console = orchestrator.console
@@ -564,13 +504,6 @@ async def _handle_bulk_audit(args, orchestrator):
             border_style="green"
         )
         console.print(header_panel)
-
-        # Display optimization info if available
-        try:
-            if optimization_info:
-                console.print(f"[blue]🎯 Resource optimization: {optimization_info['optimal_workers']} parallel workers recommended[/blue]")
-        except NameError:
-            pass  # optimization_info not defined
 
         # Create progress tracking
         with Progress(
@@ -1357,118 +1290,6 @@ def _display_rich_comparison(console: Console, comparison: Dict[str, Any]):
                 console.print(f"  {service_name}: [{score_color}]{result.overall_score:.1f}[/{score_color}] ({result.grade}) - {len(result.critical_issues)} critical issues")
             else:
                 console.print(f"  {service_name}: [red]Audit failed[/red]")
-
-
-def _handle_resources_command(args):
-    """Handle the resources command to display system optimization info."""
-    try:
-        from infrastructure.resource_optimizer import get_resource_optimizer
-
-        resource_optimizer = get_resource_optimizer()
-
-        # Get service path if specified
-        service_path = None
-        if getattr(args, 'service', None):
-            try:
-                from infrastructure.file_system.service_discovery_service import ServiceDiscoveryService
-                discovery_service = ServiceDiscoveryService()
-                services = discovery_service.discover_services()
-                service_info = next((s for s in services if s.name == args.service), None)
-                if service_info:
-                    service_path = service_info.path
-                else:
-                    print(f"❌ Service '{args.service}' not found")
-                    return
-            except Exception as discovery_error:
-                logger.warning(f"Service discovery failed: {discovery_error}")
-                # Try to construct path manually
-                from pathlib import Path
-                potential_path = Path("services") / args.service
-                if potential_path.exists():
-                    service_path = potential_path
-                    logger.info(f"Using manually constructed path: {service_path}")
-                else:
-                    print(f"❌ Service '{args.service}' not found")
-                    return
-
-        # Get optimization settings
-        full_audit = getattr(args, 'full', False)
-        try:
-            optimization_settings = resource_optimizer.get_optimal_settings(service_path, full_audit)
-        except Exception as service_error:
-            logger.warning(f"Service-specific optimization failed: {service_error}")
-            # Fall back to general optimization
-            optimization_settings = resource_optimizer.get_optimal_settings(None, full_audit)
-
-        # Display results
-        if HAS_RICH:
-            console = Console()
-            console.print("\n[bold blue]🎯 System Resource Optimization Analysis[/bold blue]\n")
-
-            # System Resources
-            sys_info = optimization_settings['system_info']
-            console.print("[bold cyan]System Resources:[/bold cyan]")
-            console.print(f"  🖥️  CPU Cores: {sys_info['cpu']['physical_cores']} physical, {sys_info['cpu']['logical_cores']} logical")
-            console.print(f"  🧠 Memory: {sys_info['memory']['available_gb']:.1f}GB available / {sys_info['memory']['total_gb']:.1f}GB total")
-            console.print(f"  💾 Disk: {sys_info['disk']['free_gb']:.1f}GB free / {sys_info['disk']['total_gb']:.1f}GB total")
-            console.print(f"  📊 System Load: {sys_info['system_load']:.2f}")
-
-            # Optimization Profile
-            profile = optimization_settings['optimization_profile']
-            console.print(f"\n[bold green]Optimization Profile:[/bold green]")
-            console.print(f"  ⚡ Parallel Workers: {profile['parallel_workers']}")
-            console.print(f"  📦 Batch Size: {profile['batch_size']}")
-            console.print(f"  💾 Max Files in Memory: {profile['max_files_in_memory']}")
-            console.print(f"  ⚖️  Load Factor: {profile['load_factor']:.2f}")
-
-            # Workload Analysis (if available)
-            if optimization_settings.get('workload_analysis'):
-                workload = optimization_settings['workload_analysis']
-                console.print(f"\n[bold yellow]Workload Analysis:[/bold yellow]")
-                console.print(f"  📁 Files: {workload['file_count']}")
-                console.print(f"  📊 Total Size: {workload['total_size_mb']:.1f}MB")
-                console.print(f"  📏 Avg File Size: {workload['avg_file_size_kb']:.1f}KB")
-
-                size_dist = workload['size_distribution']
-                if size_dist:
-                    console.print("  📈 File Size Distribution:")
-                    for category, count in size_dist.items():
-                        console.print(f"    {category.capitalize()}: {count} files")
-
-            # Recommendations
-            recommendations = optimization_settings.get('recommendations', [])
-            if recommendations:
-                console.print(f"\n[bold magenta]💡 Recommendations:[/bold magenta]")
-                for rec in recommendations:
-                    console.print(f"  • {rec}")
-
-        else:
-            # Plain text output
-            print("🎯 System Resource Optimization Analysis")
-            print("=" * 50)
-
-            sys_info = optimization_settings['system_info']
-            print(f"CPU Cores: {sys_info['cpu']['physical_cores']} physical, {sys_info['cpu']['logical_cores']} logical")
-            print(f"Memory: {sys_info['memory']['available_gb']:.1f}GB available / {sys_info['memory']['total_gb']:.1f}GB total")
-            print(f"Disk: {sys_info['disk']['free_gb']:.1f}GB free / {sys_info['disk']['total_gb']:.1f}GB total")
-            print(f"System Load: {sys_info['system_load']:.2f}")
-
-            profile = optimization_settings['optimization_profile']
-            print(f"\nOptimization Profile:")
-            print(f"  Parallel Workers: {profile['parallel_workers']}")
-            print(f"  Batch Size: {profile['batch_size']}")
-            print(f"  Max Files in Memory: {profile['max_files_in_memory']}")
-            print(f"  Load Factor: {profile['load_factor']:.2f}")
-
-            recommendations = optimization_settings.get('recommendations', [])
-            if recommendations:
-                print(f"\nRecommendations:")
-                for rec in recommendations:
-                    print(f"  • {rec}")
-
-    except Exception as e:
-        logger.error(f"Failed to display resource information: {e}")
-        print(f"❌ Failed to analyze system resources: {e}")
 
 
 if __name__ == "__main__":
