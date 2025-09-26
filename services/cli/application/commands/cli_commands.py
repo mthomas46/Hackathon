@@ -1,0 +1,740 @@
+"""CLI Commands module for the CLI service.
+
+This module contains the main CLI class and command handling logic,
+extracted from the main CLI service to improve maintainability.
+"""
+
+import asyncio
+import os
+import signal
+import time
+from contextlib import asynccontextmanager
+from typing import Any, Dict, Optional
+
+from rich.console import Console
+from rich.prompt import Prompt
+from rich.table import Table
+
+# Service names now handled by standardized config system
+from services.shared.infrastructure.monitoring.logging import fire_and_forget
+
+from ...infrastructure.services.analysis.analysis_service_manager import AnalysisServiceManager
+from ...infrastructure.services.config.config_manager import ConfigManager
+from ...infrastructure.services.config.settings_manager import SettingsManager
+from ...infrastructure.services.monitoring.advanced_monitoring_manager import AdvancedMonitoringManager
+from ...infrastructure.services.services import (
+    AnalysisManager,
+    ArchitectureDigitizerManager,
+    BedrockProxyManager,
+    BulkOperationsManager,
+    CodeAnalyzerManager,
+    DeploymentManager,
+    DiscoveryAgentManager,
+    DocStoreManager,
+    InfrastructureManager,
+    InterpreterManager,
+    LogCollectorManager,
+    MemoryAgentManager,
+    NotificationServiceManager,
+    OrchestratorManager,
+    SecureAnalyzerManager,
+    SourceAgentManager,
+    SummarizerHubManager,
+)
+from ...modules.shared_utils import (
+    add_menu_rows,
+    create_health_status_display,
+    create_menu_table,
+    get_cli_clients,
+    get_service_health_url,
+    print_panel,
+)
+
+
+class CLICommands:
+    """Main CLI command handler for the LLM Documentation Ecosystem."""
+
+    def __init__(self):
+        self.console = Console()
+        self.clients = get_cli_clients()
+        self.current_user = os.environ.get("USER", "cli_user")
+        self.session_id = f"cli_session_{int(time.time() * 1000)}"
+
+        # Enhanced caching system with TTL
+        self._cache: Dict[str, Dict[str, Any]] = {}
+        self._cache_ttl = 300  # 5 minutes default TTL
+        self._interrupt_requested = False
+
+        # Initialize power-user managers
+        self.orchestrator_manager = OrchestratorManager(
+            self.console, self.clients, self._cache
+        )
+        self.analysis_manager = AnalysisManager(self.console, self.clients, self._cache)
+        self.docstore_manager = DocStoreManager(self.console, self.clients, self._cache)
+        self.source_agent_manager = SourceAgentManager(
+            self.console, self.clients, self._cache
+        )
+        self.infrastructure_manager = InfrastructureManager(
+            self.console, self.clients, self._cache
+        )
+        self.bulk_operations_manager = BulkOperationsManager(
+            self.console, self.clients, self._cache
+        )
+        self.interpreter_manager = InterpreterManager(
+            self.console, self.clients, self._cache
+        )
+        self.discovery_agent_manager = DiscoveryAgentManager(
+            self.console, self.clients, self._cache
+        )
+        self.memory_agent_manager = MemoryAgentManager(
+            self.console, self.clients, self._cache
+        )
+        self.secure_analyzer_manager = SecureAnalyzerManager(
+            self.console, self.clients, self._cache
+        )
+        self.summarizer_hub_manager = SummarizerHubManager(
+            self.console, self.clients, self._cache
+        )
+        self.code_analyzer_manager = CodeAnalyzerManager(
+            self.console, self.clients, self._cache
+        )
+        self.notification_service_manager = NotificationServiceManager(
+            self.console, self.clients, self._cache
+        )
+        self.log_collector_manager = LogCollectorManager(
+            self.console, self.clients, self._cache
+        )
+        self.bedrock_proxy_manager = BedrockProxyManager(
+            self.console, self.clients, self._cache
+        )
+        self.analysis_service_manager = AnalysisServiceManager(
+            self.console, self.clients, self._cache
+        )
+        self.config_manager = ConfigManager(self.console, self.clients, self._cache)
+        self.settings_manager = SettingsManager(self.console, self.clients, self._cache)
+        self.deployment_manager = DeploymentManager(
+            self.console, self.clients, self._cache
+        )
+        self.advanced_monitoring_manager = AdvancedMonitoringManager(
+            self.console, self.clients, self._cache
+        )
+        self.architecture_digitizer_manager = ArchitectureDigitizerManager(
+            self.console, self.clients, self._cache
+        )
+
+    def setup_interrupt_handling(self):
+        """Setup signal handlers for graceful interrupt handling."""
+
+        def signal_handler(signum, frame):
+            self._interrupt_requested = True
+            self.console.print(
+                "\n[yellow]⚠️  Interrupt received. Cleaning up...[/yellow]"
+            )
+            # Force exit for immediate termination
+            os._exit(1)
+
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+    async def cache_get(self, key: str) -> Optional[Any]:
+        """Get cached value with TTL check."""
+        if key in self._cache:
+            cached_item = self._cache[key]
+            if time.time() - cached_item["timestamp"] < self._cache_ttl:
+                return cached_item["data"]
+            else:
+                # Cache expired, remove it
+                del self._cache[key]
+        return None
+
+    async def cache_set(self, key: str, data: Any):
+        """Set cached value with timestamp."""
+        self._cache[key] = {"data": data, "timestamp": time.time()}
+
+    async def cache_invalidate(self, pattern: str = None):
+        """Invalidate cache entries matching pattern."""
+        if pattern:
+            keys_to_remove = [k for k in self._cache.keys() if pattern in k]
+            for key in keys_to_remove:
+                del self._cache[key]
+        else:
+            self._cache.clear()
+
+    @asynccontextmanager
+    async def progress_context(self, description: str = "Processing"):
+        """Context manager for progress indicators."""
+        with self.console.status(
+            f"[bold green]{description}...[/bold green]"
+        ) as status:
+            try:
+                yield status
+            except Exception as e:
+                self.console.print(f"[red]Error during {description}: {e}[/red]")
+                raise
+
+    async def run_with_progress(self, coro, description: str = "Processing"):
+        """Run coroutine with progress indicator."""
+        async with self.progress_context(description):
+            return await coro
+
+    def print_header(self):
+        """Print CLI header."""
+        print_panel(
+            self.console,
+            "[bold blue]LLM Documentation Consistency Ecosystem[/bold blue]\n"
+            "[dim]Interactive CLI for prompt management and workflow orchestration[/dim]",
+        )
+
+    def print_menu(self):
+        """Print main menu with improved organization."""
+        # Core Operations
+        core_menu = create_menu_table("🔧 Core Operations", ["Option", "Description"])
+        add_menu_rows(
+            core_menu,
+            [
+                ("1", "Document Store (CRUD, Search, Quality)"),
+                ("2", "Analysis & Reports (Findings, Detectors, Quality)"),
+                ("3", "Source Agent (Fetch, Normalize, Code Analysis)"),
+                ("4", "Architecture Digitizer (Diagram Processing)"),
+                ("5", "Workflow Orchestration"),
+            ],
+        )
+
+        # AI & Intelligence Services
+        ai_menu = create_menu_table("🤖 AI & Intelligence", ["Option", "Description"])
+        add_menu_rows(
+            ai_menu,
+            [
+                ("6", "Interpreter Service (Query Analysis, Workflows)"),
+                ("7", "Summarizer Hub (Ensemble AI, Multi-Provider)"),
+                ("8", "Bedrock Proxy (AI Invocations, Templates)"),
+                ("9", "Secure Analyzer (Content Security, Policies)"),
+                ("10", "Code Analyzer (Endpoint Extraction, Scanning)"),
+            ],
+        )
+
+        # Infrastructure & Operations
+        infra_menu = create_menu_table(
+            "🏗️ Infrastructure & Operations", ["Option", "Description"]
+        )
+        add_menu_rows(
+            infra_menu,
+            [
+                ("11", "Service Health & Monitoring"),
+                ("12", "Orchestrator Management (Registry, Jobs)"),
+                ("13", "Infrastructure (Redis, DLQ, Sagas, Tracing)"),
+                ("14", "Notification Service (Delivery, DLQ)"),
+                ("15", "Log Collector (Aggregation, Analytics)"),
+            ],
+        )
+
+        # Advanced Features
+        advanced_menu = create_menu_table(
+            "⚡ Advanced Features", ["Option", "Description"]
+        )
+        add_menu_rows(
+            advanced_menu,
+            [
+                ("16", "Bulk Operations (Mass Analysis, Notifications)"),
+                ("17", "Discovery Agent (API Registration)"),
+                ("18", "Memory Agent (Context, Summaries)"),
+                ("19", "Configuration Management"),
+                ("20", "Deployment Controls"),
+            ],
+        )
+
+        # System Administration
+        admin_menu = create_menu_table(
+            "⚙️ System Administration", ["Option", "Description"]
+        )
+        add_menu_rows(
+            admin_menu,
+            [
+                ("21", "Advanced Monitoring (Dashboards, SLO/SLA)"),
+                ("22", "Analytics & Testing"),
+                ("23", "Prompt Management"),
+                ("s", "Settings & Service Status"),
+                ("c", "Cache Management"),
+                ("q", "Quit"),
+            ],
+        )
+
+        # Display all menu sections
+        self.console.print(core_menu)
+        self.console.print()
+        self.console.print(ai_menu)
+        self.console.print()
+        self.console.print(infra_menu)
+        self.console.print()
+        self.console.print(advanced_menu)
+        self.console.print()
+        self.console.print(admin_menu)
+
+    def get_choice(self, prompt: str = "Select option") -> str:
+        """Get user choice with validation."""
+        return Prompt.ask(f"[bold green]{prompt}[/bold green]")
+
+    async def check_service_health(self) -> Dict[str, Any]:
+        """Check health of all services."""
+        services = {
+            service_name: get_service_health_url(self.clients, service_name)
+            for service_name in [
+                "orchestrator",
+                "prompt-store",
+                "source-agent",
+                "analysis-service",
+                "doc-store",
+            ]
+        }
+
+        results = {}
+        with self.console.status("[bold green]Checking service health...") as status:
+            for service_name, url in services.items():
+                try:
+                    response = await self.clients.get_json(url)
+                    results[service_name] = {
+                        "status": "healthy",
+                        "response": response,
+                        "timestamp": time.time(),
+                    }
+                except Exception as e:
+                    results[service_name] = {
+                        "status": "unhealthy",
+                        "error": str(e),
+                        "timestamp": time.time(),
+                    }
+
+        return results
+
+    async def display_health_status(self):
+        """Display service health status."""
+        health_data = await self.check_service_health()
+
+        table = Table(title="Service Health Status")
+        table.add_column("Service", style="cyan")
+        table.add_column("Status", style="green")
+        table.add_column("Details", style="white")
+
+        for service, data in health_data.items():
+            status_display, details = create_health_status_display(service, data)
+            table.add_row(service, status_display, details)
+
+        self.console.print(table)
+
+    async def analytics_menu(self):
+        """Analytics submenu."""
+        try:
+            response = await self.clients.get_json("prompt-store/analytics")
+            content = format_analytics_display(response)
+            print_panel(self.console, content, border_style="cyan")
+        except Exception as e:
+            self.console.print(f"[red]Error fetching analytics: {e}[/red]")
+
+    async def analytics_testing_menu(self):
+        """Combined analytics and testing submenu."""
+        while True:
+            menu = create_menu_table("Analytics & Testing", ["Option", "Description"])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Prompt Store Analytics"),
+                    ("2", "Run Integration Tests"),
+                    ("3", "A/B Testing (Coming Soon)"),
+                    ("b", "Back to Main Menu"),
+                ],
+            )
+            self.console.print(menu)
+
+            choice = self.get_choice()
+
+            if choice == "1":
+                await self.analytics_menu()
+                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+            elif choice == "2":
+                await self.test_integration()
+                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+            elif choice == "3":
+                self.ab_testing_menu()
+                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+            elif choice.lower() in ["b", "back"]:
+                break
+            else:
+                self.console.print("[red]Invalid option. Please try again.[/red]")
+
+    def ab_testing_menu(self):
+        """Placeholder for A/B testing menu."""
+        self.console.print("[yellow]A/B Testing menu coming soon![/yellow]")
+
+    async def test_integration(self) -> Dict[str, Any]:
+        """Test integration between all services."""
+        self.console.print("\n[bold green]Testing Service Integration[/bold green]")
+
+        integration_tests = [
+            ("Prompt Store Health", self._test_prompt_store_integration),
+            ("Interpreter Integration", self._test_interpreter_integration),
+            ("Orchestrator Integration", self._test_orchestrator_integration),
+            ("Analysis Service Integration", self._test_analysis_integration),
+            ("Cross-Service Workflow", self._test_cross_service_workflow),
+        ]
+
+        results = {}
+        for test_name, test_func in integration_tests:
+            try:
+                self.console.print(f"🔄 Testing {test_name}...")
+                result = await test_func()
+                results[test_name] = result
+                status = "[green]✅ PASS[/green]" if result else "[red]❌ FAIL[/red]"
+                self.console.print(f"   {status}")
+            except Exception as e:
+                results[test_name] = False
+                self.console.print(f"   [red]❌ ERROR: {e}[/red]")
+
+        # Summary
+        passed = sum(1 for r in results.values() if r)
+        total = len(results)
+
+        self.console.print(
+            f"\n[bold]Integration Test Summary: {passed}/{total} passed[/bold]"
+        )
+
+        if passed == total:
+            self.console.print(
+                "[green]🎉 All services are properly integrated![/green]"
+            )
+        else:
+            self.console.print("[yellow]⚠️  Some integration issues detected.[/yellow]")
+
+        return results
+
+    async def _test_prompt_store_integration(self) -> bool:
+        """Test Prompt Store integration."""
+        try:
+            health = await self.clients.get_json("prompt-store/health")
+            if health.get("status") != "healthy":
+                return False
+            prompts = await self.clients.get_json("prompt-store/prompts?limit=1")
+            return "prompts" in prompts
+        except Exception:
+            return False
+
+    async def _test_interpreter_integration(self) -> bool:
+        """Test Interpreter integration."""
+        try:
+            health = await self.clients.get_json("interpreter/health")
+            if health.get("status") != "healthy":
+                return False
+            result = await self.clients.post_json(
+                "interpreter/interpret", {"query": "analyze this document"}
+            )
+            return "intent" in result
+        except Exception:
+            return False
+
+    async def _test_orchestrator_integration(self) -> bool:
+        """Test Orchestrator integration."""
+        try:
+            health = await self.clients.get_json("orchestrator/health/system")
+            return "overall_healthy" in health
+        except Exception:
+            return False
+
+    async def _test_analysis_integration(self) -> bool:
+        """Test Analysis Service integration."""
+        try:
+            health = await self.clients.get_json("analysis-service/integration/health")
+            return "integrations" in health
+        except Exception:
+            return False
+
+    async def _test_cross_service_workflow(self) -> bool:
+        """Test cross-service workflow execution."""
+        try:
+            result = await self.clients.post_json(
+                "orchestrator/query", {"query": "show me system status"}
+            )
+            return "interpretation" in result
+        except Exception:
+            return False
+
+    def _initialize_command_dispatcher(self):
+        """Initialize the command dispatcher mapping."""
+        self._command_dispatcher = {
+            # Numbered menu options
+            "1": self._handle_docstore_management,
+            "2": self._handle_analysis_reports,
+            "3": self._handle_source_agent,
+            "4": self._handle_architecture_digitizer,
+            "5": self._handle_workflow_orchestration,
+            "6": self._handle_interpreter_management,
+            "7": self._handle_summarizer_hub,
+            "8": self._handle_bedrock_proxy,
+            "9": self._handle_secure_analyzer,
+            "10": self._handle_code_analyzer,
+            "11": self._handle_health_status,
+            "12": self._handle_orchestrator_management,
+            "13": self._handle_infrastructure,
+            "14": self._handle_notification_service,
+            "15": self._handle_log_collector,
+            "16": self._handle_bulk_operations,
+            "17": self._handle_discovery_agent,
+            "18": self._handle_memory_agent,
+            "19": self._handle_config_management,
+            "20": self._handle_deployment_controls,
+            "21": self._handle_advanced_monitoring,
+            "22": self._handle_analytics_testing,
+            "23": self._handle_prompt_management,
+
+            # Special commands
+            "s": self._handle_settings,
+            "c": self._handle_cache_management,
+        }
+
+        self._exit_commands = ["q", "quit", "exit"]
+
+    async def _dispatch_command(self, choice: str) -> bool:
+        """Dispatch command to appropriate handler. Returns True if should continue, False to exit."""
+        if choice.lower() in self._exit_commands:
+            return False
+
+        handler = self._command_dispatcher.get(choice.lower())
+        if handler:
+            await handler()
+        else:
+            self.console.print("[red]Invalid option. Please try again.[/red]")
+
+        return True
+
+    # Command handlers - each handles a single menu option
+    async def _handle_docstore_management(self):
+        """Handle docstore management menu."""
+        await self.docstore_manager.docstore_management_menu()
+
+    async def _handle_analysis_reports(self):
+        """Handle analysis reports menu."""
+        await self.analysis_manager.analysis_reports_menu()
+
+    async def _handle_source_agent(self):
+        """Handle source agent menu."""
+        await self.source_agent_manager.source_agent_menu()
+
+    async def _handle_architecture_digitizer(self):
+        """Handle architecture digitizer menu."""
+        await self.architecture_digitizer_manager.architecture_digitizer_menu()
+
+    async def _handle_workflow_orchestration(self):
+        """Handle workflow orchestration menu."""
+        workflow_manager = WorkflowManager(self.console, self.clients)
+        await workflow_manager.workflow_orchestration_menu()
+
+    async def _handle_interpreter_management(self):
+        """Handle interpreter management menu."""
+        await self.interpreter_manager.interpreter_management_menu()
+
+    async def _handle_summarizer_hub(self):
+        """Handle summarizer hub menu."""
+        await self.summarizer_hub_manager.summarizer_hub_menu()
+
+    async def _handle_bedrock_proxy(self):
+        """Handle bedrock proxy menu."""
+        await self.bedrock_proxy_manager.bedrock_proxy_menu()
+
+    async def _handle_secure_analyzer(self):
+        """Handle secure analyzer menu."""
+        await self.secure_analyzer_manager.secure_analyzer_menu()
+
+    async def _handle_code_analyzer(self):
+        """Handle code analyzer menu."""
+        await self.code_analyzer_manager.code_analyzer_menu()
+
+    async def _handle_health_status(self):
+        """Handle health status display."""
+        await self.display_health_status()
+
+    async def _handle_orchestrator_management(self):
+        """Handle orchestrator management menu."""
+        await self.orchestrator_manager.orchestrator_management_menu()
+
+    async def _handle_infrastructure(self):
+        """Handle infrastructure menu."""
+        await self.infrastructure_manager.infrastructure_menu()
+
+    async def _handle_notification_service(self):
+        """Handle notification service menu."""
+        await self.notification_service_manager.notification_service_menu()
+
+    async def _handle_log_collector(self):
+        """Handle log collector menu."""
+        await self.log_collector_manager.log_collector_menu()
+
+    async def _handle_bulk_operations(self):
+        """Handle bulk operations menu."""
+        bulk_ops_manager = BulkOperationsManager(self.console, self.clients)
+        await bulk_ops_manager.bulk_operations_menu()
+
+    async def _handle_discovery_agent(self):
+        """Handle discovery agent menu."""
+        await self.discovery_agent_manager.discovery_agent_menu()
+
+    async def _handle_memory_agent(self):
+        """Handle memory agent menu."""
+        await self.memory_agent_manager.memory_agent_menu()
+
+    async def _handle_config_management(self):
+        """Handle config management menu."""
+        await self.config_manager.config_management_menu()
+
+    async def _handle_deployment_controls(self):
+        """Handle deployment controls menu."""
+        await self.deployment_manager.deployment_controls_menu()
+
+    async def _handle_advanced_monitoring(self):
+        """Handle advanced monitoring menu."""
+        await self.advanced_monitoring_manager.advanced_monitoring_menu()
+
+    async def _handle_analytics_testing(self):
+        """Handle analytics testing menu."""
+        await self.analytics_testing_menu()
+
+    async def _handle_prompt_management(self):
+        """Handle prompt management menu."""
+        prompt_manager = PromptManager(self.console, self.clients)
+        await prompt_manager.prompt_management_menu()
+
+    async def _handle_settings(self):
+        """Handle settings menu."""
+        await self.settings_manager.run_menu_loop(
+            "Settings & Service Status", use_interactive=True
+        )
+
+    async def _handle_cache_management(self):
+        """Handle cache management menu."""
+        await self.cache_management_menu()
+
+    async def _process_menu_choice(self, choice: str) -> bool:
+        """Process a menu choice and return whether to continue."""
+        should_continue = await self._dispatch_command(choice)
+
+        # Add a small pause between menu interactions
+        if should_continue:
+            await asyncio.sleep(0.5)
+
+        return should_continue
+
+    async def run(self):
+        """Main CLI loop with enhanced error handling and interrupt support."""
+        self.print_header()
+        self.setup_interrupt_handling()
+        self._initialize_command_dispatcher()
+
+        try:
+            while True:
+                if self._interrupt_requested:
+                    break
+
+                self.print_menu()
+                choice = self.get_choice()
+
+                if not await self._process_menu_choice(choice):
+                    self.console.print("[bold blue]Goodbye! 👋[/bold blue]")
+                    break
+
+        except KeyboardInterrupt:
+            self.console.print("\n[yellow]⚠️  Operation interrupted by user[/yellow]")
+        except Exception as e:
+            self.console.print(f"\n[red]❌ Fatal error: {e}[/red]")
+            fire_and_forget("error", f"CLI fatal error: {e}", "cli")
+        finally:
+            # Cleanup operations
+            self.console.print("[dim]Cleaning up...[/dim]")
+            await self.cache_invalidate()  # Clear cache on exit
+
+    def _initialize_cache_command_dispatcher(self):
+        """Initialize cache command dispatcher."""
+        self._cache_command_dispatcher = {
+            "1": self._handle_show_cache_stats,
+            "2": self._handle_clear_all_cache,
+            "3": self._handle_clear_service_cache,
+            "4": self._handle_set_cache_ttl,
+        }
+
+    async def _handle_show_cache_stats(self):
+        """Handle show cache statistics."""
+        await self._show_cache_stats()
+        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+
+    async def _handle_clear_all_cache(self):
+        """Handle clear all cache."""
+        await self.cache_invalidate()
+        self.console.print("[green]✅ All cache cleared[/green]")
+        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+
+    async def _handle_clear_service_cache(self):
+        """Handle clear service cache."""
+        pattern = Prompt.ask("Service pattern (e.g., 'docstore', 'analysis')")
+        await self.cache_invalidate(pattern)
+        self.console.print(
+            f"[green]✅ Cache cleared for pattern: {pattern}[/green]"
+        )
+        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+
+    async def _handle_set_cache_ttl(self):
+        """Handle set cache TTL."""
+        ttl = Prompt.ask("Cache TTL in seconds", default=str(self._cache_ttl))
+        try:
+            self._cache_ttl = int(ttl)
+            self.console.print(
+                f"[green]✅ Cache TTL set to {ttl} seconds[/green]"
+            )
+        except ValueError:
+            self.console.print("[red]❌ Invalid TTL value[/red]")
+        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+
+    async def cache_management_menu(self):
+        """Cache management submenu."""
+        self._initialize_cache_command_dispatcher()
+
+        while True:
+            menu = create_menu_table("Cache Management", ["Option", "Description"])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Cache Statistics"),
+                    ("2", "Clear All Cache"),
+                    ("3", "Clear Service Cache"),
+                    ("4", "Set Cache TTL"),
+                    ("b", "Back to Main Menu"),
+                ],
+            )
+            self.console.print(menu)
+
+            choice = self.get_choice()
+
+            if choice.lower() in ["b", "back"]:
+                break
+
+            handler = self._cache_command_dispatcher.get(choice)
+            if handler:
+                await handler()
+            else:
+                self.console.print("[red]Invalid option. Please try again.[/red]")
+
+    async def _show_cache_stats(self):
+        """Show cache statistics."""
+        total_entries = len(self._cache)
+        expired_entries = 0
+        current_time = time.time()
+
+        for key, item in self._cache.items():
+            if current_time - item["timestamp"] >= self._cache_ttl:
+                expired_entries += 1
+
+        table = Table(title="Cache Statistics")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="white")
+
+        table.add_row("Total Entries", str(total_entries))
+        table.add_row("Expired Entries", str(expired_entries))
+        table.add_row("Active Entries", str(total_entries - expired_entries))
+        table.add_row("Cache TTL", f"{self._cache_ttl} seconds")
+
+        self.console.print(table)

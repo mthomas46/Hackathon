@@ -145,11 +145,11 @@ except ImportError:
 # ============================================================================
 try:
     # Try relative imports first (for module execution)
-    from .modules.cli_commands import CLICommands
+    from .application.commands.cli_commands import CLICommands
     from .modules.prompt_manager import PromptManager
 except ImportError:
     # Fall back to absolute imports (for standalone execution)
-    from services.cli.modules.cli_commands import CLICommands
+    from services.cli.application.commands.cli_commands import CLICommands
     from services.cli.modules.prompt_manager import PromptManager
 
 # Service configuration constants
