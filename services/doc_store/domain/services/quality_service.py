@@ -87,6 +87,55 @@ def _parse_document_metadata(meta_raw: str) -> Dict[str, Any]:
         return {}
 
 
+def _extract_metadata_fields(metadata: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract commonly used metadata fields."""
+    return {
+        "views": metadata.get("views"),
+        "updated_at": metadata.get("updated_at"),
+        "last_viewed": metadata.get("last_viewed"),
+        "owner": metadata.get("owner"),
+        "labels": metadata.get("labels"),
+    }
+
+
+def _calculate_updated_stale_days(updated_at: str, now: datetime, current_stale_days: int) -> int:
+    """Calculate updated stale days based on updated_at timestamp."""
+    if not updated_at:
+        return current_stale_days
+
+    try:
+        updated_dt = datetime.fromisoformat(updated_at)
+        updated_stale_days = max(0, int((now - updated_dt).days))
+        return min(updated_stale_days, current_stale_days)
+    except Exception:
+        return current_stale_days
+
+
+def _check_recently_viewed(last_viewed: str, current_stale_days: int, now: datetime) -> bool:
+    """Check if document was recently viewed despite being stale."""
+    if not last_viewed or current_stale_days < 180:
+        return False
+
+    try:
+        last_viewed_dt = datetime.fromisoformat(last_viewed)
+        return (now - last_viewed_dt).days <= 30
+    except Exception:
+        return False
+
+
+def _analyze_basic_metadata(views: Any, owner: Any, min_views: int) -> List[str]:
+    """Analyze basic metadata fields for quality flags."""
+    flags = []
+
+    if isinstance(views, int) and views < min_views:
+        flags.append("low_views")
+
+    if not owner:
+        flags.append("missing_owner")
+
+    return flags
+
+
 def _analyze_metadata_flags(
     metadata: Dict[str, Any],
     min_views: int,
@@ -97,40 +146,22 @@ def _analyze_metadata_flags(
     flags = []
 
     # Extract metadata fields
-    views = metadata.get("views")
-    updated_at = metadata.get("updated_at")
-    last_viewed = metadata.get("last_viewed")
-    owner = metadata.get("owner")
-    labels = metadata.get("labels")
+    fields = _extract_metadata_fields(metadata)
 
     # Update stale calculation based on updated_at
-    if updated_at:
-        try:
-            updated_dt = datetime.fromisoformat(updated_at)
-            updated_stale_days = max(0, int((now - updated_dt).days))
-            if updated_stale_days < current_stale_days:
-                current_stale_days = updated_stale_days
-        except Exception:
-            pass
+    current_stale_days = _calculate_updated_stale_days(
+        fields["updated_at"], now, current_stale_days
+    )
 
     # Check for recent viewing despite staleness
-    if last_viewed and current_stale_days >= 180:
-        try:
-            last_viewed_dt = datetime.fromisoformat(last_viewed)
-            if (now - last_viewed_dt).days <= 30:
-                flags.append("recently_viewed")
-        except Exception:
-            pass
+    if _check_recently_viewed(fields["last_viewed"], current_stale_days, now):
+        flags.append("recently_viewed")
 
     # Basic metadata checks
-    if isinstance(views, int) and views < min_views:
-        flags.append("low_views")
-
-    if not owner:
-        flags.append("missing_owner")
+    flags.extend(_analyze_basic_metadata(fields["views"], fields["owner"], min_views))
 
     # Check for generic labels
-    flags.extend(_analyze_label_quality(labels))
+    flags.extend(_analyze_label_quality(fields["labels"]))
 
     return flags
 
