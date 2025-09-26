@@ -346,7 +346,7 @@ except ImportError:
 
 try:
     from services.shared.infrastructure.utilities import setup_common_middleware
-    from services.shared.infrastructure.utilities.error_handling import install_error_handlers
+    from services.shared.infrastructure.utilities.error_handling import install_error_handlers, safe_operation
 except ImportError:
     def setup_common_middleware(app, **kwargs):
         pass
