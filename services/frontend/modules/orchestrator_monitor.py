@@ -17,6 +17,11 @@ class OrchestratorMonitor:
     """Monitor for orchestrator Redis pub/sub activity and configuration."""
 
     def __init__(self):
+        """Initialize the orchestrator monitor with caching and activity tracking.
+
+        Sets up internal data structures for monitoring orchestrator Redis pub/sub
+        activity, configuration caching, and activity tracking with TTL-based caching.
+        """
         self._pubsub_activity = {
             "ingestion_requested": [],
             "findings_created": [],
