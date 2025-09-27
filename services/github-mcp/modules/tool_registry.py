@@ -1,6 +1,69 @@
 """Tool registry for GitHub MCP service.
 
-Manages tool definitions, toolsets, and filtering.
+This module provides a comprehensive tool registry system for managing GitHub-integrated tools
+and services within the Model Context Protocol (MCP) ecosystem. It handles tool registration,
+discovery, filtering, and metadata management for seamless integration with GitHub repositories
+and workflows.
+
+Key Features:
+- Tool registration and metadata management
+- Capability-based tool discovery and filtering
+- Version management and compatibility checking
+- Health monitoring and status tracking
+- Performance metrics and usage analytics
+- Security validation and access control
+
+Tool Categories:
+- Repository Analysis: Code quality, security scanning, dependency analysis
+- Issue Management: Issue creation, updates, assignment, labeling
+- Pull Request Tools: PR reviews, merge conflict resolution, branch management
+- CI/CD Integration: Workflow triggers, deployment automation, testing
+- Documentation: README generation, API documentation, code comments
+- Collaboration: Team management, notifications, project tracking
+
+Registry Capabilities:
+- Dynamic tool registration and deregistration
+- Metadata enrichment and tagging
+- Capability mapping and dependency resolution
+- Health status monitoring and reporting
+- Performance metrics collection
+- Audit logging and compliance tracking
+
+Security Features:
+- Tool authentication and authorization
+- Capability-based access control
+- Input validation and sanitization
+- Rate limiting and abuse prevention
+- Audit trails for tool usage
+- Secure credential management
+
+Usage Patterns:
+    # Register a new tool
+    registry.register_tool({
+        'name': 'code-analyzer',
+        'capabilities': ['static_analysis', 'security_scan'],
+        'endpoint': '/api/tools/code-analyzer'
+    })
+
+    # Discover tools by capability
+    analysis_tools = registry.find_tools_by_capability('static_analysis')
+
+    # Get tool metadata
+    tool_info = registry.get_tool('code-analyzer')
+
+Performance Considerations:
+- Efficient indexing for fast tool discovery
+- Caching for frequently accessed tool metadata
+- Lazy loading for large tool registries
+- Connection pooling for tool endpoint validation
+- Background health checking and status updates
+
+Integration Points:
+- GitHub API for repository and organization data
+- Service discovery systems for endpoint resolution
+- Monitoring systems for health and performance tracking
+- Authentication services for access control
+- Audit systems for compliance and logging
 """
 
 from typing import Any, Dict, List, Optional, Set
