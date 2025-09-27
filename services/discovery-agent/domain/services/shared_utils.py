@@ -234,10 +234,15 @@ async def _async_fetch_openapi_spec(
     openapi_url: str, timeout: int = _DEFAULT_TIMEOUT
 ) -> Dict[str, Any]:
     """Async version of fetch_openapi_spec."""
-    async with httpx.AsyncClient(timeout=timeout) as client:
-        response = await client.get(openapi_url)
-        response.raise_for_status()
-        return response.json()
+    from ...infrastructure.external_services.http_client import discovery_http_client
+
+    # Temporarily set timeout on client
+    original_timeout = discovery_http_client.timeout
+    discovery_http_client.timeout = timeout
+    try:
+        return await discovery_http_client.fetch_openapi_spec(openapi_url)
+    finally:
+        discovery_http_client.timeout = original_timeout
 
 
 def compute_schema_hash(spec: Dict[str, Any]) -> Optional[str]:
@@ -309,24 +314,31 @@ async def _async_register_with_orchestrator(
     payload: Dict[str, Any], orchestrator_url: str, timeout: int = _DEFAULT_TIMEOUT
 ):
     """Async version of register_with_orchestrator."""
-    # Support in-process orchestrator when testing with http://testserver
+    from ...infrastructure.external_services.http_client import discovery_http_client
+
+    # Handle test server case
     if orchestrator_url.startswith("http://testserver"):
         from services.orchestrator.main import app as orchestrator_app
 
-        transport = httpx.ASGITransport(app=orchestrator_app)
-        async with httpx.AsyncClient(
-            transport=transport, base_url="http://testserver", timeout=timeout
-        ) as client:
-            response = await client.post("/registry/register", json=payload)
-            response.raise_for_status()
-            return response.json()
-    else:
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.post(
-                f"{orchestrator_url}/registry/register", json=payload
+        # Temporarily set timeout
+        original_timeout = discovery_http_client.timeout
+        discovery_http_client.timeout = timeout
+        try:
+            return await discovery_http_client.register_with_orchestrator(
+                payload, "http://testserver", test_app=orchestrator_app
             )
-            response.raise_for_status()
-            return response.json()
+        finally:
+            discovery_http_client.timeout = original_timeout
+    else:
+        # Temporarily set timeout
+        original_timeout = discovery_http_client.timeout
+        discovery_http_client.timeout = timeout
+        try:
+            return await discovery_http_client.register_with_orchestrator(
+                payload, orchestrator_url
+            )
+        finally:
+            discovery_http_client.timeout = original_timeout
 
 
 def build_registration_payload(
