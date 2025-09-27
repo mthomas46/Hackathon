@@ -1,37 +1,12 @@
-"""Prompt Store REST API."""
+"""Prompt Store REST API with comprehensive OpenAPI documentation."""
 
 from fastapi import APIRouter
 
-# Basic API router
-api_router = APIRouter(prefix="/api/v1/prompts", tags=["prompts"])
+# Import the comprehensive prompt router
+from .routes.prompts import create_prompt_router
 
-@api_router.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy", "service": "prompt-store"}
+# Create API router with all prompt management endpoints
+api_router = APIRouter()
+api_router.include_router(create_prompt_router())
 
-@api_router.get("/")
-async def list_prompts():
-    """List all prompts."""
-    return {"prompts": [], "total": 0}
-
-@api_router.post("/")
-async def create_prompt(prompt: dict):
-    """Create a new prompt."""
-    return {"id": "new-prompt-id", "status": "created"}
-
-@api_router.get("/{prompt_id}")
-async def get_prompt(prompt_id: str):
-    """Get a specific prompt."""
-    return {"id": prompt_id, "content": "Sample prompt"}
-
-@api_router.put("/{prompt_id}")
-async def update_prompt(prompt_id: str, prompt: dict):
-    """Update a prompt."""
-    return {"id": prompt_id, "status": "updated"}
-
-@api_router.delete("/{prompt_id}")
-async def delete_prompt(prompt_id: str):
-    """Delete a prompt."""
-    return {"id": prompt_id, "status": "deleted"}
-
+__all__ = ["api_router"]

@@ -60,10 +60,92 @@ class DocumentRouter:
     def _register_routes(self):
         """Register all document routes."""
 
-        @self.router.post("/fetch", response_model=FetchDocumentResponseModel)
+        @self.router.post(
+            "/fetch",
+            response_model=FetchDocumentResponseModel,
+            summary="Fetch Documents from Source Systems",
+            description="""
+            Retrieve documents from various source systems for processing and ingestion.
+
+            This endpoint connects to external source systems (GitHub, Jira, Confluence, etc.)
+            to fetch documents, normalize their content, and prepare them for downstream processing.
+
+            **Supported Source Systems:**
+            - **GitHub**: Repositories, issues, pull requests, wikis
+            - **GitLab**: Projects, issues, merge requests, documentation
+            - **Jira**: Issues, projects, epics, requirements documents
+            - **Confluence**: Pages, blogs, spaces, attachments
+            - **File System**: Local files and directories
+            - **Web**: HTTP/HTTPS accessible documents
+
+            **Document Processing:**
+            - Content extraction and normalization
+            - Metadata preservation and enrichment
+            - Format conversion (Markdown, HTML, PDF, etc.)
+            - Link resolution and reference handling
+            - Access control and permission checking
+
+            **Scope Parameters:**
+            - Repository branches, tags, or commit ranges
+            - Date ranges for content filtering
+            - File type and size restrictions
+            - Content filters and search criteria
+            - Authentication and access tokens
+            """,
+            response_description="Document fetching results with processing statistics"
+        )
         async def fetch_documents(
-            request: FetchDocumentRequestModel,
-            background_tasks: BackgroundTasks
+            request: FetchDocumentRequestModel = Body(
+                ...,
+                examples={
+                    "github_repo": {
+                        "summary": "Fetch GitHub Repository Documentation",
+                        "description": "Retrieve README and documentation files from a GitHub repository",
+                        "value": {
+                            "source_type": "github",
+                            "source_id": "myorg/myrepo",
+                            "scope": {
+                                "branch": "main",
+                                "include_patterns": ["*.md", "*.rst", "docs/**"],
+                                "exclude_patterns": ["node_modules/**"]
+                            },
+                            "include_metadata": True,
+                            "timeout_seconds": 300
+                        }
+                    },
+                    "jira_issues": {
+                        "summary": "Fetch Jira Issues",
+                        "description": "Retrieve issue descriptions and comments from a Jira project",
+                        "value": {
+                            "source_type": "jira",
+                            "source_id": "PROJ",
+                            "scope": {
+                                "issue_types": ["Bug", "Story", "Task"],
+                                "status": ["Open", "In Progress"],
+                                "updated_since": "2023-01-01"
+                            },
+                            "include_metadata": True,
+                            "timeout_seconds": 180
+                        }
+                    },
+                    "confluence_space": {
+                        "summary": "Fetch Confluence Space Content",
+                        "description": "Retrieve pages and content from a Confluence space",
+                        "value": {
+                            "source_type": "confluence",
+                            "source_id": "TECH",
+                            "scope": {
+                                "space_key": "TECH",
+                                "content_types": ["page", "blogpost"],
+                                "labels": ["documentation", "api"]
+                            },
+                            "include_metadata": False,
+                            "timeout_seconds": 600
+                        }
+                    }
+                }
+            ),
+            background_tasks: BackgroundTasks = None
         ) -> FetchDocumentResponseModel:
             """Fetch documents from a source system.
 

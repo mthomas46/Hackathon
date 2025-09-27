@@ -99,10 +99,76 @@ class MemoryRouter:
     def _register_routes(self):
         """Register all memory routes."""
 
-        @self.router.post("/analyze", response_model=AnalyzeMemoryResponseModel)
+        @self.router.post(
+            "/analyze",
+            response_model=AnalyzeMemoryResponseModel,
+            summary="Analyze Memory Usage Patterns",
+            description="""
+            Perform comprehensive memory usage analysis for a service.
+
+            This endpoint analyzes memory consumption patterns, identifies trends,
+            detects anomalies, and provides optimization recommendations based on
+            historical and real-time memory metrics.
+
+            **Analysis Capabilities:**
+            - Memory usage trend analysis over time
+            - Peak usage identification and timing
+            - Memory leak detection and alerts
+            - Comparative analysis across similar services
+            - Resource utilization forecasting
+            - Performance impact correlation
+
+            **Analysis Types:**
+            - `basic`: Simple usage statistics and trends
+            - `comprehensive`: Detailed analysis with anomaly detection
+            - `predictive`: Forecasting and capacity planning
+            - `comparative`: Benchmarking against similar services
+
+            **Time Window Options:**
+            - Short-term: 1-6 hours (real-time monitoring)
+            - Medium-term: 24-72 hours (trend analysis)
+            - Long-term: 7-30 days (capacity planning)
+            - Custom ranges for specific analysis needs
+
+            **Output Insights:**
+            - Memory usage patterns and seasonality
+            - Performance correlation with memory usage
+            - Optimization opportunities and priorities
+            - Alert thresholds and monitoring recommendations
+            """,
+            response_description="Comprehensive memory analysis results with insights and recommendations"
+        )
         async def analyze_memory(
-            request: AnalyzeMemoryRequestModel,
-            background_tasks: BackgroundTasks
+            request: AnalyzeMemoryRequestModel = Body(
+                ...,
+                examples={
+                    "comprehensive_analysis": {
+                        "summary": "Comprehensive Memory Analysis",
+                        "description": "Full memory analysis for a production service",
+                        "value": {
+                            "service_name": "api-gateway",
+                            "analysis_type": "comprehensive",
+                            "time_window_minutes": 1440,  # 24 hours
+                            "include_historical": True,
+                            "filters": {
+                                "memory_threshold_mb": 1000,
+                                "severity_levels": ["high", "critical"]
+                            }
+                        }
+                    },
+                    "quick_check": {
+                        "summary": "Quick Memory Health Check",
+                        "description": "Rapid assessment of current memory usage",
+                        "value": {
+                            "service_name": "worker-service",
+                            "analysis_type": "basic",
+                            "time_window_minutes": 60,
+                            "include_historical": False
+                        }
+                    }
+                }
+            ),
+            background_tasks: BackgroundTasks = None
         ) -> AnalyzeMemoryResponseModel:
             """Analyze memory usage for a service.
 
