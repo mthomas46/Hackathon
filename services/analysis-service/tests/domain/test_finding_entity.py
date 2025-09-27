@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from domain.entities.finding import Finding
 from domain.value_objects import Confidence, Location
-from tests.conftest import assert_validation_error
+from services.shared.tests.conftest import assert_validation_error
 
 
 class TestFindingEntity:

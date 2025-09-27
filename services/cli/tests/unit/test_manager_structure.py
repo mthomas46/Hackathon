@@ -11,7 +11,7 @@ from services.cli.modules.managers import (
     OrchestratorManager, WorkflowManager, PromptManager
 )
 from services.cli.modules.base.base_manager import BaseManager
-from tests.unit.cli.test_base import (
+from services.cli.tests.unit.test_base import (
     BaseManagerTestMixin, ManagerAssertionMixin,
     assert_class_inheritance, assert_method_exists
 )

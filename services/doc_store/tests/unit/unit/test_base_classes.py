@@ -5,7 +5,7 @@ Tests for BaseEntity, BaseRepository, BaseService, BaseHandler, and utility func
 import pytest
 from unittest.mock import patch, Mock
 from datetime import datetime
-from tests.unit.doc_store.conftest import BaseTestCase
+from services.doc_store.tests.conftest import BaseTestCase
 
 
 @pytest.mark.unit
