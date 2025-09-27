@@ -1,21 +1,12 @@
-"""API Routes for Presentation Layer"""
+"""Orchestrator REST API with comprehensive OpenAPI documentation."""
 
-from . import (
-    health_monitoring,
-    infrastructure,
-    ingestion,
-    query_processing,
-    reporting,
-    service_registry,
-    workflow_management,
-)
+from fastapi import APIRouter
 
-__all__ = [
-    "workflow_management",
-    "service_registry",
-    "health_monitoring",
-    "infrastructure",
-    "reporting",
-    "query_processing",
-    "ingestion",
-]
+# Import the comprehensive orchestrator router
+from .routes.orchestration import create_orchestrator_router
+
+# Create API router with all orchestration endpoints
+api_router = APIRouter()
+api_router.include_router(create_orchestrator_router())
+
+__all__ = ["api_router"]
