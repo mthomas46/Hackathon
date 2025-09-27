@@ -22,11 +22,34 @@ from .shared_utils import (
 
 
 class FetchHandler:
-    """Handles document fetching from various sources."""
+    """Handles document fetching from various sources.
+
+    This class provides methods to fetch documents from different source systems
+    including GitHub, GitLab, Jira, and Confluence. It supports both direct API
+    calls and integration with local MCP (Model Context Protocol) servers.
+
+    The handler manages authentication, error handling, and response formatting
+    for consistent document retrieval across all supported platforms.
+    """
 
     @staticmethod
     async def fetch_github_document(owner: str, repo: str, req) -> Dict[str, Any]:
-        """Fetch document from GitHub."""
+        """Fetch document from GitHub repository.
+
+        Retrieves repository information and documentation from GitHub.
+        Can use either direct GitHub API calls or GitHub MCP integration.
+
+        Args:
+            owner: Repository owner/organization name
+            repo: Repository name
+            req: Request object containing source information
+
+        Returns:
+            Dictionary containing document data and metadata
+
+        Raises:
+            Various exceptions from API calls or MCP integration
+        """
         # Optionally delegate to local GitHub MCP when enabled
         if os.environ.get("USE_GITHUB_MCP", "0") in ("1", "true", "TRUE"):
             try:

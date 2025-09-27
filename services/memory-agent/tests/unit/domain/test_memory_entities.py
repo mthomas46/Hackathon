@@ -1,261 +1,127 @@
-"""Unit tests for memory agent domain entities."""
+"""Unit tests for memory-agent domain entities."""
 
 import pytest
-from datetime import datetime, timezone
-from unittest.mock import Mock
+from datetime import datetime, timezone, timedelta
 
-from services.memory_agent.domain.entities import MemoryMetrics, MemoryAnalysis, OptimizationRecommendation
+from services.memory_agent.domain.entities import MemoryItem, MemorySession, MemoryType
 
 
-class TestMemoryMetrics:
-    """Test cases for MemoryMetrics entity."""
+class TestMemoryItem:
+    """Test cases for MemoryItem entity."""
 
-    def test_memory_metrics_creation(self):
-        """Test basic MemoryMetrics creation."""
-        metrics = MemoryMetrics(
-            total_memory_mb=8192,
-            used_memory_mb=4096,
-            available_memory_mb=4096,
-            memory_usage_percent=50.0,
-            swap_total_mb=2048,
-            swap_used_mb=512,
-            swap_usage_percent=25.0
+    def test_memory_item_creation(self):
+        """Test basic MemoryItem creation."""
+        item = MemoryItem(
+            id="mem-123",
+            user_id="user-456",
+            memory_type=MemoryType.CONVERSATION,
+            content="This is a test memory item"
         )
 
-        assert metrics.total_memory_mb == 8192
-        assert metrics.used_memory_mb == 4096
-        assert metrics.memory_usage_percent == 50.0
-        assert isinstance(metrics.timestamp, datetime)
+        assert item.id == "mem-123"
+        assert item.user_id == "user-456"
+        assert item.memory_type == MemoryType.CONVERSATION
+        assert item.content == "This is a test memory item"
+        assert item.access_count == 0
 
-    def test_memory_metrics_calculations(self):
-        """Test memory metrics calculations."""
-        metrics = MemoryMetrics(
-            total_memory_mb=8000,
-            used_memory_mb=6000,
-            available_memory_mb=2000,
-            memory_usage_percent=75.0
+    def test_memory_item_access_tracking(self):
+        """Test memory item access tracking."""
+        item = MemoryItem(
+            id="access-test",
+            user_id="user-123",
+            memory_type=MemoryType.CONVERSATION,
+            content="Test content"
         )
 
-        assert metrics.memory_usage_percent == 75.0
-        assert metrics.is_high_usage() is True
-        assert metrics.is_low_usage() is False
+        assert item.access_count == 0
 
-    def test_memory_pressure_detection(self):
-        """Test memory pressure detection."""
-        # High pressure
-        high_pressure = MemoryMetrics(
-            total_memory_mb=8000,
-            used_memory_mb=7200,  # 90% usage
-            available_memory_mb=800,
-            memory_usage_percent=90.0
+        item.record_access()
+        assert item.access_count == 1
+        assert item.last_accessed_at is not None
+
+    def test_memory_item_expiration(self):
+        """Test memory item expiration logic."""
+        expired_time = datetime.now(timezone.utc) - timedelta(hours=1)
+        expired_item = MemoryItem(
+            id="expired",
+            user_id="user-123",
+            memory_type=MemoryType.CONVERSATION,
+            content="Expired memory",
+            expires_at=expired_time
         )
-        assert high_pressure.get_pressure_level() == "critical"
+        assert expired_item.is_expired()
 
-        # Medium pressure
-        medium_pressure = MemoryMetrics(
-            total_memory_mb=8000,
-            used_memory_mb=5600,  # 70% usage
-            available_memory_mb=2400,
-            memory_usage_percent=70.0
-        )
-        assert medium_pressure.get_pressure_level() == "high"
-
-        # Normal pressure
-        normal_pressure = MemoryMetrics(
-            total_memory_mb=8000,
-            used_memory_mb=3200,  # 40% usage
-            available_memory_mb=4800,
-            memory_usage_percent=40.0
-        )
-        assert normal_pressure.get_pressure_level() == "normal"
-
-
-class TestMemoryAnalysis:
-    """Test cases for MemoryAnalysis entity."""
-
-    def test_memory_analysis_creation(self):
-        """Test basic MemoryAnalysis creation."""
-        analysis = MemoryAnalysis(
-            analysis_id="test-analysis-001",
-            service_name="test-service",
-            analysis_type="comprehensive",
-            time_window_minutes=60
+    def test_memory_item_serialization(self):
+        """Test memory item serialization."""
+        item = MemoryItem(
+            id="serialize-test",
+            user_id="user-456",
+            memory_type=MemoryType.CONTEXT,
+            content="Serialization test content"
         )
 
-        assert analysis.analysis_id == "test-analysis-001"
-        assert analysis.service_name == "test-service"
-        assert analysis.analysis_type == "comprehensive"
-        assert analysis.time_window_minutes == 60
-        assert isinstance(analysis.start_time, datetime)
-        assert analysis.status == "pending"
+        data = item.to_dict()
+        assert data["id"] == "serialize-test"
+        assert data["content"] == "Serialization test content"
 
-    def test_memory_analysis_with_metrics(self):
-        """Test MemoryAnalysis with metrics data."""
-        metrics = [
-            MemoryMetrics(total_memory_mb=8000, used_memory_mb=4000, available_memory_mb=4000, memory_usage_percent=50.0),
-            MemoryMetrics(total_memory_mb=8000, used_memory_mb=4800, available_memory_mb=3200, memory_usage_percent=60.0)
-        ]
 
-        analysis = MemoryAnalysis(
-            analysis_id="test-analysis-002",
-            service_name="test-service",
-            metrics_history=metrics
+class TestMemorySession:
+    """Test cases for MemorySession entity."""
+
+    def test_memory_session_creation(self):
+        """Test basic MemorySession creation."""
+        session = MemorySession(
+            id="session-123",
+            user_id="user-456",
+            context="Weather conversation"
         )
 
-        assert len(analysis.metrics_history) == 2
-        assert analysis.average_memory_usage() == 55.0  # (50 + 60) / 2
-        assert analysis.peak_memory_usage() == 60.0
+        assert session.id == "session-123"
+        assert session.user_id == "user-456"
+        assert session.context == "Weather conversation"
+        assert session.is_active is True
 
-    def test_memory_analysis_insights(self):
-        """Test memory analysis insights generation."""
-        # Create analysis with memory leak pattern
-        metrics = []
-        base_usage = 1000
-        for i in range(10):
-            # Simulate memory leak - gradual increase
-            usage = base_usage + (i * 50)  # 1000, 1050, 1100, ...
-            metrics.append(MemoryMetrics(
-                total_memory_mb=8000,
-                used_memory_mb=usage,
-                available_memory_mb=8000 - usage,
-                memory_usage_percent=(usage / 8000) * 100
-            ))
-
-        analysis = MemoryAnalysis(
-            analysis_id="leak-analysis",
-            service_name="test-service",
-            metrics_history=metrics
+    def test_memory_session_item_management(self):
+        """Test memory session item management."""
+        session = MemorySession(
+            id="item-mgmt",
+            user_id="user-123",
+            context="Item management test"
         )
 
-        insights = analysis.generate_insights()
-        assert "potential_memory_leak" in insights
-        assert insights["potential_memory_leak"] is True
+        session.add_memory_item("mem-1")
+        session.add_memory_item("mem-2")
 
-    def test_memory_analysis_trends(self):
-        """Test memory usage trend analysis."""
-        # Stable usage
-        stable_metrics = [
-            MemoryMetrics(total_memory_mb=8000, used_memory_mb=4000, available_memory_mb=4000, memory_usage_percent=50.0)
-            for _ in range(5)
-        ]
+        assert len(session.memory_items) == 2
+        assert "mem-1" in session.memory_items
 
-        stable_analysis = MemoryAnalysis(
-            analysis_id="stable-analysis",
-            service_name="test-service",
-            metrics_history=stable_metrics
+    def test_memory_session_state_transitions(self):
+        """Test memory session state transitions."""
+        session = MemorySession(
+            id="state-test",
+            user_id="user-123",
+            context="State transition test"
         )
 
-        assert stable_analysis.get_usage_trend() == "stable"
+        assert session.is_active is True
 
-        # Increasing usage
-        increasing_metrics = [
-            MemoryMetrics(total_memory_mb=8000, used_memory_mb=4000 + i*200, available_memory_mb=4000 - i*200, memory_usage_percent=50.0 + i*2.5)
-            for i in range(5)
-        ]
-
-        increasing_analysis = MemoryAnalysis(
-            analysis_id="increasing-analysis",
-            service_name="test-service",
-            metrics_history=increasing_metrics
-        )
-
-        assert increasing_analysis.get_usage_trend() == "increasing"
+        session.end_session()
+        assert session.is_active is False
+        assert session.ended_at is not None
 
 
-class TestOptimizationRecommendation:
-    """Test cases for OptimizationRecommendation entity."""
+class TestMemoryType:
+    """Test cases for MemoryType enum."""
 
-    def test_optimization_recommendation_creation(self):
-        """Test basic OptimizationRecommendation creation."""
-        recommendation = OptimizationRecommendation(
-            recommendation_id="opt-rec-001",
-            service_name="test-service",
-            recommendation_type="memory_optimization",
-            priority="high",
-            description="Reduce memory usage by implementing object pooling"
-        )
+    def test_memory_type_enum_values(self):
+        """Test MemoryType enum values."""
+        assert MemoryType.CONVERSATION.value == "conversation"
+        assert MemoryType.FACT.value == "fact"
+        assert MemoryType.PREFERENCE.value == "preference"
+        assert MemoryType.CONTEXT.value == "context"
+        assert MemoryType.SESSION.value == "session"
 
-        assert recommendation.recommendation_id == "opt-rec-001"
-        assert recommendation.service_name == "test-service"
-        assert recommendation.recommendation_type == "memory_optimization"
-        assert recommendation.priority == "high"
-        assert recommendation.status == "pending"
-
-    def test_recommendation_with_metrics(self):
-        """Test recommendation with expected impact metrics."""
-        recommendation = OptimizationRecommendation(
-            recommendation_id="opt-rec-002",
-            service_name="test-service",
-            recommendation_type="garbage_collection",
-            expected_memory_savings_mb=500,
-            expected_performance_improvement_percent=15.0,
-            implementation_effort_hours=4
-        )
-
-        assert recommendation.expected_memory_savings_mb == 500
-        assert recommendation.expected_performance_improvement_percent == 15.0
-        assert recommendation.implementation_effort_hours == 4
-
-    def test_recommendation_lifecycle(self):
-        """Test recommendation status lifecycle."""
-        recommendation = OptimizationRecommendation(
-            recommendation_id="lifecycle-test",
-            service_name="test-service",
-            recommendation_type="caching"
-        )
-
-        # Initial state
-        assert recommendation.status == "pending"
-        assert recommendation.implemented_at is None
-
-        # Mark as implemented
-        recommendation.mark_implemented()
-        assert recommendation.status == "implemented"
-        assert recommendation.implemented_at is not None
-
-        # Mark as evaluated
-        recommendation.mark_evaluated(actual_savings_mb=300, success=True)
-        assert recommendation.status == "evaluated"
-        assert recommendation.actual_memory_savings_mb == 300
-        assert recommendation.success is True
-
-    def test_recommendation_priority_scoring(self):
-        """Test recommendation priority scoring."""
-        high_priority = OptimizationRecommendation(
-            recommendation_id="high-pri",
-            service_name="test-service",
-            priority="high",
-            expected_memory_savings_mb=1000,
-            implementation_effort_hours=2
-        )
-
-        medium_priority = OptimizationRecommendation(
-            recommendation_id="med-pri",
-            service_name="test-service",
-            priority="medium",
-            expected_memory_savings_mb=500,
-            implementation_effort_hours=8
-        )
-
-        # High priority should have higher impact score
-        assert high_priority.get_impact_score() > medium_priority.get_impact_score()
-
-    def test_recommendation_cost_benefit_analysis(self):
-        """Test cost-benefit analysis for recommendations."""
-        recommendation = OptimizationRecommendation(
-            recommendation_id="cost-benefit-test",
-            service_name="test-service",
-            expected_memory_savings_mb=1000,
-            expected_performance_improvement_percent=20.0,
-            implementation_effort_hours=8
-        )
-
-        # Assuming some cost per hour, calculate ROI
-        hourly_cost = 50  # $50/hour
-        implementation_cost = recommendation.implementation_effort_hours * hourly_cost
-
-        # Memory savings over a year (rough estimate)
-        annual_memory_cost_savings = recommendation.expected_memory_savings_mb * 0.01  # $0.01 per MB per year
-
-        assert implementation_cost > 0
-        assert annual_memory_cost_savings > 0
+    def test_memory_type_from_string(self):
+        """Test creating MemoryType from string."""
+        assert MemoryType("conversation") == MemoryType.CONVERSATION
+        assert MemoryType("fact") == MemoryType.FACT

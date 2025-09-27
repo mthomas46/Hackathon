@@ -22,6 +22,7 @@ import os
 from fastapi import FastAPI
 
 from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities.resource_monitor import monitor_resources
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency

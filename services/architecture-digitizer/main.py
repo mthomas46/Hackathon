@@ -54,6 +54,12 @@ except ImportError:
 
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.normalizers import get_file_normalizer, get_normalizer
+# Import presentation layer models
+from .presentation.api import APIResponse, ErrorResponse, HealthResponse
+
+# Import infrastructure layer
+from .infrastructure import register_lifecycle_events
+
 try:
     from .modules.models import (
         FileNormalizeResponse,
@@ -147,65 +153,9 @@ async def store_architecture_in_docstore(
 
 
 # ============================================================================
-# STANDARD API RESPONSE MODELS - Consistent error handling
+# STANDARD API RESPONSE MODELS - Moved to presentation layer
 # ============================================================================
-
-
-class APIResponse(BaseModel):
-    """Standard API response wrapper for consistent formatting."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    success: bool = Field(..., description="Whether the operation was successful")
-    message: str = Field(..., description="Human-readable response message")
-    data: Optional[Any] = Field(None, description="Response data payload")
-    request_id: Optional[str] = Field(
-        None, description="Unique request identifier for tracing"
-    )
-    timestamp: Optional[str] = Field(
-        None, description="Response timestamp in ISO 8601 format"
-    )
-    processing_time_ms: Optional[float] = Field(
-        None, description="Processing time in milliseconds"
-    )
-
-
-class ErrorResponse(BaseModel):
-    """Standard error response for consistent error formatting."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    success: bool = Field(default=False, description="Always false for error responses")
-    error: Dict[str, Any] = Field(..., description="Error details")
-    request_id: Optional[str] = Field(
-        None, description="Unique request identifier for tracing"
-    )
-    timestamp: str = Field(..., description="Error timestamp in ISO 8601 format")
-
-
-class HealthResponse(BaseModel):
-    """Health check response model for architecture digitizer service."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    status: str = Field(..., description="Service health status")
-    service: str = Field(..., description="Service name")
-    version: str = Field(..., description="Service version")
-    uptime_seconds: Optional[float] = Field(
-        None, description="Service uptime in seconds"
-    )
-    last_health_check: Optional[str] = Field(
-        None, description="Last health check timestamp"
-    )
-    supported_systems_count: int = Field(
-        ..., description="Number of supported diagram systems"
-    )
-    file_formats_supported: int = Field(
-        ..., description="Number of supported file formats"
-    )
-    normalization_engine_active: bool = Field(
-        ..., description="Whether normalization engine is active"
-    )
+# Models are now imported from presentation.api for better separation of concerns
 
 
 # Load standardized configuration
@@ -416,79 +366,14 @@ app = FastAPI(
 )
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize services on startup."""
-    global logger_client
-
-    # Set startup time for uptime calculation
-    import time
-
-    app._startup_time = time.time()
-
-    try:
-        # Use a fallback service name if ARCHITECTURE_DIGITIZER doesn't exist in ServiceNames
-        getattr(ServiceNames, "ARCHITECTURE_DIGITIZER", SERVICE_NAME)
-        # logger_client = await get_log_collector_client(service_name)
-        if logger_client:
-            await logger_client.log_business_event(
-                "architecture_digitizer_startup",
-                {
-                    "version": SERVICE_VERSION,
-                    "capabilities": [
-                        "diagram_normalization",
-                        "multi_format_support",
-                        "external_api_integration",
-                        "file_upload_processing",
-                    ],
-                    "integrations": [
-                        "miro",
-                        "figjam",
-                        "lucid",
-                        "confluence",
-                        "log_collector",
-                    ],
-                    "supported_formats": [
-                        "miro",
-                        "figjam",
-                        "lucid",
-                        "confluence",
-                        "json",
-                        "xml",
-                    ],
-                    "features": [
-                        "authentication_handling",
-                        "error_recovery",
-                        "structured_output",
-                        "component_extraction",
-                    ],
-                },
-            )
-            await logger_client.log_info(
-                "Architecture Digitizer service started",
-                {
-                    "diagram_sources": ["miro", "figjam", "lucid", "confluence"],
-                    "output_formats": ["json", "xml"],
-                    "file_upload_enabled": True,
-                    "api_integration_ready": True,
-                },
-            )
-    except Exception as e:
-        print(f"Failed to initialize log collector client: {e}")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown."""
-    if logger_client:
-        try:
-            await logger_client.log_info("Architecture Digitizer service shutting down")
-        except Exception:
-            pass
+# Event handlers moved to infrastructure layer for better separation of concerns
 
 
 # Use common middleware setup and error handlers
 setup_common_middleware(app, config.service_name)
+
+# Register lifecycle event handlers
+register_lifecycle_events(app)
 
 # ============================================================================
 # CUSTOM HEALTH ENDPOINT - Override shared health with detailed architecture processing

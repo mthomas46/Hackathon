@@ -14,28 +14,99 @@ from .models import (
 
 
 class BaseNormalizer(ABC):
-    """Base class for architecture diagram normalizers."""
+    """Base class for architecture diagram normalizers.
+
+    This abstract base class defines the interface for normalizing architectural
+    diagrams from various whiteboard and diagramming tools into a standardized
+    format. Each concrete normalizer handles the specific API and data format
+    of a particular platform.
+
+    The normalization process involves:
+    1. Authentication with the external platform API
+    2. Fetching diagram/board data
+    3. Parsing platform-specific data structures
+    4. Converting to standardized ArchitectureComponent and ArchitectureConnection objects
+    5. Returning NormalizedArchitectureData with complete diagram representation
+    """
 
     @abstractmethod
     async def normalize(self, board_id: str, token: str) -> NormalizedArchitectureData:
-        """Normalize diagram data into standard format."""
+        """Normalize diagram data into standard format.
+
+        Fetches diagram data from the external platform, parses it according
+        to platform-specific schemas, and converts it to the standardized
+        NormalizedArchitectureData format.
+
+        Args:
+            board_id: Unique identifier of the diagram/board to normalize
+            token: Authentication token for API access
+
+        Returns:
+            NormalizedArchitectureData containing standardized components and connections
+
+        Raises:
+            Various platform-specific exceptions for authentication, network, or parsing errors
+        """
+        pass
 
     @classmethod
     def get_description(cls) -> str:
-        """Get description of this normalizer."""
+        """Get description of this normalizer.
+
+        Returns a human-readable description of what this normalizer does
+        and what platforms/systems it supports.
+
+        Returns:
+            String description of the normalizer's capabilities
+        """
         return "Base architecture diagram normalizer"
 
     @classmethod
     def get_auth_type(cls) -> str:
-        """Get authentication type required."""
+        """Get authentication type required.
+
+        Specifies what type of authentication this normalizer requires
+        (Bearer token, API key, OAuth, etc.).
+
+        Returns:
+            String describing the required authentication method
+        """
         return "Bearer token"
 
 
 class MiroNormalizer(BaseNormalizer):
-    """Normalizer for Miro whiteboard diagrams."""
+    """Normalizer for Miro whiteboard diagrams.
+
+    Handles the normalization of architectural diagrams created in Miro,
+    a popular online collaborative whiteboard platform. This normalizer
+    extracts components (stickies, shapes, text) and connections from
+    Miro boards and converts them to standardized architecture representations.
+
+    Supported Miro elements:
+    - Sticky notes (converted to services/components)
+    - Shapes and connectors (converted to architecture connections)
+    - Text elements (used for component metadata)
+    - Frames and groups (hierarchical organization)
+    """
 
     async def normalize(self, board_id: str, token: str) -> NormalizedArchitectureData:
-        """Fetch and normalize Miro board data."""
+        """Fetch and normalize Miro board data.
+
+        Connects to the Miro API to retrieve board content, parses the
+        Miro-specific JSON structure, and converts elements to standardized
+        architecture components and connections.
+
+        Args:
+            board_id: Miro board identifier
+            token: Miro API access token
+
+        Returns:
+            NormalizedArchitectureData with extracted components and connections
+
+        Raises:
+            HTTPException: For API authentication or network errors
+            ValueError: For invalid board data or parsing errors
+        """
         async with httpx.AsyncClient(timeout=30.0) as client:
             url = f"https://api.miro.com/v2/boards/{board_id}/items"
             headers = {"Authorization": f"Bearer {token}"}
@@ -142,10 +213,38 @@ class MiroNormalizer(BaseNormalizer):
 
 
 class FigJamNormalizer(BaseNormalizer):
-    """Normalizer for Figma FigJam diagrams."""
+    """Normalizer for Figma FigJam diagrams.
+
+    Handles the normalization of architectural diagrams created in Figma FigJam,
+    a collaborative whiteboard tool within the Figma design platform. This normalizer
+    extracts components (frames, shapes, sticky notes) and connections from
+    FigJam files and converts them to standardized architecture representations.
+
+    Supported FigJam elements:
+    - Frames and groups (converted to architecture components)
+    - Shapes and connectors (converted to architecture connections)
+    - Sticky notes (converted to service components)
+    - Text elements (used for component metadata and descriptions)
+    """
 
     async def normalize(self, board_id: str, token: str) -> NormalizedArchitectureData:
-        """Fetch and normalize FigJam file data."""
+        """Fetch and normalize FigJam file data.
+
+        Connects to the Figma API to retrieve FigJam file content, parses the
+        Figma-specific JSON structure, and converts design elements to standardized
+        architecture components and connections.
+
+        Args:
+            board_id: Figma file identifier
+            token: Figma API access token
+
+        Returns:
+            NormalizedArchitectureData with extracted components and connections
+
+        Raises:
+            HTTPException: For API authentication or network errors
+            ValueError: For invalid file data or parsing errors
+        """
         async with httpx.AsyncClient(timeout=30.0) as client:
             url = f"https://api.figma.com/v1/files/{board_id}"
             headers = {"X-FIGMA-TOKEN": token}
@@ -779,7 +878,23 @@ SUPPORTED_FILE_SYSTEMS = {
 
 
 def get_normalizer(system: str) -> Optional[BaseNormalizer]:
-    """Get the appropriate normalizer for a system."""
+    """Get the appropriate normalizer for a system.
+
+    Factory function that returns an instantiated normalizer for the specified
+    architectural diagramming system. Supports dynamic loading of normalizers
+    based on system names.
+
+    Args:
+        system: Name of the architectural system (miro, figjam, lucid, confluence)
+
+    Returns:
+        Instantiated normalizer instance for the system, or None if not supported
+
+    Example:
+        normalizer = get_normalizer("miro")
+        if normalizer:
+            data = await normalizer.normalize(board_id, token)
+    """
     normalizer_class = SUPPORTED_SYSTEMS.get(system.lower())
     if normalizer_class:
         return normalizer_class()
@@ -787,7 +902,23 @@ def get_normalizer(system: str) -> Optional[BaseNormalizer]:
 
 
 def get_file_normalizer(system: str) -> Optional[BaseFileNormalizer]:
-    """Get the appropriate file normalizer for a system."""
+    """Get the appropriate file normalizer for a system.
+
+    Factory function that returns an instantiated file normalizer for the specified
+    architectural diagramming system. Used when processing uploaded files instead
+    of fetching from external APIs.
+
+    Args:
+        system: Name of the architectural system (miro, figjam, lucid, confluence)
+
+    Returns:
+        Instantiated file normalizer instance for the system, or None if not supported
+
+    Example:
+        normalizer = get_file_normalizer("miro")
+        if normalizer:
+            data = normalizer.normalize_from_file(content, filename)
+    """
     normalizer_class = SUPPORTED_FILE_SYSTEMS.get(system.lower())
     if normalizer_class:
         return normalizer_class()

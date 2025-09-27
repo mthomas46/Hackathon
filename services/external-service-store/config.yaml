@@ -1,0 +1,64 @@
+service:
+  name: "external-service-store"
+  display_name: "External Service Store"
+  description: "Lightweight SQLite-based service registry and metadata store"
+  version: "1.0.0"
+  port: 8010
+
+database:
+  path: "data/external_service_store.db"
+  max_connections: 10
+  enable_foreign_keys: true
+
+features:
+  auto_discovery: true
+  health_checks: true
+  dependency_tracking: true
+  activity_monitoring: true
+  relationship_validation: true
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+api:
+  cors_origins: ["*"]
+  docs_url: "/docs"
+  redoc_url: "/redoc"
+  openapi_url: "/openapi.json"
+
+service_types:
+  - api
+  - database
+  - message_queue
+  - cache
+  - storage
+  - authentication
+  - monitoring
+  - logging
+  - notification
+  - analytics
+  - integration
+  - other
+
+relationship_types:
+  services:
+    - maintainer
+    - contributor
+    - user
+  documents:
+    - reference
+    - implements
+    - documents
+  dependencies:
+    - runtime
+    - build
+    - optional
+
+document_types:
+  - confluence
+  - jira
+  - github_pr
+  - readme
+  - documentation
+  - specification

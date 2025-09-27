@@ -171,6 +171,17 @@ class AuditOrchestrator:
 
     def _check_if_service(self, service_path: Path) -> bool:
         """Check if a directory contains a valid service."""
+        # Exclude known infrastructure/configuration directories
+        infrastructure_dirs = {
+            "ollama",  # Just Docker config, not a service
+            "redis",   # Just Redis config, not a service
+            "data-services-dashboard",  # Minimal placeholder
+            "_template",  # Template directory
+        }
+
+        if service_path.name in infrastructure_dirs:
+            return False
+
         # Enhanced service detection
         service_indicators = [
             "main.py", "app.py", "__main__.py",  # Entry points

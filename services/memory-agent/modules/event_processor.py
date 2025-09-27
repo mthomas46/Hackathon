@@ -21,16 +21,33 @@ from .shared_utils import (
 
 
 class EventProcessor:
-    """Handles Redis event subscription and processing."""
+    """Handles Redis event subscription and processing for memory context collection.
+
+    This class manages Redis pub/sub subscriptions to collect memory context
+    from various service events. It maintains an endpoint index for tracking
+    API patterns and processes incoming events to extract relevant memory data.
+
+    The processor supports graceful degradation when Redis is unavailable and
+    provides comprehensive error handling for event processing operations.
+    """
 
     def __init__(self):
+        """Initialize the event processor with empty state."""
         self.endpoint_index: Dict[str, int] = {}
         self.redis_url = None
         self.client = None
         self.pubsub = None
 
     async def initialize_redis(self):
-        """Initialize Redis connection."""
+        """Initialize Redis connection for event processing.
+
+        Establishes connection to Redis server and sets up pub/sub client.
+        Handles connection failures gracefully by returning False.
+
+        Returns:
+            bool: True if Redis connection was successfully established,
+                  False if connection failed or Redis is not available
+        """
         if not aioredis:
             return False
 
@@ -45,7 +62,16 @@ class EventProcessor:
             return False
 
     async def subscribe_to_channels(self):
-        """Subscribe to Redis channels for memory context collection."""
+        """Subscribe to Redis channels for memory context collection.
+
+        Sets up subscriptions to relevant Redis channels that publish events
+        containing memory context data. Currently subscribes to service
+        operation channels for API endpoint tracking and memory pattern analysis.
+
+        Note:
+            Requires Redis connection to be initialized before calling this method.
+            No-op if Redis pub/sub is not available.
+        """
         if not self.pubsub:
             return
 
@@ -60,7 +86,21 @@ class EventProcessor:
         )
 
     async def process_events(self):
-        """Process incoming Redis events."""
+        """Process incoming Redis events and extract memory context.
+
+        Continuously listens for events on subscribed Redis channels and processes
+        them to extract relevant memory context. Updates endpoint index with API
+        patterns and creates memory items from event data.
+
+        This method runs indefinitely until cancelled or Redis connection is lost.
+        It handles various event types including ingestion requests, document
+        processing results, and API findings.
+
+        Note:
+            This is a long-running method that should be executed in a background
+            task or separate thread. It will automatically handle reconnection
+            and error recovery scenarios.
+        """
         if not self.pubsub:
             return
 

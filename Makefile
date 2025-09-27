@@ -8,7 +8,7 @@ YELLOW := \033[1;33m
 BLUE := \033[0;34m
 NC := \033[0m # No Color
 
-.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status dashboard dashboard-start dashboard-stop dashboard-logs dashboard-health dashboard-test audit audit-all audit-services audit-ci audit-quick audit-comprehensive audit-parallel audit-report audit-clean audit-setup audit-validate audit-benchmark audit-trend audit-config audit-debug audit-docker audit-pre-commit audit-quality-gate audit-enforce
+.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status dashboard dashboard-start dashboard-stop dashboard-logs dashboard-health dashboard-test prompt-store-run prompt-store-test prompt-store-docker prompt-store-stop prompt-store-logs prompt-store-health llm-gateway-run llm-gateway-test llm-gateway-docker llm-gateway-stop llm-gateway-logs llm-gateway-health code-analyzer-run code-analyzer-test code-analyzer-docker code-analyzer-stop code-analyzer-logs code-analyzer-health orchestrator-run orchestrator-test orchestrator-docker orchestrator-stop orchestrator-logs orchestrator-health user-store-run user-store-test user-store-docker user-store-stop user-store-logs user-store-health external-service-store-run external-service-store-test external-service-store-docker external-service-store-stop external-service-store-logs external-service-store-health audit audit-all audit-services audit-ci audit-quick audit-comprehensive audit-parallel audit-report audit-clean audit-setup audit-validate audit-benchmark audit-trend audit-config audit-debug audit-docker audit-pre-commit audit-quality-gate audit-enforce
 
 help: ## Show this help message
 	@echo "🚀 Hackathon Ecosystem Commands"
@@ -410,6 +410,222 @@ dashboard-test: ## Run unified API dashboard tests
 	@echo "$(BLUE)🧪 Running Unified API Dashboard Tests...$(NC)"
 	cd services/unified-api-dashboard && python -m pytest tests/ -v --tb=short
 	@echo "$(GREEN)✅ Dashboard tests completed$(NC)"
+
+# ========================================
+# 📝 PROMPT STORE SERVICE MANAGEMENT
+# ========================================
+
+prompt-store-run: ## Start prompt store service
+	@echo "$(BLUE)🚀 Starting Prompt Store Service...$(NC)"
+	cd services/prompt_store && python main.py
+
+prompt-store-test: ## Run prompt store tests
+	@echo "$(BLUE)🧪 Running Prompt Store Tests...$(NC)"
+	cd services/prompt_store && python -m pytest tests/ -v --tb=short
+	@echo "$(GREEN)✅ Prompt store tests completed$(NC)"
+
+prompt-store-docker: ## Start prompt store service in Docker
+	@echo "$(BLUE)🐳 Starting Prompt Store Service in Docker...$(NC)"
+	docker-compose --profile prompt-store up -d
+	@echo "$(GREEN)✅ Prompt store service started in Docker$(NC)"
+	@echo "$(YELLOW)📊 Service available at: http://localhost:5110$(NC)"
+
+prompt-store-stop: ## Stop prompt store service
+	@echo "$(BLUE)🛑 Stopping Prompt Store Service...$(NC)"
+	docker-compose --profile prompt-store down
+	@echo "$(GREEN)✅ Prompt store service stopped$(NC)"
+
+prompt-store-logs: ## View prompt store service logs
+	@echo "$(BLUE)📋 Prompt Store Service Logs$(NC)"
+	docker-compose --profile prompt-store logs -f --tail=100
+
+prompt-store-health: ## Check prompt store service health
+	@echo "$(BLUE)🏥 Prompt Store Service Health Check$(NC)"
+	@echo "$(YELLOW)Container Status:$(NC)"
+	@docker-compose --profile prompt-store ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+	@echo ""
+	@echo "$(YELLOW)Health Check:$(NC)"
+	@curl -s http://localhost:5110/health | jq . 2>/dev/null || curl -s http://localhost:5110/health || echo "❌ Service not responding"
+
+# ========================================
+# 🤖 LLM GATEWAY SERVICE MANAGEMENT
+# ========================================
+
+llm-gateway-run: ## Start LLM gateway service
+	@echo "$(BLUE)🚀 Starting LLM Gateway Service...$(NC)"
+	cd services/llm-gateway && python main.py
+
+llm-gateway-test: ## Run LLM gateway tests
+	@echo "$(BLUE)🧪 Running LLM Gateway Tests...$(NC)"
+	cd services/llm-gateway && python -m pytest tests/ -v --tb=short
+	@echo "$(GREEN)✅ LLM gateway tests completed$(NC)"
+
+llm-gateway-docker: ## Start LLM gateway service in Docker
+	@echo "$(BLUE)🐳 Starting LLM Gateway Service in Docker...$(NC)"
+	docker-compose --profile llm-gateway up -d
+	@echo "$(GREEN)✅ LLM gateway service started in Docker$(NC)"
+	@echo "$(YELLOW)📊 Service available at: http://localhost:5055$(NC)"
+
+llm-gateway-stop: ## Stop LLM gateway service
+	@echo "$(BLUE)🛑 Stopping LLM Gateway Service...$(NC)"
+	docker-compose --profile llm-gateway down
+	@echo "$(GREEN)✅ LLM gateway service stopped$(NC)"
+
+llm-gateway-logs: ## View LLM gateway service logs
+	@echo "$(BLUE)📋 LLM Gateway Service Logs$(NC)"
+	docker-compose --profile llm-gateway logs -f --tail=100
+
+llm-gateway-health: ## Check LLM gateway service health
+	@echo "$(BLUE)🏥 LLM Gateway Service Health Check$(NC)"
+	@echo "$(YELLOW)Container Status:$(NC)"
+	@docker-compose --profile llm-gateway ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+	@echo ""
+	@echo "$(YELLOW)Health Check:$(NC)"
+	@curl -s http://localhost:5055/health | jq . 2>/dev/null || curl -s http://localhost:5055/health || echo "❌ Service not responding"
+
+# ========================================
+# 🔍 CODE ANALYZER SERVICE MANAGEMENT
+# ========================================
+
+code-analyzer-run: ## Start code analyzer service
+	@echo "$(BLUE)🚀 Starting Code Analyzer Service...$(NC)"
+	cd services/code-analyzer && python main.py
+
+code-analyzer-test: ## Run code analyzer tests
+	@echo "$(BLUE)🧪 Running Code Analyzer Tests...$(NC)"
+	cd services/code-analyzer && python -m pytest tests/ -v --tb=short
+	@echo "$(GREEN)✅ Code analyzer tests completed$(NC)"
+
+code-analyzer-docker: ## Start code analyzer service in Docker
+	@echo "$(BLUE)🐳 Starting Code Analyzer Service in Docker...$(NC)"
+	docker-compose --profile code-analyzer up -d
+	@echo "$(GREEN)✅ Code analyzer service started in Docker$(NC)"
+	@echo "$(YELLOW)📊 Service available at: http://localhost:5025$(NC)"
+
+code-analyzer-stop: ## Stop code analyzer service
+	@echo "$(BLUE)🛑 Stopping Code Analyzer Service...$(NC)"
+	docker-compose --profile code-analyzer down
+	@echo "$(GREEN)✅ Code analyzer service stopped$(NC)"
+
+code-analyzer-logs: ## View code analyzer service logs
+	@echo "$(BLUE)📋 Code Analyzer Service Logs$(NC)"
+	docker-compose --profile code-analyzer logs -f --tail=100
+
+code-analyzer-health: ## Check code analyzer service health
+	@echo "$(BLUE)🏥 Code Analyzer Service Health Check$(NC)"
+	@echo "$(YELLOW)Container Status:$(NC)"
+	@docker-compose --profile code-analyzer ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+	@echo ""
+	@echo "$(YELLOW)Health Check:$(NC)"
+	@curl -s http://localhost:5025/health | jq . 2>/dev/null || curl -s http://localhost:5025/health || echo "❌ Service not responding"
+
+# ========================================
+# 🎼 ORCHESTRATOR SERVICE MANAGEMENT
+# ========================================
+
+orchestrator-run: ## Start orchestrator service
+	@echo "$(BLUE)🚀 Starting Orchestrator Service...$(NC)"
+	cd services/orchestrator && python main.py
+
+orchestrator-test: ## Run orchestrator tests
+	@echo "$(BLUE)🧪 Running Orchestrator Tests...$(NC)"
+	cd services/orchestrator && python -m pytest tests/ -v --tb=short
+	@echo "$(GREEN)✅ Orchestrator tests completed$(NC)"
+
+orchestrator-docker: ## Start orchestrator service in Docker
+	@echo "$(BLUE)🐳 Starting Orchestrator Service in Docker...$(NC)"
+	docker-compose --profile orchestrator up -d
+	@echo "$(GREEN)✅ Orchestrator service started in Docker$(NC)"
+	@echo "$(YELLOW)📊 Service available at: http://localhost:5099$(NC)"
+
+orchestrator-stop: ## Stop orchestrator service
+	@echo "$(BLUE)🛑 Stopping Orchestrator Service...$(NC)"
+	docker-compose --profile orchestrator down
+	@echo "$(GREEN)✅ Orchestrator service stopped$(NC)"
+
+orchestrator-logs: ## View orchestrator service logs
+	@echo "$(BLUE)📋 Orchestrator Service Logs$(NC)"
+	docker-compose --profile orchestrator logs -f --tail=100
+
+orchestrator-health: ## Check orchestrator service health
+	@echo "$(BLUE)🏥 Orchestrator Service Health Check$(NC)"
+	@echo "$(YELLOW)Container Status:$(NC)"
+	@docker-compose --profile orchestrator ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+	@echo ""
+	@echo "$(YELLOW)Health Check:$(NC)"
+	@curl -s http://localhost:5099/health | jq . 2>/dev/null || curl -s http://localhost:5099/health || echo "❌ Service not responding"
+
+# ========================================
+# 👥 USER STORE SERVICE MANAGEMENT
+# ========================================
+
+user-store-run: ## Start user store service
+	@echo "$(BLUE)🚀 Starting User Store Service...$(NC)"
+	cd services/user-store && python main.py
+
+user-store-test: ## Run user store tests
+	@echo "$(BLUE)🧪 Running User Store Tests...$(NC)"
+	cd services/user-store && python -m pytest tests/ -v --tb=short
+	@echo "$(GREEN)✅ User store tests completed$(NC)"
+
+user-store-docker: ## Start user store service in Docker
+	@echo "$(BLUE)🐳 Starting User Store Service in Docker...$(NC)"
+	docker-compose --profile user-store up -d
+	@echo "$(GREEN)✅ User store service started in Docker$(NC)"
+	@echo "$(YELLOW)📊 Service available at: http://localhost:8001$(NC)"
+
+user-store-stop: ## Stop user store service
+	@echo "$(BLUE)🛑 Stopping User Store Service...$(NC)"
+	docker-compose --profile user-store down
+	@echo "$(GREEN)✅ User store service stopped$(NC)"
+
+user-store-logs: ## View user store service logs
+	@echo "$(BLUE)📋 User Store Service Logs$(NC)"
+	docker-compose --profile user-store logs -f --tail=100
+
+user-store-health: ## Check user store service health
+	@echo "$(BLUE)🏥 User Store Service Health Check$(NC)"
+	@echo "$(YELLOW)Container Status:$(NC)"
+	@docker-compose --profile user-store ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+	@echo ""
+	@echo "$(YELLOW)Health Check:$(NC)"
+	@curl -s http://localhost:8001/health | jq . 2>/dev/null || curl -s http://localhost:8001/health || echo "❌ Service not responding"
+
+# ========================================
+# 🌐 EXTERNAL SERVICE STORE MANAGEMENT
+# ========================================
+
+external-service-store-run: ## Start external service store
+	@echo "$(BLUE)🚀 Starting External Service Store...$(NC)"
+	cd services/external-service-store && python main.py
+
+external-service-store-test: ## Run external service store tests
+	@echo "$(BLUE)🧪 Running External Service Store Tests...$(NC)"
+	cd services/external-service-store && python -m pytest tests/ -v --tb=short
+	@echo "$(GREEN)✅ External service store tests completed$(NC)"
+
+external-service-store-docker: ## Start external service store in Docker
+	@echo "$(BLUE)🐳 Starting External Service Store in Docker...$(NC)"
+	docker-compose --profile external-service-store up -d
+	@echo "$(GREEN)✅ External service store started in Docker$(NC)"
+	@echo "$(YELLOW)📊 Service available at: http://localhost:8010$(NC)"
+
+external-service-store-stop: ## Stop external service store
+	@echo "$(BLUE)🛑 Stopping External Service Store...$(NC)"
+	docker-compose --profile external-service-store down
+	@echo "$(GREEN)✅ External service store stopped$(NC)"
+
+external-service-store-logs: ## View external service store logs
+	@echo "$(BLUE)📋 External Service Store Logs$(NC)"
+	docker-compose --profile external-service-store logs -f --tail=100
+
+external-service-store-health: ## Check external service store health
+	@echo "$(BLUE)🏥 External Service Store Health Check$(NC)"
+	@echo "$(YELLOW)Container Status:$(NC)"
+	@docker-compose --profile external-service-store ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+	@echo ""
+	@echo "$(YELLOW)Health Check:$(NC)"
+	@curl -s http://localhost:8010/health | jq . 2>/dev/null || curl -s http://localhost:8010/health || echo "❌ Service not responding"
 
 # ========================================
 # 🔍 AUDIT FRAMEWORK INTEGRATION
