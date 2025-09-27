@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 
 from services.orchestrator.main import container
-from tests.unit.orchestrator.conftest import DDDTestHelper, TestDataFactory
+# Removed old imports - using orchestrator conftest fixtures instead
 
 
 class TestBoundedContextIsolation:

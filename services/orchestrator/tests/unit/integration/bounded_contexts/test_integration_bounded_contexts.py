@@ -9,7 +9,7 @@ import pytest
 from unittest.mock import Mock, patch, AsyncMock
 
 from services.orchestrator.main import container
-from tests.unit.orchestrator.test_base import DDDTestHelper
+# Removed old import - using orchestrator conftest fixtures instead
 
 
 class TestWorkflowHealthIntegration:

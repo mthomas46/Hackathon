@@ -17,7 +17,7 @@ from services.orchestrator.application.service_registry.queries import (
 from services.orchestrator.application.service_registry.use_cases import (
     RegisterServiceUseCase, UnregisterServiceUseCase, GetServiceUseCase, ListServicesUseCase
 )
-from tests.unit.orchestrator.test_base import BaseApplicationTest, ServiceRegistryTestMixin
+# Removed old imports - using orchestrator conftest fixtures instead
 
 
 class TestRegisterServiceUseCase(BaseApplicationTest, ServiceRegistryTestMixin):
