@@ -11,7 +11,7 @@ from httpx import AsyncClient
 from unittest.mock import Mock, patch
 
 from services.orchestrator.main import app
-from tests.unit.orchestrator.test_base import BaseAPITest
+# Removed old import - using FastAPI TestClient instead
 
 
 @pytest.mark.asyncio
