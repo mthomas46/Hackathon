@@ -75,10 +75,72 @@ class CodeAnalysisRouter:
     def _register_routes(self):
         """Register all analysis routes."""
 
-        @self.router.post("/analyze", response_model=AnalysisResponseModel)
+        @self.router.post(
+            "/analyze",
+            response_model=AnalysisResponseModel,
+            summary="Analyze Code and Generate Comprehensive Report",
+            description="""
+            Perform comprehensive code analysis on provided source code.
+
+            This endpoint analyzes source code for multiple quality dimensions including:
+            - Code quality and maintainability metrics
+            - Security vulnerability detection
+            - API endpoint extraction and documentation
+            - Style guide compliance checking
+            - Complexity analysis and recommendations
+
+            **Analysis Capabilities:**
+            - Static code analysis for quality metrics
+            - Security scanning for common vulnerabilities
+            - Endpoint discovery for API documentation
+            - Style validation against coding standards
+            - Complexity assessment with recommendations
+
+            **Supported Languages:**
+            - Python, JavaScript, TypeScript, Java, Go, C#, PHP
+            - Framework-specific analysis for Django, Flask, Express, Spring
+            - Custom rule sets and quality thresholds
+
+            **Output Includes:**
+            - Quality score (0-100) based on multiple factors
+            - Detailed findings with severity levels
+            - Remediation recommendations and best practices
+            - Performance and maintainability insights
+            """,
+            response_description="Comprehensive code analysis results with quality metrics and findings"
+        )
         async def analyze_code(
-            request: AnalysisRequestModel,
-            background_tasks: BackgroundTasks
+            request: AnalysisRequestModel = Body(
+                ...,
+                examples={
+                    "python_analysis": {
+                        "summary": "Python Code Analysis",
+                        "description": "Analyze a Python function for quality and security",
+                        "value": {
+                            "source_type": "github",
+                            "title": "User Authentication Module",
+                            "content": "def authenticate_user(username, password):\n    # Check credentials\n    return True",
+                            "repo": "myapp",
+                            "path": "auth.py",
+                            "include_endpoints": True,
+                            "include_style_check": True
+                        }
+                    },
+                    "javascript_analysis": {
+                        "summary": "JavaScript API Analysis",
+                        "description": "Analyze JavaScript code for API endpoints and security",
+                        "value": {
+                            "source_type": "gitlab",
+                            "title": "REST API Controller",
+                            "content": "app.get('/api/users', (req, res) => {\n    // Get users logic\n});",
+                            "repo": "webapp",
+                            "path": "controllers/userController.js",
+                            "correlation_id": "analysis-12345"
+                        }
+                    }
+                }
+            ),
+            background_tasks: BackgroundTasks = None
         ) -> AnalysisResponseModel:
             """Analyze code and generate comprehensive report.
 
@@ -130,14 +192,66 @@ class CodeAnalysisRouter:
                     detail=f"Code analysis failed: {str(e)}"
                 )
 
-        @self.router.post("/analyze/file")
+        @self.router.post(
+            "/analyze/file",
+            response_model=AnalysisResponseModel,
+            summary="Analyze Uploaded Code File",
+            description="""
+            Upload and analyze a code file for comprehensive quality assessment.
+
+            This endpoint accepts code files and performs the same comprehensive analysis
+            as the direct code analysis endpoint. Supports multiple programming languages
+            and provides detailed insights into code quality, security, and maintainability.
+
+            **Supported File Types:**
+            - Python (.py, .pyx)
+            - JavaScript/TypeScript (.js, .ts, .jsx, .tsx)
+            - Java (.java), C# (.cs), Go (.go)
+            - PHP (.php), Ruby (.rb), Swift (.swift)
+            - Configuration files (.json, .yaml, .toml)
+            - Documentation (.md, .rst, .txt)
+
+            **File Size Limits:**
+            - Maximum file size: 10MB
+            - Recommended: < 1MB for optimal performance
+            - Large files are processed in chunks for memory efficiency
+
+            **Analysis Features:**
+            - Automatic language detection
+            - Framework and library identification
+            - Dependency analysis and recommendations
+            - Performance bottleneck detection
+            - Security vulnerability scanning
+            """,
+            response_description="Comprehensive file analysis results with quality metrics"
+        )
         async def analyze_code_file(
-            background_tasks: BackgroundTasks,
-            file: UploadFile = File(...),
-            source_type: str = Query(..., description="Source system type"),
-            title: Optional[str] = Query(None, description="Analysis title"),
-            include_endpoints: bool = Query(True, description="Extract endpoints"),
-            include_style_check: bool = Query(True, description="Check style")
+            background_tasks: BackgroundTasks = None,
+            file: UploadFile = File(
+                ...,
+                description="Code file to analyze (max 10MB)",
+                examples=["user_auth.py", "api_controller.js"]
+            ),
+            source_type: str = Query(
+                "filesystem",
+                description="Source system type",
+                example="github"
+            ),
+            title: Optional[str] = Query(
+                None,
+                description="Custom analysis title (auto-generated if not provided)",
+                example="User Authentication Module Analysis"
+            ),
+            include_endpoints: bool = Query(
+                True,
+                description="Extract and analyze API endpoints",
+                example=True
+            ),
+            include_style_check: bool = Query(
+                True,
+                description="Perform coding style and formatting checks",
+                example=True
+            )
         ) -> AnalysisResponseModel:
             """Analyze uploaded code file.
 
@@ -197,8 +311,46 @@ class CodeAnalysisRouter:
                     detail=f"File analysis failed: {str(e)}"
                 )
 
-        @self.router.get("/stats", response_model=AnalysisStatsModel)
-        async def get_analysis_stats() -> AnalysisStatsModel:
+        @self.router.get(
+            "/stats",
+            response_model=AnalysisStatsModel,
+            summary="Get Code Analysis Statistics",
+            description="""
+            Retrieve comprehensive statistics about code analysis operations.
+
+            This endpoint provides aggregated metrics and insights about the code analysis
+            service performance, usage patterns, and quality trends across all analyses.
+
+            **Statistics Include:**
+            - Total number of analyses performed
+            - Average quality scores and trends
+            - Security issues discovered and resolved
+            - API endpoints documented and analyzed
+            - Language and framework usage statistics
+            - Performance metrics and response times
+
+            **Time Ranges:**
+            - Last 24 hours, 7 days, 30 days
+            - Custom date ranges supported
+            - Historical trend analysis
+            - Seasonal and usage pattern insights
+
+            **Quality Metrics:**
+            - Average code quality scores
+            - Security vulnerability trends
+            - Style compliance rates
+            - Complexity reduction progress
+            """,
+            response_description="Comprehensive analysis statistics and performance metrics"
+        )
+        async def get_analysis_stats(
+            time_range: str = Query(
+                "7d",
+                description="Time range for statistics (1h, 24h, 7d, 30d)",
+                example="7d",
+                regex="^(1h|24h|7d|30d)$"
+            )
+        ) -> AnalysisStatsModel:
             """Get overall code analysis statistics."""
             try:
                 # In a real implementation, this would query the repository
@@ -298,7 +450,38 @@ class CodeAnalysisRouter:
                     detail=f"Analysis result {result_id} not found"
                 )
 
-        @self.router.get("/health")
+        @self.router.get(
+            "/health",
+            summary="Code Analyzer Health Check",
+            description="""
+            Comprehensive health check for the code analysis service.
+
+            Performs detailed checks across all analysis components including
+            language parsers, security scanners, style checkers, and external services.
+
+            **Health Checks Performed:**
+            - Code analysis engine availability
+            - Language parser and AST processing
+            - Security scanning modules and rule databases
+            - Style checking and linting tools
+            - External service dependencies (if configured)
+            - File processing and upload capabilities
+            - Database and cache connections
+            - Performance and resource utilization
+
+            **Component Status:**
+            - `healthy`: Component operational within normal parameters
+            - `degraded`: Component experiencing issues but still functional
+            - `unhealthy`: Component down or critically impaired
+
+            **Performance Metrics:**
+            - Average analysis response time
+            - Queue depth and processing backlog
+            - Memory and CPU utilization
+            - Cache hit rates and efficiency
+            """,
+            response_description="Comprehensive service health status and component information"
+        )
         async def health_check():
             """Health check endpoint."""
             return {

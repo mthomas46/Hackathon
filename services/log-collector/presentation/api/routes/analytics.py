@@ -102,9 +102,80 @@ class LogAnalyticsRouter:
                     detail=f"Failed to retrieve log statistics: {str(e)}"
                 )
 
-        @self.router.post("/query", response_model=AnalyticsResponseModel)
+        @self.router.post(
+            "/query",
+            response_model=AnalyticsResponseModel,
+            summary="Advanced Log Query with Filtering",
+            description="""
+            Perform advanced queries on log data with comprehensive filtering and search capabilities.
+
+            This endpoint provides powerful log analysis capabilities including full-text search,
+            structured filtering, time range queries, and aggregation operations.
+
+            **Query Capabilities:**
+            - Full-text search across log messages and metadata
+            - Structured filtering by service, level, and custom fields
+            - Time range filtering with flexible date specifications
+            - Complex boolean queries with AND/OR/NOT operations
+            - Regular expression pattern matching
+            - Aggregation and grouping operations
+
+            **Search Syntax:**
+            - Simple text: `error connection`
+            - Field queries: `level:ERROR service:api-gateway`
+            - Time ranges: `@timestamp:[2023-01-01 TO 2023-01-02]`
+            - Boolean logic: `error AND (timeout OR connection)`
+            - Wildcards: `service:api-*`
+
+            **Performance Optimizations:**
+            - Indexed field searches for fast filtering
+            - Time-based partitioning for efficient range queries
+            - Caching for frequently accessed log patterns
+            - Parallel query execution across log shards
+
+            **Result Processing:**
+            - Configurable result limits and pagination
+            - Sorting by timestamp, level, or relevance
+            - Field selection for reduced payload sizes
+            - Export formats (JSON, CSV, text)
+            """,
+            response_description="Query results with execution statistics and metadata"
+        )
         async def query_logs(
-            query: AnalyticsQueryModel
+            query: AnalyticsQueryModel = Body(
+                ...,
+                examples={
+                    "error_analysis": {
+                        "summary": "Error Log Analysis",
+                        "description": "Find and analyze error logs from a specific service",
+                        "value": {
+                            "service_name": "api-gateway",
+                            "level": "ERROR",
+                            "start_time": "2023-12-01T00:00:00Z",
+                            "end_time": "2023-12-02T00:00:00Z",
+                            "limit": 100,
+                            "search_query": "timeout OR connection"
+                        }
+                    },
+                    "performance_monitoring": {
+                        "summary": "Performance Log Monitoring",
+                        "description": "Monitor performance-related logs across services",
+                        "value": {
+                            "level": "WARN",
+                            "limit": 50,
+                            "search_query": "slow OR performance OR latency"
+                        }
+                    },
+                    "security_audit": {
+                        "summary": "Security Event Audit",
+                        "description": "Audit security-related events and access patterns",
+                        "value": {
+                            "search_query": "authentication OR authorization OR security",
+                            "limit": 200
+                        }
+                    }
+                }
+            )
         ) -> AnalyticsResponseModel:
             """Query logs with advanced filtering and search."""
             try:
