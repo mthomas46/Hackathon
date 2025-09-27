@@ -1,6 +1,17 @@
-"""Infrastructure events and startup handlers
+"""Infrastructure events and lifecycle management for discovery agent.
 
-This module contains startup and shutdown event handlers for the discovery agent.
+This module provides FastAPI lifecycle event handlers for the discovery agent,
+managing startup initialization, shutdown cleanup, and background task coordination.
+
+Key responsibilities:
+- Service registration and deregistration with orchestrator
+- Background task initialization and cleanup
+- Health check endpoint registration
+- Performance monitoring setup and teardown
+- External service connection management
+
+The event handlers ensure proper resource management and graceful service lifecycle
+transitions, maintaining system stability and observability.
 """
 
 from fastapi import FastAPI
