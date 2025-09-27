@@ -20,8 +20,12 @@ if str(PROJECT_ROOT) not in sys.path:
 os.environ.setdefault('TESTING', 'true')
 os.environ.setdefault('LOG_LEVEL', 'WARNING')
 
-# Import focused fixtures
-from .fixtures.documentation_consistency_fixtures import *
+# Import focused fixtures from shared location
+try:
+    from services.shared.tests.fixtures.documentation_consistency_fixtures import *
+except ImportError:
+    # Fallback for when shared fixtures are not available
+    pass
 
 # Parallel-friendly: ensure any DB-like or external resources are function-scoped
 # and isolated per test process. Provide a simple marker registry for CI filtering.
