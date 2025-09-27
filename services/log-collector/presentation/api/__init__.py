@@ -3,26 +3,18 @@
 from fastapi import APIRouter
 
 # Import dependencies (these would normally come from dependency injection)
-from ...application.use_cases.collect_logs_use_case import CollectLogsUseCase
-from ...domain.services.log_storage import LogStorageService
 from ...domain.services.log_stats import LogStatsService
+from ...domain.services.log_storage import LogStorageService
 
-# Create dependencies
-_log_storage_service = LogStorageService()
+# Create dependencies (mock implementations for now)
 _log_stats_service = LogStatsService()
-_collect_logs_use_case = CollectLogsUseCase(_log_storage_service, _log_stats_service)
+_log_storage_service = LogStorageService()
+
+# Import and create routers
+from .routes.analytics import create_analytics_router
 
 # Create API router
 api_router = APIRouter()
-
-# Health endpoint
-@api_router.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": "log-collector",
-        "version": "1.0.0"
-    }
+api_router.include_router(create_analytics_router(_log_stats_service, _log_storage_service))
 
 __all__ = ["api_router"]
