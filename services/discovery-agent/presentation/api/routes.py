@@ -800,3 +800,109 @@ async def get_monitoring_dashboard():
             error_code=ErrorCodes.INTERNAL_ERROR,
             details={"error": str(e)},
         )
+
+
+# =============================================================================
+# ADDITIONAL REST ENDPOINTS FOR IMPROVED API COMPLIANCE
+# =============================================================================
+
+@router.delete(
+    "/services/{service_name}",
+    response_model=Dict[str, Any],
+    summary="Remove Service",
+    description="Remove a service from the discovery registry."
+)
+async def remove_service(service_name: str) -> Dict[str, Any]:
+    """Remove a service from the registry."""
+    try:
+        success = discovery_service.remove_service(service_name)
+        if not success:
+            return create_error_response(
+                ErrorCodes.SERVICE_NOT_FOUND,
+                f"Service '{service_name}' not found",
+                status_code=404
+            )
+
+        return create_success_response(
+            {"service_name": service_name},
+            f"Service '{service_name}' removed successfully"
+        )
+    except Exception as e:
+        return create_error_response(
+            ErrorCodes.INTERNAL_ERROR,
+            f"Failed to remove service: {str(e)}",
+            status_code=500
+        )
+
+
+@router.get(
+    "/health",
+    response_model=Dict[str, Any],
+    summary="API Health Check",
+    description="Check the health status of the discovery agent API."
+)
+async def health_check() -> Dict[str, Any]:
+    """Health check endpoint."""
+    try:
+        health_status = {
+            "status": "healthy",
+            "service": "discovery-agent",
+            "version": config.service_version,
+            "timestamp": datetime.utcnow().isoformat(),
+            "uptime": "operational"
+        }
+        return create_success_response(health_status, "Service is healthy")
+    except Exception as e:
+        return create_error_response(
+            ErrorCodes.INTERNAL_ERROR,
+            f"Health check failed: {str(e)}",
+            status_code=503
+        )
+
+
+@router.get(
+    "/stats",
+    response_model=Dict[str, Any],
+    summary="Discovery Statistics",
+    description="Get statistics about service discovery operations."
+)
+async def get_discovery_stats() -> Dict[str, Any]:
+    """Get discovery statistics."""
+    try:
+        stats = discovery_service.get_discovery_stats()
+        return create_success_response(stats, "Discovery statistics retrieved")
+    except Exception as e:
+        return create_error_response(
+            ErrorCodes.INTERNAL_ERROR,
+            f"Failed to retrieve statistics: {str(e)}",
+            status_code=500
+        )
+
+
+@router.put(
+    "/services/{service_name}",
+    response_model=Dict[str, Any],
+    summary="Update Service",
+    description="Update information about a discovered service."
+)
+async def update_service(service_name: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Update service information."""
+    try:
+        success = discovery_service.update_service_info(service_name, update_data)
+        if not success:
+            return create_error_response(
+                ErrorCodes.SERVICE_NOT_FOUND,
+                f"Service '{service_name}' not found",
+                status_code=404
+            )
+
+        return create_success_response(
+            {"service_name": service_name, "updated_fields": list(update_data.keys())},
+            f"Service '{service_name}' updated successfully"
+        )
+    except Exception as e:
+        return create_error_response(
+            ErrorCodes.INTERNAL_ERROR,
+            f"Failed to update service: {str(e)}",
+            status_code=500
+        )
