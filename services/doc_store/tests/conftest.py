@@ -23,6 +23,20 @@ DocumentRepository = Mock()
 DocumentService = Mock()
 DocStoreCache = Mock()
 
+# Base test class for doc_store tests
+class BaseTestCase:
+    """Base test case for doc_store tests."""
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
+        """Setup for each test method."""
+        pass
+
+    @pytest.fixture(autouse=True)
+    def teardown_method(self):
+        """Teardown for each test method."""
+        pass
+
 
 @pytest.fixture
 def event_loop():

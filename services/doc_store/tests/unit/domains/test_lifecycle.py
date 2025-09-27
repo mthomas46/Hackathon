@@ -4,7 +4,7 @@ Comprehensive tests for document lifecycle management, policies, and transitions
 """
 import pytest
 from unittest.mock import patch, Mock
-from tests.unit.doc_store.conftest import BaseTestCase
+from services.doc_store.tests.conftest import BaseTestCase
 
 
 @pytest.mark.unit

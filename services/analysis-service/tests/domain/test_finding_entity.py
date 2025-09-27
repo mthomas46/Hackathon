@@ -4,11 +4,27 @@ import os
 import sys
 from datetime import datetime, timezone
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+# Add the service root to Python path to enable imports
+service_root = os.path.join(os.path.dirname(__file__), "..", "..")
+if service_root not in sys.path:
+    sys.path.insert(0, service_root)
 
+# Import from the analysis-service domain
 from domain.entities.finding import Finding
 from domain.value_objects import Confidence, Location
-from services.shared.tests.conftest import assert_validation_error
+
+# Import shared test utilities
+try:
+    from services.shared.tests.helpers.assertions import assert_validation_error
+except ImportError:
+    # Fallback if shared helpers not available
+    def assert_validation_error(func, *args, **kwargs):
+        """Fallback assertion function."""
+        try:
+            result = func(*args, **kwargs)
+            assert False, f"Expected ValidationError but got: {result}"
+        except ValueError as e:
+            assert "validation" in str(e).lower() or "invalid" in str(e).lower()
 
 
 class TestFindingEntity:
