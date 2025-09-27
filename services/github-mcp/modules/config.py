@@ -1,6 +1,32 @@
 """Configuration management for GitHub MCP service.
 
-Handles environment variable parsing and configuration settings.
+This module provides centralized configuration management for the GitHub MCP (Model Context Protocol) service.
+It handles environment variable parsing, validation, and provides default values for all configurable settings.
+
+Key Responsibilities:
+- Environment variable parsing and validation
+- Default value management for missing configurations
+- Configuration validation and type checking
+- Secure credential handling for GitHub API tokens
+- Redis connection configuration for caching and state management
+
+Configuration Parameters:
+- GitHub API token for authentication
+- GitHub API base URL (supports GitHub Enterprise)
+- Redis connection settings for caching
+- Logging configuration
+- Service-specific settings and timeouts
+
+Security Considerations:
+- GitHub tokens are handled securely and not logged
+- Environment variables are validated before use
+- Default values are conservative and secure
+- Configuration validation prevents misconfigurations
+
+Usage:
+    config = Config()
+    token = config.github_token
+    redis_url = f"redis://{config.redis_host}:{config.redis_port}"
 """
 
 import os

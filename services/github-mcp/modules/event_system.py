@@ -1,6 +1,52 @@
 """Event system for GitHub MCP service.
 
-Handles integration events and downstream service notifications.
+This module implements a comprehensive event-driven architecture for the GitHub MCP service,
+enabling asynchronous communication between components and downstream services. It provides
+a publish-subscribe pattern for handling GitHub webhooks, tool registrations, and system events.
+
+Key Components:
+- Event: Data structure representing system events with metadata
+- EventSystem: Central event dispatcher and handler registry
+- EventQueue: Asynchronous event queuing for reliability
+- EventFilters: Selective event processing based on criteria
+
+Event Types:
+- tool_registered: New tool becomes available in the registry
+- tool_invoked: Tool execution request received
+- github_webhook: GitHub webhook event processed
+- service_health_changed: Service health status update
+- cache_invalidated: Cache entry invalidated
+- rate_limit_exceeded: API rate limit threshold reached
+
+Event Processing:
+- Synchronous event emission for immediate processing
+- Asynchronous event queuing for reliability
+- Event filtering based on content and metadata
+- Handler registration with optional filters
+- Error handling and dead letter queues
+
+Integration Points:
+- ServiceClients for downstream service notifications
+- Redis/EventStore for event persistence
+- Monitoring systems for event metrics
+- Circuit breakers for fault tolerance
+
+Usage Patterns:
+    # Register event handler
+    event_system.register_handler('tool_registered', handle_tool_registration)
+
+    # Emit event
+    event_system.emit_event(Event('tool_registered', {'tool_name': 'analyzer'}))
+
+    # Async processing
+    await event_system.emit_event_async(event)
+
+Performance Considerations:
+- Event queuing prevents blocking operations
+- Handler filtering reduces unnecessary processing
+- Connection pooling for downstream notifications
+- Monitoring and metrics collection
+- Configurable timeouts and retries
 """
 
 from typing import Any, Dict

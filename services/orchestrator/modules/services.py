@@ -1,7 +1,98 @@
 """Service management functionality for the Orchestrator service.
 
-This module contains all service discovery and information endpoints,
-extracted from the main orchestrator service to improve maintainability.
+This module provides comprehensive service discovery, registration, and management
+capabilities for the orchestration system. It enables dynamic service discovery,
+health monitoring, capability mapping, and communication with registered services
+within the LLM ecosystem.
+
+Key Components:
+- ServiceDiscovery: Automatic service detection and registration
+- ServiceHealthMonitor: Continuous health checking and status tracking
+- ServiceClient: Robust service communication with retry logic
+- ServiceRegistry: Centralized service metadata and capability management
+
+Service Discovery:
+- Network scanning for available services
+- Service registration and deregistration
+- Capability-based service discovery
+- Dynamic endpoint resolution
+- Service versioning and compatibility checking
+
+Health Monitoring:
+- HTTP health check endpoints monitoring
+- Response time and latency tracking
+- Success rate and error rate analysis
+- Automatic service status updates
+- Alert generation for service failures
+
+Service Communication:
+- HTTP client with connection pooling
+- Automatic retry with exponential backoff
+- Circuit breaker pattern implementation
+- Request/response timeout management
+- Comprehensive error handling and logging
+
+Capability Mapping:
+- Service capability declaration and discovery
+- Capability-based service selection
+- Load balancing across capable services
+- Fallback service selection
+- Service dependency resolution
+
+Security Features:
+- Service authentication and authorization
+- Request signing and verification
+- SSL/TLS certificate validation
+- API key and token management
+- Rate limiting and abuse prevention
+
+Performance Optimization:
+- Connection pooling and reuse
+- Request caching and deduplication
+- Asynchronous processing for non-blocking operations
+- Resource usage monitoring and optimization
+- Scalable architecture for high-throughput scenarios
+
+Integration Patterns:
+- RESTful API communication
+- Event-driven service notifications
+- Message queue integration for async communication
+- Webhook support for real-time updates
+- GraphQL support for complex queries
+
+Monitoring and Observability:
+- Comprehensive metrics collection
+- Distributed tracing support
+- Structured logging with correlation IDs
+- Performance monitoring and alerting
+- Service mesh integration capabilities
+
+Usage Patterns:
+    # Service discovery
+    services = await discovery.discover_services()
+
+    # Health checking
+    health = await monitor.check_service_health(service_info)
+
+    # Service communication
+    result = await client.call_service('analyzer', 'analyze', data)
+
+    # Capability discovery
+    capable_services = await discovery.discover_by_capability('analysis')
+
+Error Handling:
+- Graceful degradation during service failures
+- Comprehensive error classification and reporting
+- Automatic retry with configurable backoff
+- Circuit breaker pattern for fault tolerance
+- Fallback mechanisms for critical operations
+
+Configuration:
+- Environment-based configuration
+- Dynamic service registration
+- Runtime configuration updates
+- Service mesh integration settings
+- Monitoring and alerting thresholds
 """
 
 from typing import Any, Dict
