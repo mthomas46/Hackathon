@@ -354,18 +354,8 @@ def main():
     report_parser.add_argument('--output', choices=['rich', 'json', 'summary'], default='rich',
                               help='Output format (default: rich')
     report_parser.add_argument('--verbose', action='store_true',
-                              help='Show detailed issues and recommendations')    resources_parser.add_argument('--full', action='store_true', help='Consider full audit mode for optimization')
-
-    # Report display command
-    report_parser = subparsers.add_parser('report', help='Display audit reports from JSON files')
-    report_parser.add_argument('service', help='Service name to display report for')
-    report_parser.add_argument('--profile', default='strict', 
-                              choices=['relaxed', 'standard', 'strict', 'ci_fast', 'ci_comprehensive', 'strict_ddd'],
-                              help='Audit profile to display (default: strict')
-    report_parser.add_argument('--output', choices=['rich', 'json', 'summary'], default='rich',
-                              help='Output format (default: rich')
-    report_parser.add_argument('--verbose', action='store_true',
                               help='Show detailed issues and recommendations')
+
     args = parser.parse_args()
 
     if not args.command:
@@ -475,6 +465,9 @@ def main():
             asyncio.run(_handle_bulk_audit(args, orchestrator))
 
         elif args.command == 'resources':
+            # Display system resources and optimization recommendations
+            _handle_resources_command(args)
+
         elif args.command == 'report':
             # Display audit reports from JSON files
             _handle_report_command(args)
