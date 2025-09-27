@@ -11,7 +11,7 @@ from services.cli.modules.base.base_formatter import BaseFormatter
 from services.cli.modules.base.base_handler import BaseHandler
 from services.cli.modules.utils.cache_utils import CacheManager
 from services.cli.modules.formatters.display_utils import DisplayManager
-from tests.unit.cli.test_base import (
+from services.cli.tests.unit.test_base import (
     MockManager, BaseManagerTestMixin, APITestMixin,
     create_test_manager, mock_rich_console
 )
