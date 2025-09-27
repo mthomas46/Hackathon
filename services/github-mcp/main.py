@@ -23,6 +23,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities.resource_monitor import monitor_resources
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import attach_self_register, setup_common_middleware
 from services.shared.utilities.middleware import (
@@ -75,6 +76,14 @@ app = FastAPI(
 # Setup standardized middleware and utilities
 setup_common_middleware(app, service_name=config.service_name)
 attach_self_register(app, config.service_name)
+
+# Include DDD API routes
+try:
+    from .presentation.api import api_router
+    app.include_router(api_router)
+except ImportError:
+    # Fallback if DDD structure not available
+    pass
 
 
 class InvokeRequest(BaseModel):

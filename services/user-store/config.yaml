@@ -1,0 +1,32 @@
+service_name: "user-store"
+service_description: "User Store Service"
+service_version: "1.0.0"
+port: 8001
+environment: "development"
+debug: true
+
+# Service dependencies
+dependencies:
+  - "document-store"
+  - "notification-service"
+
+# Repository configuration
+repository:
+  type: "in_memory"  # Options: in_memory, sqlite, postgres
+  connection_string: "sqlite:///user_store.db"
+
+# Security configuration
+security:
+  jwt_secret: "your-secret-key-here"
+  token_expiry_hours: 24
+
+# Notification configuration
+notifications:
+  default_channels: ["email"]
+  max_retries: 3
+  retry_delay_seconds: 300
+
+# Caching configuration
+cache:
+  ttl_seconds: 3600
+  max_size: 1000

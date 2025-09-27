@@ -14,11 +14,33 @@ from .shared_utils import (
 
 
 class CodeAnalyzer:
-    """Handles code analysis operations."""
+    """Handles code analysis operations for source agent.
+
+    This class provides functionality to analyze source code for API endpoints,
+    patterns, and other structural information. It supports multiple web frameworks
+    and can extract routing information, security patterns, and architectural insights.
+    """
 
     @staticmethod
     def analyze_code(text: str) -> Dict[str, Any]:
-        """Analyze code for API endpoints and patterns."""
+        """Analyze code for API endpoints and architectural patterns.
+
+        Performs static analysis on source code to identify:
+        - API endpoints and routes
+        - Framework usage (FastAPI, Express, Flask, etc.)
+        - Code patterns and anti-patterns
+        - Security considerations
+
+        Args:
+            text: Source code content to analyze
+
+        Returns:
+            Dictionary containing analysis results with endpoints found,
+            patterns detected, and metadata
+
+        Raises:
+            Various exceptions during analysis that are handled gracefully
+        """
         try:
             hints = extract_endpoints_from_code(text)
 

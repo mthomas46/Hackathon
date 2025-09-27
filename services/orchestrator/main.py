@@ -16,6 +16,7 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities.resource_monitor import monitor_resources
 
 # Shared utilities
 from services.shared.infrastructure.utilities import setup_common_middleware
