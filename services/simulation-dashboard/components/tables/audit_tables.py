@@ -12,78 +12,57 @@ import pandas as pd
 import streamlit as st
 
 
-def render_audit_table(
-    audit_data: List[Dict[str, Any]],
-    title: str = "🔍 Audit Trail",
-    enable_filtering: bool = True,
-    enable_search: bool = True,
-    enable_export: bool = True,
-    on_investigate: Optional[Callable] = None,
-    on_export: Optional[Callable] = None,
-) -> Dict[str, Any]:
-    """Render a comprehensive audit trail table.
-
-    Args:
-        audit_data: List of audit event dictionaries
-        title: Table title
-        enable_filtering: Whether to enable filtering
-        enable_search: Whether to enable search
-        enable_export: Whether to enable export
-        on_investigate: Callback for investigating events
-        on_export: Callback for export actions
-
-    Returns:
-        Dictionary with table state and audit metrics
-    """
-    st.markdown(f"### {title}")
-
+def _prepare_audit_dataframe(audit_data: List[Dict[str, Any]]) -> pd.DataFrame:
+    """Prepare audit data as a clean DataFrame with required columns."""
     if not audit_data:
-        st.info(
-            "No audit events found. Audit logging will appear here as events occur."
-        )
-        return {"audit_metrics": {}, "filtered_events": []}
+        return pd.DataFrame()
 
-    # Convert to DataFrame
     df = pd.DataFrame(audit_data)
 
-    # Ensure required columns exist
+    # Ensure required columns exist with defaults
     required_columns = [
-        "id",
-        "timestamp",
-        "event_type",
-        "user",
-        "action",
-        "resource",
-        "severity",
-        "status",
+        "id", "timestamp", "event_type", "user", "action",
+        "resource", "severity", "status"
     ]
+
     for col in required_columns:
         if col not in df.columns:
-            df[col] = (
-                "N/A"
-                if col in ["user", "action", "resource"]
-                else (
-                    "info"
-                    if col == "severity"
-                    else "success" if col == "status" else datetime.now()
-                )
-            )
+            df[col] = _get_default_value_for_column(col)
 
     # Add derived columns
-    df["timestamp_display"] = pd.to_datetime(df["timestamp"]).dt.strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+    df["timestamp_display"] = pd.to_datetime(df["timestamp"]).dt.strftime("%Y-%m-%d %H:%M:%S")
     df["severity_icon"] = df["severity"].apply(get_severity_icon)
     df["status_icon"] = df["status"].apply(get_status_icon)
 
-    # Filters and search
-    if enable_filtering or enable_search:
-        st.markdown("#### 🔍 Filters & Search")
+    return df
 
-        filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
 
+def _get_default_value_for_column(column: str) -> Any:
+    """Get default value for a missing column."""
+    defaults = {
+        "user": "N/A",
+        "action": "N/A",
+        "resource": "N/A",
+        "severity": "info",
+        "status": "success"
+    }
+    return defaults.get(column, datetime.now())
+
+
+def _render_audit_filters(df: pd.DataFrame, enable_filtering: bool, enable_search: bool) -> Dict[str, Any]:
+    """Render filter and search controls, return filter values."""
+    filters = {}
+
+    if not (enable_filtering or enable_search):
+        return filters
+
+    st.markdown("#### 🔍 Filters & Search")
+
+    filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
+
+    if enable_filtering:
         with filter_col1:
-            severity_filter = st.multiselect(
+            filters["severity"] = st.multiselect(
                 "Severity",
                 options=["critical", "high", "medium", "low", "info"],
                 default=[],
@@ -91,7 +70,7 @@ def render_audit_table(
             )
 
         with filter_col2:
-            event_type_filter = st.multiselect(
+            filters["event_type"] = st.multiselect(
                 "Event Type",
                 options=df["event_type"].unique().tolist(),
                 default=[],
@@ -99,56 +78,65 @@ def render_audit_table(
             )
 
         with filter_col3:
-            date_from = st.date_input(
+            filters["date_from"] = st.date_input(
                 "From Date",
                 value=datetime.now() - timedelta(days=7),
                 key="audit_date_from",
             )
 
         with filter_col4:
-            date_to = st.date_input(
+            filters["date_to"] = st.date_input(
                 "To Date", value=datetime.now(), key="audit_date_to"
             )
 
-        # Search
-        if enable_search:
-            search_term = st.text_input(
-                "Search Events",
-                placeholder="Search by user, action, or resource...",
-                key="audit_search",
-            )
+    if enable_search:
+        filters["search_term"] = st.text_input(
+            "Search Events",
+            placeholder="Search by user, action, or resource...",
+            key="audit_search",
+        )
 
-    # Apply filters
+    return filters
+
+
+def _apply_audit_filters(df: pd.DataFrame, filters: Dict[str, Any]) -> pd.DataFrame:
+    """Apply filters to the audit DataFrame."""
     filtered_df = df.copy()
 
-    if enable_filtering:
-        if severity_filter:
-            filtered_df = filtered_df[filtered_df["severity"].isin(severity_filter)]
+    # Apply severity filter
+    if filters.get("severity"):
+        filtered_df = filtered_df[filtered_df["severity"].isin(filters["severity"])]
 
-        if event_type_filter:
-            filtered_df = filtered_df[filtered_df["event_type"].isin(event_type_filter)]
+    # Apply event type filter
+    if filters.get("event_type"):
+        filtered_df = filtered_df[filtered_df["event_type"].isin(filters["event_type"])]
 
-        if date_from and date_to:
-            filtered_df = filtered_df[
-                (pd.to_datetime(filtered_df["timestamp"]).dt.date >= date_from)
-                & (pd.to_datetime(filtered_df["timestamp"]).dt.date <= date_to)
-            ]
+    # Apply date range filter
+    date_from = filters.get("date_from")
+    date_to = filters.get("date_to")
+    if date_from and date_to:
+        filtered_df = filtered_df[
+            (pd.to_datetime(filtered_df["timestamp"]).dt.date >= date_from)
+            & (pd.to_datetime(filtered_df["timestamp"]).dt.date <= date_to)
+        ]
 
-    if enable_search and "search_term" in locals() and search_term:
+    # Apply search filter
+    search_term = filters.get("search_term")
+    if search_term:
         search_cols = ["user", "action", "resource"]
         search_condition = (
             filtered_df[search_cols]
-            .apply(
-                lambda x: x.astype(str).str.contains(search_term, case=False, na=False)
-            )
+            .apply(lambda x: x.astype(str).str.contains(search_term, case=False, na=False))
             .any(axis=1)
         )
         filtered_df = filtered_df[search_condition]
 
     # Sort by timestamp (most recent first)
-    filtered_df = filtered_df.sort_values("timestamp", ascending=False)
+    return filtered_df.sort_values("timestamp", ascending=False)
 
-    # Audit metrics
+
+def _render_audit_metrics(filtered_df: pd.DataFrame) -> None:
+    """Render audit metrics section."""
     st.markdown("#### 📊 Audit Metrics")
 
     col1, col2, col3, col4 = st.columns(4)
@@ -174,7 +162,9 @@ def render_audit_table(
         )
         st.metric("Last 24h", recent_count)
 
-    # Event type breakdown
+
+def _render_event_breakdown(filtered_df: pd.DataFrame) -> None:
+    """Render event type and severity breakdown."""
     st.markdown("#### 📈 Event Breakdown")
 
     event_types = filtered_df["event_type"].value_counts()
@@ -193,27 +183,18 @@ def render_audit_table(
             icon = get_severity_icon(severity)
             st.write(f"- {icon} {severity.title()}: {count}")
 
-    # Main audit table
+
+def _render_audit_table_display(filtered_df: pd.DataFrame, on_investigate: Optional[Callable]) -> None:
+    """Render the main audit table and event details."""
     st.markdown(f"#### 📋 Audit Events ({len(filtered_df)} total)")
 
-    # Display columns
+    # Display columns configuration
     display_columns = [
-        "severity_icon",
-        "timestamp_display",
-        "event_type",
-        "user",
-        "action",
-        "resource",
-        "status_icon",
+        "severity_icon", "timestamp_display", "event_type",
+        "user", "action", "resource", "status_icon"
     ]
     display_names = [
-        "Severity",
-        "Timestamp",
-        "Event Type",
-        "User",
-        "Action",
-        "Resource",
-        "Status",
+        "Severity", "Timestamp", "Event Type", "User", "Action", "Resource", "Status"
     ]
 
     display_df = filtered_df[display_columns].copy()
@@ -225,48 +206,68 @@ def render_audit_table(
     # Individual event details
     if not filtered_df.empty:
         st.markdown("#### 🔍 Event Details")
+        _render_event_details_section(filtered_df, on_investigate)
 
-        # Show details for high-severity events first
-        high_priority_events = filtered_df[
-            (filtered_df["severity"].isin(["critical", "high"]))
-            | (filtered_df["status"] == "failed")
-        ]
 
-        if len(high_priority_events) > 0:
-            with st.expander("🚨 High Priority Events", expanded=True):
-                for _, row in high_priority_events.head(5).iterrows():
-                    render_audit_event_details(row, on_investigate)
+def _render_event_details_section(filtered_df: pd.DataFrame, on_investigate: Optional[Callable]) -> None:
+    """Render the event details expanders."""
+    # Show details for high-severity events first
+    high_priority_events = filtered_df[
+        (filtered_df["severity"].isin(["critical", "high"]))
+        | (filtered_df["status"] == "failed")
+    ]
 
-        # Show recent events
-        recent_events = filtered_df.head(10)
-        with st.expander("🕒 Recent Events", expanded=False):
-            for _, row in recent_events.iterrows():
+    if len(high_priority_events) > 0:
+        with st.expander("🚨 High Priority Events", expanded=True):
+            for _, row in high_priority_events.head(5).iterrows():
                 render_audit_event_details(row, on_investigate)
 
-    # Export functionality
-    if enable_export:
-        st.markdown("#### 💾 Export")
+    # Show recent events
+    recent_events = filtered_df.head(10)
+    with st.expander("🕒 Recent Events", expanded=False):
+        for _, row in recent_events.iterrows():
+            render_audit_event_details(row, on_investigate)
 
-        col_export1, col_export2, col_export3 = st.columns([1, 2, 2])
 
-        with col_export1:
-            export_format = st.selectbox(
-                "Format", options=["CSV", "JSON", "PDF"], key="audit_export_format"
-            )
+def _render_export_controls(filtered_df: pd.DataFrame, full_df: pd.DataFrame) -> None:
+    """Render export functionality controls."""
+    st.markdown("#### 💾 Export")
 
-        with col_export2:
-            if st.button("📥 Export Filtered", key="export_filtered"):
-                export_audit_data(filtered_df, export_format, "filtered_audit")
-                st.success("✅ Export completed!")
+    col_export1, col_export2, col_export3 = st.columns([1, 2, 2])
 
-        with col_export3:
-            if st.button("📥 Export All", key="export_all"):
-                export_audit_data(df, export_format, "full_audit")
-                st.success("✅ Export completed!")
+    with col_export1:
+        export_format = st.selectbox(
+            "Format", options=["CSV", "JSON", "PDF"], key="audit_export_format"
+        )
+
+    with col_export2:
+        if st.button("📥 Export Filtered", key="export_filtered"):
+            export_audit_data(filtered_df, export_format, "filtered_audit")
+            st.success("✅ Export completed!")
+
+    with col_export3:
+        if st.button("📥 Export All", key="export_all"):
+            export_audit_data(full_df, export_format, "full_audit")
+            st.success("✅ Export completed!")
+
+
+def _build_audit_table_result(full_df: pd.DataFrame, filtered_df: pd.DataFrame) -> Dict[str, Any]:
+    """Build the return result dictionary."""
+    critical_count = len(filtered_df[filtered_df["severity"] == "critical"])
+    failed_count = len(filtered_df[filtered_df["status"] == "failed"])
+    recent_count = len(
+        filtered_df[
+            pd.to_datetime(filtered_df["timestamp"])
+            > (datetime.now() - timedelta(hours=24))
+        ]
+    )
+
+    event_types = filtered_df["event_type"].value_counts()
+    severity_levels = filtered_df["severity"].value_counts()
 
     return {
         "audit_metrics": {
-            "total_events": len(df),
+            "total_events": len(full_df),
             "filtered_events": len(filtered_df),
             "critical_events": critical_count,
             "failed_events": failed_count,
@@ -278,6 +279,56 @@ def render_audit_table(
             "severity_levels": severity_levels.to_dict(),
         },
     }
+
+
+def render_audit_table(
+    audit_data: List[Dict[str, Any]],
+    title: str = "🔍 Audit Trail",
+    enable_filtering: bool = True,
+    enable_search: bool = True,
+    enable_export: bool = True,
+    on_investigate: Optional[Callable] = None,
+    on_export: Optional[Callable] = None,
+) -> Dict[str, Any]:
+    """Render a comprehensive audit trail table with separated concerns.
+
+    Args:
+        audit_data: List of audit event dictionaries
+        title: Table title
+        enable_filtering: Whether to enable filtering
+        enable_search: Whether to enable search
+        enable_export: Whether to enable export
+        on_investigate: Callback for investigating events
+        on_export: Callback for export actions
+
+    Returns:
+        Dictionary with table state and audit metrics
+    """
+    st.markdown(f"### {title}")
+
+    if not audit_data:
+        st.info("No audit events found. Audit logging will appear here as events occur.")
+        return {"audit_metrics": {}, "filtered_events": []}
+
+    # Prepare data
+    df = _prepare_audit_dataframe(audit_data)
+
+    # Render filters and get filter values
+    filters = _render_audit_filters(df, enable_filtering, enable_search)
+
+    # Apply filters
+    filtered_df = _apply_audit_filters(df, filters)
+
+    # Render components
+    _render_audit_metrics(filtered_df)
+    _render_event_breakdown(filtered_df)
+    _render_audit_table_display(filtered_df, on_investigate)
+
+    if enable_export:
+        _render_export_controls(filtered_df, df)
+
+    # Return results
+    return _build_audit_table_result(df, filtered_df)
 
 
 def render_audit_event_details(
