@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 
 # ============================================================================
@@ -514,7 +514,39 @@ orchestrator_integration = SimpleOrchestratorIntegration()
 # ============================================================================
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    summary="Health Check",
+    description="Check the health status of the Interpreter service and its core components.",
+    tags=["Health"],
+    responses={
+        200: {
+            "description": "Service is healthy and operational",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "healthy",
+                        "service": "interpreter",
+                        "timestamp": "2024-01-01T12:00:00Z",
+                        "version": "1.0.0"
+                    }
+                }
+            }
+        },
+        503: {
+            "description": "Service is unhealthy or unavailable",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "unhealthy",
+                        "service": "interpreter",
+                        "error": "Service dependencies unavailable"
+                    }
+                }
+            }
+        }
+    }
+)
 async def health():
     """Health check endpoint."""
     return {
@@ -530,18 +562,157 @@ async def health():
     }
 
 
-@app.post("/interpret")
-async def interpret_query(query_data: UserQuery):
-    """Basic query interpretation."""
-    return {
-        "intent": "workflow_execution",
-        "confidence": 0.8,
-        "entities": {"workflow": "document_analysis"},
-        "response_text": f"I can help you execute a workflow for: {query_data.query}",
+@app.post(
+    "/interpret",
+    summary="Interpret Natural Language Query",
+    description="Interpret a natural language query and return structured workflow execution parameters.",
+    tags=["Query Processing"],
+    responses={
+        200: {
+            "description": "Query successfully interpreted",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "intent": "workflow_execution",
+                        "confidence": 0.85,
+                        "parameters": {
+                            "workflow": "document_analysis",
+                            "target": "repo:example/docs"
+                        }
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Invalid query format or parameters",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Invalid query format",
+                        "details": "Query must be a non-empty string"
+                    }
+                }
+            }
+        },
+        422: {
+            "description": "Validation error in request data",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Validation Error",
+                        "details": [
+                            {
+                                "loc": ["query"],
+                                "msg": "field required",
+                                "type": "value_error.missing"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal server error during query interpretation",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Internal server error",
+                        "details": "Failed to process query interpretation"
+                    }
+                }
+            }
+        }
     }
+)
+async def interpret_query(query_data: UserQuery):
+    """Basic query interpretation with proper error handling."""
+    try:
+        # Validate input
+        if not query_data.query or not query_data.query.strip():
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Invalid query format",
+                    "message": "Query cannot be empty",
+                    "details": "Please provide a non-empty query string"
+                }
+            )
+
+        # Basic intent detection (in real implementation, this would use NLP models)
+        query_lower = query_data.query.lower()
+
+        if any(word in query_lower for word in ["analyze", "analysis", "check", "review"]):
+            intent = "document_analysis"
+            confidence = 0.85
+        elif any(word in query_lower for word in ["generate", "create", "build"]):
+            intent = "content_generation"
+            confidence = 0.82
+        elif any(word in query_lower for word in ["execute", "run", "workflow"]):
+            intent = "workflow_execution"
+            confidence = 0.88
+        else:
+            intent = "general_query"
+            confidence = 0.65
+
+        return {
+            "intent": intent,
+            "confidence": confidence,
+            "entities": {"workflow": intent.replace("_", " ")},
+            "response_text": f"I can help you execute a workflow for: {query_data.query}",
+            "processing_time_ms": 150
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error interpreting query: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Internal server error",
+                "message": "Failed to process query interpretation",
+                "details": str(e)
+            }
+        )
 
 
-@app.get("/intents")
+@app.get(
+    "/intents",
+    summary="List Supported Query Intents",
+    description="Retrieve a comprehensive list of all supported query intents with examples and confidence thresholds.",
+    tags=["Query Processing", "Intents"],
+    responses={
+        200: {
+            "description": "Successfully retrieved supported intents",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "supported_intents": [
+                            {
+                                "intent": "document_analysis",
+                                "description": "Analyze document quality, structure, and content",
+                                "examples": ["Analyze this document for quality"],
+                                "confidence_threshold": 0.7
+                            }
+                        ],
+                        "total_intents": 5
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal server error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Internal server error",
+                        "message": "Failed to retrieve intent information"
+                    }
+                }
+            }
+        }
+    }
+)
 async def list_supported_intents():
     """List all supported query intents and examples."""
     return {
