@@ -119,7 +119,7 @@ class TestQualityService:
 class TestRepositoryOperations:
     """Test repository layer operations."""
 
-    @patch('doc_store.infrastructure.db.connection.get_db_connection')
+    @patch('doc_store.infrastructure.database.connection.get_db_connection')
     def test_database_connection(self, mock_connection):
         """Test database connection handling."""
         mock_conn = Mock()
@@ -129,7 +129,12 @@ class TestRepositoryOperations:
         mock_conn.execute.return_value = None
         mock_conn.fetchone.return_value = {"id": "1", "title": "Test"}
 
+        # Import and test a function that would use get_db_connection
+        from doc_store.infrastructure.database.connection import get_db_connection
+        result = get_db_connection()
+
         assert mock_connection.called
+        assert result == mock_conn
 
     def test_repository_crud_operations(self):
         """Test basic CRUD operations structure."""
@@ -192,7 +197,7 @@ class TestIntegrationCapabilities:
     def test_service_communication_patterns(self):
         """Test service-to-service communication patterns."""
         service_endpoints = {
-            "doc_store": "http://doc_store:5005",
+            "doc_store": "http://doc-store:5005",
             "analysis_service": "http://analysis-service:5020",
             "search_service": "http://search-service:5015"
         }
@@ -201,7 +206,9 @@ class TestIntegrationCapabilities:
         assert len(service_endpoints) >= 3
         for service, url in service_endpoints.items():
             assert url.startswith("http://")
-            assert service in url
+            # Convert service name to URL format (underscores to hyphens)
+            service_in_url = service.replace('_', '-')
+            assert service_in_url in url
 
     def test_event_driven_architecture(self):
         """Test event-driven architecture patterns."""
@@ -310,7 +317,7 @@ class TestApplicationHandlers:
     async def test_base_handler_request_processing(self):
         """Test base handler request processing."""
         from unittest.mock import AsyncMock
-        from doc_store.application.handlers.handler import BaseHandler
+        from doc_store.application.handlers.base_handler import BaseHandler
 
         # Mock service
         mock_service = AsyncMock()
@@ -327,7 +334,7 @@ class TestApplicationHandlers:
 
     def test_base_handler_validation(self):
         """Test base handler validation."""
-        from doc_store.application.handlers.handler import BaseHandler
+        from doc_store.application.handlers.base_handler import BaseHandler
 
         # Mock service
         mock_service = AsyncMock()

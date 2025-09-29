@@ -23,7 +23,7 @@ except ImportError:
     aioredis = None
     REDIS_AVAILABLE = False
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities.utilities import utc_now
 
 
 @dataclass

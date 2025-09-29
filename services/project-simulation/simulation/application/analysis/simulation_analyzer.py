@@ -152,7 +152,7 @@ class SimulationAnalyzer:
         else:
             # Get recommendations report from summarizer-hub
             recommendations_report = (
-                await self._get_recommendations_report_from_summarizer-hub(
+                await self._get_recommendations_report_from_summarizer_hub(
                     simulation_id, documents
                 )
             )
@@ -493,13 +493,13 @@ class SimulationAnalyzer:
     # RECOMMENDATIONS REPORT MANAGEMENT
     # ============================================================================
 
-    async def _get_recommendations_report_from_summarizer-hub(
+    async def _get_recommendations_report_from_summarizer_hub(
         self, simulation_id: str, documents: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
         """Get recommendations report from summarizer-hub and store it."""
         try:
             # Get recommendations from summarizer-hub
-            recommendations = await self._get_recommendations_from_summarizer-hub(
+            recommendations = await self._get_recommendations_from_summarizer_hub(
                 documents
             )
 
@@ -544,7 +544,7 @@ class SimulationAnalyzer:
             print(f"Error getting recommendations report: {e}")
             return None
 
-    async def _get_recommendations_from_summarizer-hub(
+    async def _get_recommendations_from_summarizer_hub(
         self, documents: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Get recommendations from summarizer-hub service."""
@@ -1488,7 +1488,7 @@ class SimulationAnalyzer:
     ) -> Dict[str, Any]:
         """Gather all data sources needed for report generation."""
         return {
-            "recommendations": await self._get_recommendations_report_from_summarizer-hub(
+            "recommendations": await self._get_recommendations_report_from_summarizer_hub(
                 simulation_id, documents
             ),
             "analysis": await self._get_analysis_report_from_analysis_service(
@@ -1558,7 +1558,7 @@ class SimulationAnalyzer:
             "report_generated": False,
         }
 
-    async def _get_recommendations_report_from_summarizer-hub(
+    async def _get_recommendations_report_from_summarizer_hub(
         self, simulation_id: str, documents: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
         """Get recommendations report from summarizer-hub service."""
@@ -2206,7 +2206,7 @@ class SimulationAnalyzer:
     # ECOSYSTEM SERVICE INTEGRATION METHODS
     # ============================================================================
 
-    async def _analyze_with_summarizer-hub(
+    async def _analyze_with_summarizer_hub(
         self, documents: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
         """Analyze documents using the summarizer-hub service."""
@@ -2289,7 +2289,7 @@ class SimulationAnalyzer:
         except Exception:
             return None
 
-    async def _analyze_with_code-analyzer(
+    async def _analyze_with_code_analyzer(
         self, code_content: str
     ) -> Optional[Dict[str, Any]]:
         """Analyze code using the code analyzer service."""

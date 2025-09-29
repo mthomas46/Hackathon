@@ -1534,7 +1534,7 @@ async def get_recent_workflow_executions(limit: int = 20):
             )
 
         return {
-            "recent_executions": executions_with_docs,
+            "executions": executions_with_docs,
             "total_executions": len(executions_with_docs),
             "execution_metrics": execution_metrics,
             "query_limit": limit,
