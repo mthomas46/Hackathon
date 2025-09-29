@@ -1,30 +1,40 @@
-# Scripts Directory Organization
+# Consolidated Scripts Directory Organization
 
-This directory contains all scripts for the LLM Documentation Ecosystem, organized by purpose and functionality.
+This directory contains all consolidated scripts for the LLM Documentation Ecosystem, organized by purpose and functionality.
 
 ## Directory Structure
 
 ```
 scripts/
-├── startup/          # Service startup and management scripts
+├── startup/          # Consolidated service management
 ├── services/         # Service-specific test and utility scripts
-├── cli/             # CLI-specific test scripts
+├── cli/             # Consolidated CLI testing
+├── ecosystem/       # Unified ecosystem management
 ├── integration/     # Cross-service integration test scripts
 ├── validation/      # Compliance and validation scripts
-├── demo/            # Demonstration and showcase scripts
+├── demo/            # Consolidated demonstration scripts
 ├── docs/            # Documentation generation scripts
 ├── migration/       # Database migration scripts
-└── README.md        # This file
+├── utilities/       # Consolidated development utilities
+├── async/           # Asynchronous processing utilities
+├── docker/          # Docker management scripts
+├── hardening/       # Security and production hardening
+├── monitoring/      # System monitoring scripts
+├── performance/     # Performance optimization scripts
+├── safeguards/      # Operational safeguards
+├── testing/         # Testing framework utilities
+└── verification/    # System verification scripts
 ```
 
-## Script Categories
+## Consolidated Script Categories
 
-### 🚀 Startup Scripts (`startup/`)
-Scripts for starting and managing services locally
-- Individual service starters (13 services)
-- Master startup script for all services
-- Service dependency management
-- Health monitoring
+### 🚀 Service Management (`startup/`)
+**Consolidated Service Startup Manager** - Unified service management for the entire ecosystem
+- Single script managing all 15+ services
+- Dependency-aware startup ordering
+- Docker and local environment support
+- Health monitoring and status reporting
+- Individual and bulk service management
 
 ### 🔧 Service Scripts (`services/`)
 Service-specific testing and utility scripts
@@ -33,12 +43,21 @@ Service-specific testing and utility scripts
 - Test data population
 - Service runner scripts
 
-### 💻 CLI Scripts (`cli/`)
-CLI-specific testing and validation
-- CLI functionality tests
-- Command validation
-- Interactive testing
-- CLI performance validation
+### 💻 CLI Testing (`cli/`)
+**Consolidated CLI Test Suite** - Comprehensive CLI functionality testing
+- Basic command validation
+- Interactive testing scenarios
+- Error handling verification
+- Live service integration testing
+- Performance and reliability testing
+
+### 🌐 Ecosystem Management (`ecosystem/`)
+**Consolidated Ecosystem Manager** - Unified ecosystem auditing and management
+- API endpoint auditing and gap analysis
+- Functional testing across all services
+- Configuration validation and drift detection
+- Health monitoring and status reporting
+- Automated service discovery and testing
 
 ### 🔗 Integration Scripts (`integration/`)
 Cross-service integration testing
@@ -55,11 +74,11 @@ Compliance and quality validation
 - Memory usage analysis
 
 ### 🎬 Demo Scripts (`demo/`)
-Demonstration and showcase scripts
-- System capability demonstrations
+**Consolidated Demonstration Scripts** - System capability demonstrations
+- Architecture showcase and explanations
 - Interactive workflow examples
-- Architecture showcase
-- User experience examples
+- Advanced user scenarios
+- End-to-end system demonstrations
 
 ### 📚 Documentation Scripts (`docs/`)
 Documentation generation and management
@@ -73,6 +92,23 @@ Database migration and data transformation
 - Data transformation utilities
 - Backward compatibility handling
 
+### 🛠️ Development Utilities (`utilities/`)
+**Consolidated Development Toolkit** - Comprehensive development utilities
+- Code quality and import fixing
+- Data store optimization and browsing
+- Infrastructure configuration management
+- Environment setup and conflict resolution
+
+### ⚡ Specialized Scripts
+- **Async** (`async/`): Asynchronous processing utilities
+- **Docker** (`docker/`): Container management and optimization
+- **Hardening** (`hardening/`): Security and production readiness
+- **Monitoring** (`monitoring/`): System monitoring and alerting
+- **Performance** (`performance/`): Performance optimization tools
+- **Safeguards** (`safeguards/`): Operational safety and validation
+- **Testing** (`testing/`): Testing framework and utilities
+- **Verification** (`verification/`): System verification and auditing
+
 ## Test Suite Organization
 
 The test suites are organized by scope to avoid overlap:
@@ -85,20 +121,23 @@ The test suites are organized by scope to avoid overlap:
 ## Quick Start
 
 ```bash
-# Start all services locally
-python scripts/startup/start_all_services.py --start
+# Start all services with dependency management
+python scripts/startup/service_manager.py start-all
 
-# Run service tests
-python scripts/services/test_services.py
+# Run comprehensive CLI testing
+python scripts/cli/test_cli_consolidated.py
 
-# Test CLI functionality
-python scripts/cli/test_cli_simple.py
+# Audit entire ecosystem health
+python scripts/ecosystem/ecosystem_manager.py audit
 
 # Run integration tests
 python scripts/integration/test_full_integration.py
 
-# Validate system
+# Validate system compliance
 python scripts/validation/test_api_compatibility.py
+
+# Fix code quality issues
+python scripts/utilities/dev_utilities.py fix-code --imports --bare-except
 ```
 
 ## Best Practices

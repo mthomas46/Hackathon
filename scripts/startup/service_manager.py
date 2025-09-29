@@ -1,7 +1,24 @@
 #!/usr/bin/env python3
 """
-Master Startup Script for LLM Documentation Ecosystem
-Starts all services locally with CLI as the main interface
+Consolidated Service Startup Manager
+Comprehensive service management for the LLM Documentation Ecosystem
+
+This script combines functionality from all individual startup scripts:
+- start_all_services.py (master startup)
+- start_analysis_service.py (analysis service)
+- start_architecture_digitizer.py (architecture digitizer)
+- start_bedrock_proxy.py (bedrock proxy)
+- start_code_analyzer.py (code analyzer)
+- start_docstore.py (document store)
+- start_github_mcp.py (GitHub MCP)
+- start_interpreter.py (interpreter)
+- start_log_collector.py (log collector)
+- start_orchestrator.py (orchestrator)
+- start_prompt_store.py (prompt store)
+- start_secure_analyzer.py (secure analyzer)
+- start_summarizer_hub.py (summarizer hub)
+
+Provides unified service startup, management, and monitoring capabilities.
 """
 
 import os
@@ -10,38 +27,48 @@ import asyncio
 import signal
 import time
 import subprocess
+import argparse
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.prompt import Confirm
 import requests
 
 console = Console()
 
-class ServiceManager:
-    """Manages all services in the ecosystem."""
+class ConsolidatedServiceManager:
+    """
+    Comprehensive service manager for the entire LLM Documentation Ecosystem.
+    Combines all individual service startup and management functionality.
+    """
 
     def __init__(self):
         self.project_root = Path(__file__).parent.parent
         self.services: Dict[str, Dict] = {}
         self.processes: Dict[str, subprocess.Popen] = {}
+        self.docker_containers: Dict[str, str] = {}
+
+        # Define optimal startup order based on dependencies
         self.service_order = [
-            "redis",
-            "doc_store",
-            "analysis_service",
-            "orchestrator",
-            "prompt_store",
-            "summarizer-hub",
-            "architecture_digitizer",
-            "bedrock_proxy",
-            "github_mcp",
-            "interpreter",
-            "code-analyzer",
-            "secure-analyzer",
-            "log_collector",
-            "cli"
+            "redis",                    # Infrastructure
+            "doc_store",               # Core storage
+            "prompt_store",            # Core storage
+            "analysis_service",        # Core analysis
+            "orchestrator",            # Workflow orchestration
+            "source_agent",            # Data ingestion
+            "summarizer_hub",          # Content processing
+            "interpreter",             # Code execution
+            "code_analyzer",           # Code analysis
+            "secure_analyzer",         # Security analysis
+            "github_mcp",              # External integrations
+            "bedrock_proxy",           # External APIs
+            "architecture_digitizer", # Advanced features
+            "log_collector",           # Monitoring
+            "frontend",                # User interface
+            "cli"                      # Command interface
         ]
 
     def define_services(self):

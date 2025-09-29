@@ -1,14 +1,16 @@
 # CLI Test Scripts
 
-This directory contains test scripts specifically for validating CLI functionality and user interface components.
+This directory contains consolidated test scripts for validating CLI functionality and user interface components.
 
-## Test Categories
+## Consolidated Test Suite
 
-### CLI Functionality Tests
-- `test_cli_simple.py` - Basic CLI command validation (help, commands, basic functionality)
-- `test_cli_analysis_service.py` - Comprehensive Analysis Service CLI testing
-- `test_cli_comprehensive.py` - Full CLI ecosystem testing with service integration
-- `test_cli_interactive.py` - Interactive CLI testing scenarios
+### `test_cli_consolidated.py`
+**Comprehensive CLI Testing** - Combines all previous CLI test functionality:
+- Basic CLI command validation (help, commands, basic functionality)
+- CLI ecosystem testing with service integration
+- Interactive CLI testing scenarios
+- Error handling and edge case testing
+- Live service integration testing
 
 ## Test Scope
 
@@ -18,6 +20,8 @@ CLI tests focus on:
 - ✅ CLI menu system functionality
 - ✅ Basic command validation
 - ✅ CLI-specific error handling
+- ✅ Interactive features and help systems
+- ✅ Integration with live services (when available)
 
 ## What CLI Tests DON'T Cover
 
@@ -30,18 +34,41 @@ CLI tests do NOT test:
 ## Usage
 
 ```bash
-# Test basic CLI functionality
-python scripts/cli/test_cli_simple.py
+# Run comprehensive CLI testing
+python scripts/cli/test_cli_consolidated.py
 
-# Test CLI with live services
-python scripts/cli/test_cli_comprehensive.py --verbose
-
-# Test interactive CLI scenarios
-python scripts/cli/test_cli_interactive.py
+# Test results are saved to cli_simple_test_results.json
 ```
+
+## Test Categories
+
+The consolidated test suite includes:
+
+1. **Basic CLI Functionality**
+   - Help command validation
+   - Command listing and availability
+   - Health command testing
+
+2. **CLI Feature Testing**
+   - Document analysis commands
+   - Code analysis commands
+   - Prompt management commands
+
+3. **Error Handling**
+   - Invalid command handling
+   - Missing argument handling
+   - Graceful failure testing
+
+4. **Interactive Features**
+   - Help system validation
+   - Command assistance
+   - User interface elements
+
+5. **Live Service Integration** (Optional)
+   - Tests CLI commands against running services
+   - Service availability checking
+   - Real-world usage scenarios
 
 ## Test Results
 
-Test results are saved to JSON files for analysis:
-- `cli_simple_test_results.json`
-- CLI test reports with detailed pass/fail metrics
+Test results are saved to `cli_simple_test_results.json` with detailed pass/fail metrics and performance data.

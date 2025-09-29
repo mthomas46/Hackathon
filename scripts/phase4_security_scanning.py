@@ -26,7 +26,7 @@ class ToolSecurityScanner:
     """Security scanner for discovered LangGraph tools using secure-analyzer service"""
     
     def __init__(self):
-        self.secure-analyzer_url = "http://localhost:5070"
+        self.secure_analyzer_url = "http://localhost:5070"
         self.security_reports = {}
         
         # Security risk categories
