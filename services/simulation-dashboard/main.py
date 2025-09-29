@@ -19,6 +19,24 @@ from services.shared.presentation.api.middleware import (
 
 from .presentation.api import api_router
 
+# Import DDD application layer
+from .application import (
+    CreateSimulationHandler,
+    UpdateSimulationHandler,
+    DeleteSimulationHandler,
+    StartSimulationHandler,
+    StopSimulationHandler,
+)
+from .application.simulation_queries import (
+    ListSimulationsQueryHandler,
+    GetSimulationQueryHandler,
+    GetSimulationProgressQueryHandler,
+)
+
+# Import domain and infrastructure
+from .domain.services.simulation_service import SimulationService
+from .infrastructure.repositories.simulation_repository import SimulationRepository
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -28,6 +46,22 @@ logger = logging.getLogger(__name__)
 
 # Load configuration
 config = load_service_config()
+
+# Initialize dependencies (DDD pattern)
+simulation_repository = SimulationRepository()
+simulation_service = SimulationService(simulation_repository)
+
+# Initialize application layer handlers
+create_simulation_handler = CreateSimulationHandler(simulation_service, simulation_repository)
+update_simulation_handler = UpdateSimulationHandler(simulation_service, simulation_repository)
+delete_simulation_handler = DeleteSimulationHandler(simulation_repository)
+start_simulation_handler = StartSimulationHandler(simulation_service, simulation_repository)
+stop_simulation_handler = StopSimulationHandler(simulation_service, simulation_repository)
+
+# Initialize query handlers
+list_simulations_query = ListSimulationsQueryHandler(simulation_repository)
+get_simulation_query = GetSimulationQueryHandler(simulation_repository)
+get_simulation_progress_query = GetSimulationProgressQueryHandler(simulation_service, simulation_repository)
 
 # Create FastAPI application
 app = FastAPI(
@@ -51,6 +85,13 @@ app = FastAPI(
     - Comprehensive audit logging and compliance
     - Scalable architecture with DDD patterns
     - Enterprise-grade security and monitoring
+
+    **Architecture:**
+    - Domain-Driven Design (DDD) with clear layer separation
+    - CQRS pattern for optimal read/write operations
+    - Dependency injection for testability and maintainability
+    - Application layer orchestrates domain services
+    - Clean separation between infrastructure and domain logic
     """,
     version="1.0.0",
     docs_url="/docs",
@@ -77,6 +118,16 @@ app.add_middleware(
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(MetricsMiddleware)
 app.add_middleware(RateLimitMiddleware)
+
+# Make handlers available to routes via app state (DDD pattern)
+app.state.create_simulation_handler = create_simulation_handler
+app.state.update_simulation_handler = update_simulation_handler
+app.state.delete_simulation_handler = delete_simulation_handler
+app.state.start_simulation_handler = start_simulation_handler
+app.state.stop_simulation_handler = stop_simulation_handler
+app.state.list_simulations_query = list_simulations_query
+app.state.get_simulation_query = get_simulation_query
+app.state.get_simulation_progress_query = get_simulation_progress_query
 
 # Include API routes
 app.include_router(api_router)
