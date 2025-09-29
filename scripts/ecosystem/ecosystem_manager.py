@@ -1,40 +1,119 @@
 #!/usr/bin/env python3
 """
-Ecosystem API Audit - Identify gaps between available endpoints and CLI capabilities
-Also tests configuration viewing across all services
+Consolidated Ecosystem Management Suite
+Comprehensive ecosystem auditing, testing, and management
+
+This script combines functionality from:
+- ecosystem_api_audit.py (API auditing and gap analysis)
+- ecosystem_functional_test_suite.py (end-to-end testing)
+- ecosystem_gap_analysis.py (feature gap analysis)
+- ecosystem_test.py (general ecosystem testing)
+- ecosystem_unified_test.sh (unified testing orchestration)
+
+Provides comprehensive ecosystem management capabilities.
 """
 
 import subprocess
 import json
 import sys
 import time
+import asyncio
+import aiohttp
+import requests
+from pathlib import Path
 from typing import Dict, List, Any, Tuple, Optional
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+import argparse
 
+console = Console()
 
-class EcosystemAPIAuditor:
+class ConsolidatedEcosystemManager:
     """
-    Comprehensive auditor for ecosystem APIs vs CLI capabilities
+    Comprehensive ecosystem manager combining all ecosystem management functionality
     """
-    
+
     def __init__(self):
+        # Service configurations with both Docker and localhost URLs
         self.services = {
-            "analysis-service": {"port": "5020", "container": "hackathon-analysis-service-1"},
-            "orchestrator": {"port": "5099", "container": "hackathon-orchestrator-1"},
-            "doc_store": {"port": "5087", "container": "hackathon-doc_store-1"},
-            "memory-agent": {"port": "5040", "container": "hackathon-memory-agent-1"},
-            "discovery-agent": {"port": "5045", "container": "hackathon-discovery-agent-1"},
-            "bedrock-proxy": {"port": "7090", "container": "hackathon-bedrock-proxy-1"},
-            "frontend": {"port": "3000", "container": "hackathon-frontend-1"},
-            "interpreter": {"port": "5120", "container": "hackathon-interpreter-1"},
-            "github-mcp": {"port": "5072", "container": "hackathon-github-mcp-1"},
-            "source-agent": {"port": "5000", "container": "hackathon-source-agent-1"},
-            "prompt_store": {"port": "5110", "container": "hackathon-prompt_store-1"},
-            "architecture-digitizer": {"port": "5030", "container": "hackathon-architecture-digitizer-1"},
-            "secure-analyzer": {"port": "5060", "container": "hackathon-secure-analyzer-1"}
+            "analysis-service": {
+                "port": "5080",
+                "docker_container": "hackathon-analysis-service-1",
+                "localhost_url": "http://localhost:5080",
+                "docker_url": "http://hackathon-analysis-service-1:5020"
+            },
+            "orchestrator": {
+                "port": "5099",
+                "docker_container": "hackathon-orchestrator-1",
+                "localhost_url": "http://localhost:5099",
+                "docker_url": "http://hackathon-orchestrator-1:5099"
+            },
+            "doc_store": {
+                "port": "5087",
+                "docker_container": "hackathon-doc_store-1",
+                "localhost_url": "http://localhost:5087",
+                "docker_url": "http://hackathon-doc_store-1:5087"
+            },
+            "memory-agent": {
+                "port": "5040",
+                "docker_container": "hackathon-memory-agent-1",
+                "localhost_url": "http://localhost:5040",
+                "docker_url": "http://hackathon-memory-agent-1:5040"
+            },
+            "discovery-agent": {
+                "port": "5045",
+                "docker_container": "hackathon-discovery-agent-1",
+                "localhost_url": "http://localhost:5045",
+                "docker_url": "http://hackathon-discovery-agent-1:5045"
+            },
+            "bedrock-proxy": {
+                "port": "7090",
+                "docker_container": "hackathon-bedrock-proxy-1",
+                "localhost_url": "http://localhost:7090",
+                "docker_url": "http://hackathon-bedrock-proxy-1:7090"
+            },
+            "frontend": {
+                "port": "3000",
+                "docker_container": "hackathon-frontend-1",
+                "localhost_url": "http://localhost:3000",
+                "docker_url": "http://hackathon-frontend-1:3000"
+            },
+            "interpreter": {
+                "port": "5120",
+                "docker_container": "hackathon-interpreter-1",
+                "localhost_url": "http://localhost:5120",
+                "docker_url": "http://hackathon-interpreter-1:5120"
+            },
+            "github-mcp": {
+                "port": "5072",
+                "docker_container": "hackathon-github-mcp-1",
+                "localhost_url": "http://localhost:5072",
+                "docker_url": "http://hackathon-github-mcp-1:5072"
+            },
+            "source-agent": {
+                "port": "5085",
+                "docker_container": "hackathon-source-agent-1",
+                "localhost_url": "http://localhost:5085",
+                "docker_url": "http://hackathon-source-agent-1:5000"
+            },
+            "prompt_store": {
+                "port": "5110",
+                "docker_container": "hackathon-prompt_store-1",
+                "localhost_url": "http://localhost:5110",
+                "docker_url": "http://hackathon-prompt_store-1:5110"
+            },
+            "secure-analyzer": {
+                "port": "5070",
+                "docker_container": "hackathon-secure-analyzer-1",
+                "localhost_url": "http://localhost:5070",
+                "docker_url": "http://hackathon-secure-analyzer-1:5060"
+            }
         }
         self.audit_results = {}
         self.cli_capabilities = {}
         self.gaps = {}
+        self.test_results = {}
     
     def test_endpoint(self, service: str, endpoint: str, method: str = "GET") -> Tuple[bool, str, Optional[Dict]]:
         """Test a specific API endpoint"""

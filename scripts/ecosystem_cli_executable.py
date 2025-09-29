@@ -565,7 +565,7 @@ class EcosystemCLI:
             print("Available commands: health, config")
             print("Note: GitHub MCP adapter endpoints may require authentication")
     
-    async def source-agent_command(self, command: str, **kwargs):
+    async def source_agent_command(self, command: str, **kwargs):
         """Execute Source Agent commands"""
         base_url = self.services["source-agent"]
         
@@ -797,7 +797,7 @@ class EcosystemCLI:
         elif service == "github-mcp":
             await self.github_mcp_command(command, **kwargs)
         elif service == "source-agent":
-            await self.source-agent_command(command, **kwargs)
+            await self.source_agent_command(command, **kwargs)
         elif service in ["doc_store", "doc-store"]:
             await self.doc_store_command(command, **kwargs)
         elif service == "frontend":
