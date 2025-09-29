@@ -1,67 +1,61 @@
 # =============================================================================
-# Mock Data Generator Service Dockerfile
+# Standard Service Dockerfile Template
 # =============================================================================
-# Production-ready containerization for the Mock Data Generator service
-# Provides LLM-integrated realistic mock data generation for testing
+# Template for standard services with simple main.py structure
 
-FROM python:3.12.7-slim
+FROM python:3.12-slim
 
-# Set metadata
-LABEL maintainer="LLM Ecosystem Team"
+# Metadata - To be customized per service
+LABEL maintainer="LLM Documentation Ecosystem Team"
 LABEL service="mock-data-generator"
 LABEL version="1.0.0"
-LABEL description="LLM-integrated mock data generation for testing"
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app \
-    SERVICE_NAME=mock-data-generator \
-    SERVICE_PORT=5065
-
-# Create non-root user for security
-RUN groupadd -r mockgen && useradd -r -g mockgen mockgen
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+LABEL description="Mock Data Generator service"
+LABEL port="5000"
+LABEL dependencies="redis"
+LABEL profile="core"
 
 # Set working directory
 WORKDIR /app
 
-# Copy shared dependencies first for better caching
-COPY services/shared/requirements.txt /app/services/shared/requirements.txt
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy service-specific requirements
-COPY services/mock-data-generator/requirements.txt /app/services/mock-data-generator/requirements.txt
+# Copy requirements files
+COPY services/requirements.base.txt ./
+COPY services/shared/requirements.txt ./shared_requirements.txt
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r services/shared/requirements.txt && \
-    pip install --no-cache-dir -r services/mock-data-generator/requirements.txt
+    pip install --no-cache-dir -r requirements.base.txt && \
+    pip install --no-cache-dir -r shared_requirements.txt
 
-# Copy shared modules
-COPY services/shared/ /app/services/shared/
+# Copy service code maintaining directory structure
+COPY services/mock-data-generator/ ./services/mock-data-generator/
+COPY services/shared/ ./services/shared/
+COPY config.yml ./
+COPY config/ ./config/
 
-# Copy service code
-COPY services/mock-data-generator/ /app/services/mock-data-generator/
+# Set Python path and environment
+ENV PYTHONPATH=/app
+ENV mock-data-generator=mock-data-generator
+ENV 5000=5000
+ENV REDIS_HOST=redis
+ENV ENVIRONMENT=development
 
-# Create necessary directories and set permissions
-RUN mkdir -p /app/data /app/logs /app/config && \
-    echo '{}' > /app/config.yml && \
-    chown -R mockgen:mockgen /app
-
-# Switch to non-root user
-USER mockgen
-
-# Expose service port
-EXPOSE 5065
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5065/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
 
-# Default command
-WORKDIR /app
-CMD ["python", "services/mock-data-generator/main.py"]
+# Expose port
+EXPOSE 5000
+
+USER appuser
+
+# Start command - using module path for proper imports
+CMD ["python", "-m", "services.mock-data-generator.main"]

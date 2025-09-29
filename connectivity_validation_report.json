@@ -1,0 +1,213 @@
+{
+  "validation_timestamp": 1759171303.520245,
+  "connectivity_score": 18.75,
+  "overall_status": "CRITICAL",
+  "dependency_validation": {
+    "dependency_validation": {
+      "doc_store": {
+        "service": "doc_store",
+        "required_dependencies": [
+          "redis"
+        ],
+        "dependency_status": {
+          "redis": false
+        },
+        "missing_dependencies": [
+          "redis"
+        ],
+        "dependencies_met": false,
+        "critical": true
+      },
+      "orchestrator": {
+        "service": "orchestrator",
+        "required_dependencies": [
+          "redis"
+        ],
+        "dependency_status": {
+          "redis": false
+        },
+        "missing_dependencies": [
+          "redis"
+        ],
+        "dependencies_met": false,
+        "critical": true
+      },
+      "llm-gateway": {
+        "service": "llm-gateway",
+        "required_dependencies": [
+          "ollama"
+        ],
+        "dependency_status": {
+          "ollama": true
+        },
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": false
+      },
+      "analysis-service": {
+        "service": "analysis-service",
+        "required_dependencies": [
+          "doc_store",
+          "llm-gateway"
+        ],
+        "dependency_status": {
+          "doc_store": false,
+          "llm-gateway": false
+        },
+        "missing_dependencies": [
+          "doc_store",
+          "llm-gateway"
+        ],
+        "dependencies_met": false,
+        "critical": true
+      },
+      "discovery-agent": {
+        "service": "discovery-agent",
+        "required_dependencies": [
+          "orchestrator"
+        ],
+        "dependency_status": {
+          "orchestrator": false
+        },
+        "missing_dependencies": [
+          "orchestrator"
+        ],
+        "dependencies_met": false,
+        "critical": true
+      },
+      "mock-data-generator": {
+        "service": "mock-data-generator",
+        "required_dependencies": [
+          "llm-gateway",
+          "doc_store"
+        ],
+        "dependency_status": {
+          "llm-gateway": false,
+          "doc_store": false
+        },
+        "missing_dependencies": [
+          "llm-gateway",
+          "doc_store"
+        ],
+        "dependencies_met": false,
+        "critical": true
+      },
+      "summarizer-hub": {
+        "service": "summarizer-hub",
+        "required_dependencies": [
+          "llm-gateway"
+        ],
+        "dependency_status": {
+          "llm-gateway": false
+        },
+        "missing_dependencies": [
+          "llm-gateway"
+        ],
+        "dependencies_met": false,
+        "critical": true
+      },
+      "notification-service": {
+        "service": "notification-service",
+        "required_dependencies": [],
+        "dependency_status": {},
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": false
+      },
+      "prompt_store": {
+        "service": "prompt_store",
+        "required_dependencies": [
+          "doc_store"
+        ],
+        "dependency_status": {
+          "doc_store": false
+        },
+        "missing_dependencies": [
+          "doc_store"
+        ],
+        "dependencies_met": false,
+        "critical": false
+      }
+    },
+    "critical_failures": [
+      "doc_store",
+      "orchestrator",
+      "analysis-service",
+      "discovery-agent",
+      "mock-data-generator",
+      "summarizer-hub"
+    ],
+    "total_dependencies": 9,
+    "healthy_dependencies": 2
+  },
+  "integration_testing": {
+    "integration_tests": {
+      "document_creation_workflow": {
+        "test_name": "document_creation_workflow",
+        "passed": false,
+        "error": "<urlopen error [Errno 61] Connection refused>",
+        "execution_time": 0.0004470348358154297,
+        "url": "http://localhost:5087/api/v1/documents"
+      },
+      "document_analysis_workflow": {
+        "test_name": "document_analysis_workflow",
+        "passed": false,
+        "error": "<urlopen error [Errno 61] Connection refused>",
+        "execution_time": 0.00041413307189941406,
+        "url": "http://localhost:5080/api/v1/analysis/analyze"
+      },
+      "llm_provider_check": {
+        "test_name": "llm_provider_check",
+        "passed": false,
+        "error": "<urlopen error [Errno 61] Connection refused>",
+        "execution_time": 0.00040912628173828125,
+        "url": "http://localhost:5055/api/v1/providers"
+      },
+      "service_discovery_check": {
+        "test_name": "service_discovery_check",
+        "passed": false,
+        "error": "<urlopen error [Errno 61] Connection refused>",
+        "execution_time": 0.00034999847412109375,
+        "url": "http://localhost:5045/api/v1/discovery/services"
+      },
+      "orchestrator_services_check": {
+        "test_name": "orchestrator_services_check",
+        "passed": false,
+        "error": "<urlopen error [Errno 61] Connection refused>",
+        "execution_time": 0.00037980079650878906,
+        "url": "http://localhost:5099/api/v1/services"
+      },
+      "doc_store_to_analysis_integration": {
+        "test_name": "doc_store_to_analysis_integration",
+        "passed": false,
+        "error": "<urlopen error [Errno 61] Connection refused>",
+        "execution_time": 0.00032782554626464844,
+        "url": "http://localhost:5080/api/v1/analysis/capabilities"
+      }
+    },
+    "total_tests": 6,
+    "passed_tests": 0,
+    "failed_tests": [
+      "document_creation_workflow",
+      "document_analysis_workflow",
+      "llm_provider_check",
+      "service_discovery_check",
+      "orchestrator_services_check",
+      "doc_store_to_analysis_integration"
+    ]
+  },
+  "port_validation": {
+    "port_validation": {},
+    "port_conflicts": [],
+    "total_containers": 0,
+    "conflicts_found": 0
+  },
+  "critical_issues": [
+    "Critical service dependencies missing: doc_store, orchestrator, analysis-service, discovery-agent, mock-data-generator, summarizer-hub",
+    "Integration tests failing: document_creation_workflow, document_analysis_workflow, llm_provider_check, service_discovery_check, orchestrator_services_check, doc_store_to_analysis_integration"
+  ],
+  "recommendations": [
+    "Start missing critical dependencies before dependent services",
+    "Fix API endpoints and response formats for failing integration tests"
+  ]
+}

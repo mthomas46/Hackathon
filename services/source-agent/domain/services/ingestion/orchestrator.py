@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from services.shared.intelligent_caching import get_service_cache
-from services.shared.monitoring.logging import fire_and_forget
+from services.shared.infrastructure.caching.intelligent_caching import get_service_cache
+from services.shared.infrastructure.monitoring.logging import fire_and_forget
 
 from .types import DataIngestionJob, DataSource, IngestionPriority
 from .predictive_model import PredictiveIngestionModel

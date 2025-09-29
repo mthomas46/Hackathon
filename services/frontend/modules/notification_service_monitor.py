@@ -229,4 +229,4 @@ class NotificationServiceMonitor:
 
 
 # Global instance
-notification-service_monitor = NotificationServiceMonitor()
+notification_service_monitor = NotificationServiceMonitor()

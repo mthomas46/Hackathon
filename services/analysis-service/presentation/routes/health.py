@@ -4,8 +4,7 @@ Handles health checks and monitoring endpoints
 """
 
 from fastapi import APIRouter, HTTPException
-from services.shared.presentation.responses import create_success_response
-from services.shared.monitoring.health import HealthStatus
+from services.shared.presentation.api.responses import create_success_response
 
 router = APIRouter()
 
@@ -14,7 +13,7 @@ router = APIRouter()
 async def health_check():
     """Basic health check endpoint."""
     return create_success_response({
-        "status": HealthStatus.HEALTHY.value,
+        "status": "healthy",
         "service": "analysis-service",
         "version": "1.0.0"
     })
@@ -27,7 +26,7 @@ async def get_analysis_status_v1():
     analysis_status = {
         "service": "analysis-service",
         "version": "1.0.0",
-        "status": HealthStatus.HEALTHY.value,
+        "status": "healthy",
         "capabilities": {
             "sentiment_analysis": True,
             "semantic_similarity": True,
@@ -49,6 +48,6 @@ async def get_analysis_status_v1():
 async def check_integration_health():
     """Check integration health with other services."""
     return create_success_response({
-        "status": HealthStatus.HEALTHY.value,
+        "status": "healthy",
         "services": ["doc-store", "llm-gateway"]
     })

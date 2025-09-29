@@ -12,7 +12,7 @@ from ..shared_utils import (
     get_frontend_clients,
     handle_frontend_error,
 )
-from ..source-agent_monitor import source-agent_monitor
+from ..source_agent_monitor import source_agent_monitor
 
 
 class SourceAgentUIHandlers:
@@ -25,12 +25,12 @@ class SourceAgentUIHandlers:
             get_frontend_clients()
 
             # Get source agent status and cached data
-            status_data = source-agent_monitor.get_source_status()
-            fetch_history = source-agent_monitor.get_fetch_history(limit=20)
-            normalization_history = source-agent_monitor.get_normalization_history(
+            status_data = source_agent_monitor.get_source_status()
+            fetch_history = source_agent_monitor.get_fetch_history(limit=20)
+            normalization_history = source_agent_monitor.get_normalization_history(
                 limit=20
             )
-            analysis_history = source-agent_monitor.get_analysis_history(limit=20)
+            analysis_history = source_agent_monitor.get_analysis_history(limit=20)
 
             # Build context for template
             context = {

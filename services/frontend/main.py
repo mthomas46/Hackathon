@@ -137,7 +137,7 @@ from fastapi.staticfiles import StaticFiles
 try:
     from services.frontend.modules.analysis_monitor import analysis_monitor
     from services.frontend.modules.bedrock_proxy_monitor import bedrock_proxy_monitor
-    from services.frontend.modules.code-analyzer_monitor import code-analyzer_monitor
+    from services.frontend.modules.code_analyzer_monitor import code_analyzer_monitor
     from services.frontend.modules.data_browser import (
         data_browser,
         get_doc_store_summary,
@@ -166,7 +166,7 @@ try:
         get_frontend_clients,
         get_orchestrator_url,
         get_reporting_url,
-        get_summarizer-hub_url,
+        get_summarizer_hub_url,
         handle_frontend_error,
     )
     from services.frontend.modules.summarizer_cache import (
@@ -187,7 +187,7 @@ except ImportError:
 
     analysis_monitor = MockMonitor("analysis")
     bedrock_proxy_monitor = MockMonitor("bedrock_proxy")
-    code-analyzer_monitor = MockMonitor("code-analyzer")
+    code_analyzer_monitor = MockMonitor("code-analyzer")
 
     class MockDataBrowser:
         pass
@@ -299,7 +299,7 @@ except ImportError:
     def get_reporting_url():
         return os.getenv("REPORTING_URL", "http://localhost:5008")
 
-    def get_summarizer-hub_url():
+    def get_summarizer_hub_url():
         return os.getenv("SUMMARIZER_HUB_URL", "http://localhost:5009")
 
     def handle_frontend_error(error):
@@ -446,7 +446,7 @@ async def info():
                     "DOC_STORE_URL": get_doc_store_url(),
                     "CONSISTENCY_ENGINE_URL": get_consistency_engine_url(),
                     "ORCHESTRATOR_URL": get_orchestrator_url(),
-                    "SUMMARIZER_HUB_URL": get_summarizer-hub_url(),
+                    "SUMMARIZER_HUB_URL": get_summarizer_hub_url(),
                     "LOG_COLLECTOR_URL": get_log_collector_url(),
                     "PROMPT_STORE_URL": get_prompt_store_url(),
                     "ANALYSIS_SERVICE_URL": get_analysis_service_url(),
@@ -474,7 +474,7 @@ async def config_effective():
             EnvVars.DOC_STORE_URL_ENV: get_doc_store_url(),
             EnvVars.CONSISTENCY_ENGINE_URL_ENV: get_consistency_engine_url(),
             EnvVars.ORCHESTRATOR_URL_ENV: get_orchestrator_url(),
-            EnvVars.SUMMARIZER_HUB_URL_ENV: get_summarizer-hub_url(),
+            EnvVars.SUMMARIZER_HUB_URL_ENV: get_summarizer_hub_url(),
             EnvVars.LOG_COLLECTOR_URL_ENV: get_log_collector_url(),
             EnvVars.PROMPT_STORE_URL_ENV: get_prompt_store_url(),
             EnvVars.ANALYSIS_SERVICE_URL_ENV: get_analysis_service_url(),
@@ -688,13 +688,13 @@ async def ui_services_overview():
 
 
 @app.get("/code-analyzer/dashboard")
-async def ui_code-analyzer_dashboard():
+async def ui_code_analyzer_dashboard():
     """Render code analyzer service dashboard.
 
     Provides code analysis, security scanning, and style checking capabilities
     with interactive forms and result visualization.
     """
-    return ui_handlers.handle_code-analyzer_dashboard()
+    return ui_handlers.handle_code_analyzer_dashboard()
 
 
 @app.get("/bedrock-proxy/dashboard")
@@ -748,33 +748,33 @@ async def ui_memory_agent_dashboard():
 
 
 @app.get("/notification-service/dashboard")
-async def ui_notification-service_dashboard():
+async def ui_notification_service_dashboard():
     """Render notification service dashboard.
 
     Provides owner resolution monitoring, notification delivery tracking,
     and dead letter queue management for the notification service.
     """
-    return ui_handlers.handle_notification-service_dashboard()
+    return ui_handlers.handle_notification_service_dashboard()
 
 
 @app.get("/secure-analyzer/dashboard")
-async def ui_secure-analyzer_dashboard():
+async def ui_secure_analyzer_dashboard():
     """Render secure analyzer service dashboard.
 
     Provides content security analysis, policy enforcement monitoring,
     and secure summarization testing for the secure analyzer service.
     """
-    return ui_handlers.handle_secure-analyzer_dashboard()
+    return ui_handlers.handle_secure_analyzer_dashboard()
 
 
 @app.get("/source-agent/dashboard")
-async def ui_source-agent_dashboard():
+async def ui_source_agent_dashboard():
     """Render source agent service dashboard.
 
     Provides document fetching, data normalization, and code analysis
     monitoring across GitHub, Jira, and Confluence sources.
     """
-    return ui_handlers.handle_source-agent_dashboard()
+    return ui_handlers.handle_source_agent_dashboard()
 
 
 @app.get("/services/overview")
@@ -930,7 +930,7 @@ async def get_summarizer_status():
 
         # Try to fetch live data from summarizer hub
         clients = get_frontend_clients()
-        summarizer_url = get_summarizer-hub_url()
+        summarizer_url = get_summarizer_hub_url()
 
         live_data = {"service_status": {}, "config": {}}
 
@@ -1709,10 +1709,10 @@ async def get_finding_details(finding_id: str):
 
 # Code Analyzer API endpoints
 @app.get("/api/code-analyzer/status")
-async def get_code-analyzer_status():
+async def get_code_analyzer_status():
     """Get comprehensive code analyzer service status."""
     try:
-        status_data = await code-analyzer_monitor.get_analyzer_status()
+        status_data = await code_analyzer_monitor.get_analyzer_status()
         return create_frontend_success_response(
             "code analyzer status retrieved",
             status_data,
@@ -1730,7 +1730,7 @@ async def get_code-analyzer_status():
 async def analyze_text_code(req: dict):
     """Analyze text content for code quality and issues."""
     try:
-        result = await code-analyzer_monitor.analyze_text(
+        result = await code_analyzer_monitor.analyze_text(
             req.get("text", ""), req.get("analysis_type", "general")
         )
         return create_frontend_success_response(
@@ -1748,7 +1748,7 @@ async def analyze_text_code(req: dict):
 async def analyze_files_code(req: dict):
     """Analyze multiple files for code quality and issues."""
     try:
-        result = await code-analyzer_monitor.analyze_files(
+        result = await code_analyzer_monitor.analyze_files(
             req.get("files", []), req.get("analysis_type", "general")
         )
         return create_frontend_success_response(
@@ -1766,7 +1766,7 @@ async def analyze_files_code(req: dict):
 async def security_scan_code(req: dict):
     """Perform security scan on code."""
     try:
-        result = await code-analyzer_monitor.scan_security(req.get("code", ""))
+        result = await code_analyzer_monitor.scan_security(req.get("code", ""))
         return create_frontend_success_response(
             "security scan completed",
             result,
@@ -1782,7 +1782,7 @@ async def security_scan_code(req: dict):
 async def style_check_code(req: dict):
     """Check code style compliance."""
     try:
-        result = await code-analyzer_monitor.check_style(
+        result = await code_analyzer_monitor.check_style(
             req.get("code", ""), req.get("style", "google")
         )
         return create_frontend_success_response(
@@ -1822,10 +1822,10 @@ async def get_style_examples():
 
 
 @app.get("/api/code-analyzer/history")
-async def get_code-analyzer_history():
+async def get_code_analyzer_history():
     """Get code analyzer analysis history."""
     try:
-        history = code-analyzer_monitor.get_analysis_history()
+        history = code_analyzer_monitor.get_analysis_history()
         return create_frontend_success_response(
             "analysis history retrieved",
             {"history": history},
@@ -2491,16 +2491,16 @@ async def get_memory_agent_history(limit: int = 20):
 
 
 @app.get("/api/notification-service/status")
-async def get_notification-service_status():
+async def get_notification_service_status():
     """Get comprehensive notification service status.
 
     Returns health information, notification statistics, DLQ status,
     and recent activity for monitoring the notification service.
     """
     try:
-        from .modules.notification-service_monitor import notification-service_monitor
+        from .modules.notification_service_monitor import notification_service_monitor
 
-        status_data = await notification-service_monitor.get_notification_status()
+        status_data = await notification_service_monitor.get_notification_status()
         return create_frontend_success_response(
             "notification service status retrieved",
             status_data,
@@ -2522,9 +2522,9 @@ async def get_notification_dlq(limit: int = 50):
     delivery issues in the notification service.
     """
     try:
-        from .modules.notification-service_monitor import notification-service_monitor
+        from .modules.notification_service_monitor import notification_service_monitor
 
-        dlq_entries = await notification-service_monitor.get_dlq_entries(limit=limit)
+        dlq_entries = await notification_service_monitor.get_dlq_entries(limit=limit)
         return create_frontend_success_response(
             "notification DLQ retrieved",
             dlq_entries,
@@ -2544,7 +2544,7 @@ async def resolve_notification_owners(req: dict):
     targets (email addresses, webhook URLs, etc.) for bulk operations.
     """
     try:
-        from .modules.notification-service_monitor import notification-service_monitor
+        from .modules.notification_service_monitor import notification_service_monitor
 
         owners = req.get("owners", [])
         if not owners or not isinstance(owners, list):
@@ -2554,7 +2554,7 @@ async def resolve_notification_owners(req: dict):
                 **build_frontend_context("resolve_notification_owners"),
             )
 
-        result = await notification-service_monitor.resolve_owners(owners)
+        result = await notification_service_monitor.resolve_owners(owners)
 
         if result.get("success"):
             return create_frontend_success_response(
@@ -2588,7 +2588,7 @@ async def send_test_notification(req: dict):
     the specified channel for testing delivery capabilities.
     """
     try:
-        from .modules.notification-service_monitor import notification-service_monitor
+        from .modules.notification_service_monitor import notification_service_monitor
 
         channel = req.get("channel")
         target = req.get("target")
@@ -2602,7 +2602,7 @@ async def send_test_notification(req: dict):
                 **build_frontend_context("send_test_notification"),
             )
 
-        result = await notification-service_monitor.send_notification(
+        result = await notification_service_monitor.send_notification(
             channel=channel,
             target=target,
             title=title,
@@ -2641,9 +2641,9 @@ async def get_notification_history(limit: int = 20):
     Useful for analyzing delivery success rates and troubleshooting.
     """
     try:
-        from .modules.notification-service_monitor import notification-service_monitor
+        from .modules.notification_service_monitor import notification_service_monitor
 
-        history = notification-service_monitor.get_notification_history(limit=limit)
+        history = notification_service_monitor.get_notification_history(limit=limit)
         return create_frontend_success_response(
             "notification history retrieved",
             history,
@@ -2665,9 +2665,9 @@ async def get_owner_resolution_history(limit: int = 20):
     Useful for analyzing resolution patterns and caching effectiveness.
     """
     try:
-        from .modules.notification-service_monitor import notification-service_monitor
+        from .modules.notification_service_monitor import notification_service_monitor
 
-        history = notification-service_monitor.get_owner_resolution_history(limit=limit)
+        history = notification_service_monitor.get_owner_resolution_history(limit=limit)
         return create_frontend_success_response(
             "owner resolution history retrieved",
             history,
@@ -2687,16 +2687,16 @@ async def get_owner_resolution_history(limit: int = 20):
 
 
 @app.get("/api/secure-analyzer/status")
-async def get_secure-analyzer_status():
+async def get_secure_analyzer_status():
     """Get comprehensive secure analyzer service status.
 
     Returns health information, analysis statistics, and recent activity
     for monitoring the secure analyzer service operations.
     """
     try:
-        from .modules.secure-analyzer_monitor import secure-analyzer_monitor
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
 
-        status_data = await secure-analyzer_monitor.get_secure_status()
+        status_data = await secure_analyzer_monitor.get_secure_status()
         return create_frontend_success_response(
             "secure analyzer status retrieved",
             status_data,
@@ -2718,7 +2718,7 @@ async def detect_secure_content(req: dict):
     including detected sensitive information and security topics.
     """
     try:
-        from .modules.secure-analyzer_monitor import secure-analyzer_monitor
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
 
         content = req.get("content")
         keywords = req.get("keywords", [])
@@ -2731,7 +2731,7 @@ async def detect_secure_content(req: dict):
                 **build_frontend_context("detect_secure_content"),
             )
 
-        result = await secure-analyzer_monitor.detect_content(
+        result = await secure_analyzer_monitor.detect_content(
             content=content, keywords=keywords, keyword_document=keyword_document
         )
 
@@ -2768,7 +2768,7 @@ async def suggest_secure_models(req: dict):
     security analysis and policy enforcement.
     """
     try:
-        from .modules.secure-analyzer_monitor import secure-analyzer_monitor
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
 
         content = req.get("content")
         keywords = req.get("keywords", [])
@@ -2781,7 +2781,7 @@ async def suggest_secure_models(req: dict):
                 **build_frontend_context("suggest_secure_models"),
             )
 
-        result = await secure-analyzer_monitor.suggest_models(
+        result = await secure_analyzer_monitor.suggest_models(
             content=content, keywords=keywords, keyword_document=keyword_document
         )
 
@@ -2818,7 +2818,7 @@ async def generate_secure_summary(req: dict):
     based on security analysis and policy constraints.
     """
     try:
-        from .modules.secure-analyzer_monitor import secure-analyzer_monitor
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
 
         content = req.get("content")
         providers = req.get("providers", [])
@@ -2834,7 +2834,7 @@ async def generate_secure_summary(req: dict):
                 **build_frontend_context("generate_secure_summary"),
             )
 
-        result = await secure-analyzer_monitor.secure_summarize(
+        result = await secure_analyzer_monitor.secure_summarize(
             content=content,
             providers=providers,
             override_policy=override_policy,
@@ -2880,9 +2880,9 @@ async def get_detection_history(limit: int = 20):
     Useful for analyzing security patterns and detection effectiveness.
     """
     try:
-        from .modules.secure-analyzer_monitor import secure-analyzer_monitor
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
 
-        history = secure-analyzer_monitor.get_detection_history(limit=limit)
+        history = secure_analyzer_monitor.get_detection_history(limit=limit)
         return create_frontend_success_response(
             "detection history retrieved",
             history,
@@ -2904,9 +2904,9 @@ async def get_suggestion_history(limit: int = 20):
     Useful for analyzing policy enforcement and model selection patterns.
     """
     try:
-        from .modules.secure-analyzer_monitor import secure-analyzer_monitor
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
 
-        history = secure-analyzer_monitor.get_suggestion_history(limit=limit)
+        history = secure_analyzer_monitor.get_suggestion_history(limit=limit)
         return create_frontend_success_response(
             "suggestion history retrieved",
             history,
@@ -2928,9 +2928,9 @@ async def get_summary_history(limit: int = 20):
     Useful for analyzing summarization effectiveness and policy compliance.
     """
     try:
-        from .modules.secure-analyzer_monitor import secure-analyzer_monitor
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
 
-        history = secure-analyzer_monitor.get_summary_history(limit=limit)
+        history = secure_analyzer_monitor.get_summary_history(limit=limit)
         return create_frontend_success_response(
             "summary history retrieved",
             history,
@@ -2948,16 +2948,16 @@ async def get_summary_history(limit: int = 20):
 
 
 @app.get("/api/source-agent/status")
-async def get_source-agent_status():
+async def get_source_agent_status():
     """Get comprehensive source agent service status.
 
     Returns health information, operation statistics, source capabilities,
     and recent activity for monitoring the source agent service.
     """
     try:
-        from .modules.source-agent_monitor import source-agent_monitor
+        from .modules.source_agent_monitor import source_agent_monitor
 
-        status_data = await source-agent_monitor.get_source_status()
+        status_data = await source_agent_monitor.get_source_status()
         return create_frontend_success_response(
             "source agent status retrieved",
             status_data,
@@ -2979,7 +2979,7 @@ async def fetch_source_document(req: dict):
     to fetch documents from GitHub, Jira, or Confluence.
     """
     try:
-        from .modules.source-agent_monitor import source-agent_monitor
+        from .modules.source_agent_monitor import source_agent_monitor
 
         source = req.get("source")
         identifier = req.get("identifier")
@@ -2992,7 +2992,7 @@ async def fetch_source_document(req: dict):
                 **build_frontend_context("fetch_source_document"),
             )
 
-        result = await source-agent_monitor.fetch_document(
+        result = await source_agent_monitor.fetch_document(
             source=source, identifier=identifier, scope=scope
         )
 
@@ -3028,7 +3028,7 @@ async def normalize_source_data(req: dict):
     to normalize data from GitHub, Jira, or Confluence into standard format.
     """
     try:
-        from .modules.source-agent_monitor import source-agent_monitor
+        from .modules.source_agent_monitor import source_agent_monitor
 
         source = req.get("source")
         data = req.get("data")
@@ -3041,7 +3041,7 @@ async def normalize_source_data(req: dict):
                 **build_frontend_context("normalize_source_data"),
             )
 
-        result = await source-agent_monitor.normalize_data(
+        result = await source_agent_monitor.normalize_data(
             source=source, data=data, correlation_id=correlation_id
         )
 
@@ -3077,7 +3077,7 @@ async def analyze_source_code(req: dict):
     API endpoints, architectural patterns, and integration points.
     """
     try:
-        from .modules.source-agent_monitor import source-agent_monitor
+        from .modules.source_agent_monitor import source_agent_monitor
 
         text = req.get("text")
 
@@ -3088,7 +3088,7 @@ async def analyze_source_code(req: dict):
                 **build_frontend_context("analyze_source_code"),
             )
 
-        result = await source-agent_monitor.analyze_code(text=text)
+        result = await source_agent_monitor.analyze_code(text=text)
 
         if result.get("success"):
             return create_frontend_success_response(
@@ -3123,9 +3123,9 @@ async def get_fetch_history(limit: int = 20):
     Useful for analyzing fetch success rates and source performance.
     """
     try:
-        from .modules.source-agent_monitor import source-agent_monitor
+        from .modules.source_agent_monitor import source_agent_monitor
 
-        history = source-agent_monitor.get_fetch_history(limit=limit)
+        history = source_agent_monitor.get_fetch_history(limit=limit)
         return create_frontend_success_response(
             "fetch history retrieved",
             history,
@@ -3145,9 +3145,9 @@ async def get_normalization_history(limit: int = 20):
     Useful for analyzing normalization success rates and data quality.
     """
     try:
-        from .modules.source-agent_monitor import source-agent_monitor
+        from .modules.source_agent_monitor import source_agent_monitor
 
-        history = source-agent_monitor.get_normalization_history(limit=limit)
+        history = source_agent_monitor.get_normalization_history(limit=limit)
         return create_frontend_success_response(
             "normalization history retrieved",
             history,
@@ -3169,9 +3169,9 @@ async def get_analysis_history(limit: int = 20):
     Useful for analyzing code patterns and endpoint detection accuracy.
     """
     try:
-        from .modules.source-agent_monitor import source-agent_monitor
+        from .modules.source_agent_monitor import source_agent_monitor
 
-        history = source-agent_monitor.get_analysis_history(limit=limit)
+        history = source_agent_monitor.get_analysis_history(limit=limit)
         return create_frontend_success_response(
             "analysis history retrieved",
             history,
@@ -3462,7 +3462,7 @@ if __name__ == "__main__":
     # Enable auto-reload in development
     is_dev = os.getenv("ENVIRONMENT", "production") == "development"
 
-    host = os.getenv("FRONTEND_SERVICE_HOST", "127.0.0.1")
+    host = "0.0.0.0"
     port = int(os.getenv("FRONTEND_SERVICE_PORT", str(DEFAULT_PORT)))
     uvicorn.run(
         "main:app" if is_dev else app,

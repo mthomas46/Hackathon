@@ -33,7 +33,7 @@ except ImportError:
 # DRY refactoring: Removed local fallbacks - all services now use shared utilities
 # This eliminates ~20 lines of duplicated utility code across the ecosystem
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )

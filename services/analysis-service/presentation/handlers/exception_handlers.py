@@ -8,7 +8,7 @@ import logging
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from services.shared.presentation.responses import create_error_response
+from services.shared.presentation.api.responses import create_error_response
 
 from ...domain.exceptions import (
     AnalysisExecutionException,

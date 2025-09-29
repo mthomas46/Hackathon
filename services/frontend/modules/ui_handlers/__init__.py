@@ -12,11 +12,11 @@ from .github_mcp_handlers import GithubMcpUIHandlers
 from .interpreter_handlers import InterpreterUIHandlers
 from .main_handlers import MainUIHandlers
 from .memory_agent_handlers import MemoryAgentUIHandlers
-from .notification-service_handlers import NotificationServiceUIHandlers
+from .notification_service_handlers import NotificationServiceUIHandlers
 from .prompt_store_handlers import PromptStoreUIHandlers
-from .secure-analyzer_handlers import SecureAnalyzerUIHandlers
+from .secure_analyzer_handlers import SecureAnalyzerUIHandlers
 from .services_overview_handlers import ServicesOverviewUIHandlers
-from .source-agent_handlers import SourceAgentUIHandlers
+from .source_agent_handlers import SourceAgentUIHandlers
 from .workflow_handlers import WorkflowUIHandlers
 
 # Create singleton instances for each handler type
@@ -24,15 +24,15 @@ main_handlers = MainUIHandlers()
 workflow_handlers = WorkflowUIHandlers()
 doc_store_handlers = DocStoreUIHandlers()
 prompt_store_handlers = PromptStoreUIHandlers()
-code-analyzer_handlers = CodeAnalyzerUIHandlers()
+code_analyzer_handlers = CodeAnalyzerUIHandlers()
 bedrock_proxy_handlers = BedrockProxyUIHandlers()
 discovery_agent_handlers = DiscoveryAgentUIHandlers()
 github_mcp_handlers = GithubMcpUIHandlers()
 interpreter_handlers = InterpreterUIHandlers()
 memory_agent_handlers = MemoryAgentUIHandlers()
-notification-service_handlers = NotificationServiceUIHandlers()
-secure-analyzer_handlers = SecureAnalyzerUIHandlers()
-source-agent_handlers = SourceAgentUIHandlers()
+notification_service_handlers = NotificationServiceUIHandlers()
+secure_analyzer_handlers = SecureAnalyzerUIHandlers()
+source_agent_handlers = SourceAgentUIHandlers()
 services_overview_handlers = ServicesOverviewUIHandlers()
 cli_handlers = CLIUIHandlers()
 
@@ -97,7 +97,7 @@ class UIHandlers:
         return prompt_store_handlers.handle_prompt_store_browser()
 
     def handle_code_analyzer_dashboard(self) -> "HTMLResponse":
-        return code-analyzer_handlers.handle_code_analyzer_dashboard()
+        return code_analyzer_handlers.handle_code_analyzer_dashboard()
 
     def handle_bedrock_proxy_dashboard(self) -> "HTMLResponse":
         return bedrock_proxy_handlers.handle_bedrock_proxy_dashboard()
@@ -115,13 +115,13 @@ class UIHandlers:
         return memory_agent_handlers.handle_memory_agent_dashboard()
 
     def handle_notification_service_dashboard(self) -> "HTMLResponse":
-        return notification-service_handlers.handle_notification_service_dashboard()
+        return notification_service_handlers.handle_notification_service_dashboard()
 
     def handle_secure_analyzer_dashboard(self) -> "HTMLResponse":
-        return secure-analyzer_handlers.handle_secure_analyzer_dashboard()
+        return secure_analyzer_handlers.handle_secure_analyzer_dashboard()
 
     def handle_source_agent_dashboard(self) -> "HTMLResponse":
-        return source-agent_handlers.handle_source_agent_dashboard()
+        return source_agent_handlers.handle_source_agent_dashboard()
 
     def handle_services_overview(self) -> "HTMLResponse":
         return services_overview_handlers.handle_services_overview()

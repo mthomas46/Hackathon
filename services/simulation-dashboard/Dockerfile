@@ -1,77 +1,61 @@
-# Project Simulation Dashboard - Docker Configuration
-# Multi-stage build for optimized production deployment
+# =============================================================================
+# Standard Service Dockerfile Template
+# =============================================================================
+# Template for standard services with simple main.py structure
 
-# Build stage
-FROM python:3.13-slim as builder
+FROM python:3.12-slim
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Install system dependencies for building
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create virtual environment
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
-
-# Production stage
-FROM python:3.13-slim as production
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PATH="/opt/venv/bin:$PATH" \
-    DASHBOARD_ENVIRONMENT=production \
-    DASHBOARD_DEBUG=false
-
-# Install runtime system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/* && \
-    apt-get clean
-
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash dashboard && \
-    mkdir -p /app && \
-    chown dashboard:dashboard /app
-
-# Copy virtual environment from builder
-COPY --from=builder /opt/venv /opt/venv
-
-# Copy application code
-COPY --chown=dashboard:dashboard . /app/
+# Metadata - To be customized per service
+LABEL maintainer="LLM Documentation Ecosystem Team"
+LABEL service="simulation-dashboard"
+LABEL version="1.0.0"
+LABEL description="Simulation Dashboard service"
+LABEL port="5000"
+LABEL dependencies="redis"
+LABEL profile="core"
 
 # Set working directory
 WORKDIR /app
 
-# Switch to non-root user
-USER dashboard
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements files
+COPY services/requirements.base.txt ./
+COPY services/shared/requirements.txt ./shared_requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.base.txt && \
+    pip install --no-cache-dir -r shared_requirements.txt
+
+# Copy service code maintaining directory structure
+COPY services/simulation-dashboard/ ./services/simulation-dashboard/
+COPY services/shared/ ./services/shared/
+COPY config.yml ./
+COPY config/ ./config/
+
+# Set Python path and environment
+ENV PYTHONPATH=/app
+ENV simulation-dashboard=simulation-dashboard
+ENV 5000=5000
+ENV REDIS_HOST=redis
+ENV ENVIRONMENT=development
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8501/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
 
 # Expose port
-EXPOSE 8501
+EXPOSE 5000
 
-# Default command
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+USER appuser
 
-# Labels for better container management
-LABEL maintainer="Project Simulation Team" \
-      version="1.0.0" \
-      description="Project Simulation Dashboard - Interactive frontend for simulation management" \
-      org.opencontainers.image.source="https://github.com/your-org/project-simulation-dashboard" \
-      org.opencontainers.image.title="Project Simulation Dashboard" \
-      org.opencontainers.image.description="Interactive dashboard for managing project simulations"
+# Start command - using module path for proper imports
+CMD ["python", "-m", "services.simulation-dashboard.main"]

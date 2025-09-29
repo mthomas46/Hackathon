@@ -118,12 +118,12 @@ services:
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
-      - "5087:5010"
+      - "5087:5005"
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5010/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5005/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -139,7 +139,7 @@ services:
     environment:
       - PYTHONPATH=/app
       - SERVICE_NAME=analysis-service
-      - SERVICE_PORT=5080
+      - SERVICE_PORT=5020
       - REDIS_HOST=redis
       - ENVIRONMENT=development
       # DDD-specific environment variables
@@ -168,14 +168,14 @@ services:
       context: .
       dockerfile: services/source-agent/Dockerfile
     ports:
-      - "5085:5070"
+      - "5085:5085"
     environment:
       - SERVICE_NAME=source-agent
       - SERVICE_PORT=5085
       - ENVIRONMENT=development
       - DOC_STORE_URL=http://doc_store:5087
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5070/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5085/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -194,19 +194,20 @@ services:
       - PYTHONPATH=/app
       - SERVICE_NAME=frontend
       - SERVICE_PORT=3000
+      - FRONTEND_SERVICE_HOST=0.0.0.0
       - ENVIRONMENT=development
     ports:
       - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     depends_on:
       orchestrator:
         condition: service_started
       analysis-service:
         condition: service_started
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     profiles:
       - core
 
@@ -277,11 +278,11 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
-      - SERVICE_PORT=5060
+      - SERVICE_PORT=5002
     ports:
-      - "5060:7090"
+      - "5060:5002"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5060/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5002/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -348,6 +349,7 @@ services:
       - PYTHONPATH=/app
       - SERVICE_NAME=mock-data-generator
       - SERVICE_PORT=5065
+      - MOCK_DATA_GENERATOR_HOST=0.0.0.0
       - REDIS_HOST=redis
       - ENVIRONMENT=development
       - LLM_GATEWAY_URL=http://llm-gateway:5055
@@ -381,7 +383,7 @@ services:
     ports:
       - "5030:5072"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5030/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5072/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -401,10 +403,11 @@ services:
       - PYTHONPATH=/app
       - SERVICE_NAME=memory-agent
       - SERVICE_PORT=5090
+      - MEMORY_AGENT_HOST=0.0.0.0
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
-      - "5090:5040"
+      - "5090:5090"
     depends_on:
       redis:
         condition: service_healthy
@@ -442,6 +445,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+      - core
       - development
 
   # Notification Service - Notification delivery and management
@@ -455,9 +459,9 @@ services:
       - SERVICE_PORT=5130
       - ENVIRONMENT=development
     ports:
-      - "5130:5020"
+      - "5130:5130"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5130/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -513,6 +517,7 @@ services:
       - PYTHONPATH=/app
       - SERVICE_NAME=interpreter
       - SERVICE_PORT=5120
+      - INTERPRETER_SERVICE_HOST=0.0.0.0
       - ENVIRONMENT=development
     ports:
       - "5120:5120"
@@ -764,9 +769,10 @@ services:
       - PYTHONPATH=/app
       - SERVICE_NAME=secure-analyzer
       - SERVICE_PORT=5100
+      - SECURE_ANALYZER_HOST=0.0.0.0
       - ENVIRONMENT=development
     ports:
-      - "5100:5070"
+      - "5100:5100"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5100/health"]
       interval: 30s
@@ -783,17 +789,92 @@ services:
     environment:
       - PYTHONPATH=/app
       - SERVICE_NAME=log-collector
-      - SERVICE_PORT=5040
+      - SERVICE_PORT=5080
       - ENVIRONMENT=development
     ports:
       - "5040:5080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5040/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
     profiles:
       - production
+
+  external-service-store:
+    build:
+      context: .
+      dockerfile: services/external-service-store/Dockerfile
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_NAME=external-service-store
+      - SERVICE_PORT=5140
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+    ports:
+      - "5140:5140"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5140/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - core
+      - utility
+
+  user-store:
+    build:
+      context: .
+      dockerfile: services/user-store/Dockerfile
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_NAME=user-store
+      - SERVICE_PORT=5150
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+    ports:
+      - "5150:5150"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5150/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - core
+      - utility
+
+  audit-framework:
+    build:
+      context: .
+      dockerfile: Dockerfile.audit
+    container_name: hackathon-audit-framework
+    volumes:
+      - .:/app
+      - audit-reports:/app/audit-reports
+    environment:
+      - PYTHONPATH=/app
+      - AUDIT_CONFIG=/app/config/audit-config.yaml
+      - REPORTS_DIR=/app/audit-reports
+      - CI=${CI:-false}
+    profiles:
+      - audit
+      - development
+      - ci
+    command: ["python3", "scripts/audit-framework/audit_cli.py", "--help"]
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "python3", "-c", "from audit_framework import AuditFramework; print('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 # ============================================================================
 # VOLUMES
@@ -841,37 +922,6 @@ volumes:
   # Audit framework volumes
   audit-reports:
     driver: local
-
-# ============================================================================
-# AUDIT FRAMEWORK SERVICE
-# ============================================================================
-
-  audit-framework:
-    build:
-      context: .
-      dockerfile: Dockerfile.audit
-    container_name: hackathon-audit-framework
-    volumes:
-      - .:/app
-      - audit-reports:/app/audit-reports
-    environment:
-      - PYTHONPATH=/app
-      - AUDIT_CONFIG=/app/config/audit-config.yaml
-      - REPORTS_DIR=/app/audit-reports
-      - CI=${CI:-false}
-    profiles:
-      - audit
-      - development
-      - ci
-    command: ["python3", "scripts/audit-framework/audit_cli.py", "--help"]
-    networks:
-      - default
-    healthcheck:
-      test: ["CMD", "python3", "-c", "from audit_framework import AuditFramework; print('healthy')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
 # ============================================================================
 # NETWORKS

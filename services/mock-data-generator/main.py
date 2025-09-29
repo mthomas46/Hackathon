@@ -20,9 +20,9 @@ from pydantic import BaseModel, Field
 # STANDARDIZED CONFIGURATION
 # ============================================================================
 from services.shared.infrastructure.config import load_service_config
-from services.shared.utilities import setup_common_middleware
-from services.shared.presentation.responses import create_error_response, create_success_response
-from services.shared.monitoring.health import register_health_endpoints
+from services.shared.infrastructure.utilities.middleware import setup_common_middleware
+from services.shared.presentation.api.responses import create_error_response, create_success_response
+from services.shared.infrastructure.monitoring.health import register_health_endpoints
 
 # Load standardized configuration
 config = load_service_config(
@@ -2734,4 +2734,5 @@ if __name__ == "__main__":
     print("")
     print(f"📖 API Documentation: http://localhost:{DEFAULT_PORT}/docs")
     print("")
-    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")
+    host = os.getenv("MOCK_DATA_GENERATOR_HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=DEFAULT_PORT, log_level="info")

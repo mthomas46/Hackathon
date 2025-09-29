@@ -99,21 +99,31 @@ utility_services:
     internal_port: 5110
     external_port: 5110
     description: "Centralized prompt management"
-    
+
   interpreter:
     internal_port: 5120
     external_port: 5120
     description: "Document interpretation service"
-    
+
   architecture_digitizer:
     internal_port: 5105
     external_port: 5105
     description: "Architecture diagram processing"
-    
+
   notification-service:
     internal_port: 5130
     external_port: 5130
     description: "Event notification system"
+
+  external-service-store:
+    internal_port: 5140
+    external_port: 5140
+    description: "External service configuration store"
+
+  user-store:
+    internal_port: 5150
+    external_port: 5150
+    description: "User management and authentication"
 
 # Simulation Services
 simulation_services:

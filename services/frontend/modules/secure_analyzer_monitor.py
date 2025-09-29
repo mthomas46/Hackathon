@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from services.shared.infrastructure.utilities import utc_now
 
-from .shared_utils import get_frontend_clients, get_secure-analyzer_url
+from .shared_utils import get_frontend_clients, get_secure_analyzer_url
 
 
 class SecureAnalyzerMonitor:
@@ -34,7 +34,7 @@ class SecureAnalyzerMonitor:
 
         try:
             clients = get_frontend_clients()
-            secure_url = get_secure-analyzer_url()
+            secure_url = get_secure_analyzer_url()
 
             # Get health status
             health_response = await clients.get_json(f"{secure_url}/health")
@@ -79,7 +79,7 @@ class SecureAnalyzerMonitor:
         """Detect sensitive content in provided text."""
         try:
             clients = get_frontend_clients()
-            secure_url = get_secure-analyzer_url()
+            secure_url = get_secure_analyzer_url()
 
             payload = {
                 "content": content,
@@ -128,7 +128,7 @@ class SecureAnalyzerMonitor:
         """Get model suggestions based on content sensitivity."""
         try:
             clients = get_frontend_clients()
-            secure_url = get_secure-analyzer_url()
+            secure_url = get_secure_analyzer_url()
 
             payload = {
                 "content": content,
@@ -180,7 +180,7 @@ class SecureAnalyzerMonitor:
         """Generate secure summary with policy enforcement."""
         try:
             clients = get_frontend_clients()
-            secure_url = get_secure-analyzer_url()
+            secure_url = get_secure_analyzer_url()
 
             payload = {
                 "content": content,
@@ -275,4 +275,4 @@ class SecureAnalyzerMonitor:
 
 
 # Global instance
-secure-analyzer_monitor = SecureAnalyzerMonitor()
+secure_analyzer_monitor = SecureAnalyzerMonitor()
