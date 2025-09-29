@@ -25,7 +25,7 @@ normalize_document_content = _mod.normalize_document_content
 create_base_document = _mod.create_base_document
 validate_source_type = _mod.validate_source_type
 handle_fetch_error = _mod.handle_fetch_error
-build_source-agent_context = _mod.build_source-agent_context
+build_source_agent_context = _mod.build_source_agent_context
 
 
 def test_validate_atlassian_url_edge_cases():
@@ -164,9 +164,9 @@ def test_handle_fetch_error_with_context():
     assert error.details.get("document_id") == "readme:123"
 
 
-def test_build_source-agent_context_comprehensive():
+def test_build_source_agent_context_comprehensive():
     """Context building includes all relevant information."""
-    context = build_source-agent_context(
+    context = build_source_agent_context(
         operation="fetch_document",
         source_type="confluence",
         doc_id="conf:page:456",

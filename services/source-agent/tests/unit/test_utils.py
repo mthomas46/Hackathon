@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-def load_source-agent_service():
+def load_source_agent_service():
     """Load source-agent service dynamically.
 
     Provides a standardized way to load the service for testing across
@@ -100,7 +100,7 @@ def load_source-agent_service():
 @pytest.fixture(scope="module")
 def client():
     """Test client fixture for source agent service."""
-    app = load_source-agent_service()
+    app = load_source_agent_service()
     from fastapi.testclient import TestClient
     return TestClient(app)
 
