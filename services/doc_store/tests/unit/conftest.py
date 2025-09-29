@@ -85,7 +85,7 @@ def mock_service_clients():
     """Mock service clients for testing."""
     clients = Mock()
     clients.doc_store_url = Mock(return_value="http://localhost:5010")
-    clients.notification-service_url = Mock(return_value="http://localhost:5095")
+    clients.notification_service_url = Mock(return_value="http://localhost:5095")
     clients.notify_via_service = AsyncMock(return_value={"status": "sent"})
     clients.resolve_owners_via_service = AsyncMock(return_value={"resolved": []})
     return clients

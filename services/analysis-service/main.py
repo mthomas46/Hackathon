@@ -28,7 +28,7 @@ sys.path.insert(0, str(project_root))
 
 # Import shared utilities and patterns
 try:
-    from services.shared.presentation.responses import create_success_response
+    from services.shared.presentation.api.responses import create_success_response
     from services.shared.infrastructure.config import load_service_config
     from services.shared.infrastructure.utilities.middleware import setup_common_middleware
     from services.shared.monitoring.health import register_health_endpoints
@@ -147,7 +147,7 @@ app.include_router(health_router)
 )
 async def root():
     """Basic health check endpoint."""
-    return create_success_response(data={"message": "Analysis Service is running"}, message="Service operational")
+    return create_success_response(data={"message": "Analysis Service is running"})
 
 
 @app.get(
@@ -169,8 +169,7 @@ async def analysis_status():
             "status": "operational",
             "version": "1.0.0",
             "features": ["code_analysis", "quality_metrics", "security_scanning"],
-        },
-        message="Analysis service status",
+        }
     )
 
 
@@ -277,8 +276,7 @@ async def analyze_code():
                 "security_issues": 0,
                 "maintainability": "high",
             },
-        },
-        message="Analysis completed successfully",
+        }
     )
 
 
