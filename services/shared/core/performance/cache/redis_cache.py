@@ -73,8 +73,8 @@ class RedisCache(CacheBackend):
         except Exception as e:
             # Cache miss or connection error - log and return None
             logger = logging.getLogger(__name__)
-            logger.debug(f"Cache get failed for key {key}: {e}")
-            pass  # Cache miss or error
+            logger.warning(f"Cache get failed for key {key}: {e}", exc_info=True)
+            return None
 
         return None
 
@@ -94,8 +94,10 @@ class RedisCache(CacheBackend):
                 await self._redis.setex(cache_key, ttl_seconds, value_bytes)
             else:
                 await self._redis.set(cache_key, value_bytes)
-        except Exception:
-            pass  # Ignore cache errors
+        except Exception as e:
+            # Log cache set errors but don't raise
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Cache set failed for key {key}: {e}", exc_info=True)
 
     async def delete(self, key: str) -> None:
         """Delete value from Redis cache."""
@@ -105,8 +107,10 @@ class RedisCache(CacheBackend):
         try:
             cache_key = self._make_key(key)
             await self._redis.delete(cache_key)
-        except Exception:
-            pass  # Ignore cache errors
+        except Exception as e:
+            # Log cache delete errors but don't raise
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Cache delete failed for key {key}: {e}", exc_info=True)
 
     async def exists(self, key: str) -> bool:
         """Check if key exists in Redis cache."""
@@ -116,7 +120,10 @@ class RedisCache(CacheBackend):
         try:
             cache_key = self._make_key(key)
             return await self._redis.exists(cache_key) > 0
-        except Exception:
+        except Exception as e:
+            # Log cache exists errors and return False
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Cache exists check failed for key {key}: {e}", exc_info=True)
             return False
 
     async def clear(self) -> None:
@@ -130,8 +137,10 @@ class RedisCache(CacheBackend):
             keys = await self._redis.keys(pattern)
             if keys:
                 await self._redis.delete(*keys)
-        except Exception:
-            pass  # Ignore cache errors
+        except Exception as e:
+            # Log cache clear errors but don't raise
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Cache clear failed: {e}", exc_info=True)
 
     async def get_stats(self) -> Dict[str, Any]:
         """Get Redis cache statistics."""
@@ -149,6 +158,9 @@ class RedisCache(CacheBackend):
                 "default_ttl": self._default_ttl,
             }
         except Exception as e:
+            # Log stats retrieval errors
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Cache stats retrieval failed: {e}", exc_info=True)
             return {"error": str(e)}
 
 
