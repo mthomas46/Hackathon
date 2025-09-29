@@ -1,22 +1,74 @@
 {
   "service_name": "simulation-dashboard",
-  "overall_score": 70.59,
+  "overall_score": 70.77,
   "grade": "C",
-  "critical_issues_count": 0,
-  "estimated_effort_days": 3.0,
   "dimensions": {
-    "architecture": 82.5,
-    "code_quality": 54.28,
+    "architecture": 80.35,
+    "code_quality": 55.8,
     "performance": 80.75,
-    "maintainability": 64.5
+    "maintainability": 64.8
   },
+  "architecture": "ArchitectureAnalysisResult(score=80.35, ddd_compliance=100, ddd_migration_status=0, rest_compliance=80.0, layer_separation=100.0, ddd_issues=['⚠️ ANALYSIS LIMITED: Only analyzed first 50 Python files to prevent timeout', '🚨 MISSING ROUTES: presentation/routes/ directory required for DDD+REST', '📏 OVERSIZED FILES: 4 files exceed 1000 lines', '🚨 DOMAIN VIOLATION: domain/services/ai_insights/models.py imports from infrastructure/presentation', '📋 MISSING CQRS: Application layer should implement Command/Query patterns', '⚠️ ROOT FILES: 1 Python files in service root should be migrated', '🗂️ EMPTY DIRECTORIES: 1 empty directories found', '🐳 DOCKER/INFRA: Service not referenced in Makefile', 'DDD patterns implementation could be improved', 'REST API could follow more best practices'], ddd_recommendations=['📁 CREATE: presentation/routes/ directory with domain-organized route files', '🔨 REFACTOR: Split oversized files: pages/ai_insights_page.py (1557 lines), pages/simulation_monitor.py (1083 lines), pages/wizard.py (1848 lines)', '🔄 REFACTOR: Remove infrastructure/presentation imports from domain layer', '🔄 IMPLEMENT: Add CQRS patterns (Command, Query, CommandHandler, QueryHandler) to application layer', '🔄 domain/ layer: 3/6 subdirs - needs completion', '🔄 application/ layer: 0/5 subdirs - needs completion', '🔄 infrastructure/ layer: 1/7 subdirs - needs completion', '🔄 presentation/ layer: 1/3 subdirs - needs completion', '🔄 MIGRATE: test_runner.py → determine appropriate DDD layer', '🧹 CLEANUP: Remove or populate empty directories: application', '🎯 Implement proper DDD patterns: entities, value objects, aggregates, domain events', '📡 Implement REST best practices: proper HTTP methods, status codes, HATEOAS, content negotiation'], file_metrics={}, test_quality={'coverage_score': 0, 'quality_score': 0, 'structure_score': 0, 'total_score': 0, 'recommendations': []}, linting_quality={'pylint_score': 0, 'flake8_issues': 0, 'total_issues': 0, 'issues_by_type': {}, 'recommendations': []}, endpoint_analysis={'total_endpoints': 2, 'rest_compliant_endpoints': 0, 'openapi_compliant_endpoints': 0, 'project_standard_compliant_endpoints': 2, 'endpoint_issues': [], 'rest_violations': ['Low REST compliance score', 'Low REST compliance score'], 'openapi_violations': ['Low OpenAPI compliance score', 'Low OpenAPI compliance score'], 'standard_violations': [], 'endpoint_details': [{'method': 'ON_EVENT', 'path': 'startup', 'function': 'startup_event', 'file': 'services/simulation-dashboard/main.py', 'line_number': 129}, {'method': 'ON_EVENT', 'path': 'shutdown', 'function': 'shutdown_event', 'file': 'services/simulation-dashboard/main.py', 'line_number': 140}], 'compliant_endpoints': [], 'non_compliant_endpoints': [{'method': 'ON_EVENT', 'path': 'startup', 'function': 'startup_event', 'file': 'services/simulation-dashboard/main.py', 'line_number': 129, 'issues': ['REST compliance issues', 'OpenAPI documentation issues']}, {'method': 'ON_EVENT', 'path': 'shutdown', 'function': 'shutdown_event', 'file': 'services/simulation-dashboard/main.py', 'line_number': 140, 'issues': ['REST compliance issues', 'OpenAPI documentation issues']}], 'rest_compliance_score': 0.0, 'openapi_compliance_score': 0.0, 'project_standards_compliance_score': 100.0, 'endpoint_detection_validation': {'total_fastapi_files_found': 8, 'detection_gaps': [], 'recommendations': []}}, complexity_analysis={'high_complexity_functions': [], 'total_functions_analyzed': 0, 'complexity_distribution': {'low': 0, 'medium': 0, 'high': 0, 'very_high': 0}, 'average_complexity': 0.0, 'recommendations': []}, dependency_coupling={'import_dependencies': {}, 'coupling_score': 0, 'recommendations': []}, dead_code_analysis={'dead_code_lines': 0, 'unused_functions': [], 'recommendations': []}, test_quality_metrics={'total_test_files': 0, 'test_naming_issues': 0, 'recommendations': []}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'documentation_score': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 0.0, 'undocumented_functions': 0, 'recommendations': []}, configuration_management={'hardcoded_values': 0, 'security_issues': 0, 'recommendations': []}, logging_practices={'logging_usage': 0, 'error_logging': 0, 'recommendations': []}, directory_analysis={}, issues=[], recommendations=[], detailed_issues=[{'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/simulation-dashboard/pages/ai_insights_page.py', 'description': 'File exceeds line limit: 1557 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/simulation-dashboard/pages/simulation_monitor.py', 'description': 'File exceeds line limit: 1083 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/simulation-dashboard/pages/wizard.py', 'description': 'File exceeds line limit: 1848 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/simulation-dashboard/pages/autonomous.py', 'description': 'File exceeds line limit: 1039 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'empty_directory', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/simulation-dashboard/application', 'description': 'Empty directory found', 'severity': 'info', 'dimension': 'maintainability'}], empty_directories=95.0, requirements_file=100.0, docker_infrastructure=95.0, dry_principles=0.0, kiss_principles=0.0, ddd_patterns=30.0, rest_best_practices=42.857142857142854, documentation_quality=0.0)",
+  "code_quality": "CodeQualityAnalysisResult(score=55.8, complexity_score=19.0, testing_score=20.0, linting_score=100, duplication_score=60.0, security_score=100, dry_principle_score=60.0, kiss_principle_score=90.0, test_coverage=0, cyclomatic_complexity={'high_complexity_functions': [{'function': 'render_simulation_row_actions', 'file': 'components/tables/simulation_tables.py', 'complexity': 23}, {'function': 'render_resource_table', 'file': 'components/tables/resource_tables.py', 'complexity': 34}, {'function': 'render_performance_table', 'file': 'components/tables/performance_tables.py', 'complexity': 34}, {'function': 'render_risk_assessment_form', 'file': 'components/forms/risk_assessment_forms.py', 'complexity': 23}, {'function': 'render_budget_planner_form', 'file': 'components/forms/budget_planner_forms.py', 'complexity': 23}, {'function': 'render_team_analysis', 'file': 'components/forms/team_builder_forms.py', 'complexity': 21}, {'function': 'render_ml_config_form', 'file': 'components/forms/ml_config_forms.py', 'complexity': 21}, {'function': 'render_distribution_parameters', 'file': 'components/charts/distribution_charts.py', 'complexity': 21}, {'function': 'render_simulation_controls', 'file': 'pages/controls.py', 'complexity': 21}, {'function': 'render_step_3_timeline_design', 'file': 'pages/wizard.py', 'complexity': 23}, {'function': 'render_step_7_review_launch', 'file': 'pages/wizard.py', 'complexity': 22}, {'function': 'render_auto_scaling_engine', 'file': 'pages/autonomous.py', 'complexity': 22}, {'function': 'render_self_healing_system', 'file': 'pages/autonomous.py', 'complexity': 25}, {'function': 'render_optimization_loops', 'file': 'pages/autonomous.py', 'complexity': 25}], 'total_functions_analyzed': 860, 'complexity_distribution': {'low': 615, 'medium': 152, 'high': 79, 'very_high': 14}, 'average_complexity': 4.498837209302326, 'recommendations': ['Refactor 14 high-complexity functions']}, test_quality_metrics={'total_test_files': 14, 'test_naming_issues': 230, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 6, 'mock_usage': 11, 'recommendations': ['Fix 230 poorly named test functions']}, linting_quality={'pylint_score': 0, 'flake8_issues': 674, 'total_issues': 674, 'issues_by_type': {}, 'recommendations': []}, duplication_analysis={'total_duplicate_blocks': 1893, 'duplicate_lines': 7572, 'total_lines_analyzed': 29776, 'duplication_rate': 25.42987641053197, 'recommendations': ['High duplication rate (25.4%) - consider refactoring']}, issues=['High code complexity detected', 'Insufficient test coverage', 'Code duplication detected'], recommendations=['Refactor high-complexity functions (>10 cyclomatic complexity)', 'Increase test coverage to at least 70.0%', 'Reduce code duplication through refactoring'])",
+  "performance": "PerformanceAnalysisResult(score=80.75, system_metrics_score=75.0, database_score=70.0, resource_usage_score=88.0, system_metrics={'cpu_percent': 14.0, 'memory_percent': 39.6, 'memory_used_gb': 24.43975830078125, 'disk_read_mb': 43059.93359375, 'disk_write_mb': 26240.12109375, 'network_sent_mb': 568.51953125, 'network_recv_mb': 447.5205078125, 'process_memory_percent': 0.08094310760498047, 'process_cpu_percent': 0.1, 'timestamp': 1759155316.815107}, database_performance={'has_database_layer': True, 'connection_pooling': False, 'query_optimization': False, 'caching_strategy': False, 'migration_scripts': False, 'performance_issues': ['Missing connection pooling', 'Limited query optimization', 'No caching strategy'], 'recommendations': ['Implement database connection pooling', 'Add database indexes and optimize queries', 'Implement caching layer for frequently accessed data']}, resource_usage={'file_handle_leaks': 2, 'memory_leaks_potential': 17, 'resource_management_issues': 0, 'context_manager_usage': 1020, 'exception_handling_resources': 0, 'large_objects': ['components/tables/audit_tables.py', 'components/tables/simulation_tables.py', 'components/tables/performance_tables.py', 'components/forms/risk_assessment_forms.py', 'components/forms/budget_planner_forms.py', 'components/forms/team_builder_forms.py', 'components/charts/performance_charts.py', 'components/charts/distribution_charts.py', 'components/charts/anomaly_charts.py', 'components/realtime/live_metrics.py', 'components/realtime/event_timeline.py', 'components/realtime/workflow_visualizer.py', 'components/realtime/status_dashboard.py', 'pages/ai_insights_page.py', 'pages/controls.py', 'pages/config.py', 'pages/monitor.py', 'pages/audit.py', 'pages/events.py', 'pages/simulation_monitor.py', 'pages/wizard.py', 'pages/autonomous.py', 'services/clients/simulation_client.py', 'services/templates/project_templates.py'], 'resource_intensive_operations': ['audit_tables.py:466', 'audit_tables.py:494', 'audit_tables.py:495', 'resource_tables.py:62', 'resource_tables.py:104', 'resource_tables.py:251', 'resource_tables.py:252', 'resource_tables.py:253', 'resource_tables.py:255', 'resource_tables.py:256', 'resource_tables.py:382', 'risk_assessment_forms.py:179', 'risk_assessment_forms.py:180', 'risk_assessment_forms.py:370', 'risk_assessment_forms.py:375', 'risk_assessment_forms.py:491', 'budget_planner_forms.py:423', 'budget_planner_forms.py:427', 'team_builder_forms.py:429', 'team_builder_forms.py:432', 'team_builder_forms.py:446', 'team_builder_forms.py:462', 'team_builder_forms.py:670', 'team_builder_forms.py:675', 'performance_charts.py:386', 'performance_charts.py:615', 'performance_charts.py:616', 'timeline_charts.py:383', 'timeline_charts.py:384', 'timeline_charts.py:387', 'timeline_charts.py:390', 'timeline_charts.py:450', 'distribution_charts.py:165', 'distribution_charts.py:169', 'distribution_charts.py:237', 'distribution_charts.py:312', 'distribution_charts.py:313', 'distribution_charts.py:619', 'anomaly_charts.py:155', 'anomaly_charts.py:178', 'anomaly_charts.py:701', 'anomaly_charts.py:709', 'progress_indicators.py:74', 'progress_indicators.py:131', 'progress_indicators.py:143', 'progress_indicators.py:148', 'progress_indicators.py:272', 'progress_indicators.py:279', 'live_metrics.py:154', 'live_metrics.py:159', 'live_metrics.py:348', 'live_metrics.py:350', 'live_metrics.py:352', 'live_metrics.py:353', 'live_metrics.py:356', 'live_metrics.py:357', 'live_metrics.py:360', 'live_metrics.py:361', 'event_timeline.py:175', 'event_timeline.py:188', 'event_timeline.py:420', 'event_timeline.py:679', 'event_timeline.py:694', 'workflow_visualizer.py:187', 'workflow_visualizer.py:243', 'workflow_visualizer.py:443', 'workflow_visualizer.py:459', 'event_stream.py:452', 'status_dashboard.py:80', 'status_dashboard.py:81', 'status_dashboard.py:84', 'status_dashboard.py:138', 'status_dashboard.py:143', 'status_dashboard.py:252', 'status_dashboard.py:257', 'status_dashboard.py:427', 'status_dashboard.py:432', 'status_dashboard.py:437', 'status_dashboard.py:443', 'status_dashboard.py:455', 'ai_insights_page.py:705', 'controls.py:656', 'controls.py:675', 'controls.py:719', 'monitor.py:247', 'monitor.py:252', 'monitor.py:259', 'monitor.py:359', 'audit.py:164', 'audit.py:548', 'events.py:253', 'events.py:254', 'events.py:487', 'events.py:532', 'events.py:648', 'events.py:661', 'events.py:716', 'events.py:726', 'events.py:747', 'wizard.py:425', 'wizard.py:436', 'wizard.py:521', 'wizard.py:1085', 'wizard.py:1542', 'wizard.py:1553', 'wizard.py:1592', 'reports.py:288', 'reports.py:291', 'causal_analysis_service.py:128', 'causal_analysis_service.py:129', 'models.py:218', 'core.py:35', 'core.py:36', 'core.py:37', 'core.py:39', 'core.py:59', 'core.py:163', 'core.py:164', 'core.py:165', 'predictive_modeling.py:176', 'causal_analysis.py:229', 'causal_analysis.py:230', 'template_manager.py:78'], 'recommendations': ['Fix 2 potential file handle leaks - use context managers', 'Review 17 potential memory leaks with global variables', 'Consider splitting 24 large files for better resource management']}, performance_indicators={'cpu_health': 'good', 'memory_health': 'good', 'disk_health': 'high', 'network_health': 'high', 'overall_performance': 'moderate'}, issues=[], recommendations=['Optimize system resource usage - monitor CPU, memory, and I/O', 'Improve database performance - add connection pooling and query optimization'])",
+  "maintainability": "MaintainabilityAnalysisResult(score=64.8, documentation_score=20.0, organization_score=100, error_handling_score=72.0, devops_readiness_score=100, scalability_score=100, linting_quality={'pylint_score': 0, 'flake8_issues': 674, 'total_issues': 674, 'issues_by_type': {}, 'recommendations': []}, test_quality={'coverage_score': 0, 'quality_score': 28, 'structure_score': 0, 'total_score': 28, 'recommendations': []}, test_quality_metrics={'total_test_files': 14, 'test_naming_issues': 230, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 6, 'mock_usage': 11, 'recommendations': ['Fix 230 poorly named test functions']}, domain_boundaries={'leaks_detected': 1, 'boundary_violations': ['presentation/streamlit/app.py'], 'layer_integrity': False, 'recommendations': ['Fix 1 domain boundary violations']}, api_documentation={'endpoints_documented': 0, 'total_endpoints': 0, 'documentation_score': 0, 'missing_summaries': 0, 'missing_descriptions': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 92.58720930232558, 'undocumented_functions': 51, 'undocumented_classes': 5, 'total_functions': 688, 'total_classes': 62, 'recommendations': ['Add docstrings to 51 undocumented functions']}, configuration_management={'hardcoded_values': 616, 'environment_variables': 1, 'config_files': 1, 'security_issues': 616, 'recommendations': ['Replace 616 hardcoded values with environment variables']}, logging_practices={'logging_usage': 11, 'error_logging': 38, 'structured_logging': 0, 'missing_error_logs': 146, 'logging_levels_used': {'WARNING', 'DEBUG', 'INFO', 'ERROR'}, 'recommendations': ['Add error logging to 146 exception handlers']}, issues=['Insufficient documentation coverage'], recommendations=['Increase docstring coverage to at least 80.0%', 'Implement proper error handling with specific exception types'], architecture_quality_score=30.0)",
+  "documentation_quality": {},
+  "dry_principles": {},
+  "kiss_principles": {},
   "recommendations": [
-    "Address: REST API design issues - review HTTP methods and status codes",
     "Refactor high-complexity functions (>10 cyclomatic complexity)",
     "Increase test coverage to at least 70.0%",
     "Reduce code duplication through refactoring",
-    "Address: High code complexity detected"
+    "Address: High code complexity detected",
+    "Address: Insufficient test coverage",
+    "Address: Code duplication detected",
+    "Optimize system resource usage - monitor CPU, memory, and I/O",
+    "Improve database performance - add connection pooling and query optimization",
+    "Increase docstring coverage to at least 80.0%",
+    "Implement proper error handling with specific exception types",
+    "Address: Insufficient documentation coverage"
   ],
+  "critical_issues": [],
+  "detailed_issues": [
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/simulation-dashboard/pages/ai_insights_page.py",
+      "description": "File exceeds line limit: 1557 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/simulation-dashboard/pages/simulation_monitor.py",
+      "description": "File exceeds line limit: 1083 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/simulation-dashboard/pages/wizard.py",
+      "description": "File exceeds line limit: 1848 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/simulation-dashboard/pages/autonomous.py",
+      "description": "File exceeds line limit: 1039 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "empty_directory",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/simulation-dashboard/application",
+      "description": "Empty directory found",
+      "severity": "info",
+      "dimension": "maintainability"
+    }
+  ],
+  "critical_issues_count": 0,
+  "estimated_effort_days": 3.0,
+  "analysis_timestamp": "2025-09-29T09:15:18.008453",
   "metadata": {
     "service_info": {
       "name": "simulation-dashboard",
@@ -24,7 +76,7 @@
       "type": "python",
       "status": "unknown",
       "metadata": {},
-      "discovered_at": "2025-09-26T01:09:06.088669",
+      "discovered_at": "2025-09-29T09:15:12.569932",
       "last_audited_at": null
     },
     "profile_used": "standard",
@@ -80,7 +132,7 @@
     },
     "audit_timestamp": null,
     "use_case": "audit_service",
-    "service_discovered_at": "2025-09-26T01:09:06.088669",
-    "audit_duration_seconds": -2.4e-05
+    "service_discovered_at": "2025-09-29T09:15:12.569932",
+    "audit_duration_seconds": -3.9e-05
   }
 }
