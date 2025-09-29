@@ -12,12 +12,14 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel, Field
+from typing import List, Optional
 from modules.analytics import (
     ErrorTracking,
     PerformanceInsights,
@@ -45,6 +47,142 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(level)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+
+# Pydantic Response Models for OpenAPI documentation
+class HealthResponse(BaseModel):
+    """Health check response model."""
+    status: str = Field(..., description="Service health status")
+    timestamp: str = Field(..., description="ISO timestamp of health check")
+    version: str = Field(..., description="Service version")
+    services: List[str] = Field(..., description="List of active services")
+
+
+class ServiceInfo(BaseModel):
+    """Service information model."""
+    name: str = Field(..., description="Service name")
+    url: str = Field(..., description="Service URL")
+    status: str = Field(..., description="Service status")
+    version: Optional[str] = Field(None, description="Service version")
+
+
+class DiscoveryResponse(BaseModel):
+    """Service discovery response model."""
+    success: bool = Field(..., description="Operation success status")
+    data: List[ServiceInfo] = Field(..., description="Discovered services")
+
+
+class ScanResult(BaseModel):
+    """Discovery scan result model."""
+    services_found: int = Field(..., description="Number of services discovered")
+    scan_duration: float = Field(..., description="Scan duration in seconds")
+    timestamp: str = Field(..., description="Scan completion timestamp")
+
+
+class APIEndpoint(BaseModel):
+    """API endpoint information model."""
+    path: str = Field(..., description="Endpoint path")
+    method: str = Field(..., description="HTTP method")
+    description: Optional[str] = Field(None, description="Endpoint description")
+    tags: List[str] = Field(default_factory=list, description="Endpoint tags")
+
+
+class APICatalogResponse(BaseModel):
+    """API catalog response model."""
+    success: bool = Field(..., description="Operation success status")
+    endpoints: List[APIEndpoint] = Field(..., description="Available API endpoints")
+    total_count: int = Field(..., description="Total number of endpoints")
+
+
+class ServiceHealth(BaseModel):
+    """Service health information model."""
+    name: str = Field(..., description="Service name")
+    status: str = Field(..., description="Health status")
+    response_time: Optional[float] = Field(None, description="Response time in seconds")
+    last_checked: str = Field(..., description="Last health check timestamp")
+
+
+class HealthStatusResponse(BaseModel):
+    """Service health status response model."""
+    success: bool = Field(..., description="Operation success status")
+    services: List[ServiceHealth] = Field(..., description="Service health information")
+
+
+class UsageOverview(BaseModel):
+    """Usage analytics overview model."""
+    total_requests: int = Field(..., description="Total API requests")
+    active_users: int = Field(..., description="Number of active users")
+    average_response_time: float = Field(..., description="Average response time in seconds")
+    period: str = Field(..., description="Analysis period")
+
+
+class PerformanceInsight(BaseModel):
+    """Performance insight model."""
+    endpoint: str = Field(..., description="API endpoint")
+    average_response_time: float = Field(..., description="Average response time")
+    error_rate: float = Field(..., description="Error rate percentage")
+    throughput: int = Field(..., description="Requests per second")
+
+
+class PerformanceInsightsResponse(BaseModel):
+    """Performance insights response model."""
+    success: bool = Field(..., description="Operation success status")
+    insights: List[PerformanceInsight] = Field(..., description="Performance insights")
+    analysis_period: str = Field(..., description="Analysis time period")
+
+
+class ClientCodeResponse(BaseModel):
+    """Client code generation response model."""
+    success: bool = Field(..., description="Operation success status")
+    language: str = Field(..., description="Target programming language")
+    code: str = Field(..., description="Generated client code")
+    endpoint_count: int = Field(..., description="Number of endpoints in client")
+
+
+class ValidationResult(BaseModel):
+    """API specification validation result model."""
+    valid: bool = Field(..., description="Validation result")
+    errors: List[str] = Field(default_factory=list, description="Validation errors")
+    warnings: List[str] = Field(default_factory=list, description="Validation warnings")
+
+
+class TopologyAnalysis(BaseModel):
+    """Topology analysis result model."""
+    nodes: int = Field(..., description="Number of service nodes")
+    edges: int = Field(..., description="Number of service dependencies")
+    clusters: int = Field(..., description="Number of service clusters")
+    critical_path_length: int = Field(..., description="Length of critical dependency path")
+
+
+class TopologyVisualization(BaseModel):
+    """Topology visualization data model."""
+    nodes: List[Dict] = Field(..., description="Graph nodes data")
+    edges: List[Dict] = Field(..., description="Graph edges data")
+    layout: str = Field(..., description="Visualization layout type")
+
+
+class AuthResponse(BaseModel):
+    """Authentication response model."""
+    success: bool = Field(..., description="Authentication success status")
+    token: Optional[str] = Field(None, description="JWT access token")
+    user: Optional[Dict] = Field(None, description="User information")
+
+
+class SecurityThreat(BaseModel):
+    """Security threat information model."""
+    id: str = Field(..., description="Threat identifier")
+    type: str = Field(..., description="Threat type")
+    severity: str = Field(..., description="Threat severity")
+    description: str = Field(..., description="Threat description")
+    detected_at: str = Field(..., description="Detection timestamp")
+
+
+class SecurityThreatsResponse(BaseModel):
+    """Security threats response model."""
+    success: bool = Field(..., description="Operation success status")
+    threats: List[SecurityThreat] = Field(..., description="Detected security threats")
+    total_count: int = Field(..., description="Total number of threats")
+
 
 # Global service instances
 service_instances: Dict[str, Any] = {}
@@ -248,9 +386,24 @@ async def get_current_user(
 
 
 # Health check endpoint
-@app.get("/health")
+@app.get(
+    "/health",
+    response_model=HealthResponse,
+    summary="Health Check",
+    description="Check the health status of the Unified API Dashboard service and its dependencies.",
+    tags=["Health"],
+    responses={
+        200: {
+            "description": "Service is healthy and operational",
+            "model": HealthResponse
+        },
+        503: {
+            "description": "Service is unhealthy or unavailable"
+        }
+    }
+)
 async def health_check():
-    """Basic health check endpoint."""
+    """Get the current health status of the API Dashboard service."""
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
@@ -260,9 +413,27 @@ async def health_check():
 
 
 # API Discovery endpoints
-@app.get("/api/discovery/services")
+@app.get(
+    "/api/discovery/services",
+    response_model=DiscoveryResponse,
+    summary="Get Discovered Services",
+    description="Retrieve a list of all services discovered in the API ecosystem.",
+    tags=["Discovery"],
+    responses={
+        200: {
+            "description": "Successfully retrieved discovered services",
+            "model": DiscoveryResponse
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during service discovery"
+        }
+    }
+)
 async def get_discovered_services(user: Dict = Depends(get_current_user)):
-    """Get all discovered services."""
+    """Retrieve all services that have been discovered in the API ecosystem."""
     try:
         discovery_client = service_instances["discovery_client"]
         services = await discovery_client.discover_services()
@@ -271,9 +442,25 @@ async def get_discovered_services(user: Dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Discovery failed: {str(e)}")
 
 
-@app.post("/api/discovery/scan")
+@app.post(
+    "/api/discovery/scan",
+    summary="Trigger Discovery Scan",
+    description="Initiate a new network scan to discover API services and endpoints.",
+    tags=["Discovery"],
+    responses={
+        200: {
+            "description": "Discovery scan completed successfully"
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during scan"
+        }
+    }
+)
 async def trigger_discovery_scan(user: Dict = Depends(get_current_user)):
-    """Trigger a new discovery scan."""
+    """Trigger a comprehensive scan of the network to discover new API services."""
     try:
         discovery_client = service_instances["discovery_client"]
         result = await discovery_client.scan_network()
@@ -283,7 +470,23 @@ async def trigger_discovery_scan(user: Dict = Depends(get_current_user)):
 
 
 # API Catalog endpoints
-@app.get("/api/catalog/endpoints")
+@app.get(
+    "/api/catalog/endpoints",
+    summary="Get API Catalog",
+    description="Retrieve a comprehensive catalog of all available API endpoints with filtering and pagination support.",
+    tags=["Catalog"],
+    responses={
+        200: {
+            "description": "Successfully retrieved API catalog"
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during catalog retrieval"
+        }
+    }
+)
 async def get_api_catalog(
     service: Optional[str] = None,
     search: Optional[str] = None,
@@ -291,7 +494,7 @@ async def get_api_catalog(
     offset: int = 0,
     user: Dict = Depends(get_current_user),
 ):
-    """Get API catalog with filtering and pagination."""
+    """Retrieve API catalog with optional filtering by service, search terms, and pagination."""
     try:
         catalog_manager = service_instances["catalog_manager"]
         result = await catalog_manager.get_catalog(
@@ -303,9 +506,25 @@ async def get_api_catalog(
 
 
 # Health monitoring endpoints
-@app.get("/api/health/services")
+@app.get(
+    "/api/health/services",
+    summary="Get Service Health Status",
+    description="Retrieve the current health status and metrics for all discovered services.",
+    tags=["Health"],
+    responses={
+        200: {
+            "description": "Successfully retrieved service health information"
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during health check"
+        }
+    }
+)
 async def get_service_health(user: Dict = Depends(get_current_user)):
-    """Get health status of all services."""
+    """Retrieve comprehensive health status information for all monitored services."""
     try:
         health_monitor = service_instances["health_monitor"]
         health_status = await health_monitor.get_health_overview()
@@ -315,9 +534,25 @@ async def get_service_health(user: Dict = Depends(get_current_user)):
 
 
 # Analytics endpoints
-@app.get("/api/analytics/usage/overview")
+@app.get(
+    "/api/analytics/usage/overview",
+    summary="Get Usage Analytics Overview",
+    description="Retrieve comprehensive usage analytics and metrics for the API ecosystem.",
+    tags=["Analytics"],
+    responses={
+        200: {
+            "description": "Successfully retrieved usage analytics"
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during analytics retrieval"
+        }
+    }
+)
 async def get_usage_overview(user: Dict = Depends(get_current_user)):
-    """Get API usage overview."""
+    """Retrieve comprehensive usage analytics overview for the API ecosystem."""
     try:
         usage_analytics = service_instances["usage_analytics"]
         overview = await usage_analytics.get_usage_overview()
@@ -326,9 +561,25 @@ async def get_usage_overview(user: Dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Analytics query failed: {str(e)}")
 
 
-@app.get("/api/analytics/performance/insights")
+@app.get(
+    "/api/analytics/performance/insights",
+    summary="Get Performance Insights",
+    description="Retrieve detailed performance insights and metrics for API endpoints and services.",
+    tags=["Analytics"],
+    responses={
+        200: {
+            "description": "Successfully retrieved performance insights"
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during performance analysis"
+        }
+    }
+)
 async def get_performance_insights(user: Dict = Depends(get_current_user)):
-    """Get performance insights."""
+    """Retrieve detailed performance insights and metrics for the API ecosystem."""
     try:
         performance_insights = service_instances["performance_insights"]
         insights = await performance_insights.analyze_response_times()
@@ -340,11 +591,30 @@ async def get_performance_insights(user: Dict = Depends(get_current_user)):
 
 
 # Developer tools endpoints
-@app.post("/api/tools/generate-client")
+@app.post(
+    "/api/tools/generate-client",
+    summary="Generate Client SDK Code",
+    description="Generate client SDK code for a specific service in the requested programming language.",
+    tags=["Developer Tools"],
+    responses={
+        200: {
+            "description": "Successfully generated client code"
+        },
+        400: {
+            "description": "Invalid request parameters"
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during code generation"
+        }
+    }
+)
 async def generate_client_code(
     request: Dict[str, Any], user: Dict = Depends(get_current_user)
 ):
-    """Generate client SDK code."""
+    """Generate client SDK code for API integration in various programming languages."""
     try:
         client_generator = service_instances["client_generator"]
         service_name = request.get("service_name")
@@ -356,7 +626,26 @@ async def generate_client_code(
         raise HTTPException(status_code=500, detail=f"Code generation failed: {str(e)}")
 
 
-@app.post("/api/tools/validate-spec")
+@app.post(
+    "/api/tools/validate-spec",
+    summary="Validate API Specification",
+    description="Validate an OpenAPI/Swagger specification for a service.",
+    tags=["Developer Tools"],
+    responses={
+        200: {
+            "description": "Successfully validated API specification"
+        },
+        400: {
+            "description": "Invalid API specification"
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during validation"
+        }
+    }
+)
 async def validate_api_spec(
     request: Dict[str, Any], user: Dict = Depends(get_current_user)
 ):
@@ -375,7 +664,23 @@ async def validate_api_spec(
 
 
 # Service topology endpoints
-@app.get("/api/topology/analysis")
+@app.get(
+    "/api/topology/analysis",
+    summary="Get Topology Analysis",
+    description="Retrieve detailed analysis of the service topology and dependencies.",
+    tags=["Topology"],
+    responses={
+        200: {
+            "description": "Successfully retrieved topology analysis"
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during topology analysis"
+        }
+    }
+)
 async def get_topology_analysis(user: Dict = Depends(get_current_user)):
     """Get service topology analysis."""
     try:
@@ -388,11 +693,30 @@ async def get_topology_analysis(user: Dict = Depends(get_current_user)):
         )
 
 
-@app.get("/api/topology/visualization")
+@app.get(
+    "/api/topology/visualization",
+    summary="Get Topology Visualization",
+    description="Retrieve visualization data for the service topology in various formats.",
+    tags=["Topology"],
+    responses={
+        200: {
+            "description": "Successfully retrieved topology visualization data"
+        },
+        400: {
+            "description": "Invalid visualization format requested"
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during visualization generation"
+        }
+    }
+)
 async def get_topology_visualization(
     format: str = "cytoscape", user: Dict = Depends(get_current_user)
 ):
-    """Get topology visualization data."""
+    """Retrieve service topology visualization data in the specified format."""
     try:
         topology_visualizer = service_instances["topology_visualizer"]
         visualization = await topology_visualizer.generate_visualization(format=format)
@@ -402,9 +726,28 @@ async def get_topology_visualization(
 
 
 # Security endpoints
-@app.post("/api/auth/login")
+@app.post(
+    "/api/auth/login",
+    summary="User Authentication",
+    description="Authenticate a user and return a JWT access token.",
+    tags=["Security"],
+    responses={
+        200: {
+            "description": "Successfully authenticated user"
+        },
+        400: {
+            "description": "Missing or invalid credentials"
+        },
+        401: {
+            "description": "Authentication failed"
+        },
+        500: {
+            "description": "Internal server error during authentication"
+        }
+    }
+)
 async def login(request: Dict[str, str]):
-    """User authentication."""
+    """Authenticate user credentials and return access token."""
     try:
         auth_manager = service_instances["auth_manager"]
         username = request.get("username")
@@ -421,7 +764,23 @@ async def login(request: Dict[str, str]):
         raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
 
 
-@app.get("/api/security/threats")
+@app.get(
+    "/api/security/threats",
+    summary="Get Security Threats",
+    description="Retrieve a list of detected security threats and vulnerabilities.",
+    tags=["Security"],
+    responses={
+        200: {
+            "description": "Successfully retrieved security threats"
+        },
+        401: {
+            "description": "Authentication required"
+        },
+        500: {
+            "description": "Internal server error during threat analysis"
+        }
+    }
+)
 async def get_security_threats(
     limit: int = 100, user: Dict = Depends(get_current_user)
 ):
