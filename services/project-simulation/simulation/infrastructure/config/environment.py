@@ -6,11 +6,11 @@ validation, and environment-aware defaults for the Project Simulation Service.
 
 import os
 import platform
+from typing import Dict, Any, Optional, List
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
-from ..logging import get_simulation_logger
 from .config_manager import ConfigManager, get_config
+from ..logging import get_simulation_logger
 
 
 class EnvironmentDetector:
@@ -47,15 +47,18 @@ class EnvironmentDetector:
             Path(".git").exists(),
             Path("requirements-dev.txt").exists(),
             Path("pyproject.toml").exists(),
+
             # Environment variables
             os.getenv("DEBUG", "").lower() == "true",
             os.getenv("RELOAD", "").lower() == "true",
             os.getenv("PYDEVD_ENABLE", "").lower() == "true",
+
             # Host information
             platform.node().startswith(("localhost", "desktop", "laptop")),
             os.getenv("USER", "").startswith(("dev", "user")),
+
             # Development ports
-            os.getenv("PORT", "").startswith(("3000", "5000", "8000", "8080")),
+            os.getenv("PORT", "").startswith(("3000", "5000", "8000", "8080"))
         ]
 
         return any(indicators)
@@ -68,12 +71,14 @@ class EnvironmentDetector:
             Path("tests").exists(),
             Path("pytest.ini").exists(),
             Path(".coverage").exists(),
+
             # Test environment variables
             os.getenv("PYTEST_CURRENT_TEST"),
             os.getenv("TESTING", "").lower() == "true",
             os.getenv("CI", "").lower() == "true",
+
             # Test database
-            "test" in os.getenv("DATABASE_URL", "").lower(),
+            "test" in os.getenv("DATABASE_URL", "").lower()
         ]
 
         return any(indicators)
@@ -85,7 +90,7 @@ class EnvironmentDetector:
             # Staging-specific variables
             os.getenv("STAGING", "").lower() == "true",
             "staging" in os.getenv("DATABASE_URL", "").lower(),
-            "staging" in platform.node().lower(),
+            "staging" in platform.node().lower()
         ]
 
         return any(indicators)
@@ -111,11 +116,9 @@ class EnvironmentConfig:
         # Apply runtime overrides
         self._apply_runtime_overrides(config)
 
-        self.logger.info(
-            "Environment configuration loaded",
-            environment=self.environment,
-            overrides=len(self._config_overrides),
-        )
+        self.logger.info("Environment configuration loaded",
+                        environment=self.environment,
+                        overrides=len(self._config_overrides))
 
         return config
 
@@ -145,71 +148,107 @@ class EnvironmentConfig:
     def _get_development_overrides(self) -> Dict[str, Any]:
         """Get development environment overrides."""
         return {
-            "service": {"debug": True, "reload": True, "log_level": "DEBUG"},
+            "service": {
+                "debug": True,
+                "reload": True,
+                "log_level": "DEBUG"
+            },
             "development": {
                 "enable_swagger": True,
                 "enable_redoc": True,
                 "enable_cors": True,
                 "cors_origins": ["http://localhost:3000", "http://localhost:8080"],
                 "auto_reload": True,
-                "debug_mode": True,
+                "debug_mode": True
             },
             "security": {
                 "rate_limit_enabled": False,
-                "circuit_breaker_failure_threshold": 10,
+                "circuit_breaker_failure_threshold": 10
             },
-            "monitoring": {"enable_profiling": False},
+            "monitoring": {
+                "enable_profiling": False
+            },
             "features": {
                 "enable_advanced_analytics": True,
                 "enable_real_time_updates": True,
                 "enable_extended_logging": True,
-                "enable_detailed_metrics": True,
+                "enable_detailed_metrics": True
             },
-            "database": {"url": "sqlite:///./data/project_simulation_dev.db"},
+            "database": {
+                "url": "sqlite:///./data/project_simulation_dev.db"
+            }
         }
 
     def _get_testing_overrides(self) -> Dict[str, Any]:
         """Get testing environment overrides."""
         return {
-            "service": {"debug": False, "reload": False, "log_level": "WARNING"},
-            "database": {"url": "sqlite:///:memory:"},  # In-memory database for tests
-            "testing": {"use_mock_services": True, "mock_data_enabled": True},
-            "security": {"rate_limit_enabled": False},
-            "monitoring": {"enable_metrics": False, "enable_profiling": False},
+            "service": {
+                "debug": False,
+                "reload": False,
+                "log_level": "WARNING"
+            },
+            "database": {
+                "url": "sqlite:///:memory:"  # In-memory database for tests
+            },
+            "testing": {
+                "use_mock_services": True,
+                "mock_data_enabled": True
+            },
+            "security": {
+                "rate_limit_enabled": False
+            },
+            "monitoring": {
+                "enable_metrics": False,
+                "enable_profiling": False
+            },
             "features": {
                 "enable_advanced_analytics": False,
                 "enable_real_time_updates": False,
                 "enable_extended_logging": False,
-                "enable_detailed_metrics": False,
-            },
+                "enable_detailed_metrics": False
+            }
         }
 
     def _get_staging_overrides(self) -> Dict[str, Any]:
         """Get staging environment overrides."""
         return {
-            "service": {"debug": False, "reload": False, "log_level": "INFO"},
-            "monitoring": {"enable_metrics": True, "enable_profiling": True},
+            "service": {
+                "debug": False,
+                "reload": False,
+                "log_level": "INFO"
+            },
+            "monitoring": {
+                "enable_metrics": True,
+                "enable_profiling": True
+            },
             "security": {
                 "rate_limit_enabled": True,
-                "circuit_breaker_failure_threshold": 5,
-            },
+                "circuit_breaker_failure_threshold": 5
+            }
         }
 
     def _get_production_overrides(self) -> Dict[str, Any]:
         """Get production environment overrides."""
         return {
-            "service": {"debug": False, "reload": False, "log_level": "WARNING"},
-            "monitoring": {"enable_metrics": True, "enable_profiling": False},
+            "service": {
+                "debug": False,
+                "reload": False,
+                "log_level": "WARNING"
+            },
+            "monitoring": {
+                "enable_metrics": True,
+                "enable_profiling": False
+            },
             "security": {
                 "rate_limit_enabled": True,
-                "circuit_breaker_failure_threshold": 3,
+                "circuit_breaker_failure_threshold": 3
             },
             "development": {
                 "enable_swagger": False,
                 "enable_redoc": False,
                 "auto_reload": False,
-                "debug_mode": False,
-            },
+                "debug_mode": False
+            }
         }
 
     def _get_runtime_overrides(self) -> Dict[str, Any]:
@@ -249,7 +288,7 @@ class EnvironmentConfig:
             "hostname": platform.node(),
             "user": os.getenv("USER", "unknown"),
             "overrides_applied": len(self._config_overrides),
-            "config_overrides": self._config_overrides,
+            "config_overrides": self._config_overrides
         }
 
     def validate_environment(self) -> List[str]:
@@ -340,9 +379,9 @@ class EnvironmentConfig:
             for issue in issues:
                 print(f"  - {issue}")
 
-        if info["config_overrides"]:
+        if info['config_overrides']:
             print("🔧 Applied Overrides:")
-            for key, value in info["config_overrides"].items():
+            for key, value in info['config_overrides'].items():
                 print(f"  - {key}: {value}")
 
         print("✅ Environment setup complete\n")
@@ -389,13 +428,13 @@ def is_production() -> bool:
 
 
 __all__ = [
-    "EnvironmentDetector",
-    "EnvironmentConfig",
-    "get_environment_config",
-    "setup_environment",
-    "print_env_info",
-    "validate_environment",
-    "is_development",
-    "is_testing",
-    "is_production",
+    'EnvironmentDetector',
+    'EnvironmentConfig',
+    'get_environment_config',
+    'setup_environment',
+    'print_env_info',
+    'validate_environment',
+    'is_development',
+    'is_testing',
+    'is_production'
 ]

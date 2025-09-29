@@ -5,11 +5,12 @@ communication and graceful failure handling.
 """
 
 import sys
-import time
-from datetime import datetime
-from enum import Enum
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Dict, Optional
+from typing import Dict, Any, Optional, Callable, Awaitable
+from datetime import datetime, timedelta
+from enum import Enum
+import asyncio
+import time
 
 # Import from shared infrastructure
 shared_path = Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"
@@ -26,28 +27,24 @@ except ImportError:
         def __init__(self, *args, **kwargs):
             pass
 
-
 from ..logging import get_simulation_logger
 
 
 class CircuitBreakerState(Enum):
     """Circuit breaker states."""
-
-    CLOSED = "closed"  # Normal operation
-    OPEN = "open"  # Failing, requests rejected
+    CLOSED = "closed"      # Normal operation
+    OPEN = "open"         # Failing, requests rejected
     HALF_OPEN = "half_open"  # Testing if service recovered
 
 
 class ServiceCircuitBreaker:
     """Circuit breaker for individual service calls."""
 
-    def __init__(
-        self,
-        service_name: str,
-        failure_threshold: int = 5,
-        recovery_timeout: float = 60.0,
-        success_threshold: int = 3,
-    ):
+    def __init__(self,
+                 service_name: str,
+                 failure_threshold: int = 5,
+                 recovery_timeout: float = 60.0,
+                 success_threshold: int = 3):
         """Initialize circuit breaker.
 
         Args:
@@ -75,7 +72,7 @@ class ServiceCircuitBreaker:
                 self.half_open_failure_count = 0  # Reset half-open failure count
                 self.logger.info(
                     "Circuit breaker transitioning to half-open",
-                    service=self.service_name,
+                    service=self.service_name
                 )
             else:
                 raise CircuitBreakerOpenException(
@@ -102,7 +99,7 @@ class ServiceCircuitBreaker:
                 self.state = CircuitBreakerState.HALF_OPEN
                 self.logger.info(
                     "Circuit breaker transitioning to half-open",
-                    service=self.service_name,
+                    service=self.service_name
                 )
             else:
                 raise CircuitBreakerOpenException(
@@ -160,7 +157,7 @@ class ServiceCircuitBreaker:
             self.logger.warning(
                 "Circuit breaker tripped to OPEN",
                 service=self.service_name,
-                failure_count=self.failure_count,
+                failure_count=self.failure_count
             )
 
     def _reset(self) -> None:
@@ -169,7 +166,10 @@ class ServiceCircuitBreaker:
         self.failure_count = 0
         self.success_count = 0
         self.half_open_failure_count = 0  # Reset half-open failure count
-        self.logger.info("Circuit breaker reset to CLOSED", service=self.service_name)
+        self.logger.info(
+            "Circuit breaker reset to CLOSED",
+            service=self.service_name
+        )
 
     def get_status(self) -> Dict[str, Any]:
         """Get circuit breaker status."""
@@ -178,17 +178,16 @@ class ServiceCircuitBreaker:
             "state": self.state.value,
             "failure_count": self.failure_count,
             "success_count": self.success_count,
-            "last_failure_time": (
-                self.last_failure_time.isoformat() if self.last_failure_time else None
-            ),
+            "last_failure_time": self.last_failure_time.isoformat() if self.last_failure_time else None,
             "failure_threshold": self.failure_threshold,
             "recovery_timeout": self.recovery_timeout,
-            "success_threshold": self.success_threshold,
+            "success_threshold": self.success_threshold
         }
 
 
 class CircuitBreakerOpenException(Exception):
     """Exception raised when circuit breaker is open."""
+    pass
 
 
 class EcosystemCircuitBreakerRegistry:
@@ -213,7 +212,7 @@ class EcosystemCircuitBreakerRegistry:
                     service_name=service.name,
                     failure_threshold=3,  # Fail after 3 attempts
                     recovery_timeout=30.0,  # Try again after 30 seconds
-                    success_threshold=2,  # Need 2 successes to close
+                    success_threshold=2  # Need 2 successes to close
                 )
             else:
                 # Other services - stricter thresholds
@@ -221,7 +220,7 @@ class EcosystemCircuitBreakerRegistry:
                     service_name=service.name,
                     failure_threshold=5,  # Fail after 5 attempts
                     recovery_timeout=60.0,  # Try again after 1 minute
-                    success_threshold=3,  # Need 3 successes to close
+                    success_threshold=3  # Need 3 successes to close
                 )
 
             self.breakers[service.name] = breaker
@@ -230,9 +229,7 @@ class EcosystemCircuitBreakerRegistry:
         """Get circuit breaker for a service."""
         return self.breakers.get(service_name)
 
-    async def execute_with_breaker(
-        self, service_name: str, func: Callable[[], Awaitable[Any]]
-    ) -> Any:
+    async def execute_with_breaker(self, service_name: str, func: Callable[[], Awaitable[Any]]) -> Any:
         """Execute function with circuit breaker protection."""
         breaker = self.get_breaker(service_name)
         if breaker:
@@ -253,7 +250,10 @@ class EcosystemCircuitBreakerRegistry:
         breaker = self.get_breaker(service_name)
         if breaker and breaker.state != CircuitBreakerState.CLOSED:
             breaker._reset()
-            self.logger.info("Circuit breaker manually reset", service=service_name)
+            self.logger.info(
+                "Circuit breaker manually reset",
+                service=service_name
+            )
             return True
         return False
 
@@ -271,12 +271,9 @@ class ResilientServiceClient:
     def __init__(self, service_name: str):
         """Initialize resilient service client."""
         from ..clients.ecosystem_clients import get_ecosystem_client
-
         self.service_name = service_name
         self.client = get_ecosystem_client(service_name)
-        self.circuit_breaker = EcosystemCircuitBreakerRegistry().get_breaker(
-            service_name
-        )
+        self.circuit_breaker = EcosystemCircuitBreakerRegistry().get_breaker(service_name)
         self.logger = get_simulation_logger()
 
     async def execute_request(self, method_name: str, *args, **kwargs) -> Any:
@@ -287,9 +284,7 @@ class ResilientServiceClient:
         # Get the method from the client
         method = getattr(self.client, method_name, None)
         if not method:
-            raise ValueError(
-                f"Method {method_name} not found on {self.service_name} client"
-            )
+            raise ValueError(f"Method {method_name} not found on {self.service_name} client")
 
         async def _execute():
             start_time = time.time()
@@ -301,7 +296,7 @@ class ResilientServiceClient:
                     "Service request successful",
                     service=self.service_name,
                     method=method_name,
-                    execution_time_seconds=execution_time,
+                    execution_time_seconds=execution_time
                 )
 
                 return result
@@ -313,7 +308,7 @@ class ResilientServiceClient:
                     service=self.service_name,
                     method=method_name,
                     execution_time_seconds=execution_time,
-                    error=str(e),
+                    error=str(e)
                 )
                 raise e
 
@@ -326,22 +321,18 @@ class ResilientServiceClient:
     async def health_check(self) -> Dict[str, Any]:
         """Perform health check with circuit breaker protection."""
         try:
-            await self.execute_request("health_check")
+            result = await self.execute_request("health_check")
             return {
                 "service": self.service_name,
                 "healthy": True,
-                "circuit_breaker_state": (
-                    self.circuit_breaker.state.value if self.circuit_breaker else "none"
-                ),
+                "circuit_breaker_state": self.circuit_breaker.state.value if self.circuit_breaker else "none"
             }
         except Exception as e:
             return {
                 "service": self.service_name,
                 "healthy": False,
                 "error": str(e),
-                "circuit_breaker_state": (
-                    self.circuit_breaker.state.value if self.circuit_breaker else "none"
-                ),
+                "circuit_breaker_state": self.circuit_breaker.state.value if self.circuit_breaker else "none"
             }
 
 
@@ -362,21 +353,19 @@ def create_resilient_client(service_name: str) -> ResilientServiceClient:
     return ResilientServiceClient(service_name)
 
 
-async def execute_with_resilience(
-    service_name: str, method_name: str, *args, **kwargs
-) -> Any:
+async def execute_with_resilience(service_name: str, method_name: str, *args, **kwargs) -> Any:
     """Execute a service method with full resilience features."""
     client = create_resilient_client(service_name)
     return await client.execute_request(method_name, *args, **kwargs)
 
 
 __all__ = [
-    "CircuitBreakerState",
-    "ServiceCircuitBreaker",
-    "CircuitBreakerOpenException",
-    "EcosystemCircuitBreakerRegistry",
-    "ResilientServiceClient",
-    "get_circuit_breaker_registry",
-    "create_resilient_client",
-    "execute_with_resilience",
+    'CircuitBreakerState',
+    'ServiceCircuitBreaker',
+    'CircuitBreakerOpenException',
+    'EcosystemCircuitBreakerRegistry',
+    'ResilientServiceClient',
+    'get_circuit_breaker_registry',
+    'create_resilient_client',
+    'execute_with_resilience'
 ]

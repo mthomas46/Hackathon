@@ -1,5 +1,9 @@
-"""Infrastructure layer - Delegates to existing infrastructure structure."""
+"""Infrastructure layer for Analysis Service."""
 
-from infrastructure import *
+from .repositories import DocumentRepository, AnalysisRepository, FindingRepository
 
-__all__ = []
+__all__ = [
+    'DocumentRepository',
+    'AnalysisRepository',
+    'FindingRepository'
+]

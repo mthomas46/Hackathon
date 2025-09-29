@@ -6,17 +6,14 @@ with detailed findings, recommendations, and executive summaries.
 """
 
 import json
-from dataclasses import dataclass
+from typing import Dict, Any, List, Optional
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-
+from dataclasses import dataclass
 from jinja2 import Template
-
 
 @dataclass
 class PRConfidenceReport:
     """Complete PR confidence analysis report."""
-
     workflow_id: str
     pr_id: str
     jira_ticket: Optional[str]
@@ -43,7 +40,6 @@ class PRConfidenceReport:
     analysis_duration: float
     ai_provider: str = "local_llm"
 
-
 class PRReportGenerator:
     """Generates comprehensive PR confidence analysis reports."""
 
@@ -55,8 +51,7 @@ class PRReportGenerator:
         templates = {}
 
         # HTML Report Template
-        templates["html"] = Template(
-            """
+        templates['html'] = Template("""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -217,8 +212,7 @@ class PRReportGenerator:
     </div>
 </body>
 </html>
-        """
-        )
+        """)
 
         # CSS Styles for the HTML report
         self.css_styles = """
@@ -552,7 +546,7 @@ class PRReportGenerator:
         }
         """
 
-        templates["html"] = Template(templates["html"].template.replace("{{ css_styles }}", self.css_styles))
+        templates['html'] = Template(templates['html'].template.replace('{{ css_styles }}', self.css_styles))
 
         return templates
 
@@ -564,7 +558,7 @@ class PRReportGenerator:
         cross_reference_results: Any,
         confidence_score: Any,
         detected_gaps: List[Any],
-        analysis_duration: float,
+        analysis_duration: float
     ) -> PRConfidenceReport:
         """
         Generate a comprehensive PR confidence report.
@@ -574,33 +568,31 @@ class PRReportGenerator:
         """
         # Extract key data
         workflow_id = f"pr-analysis-{int(datetime.now().timestamp())}"
-        pr_id = pr_data.get("id", "unknown")
-        jira_ticket = pr_data.get("jira_ticket")
+        pr_id = pr_data.get('id', 'unknown')
+        jira_ticket = pr_data.get('jira_ticket')
 
         # Convert complex objects to dictionaries for JSON serialization
         cross_ref_dict = {
-            "overall_alignment_score": cross_reference_results.overall_alignment_score,
-            "requirement_alignment": dict(cross_reference_results.requirement_alignment),
-            "documentation_consistency": dict(cross_reference_results.documentation_consistency),
-            "documentation_consistency_overall": (
-                sum(result.get("consistency_score", 0) for result in cross_reference_results.documentation_consistency.values())
-                / len(cross_reference_results.documentation_consistency)
-                if cross_reference_results.documentation_consistency
-                else 0
-            ),
-            "identified_gaps": cross_reference_results.identified_gaps,
-            "consistency_issues": cross_reference_results.consistency_issues,
+            'overall_alignment_score': cross_reference_results.overall_alignment_score,
+            'requirement_alignment': dict(cross_reference_results.requirement_alignment),
+            'documentation_consistency': dict(cross_reference_results.documentation_consistency),
+            'documentation_consistency_overall': sum(
+                result.get('consistency_score', 0)
+                for result in cross_reference_results.documentation_consistency.values()
+            ) / len(cross_reference_results.documentation_consistency) if cross_reference_results.documentation_consistency else 0,
+            'identified_gaps': cross_reference_results.identified_gaps,
+            'consistency_issues': cross_reference_results.consistency_issues
         }
 
         gaps_list = [
             {
-                "gap_type": gap.gap_type.value,
-                "severity": gap.severity.value,
-                "description": gap.description,
-                "evidence": gap.evidence,
-                "recommendation": gap.recommendation,
-                "estimated_effort": gap.estimated_effort,
-                "blocking_approval": gap.blocking_approval,
+                'gap_type': gap.gap_type.value,
+                'severity': gap.severity.value,
+                'description': gap.description,
+                'evidence': gap.evidence,
+                'recommendation': gap.recommendation,
+                'estimated_effort': gap.estimated_effort,
+                'blocking_approval': gap.blocking_approval
             }
             for gap in detected_gaps
         ]
@@ -617,70 +609,69 @@ class PRReportGenerator:
             cross_reference_results=cross_ref_dict,
             detected_gaps=gaps_list,
             risk_assessment=cross_reference_results.risk_assessment,
-            recommendations=confidence_score.improvement_areas
-            + [
+            recommendations=confidence_score.improvement_areas + [
                 "Review all critical concerns before approval",
                 "Address all blocking gaps identified",
-                "Consider additional testing for security-related changes",
+                "Consider additional testing for security-related changes"
             ],
             critical_concerns=confidence_score.critical_concerns,
             strengths=confidence_score.strengths,
             improvement_areas=confidence_score.improvement_areas,
             analysis_duration=analysis_duration,
-            ai_provider="ollama_llama3.2",
+            ai_provider="ollama_llama3.2"
         )
 
     def generate_html_report(self, report: PRConfidenceReport) -> str:
         """Generate HTML report from PRConfidenceReport."""
         template_data = {
-            "workflow_id": report.workflow_id,
-            "pr_id": report.pr_id,
-            "jira_ticket": report.jira_ticket,
-            "analysis_timestamp": report.analysis_timestamp,
-            "confidence_score": report.confidence_score,
-            "confidence_level": report.confidence_level,
-            "approval_recommendation": report.approval_recommendation,
-            "component_scores": report.component_scores,
-            "cross_reference_results": type("obj", (object,), report.cross_reference_results),
-            "detected_gaps": report.detected_gaps,
-            "risk_assessment": report.risk_assessment,
-            "recommendations": report.recommendations,
-            "critical_concerns": report.critical_concerns,
-            "strengths": report.strengths,
-            "improvement_areas": report.improvement_areas,
-            "analysis_duration": report.analysis_duration,
-            "ai_provider": report.ai_provider,
-            "rationale": getattr(report, "rationale", "Analysis completed successfully"),
-            "risk_factors": getattr(report, "risk_factors", []),
+            'workflow_id': report.workflow_id,
+            'pr_id': report.pr_id,
+            'jira_ticket': report.jira_ticket,
+            'analysis_timestamp': report.analysis_timestamp,
+            'confidence_score': report.confidence_score,
+            'confidence_level': report.confidence_level,
+            'approval_recommendation': report.approval_recommendation,
+            'component_scores': report.component_scores,
+            'cross_reference_results': type('obj', (object,), report.cross_reference_results),
+            'detected_gaps': report.detected_gaps,
+            'risk_assessment': report.risk_assessment,
+            'recommendations': report.recommendations,
+            'critical_concerns': report.critical_concerns,
+            'strengths': report.strengths,
+            'improvement_areas': report.improvement_areas,
+            'analysis_duration': report.analysis_duration,
+            'ai_provider': report.ai_provider,
+            'rationale': getattr(report, 'rationale', 'Analysis completed successfully'),
+            'risk_factors': getattr(report, 'risk_factors', [])
         }
 
-        return self.templates["html"].render(**template_data)
+        return self.templates['html'].render(**template_data)
 
     def generate_json_report(self, report: PRConfidenceReport) -> str:
         """Generate JSON report from PRConfidenceReport."""
         report_dict = {
-            "workflow_id": report.workflow_id,
-            "pr_id": report.pr_id,
-            "jira_ticket": report.jira_ticket,
-            "analysis_timestamp": report.analysis_timestamp,
-            "confidence_score": report.confidence_score,
-            "confidence_level": report.confidence_level,
-            "approval_recommendation": report.approval_recommendation,
-            "component_scores": report.component_scores,
-            "cross_reference_results": report.cross_reference_results,
-            "detected_gaps": report.detected_gaps,
-            "risk_assessment": report.risk_assessment,
-            "recommendations": report.recommendations,
-            "critical_concerns": report.critical_concerns,
-            "strengths": report.strengths,
-            "improvement_areas": report.improvement_areas,
-            "analysis_duration": report.analysis_duration,
-            "ai_provider": report.ai_provider,
-            "metadata": {
-                "generated_by": "LLM Documentation Ecosystem",
-                "version": "2.0.0",
-                "analysis_type": "pr_confidence_analysis",
-            },
+            'workflow_id': report.workflow_id,
+            'pr_id': report.pr_id,
+            'jira_ticket': report.jira_ticket,
+            'analysis_timestamp': report.analysis_timestamp,
+            'confidence_score': report.confidence_score,
+            'confidence_level': report.confidence_level,
+            'approval_recommendation': report.approval_recommendation,
+            'component_scores': report.component_scores,
+            'cross_reference_results': report.cross_reference_results,
+            'detected_gaps': report.detected_gaps,
+            'risk_assessment': report.risk_assessment,
+            'recommendations': report.recommendations,
+            'critical_concerns': report.critical_concerns,
+            'strengths': report.strengths,
+            'improvement_areas': report.improvement_areas,
+            'analysis_duration': report.analysis_duration,
+            'ai_provider': report.ai_provider,
+            'metadata': {
+                'generated_by': 'LLM Documentation Ecosystem',
+                'version': '2.0.0',
+                'analysis_type': 'pr_confidence_analysis'
+            }
         }
 
         return json.dumps(report_dict, indent=2, default=str)
@@ -701,7 +692,7 @@ class PRReportGenerator:
         html_filename = f"{base_filename}.html"
         html_filepath = os.path.join(output_dir, html_filename)
 
-        with open(html_filepath, "w", encoding="utf-8") as f:
+        with open(html_filepath, 'w', encoding='utf-8') as f:
             f.write(html_content)
 
         # Generate and save JSON report
@@ -709,10 +700,13 @@ class PRReportGenerator:
         json_filename = f"{base_filename}.json"
         json_filepath = os.path.join(output_dir, json_filename)
 
-        with open(json_filepath, "w", encoding="utf-8") as f:
+        with open(json_filepath, 'w', encoding='utf-8') as f:
             f.write(json_content)
 
-        return {"html_report": html_filepath, "json_report": json_filepath}
+        return {
+            'html_report': html_filepath,
+            'json_report': json_filepath
+        }
 
 
 # Create singleton instance

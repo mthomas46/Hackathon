@@ -1,24 +1,25 @@
 """Query bus for CQRS pattern."""
 
-from typing import Any, Dict, Type
+from typing import Dict, Type, Any
+from abc import ABC, abstractmethod
 
-from ..handlers.queries import (
-    GetAnalysesQuery,
-    GetAnalysisQuery,
-    GetDocumentQuery,
-    GetDocumentsQuery,
-    GetFindingQuery,
-    GetFindingsQuery,
-    GetStatisticsQuery,
-)
 from ..handlers.query_handlers import (
-    GetAnalysesQueryHandler,
-    GetAnalysisQueryHandler,
     GetDocumentQueryHandler,
     GetDocumentsQueryHandler,
+    GetAnalysisQueryHandler,
+    GetAnalysesQueryHandler,
     GetFindingQueryHandler,
     GetFindingsQueryHandler,
-    GetStatisticsQueryHandler,
+    GetStatisticsQueryHandler
+)
+from ..handlers.queries import (
+    GetDocumentQuery,
+    GetDocumentsQuery,
+    GetAnalysisQuery,
+    GetAnalysesQuery,
+    GetFindingQuery,
+    GetFindingsQuery,
+    GetStatisticsQuery
 )
 
 
@@ -43,16 +44,14 @@ class QueryBus:
         handler = self._handlers[query_type]
         return await handler.handle(query)
 
-    def register_default_handlers(
-        self,
-        get_document_handler: GetDocumentQueryHandler,
-        get_documents_handler: GetDocumentsQueryHandler,
-        get_analysis_handler: GetAnalysisQueryHandler,
-        get_analyses_handler: GetAnalysesQueryHandler,
-        get_finding_handler: GetFindingQueryHandler,
-        get_findings_handler: GetFindingsQueryHandler,
-        get_statistics_handler: GetStatisticsQueryHandler,
-    ) -> None:
+    def register_default_handlers(self,
+                                  get_document_handler: GetDocumentQueryHandler,
+                                  get_documents_handler: GetDocumentsQueryHandler,
+                                  get_analysis_handler: GetAnalysisQueryHandler,
+                                  get_analyses_handler: GetAnalysesQueryHandler,
+                                  get_finding_handler: GetFindingQueryHandler,
+                                  get_findings_handler: GetFindingsQueryHandler,
+                                  get_statistics_handler: GetStatisticsQueryHandler) -> None:
         """Register all default query handlers."""
         self.register_handler(GetDocumentQuery, get_document_handler)
         self.register_handler(GetDocumentsQuery, get_documents_handler)

@@ -1,15 +1,13 @@
 """Base HTTP models for consistent API responses."""
 
+from typing import Optional, Dict, Any, List, Generic, TypeVar
 from datetime import datetime
+from pydantic import BaseModel, Field, validator
 from enum import Enum
-from typing import Any, Dict, Generic, List, Optional, TypeVar
-
-from pydantic import BaseModel, Field
 
 
 class ResponseStatus(str, Enum):
     """API response status enumeration."""
-
     SUCCESS = "success"
     ERROR = "error"
     WARNING = "warning"
@@ -17,7 +15,6 @@ class ResponseStatus(str, Enum):
 
 class ErrorCode(str, Enum):
     """Standard error codes for API responses."""
-
     VALIDATION_ERROR = "VALIDATION_ERROR"
     NOT_FOUND = "NOT_FOUND"
     UNAUTHORIZED = "UNAUTHORIZED"
@@ -37,9 +34,10 @@ class BaseResponse(BaseModel):
 
     class Config:
         """Pydantic configuration."""
-
         use_enum_values = True
-        json_encoders = {datetime: lambda v: v.isoformat()}
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 
 class ErrorDetail(BaseModel):
@@ -62,15 +60,18 @@ class ErrorResponse(BaseResponse):
         cls,
         exception: Exception,
         status_code: int = 500,
-        request_id: Optional[str] = None,
-    ) -> "ErrorResponse":
+        request_id: Optional[str] = None
+    ) -> 'ErrorResponse':
         """Create error response from exception."""
         error_detail = ErrorDetail(
             message=str(exception),
-            code=getattr(exception, "code", ErrorCode.INTERNAL_ERROR),
+            code=getattr(exception, 'code', ErrorCode.INTERNAL_ERROR)
         )
 
-        return cls(error=error_detail, request_id=request_id)
+        return cls(
+            error=error_detail,
+            request_id=request_id
+        )
 
 
 class SuccessResponse(BaseResponse):
@@ -81,12 +82,21 @@ class SuccessResponse(BaseResponse):
     message: Optional[str] = Field(None, description="Success message")
 
     @classmethod
-    def with_data(cls, data: Any, message: Optional[str] = None, request_id: Optional[str] = None) -> "SuccessResponse":
+    def with_data(
+        cls,
+        data: Any,
+        message: Optional[str] = None,
+        request_id: Optional[str] = None
+    ) -> 'SuccessResponse':
         """Create success response with data."""
-        return cls(data=data, message=message, request_id=request_id)
+        return cls(
+            data=data,
+            message=message,
+            request_id=request_id
+        )
 
 
-T = TypeVar("T")
+T = TypeVar('T')
 
 
 class PaginatedResponse(BaseResponse, Generic[T]):
@@ -103,8 +113,8 @@ class PaginatedResponse(BaseResponse, Generic[T]):
         page: int = 1,
         page_size: int = 20,
         total: int = 0,
-        request_id: Optional[str] = None,
-    ) -> "PaginatedResponse[T]":
+        request_id: Optional[str] = None
+    ) -> 'PaginatedResponse[T]':
         """Create paginated response."""
         total_pages = (total + page_size - 1) // page_size  # Ceiling division
 
@@ -114,10 +124,14 @@ class PaginatedResponse(BaseResponse, Generic[T]):
             "total": total,
             "total_pages": total_pages,
             "has_next": page < total_pages,
-            "has_prev": page > 1,
+            "has_prev": page > 1
         }
 
-        return cls(data=items, pagination=pagination, request_id=request_id)
+        return cls(
+            data=items,
+            pagination=pagination,
+            request_id=request_id
+        )
 
 
 class HealthResponse(BaseResponse):
@@ -136,15 +150,15 @@ class HealthResponse(BaseResponse):
         version: str,
         uptime: Optional[float] = None,
         dependencies: Optional[Dict[str, Any]] = None,
-        request_id: Optional[str] = None,
-    ) -> "HealthResponse":
+        request_id: Optional[str] = None
+    ) -> 'HealthResponse':
         """Create healthy response."""
         return cls(
             service=service,
             version=version,
             uptime=uptime,
             dependencies=dependencies,
-            request_id=request_id,
+            request_id=request_id
         )
 
 
@@ -166,8 +180,8 @@ class MetadataResponse(BaseResponse):
         description: str,
         endpoints: List[str],
         capabilities: List[str],
-        request_id: Optional[str] = None,
-    ) -> "MetadataResponse":
+        request_id: Optional[str] = None
+    ) -> 'MetadataResponse':
         """Create metadata response."""
         return cls(
             service=service,
@@ -175,5 +189,5 @@ class MetadataResponse(BaseResponse):
             description=description,
             endpoints=endpoints,
             capabilities=capabilities,
-            request_id=request_id,
+            request_id=request_id
         )

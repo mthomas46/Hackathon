@@ -3,15 +3,12 @@ Summarizer-Hub Client for integrating with the summarizer service.
 Following DDD infrastructure patterns with clean separation of concerns.
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional
-
 import httpx
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+
 from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
-from simulation.domain.recommendations.recommendation import (
-    Recommendation,
-    RecommendationType,
-)
+from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
 
 
 class SummarizerHubClient:
@@ -26,9 +23,7 @@ class SummarizerHubClient:
     def _get_service_url(self) -> str:
         """Get the appropriate Summarizer-Hub service URL."""
         # Use the same environment detection logic as the analyzer
-        return self._analyzer.service_urls.get(
-            "summarizer-hub", "http://localhost:5160"
-        )
+        return self._analyzer.service_urls.get("summarizer_hub", "http://localhost:5160")
 
     async def analyze_document(self, document: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze a single document using the summarizer-hub service."""
@@ -37,13 +32,13 @@ class SummarizerHubClient:
                 "content": document.get("content", ""),
                 "title": document.get("title", ""),
                 "document_type": document.get("type", "unknown"),
-                "analysis_type": "comprehensive",
+                "analysis_type": "comprehensive"
             }
 
             response = await self.http_client.post(
                 f"{self.service_url}/api/v1/analyze/document",
                 json=analysis_request,
-                headers={"Content-Type": "application/json"},
+                headers={"Content-Type": "application/json"}
             )
 
             if response.status_code == 200:
@@ -52,13 +47,11 @@ class SummarizerHubClient:
                 # Fallback to basic analysis
                 return await self._fallback_document_analysis(document)
 
-        except Exception:
+        except Exception as e:
             # Service unavailable - return fallback analysis
             return await self._fallback_document_analysis(document)
 
-    async def analyze_documents_batch(
-        self, documents: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    async def analyze_documents_batch(self, documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Analyze multiple documents in batch."""
         results = []
 
@@ -66,7 +59,7 @@ class SummarizerHubClient:
         batch_size = min(len(documents), 10)
 
         for i in range(0, len(documents), batch_size):
-            batch = documents[i : i + batch_size]
+            batch = documents[i:i + batch_size]
 
             try:
                 batch_request = {
@@ -75,17 +68,17 @@ class SummarizerHubClient:
                             "id": doc.get("id"),
                             "content": doc.get("content", ""),
                             "title": doc.get("title", ""),
-                            "type": doc.get("type", "unknown"),
+                            "type": doc.get("type", "unknown")
                         }
                         for doc in batch
                     ],
-                    "analysis_type": "batch_quality",
+                    "analysis_type": "batch_quality"
                 }
 
                 response = await self.http_client.post(
                     f"{self.service_url}/api/v1/analyze/batch",
                     json=batch_request,
-                    headers={"Content-Type": "application/json"},
+                    headers={"Content-Type": "application/json"}
                 )
 
                 if response.status_code == 200:
@@ -95,43 +88,37 @@ class SummarizerHubClient:
                     # Fallback analysis for batch
                     for doc in batch:
                         fallback_result = await self._fallback_document_analysis(doc)
-                        results.append(
-                            {
-                                "document_id": doc.get("id"),
-                                "analysis": fallback_result,
-                                "fallback": True,
-                            }
-                        )
+                        results.append({
+                            "document_id": doc.get("id"),
+                            "analysis": fallback_result,
+                            "fallback": True
+                        })
 
             except Exception:
                 # Fallback for entire batch
                 for doc in batch:
                     fallback_result = await self._fallback_document_analysis(doc)
-                    results.append(
-                        {
-                            "document_id": doc.get("id"),
-                            "analysis": fallback_result,
-                            "fallback": True,
-                        }
-                    )
+                    results.append({
+                        "document_id": doc.get("id"),
+                        "analysis": fallback_result,
+                        "fallback": True
+                    })
 
         return results
 
-    async def generate_recommendations(
-        self, analysis_results: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    async def generate_recommendations(self, analysis_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Generate recommendations based on analysis results."""
         try:
             recommendation_request = {
                 "analysis_results": analysis_results,
                 "recommendation_types": ["consolidation", "quality", "structure"],
-                "include_priorities": True,
+                "include_priorities": True
             }
 
             response = await self.http_client.post(
                 f"{self.service_url}/api/v1/recommendations/generate",
                 json=recommendation_request,
-                headers={"Content-Type": "application/json"},
+                headers={"Content-Type": "application/json"}
             )
 
             if response.status_code == 200:
@@ -155,15 +142,13 @@ class SummarizerHubClient:
                 {
                     "type": "service_unavailable",
                     "description": "Summarizer service is currently unavailable",
-                    "priority": "medium",
+                    "priority": "medium"
                 }
             ],
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now().isoformat()
         }
 
-    async def _fallback_document_analysis(
-        self, document: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _fallback_document_analysis(self, document: Dict[str, Any]) -> Dict[str, Any]:
         """Provide basic fallback analysis for a document."""
         content = document.get("content", "")
         word_count = len(content.split()) if content else 0
@@ -192,12 +177,10 @@ class SummarizerHubClient:
             "key_points": ["Content length analysis", "Basic quality assessment"],
             "sentiment": "neutral",
             "fallback_mode": True,
-            "analyzed_at": datetime.now().isoformat(),
+            "analyzed_at": datetime.now().isoformat()
         }
 
-    async def _fallback_recommendation_generation(
-        self, analysis_results: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    async def _fallback_recommendation_generation(self, analysis_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Generate basic fallback recommendations."""
         recommendations = []
 
@@ -206,39 +189,28 @@ class SummarizerHubClient:
             quality_score = result.get("quality_score", 0.5)
 
             if quality_score < 0.6:
-                recommendations.append(
-                    {
-                        "type": "quality",
-                        "description": f"Consider improving quality of document {doc_id}",
-                        "priority": "medium",
-                        "document_id": doc_id,
-                        "fallback": True,
-                    }
-                )
+                recommendations.append({
+                    "type": "quality",
+                    "description": f"Consider improving quality of document {doc_id}",
+                    "priority": "medium",
+                    "document_id": doc_id,
+                    "fallback": True
+                })
 
         # Add general recommendations if we have multiple low-quality documents
-        low_quality_count = sum(
-            1 for r in analysis_results if r.get("quality_score", 0.5) < 0.6
-        )
+        low_quality_count = sum(1 for r in analysis_results if r.get("quality_score", 0.5) < 0.6)
 
         if low_quality_count > len(analysis_results) * 0.5:
-            recommendations.append(
-                {
-                    "type": "consolidation",
-                    "description": "Consider consolidating multiple low-quality documents",
-                    "priority": "high",
-                    "fallback": True,
-                }
-            )
+            recommendations.append({
+                "type": "consolidation",
+                "description": "Consider consolidating multiple low-quality documents",
+                "priority": "high",
+                "fallback": True
+            })
 
         return recommendations
 
-    async def get_recommendations(
-        self,
-        documents: List[Dict[str, Any]],
-        recommendation_types: Optional[List[str]] = None,
-        confidence_threshold: float = 0.4,
-    ) -> List[Recommendation]:
+    async def get_recommendations(self, documents: List[Dict[str, Any]], recommendation_types: Optional[List[str]] = None, confidence_threshold: float = 0.4) -> List[Recommendation]:
         """Get recommendations for documents from Summarizer Hub."""
         try:
             async with httpx.AsyncClient(timeout=self.http_client.timeout) as client:
@@ -247,8 +219,8 @@ class SummarizerHubClient:
                     json={
                         "documents": documents,
                         "recommendation_types": recommendation_types,
-                        "confidence_threshold": confidence_threshold,
-                    },
+                        "confidence_threshold": confidence_threshold
+                    }
                 )
 
                 if response.status_code == 200:
@@ -256,55 +228,37 @@ class SummarizerHubClient:
                     if result.get("success"):
                         return self._parse_recommendations(result["recommendations"])
                     else:
-                        print(
-                            f"Summarizer Hub error: {result.get('error', 'Unknown error')}"
-                        )
+                        print(f"Summarizer Hub error: {result.get('error', 'Unknown error')}")
                         return []
                 else:
-                    print(
-                        f"Summarizer Hub request failed with status {response.status_code}"
-                    )
+                    print(f"Summarizer Hub request failed with status {response.status_code}")
                     return []
 
         except Exception as e:
             print(f"Error communicating with Summarizer Hub: {e}")
             return []
 
-    async def get_consolidation_recommendations(
-        self, documents: List[Dict[str, Any]]
-    ) -> List[Recommendation]:
+    async def get_consolidation_recommendations(self, documents: List[Dict[str, Any]]) -> List[Recommendation]:
         """Get consolidation recommendations specifically."""
         return await self.get_recommendations(documents, ["consolidation"])
 
-    async def get_duplicate_recommendations(
-        self, documents: List[Dict[str, Any]]
-    ) -> List[Recommendation]:
+    async def get_duplicate_recommendations(self, documents: List[Dict[str, Any]]) -> List[Recommendation]:
         """Get duplicate detection recommendations specifically."""
         return await self.get_recommendations(documents, ["duplicate"])
 
-    async def get_outdated_recommendations(
-        self, documents: List[Dict[str, Any]]
-    ) -> List[Recommendation]:
+    async def get_outdated_recommendations(self, documents: List[Dict[str, Any]]) -> List[Recommendation]:
         """Get outdated document recommendations specifically."""
         return await self.get_recommendations(documents, ["outdated"])
 
-    async def get_quality_recommendations(
-        self, documents: List[Dict[str, Any]]
-    ) -> List[Recommendation]:
+    async def get_quality_recommendations(self, documents: List[Dict[str, Any]]) -> List[Recommendation]:
         """Get quality improvement recommendations specifically."""
         return await self.get_recommendations(documents, ["quality"])
 
-    async def get_comprehensive_recommendations(
-        self, documents: List[Dict[str, Any]]
-    ) -> List[Recommendation]:
+    async def get_comprehensive_recommendations(self, documents: List[Dict[str, Any]]) -> List[Recommendation]:
         """Get comprehensive recommendations across all types."""
-        return await self.get_recommendations(
-            documents, ["consolidation", "duplicate", "outdated", "quality"]
-        )
+        return await self.get_recommendations(documents, ["consolidation", "duplicate", "outdated", "quality"])
 
-    def _parse_recommendations(
-        self, raw_recommendations: List[Dict[str, Any]]
-    ) -> List[Recommendation]:
+    def _parse_recommendations(self, raw_recommendations: List[Dict[str, Any]]) -> List[Recommendation]:
         """Parse raw recommendations into Recommendation objects."""
         recommendations = []
 
@@ -334,7 +288,7 @@ class SummarizerHubClient:
                     effort_level=raw_rec.get("effort_level", "medium"),
                     tags=raw_rec.get("tags", []),
                     metadata=raw_rec.get("metadata", {}),
-                    age_days=raw_rec.get("age_days"),
+                    age_days=raw_rec.get("age_days")
                 )
                 recommendations.append(recommendation)
 
@@ -352,10 +306,7 @@ class SummarizerHubClient:
                 if response.status_code == 200:
                     return response.json()
                 else:
-                    return {
-                        "status": "unhealthy",
-                        "error": f"HTTP {response.status_code}",
-                    }
+                    return {"status": "unhealthy", "error": f"HTTP {response.status_code}"}
         except Exception as e:
             return {"status": "unreachable", "error": str(e)}
 

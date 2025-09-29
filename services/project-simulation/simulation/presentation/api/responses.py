@@ -5,22 +5,26 @@ and proper HTTP status code usage.
 """
 
 import sys
+from pathlib import Path
+from typing import Dict, Any, Optional, List, Union
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(
-    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+from core.responses.responses import (
+    BaseResponse,
+    SuccessResponse,
+    ErrorResponse,
+    create_success_response,
+    create_error_response
 )
 
-from .hateoas import Links
+from .hateoas import Links, Link
 
 
 class HTTPStatus(Enum):
     """HTTP status codes with descriptions."""
-
     # 2xx Success
     OK = (200, "OK")
     CREATED = (201, "Created")
@@ -57,22 +61,18 @@ class HTTPStatus(Enum):
 class SimulationResponse:
     """Standardized response class for simulation API."""
 
-    def __init__(
-        self,
-        success: bool = True,
-        data: Optional[Any] = None,
-        message: Optional[str] = None,
-        error_code: Optional[str] = None,
-        status: HTTPStatus = HTTPStatus.OK,
-        links: Optional[Links] = None,
-        meta: Optional[Dict[str, Any]] = None,
-    ):
+    def __init__(self,
+                 success: bool = True,
+                 data: Optional[Any] = None,
+                 message: Optional[str] = None,
+                 error_code: Optional[str] = None,
+                 status: HTTPStatus = HTTPStatus.OK,
+                 links: Optional[Links] = None,
+                 meta: Optional[Dict[str, Any]] = None):
         """Initialize simulation response."""
         self.success = success
         self.data = data
-        self.message = message or (
-            "Operation successful" if success else "Operation failed"
-        )
+        self.message = message or ("Operation successful" if success else "Operation failed")
         self.error_code = error_code
         self.status = status
         self.links = links
@@ -86,7 +86,7 @@ class SimulationResponse:
             "message": self.message,
             "timestamp": self.timestamp,
             "status_code": self.status.code,
-            "version": "1.0.0",
+            "version": "1.0.0"
         }
 
         if self.data is not None:
@@ -112,13 +112,11 @@ class SimulationResponseBuilder:
     """Builder for creating standardized simulation responses."""
 
     @staticmethod
-    def success(
-        data: Optional[Any] = None,
-        message: Optional[str] = None,
-        status: HTTPStatus = HTTPStatus.OK,
-        links: Optional[Links] = None,
-        meta: Optional[Dict[str, Any]] = None,
-    ) -> SimulationResponse:
+    def success(data: Optional[Any] = None,
+               message: Optional[str] = None,
+               status: HTTPStatus = HTTPStatus.OK,
+               links: Optional[Links] = None,
+               meta: Optional[Dict[str, Any]] = None) -> SimulationResponse:
         """Create a successful response."""
         return SimulationResponse(
             success=True,
@@ -126,17 +124,15 @@ class SimulationResponseBuilder:
             message=message or "Operation completed successfully",
             status=status,
             links=links,
-            meta=meta,
+            meta=meta
         )
 
     @staticmethod
-    def created(
-        data: Optional[Any] = None,
-        message: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        resource_url: Optional[str] = None,
-        links: Optional[Links] = None,
-    ) -> SimulationResponse:
+    def created(data: Optional[Any] = None,
+               message: Optional[str] = None,
+               resource_id: Optional[str] = None,
+               resource_url: Optional[str] = None,
+               links: Optional[Links] = None) -> SimulationResponse:
         """Create a resource created response."""
         meta = {"resource_id": resource_id} if resource_id else {}
         if resource_url:
@@ -148,17 +144,15 @@ class SimulationResponseBuilder:
             message=message or "Resource created successfully",
             status=HTTPStatus.CREATED,
             links=links,
-            meta=meta,
+            meta=meta
         )
 
     @staticmethod
-    def accepted(
-        data: Optional[Any] = None,
-        message: Optional[str] = None,
-        job_id: Optional[str] = None,
-        estimated_time: Optional[int] = None,
-        links: Optional[Links] = None,
-    ) -> SimulationResponse:
+    def accepted(data: Optional[Any] = None,
+                message: Optional[str] = None,
+                job_id: Optional[str] = None,
+                estimated_time: Optional[int] = None,
+                links: Optional[Links] = None) -> SimulationResponse:
         """Create an accepted (async operation) response."""
         meta = {}
         if job_id:
@@ -172,28 +166,25 @@ class SimulationResponseBuilder:
             message=message or "Operation accepted for processing",
             status=HTTPStatus.ACCEPTED,
             links=links,
-            meta=meta,
+            meta=meta
         )
 
     @staticmethod
-    def no_content(
-        message: Optional[str] = None, links: Optional[Links] = None
-    ) -> SimulationResponse:
+    def no_content(message: Optional[str] = None,
+                  links: Optional[Links] = None) -> SimulationResponse:
         """Create a no content response."""
         return SimulationResponse(
             success=True,
             message=message or "Operation completed",
             status=HTTPStatus.NO_CONTENT,
-            links=links,
+            links=links
         )
 
     @staticmethod
-    def bad_request(
-        message: str = "Invalid request",
-        error_code: str = "INVALID_REQUEST",
-        details: Optional[Dict[str, Any]] = None,
-        links: Optional[Links] = None,
-    ) -> SimulationResponse:
+    def bad_request(message: str = "Invalid request",
+                   error_code: str = "INVALID_REQUEST",
+                   details: Optional[Dict[str, Any]] = None,
+                   links: Optional[Links] = None) -> SimulationResponse:
         """Create a bad request error response."""
         return SimulationResponse(
             success=False,
@@ -201,15 +192,13 @@ class SimulationResponseBuilder:
             error_code=error_code,
             status=HTTPStatus.BAD_REQUEST,
             links=links,
-            meta={"details": details} if details else None,
+            meta={"details": details} if details else None
         )
 
     @staticmethod
-    def not_found(
-        resource_type: str = "Resource",
-        resource_id: Optional[str] = None,
-        links: Optional[Links] = None,
-    ) -> SimulationResponse:
+    def not_found(resource_type: str = "Resource",
+                 resource_id: Optional[str] = None,
+                 links: Optional[Links] = None) -> SimulationResponse:
         """Create a not found error response."""
         message = f"{resource_type} not found"
         if resource_id:
@@ -220,16 +209,14 @@ class SimulationResponseBuilder:
             message=message,
             error_code="RESOURCE_NOT_FOUND",
             status=HTTPStatus.NOT_FOUND,
-            links=links,
+            links=links
         )
 
     @staticmethod
-    def conflict(
-        message: str = "Resource conflict",
-        error_code: str = "RESOURCE_CONFLICT",
-        details: Optional[Dict[str, Any]] = None,
-        links: Optional[Links] = None,
-    ) -> SimulationResponse:
+    def conflict(message: str = "Resource conflict",
+                error_code: str = "RESOURCE_CONFLICT",
+                details: Optional[Dict[str, Any]] = None,
+                links: Optional[Links] = None) -> SimulationResponse:
         """Create a conflict error response."""
         return SimulationResponse(
             success=False,
@@ -237,16 +224,14 @@ class SimulationResponseBuilder:
             error_code=error_code,
             status=HTTPStatus.CONFLICT,
             links=links,
-            meta={"details": details} if details else None,
+            meta={"details": details} if details else None
         )
 
     @staticmethod
-    def unprocessable_entity(
-        message: str = "Validation failed",
-        error_code: str = "VALIDATION_ERROR",
-        validation_errors: Optional[List[Dict[str, Any]]] = None,
-        links: Optional[Links] = None,
-    ) -> SimulationResponse:
+    def unprocessable_entity(message: str = "Validation failed",
+                           error_code: str = "VALIDATION_ERROR",
+                           validation_errors: Optional[List[Dict[str, Any]]] = None,
+                           links: Optional[Links] = None) -> SimulationResponse:
         """Create an unprocessable entity error response."""
         meta = {}
         if validation_errors:
@@ -258,15 +243,13 @@ class SimulationResponseBuilder:
             error_code=error_code,
             status=HTTPStatus.UNPROCESSABLE_ENTITY,
             links=links,
-            meta=meta,
+            meta=meta
         )
 
     @staticmethod
-    def too_many_requests(
-        message: str = "Rate limit exceeded",
-        retry_after: Optional[int] = None,
-        links: Optional[Links] = None,
-    ) -> SimulationResponse:
+    def too_many_requests(message: str = "Rate limit exceeded",
+                         retry_after: Optional[int] = None,
+                         links: Optional[Links] = None) -> SimulationResponse:
         """Create a too many requests error response."""
         meta = {}
         if retry_after:
@@ -278,16 +261,14 @@ class SimulationResponseBuilder:
             error_code="RATE_LIMIT_EXCEEDED",
             status=HTTPStatus.TOO_MANY_REQUESTS,
             links=links,
-            meta=meta,
+            meta=meta
         )
 
     @staticmethod
-    def internal_server_error(
-        message: str = "Internal server error",
-        error_code: str = "INTERNAL_ERROR",
-        trace_id: Optional[str] = None,
-        links: Optional[Links] = None,
-    ) -> SimulationResponse:
+    def internal_server_error(message: str = "Internal server error",
+                             error_code: str = "INTERNAL_ERROR",
+                             trace_id: Optional[str] = None,
+                             links: Optional[Links] = None) -> SimulationResponse:
         """Create an internal server error response."""
         meta = {}
         if trace_id:
@@ -299,15 +280,13 @@ class SimulationResponseBuilder:
             error_code=error_code,
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
             links=links,
-            meta=meta,
+            meta=meta
         )
 
     @staticmethod
-    def service_unavailable(
-        message: str = "Service temporarily unavailable",
-        retry_after: Optional[int] = None,
-        links: Optional[Links] = None,
-    ) -> SimulationResponse:
+    def service_unavailable(message: str = "Service temporarily unavailable",
+                          retry_after: Optional[int] = None,
+                          links: Optional[Links] = None) -> SimulationResponse:
         """Create a service unavailable error response."""
         meta = {}
         if retry_after:
@@ -319,45 +298,39 @@ class SimulationResponseBuilder:
             error_code="SERVICE_UNAVAILABLE",
             status=HTTPStatus.SERVICE_UNAVAILABLE,
             links=links,
-            meta=meta,
+            meta=meta
         )
 
 
 # Convenience functions for common responses
-def ok_response(
-    data: Optional[Any] = None, message: str = "OK", links: Optional[Links] = None
-) -> SimulationResponse:
+def ok_response(data: Optional[Any] = None,
+               message: str = "OK",
+               links: Optional[Links] = None) -> SimulationResponse:
     """Create a standard OK response."""
     return SimulationResponseBuilder.success(data, message, HTTPStatus.OK, links)
 
 
-def created_response(
-    data: Optional[Any] = None,
-    message: str = "Resource created",
-    resource_id: Optional[str] = None,
-    links: Optional[Links] = None,
-) -> SimulationResponse:
+def created_response(data: Optional[Any] = None,
+                    message: str = "Resource created",
+                    resource_id: Optional[str] = None,
+                    links: Optional[Links] = None) -> SimulationResponse:
     """Create a resource created response."""
     return SimulationResponseBuilder.created(data, message, resource_id, links=links)
 
 
-def accepted_response(
-    data: Optional[Any] = None,
-    message: str = "Request accepted",
-    job_id: Optional[str] = None,
-    links: Optional[Links] = None,
-) -> SimulationResponse:
+def accepted_response(data: Optional[Any] = None,
+                     message: str = "Request accepted",
+                     job_id: Optional[str] = None,
+                     links: Optional[Links] = None) -> SimulationResponse:
     """Create an accepted response for async operations."""
     return SimulationResponseBuilder.accepted(data, message, job_id, links=links)
 
 
-def error_response(
-    status: HTTPStatus,
-    message: str,
-    error_code: Optional[str] = None,
-    links: Optional[Links] = None,
-    meta: Optional[Dict[str, Any]] = None,
-) -> SimulationResponse:
+def error_response(status: HTTPStatus,
+                  message: str,
+                  error_code: Optional[str] = None,
+                  links: Optional[Links] = None,
+                  meta: Optional[Dict[str, Any]] = None) -> SimulationResponse:
     """Create a standardized error response."""
     return SimulationResponse(
         success=False,
@@ -365,17 +338,15 @@ def error_response(
         error_code=error_code or f"HTTP_{status.code}",
         status=status,
         links=links,
-        meta=meta,
+        meta=meta
     )
 
 
 # Response headers utilities
-def get_response_headers(
-    status: HTTPStatus,
-    content_type: str = "application/json",
-    cors_origin: str = "*",
-    cache_control: Optional[str] = None,
-) -> Dict[str, str]:
+def get_response_headers(status: HTTPStatus,
+                        content_type: str = "application/json",
+                        cors_origin: str = "*",
+                        cache_control: Optional[str] = None) -> Dict[str, str]:
     """Get standard response headers."""
     headers = {
         "Content-Type": content_type,
@@ -384,13 +355,11 @@ def get_response_headers(
     }
 
     if cors_origin:
-        headers.update(
-            {
-                "Access-Control-Allow-Origin": cors_origin,
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
-            }
-        )
+        headers.update({
+            "Access-Control-Allow-Origin": cors_origin,
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        })
 
     if cache_control:
         headers["Cache-Control"] = cache_control
@@ -409,15 +378,13 @@ def get_cors_preflight_headers() -> Dict[str, str]:
 
 
 # Pagination response helpers
-def paginated_response(
-    items: List[Any],
-    page: int,
-    page_size: int,
-    total_items: int,
-    base_url: str,
-    links: Optional[Links] = None,
-    meta: Optional[Dict[str, Any]] = None,
-) -> SimulationResponse:
+def paginated_response(items: List[Any],
+                      page: int,
+                      page_size: int,
+                      total_items: int,
+                      base_url: str,
+                      links: Optional[Links] = None,
+                      meta: Optional[Dict[str, Any]] = None) -> SimulationResponse:
     """Create a paginated response."""
     total_pages = (total_items + page_size - 1) // page_size  # Ceiling division
 
@@ -441,19 +408,19 @@ def paginated_response(
         data={"items": items},
         message=f"Retrieved {len(items)} items",
         links=links,
-        meta=pagination_meta,
+        meta=pagination_meta
     )
 
 
 __all__ = [
-    "HTTPStatus",
-    "SimulationResponse",
-    "SimulationResponseBuilder",
-    "ok_response",
-    "created_response",
-    "accepted_response",
-    "error_response",
-    "get_response_headers",
-    "get_cors_preflight_headers",
-    "paginated_response",
+    'HTTPStatus',
+    'SimulationResponse',
+    'SimulationResponseBuilder',
+    'ok_response',
+    'created_response',
+    'accepted_response',
+    'error_response',
+    'get_response_headers',
+    'get_cors_preflight_headers',
+    'paginated_response'
 ]

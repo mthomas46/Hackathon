@@ -5,25 +5,25 @@ service architecture, providing automatic service location, health monitoring,
 and dynamic service registration for the simulation service ecosystem integration.
 """
 
-import asyncio
 import sys
-import threading
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, Any, List, Optional, Set, Tuple
+from datetime import datetime, timedelta
+import asyncio
+import threading
+import json
+import weakref
 
 # Import from shared infrastructure
-sys.path.append(
-    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
-)
+sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
 from simulation.infrastructure.logging import get_simulation_logger
 
 # Import shared discovery patterns (with fallbacks)
 try:
-    from shared.discovery.client import DiscoveryClient
+    from shared.discovery.registry import ServiceRegistry, ServiceInstance
     from shared.discovery.health import ServiceHealthChecker
-    from shared.discovery.registry import ServiceInstance, ServiceRegistry
+    from shared.discovery.client import DiscoveryClient
 except ImportError:
     # Fallback implementations
     from dataclasses import dataclass
@@ -56,9 +56,7 @@ except ImportError:
 
         def deregister(self, service_id: str):
             for service_list in self.services.values():
-                service_list[:] = [
-                    s for s in service_list if s.service_id != service_id
-                ]
+                service_list[:] = [s for s in service_list if s.service_id != service_id]
 
         def get_instances(self, service_name: str) -> List[ServiceInstance]:
             return self.services.get(service_name, [])
@@ -129,108 +127,108 @@ class SimulationServiceDiscovery:
             "mock_data_generator": {
                 "default_url": "http://localhost:5002",
                 "description": "Document and data generation service",
-                "dependencies": [],
+                "dependencies": []
             },
             "doc_store": {
                 "default_url": "http://localhost:5003",
                 "description": "Document storage and retrieval service",
-                "dependencies": [],
+                "dependencies": []
             },
             "analysis_service": {
                 "default_url": "http://localhost:5004",
                 "description": "Content analysis and quality assessment",
-                "dependencies": ["doc_store"],
+                "dependencies": ["doc_store"]
             },
             "llm_gateway": {
                 "default_url": "http://localhost:5005",
                 "description": "AI language model gateway",
-                "dependencies": [],
+                "dependencies": []
             },
             "prompt_store": {
                 "default_url": "http://localhost:5006",
                 "description": "Prompt management and versioning",
-                "dependencies": [],
+                "dependencies": []
             },
             "orchestrator": {
                 "default_url": "http://localhost:5007",
                 "description": "Workflow orchestration service",
-                "dependencies": ["doc_store", "analysis_service"],
+                "dependencies": ["doc_store", "analysis_service"]
             },
             "log_collector": {
                 "default_url": "http://localhost:5008",
                 "description": "Centralized logging service",
-                "dependencies": [],
+                "dependencies": []
             },
-            "notification-service": {
+            "notification_service": {
                 "default_url": "http://localhost:5009",
                 "description": "Event notification service",
-                "dependencies": [],
+                "dependencies": []
             },
-            "source-agent": {
+            "source_agent": {
                 "default_url": "http://localhost:5010",
                 "description": "Code analysis and documentation",
-                "dependencies": [],
+                "dependencies": []
             },
-            "code-analyzer": {
+            "code_analyzer": {
                 "default_url": "http://localhost:5011",
                 "description": "Advanced code analysis",
-                "dependencies": ["source-agent"],
+                "dependencies": ["source_agent"]
             },
             "github_mcp": {
                 "default_url": "http://localhost:5012",
                 "description": "GitHub integration service",
-                "dependencies": [],
+                "dependencies": []
             },
             "bedrock_proxy": {
                 "default_url": "http://localhost:5013",
                 "description": "AWS AI services proxy",
-                "dependencies": [],
+                "dependencies": []
             },
-            "summarizer-hub": {
+            "summarizer_hub": {
                 "default_url": "http://localhost:5014",
                 "description": "Content summarization service",
-                "dependencies": ["analysis_service"],
+                "dependencies": ["analysis_service"]
             },
             "architecture_digitizer": {
                 "default_url": "http://localhost:5015",
                 "description": "Architecture diagram generation",
-                "dependencies": [],
+                "dependencies": []
             },
             "interpreter": {
                 "default_url": "http://localhost:5016",
                 "description": "Cross-document analysis and insights",
-                "dependencies": ["doc_store", "analysis_service"],
+                "dependencies": ["doc_store", "analysis_service"]
             },
             "memory_agent": {
                 "default_url": "http://localhost:5017",
                 "description": "Context and conversation management",
-                "dependencies": [],
+                "dependencies": []
             },
-            "secure-analyzer": {
+            "secure_analyzer": {
                 "default_url": "http://localhost:5018",
                 "description": "Security analysis and compliance",
-                "dependencies": ["code-analyzer"],
+                "dependencies": ["code_analyzer"]
             },
             "cli": {
                 "default_url": "http://localhost:5019",
                 "description": "Command-line interface service",
-                "dependencies": [],
+                "dependencies": []
             },
             "ollama": {
                 "default_url": "http://localhost:5020",
                 "description": "Local LLM inference service",
-                "dependencies": [],
+                "dependencies": []
             },
             "frontend": {
                 "default_url": "http://localhost:3000",
                 "description": "Web frontend application",
-                "dependencies": ["doc_store", "analysis_service"],
+                "dependencies": ["doc_store", "analysis_service"]
             },
             "discovery_agent": {
                 "default_url": "http://localhost:5021",
                 "description": "Service discovery and registration",
-                "dependencies": [],
-            },
+                "dependencies": []
+            }
         }
 
         for service_name, config in ecosystem_services.items():
@@ -238,7 +236,7 @@ class SimulationServiceDiscovery:
             self._service_metadata[service_name] = {
                 "description": config["description"],
                 "default_url": config["default_url"],
-                "auto_discovered": False,
+                "auto_discovered": False
             }
             self._service_dependencies[service_name] = set(config["dependencies"])
 
@@ -251,7 +249,7 @@ class SimulationServiceDiscovery:
                 status=ServiceStatus.UNKNOWN,
                 metadata={"description": config["description"]},
                 registered_at=datetime.now(),
-                last_heartbeat=datetime.now(),
+                last_heartbeat=datetime.now()
             )
             self.registry.register(instance)
 
@@ -263,9 +261,7 @@ class SimulationServiceDiscovery:
         self._running = True
 
         # Start background threads
-        self._discovery_thread = threading.Thread(
-            target=self._discovery_worker, daemon=True
-        )
+        self._discovery_thread = threading.Thread(target=self._discovery_worker, daemon=True)
         self._health_thread = threading.Thread(target=self._health_worker, daemon=True)
 
         self._discovery_thread.start()
@@ -308,7 +304,7 @@ class SimulationServiceDiscovery:
             "status": status,
             "last_check": last_check,
             "is_healthy": status == ServiceStatus.UP,
-            "metadata": self._service_metadata.get(service_name, {}),
+            "metadata": self._service_metadata.get(service_name, {})
         }
 
     def get_service_dependencies(self, service_name: str) -> Set[str]:
@@ -318,16 +314,10 @@ class SimulationServiceDiscovery:
     def get_ecosystem_health_overview(self) -> Dict[str, Any]:
         """Get comprehensive ecosystem health overview."""
         total_services = len(self._service_endpoints)
-        healthy_services = sum(
-            1 for status in self._health_status.values() if status == ServiceStatus.UP
-        )
-        unhealthy_services = sum(
-            1 for status in self._health_status.values() if status == ServiceStatus.DOWN
-        )
+        healthy_services = sum(1 for status in self._health_status.values() if status == ServiceStatus.UP)
+        unhealthy_services = sum(1 for status in self._health_status.values() if status == ServiceStatus.DOWN)
 
-        health_percentage = (
-            (healthy_services / total_services * 100) if total_services > 0 else 0
-        )
+        health_percentage = (healthy_services / total_services * 100) if total_services > 0 else 0
 
         # Service health breakdown
         service_health = {}
@@ -343,12 +333,10 @@ class SimulationServiceDiscovery:
             "health_percentage": health_percentage,
             "overall_status": self._calculate_overall_status(health_percentage),
             "service_health": service_health,
-            "dependency_graph": self._build_dependency_graph(),
+            "dependency_graph": self._build_dependency_graph()
         }
 
-    def register_simulation_service(
-        self, service_name: str, url: str, metadata: Dict[str, Any] = None
-    ):
+    def register_simulation_service(self, service_name: str, url: str, metadata: Dict[str, Any] = None):
         """Register the simulation service itself."""
         with self._lock:
             instance = ServiceInstance(
@@ -359,16 +347,14 @@ class SimulationServiceDiscovery:
                 status=ServiceStatus.UP,
                 metadata=metadata or {},
                 registered_at=datetime.now(),
-                last_heartbeat=datetime.now(),
+                last_heartbeat=datetime.now()
             )
             self.registry.register(instance)
             self._service_endpoints[service_name] = url
             self._service_metadata[service_name] = metadata or {}
             self._health_status[service_name] = ServiceStatus.UP
 
-            self.logger.info(
-                "Simulation service registered", service_name=service_name, url=url
-            )
+            self.logger.info("Simulation service registered", service_name=service_name, url=url)
 
     def _discovery_worker(self):
         """Background worker for service discovery."""
@@ -398,6 +384,7 @@ class SimulationServiceDiscovery:
         """Perform service discovery."""
         # In a real implementation, this would query service registries,
         # check DNS, or use other discovery mechanisms
+        pass
 
     async def _perform_health_checks(self):
         """Perform health checks on all registered services."""
@@ -415,9 +402,7 @@ class SimulationServiceDiscovery:
                     instance.last_heartbeat = datetime.now()
 
             except Exception as e:
-                self.logger.warning(
-                    "Health check failed", service=service_name, error=str(e)
-                )
+                self.logger.warning("Health check failed", service=service_name, error=str(e))
                 self._health_status[service_name] = ServiceStatus.DOWN
                 self._health_timestamps[service_name] = datetime.now()
 
@@ -436,7 +421,10 @@ class SimulationServiceDiscovery:
         """Build service dependency graph."""
         graph = {}
         for service_name, dependencies in self._service_dependencies.items():
-            graph[service_name] = {"dependencies": list(dependencies), "dependents": []}
+            graph[service_name] = {
+                "dependencies": list(dependencies),
+                "dependents": []
+            }
 
         # Build reverse dependencies
         for service_name, deps in self._service_dependencies.items():
@@ -478,9 +466,9 @@ def get_ecosystem_health() -> Dict[str, Any]:
 
 
 __all__ = [
-    "SimulationServiceDiscovery",
-    "get_simulation_service_discovery",
-    "discover_service",
-    "get_service_url",
-    "get_ecosystem_health",
+    'SimulationServiceDiscovery',
+    'get_simulation_service_discovery',
+    'discover_service',
+    'get_service_url',
+    'get_ecosystem_health'
 ]

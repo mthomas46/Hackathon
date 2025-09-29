@@ -2,8 +2,9 @@
 
 import asyncio
 from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
 
-from .connection_pool import ConnectionPool, ConnectionPoolConfig
+from .connection_pool import ConnectionPool, ConnectionPoolConfig, PooledConnection
 
 
 class RedisConnectionPool(ConnectionPool):
@@ -12,7 +13,7 @@ class RedisConnectionPool(ConnectionPool):
     def __init__(
         self,
         config: ConnectionPoolConfig,
-        host: str = "localhost",
+        host: str = 'localhost',
         port: int = 6379,
         db: int = 0,
         password: Optional[str] = None,
@@ -21,7 +22,7 @@ class RedisConnectionPool(ConnectionPool):
         socket_keepalive: bool = True,
         socket_keepalive_options: Optional[Dict[int, Union[int, bytes]]] = None,
         health_check_interval: int = 30,
-        **kwargs,
+        **kwargs
     ):
         """Initialize Redis connection pool."""
         super().__init__(config)
@@ -39,12 +40,10 @@ class RedisConnectionPool(ConnectionPool):
         # Import redis here to make it optional
         try:
             import redis.asyncio as aioredis
-
             self.aioredis = aioredis
         except ImportError:
             try:
                 import redis
-
                 self.aioredis = redis
             except ImportError:
                 raise ImportError("redis or redis-py is required for Redis connection pooling")
@@ -60,7 +59,7 @@ class RedisConnectionPool(ConnectionPool):
             socket_connect_timeout=self.socket_connect_timeout,
             socket_keepalive=self.socket_keepalive,
             socket_keepalive_options=self.socket_keepalive_options,
-            **self.redis_kwargs,
+            **self.redis_kwargs
         )
 
     async def validate_connection(self, connection: Any) -> bool:
@@ -90,107 +89,107 @@ class RedisConnectionPool(ConnectionPool):
     # Convenience methods for common Redis operations
     async def get(self, key: str) -> Optional[str]:
         """Get value from Redis."""
-        return await self.execute_command("GET", key)
+        return await self.execute_command('GET', key)
 
     async def set(self, key: str, value: Any, ex: Optional[int] = None) -> bool:
         """Set value in Redis."""
-        return await self.execute_command("SET", key, value, ex=ex)
+        return await self.execute_command('SET', key, value, ex=ex)
 
     async def delete(self, *keys: str) -> int:
         """Delete keys from Redis."""
-        return await self.execute_command("DELETE", *keys)
+        return await self.execute_command('DELETE', *keys)
 
     async def exists(self, *keys: str) -> int:
         """Check if keys exist in Redis."""
-        return await self.execute_command("EXISTS", *keys)
+        return await self.execute_command('EXISTS', *keys)
 
     async def expire(self, key: str, time: int) -> bool:
         """Set key expiration."""
-        return await self.execute_command("EXPIRE", key, time)
+        return await self.execute_command('EXPIRE', key, time)
 
     async def ttl(self, key: str) -> int:
         """Get key time-to-live."""
-        return await self.execute_command("TTL", key)
+        return await self.execute_command('TTL', key)
 
     async def incr(self, key: str) -> int:
         """Increment key value."""
-        return await self.execute_command("INCR", key)
+        return await self.execute_command('INCR', key)
 
     async def decr(self, key: str) -> int:
         """Decrement key value."""
-        return await self.execute_command("DECR", key)
+        return await self.execute_command('DECR', key)
 
     async def hget(self, key: str, field: str) -> Optional[str]:
         """Get hash field value."""
-        return await self.execute_command("HGET", key, field)
+        return await self.execute_command('HGET', key, field)
 
     async def hset(self, key: str, field: str, value: Any) -> bool:
         """Set hash field value."""
-        return await self.execute_command("HSET", key, field, value)
+        return await self.execute_command('HSET', key, field, value)
 
     async def hgetall(self, key: str) -> Dict[str, str]:
         """Get all hash fields."""
-        return await self.execute_command("HGETALL", key)
+        return await self.execute_command('HGETALL', key)
 
     async def lpush(self, key: str, *values: Any) -> int:
         """Push values to list left."""
-        return await self.execute_command("LPUSH", key, *values)
+        return await self.execute_command('LPUSH', key, *values)
 
     async def rpush(self, key: str, *values: Any) -> int:
         """Push values to list right."""
-        return await self.execute_command("RPUSH", key, *values)
+        return await self.execute_command('RPUSH', key, *values)
 
     async def lpop(self, key: str) -> Optional[str]:
         """Pop value from list left."""
-        return await self.execute_command("LPOP", key)
+        return await self.execute_command('LPOP', key)
 
     async def rpop(self, key: str) -> Optional[str]:
         """Pop value from list right."""
-        return await self.execute_command("RPOP", key)
+        return await self.execute_command('RPOP', key)
 
     async def blpop(self, keys: List[str], timeout: int = 0) -> Optional[List[str]]:
         """Blocking left pop from list."""
-        return await self.execute_command("BLPOP", keys, timeout)
+        return await self.execute_command('BLPOP', keys, timeout)
 
     async def brpop(self, keys: List[str], timeout: int = 0) -> Optional[List[str]]:
         """Blocking right pop from list."""
-        return await self.execute_command("BRPOP", keys, timeout)
+        return await self.execute_command('BRPOP', keys, timeout)
 
     async def publish(self, channel: str, message: str) -> int:
         """Publish message to channel."""
-        return await self.execute_command("PUBLISH", channel, message)
+        return await self.execute_command('PUBLISH', channel, message)
 
     async def subscribe(self, *channels: str) -> Any:
         """Subscribe to channels."""
-        return await self.execute_command("SUBSCRIBE", *channels)
+        return await self.execute_command('SUBSCRIBE', *channels)
 
     async def psubscribe(self, *patterns: str) -> Any:
         """Subscribe to channel patterns."""
-        return await self.execute_command("PSUBSCRIBE", *patterns)
+        return await self.execute_command('PSUBSCRIBE', *patterns)
 
     async def zadd(self, key: str, mapping: Dict[str, float]) -> int:
         """Add members to sorted set."""
-        return await self.execute_command("ZADD", key, mapping)
+        return await self.execute_command('ZADD', key, mapping)
 
     async def zrange(self, key: str, start: int, end: int, withscores: bool = False) -> List[str]:
         """Get range from sorted set."""
-        return await self.execute_command("ZRANGE", key, start, end, withscores=withscores)
+        return await self.execute_command('ZRANGE', key, start, end, withscores=withscores)
 
     async def zrem(self, key: str, *members: str) -> int:
         """Remove members from sorted set."""
-        return await self.execute_command("ZREM", key, *members)
+        return await self.execute_command('ZREM', key, *members)
 
     async def sadd(self, key: str, *members: str) -> int:
         """Add members to set."""
-        return await self.execute_command("SADD", key, *members)
+        return await self.execute_command('SADD', key, *members)
 
     async def srem(self, key: str, *members: str) -> int:
         """Remove members from set."""
-        return await self.execute_command("SREM", key, *members)
+        return await self.execute_command('SREM', key, *members)
 
     async def smembers(self, key: str) -> set:
         """Get all set members."""
-        return await self.execute_command("SMEMBERS", key)
+        return await self.execute_command('SMEMBERS', key)
 
 
 class RedisClusterConnectionPool(ConnectionPool):
@@ -201,7 +200,7 @@ class RedisClusterConnectionPool(ConnectionPool):
         config: ConnectionPoolConfig,
         startup_nodes: List[Dict[str, Union[str, int]]],
         password: Optional[str] = None,
-        **kwargs,
+        **kwargs
     ):
         """Initialize Redis Cluster connection pool."""
         super().__init__(config)
@@ -212,12 +211,10 @@ class RedisClusterConnectionPool(ConnectionPool):
         # Import redis cluster here to make it optional
         try:
             from rediscluster import RedisCluster
-
             self.RedisCluster = RedisCluster
         except ImportError:
             try:
                 from redis.cluster import RedisCluster
-
                 self.RedisCluster = RedisCluster
             except ImportError:
                 raise ImportError("redis-py-cluster is required for Redis Cluster connection pooling")
@@ -231,7 +228,7 @@ class RedisClusterConnectionPool(ConnectionPool):
             return self.RedisCluster(
                 startup_nodes=self.startup_nodes,
                 password=self.password,
-                **self.cluster_kwargs,
+                **self.cluster_kwargs
             )
 
         return await loop.run_in_executor(None, _create_cluster)
@@ -283,7 +280,7 @@ class RedisSentinelConnectionPool(ConnectionPool):
         sentinels: List[Dict[str, Union[str, int]]],
         service_name: str,
         password: Optional[str] = None,
-        **kwargs,
+        **kwargs
     ):
         """Initialize Redis Sentinel connection pool."""
         super().__init__(config)
@@ -295,7 +292,6 @@ class RedisSentinelConnectionPool(ConnectionPool):
         # Import redis sentinel here to make it optional
         try:
             from redis.sentinel import Sentinel
-
             self.Sentinel = Sentinel
         except ImportError:
             raise ImportError("redis-py is required for Redis Sentinel connection pooling")
@@ -303,9 +299,9 @@ class RedisSentinelConnectionPool(ConnectionPool):
     async def create_connection(self) -> Any:
         """Create Redis Sentinel connection."""
         sentinel = self.Sentinel(
-            [(s["host"], s["port"]) for s in self.sentinels],
+            [(s['host'], s['port']) for s in self.sentinels],
             password=self.password,
-            **self.sentinel_kwargs,
+            **self.sentinel_kwargs
         )
 
         # Get master connection
@@ -340,29 +336,49 @@ class RedisPoolFactory:
 
     @staticmethod
     def create_single_node_pool(
-        host: str = "localhost",
+        host: str = 'localhost',
         port: int = 6379,
         db: int = 0,
         password: Optional[str] = None,
         max_connections: int = 20,
-        **kwargs,
+        **kwargs
     ) -> RedisConnectionPool:
         """Create single Redis node connection pool."""
-        config = ConnectionPoolConfig(min_size=1, max_size=max_connections, acquire_timeout=30.0)
+        config = ConnectionPoolConfig(
+            min_size=1,
+            max_size=max_connections,
+            acquire_timeout=30.0
+        )
 
-        return RedisConnectionPool(config=config, host=host, port=port, db=db, password=password, **kwargs)
+        return RedisConnectionPool(
+            config=config,
+            host=host,
+            port=port,
+            db=db,
+            password=password,
+            **kwargs
+        )
 
     @staticmethod
     def create_cluster_pool(
         startup_nodes: List[Dict[str, Union[str, int]]],
         password: Optional[str] = None,
         max_connections: int = 20,
-        **kwargs,
+        **kwargs
     ) -> RedisClusterConnectionPool:
         """Create Redis Cluster connection pool."""
-        config = ConnectionPoolConfig(min_size=1, max_size=max_connections, acquire_timeout=30.0)
+        config = ConnectionPoolConfig(
+            min_size=1,
+            max_size=max_connections,
+            acquire_timeout=30.0
+        )
 
-        return RedisClusterConnectionPool(config=config, startup_nodes=startup_nodes, password=password, **kwargs)
+        return RedisClusterConnectionPool(
+            config=config,
+            startup_nodes=startup_nodes,
+            password=password,
+            **kwargs
+        )
 
     @staticmethod
     def create_sentinel_pool(
@@ -370,44 +386,51 @@ class RedisPoolFactory:
         service_name: str,
         password: Optional[str] = None,
         max_connections: int = 20,
-        **kwargs,
+        **kwargs
     ) -> RedisSentinelConnectionPool:
         """Create Redis Sentinel connection pool."""
-        config = ConnectionPoolConfig(min_size=1, max_size=max_connections, acquire_timeout=30.0)
+        config = ConnectionPoolConfig(
+            min_size=1,
+            max_size=max_connections,
+            acquire_timeout=30.0
+        )
 
         return RedisSentinelConnectionPool(
             config=config,
             sentinels=sentinels,
             service_name=service_name,
             password=password,
-            **kwargs,
+            **kwargs
         )
 
     @staticmethod
-    def create_pool_from_url(redis_url: str, max_connections: int = 20) -> RedisConnectionPool:
+    def create_pool_from_url(
+        redis_url: str,
+        max_connections: int = 20
+    ) -> RedisConnectionPool:
         """Create Redis pool from connection URL."""
         # Parse Redis URL (redis://[:password@]host[:port][/db])
-        if redis_url.startswith("redis://"):
-            url = redis_url.replace("redis://", "")
+        if redis_url.startswith('redis://'):
+            url = redis_url.replace('redis://', '')
 
             # Parse auth and host/port
-            if "@" in url:
-                auth, rest = url.split("@", 1)
+            if '@' in url:
+                auth, rest = url.split('@', 1)
                 password = auth
             else:
                 password = None
                 rest = url
 
             # Parse host, port, db
-            if "/" in rest:
-                host_port, db_part = rest.split("/", 1)
+            if '/' in rest:
+                host_port, db_part = rest.split('/', 1)
                 db = int(db_part) if db_part else 0
             else:
                 host_port = rest
                 db = 0
 
-            if ":" in host_port:
-                host, port = host_port.split(":", 1)
+            if ':' in host_port:
+                host, port = host_port.split(':', 1)
                 port = int(port)
             else:
                 host = host_port
@@ -418,10 +441,10 @@ class RedisPoolFactory:
                 port=port,
                 db=db,
                 password=password,
-                max_connections=max_connections,
+                max_connections=max_connections
             )
 
-        elif redis_url.startswith("redis-cluster://"):
+        elif redis_url.startswith('redis-cluster://'):
             # For cluster URLs, we'd need more complex parsing
             # This is a simplified implementation
             raise NotImplementedError("Redis Cluster URL parsing not implemented")

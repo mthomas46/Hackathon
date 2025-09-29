@@ -1,8 +1,8 @@
 """External service configuration management."""
 
 import os
+from typing import Optional, Dict, Any
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -30,53 +30,53 @@ class ExternalServiceConfig:
     retry_delay: float = 1.0
 
     @classmethod
-    def from_env(cls) -> "ExternalServiceConfig":
+    def from_env(cls) -> 'ExternalServiceConfig':
         """Create configuration from environment variables."""
         return cls(
-            openai_api_key=os.getenv("OPENAI_API_KEY"),
-            openai_model=os.getenv("OPENAI_MODEL", "gpt-4"),
-            openai_max_tokens=int(os.getenv("OPENAI_MAX_TOKENS", "2000")),
-            openai_temperature=float(os.getenv("OPENAI_TEMPERATURE", "0.7")),
-            semantic_model_path=os.getenv("SEMANTIC_MODEL_PATH"),
-            semantic_batch_size=int(os.getenv("SEMANTIC_BATCH_SIZE", "32")),
-            semantic_similarity_threshold=float(os.getenv("SEMANTIC_SIMILARITY_THRESHOLD", "0.8")),
-            sentiment_model=os.getenv("SENTIMENT_MODEL", "cardiffnlp/twitter-roberta-base-sentiment-latest"),
-            sentiment_confidence_threshold=float(os.getenv("SENTIMENT_CONFIDENCE_THRESHOLD", "0.6")),
-            request_timeout=int(os.getenv("EXTERNAL_REQUEST_TIMEOUT", "30")),
-            max_retries=int(os.getenv("EXTERNAL_MAX_RETRIES", "3")),
-            retry_delay=float(os.getenv("EXTERNAL_RETRY_DELAY", "1.0")),
+            openai_api_key=os.getenv('OPENAI_API_KEY'),
+            openai_model=os.getenv('OPENAI_MODEL', 'gpt-4'),
+            openai_max_tokens=int(os.getenv('OPENAI_MAX_TOKENS', '2000')),
+            openai_temperature=float(os.getenv('OPENAI_TEMPERATURE', '0.7')),
+            semantic_model_path=os.getenv('SEMANTIC_MODEL_PATH'),
+            semantic_batch_size=int(os.getenv('SEMANTIC_BATCH_SIZE', '32')),
+            semantic_similarity_threshold=float(os.getenv('SEMANTIC_SIMILARITY_THRESHOLD', '0.8')),
+            sentiment_model=os.getenv('SENTIMENT_MODEL', 'cardiffnlp/twitter-roberta-base-sentiment-latest'),
+            sentiment_confidence_threshold=float(os.getenv('SENTIMENT_CONFIDENCE_THRESHOLD', '0.6')),
+            request_timeout=int(os.getenv('EXTERNAL_REQUEST_TIMEOUT', '30')),
+            max_retries=int(os.getenv('EXTERNAL_MAX_RETRIES', '3')),
+            retry_delay=float(os.getenv('EXTERNAL_RETRY_DELAY', '1.0'))
         )
 
     def get_openai_config(self) -> Dict[str, Any]:
         """Get OpenAI configuration."""
         return {
-            "api_key": self.openai_api_key,
-            "model": self.openai_model,
-            "max_tokens": self.openai_max_tokens,
-            "temperature": self.openai_temperature,
+            'api_key': self.openai_api_key,
+            'model': self.openai_model,
+            'max_tokens': self.openai_max_tokens,
+            'temperature': self.openai_temperature
         }
 
     def get_semantic_config(self) -> Dict[str, Any]:
         """Get semantic analysis configuration."""
         return {
-            "model_path": self.semantic_model_path,
-            "batch_size": self.semantic_batch_size,
-            "similarity_threshold": self.semantic_similarity_threshold,
+            'model_path': self.semantic_model_path,
+            'batch_size': self.semantic_batch_size,
+            'similarity_threshold': self.semantic_similarity_threshold
         }
 
     def get_sentiment_config(self) -> Dict[str, Any]:
         """Get sentiment analysis configuration."""
         return {
-            "model": self.sentiment_model,
-            "confidence_threshold": self.sentiment_confidence_threshold,
+            'model': self.sentiment_model,
+            'confidence_threshold': self.sentiment_confidence_threshold
         }
 
     def get_retry_config(self) -> Dict[str, Any]:
         """Get retry configuration."""
         return {
-            "max_retries": self.max_retries,
-            "retry_delay": self.retry_delay,
-            "timeout": self.request_timeout,
+            'max_retries': self.max_retries,
+            'retry_delay': self.retry_delay,
+            'timeout': self.request_timeout
         }
 
     def validate(self) -> list[str]:

@@ -1,15 +1,14 @@
 """Rate limiting middleware to protect API endpoints from abuse."""
 
-import asyncio
 import time
+import asyncio
+from typing import Dict, Any, Optional, Tuple
 from collections import defaultdict
-from typing import Dict, Optional, Tuple
-
-from fastapi import HTTPException, Request
+from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-from ...presentation.models.base import ErrorCode, ErrorResponse
+from ...presentation.models.base import ErrorResponse, ErrorCode
 
 
 class RateLimitExceeded(HTTPException):
@@ -20,7 +19,7 @@ class RateLimitExceeded(HTTPException):
         super().__init__(
             status_code=429,
             detail="Rate limit exceeded",
-            headers={"Retry-After": str(retry_after)},
+            headers={"Retry-After": str(retry_after)}
         )
 
 
@@ -82,14 +81,20 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
 
         # Default rate limits by endpoint type
         self.rate_limits = {
-            "analysis": (10, 60),  # 10 requests per minute for analysis endpoints
-            "reports": (5, 60),  # 5 requests per minute for report endpoints
-            "admin": (20, 60),  # 20 requests per minute for admin endpoints
-            "default": (30, 60),  # 30 requests per minute default
+            'analysis': (10, 60),    # 10 requests per minute for analysis endpoints
+            'reports': (5, 60),      # 5 requests per minute for report endpoints
+            'admin': (20, 60),       # 20 requests per minute for admin endpoints
+            'default': (30, 60),     # 30 requests per minute default
         }
 
         # Endpoints that bypass rate limiting
-        self.exempt_paths = ["/health", "/metrics", "/docs", "/redoc", "/openapi.json"]
+        self.exempt_paths = [
+            '/health',
+            '/metrics',
+            '/docs',
+            '/redoc',
+            '/openapi.json'
+        ]
 
     async def dispatch(self, request: Request, call_next):
         """Process request with rate limiting."""
@@ -103,7 +108,7 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
         rate_limit_key = f"{client_ip}:{endpoint_type}"
 
         # Get rate limit for this endpoint type
-        limit, window = self.rate_limits.get(endpoint_type, self.rate_limits["default"])
+        limit, window = self.rate_limits.get(endpoint_type, self.rate_limits['default'])
 
         # Check rate limit
         allowed, retry_after = self.rate_limiter.is_allowed(rate_limit_key, limit, window)
@@ -114,15 +119,15 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
                 error={
                     "field": None,
                     "message": f"Rate limit exceeded. Try again in {retry_after} seconds.",
-                    "code": ErrorCode.RATE_LIMIT_EXCEEDED,
+                    "code": ErrorCode.RATE_LIMIT_EXCEEDED
                 },
-                request_id=getattr(request.state, "request_id", None),
+                request_id=getattr(request.state, 'request_id', None)
             )
 
             return JSONResponse(
                 status_code=429,
                 content=error_response.dict(),
-                headers={"Retry-After": str(retry_after)},
+                headers={"Retry-After": str(retry_after)}
             )
 
         # Add rate limit headers to response
@@ -135,19 +140,19 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
         remaining = max(0, limit - len(request_times))
 
         # Add rate limit headers
-        response.headers["X-RateLimit-Limit"] = str(limit)
-        response.headers["X-RateLimit-Remaining"] = str(remaining)
-        response.headers["X-RateLimit-Reset"] = str(int(now + window))
+        response.headers['X-RateLimit-Limit'] = str(limit)
+        response.headers['X-RateLimit-Remaining'] = str(remaining)
+        response.headers['X-RateLimit-Reset'] = str(int(now + window))
 
         return response
 
     def _get_client_ip(self, request: Request) -> str:
         """Get client IP address."""
-        forwarded_for = request.headers.get("x-forwarded-for")
+        forwarded_for = request.headers.get('x-forwarded-for')
         if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
+            return forwarded_for.split(',')[0].strip()
 
-        real_ip = request.headers.get("x-real-ip")
+        real_ip = request.headers.get('x-real-ip')
         if real_ip:
             return real_ip
 
@@ -156,14 +161,14 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
 
     def _get_endpoint_type(self, path: str) -> str:
         """Determine endpoint type from path."""
-        if path.startswith("/analyze"):
-            return "analysis"
-        elif path.startswith("/reports"):
-            return "reports"
-        elif path.startswith("/admin") or path.startswith("/internal"):
-            return "admin"
+        if path.startswith('/analyze'):
+            return 'analysis'
+        elif path.startswith('/reports'):
+            return 'reports'
+        elif path.startswith('/admin') or path.startswith('/internal'):
+            return 'admin'
         else:
-            return "default"
+            return 'default'
 
 
 class AdaptiveRateLimiter(InMemoryRateLimiter):
@@ -214,6 +219,6 @@ adaptive_rate_limiter = AdaptiveRateLimiter()
 endpoint_rate_limiter = EndpointRateLimiter()
 
 # Pre-configure endpoint-specific limits
-endpoint_rate_limiter.set_endpoint_limit("/analyze/*", 10, 60)  # 10 per minute for analysis
-endpoint_rate_limiter.set_endpoint_limit("/distributed/*", 5, 60)  # 5 per minute for distributed tasks
-endpoint_rate_limiter.set_endpoint_limit("/reports/*", 3, 60)  # 3 per minute for reports
+endpoint_rate_limiter.set_endpoint_limit('/analyze/*', 10, 60)  # 10 per minute for analysis
+endpoint_rate_limiter.set_endpoint_limit('/distributed/*', 5, 60)  # 5 per minute for distributed tasks
+endpoint_rate_limiter.set_endpoint_limit('/reports/*', 3, 60)    # 3 per minute for reports

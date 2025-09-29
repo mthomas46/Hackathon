@@ -6,10 +6,10 @@ and reusability across the ecosystem.
 """
 
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-
+from typing import Dict, Any, List, Optional, Tuple
+from datetime import datetime, timedelta
+import asyncio
 import httpx
 
 # Import from shared infrastructure
@@ -17,14 +17,11 @@ shared_path = Path(__file__).parent.parent.parent.parent.parent / "services" / "
 sys.path.insert(0, str(shared_path))
 
 from simulation.infrastructure.logging import get_simulation_logger
-from simulation.infrastructure.monitoring.simulation_monitoring import (
-    get_simulation_monitoring_service,
-)
+from simulation.infrastructure.monitoring.simulation_monitoring import get_simulation_monitoring_service
 
 # Import shared health patterns (with fallbacks)
 try:
-    from monitoring.health import HealthStatus
-
+    from monitoring.health import HealthStatus, register_health_endpoints
     # Create simple mock implementations for missing classes
     class HealthCheck:
         pass
@@ -87,13 +84,9 @@ except ImportError:
                 async with httpx.AsyncClient(timeout=5.0) as client:
                     response = await client.get(f"{self.service_url}/health")
                     if response.status_code == 200:
-                        return HealthStatus.HEALTHY, {
-                            "response_time": response.elapsed.total_seconds()
-                        }
+                        return HealthStatus.HEALTHY, {"response_time": response.elapsed.total_seconds()}
                     else:
-                        return HealthStatus.UNHEALTHY, {
-                            "status_code": response.status_code
-                        }
+                        return HealthStatus.UNHEALTHY, {"status_code": response.status_code}
             except Exception as e:
                 return HealthStatus.UNHEALTHY, {"error": str(e)}
 
@@ -116,7 +109,11 @@ except ImportError:
             self.path = path
 
         async def get_health_status(self) -> Dict[str, Any]:
-            return {"status": "healthy", "timestamp": datetime.now(), "checks": {}}
+            return {
+                "status": "healthy",
+                "timestamp": datetime.now(),
+                "checks": {}
+            }
 
 
 class SimulationHealthChecker(HealthChecker):
@@ -176,14 +173,14 @@ class SimulationHealthChecker(HealthChecker):
             "health_score": health_score,
             "checks": health_results,
             "monitoring": monitoring_snapshot,
-            "recommendations": self._generate_health_recommendations(health_results),
+            "recommendations": self._generate_health_recommendations(health_results)
         }
 
         self.logger.info(
             "Comprehensive health check completed",
             status=overall_status,
             health_score=health_score,
-            duration_seconds=comprehensive_result["duration_seconds"],
+            duration_seconds=comprehensive_result["duration_seconds"]
         )
 
         return comprehensive_result
@@ -218,17 +215,11 @@ class SimulationHealthChecker(HealthChecker):
             memory_threshold = 1024  # MB
 
             if memory_usage > memory_threshold * 0.9:
-                memory_check.update_status(
-                    HealthStatus.UNHEALTHY, {"memory_mb": memory_usage}
-                )
+                memory_check.update_status(HealthStatus.UNHEALTHY, {"memory_mb": memory_usage})
             elif memory_usage > memory_threshold * 0.7:
-                memory_check.update_status(
-                    HealthStatus.DEGRADED, {"memory_mb": memory_usage}
-                )
+                memory_check.update_status(HealthStatus.DEGRADED, {"memory_mb": memory_usage})
             else:
-                memory_check.update_status(
-                    HealthStatus.HEALTHY, {"memory_mb": memory_usage}
-                )
+                memory_check.update_status(HealthStatus.HEALTHY, {"memory_mb": memory_usage})
 
         except Exception as e:
             memory_check.update_status(HealthStatus.UNHEALTHY, {"error": str(e)})
@@ -236,7 +227,7 @@ class SimulationHealthChecker(HealthChecker):
         results["memory_usage"] = {
             "status": memory_check.status,
             "details": memory_check.details,
-            "timestamp": memory_check.timestamp,
+            "timestamp": memory_check.timestamp
         }
 
         # CPU usage check
@@ -246,17 +237,11 @@ class SimulationHealthChecker(HealthChecker):
             cpu_threshold = 80.0  # %
 
             if cpu_usage > cpu_threshold:
-                cpu_check.update_status(
-                    HealthStatus.UNHEALTHY, {"cpu_percent": cpu_usage}
-                )
+                cpu_check.update_status(HealthStatus.UNHEALTHY, {"cpu_percent": cpu_usage})
             elif cpu_usage > cpu_threshold * 0.7:
-                cpu_check.update_status(
-                    HealthStatus.DEGRADED, {"cpu_percent": cpu_usage}
-                )
+                cpu_check.update_status(HealthStatus.DEGRADED, {"cpu_percent": cpu_usage})
             else:
-                cpu_check.update_status(
-                    HealthStatus.HEALTHY, {"cpu_percent": cpu_usage}
-                )
+                cpu_check.update_status(HealthStatus.HEALTHY, {"cpu_percent": cpu_usage})
 
         except Exception as e:
             cpu_check.update_status(HealthStatus.UNHEALTHY, {"error": str(e)})
@@ -264,7 +249,7 @@ class SimulationHealthChecker(HealthChecker):
         results["cpu_usage"] = {
             "status": cpu_check.status,
             "details": cpu_check.details,
-            "timestamp": cpu_check.timestamp,
+            "timestamp": cpu_check.timestamp
         }
 
         return results
@@ -277,9 +262,7 @@ class SimulationHealthChecker(HealthChecker):
         db_check = self.checks["database_connection"]
         try:
             # In production, would test actual database connection
-            db_indicator = DatabaseHealthIndicator(
-                "postgresql://simulation:password@localhost:5432/simulation"
-            )
+            db_indicator = DatabaseHealthIndicator("postgresql://simulation:password@localhost:5432/simulation")
             status, details = await db_indicator.check_health()
 
             db_check.update_status(status, details)
@@ -290,7 +273,7 @@ class SimulationHealthChecker(HealthChecker):
         results["database_connection"] = {
             "status": db_check.status,
             "details": db_check.details,
-            "timestamp": db_check.timestamp,
+            "timestamp": db_check.timestamp
         }
 
         # Database performance check
@@ -301,17 +284,11 @@ class SimulationHealthChecker(HealthChecker):
             performance_threshold = 1.0  # seconds
 
             if query_time > performance_threshold:
-                perf_check.update_status(
-                    HealthStatus.UNHEALTHY, {"query_time_seconds": query_time}
-                )
+                perf_check.update_status(HealthStatus.UNHEALTHY, {"query_time_seconds": query_time})
             elif query_time > performance_threshold * 0.5:
-                perf_check.update_status(
-                    HealthStatus.DEGRADED, {"query_time_seconds": query_time}
-                )
+                perf_check.update_status(HealthStatus.DEGRADED, {"query_time_seconds": query_time})
             else:
-                perf_check.update_status(
-                    HealthStatus.HEALTHY, {"query_time_seconds": query_time}
-                )
+                perf_check.update_status(HealthStatus.HEALTHY, {"query_time_seconds": query_time})
 
         except Exception as e:
             perf_check.update_status(HealthStatus.UNHEALTHY, {"error": str(e)})
@@ -319,7 +296,7 @@ class SimulationHealthChecker(HealthChecker):
         results["database_performance"] = {
             "status": perf_check.status,
             "details": perf_check.details,
-            "timestamp": perf_check.timestamp,
+            "timestamp": perf_check.timestamp
         }
 
         return results
@@ -331,7 +308,7 @@ class SimulationHealthChecker(HealthChecker):
             "mock_data_generator": "http://localhost:5002",
             "doc_store": "http://localhost:5003",
             "analysis_service": "http://localhost:5004",
-            "llm_gateway": "http://localhost:5005",
+            "llm_gateway": "http://localhost:5005"
         }
 
         for service_name, service_url in services_to_check.items():
@@ -348,35 +325,25 @@ class SimulationHealthChecker(HealthChecker):
             results[service_name] = {
                 "status": check.status,
                 "details": check.details,
-                "timestamp": check.timestamp,
+                "timestamp": check.timestamp
             }
 
         # Overall ecosystem services check
         ecosystem_check = self.checks["ecosystem_services"]
-        unhealthy_services = [
-            name
-            for name, result in results.items()
-            if result["status"] != HealthStatus.HEALTHY
-        ]
+        unhealthy_services = [name for name, result in results.items() if result["status"] != HealthStatus.HEALTHY]
 
         if unhealthy_services:
             ecosystem_check.update_status(
-                (
-                    HealthStatus.UNHEALTHY
-                    if len(unhealthy_services) > 2
-                    else HealthStatus.DEGRADED
-                ),
-                {"unhealthy_services": unhealthy_services},
+                HealthStatus.UNHEALTHY if len(unhealthy_services) > 2 else HealthStatus.DEGRADED,
+                {"unhealthy_services": unhealthy_services}
             )
         else:
-            ecosystem_check.update_status(
-                HealthStatus.HEALTHY, {"all_services_healthy": True}
-            )
+            ecosystem_check.update_status(HealthStatus.HEALTHY, {"all_services_healthy": True})
 
         results["ecosystem_services"] = {
             "status": ecosystem_check.status,
             "details": ecosystem_check.details,
-            "timestamp": ecosystem_check.timestamp,
+            "timestamp": ecosystem_check.timestamp
         }
 
         return results
@@ -388,26 +355,15 @@ class SimulationHealthChecker(HealthChecker):
         # Simulation queue check
         queue_check = self.checks["simulation_queue"]
         try:
-            queue_depth = (
-                self.monitoring_service.metrics_collector.get_metric_value(
-                    "simulation_queue_depth"
-                )
-                or 0
-            )
+            queue_depth = self.monitoring_service.metrics_collector.get_metric_value("simulation_queue_depth") or 0
             queue_threshold = 20
 
             if queue_depth > queue_threshold * 2:
-                queue_check.update_status(
-                    HealthStatus.UNHEALTHY, {"queue_depth": queue_depth}
-                )
+                queue_check.update_status(HealthStatus.UNHEALTHY, {"queue_depth": queue_depth})
             elif queue_depth > queue_threshold:
-                queue_check.update_status(
-                    HealthStatus.DEGRADED, {"queue_depth": queue_depth}
-                )
+                queue_check.update_status(HealthStatus.DEGRADED, {"queue_depth": queue_depth})
             else:
-                queue_check.update_status(
-                    HealthStatus.HEALTHY, {"queue_depth": queue_depth}
-                )
+                queue_check.update_status(HealthStatus.HEALTHY, {"queue_depth": queue_depth})
 
         except Exception as e:
             queue_check.update_status(HealthStatus.UNHEALTHY, {"error": str(e)})
@@ -415,32 +371,21 @@ class SimulationHealthChecker(HealthChecker):
         results["simulation_queue"] = {
             "status": queue_check.status,
             "details": queue_check.details,
-            "timestamp": queue_check.timestamp,
+            "timestamp": queue_check.timestamp
         }
 
         # Active simulations check
         active_check = self.checks["active_simulations"]
         try:
-            active_count = (
-                self.monitoring_service.metrics_collector.get_metric_value(
-                    "simulation_active_count"
-                )
-                or 0
-            )
+            active_count = self.monitoring_service.metrics_collector.get_metric_value("simulation_active_count") or 0
             active_threshold = 50
 
             if active_count > active_threshold * 2:
-                active_check.update_status(
-                    HealthStatus.UNHEALTHY, {"active_simulations": active_count}
-                )
+                active_check.update_status(HealthStatus.UNHEALTHY, {"active_simulations": active_count})
             elif active_count > active_threshold:
-                active_check.update_status(
-                    HealthStatus.DEGRADED, {"active_simulations": active_count}
-                )
+                active_check.update_status(HealthStatus.DEGRADED, {"active_simulations": active_count})
             else:
-                active_check.update_status(
-                    HealthStatus.HEALTHY, {"active_simulations": active_count}
-                )
+                active_check.update_status(HealthStatus.HEALTHY, {"active_simulations": active_count})
 
         except Exception as e:
             active_check.update_status(HealthStatus.UNHEALTHY, {"error": str(e)})
@@ -448,32 +393,21 @@ class SimulationHealthChecker(HealthChecker):
         results["active_simulations"] = {
             "status": active_check.status,
             "details": active_check.details,
-            "timestamp": active_check.timestamp,
+            "timestamp": active_check.timestamp
         }
 
         # Response times check
         response_check = self.checks["response_times"]
         try:
-            avg_response_time = (
-                self.monitoring_service.metrics_collector.get_metric_value(
-                    "ecosystem_service_response_time"
-                )
-                or 0
-            )
+            avg_response_time = self.monitoring_service.metrics_collector.get_metric_value("ecosystem_service_response_time") or 0
             response_threshold = 2.0  # seconds
 
             if avg_response_time > response_threshold * 3:
-                response_check.update_status(
-                    HealthStatus.UNHEALTHY, {"avg_response_time": avg_response_time}
-                )
+                response_check.update_status(HealthStatus.UNHEALTHY, {"avg_response_time": avg_response_time})
             elif avg_response_time > response_threshold:
-                response_check.update_status(
-                    HealthStatus.DEGRADED, {"avg_response_time": avg_response_time}
-                )
+                response_check.update_status(HealthStatus.DEGRADED, {"avg_response_time": avg_response_time})
             else:
-                response_check.update_status(
-                    HealthStatus.HEALTHY, {"avg_response_time": avg_response_time}
-                )
+                response_check.update_status(HealthStatus.HEALTHY, {"avg_response_time": avg_response_time})
 
         except Exception as e:
             response_check.update_status(HealthStatus.UNHEALTHY, {"error": str(e)})
@@ -481,32 +415,21 @@ class SimulationHealthChecker(HealthChecker):
         results["response_times"] = {
             "status": response_check.status,
             "details": response_check.details,
-            "timestamp": response_check.timestamp,
+            "timestamp": response_check.timestamp
         }
 
         # Error rates check
         error_check = self.checks["error_rates"]
         try:
-            error_rate = (
-                self.monitoring_service.metrics_collector.get_metric_value(
-                    "error_rate_percent", {"operation_type": "simulation"}
-                )
-                or 0
-            )
+            error_rate = self.monitoring_service.metrics_collector.get_metric_value("error_rate_percent", {"operation_type": "simulation"}) or 0
             error_threshold = 5.0  # %
 
             if error_rate > error_threshold * 4:
-                error_check.update_status(
-                    HealthStatus.UNHEALTHY, {"error_rate_percent": error_rate}
-                )
+                error_check.update_status(HealthStatus.UNHEALTHY, {"error_rate_percent": error_rate})
             elif error_rate > error_threshold:
-                error_check.update_status(
-                    HealthStatus.DEGRADED, {"error_rate_percent": error_rate}
-                )
+                error_check.update_status(HealthStatus.DEGRADED, {"error_rate_percent": error_rate})
             else:
-                error_check.update_status(
-                    HealthStatus.HEALTHY, {"error_rate_percent": error_rate}
-                )
+                error_check.update_status(HealthStatus.HEALTHY, {"error_rate_percent": error_rate})
 
         except Exception as e:
             error_check.update_status(HealthStatus.UNHEALTHY, {"error": str(e)})
@@ -514,7 +437,7 @@ class SimulationHealthChecker(HealthChecker):
         results["error_rates"] = {
             "status": error_check.status,
             "details": error_check.details,
-            "timestamp": error_check.timestamp,
+            "timestamp": error_check.timestamp
         }
 
         return results
@@ -536,59 +459,32 @@ class SimulationHealthChecker(HealthChecker):
         if total_checks == 0:
             return 100.0
 
-        healthy_count = sum(
-            1
-            for result in health_results.values()
-            if result["status"] == HealthStatus.HEALTHY
-        )
-        degraded_count = sum(
-            1
-            for result in health_results.values()
-            if result["status"] == HealthStatus.DEGRADED
-        )
+        healthy_count = sum(1 for result in health_results.values() if result["status"] == HealthStatus.HEALTHY)
+        degraded_count = sum(1 for result in health_results.values() if result["status"] == HealthStatus.DEGRADED)
 
         # Weight: healthy = 1.0, degraded = 0.5, unhealthy = 0.0
         score = (healthy_count * 1.0 + degraded_count * 0.5) / total_checks * 100
 
         return round(score, 2)
 
-    def _generate_health_recommendations(
-        self, health_results: Dict[str, Any]
-    ) -> List[str]:
+    def _generate_health_recommendations(self, health_results: Dict[str, Any]) -> List[str]:
         """Generate health recommendations based on check results."""
         recommendations = []
 
         for check_name, result in health_results.items():
             if result["status"] == HealthStatus.UNHEALTHY:
                 if "memory" in check_name:
-                    recommendations.append(
-                        "Consider increasing memory allocation or optimizing memory usage"
-                    )
+                    recommendations.append("Consider increasing memory allocation or optimizing memory usage")
                 elif "cpu" in check_name:
-                    recommendations.append(
-                        "Monitor CPU usage and consider scaling resources"
-                    )
+                    recommendations.append("Monitor CPU usage and consider scaling resources")
                 elif "database" in check_name:
-                    recommendations.append(
-                        "Check database connectivity and performance"
-                    )
+                    recommendations.append("Check database connectivity and performance")
                 elif "queue" in check_name:
-                    recommendations.append(
-                        "Reduce simulation queue depth by scaling or optimizing processing"
-                    )
-                elif check_name in [
-                    "mock_data_generator",
-                    "doc_store",
-                    "analysis_service",
-                    "llm_gateway",
-                ]:
-                    recommendations.append(
-                        f"Investigate connectivity issues with {check_name} service"
-                    )
+                    recommendations.append("Reduce simulation queue depth by scaling or optimizing processing")
+                elif check_name in ["mock_data_generator", "doc_store", "analysis_service", "llm_gateway"]:
+                    recommendations.append(f"Investigate connectivity issues with {check_name} service")
                 else:
-                    recommendations.append(
-                        f"Address issues with {check_name} component"
-                    )
+                    recommendations.append(f"Address issues with {check_name} component")
 
             elif result["status"] == HealthStatus.DEGRADED:
                 recommendations.append(f"Monitor {check_name} performance closely")
@@ -618,7 +514,7 @@ class SimulationHealthEndpoint(HealthEndpoint):
             "status": comprehensive["status"],
             "timestamp": comprehensive["timestamp"],
             "version": "1.0.0",  # Would be dynamic in production
-            "uptime_seconds": 3600,  # Would be calculated in production
+            "uptime_seconds": 3600  # Would be calculated in production
         }
 
     async def get_health_status(self) -> Dict[str, Any]:
@@ -643,15 +539,13 @@ def get_simulation_health_endpoint() -> SimulationHealthEndpoint:
     """Get the global simulation health endpoint instance."""
     global _simulation_health_endpoint
     if _simulation_health_endpoint is None:
-        _simulation_health_endpoint = SimulationHealthEndpoint(
-            get_simulation_health_checker()
-        )
+        _simulation_health_endpoint = SimulationHealthEndpoint(get_simulation_health_checker())
     return _simulation_health_endpoint
 
 
 __all__ = [
-    "SimulationHealthChecker",
-    "SimulationHealthEndpoint",
-    "get_simulation_health_checker",
-    "get_simulation_health_endpoint",
+    'SimulationHealthChecker',
+    'SimulationHealthEndpoint',
+    'get_simulation_health_checker',
+    'get_simulation_health_endpoint'
 ]

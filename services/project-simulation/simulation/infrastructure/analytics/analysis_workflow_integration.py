@@ -6,28 +6,26 @@ and orchestrates complex multi-step analysis processes with intelligent routing
 and result aggregation.
 """
 
-import asyncio
 import sys
-from datetime import datetime
-from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, Any, List, Optional, Union, Set, Tuple
+from datetime import datetime, timedelta
+from enum import Enum
+import asyncio
+import json
 
 # Import from shared infrastructure
-sys.path.append(
-    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
-)
+sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
-from simulation.infrastructure.analytics.analytics_integration import (
-    AnalysisType,
-    get_analytics_integration_manager,
-)
 from simulation.infrastructure.logging import get_simulation_logger
+from simulation.infrastructure.analytics.analytics_integration import (
+    AnalyticsIntegrationManager, AnalysisType, AnalysisInsight,
+    get_analytics_integration_manager
+)
 
 
 class WorkflowExecutionStatus(Enum):
     """Status of workflow execution."""
-
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -39,15 +37,13 @@ class WorkflowExecutionStatus(Enum):
 class WorkflowStep:
     """Represents a step in an analysis workflow."""
 
-    def __init__(
-        self,
-        step_id: str,
-        name: str,
-        analysis_type: AnalysisType,
-        dependencies: List[str] = None,
-        parameters: Dict[str, Any] = None,
-        timeout_seconds: int = 300,
-    ):
+    def __init__(self,
+                 step_id: str,
+                 name: str,
+                 analysis_type: AnalysisType,
+                 dependencies: List[str] = None,
+                 parameters: Dict[str, Any] = None,
+                 timeout_seconds: int = 300):
         """Initialize workflow step."""
         self.step_id = step_id
         self.name = name
@@ -64,20 +60,18 @@ class WorkflowStep:
             "analysis_type": self.analysis_type.value,
             "dependencies": self.dependencies,
             "parameters": self.parameters,
-            "timeout_seconds": self.timeout_seconds,
+            "timeout_seconds": self.timeout_seconds
         }
 
 
 class WorkflowExecution:
     """Represents the execution of an analysis workflow."""
 
-    def __init__(
-        self,
-        execution_id: str,
-        workflow_id: str,
-        context: Dict[str, Any],
-        steps: List[WorkflowStep],
-    ):
+    def __init__(self,
+                 execution_id: str,
+                 workflow_id: str,
+                 context: Dict[str, Any],
+                 steps: List[WorkflowStep]):
         """Initialize workflow execution."""
         self.execution_id = execution_id
         self.workflow_id = workflow_id
@@ -130,15 +124,12 @@ class WorkflowExecution:
             "step_results": self.step_results,
             "step_status": {k: v.value for k, v in self.step_status.items()},
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": (
-                self.completed_at.isoformat() if self.completed_at else None
-            ),
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
             "errors": self.errors,
             "execution_time_seconds": (
                 (self.completed_at - self.started_at).total_seconds()
-                if self.started_at and self.completed_at
-                else None
-            ),
+                if self.started_at and self.completed_at else None
+            )
         }
 
 
@@ -170,54 +161,50 @@ class AnalysisWorkflowOrchestrator:
                 name="Initial Project Assessment",
                 analysis_type=AnalysisType.DOCUMENT_QUALITY,
                 dependencies=[],
-                parameters={"assessment_type": "initial"},
+                parameters={"assessment_type": "initial"}
             ),
             WorkflowStep(
                 step_id="risk_analysis",
                 name="Project Risk Analysis",
                 analysis_type=AnalysisType.PROJECT_RISKS,
                 dependencies=["initial_assessment"],
-                parameters={"risk_categories": ["timeline", "team", "technical"]},
+                parameters={"risk_categories": ["timeline", "team", "technical"]}
             ),
             WorkflowStep(
                 step_id="team_productivity",
                 name="Team Productivity Analysis",
                 analysis_type=AnalysisType.TEAM_PRODUCTIVITY,
                 dependencies=["initial_assessment"],
-                parameters={"metrics": ["efficiency", "collaboration", "output"]},
+                parameters={"metrics": ["efficiency", "collaboration", "output"]}
             ),
             WorkflowStep(
                 step_id="requirement_coverage",
                 name="Requirement Coverage Analysis",
                 analysis_type=AnalysisType.REQUIREMENT_COVERAGE,
                 dependencies=["initial_assessment", "risk_analysis"],
-                parameters={
-                    "coverage_types": ["functional", "non_functional", "business"]
-                },
+                parameters={"coverage_types": ["functional", "non_functional", "business"]}
             ),
             WorkflowStep(
                 step_id="architecture_compliance",
                 name="Architecture Compliance Check",
                 analysis_type=AnalysisType.ARCHITECTURE_COMPLIANCE,
                 dependencies=["requirement_coverage"],
-                parameters={
-                    "standards": ["security", "scalability", "maintainability"]
-                },
+                parameters={"standards": ["security", "scalability", "maintainability"]}
             ),
             WorkflowStep(
                 step_id="test_coverage",
                 name="Test Coverage Analysis",
                 analysis_type=AnalysisType.TEST_COVERAGE,
                 dependencies=["requirement_coverage", "architecture_compliance"],
-                parameters={"coverage_levels": ["unit", "integration", "system"]},
+                parameters={"coverage_levels": ["unit", "integration", "system"]}
             ),
             WorkflowStep(
                 step_id="final_synthesis",
                 name="Analysis Synthesis and Recommendations",
                 analysis_type=AnalysisType.PERFORMANCE_METRICS,
                 dependencies=["risk_analysis", "team_productivity", "test_coverage"],
-                parameters={"synthesis_type": "comprehensive"},
-            ),
+                parameters={"synthesis_type": "comprehensive"}
+            )
         ]
 
         # Agile Sprint Analysis Workflow
@@ -227,29 +214,29 @@ class AnalysisWorkflowOrchestrator:
                 name="Sprint Backlog Analysis",
                 analysis_type=AnalysisType.REQUIREMENT_COVERAGE,
                 dependencies=[],
-                parameters={"analysis_scope": "sprint"},
+                parameters={"analysis_scope": "sprint"}
             ),
             WorkflowStep(
                 step_id="velocity_analysis",
                 name="Team Velocity Analysis",
                 analysis_type=AnalysisType.TEAM_PRODUCTIVITY,
                 dependencies=["sprint_backlog_analysis"],
-                parameters={"timeframe": "sprint"},
+                parameters={"timeframe": "sprint"}
             ),
             WorkflowStep(
                 step_id="burndown_analysis",
                 name="Burndown Chart Analysis",
                 analysis_type=AnalysisType.PROJECT_RISKS,
                 dependencies=["velocity_analysis"],
-                parameters={"analysis_type": "burndown"},
+                parameters={"analysis_type": "burndown"}
             ),
             WorkflowStep(
                 step_id="sprint_retrospective",
                 name="Sprint Retrospective Insights",
                 analysis_type=AnalysisType.PERFORMANCE_METRICS,
                 dependencies=["burndown_analysis"],
-                parameters={"focus": "retrospective"},
-            ),
+                parameters={"focus": "retrospective"}
+            )
         ]
 
         # Code Quality Analysis Workflow
@@ -259,45 +246,37 @@ class AnalysisWorkflowOrchestrator:
                 name="Code Complexity Analysis",
                 analysis_type=AnalysisType.CODE_COMPLEXITY,
                 dependencies=[],
-                parameters={"metrics": ["cyclomatic", "cognitive", "maintainability"]},
+                parameters={"metrics": ["cyclomatic", "cognitive", "maintainability"]}
             ),
             WorkflowStep(
                 step_id="security_analysis",
                 name="Security Vulnerability Analysis",
                 analysis_type=AnalysisType.SECURITY_ANALYSIS,
                 dependencies=["code_complexity"],
-                parameters={"scan_types": ["static", "dependency", "container"]},
+                parameters={"scan_types": ["static", "dependency", "container"]}
             ),
             WorkflowStep(
                 step_id="performance_analysis",
                 name="Performance Analysis",
                 analysis_type=AnalysisType.PERFORMANCE_METRICS,
                 dependencies=["code_complexity"],
-                parameters={
-                    "performance_indicators": [
-                        "response_time",
-                        "throughput",
-                        "resource_usage",
-                    ]
-                },
+                parameters={"performance_indicators": ["response_time", "throughput", "resource_usage"]}
             ),
             WorkflowStep(
                 step_id="quality_synthesis",
                 name="Code Quality Synthesis",
                 analysis_type=AnalysisType.DOCUMENT_QUALITY,
                 dependencies=["security_analysis", "performance_analysis"],
-                parameters={"synthesis_focus": "code_quality"},
-            ),
+                parameters={"synthesis_focus": "code_quality"}
+            )
         ]
 
         return workflows
 
-    async def execute_workflow(
-        self,
-        workflow_id: str,
-        context: Dict[str, Any],
-        execution_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    async def execute_workflow(self,
+                             workflow_id: str,
+                             context: Dict[str, Any],
+                             execution_id: Optional[str] = None) -> Dict[str, Any]:
         """Execute a complete analysis workflow."""
         try:
             if workflow_id not in self.workflows:
@@ -314,11 +293,8 @@ class AnalysisWorkflowOrchestrator:
             # Register execution
             self.active_executions[execution_id] = execution
 
-            self.logger.info(
-                "Starting workflow execution",
-                execution_id=execution_id,
-                workflow_id=workflow_id,
-            )
+            self.logger.info("Starting workflow execution",
+                           execution_id=execution_id, workflow_id=workflow_id)
 
             # Execute workflow
             execution.start()
@@ -331,14 +307,11 @@ class AnalysisWorkflowOrchestrator:
             return result
 
         except Exception as e:
-            self.logger.error(
-                "Workflow execution failed", workflow_id=workflow_id, error=str(e)
-            )
+            self.logger.error("Workflow execution failed",
+                            workflow_id=workflow_id, error=str(e))
             raise
 
-    async def _execute_workflow_steps(
-        self, execution: WorkflowExecution
-    ) -> Dict[str, Any]:
+    async def _execute_workflow_steps(self, execution: WorkflowExecution) -> Dict[str, Any]:
         """Execute workflow steps in dependency order."""
         try:
             # Build dependency graph
@@ -360,28 +333,22 @@ class AnalysisWorkflowOrchestrator:
                     result = await self._execute_workflow_step(step, execution.context)
                     execution.complete_step(step_id, result)
 
-                    self.logger.info(
-                        "Workflow step completed",
-                        execution_id=execution.execution_id,
-                        step_id=step_id,
-                    )
+                    self.logger.info("Workflow step completed",
+                                   execution_id=execution.execution_id,
+                                   step_id=step_id)
 
                 except Exception as e:
                     execution.fail_step(step_id, str(e))
-                    self.logger.error(
-                        "Workflow step failed",
-                        execution_id=execution.execution_id,
-                        step_id=step_id,
-                        error=str(e),
-                    )
+                    self.logger.error("Workflow step failed",
+                                    execution_id=execution.execution_id,
+                                    step_id=step_id, error=str(e))
                     break
 
             # Complete execution
             if execution.status == WorkflowExecutionStatus.RUNNING:
                 execution.complete()
-                self.logger.info(
-                    "Workflow execution completed", execution_id=execution.execution_id
-                )
+                self.logger.info("Workflow execution completed",
+                               execution_id=execution.execution_id)
 
             return execution.to_dict()
 
@@ -389,9 +356,9 @@ class AnalysisWorkflowOrchestrator:
             execution.fail(str(e))
             raise
 
-    async def _execute_workflow_step(
-        self, step: WorkflowStep, context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _execute_workflow_step(self,
+                                   step: WorkflowStep,
+                                   context: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a single workflow step."""
         try:
             # Prepare step inputs
@@ -399,9 +366,7 @@ class AnalysisWorkflowOrchestrator:
 
             # Execute analysis component
             result = await self.analytics_manager._execute_analysis_component(
-                step.analysis_type,
-                step_inputs,
-                None,  # Context not needed for this call
+                step.analysis_type, step_inputs, None  # Context not needed for this call
             )
 
             # Post-process results
@@ -410,14 +375,13 @@ class AnalysisWorkflowOrchestrator:
             return processed_result
 
         except Exception as e:
-            self.logger.error(
-                "Step execution failed", step_id=step.step_id, error=str(e)
-            )
+            self.logger.error("Step execution failed",
+                            step_id=step.step_id, error=str(e))
             raise
 
-    def _prepare_step_inputs(
-        self, step: WorkflowStep, context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _prepare_step_inputs(self,
+                           step: WorkflowStep,
+                           context: Dict[str, Any]) -> Dict[str, Any]:
         """Prepare inputs for step execution."""
         inputs = step.parameters.copy()
 
@@ -440,9 +404,9 @@ class AnalysisWorkflowOrchestrator:
 
         return inputs
 
-    def _post_process_step_result(
-        self, step: WorkflowStep, result: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _post_process_step_result(self,
+                                step: WorkflowStep,
+                                result: Dict[str, Any]) -> Dict[str, Any]:
         """Post-process step execution result."""
         processed = result.copy()
 
@@ -457,9 +421,7 @@ class AnalysisWorkflowOrchestrator:
 
         # Add recommendations if not present
         if "recommendations" not in processed:
-            processed["recommendations"] = self._generate_step_recommendations(
-                step, result
-            )
+            processed["recommendations"] = self._generate_step_recommendations(step, result)
 
         return processed
 
@@ -481,9 +443,9 @@ class AnalysisWorkflowOrchestrator:
 
         return max(0.0, min(1.0, confidence))
 
-    def _generate_step_recommendations(
-        self, step: WorkflowStep, result: Dict[str, Any]
-    ) -> List[str]:
+    def _generate_step_recommendations(self,
+                                     step: WorkflowStep,
+                                     result: Dict[str, Any]) -> List[str]:
         """Generate recommendations for step result."""
         recommendations = []
 
@@ -504,9 +466,7 @@ class AnalysisWorkflowOrchestrator:
 
         return recommendations
 
-    def _build_dependency_graph(
-        self, steps: List[WorkflowStep]
-    ) -> Dict[str, List[str]]:
+    def _build_dependency_graph(self, steps: List[WorkflowStep]) -> Dict[str, List[str]]:
         """Build dependency graph for workflow steps."""
         graph = {}
 
@@ -544,15 +504,12 @@ class AnalysisWorkflowOrchestrator:
 
         return order
 
-    def _are_dependencies_satisfied(
-        self, step: WorkflowStep, execution: WorkflowExecution
-    ) -> bool:
+    def _are_dependencies_satisfied(self,
+                                  step: WorkflowStep,
+                                  execution: WorkflowExecution) -> bool:
         """Check if step dependencies are satisfied."""
         for dependency_id in step.dependencies:
-            if (
-                execution.step_status.get(dependency_id)
-                != WorkflowExecutionStatus.COMPLETED
-            ):
+            if execution.step_status.get(dependency_id) != WorkflowExecutionStatus.COMPLETED:
                 return False
         return True
 
@@ -584,7 +541,7 @@ class AnalysisWorkflowOrchestrator:
             workflow_id: {
                 "steps": len(steps),
                 "description": self._get_workflow_description(workflow_id),
-                "analysis_types": list(set(step.analysis_type.value for step in steps)),
+                "analysis_types": list(set(step.analysis_type.value for step in steps))
             }
             for workflow_id, steps in self.workflows.items()
         }
@@ -594,14 +551,14 @@ class AnalysisWorkflowOrchestrator:
         descriptions = {
             "comprehensive_project_analysis": "Complete project analysis covering quality, risks, productivity, and compliance",
             "agile_sprint_analysis": "Agile sprint analysis focusing on velocity, burndown, and retrospective insights",
-            "code_quality_analysis": "Code quality analysis covering complexity, security, and performance",
+            "code_quality_analysis": "Code quality analysis covering complexity, security, and performance"
         }
 
         return descriptions.get(workflow_id, f"Analysis workflow: {workflow_id}")
 
-    def get_execution_history(
-        self, workflow_id: Optional[str] = None, limit: int = 10
-    ) -> List[Dict[str, Any]]:
+    def get_execution_history(self,
+                            workflow_id: Optional[str] = None,
+                            limit: int = 10) -> List[Dict[str, Any]]:
         """Get execution history."""
         history = self.execution_history
 
@@ -613,9 +570,8 @@ class AnalysisWorkflowOrchestrator:
 
         return [exec.to_dict() for exec in history[:limit]]
 
-    async def execute_parallel_workflows(
-        self, workflow_configs: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    async def execute_parallel_workflows(self,
+                                       workflow_configs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Execute multiple workflows in parallel."""
         tasks = []
 
@@ -634,13 +590,11 @@ class AnalysisWorkflowOrchestrator:
         processed_results = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                processed_results.append(
-                    {
-                        "workflow_config": workflow_configs[i],
-                        "status": "error",
-                        "error": str(result),
-                    }
-                )
+                processed_results.append({
+                    "workflow_config": workflow_configs[i],
+                    "status": "error",
+                    "error": str(result)
+                })
             else:
                 processed_results.append(result)
 
@@ -660,9 +614,9 @@ def get_workflow_orchestrator() -> AnalysisWorkflowOrchestrator:
 
 
 __all__ = [
-    "WorkflowExecutionStatus",
-    "WorkflowStep",
-    "WorkflowExecution",
-    "AnalysisWorkflowOrchestrator",
-    "get_workflow_orchestrator",
+    'WorkflowExecutionStatus',
+    'WorkflowStep',
+    'WorkflowExecution',
+    'AnalysisWorkflowOrchestrator',
+    'get_workflow_orchestrator'
 ]

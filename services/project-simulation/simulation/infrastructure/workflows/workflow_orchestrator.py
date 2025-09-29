@@ -5,14 +5,13 @@ with the ecosystem orchestrator service for complex cross-service workflows.
 """
 
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, Any, Optional, List
+from datetime import datetime
+import asyncio
 
 # Import from shared infrastructure
-sys.path.append(
-    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
-)
+sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 try:
     from integrations.orchestration.orchestration import WorkflowOrchestrator
 except (ImportError, AttributeError):
@@ -26,15 +25,14 @@ except (ImportError, AttributeError):
             """Mock workflow status check."""
             return {"status": "completed", "workflow_id": workflow_id}
 
-
-from ..clients.ecosystem_clients import (
-    get_analysis_service_client,
-    get_doc_store_client,
-    get_llm_gateway_client,
-    get_mock_data_generator_client,
-    get_orchestrator_client,
-)
 from ..logging import get_simulation_logger
+from ..clients.ecosystem_clients import (
+    get_orchestrator_client,
+    get_doc_store_client,
+    get_mock_data_generator_client,
+    get_analysis_service_client,
+    get_llm_gateway_client
+)
 
 
 class SimulationWorkflowOrchestrator:
@@ -49,9 +47,7 @@ class SimulationWorkflowOrchestrator:
         self.analysis_client = get_analysis_service_client()
         self.llm_client = get_llm_gateway_client()
 
-    async def execute_phase_workflow(
-        self, workflow_config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def execute_phase_workflow(self, workflow_config: Dict[str, Any]) -> Dict[str, Any]:
         """Execute workflow for a simulation phase."""
         start_time = datetime.now()
         phase_name = workflow_config.get("phase", "unknown")
@@ -60,7 +56,7 @@ class SimulationWorkflowOrchestrator:
             self.logger.info(
                 "Executing phase workflow",
                 phase=phase_name,
-                workflow_type="phase_execution",
+                workflow_type="phase_execution"
             )
 
             # Execute workflow through orchestrator service
@@ -72,29 +68,25 @@ class SimulationWorkflowOrchestrator:
                     {
                         "name": "validate_phase",
                         "type": "validation",
-                        "config": {"phase": phase_name},
+                        "config": {"phase": phase_name}
                     },
                     {
                         "name": "execute_phase_logic",
                         "type": "execution",
-                        "config": workflow_config,
+                        "config": workflow_config
                     },
                     {
                         "name": "validate_results",
                         "type": "validation",
-                        "config": {"expected_outputs": ["documents", "tickets", "prs"]},
-                    },
-                ],
+                        "config": {"expected_outputs": ["documents", "tickets", "prs"]}
+                    }
+                ]
             }
 
             if self.orchestrator_client:
-                workflow_id = await self.orchestrator_client.create_workflow(
-                    workflow_data
-                )
+                workflow_id = await self.orchestrator_client.create_workflow(workflow_data)
                 if workflow_id:
-                    result = await self.orchestrator_client.execute_workflow(
-                        workflow_id
-                    )
+                    result = await self.orchestrator_client.execute_workflow(workflow_id)
                     execution_time = (datetime.now() - start_time).total_seconds()
 
                     return {
@@ -102,7 +94,7 @@ class SimulationWorkflowOrchestrator:
                         "execution_time": execution_time,
                         "workflow_id": workflow_id,
                         "phase": phase_name,
-                        "result": result,
+                        "result": result
                     }
 
             # Fallback: simulate workflow execution
@@ -112,23 +104,23 @@ class SimulationWorkflowOrchestrator:
                 "execution_time": execution_time,
                 "workflow_id": f"fallback_{phase_name}_{datetime.now().timestamp()}",
                 "phase": phase_name,
-                "result": {"message": f"Phase {phase_name} executed successfully"},
+                "result": {"message": f"Phase {phase_name} executed successfully"}
             }
 
         except Exception as e:
             self.logger.error(
-                "Phase workflow execution failed", error=str(e), phase=phase_name
+                "Phase workflow execution failed",
+                error=str(e),
+                phase=phase_name
             )
             return {
                 "success": False,
                 "execution_time": (datetime.now() - start_time).total_seconds(),
                 "error": str(e),
-                "phase": phase_name,
+                "phase": phase_name
             }
 
-    async def run_analysis_workflow(
-        self, analysis_config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def run_analysis_workflow(self, analysis_config: Dict[str, Any]) -> Dict[str, Any]:
         """Run analysis workflow on simulation results."""
         start_time = datetime.now()
         simulation_id = analysis_config.get("simulation_id", "unknown")
@@ -137,7 +129,7 @@ class SimulationWorkflowOrchestrator:
             self.logger.info(
                 "Running analysis workflow",
                 simulation_id=simulation_id,
-                analysis_types=analysis_config.get("analysis_types", []),
+                analysis_types=analysis_config.get("analysis_types", [])
             )
 
             # Run analysis through analysis service
@@ -147,9 +139,10 @@ class SimulationWorkflowOrchestrator:
                 )
 
                 # Generate insights
-                insights_result = await self.analysis_client.generate_insights(
-                    {"analysis_data": analysis_result, "simulation_id": simulation_id}
-                )
+                insights_result = await self.analysis_client.generate_insights({
+                    "analysis_data": analysis_result,
+                    "simulation_id": simulation_id
+                })
 
                 # Run additional analysis types if requested
                 additional_analysis = {}
@@ -177,7 +170,7 @@ class SimulationWorkflowOrchestrator:
                     "analysis_result": analysis_result,
                     "insights": insights_result,
                     "additional_analysis": additional_analysis,
-                    "simulation_id": simulation_id,
+                    "simulation_id": simulation_id
                 }
 
             # Fallback: return mock analysis
@@ -188,23 +181,23 @@ class SimulationWorkflowOrchestrator:
                 "analysis_result": {"quality_score": 0.85, "issues": []},
                 "insights": ["Analysis completed successfully"],
                 "additional_analysis": {},
-                "simulation_id": simulation_id,
+                "simulation_id": simulation_id
             }
 
         except Exception as e:
             self.logger.error(
-                "Analysis workflow failed", error=str(e), simulation_id=simulation_id
+                "Analysis workflow failed",
+                error=str(e),
+                simulation_id=simulation_id
             )
             return {
                 "success": False,
                 "execution_time": (datetime.now() - start_time).total_seconds(),
                 "error": str(e),
-                "simulation_id": simulation_id,
+                "simulation_id": simulation_id
             }
 
-    async def _analyze_document_patterns(
-        self, documents: List[Dict[str, Any]], simulation_id: str
-    ) -> Dict[str, Any]:
+    async def _analyze_document_patterns(self, documents: List[Dict[str, Any]], simulation_id: str) -> Dict[str, Any]:
         """Analyze patterns in documents for insights and trends."""
         try:
             # Extract document types and content
@@ -238,22 +231,19 @@ class SimulationWorkflowOrchestrator:
                 "unique_patterns_identified": len(set(content_patterns)),
                 "insights": [
                     f"Most common document type: {max(doc_types, key=doc_types.get) if doc_types else 'None'}",
-                    f"Primary focus area: {max(pattern_distribution, key=pattern_distribution.get) if pattern_distribution else 'General'}",
-                ],
+                    f"Primary focus area: {max(pattern_distribution, key=pattern_distribution.get) if pattern_distribution else 'General'}"
+                ]
             }
 
         except Exception as e:
-            self.logger.error(
-                f"Pattern analysis failed", error=str(e), simulation_id=simulation_id
-            )
+            self.logger.error(f"Pattern analysis failed", error=str(e), simulation_id=simulation_id)
             return {"error": str(e), "patterns": []}
 
-    async def _analyze_document_consistency(
-        self, documents: List[Dict[str, Any]], simulation_id: str
-    ) -> Dict[str, Any]:
+    async def _analyze_document_consistency(self, documents: List[Dict[str, Any]], simulation_id: str) -> Dict[str, Any]:
         """Analyze document consistency and identify potential issues."""
         try:
             consistency_issues = []
+            naming_consistency = {}
             content_references = {}
 
             for doc in documents:
@@ -266,15 +256,12 @@ class SimulationWorkflowOrchestrator:
 
                 # Check for broken references
                 import re
-
-                references = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", content)
+                references = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', content)
                 for ref in references:
                     content_references[ref] = content_references.get(ref, 0) + 1
 
             # Identify potential duplicate references
-            duplicate_refs = [
-                ref for ref, count in content_references.items() if count > 2
-            ]
+            duplicate_refs = [ref for ref, count in content_references.items() if count > 2]
 
             return {
                 "consistency_score": max(0, 100 - len(consistency_issues) * 10),
@@ -283,21 +270,13 @@ class SimulationWorkflowOrchestrator:
                 "reference_distribution": content_references,
                 "recommendations": [
                     "Standardize naming conventions across documents",
-                    (
-                        "Review and consolidate duplicate references"
-                        if duplicate_refs
-                        else "Reference usage is consistent"
-                    ),
-                    "Ensure consistent terminology throughout documentation",
-                ],
+                    "Review and consolidate duplicate references" if duplicate_refs else "Reference usage is consistent",
+                    "Ensure consistent terminology throughout documentation"
+                ]
             }
 
         except Exception as e:
-            self.logger.error(
-                f"Consistency analysis failed",
-                error=str(e),
-                simulation_id=simulation_id,
-            )
+            self.logger.error(f"Consistency analysis failed", error=str(e), simulation_id=simulation_id)
             return {"error": str(e), "consistency_score": 0, "issues": []}
 
     async def orchestrate_document_generation_workflow(
@@ -310,37 +289,31 @@ class SimulationWorkflowOrchestrator:
             self.logger.info(
                 "Starting document generation workflow",
                 simulation_id=simulation_id,
-                workflow_type="document_generation",
+                workflow_type="document_generation"
             )
 
             # Step 1: Generate project documents
-            project_docs = await self.mock_data_client.generate_project_documents(
-                {
-                    "project_name": project_config["name"],
-                    "project_type": project_config["type"],
-                    "team_size": project_config["team_size"],
-                    "complexity": project_config["complexity"],
-                    "duration_weeks": project_config["duration_weeks"],
-                    "document_types": ["project_requirements", "architecture_diagram"],
-                }
-            )
+            project_docs = await self.mock_data_client.generate_project_documents({
+                "project_name": project_config["name"],
+                "project_type": project_config["type"],
+                "team_size": project_config["team_size"],
+                "complexity": project_config["complexity"],
+                "duration_weeks": project_config["duration_weeks"],
+                "document_types": ["project_requirements", "architecture_diagram"]
+            })
 
             # Step 2: Generate user stories
-            user_stories = await self.mock_data_client.generate_project_documents(
-                {
-                    "project_name": project_config["name"],
-                    "project_type": project_config["type"],
-                    "team_size": project_config["team_size"],
-                    "complexity": project_config["complexity"],
-                    "document_types": ["user_story"],
-                }
-            )
+            user_stories = await self.mock_data_client.generate_project_documents({
+                "project_name": project_config["name"],
+                "project_type": project_config["type"],
+                "team_size": project_config["team_size"],
+                "complexity": project_config["complexity"],
+                "document_types": ["user_story"]
+            })
 
             # Step 3: Store documents in doc_store
             stored_docs = []
-            all_docs = project_docs.get("documents_created", []) + user_stories.get(
-                "documents_created", []
-            )
+            all_docs = project_docs.get("documents_created", []) + user_stories.get("documents_created", [])
 
             for doc in all_docs:
                 doc_id = await self.doc_store_client.store_document(
@@ -349,8 +322,8 @@ class SimulationWorkflowOrchestrator:
                     metadata={
                         "simulation_id": simulation_id,
                         "document_type": doc.get("type", "unknown"),
-                        "generated_at": datetime.now().isoformat(),
-                    },
+                        "generated_at": datetime.now().isoformat()
+                    }
                 )
                 if doc_id:
                     stored_docs.append(doc_id)
@@ -391,14 +364,14 @@ class SimulationWorkflowOrchestrator:
                 "documents_generated": len(all_docs),
                 "documents_stored": len(stored_docs),
                 "insights": insights,
-                "stored_document_ids": stored_docs,
+                "stored_document_ids": stored_docs
             }
 
             self.logger.info(
                 "Document generation workflow completed",
                 simulation_id=simulation_id,
                 documents_generated=len(all_docs),
-                execution_time_seconds=execution_time,
+                execution_time_seconds=execution_time
             )
 
             return result
@@ -409,14 +382,14 @@ class SimulationWorkflowOrchestrator:
                 "Document generation workflow failed",
                 error=str(e),
                 simulation_id=simulation_id,
-                execution_time_seconds=execution_time,
+                execution_time_seconds=execution_time
             )
 
             return {
                 "success": False,
                 "workflow_type": "document_generation",
                 "execution_time_seconds": execution_time,
-                "error": str(e),
+                "error": str(e)
             }
 
     async def orchestrate_team_dynamics_workflow(
@@ -429,23 +402,17 @@ class SimulationWorkflowOrchestrator:
             self.logger.info(
                 "Starting team dynamics workflow",
                 simulation_id=simulation_id,
-                workflow_type="team_dynamics",
+                workflow_type="team_dynamics"
             )
 
             # Generate team activities
-            activities_result = await self.mock_data_client.generate_team_activities(
-                {
-                    "project_name": team_data.get("project_name", "Unknown Project"),
-                    "team_members": team_data.get("members", []),
-                    "activity_types": [
-                        "code_commit",
-                        "meeting_notes",
-                        "design_decision",
-                    ],
-                    "time_range_days": 30,
-                    "activity_count": 20,
-                }
-            )
+            activities_result = await self.mock_data_client.generate_team_activities({
+                "project_name": team_data.get("project_name", "Unknown Project"),
+                "team_members": team_data.get("members", []),
+                "activity_types": ["code_commit", "meeting_notes", "design_decision"],
+                "time_range_days": 30,
+                "activity_count": 20
+            })
 
             # Analyze team dynamics based on activities
             activities = activities_result.get("documents_created", [])
@@ -481,14 +448,14 @@ class SimulationWorkflowOrchestrator:
                 "activities_analyzed": len(activities),
                 "team_size": len(team_data.get("members", [])),
                 "dynamics_analysis": dynamics_analysis,
-                "recommendations": self._extract_recommendations(dynamics_analysis),
+                "recommendations": self._extract_recommendations(dynamics_analysis)
             }
 
             self.logger.info(
                 "Team dynamics workflow completed",
                 simulation_id=simulation_id,
                 activities_analyzed=len(activities),
-                execution_time_seconds=execution_time,
+                execution_time_seconds=execution_time
             )
 
             return result
@@ -499,14 +466,14 @@ class SimulationWorkflowOrchestrator:
                 "Team dynamics workflow failed",
                 error=str(e),
                 simulation_id=simulation_id,
-                execution_time_seconds=execution_time,
+                execution_time_seconds=execution_time
             )
 
             return {
                 "success": False,
                 "workflow_type": "team_dynamics",
                 "execution_time_seconds": execution_time,
-                "error": str(e),
+                "error": str(e)
             }
 
     async def orchestrate_full_simulation_workflow(
@@ -519,7 +486,7 @@ class SimulationWorkflowOrchestrator:
             self.logger.info(
                 "Starting full simulation workflow",
                 simulation_id=simulation_id,
-                workflow_type="full_simulation",
+                workflow_type="full_simulation"
             )
 
             workflow_results = []
@@ -540,34 +507,22 @@ class SimulationWorkflowOrchestrator:
 
             # Phase 3: Timeline Event Generation
             if config.get("include_timeline_events", True):
-                timeline_result = await self.mock_data_client.generate_timeline_events(
-                    {
-                        "project_name": config.get("project_config", {}).get(
-                            "name", "Unknown"
-                        ),
-                        "timeline_phases": config.get("timeline_phases", []),
-                        "include_past_events": True,
-                        "include_future_events": False,
-                    }
-                )
-                workflow_results.append(
-                    {
-                        "success": timeline_result.get("success", False),
-                        "workflow_type": "timeline_events",
-                        "execution_time_seconds": 0.5,  # Mock execution time
-                        "events_generated": len(
-                            timeline_result.get("documents_created", [])
-                        ),
-                    }
-                )
+                timeline_result = await self.mock_data_client.generate_timeline_events({
+                    "project_name": config.get("project_config", {}).get("name", "Unknown"),
+                    "timeline_phases": config.get("timeline_phases", []),
+                    "include_past_events": True,
+                    "include_future_events": False
+                })
+                workflow_results.append({
+                    "success": timeline_result.get("success", False),
+                    "workflow_type": "timeline_events",
+                    "execution_time_seconds": 0.5,  # Mock execution time
+                    "events_generated": len(timeline_result.get("documents_created", []))
+                })
 
             # Calculate overall results
-            successful_workflows = sum(
-                1 for r in workflow_results if r.get("success", False)
-            )
-            total_execution_time = sum(
-                r.get("execution_time_seconds", 0) for r in workflow_results
-            )
+            successful_workflows = sum(1 for r in workflow_results if r.get("success", False))
+            total_execution_time = sum(r.get("execution_time_seconds", 0) for r in workflow_results)
 
             result = {
                 "success": successful_workflows == len(workflow_results),
@@ -577,11 +532,7 @@ class SimulationWorkflowOrchestrator:
                 "workflows_succeeded": successful_workflows,
                 "total_sub_execution_time": total_execution_time,
                 "workflow_results": workflow_results,
-                "overall_efficiency": (
-                    successful_workflows / len(workflow_results)
-                    if workflow_results
-                    else 0
-                ),
+                "overall_efficiency": successful_workflows / len(workflow_results) if workflow_results else 0
             }
 
             self.logger.info(
@@ -589,7 +540,7 @@ class SimulationWorkflowOrchestrator:
                 simulation_id=simulation_id,
                 workflows_executed=len(workflow_results),
                 workflows_succeeded=successful_workflows,
-                execution_time_seconds=result["execution_time_seconds"],
+                execution_time_seconds=result["execution_time_seconds"]
             )
 
             return result
@@ -600,31 +551,26 @@ class SimulationWorkflowOrchestrator:
                 "Full simulation workflow failed",
                 error=str(e),
                 simulation_id=simulation_id,
-                execution_time_seconds=execution_time,
+                execution_time_seconds=execution_time
             )
 
             return {
                 "success": False,
                 "workflow_type": "full_simulation",
                 "execution_time_seconds": execution_time,
-                "error": str(e),
+                "error": str(e)
             }
 
     def _extract_recommendations(self, analysis_text: str) -> List[str]:
         """Extract recommendations from analysis text."""
         # Simple extraction - in practice, this could use more sophisticated NLP
         recommendations = []
-        lines = analysis_text.split("\n")
+        lines = analysis_text.split('\n')
 
         for line in lines:
             line = line.strip()
-            if any(
-                keyword in line.lower()
-                for keyword in ["recommend", "suggest", "should", "consider"]
-            ):
-                if len(line) > 20 and not line.startswith(
-                    "   "
-                ):  # Filter out sub-points
+            if any(keyword in line.lower() for keyword in ['recommend', 'suggest', 'should', 'consider']):
+                if len(line) > 20 and not line.startswith('   '):  # Filter out sub-points
                     recommendations.append(line)
 
         return recommendations[:5]  # Limit to top 5 recommendations
@@ -646,17 +592,15 @@ class EcosystemWorkflowCoordinator:
             self.logger.info(
                 "Coordinating simulation workflow",
                 simulation_id=simulation_id,
-                workflow_type=workflow_config.get("type", "unknown"),
+                workflow_type=workflow_config.get("type", "unknown")
             )
 
             # Determine workflow type and execute
             workflow_type = workflow_config.get("type", "full_simulation")
 
             if workflow_type == "document_generation":
-                result = (
-                    await self.orchestrator.orchestrate_document_generation_workflow(
-                        simulation_id, workflow_config.get("project_config", {})
-                    )
+                result = await self.orchestrator.orchestrate_document_generation_workflow(
+                    simulation_id, workflow_config.get("project_config", {})
                 )
             elif workflow_type == "team_dynamics":
                 result = await self.orchestrator.orchestrate_team_dynamics_workflow(
@@ -676,13 +620,13 @@ class EcosystemWorkflowCoordinator:
                 "Workflow coordination failed",
                 error=str(e),
                 simulation_id=simulation_id,
-                workflow_type=workflow_config.get("type", "unknown"),
+                workflow_type=workflow_config.get("type", "unknown")
             )
             return {
                 "success": False,
                 "error": str(e),
                 "simulation_id": simulation_id,
-                "workflow_type": workflow_config.get("type", "unknown"),
+                "workflow_type": workflow_config.get("type", "unknown")
             }
 
 
@@ -699,7 +643,7 @@ def get_workflow_coordinator() -> EcosystemWorkflowCoordinator:
 
 
 __all__ = [
-    "SimulationWorkflowOrchestrator",
-    "EcosystemWorkflowCoordinator",
-    "get_workflow_coordinator",
+    'SimulationWorkflowOrchestrator',
+    'EcosystemWorkflowCoordinator',
+    'get_workflow_coordinator'
 ]

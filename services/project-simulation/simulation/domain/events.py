@@ -6,17 +6,15 @@ actions in other bounded contexts.
 """
 
 from __future__ import annotations
-
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Dict, Optional, Any
+from abc import ABC, abstractmethod
 
 
 @dataclass(frozen=True, kw_only=True)
 class DomainEvent(ABC):
     """Base class for all domain events."""
-
     event_id: str = field(init=False)
     event_type: str = field(init=False)
     event_version: int = 1
@@ -24,19 +22,18 @@ class DomainEvent(ABC):
 
     def __post_init__(self):
         # Set event_id and event_type based on class name
-        object.__setattr__(
-            self, "event_id", f"{self.__class__.__name__}_{datetime.now().timestamp()}"
-        )
-        object.__setattr__(self, "event_type", self.__class__.__name__)
+        object.__setattr__(self, 'event_id', f"{self.__class__.__name__}_{datetime.now().timestamp()}")
+        object.__setattr__(self, 'event_type', self.__class__.__name__)
         # Set default values for optional fields
-        if not hasattr(self, "event_version"):
-            object.__setattr__(self, "event_version", 1)
-        if not hasattr(self, "occurred_at"):
-            object.__setattr__(self, "occurred_at", datetime.now())
+        if not hasattr(self, 'event_version'):
+            object.__setattr__(self, 'event_version', 1)
+        if not hasattr(self, 'occurred_at'):
+            object.__setattr__(self, 'occurred_at', datetime.now())
 
     @abstractmethod
     def get_aggregate_id(self) -> str:
         """Get the aggregate ID this event relates to."""
+        pass
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert event to dictionary for serialization."""
@@ -49,7 +46,7 @@ class DomainEvent(ABC):
 
         # Add other fields, converting datetime objects to ISO strings
         for k, v in self.__dict__.items():
-            if k not in ["event_id", "event_type", "occurred_at", "event_version"]:
+            if k not in ['event_id', 'event_type', 'occurred_at', 'event_version']:
                 if isinstance(v, datetime):
                     result[k] = v.isoformat()
                 else:
@@ -60,11 +57,9 @@ class DomainEvent(ABC):
 
 # Project Aggregate Events
 
-
 @dataclass(frozen=True)
 class ProjectCreated(DomainEvent):
     """Event fired when a new project is created."""
-
     project_id: str
     project_name: str
     project_type: str
@@ -77,7 +72,6 @@ class ProjectCreated(DomainEvent):
 @dataclass(frozen=True)
 class ProjectStatusChanged(DomainEvent):
     """Event fired when project status changes."""
-
     project_id: str
     old_status: str
     new_status: str
@@ -90,7 +84,6 @@ class ProjectStatusChanged(DomainEvent):
 @dataclass(frozen=True)
 class ProjectPhaseCompleted(DomainEvent):
     """Event fired when a project phase is completed."""
-
     project_id: str
     phase_name: str
     phase_number: int
@@ -104,7 +97,6 @@ class ProjectPhaseCompleted(DomainEvent):
 @dataclass(frozen=True)
 class TeamMemberAdded(DomainEvent):
     """Event fired when a team member is added to a project."""
-
     team_id: str
     project_id: str
     member_id: str
@@ -121,7 +113,6 @@ class TeamMemberAdded(DomainEvent):
 @dataclass(frozen=True)
 class TeamMemberRemoved(DomainEvent):
     """Event fired when a team member is removed from a project."""
-
     team_id: str
     project_id: str
     member_id: str
@@ -136,11 +127,9 @@ class TeamMemberRemoved(DomainEvent):
 
 # Simulation Aggregate Events
 
-
 @dataclass(frozen=True)
 class SimulationStarted(DomainEvent):
     """Event fired when a simulation starts."""
-
     simulation_id: str
     project_id: str
     scenario_type: str
@@ -153,7 +142,6 @@ class SimulationStarted(DomainEvent):
 @dataclass(frozen=True)
 class SimulationCompleted(DomainEvent):
     """Event fired when a simulation completes."""
-
     simulation_id: str
     project_id: str
     status: str
@@ -167,7 +155,6 @@ class SimulationCompleted(DomainEvent):
 @dataclass(frozen=True)
 class SimulationFailed(DomainEvent):
     """Event fired when a simulation fails."""
-
     simulation_id: str
     project_id: str
     failure_reason: str
@@ -180,7 +167,6 @@ class SimulationFailed(DomainEvent):
 @dataclass(frozen=True)
 class DocumentGenerated(DomainEvent):
     """Event fired when a document is generated."""
-
     document_id: str
     project_id: str
     simulation_id: str
@@ -196,7 +182,6 @@ class DocumentGenerated(DomainEvent):
 @dataclass(frozen=True)
 class WorkflowExecuted(DomainEvent):
     """Event fired when a workflow is executed."""
-
     workflow_id: str
     simulation_id: str
     workflow_type: str
@@ -210,11 +195,9 @@ class WorkflowExecuted(DomainEvent):
 
 # Timeline Aggregate Events
 
-
 @dataclass(frozen=True)
 class PhaseStarted(DomainEvent):
     """Event fired when a timeline phase starts."""
-
     timeline_id: str
     project_id: str
     phase_name: str
@@ -227,7 +210,6 @@ class PhaseStarted(DomainEvent):
 @dataclass(frozen=True)
 class PhaseDelayed(DomainEvent):
     """Event fired when a timeline phase is delayed."""
-
     timeline_id: str
     project_id: str
     phase_name: str
@@ -242,7 +224,6 @@ class PhaseDelayed(DomainEvent):
 @dataclass(frozen=True)
 class MilestoneAchieved(DomainEvent):
     """Event fired when a milestone is achieved."""
-
     timeline_id: str
     project_id: str
     milestone_name: str
@@ -254,11 +235,9 @@ class MilestoneAchieved(DomainEvent):
 
 # Integration Events (Cross-Bounded Context)
 
-
 @dataclass(frozen=True)
 class EcosystemServiceHealthChanged(DomainEvent):
     """Event fired when ecosystem service health changes."""
-
     service_name: str
     old_status: str
     new_status: str
@@ -272,7 +251,6 @@ class EcosystemServiceHealthChanged(DomainEvent):
 @dataclass(frozen=True)
 class DocumentAnalysisCompleted(DomainEvent):
     """Event fired when document analysis is completed."""
-
     document_id: str
     analysis_type: str
     confidence_score: float
@@ -286,7 +264,6 @@ class DocumentAnalysisCompleted(DomainEvent):
 @dataclass(frozen=True)
 class WorkflowOrchestrationCompleted(DomainEvent):
     """Event fired when workflow orchestration is completed."""
-
     workflow_id: str
     orchestration_type: str
     services_involved: List[str]
@@ -300,7 +277,6 @@ class WorkflowOrchestrationCompleted(DomainEvent):
 @dataclass(frozen=True)
 class NotificationSent(DomainEvent):
     """Event fired when a notification is sent."""
-
     notification_id: str
     recipient: str
     notification_type: str
@@ -314,7 +290,6 @@ class NotificationSent(DomainEvent):
 @dataclass(frozen=True)
 class AnalyticsDataGenerated(DomainEvent):
     """Event fired when analytics data is generated."""
-
     analytics_id: str
     data_type: str
     records_generated: int
@@ -328,7 +303,6 @@ class AnalyticsDataGenerated(DomainEvent):
 @dataclass(frozen=True)
 class ConfigurationChanged(DomainEvent):
     """Event fired when system configuration changes."""
-
     config_id: str
     config_type: str
     changed_by: str
@@ -342,7 +316,6 @@ class ConfigurationChanged(DomainEvent):
 @dataclass(frozen=True)
 class TimelineEventOccurred(DomainEvent):
     """Event fired when a timeline event occurs."""
-
     simulation_id: str
     event_type: str
     timestamp: datetime
@@ -360,16 +333,19 @@ EVENT_TYPES = {
     "ProjectPhaseCompleted": ProjectPhaseCompleted,
     "TeamMemberAdded": TeamMemberAdded,
     "TeamMemberRemoved": TeamMemberRemoved,
+
     # Simulation Events
     "SimulationStarted": SimulationStarted,
     "SimulationCompleted": SimulationCompleted,
     "SimulationFailed": SimulationFailed,
     "DocumentGenerated": DocumentGenerated,
     "WorkflowExecuted": WorkflowExecuted,
+
     # Timeline Events
     "PhaseStarted": PhaseStarted,
     "PhaseDelayed": PhaseDelayed,
     "MilestoneAchieved": MilestoneAchieved,
+
     # Integration Events
     "EcosystemServiceHealthChanged": EcosystemServiceHealthChanged,
     "DocumentAnalysisCompleted": DocumentAnalysisCompleted,
@@ -388,11 +364,8 @@ def event_from_dict(data: Dict[str, Any]) -> DomainEvent:
         raise ValueError(f"Unknown event type: {event_type}")
 
     # Remove metadata fields before creating event
-    event_data = {
-        k: v
-        for k, v in data.items()
-        if k not in ["event_id", "event_type", "occurred_at", "event_version"]
-    }
+    event_data = {k: v for k, v in data.items()
+                  if k not in ["event_id", "event_type", "occurred_at", "event_version"]}
 
     # Convert occurred_at back to datetime
     if "occurred_at" in data:

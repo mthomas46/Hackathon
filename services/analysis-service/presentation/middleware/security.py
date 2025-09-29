@@ -1,13 +1,12 @@
 """Security middleware for adding security headers and protection."""
 
 import re
-from typing import List, Optional
-
-from fastapi import HTTPException, Request
+from typing import Dict, List, Optional, Set
+from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from ...presentation.models.base import ErrorCode, ErrorResponse
+from ...presentation.models.base import ErrorResponse, ErrorCode
 
 
 class SecurityMiddleware(BaseHTTPMiddleware):
@@ -20,23 +19,23 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
         # Security headers
         self.security_headers = {
-            "X-Content-Type-Options": "nosniff",
-            "X-Frame-Options": "DENY",
-            "X-XSS-Protection": "1; mode=block",
-            "Referrer-Policy": "strict-origin-when-cross-origin",
-            "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
-            "Cross-Origin-Embedder-Policy": "require-corp",
-            "Cross-Origin-Opener-Policy": "same-origin",
-            "Cross-Origin-Resource-Policy": "same-origin",
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'X-XSS-Protection': '1; mode=block',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+            'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+            'Cross-Origin-Embedder-Policy': 'require-corp',
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Resource-Policy': 'same-origin'
         }
 
         # Suspicious patterns to block
         self.suspicious_patterns = [
-            r"\.\./",  # Directory traversal
-            r"<script",  # XSS attempts
-            r"union.*select",  # SQL injection attempts
-            r"1=1",  # SQL injection attempts
-            r"eval\(",  # Code injection attempts
+            r'\.\./',  # Directory traversal
+            r'<script',  # XSS attempts
+            r'union.*select',  # SQL injection attempts
+            r'1=1',  # SQL injection attempts
+            r'eval\(',  # Code injection attempts
         ]
 
         # Compile regex patterns
@@ -66,7 +65,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 await self._block_request(request, "Suspicious request pattern detected")
 
         # Check request size
-        content_length = request.headers.get("content-length")
+        content_length = request.headers.get('content-length')
         if content_length:
             try:
                 size = int(content_length)
@@ -76,14 +75,14 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 pass
 
         # Check user agent
-        user_agent = request.headers.get("user-agent", "").lower()
-        suspicious_agents = ["sqlmap", "nmap", "nikto", "dirbuster"]
+        user_agent = request.headers.get('user-agent', '').lower()
+        suspicious_agents = ['sqlmap', 'nmap', 'nikto', 'dirbuster']
         for agent in suspicious_agents:
             if agent in user_agent:
                 await self._block_request(request, "Suspicious user agent detected")
 
         # Rate limiting for suspicious IPs can be added here
-        self._get_client_ip(request)
+        client_ip = self._get_client_ip(request)
         # Could integrate with a reputation service here
 
     async def _block_request(self, request: Request, reason: str):
@@ -92,12 +91,15 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             error={
                 "field": None,
                 "message": "Request blocked for security reasons",
-                "code": ErrorCode.FORBIDDEN,
+                "code": ErrorCode.FORBIDDEN
             },
-            request_id=getattr(request.state, "request_id", None),
+            request_id=getattr(request.state, 'request_id', None)
         )
 
-        raise HTTPException(status_code=403, detail=error_response.dict())
+        raise HTTPException(
+            status_code=403,
+            detail=error_response.dict()
+        )
 
     def _add_security_headers(self, response: Response):
         """Add security headers to the response."""
@@ -105,8 +107,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             response.headers[header] = value
 
         # Add CSP header if not present
-        if "Content-Security-Policy" not in response.headers:
-            response.headers["Content-Security-Policy"] = (
+        if 'Content-Security-Policy' not in response.headers:
+            response.headers['Content-Security-Policy'] = (
                 "default-src 'self'; "
                 "script-src 'self' 'unsafe-inline'; "
                 "style-src 'self' 'unsafe-inline'; "
@@ -117,11 +119,11 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
     def _get_client_ip(self, request: Request) -> str:
         """Get client IP address."""
-        forwarded_for = request.headers.get("x-forwarded-for")
+        forwarded_for = request.headers.get('x-forwarded-for')
         if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
+            return forwarded_for.split(',')[0].strip()
 
-        real_ip = request.headers.get("x-real-ip")
+        real_ip = request.headers.get('x-real-ip')
         if real_ip:
             return real_ip
 
@@ -144,7 +146,7 @@ class CORSMiddleware(BaseHTTPMiddleware):
             "Content-Language",
             "Content-Type",
             "Authorization",
-            "X-Requested-With",
+            "X-Requested-With"
         ]
         self.max_age = 86400  # 24 hours
 
@@ -157,21 +159,21 @@ class CORSMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
 
         # Get origin
-        origin = request.headers.get("origin")
+        origin = request.headers.get('origin')
 
         # Check if origin is allowed
         if origin and self._is_origin_allowed(origin):
-            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers['Access-Control-Allow-Origin'] = origin
         elif self.allow_origins == ["*"]:
-            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers['Access-Control-Allow-Origin'] = "*"
 
         # Add other CORS headers
         if self.allow_credentials:
-            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
 
-        response.headers["Access-Control-Allow-Methods"] = ", ".join(self.allow_methods)
-        response.headers["Access-Control-Allow-Headers"] = ", ".join(self.allow_headers)
-        response.headers["Access-Control-Max-Age"] = str(self.max_age)
+        response.headers['Access-Control-Allow-Methods'] = ', '.join(self.allow_methods)
+        response.headers['Access-Control-Allow-Headers'] = ', '.join(self.allow_headers)
+        response.headers['Access-Control-Max-Age'] = str(self.max_age)
 
         return response
 
@@ -200,14 +202,14 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         import uuid
 
         # Generate request ID if not present
-        if not hasattr(request.state, "request_id"):
+        if not hasattr(request.state, 'request_id'):
             request.state.request_id = str(uuid.uuid4())
 
         # Process request
         response = await call_next(request)
 
         # Add request ID to response headers
-        response.headers["X-Request-ID"] = request.state.request_id
+        response.headers['X-Request-ID'] = request.state.request_id
 
         return response
 
@@ -221,26 +223,30 @@ class SanitizationMiddleware(BaseHTTPMiddleware):
 
         # Patterns for sanitization
         self.sql_injection_patterns = [
-            r"union.*select",
-            r"1=1",
-            r"drop table",
-            r"--",
-            r"/*",
-            r"*/",
+            r'union.*select',
+            r'1=1',
+            r'drop table',
+            r'--',
+            r'/*',
+            r'*/'
         ]
 
         self.xss_patterns = [
-            r"<script",
-            r"javascript:",
-            r"on\w+\s*=",
-            r"<iframe",
-            r"<object",
-            r"<embed",
+            r'<script',
+            r'javascript:',
+            r'on\w+\s*=',
+            r'<iframe',
+            r'<object',
+            r'<embed'
         ]
 
         # Compile patterns
-        self.all_patterns = [(re.compile(pattern, re.IGNORECASE), "sql_injection") for pattern in self.sql_injection_patterns] + [
-            (re.compile(pattern, re.IGNORECASE), "xss") for pattern in self.xss_patterns
+        self.all_patterns = [
+            (re.compile(pattern, re.IGNORECASE), 'sql_injection')
+            for pattern in self.sql_injection_patterns
+        ] + [
+            (re.compile(pattern, re.IGNORECASE), 'xss')
+            for pattern in self.xss_patterns
         ]
 
     async def dispatch(self, request: Request, call_next) -> Response:
@@ -262,11 +268,11 @@ class SanitizationMiddleware(BaseHTTPMiddleware):
     def _sanitize_input(self, input_str: str) -> str:
         """Sanitize input string."""
         # Basic HTML escaping
-        input_str = input_str.replace("&", "&amp;")
-        input_str = input_str.replace("<", "&lt;")
-        input_str = input_str.replace(">", "&gt;")
-        input_str = input_str.replace('"', "&quot;")
-        input_str = input_str.replace("'", "&#x27;")
+        input_str = input_str.replace('&', '&amp;')
+        input_str = input_str.replace('<', '&lt;')
+        input_str = input_str.replace('>', '&gt;')
+        input_str = input_str.replace('"', '&quot;')
+        input_str = input_str.replace("'", '&#x27;')
 
         return input_str
 

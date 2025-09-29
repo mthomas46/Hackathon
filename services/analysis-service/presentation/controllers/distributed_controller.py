@@ -1,17 +1,18 @@
 """Distributed Controller - Handles distributed processing endpoints."""
 
-from fastapi import APIRouter
+from typing import Dict, Any
+from fastapi import APIRouter, HTTPException
 
-from ...modules.analysis_handlers import analysis_handlers
 from ...modules.models import (
-    BatchTasksRequest,
-    CancelTaskRequest,
     DistributedTaskRequest,
-    LoadBalancingConfigRequest,
-    LoadBalancingStrategyRequest,
-    ScaleWorkersRequest,
+    BatchTasksRequest,
     TaskStatusRequest,
+    CancelTaskRequest,
+    ScaleWorkersRequest,
+    LoadBalancingStrategyRequest,
+    LoadBalancingConfigRequest
 )
+from ...modules.analysis_handlers import analysis_handlers
 
 
 class DistributedController:
@@ -50,7 +51,9 @@ class DistributedController:
             Retrieves detailed status information for a specific distributed task
             including progress, results, worker assignment, and performance metrics.
             """
-            return await analysis_handlers.handle_get_task_status(TaskStatusRequest(task_id=task_id))
+            return await analysis_handlers.handle_get_task_status(
+                TaskStatusRequest(task_id=task_id)
+            )
 
         @self.router.delete("/distributed/tasks/{task_id}")
         async def cancel_task_endpoint(task_id: str):
@@ -59,7 +62,9 @@ class DistributedController:
             Cancels a running distributed task and releases associated resources.
             Provides graceful shutdown and cleanup of task state.
             """
-            return await analysis_handlers.handle_cancel_task(CancelTaskRequest(task_id=task_id))
+            return await analysis_handlers.handle_cancel_task(
+                CancelTaskRequest(task_id=task_id)
+            )
 
         @self.router.get("/distributed/workers")
         async def get_workers_status_endpoint():
@@ -98,9 +103,7 @@ class DistributedController:
             return await analysis_handlers.handle_start_processing()
 
         @self.router.put("/distributed/load-balancing/strategy")
-        async def set_load_balancing_strategy_endpoint(
-            req: LoadBalancingStrategyRequest,
-        ):
+        async def set_load_balancing_strategy_endpoint(req: LoadBalancingStrategyRequest):
             """Configure load balancing strategy.
 
             Sets the load balancing algorithm used for task distribution

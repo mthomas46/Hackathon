@@ -1,8 +1,9 @@
 """Migration Templates - Generates migration templates and boilerplate code."""
 
-from datetime import datetime
+import os
+from typing import Dict, Any, Optional
 from pathlib import Path
-from typing import Dict, Optional
+from datetime import datetime
 
 
 class MigrationTemplateGenerator:
@@ -23,16 +24,16 @@ class MigrationTemplateGenerator:
         name: str,
         table_name: Optional[str] = None,
         operation: str = "create_table",
-        output_dir: str = "migrations",
+        output_dir: str = "migrations"
     ) -> str:
         """Generate a schema migration template."""
         template_vars = {
-            "migration_id": migration_id,
-            "name": name,
-            "table_name": table_name or migration_id.split("_")[-1],
-            "operation": operation,
-            "timestamp": datetime.utcnow().strftime("%Y%m%d_%H%M%S"),
-            "class_name": self._to_class_name(migration_id),
+            'migration_id': migration_id,
+            'name': name,
+            'table_name': table_name or migration_id.split('_')[-1],
+            'operation': operation,
+            'timestamp': datetime.utcnow().strftime('%Y%m%d_%H%M%S'),
+            'class_name': self._to_class_name(migration_id)
         }
 
         template = self._get_schema_template(operation)
@@ -42,7 +43,7 @@ class MigrationTemplateGenerator:
         output_path = Path(output_dir) / f"{migration_id}.py"
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, "w", encoding="utf-8") as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -52,15 +53,15 @@ class MigrationTemplateGenerator:
         migration_id: str,
         name: str,
         description: str = "",
-        output_dir: str = "migrations",
+        output_dir: str = "migrations"
     ) -> str:
         """Generate a data migration template."""
         template_vars = {
-            "migration_id": migration_id,
-            "name": name,
-            "description": description,
-            "timestamp": datetime.utcnow().strftime("%Y%m%d_%H%M%S"),
-            "class_name": self._to_class_name(migration_id),
+            'migration_id': migration_id,
+            'name': name,
+            'description': description,
+            'timestamp': datetime.utcnow().strftime('%Y%m%d_%H%M%S'),
+            'class_name': self._to_class_name(migration_id)
         }
 
         template = self._get_data_template()
@@ -70,7 +71,7 @@ class MigrationTemplateGenerator:
         output_path = Path(output_dir) / f"{migration_id}.py"
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, "w", encoding="utf-8") as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -82,20 +83,20 @@ class MigrationTemplateGenerator:
         table_name: str,
         columns: list,
         index_name: Optional[str] = None,
-        output_dir: str = "migrations",
+        output_dir: str = "migrations"
     ) -> str:
         """Generate an index migration template."""
         if not index_name:
             index_name = f"idx_{table_name}_{'_'.join(columns)}"
 
         template_vars = {
-            "migration_id": migration_id,
-            "name": name,
-            "table_name": table_name,
-            "columns": ", ".join(f"'{col}'" for col in columns),
-            "index_name": index_name,
-            "timestamp": datetime.utcnow().strftime("%Y%m%d_%H%M%S"),
-            "class_name": self._to_class_name(migration_id),
+            'migration_id': migration_id,
+            'name': name,
+            'table_name': table_name,
+            'columns': ', '.join(f"'{col}'" for col in columns),
+            'index_name': index_name,
+            'timestamp': datetime.utcnow().strftime('%Y%m%d_%H%M%S'),
+            'class_name': self._to_class_name(migration_id)
         }
 
         template = self._get_index_template()
@@ -105,7 +106,7 @@ class MigrationTemplateGenerator:
         output_path = Path(output_dir) / f"{migration_id}.py"
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, "w", encoding="utf-8") as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -116,15 +117,15 @@ class MigrationTemplateGenerator:
         name: str,
         up_sql: str,
         down_sql: Optional[str] = None,
-        output_dir: str = "migrations",
+        output_dir: str = "migrations"
     ) -> str:
         """Generate a SQL migration file."""
         template_vars = {
-            "migration_id": migration_id,
-            "name": name,
-            "up_sql": up_sql,
-            "down_sql": down_sql or "-- No rollback SQL provided",
-            "timestamp": datetime.utcnow().strftime("%Y%m%d_%H%M%S"),
+            'migration_id': migration_id,
+            'name': name,
+            'up_sql': up_sql,
+            'down_sql': down_sql or "-- No rollback SQL provided",
+            'timestamp': datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         }
 
         template = self._get_sql_template()
@@ -134,7 +135,7 @@ class MigrationTemplateGenerator:
         output_path = Path(output_dir) / f"{migration_id}.sql"
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, "w", encoding="utf-8") as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(migration_sql)
 
         return str(output_path)
@@ -142,7 +143,7 @@ class MigrationTemplateGenerator:
     def _get_schema_template(self, operation: str) -> str:
         """Get schema migration template."""
         templates = {
-            "create_table": '''"""Migration: {name}"""
+            'create_table': '''"""Migration: {name}"""
 
 from infrastructure.migrations.migration import SchemaMigration
 
@@ -171,7 +172,7 @@ class {class_name}(SchemaMigration):
             down_sql=down_sql.strip()
         )
 ''',
-            "add_column": '''"""Migration: {name}"""
+            'add_column': '''"""Migration: {name}"""
 
 from infrastructure.migrations.migration import SchemaMigration
 
@@ -196,7 +197,7 @@ class {class_name}(SchemaMigration):
             down_sql=down_sql.strip()
         )
 ''',
-            "drop_table": '''"""Migration: {name}"""
+            'drop_table': '''"""Migration: {name}"""
 
 from infrastructure.migrations.migration import SchemaMigration
 
@@ -217,10 +218,10 @@ class {class_name}(SchemaMigration):
             up_sql=up_sql.strip(),
             down_sql=None
         )
-''',
+'''
         }
 
-        return templates.get(operation, templates["create_table"])
+        return templates.get(operation, templates['create_table'])
 
     def _get_data_template(self) -> str:
         """Get data migration template."""
@@ -289,7 +290,7 @@ class {class_name}(IndexMigration):
 
     def _get_sql_template(self) -> str:
         """Get SQL migration template."""
-        return """-- Migration: {name}
+        return '''-- Migration: {name}
 -- ID: {migration_id}
 -- Generated: {timestamp}
 
@@ -298,34 +299,42 @@ class {class_name}(IndexMigration):
 
 -- DOWN
 {down_sql}
-"""
+'''
 
     def _to_class_name(self, migration_id: str) -> str:
         """Convert migration ID to class name."""
-        parts = migration_id.split("_")
-        return "".join(word.capitalize() for word in parts)
+        parts = migration_id.split('_')
+        return ''.join(word.capitalize() for word in parts)
 
     def list_available_templates(self) -> Dict[str, str]:
         """List available migration templates."""
         return {
-            "schema:create_table": "Create a new database table",
-            "schema:add_column": "Add a column to an existing table",
-            "schema:drop_table": "Drop an existing table",
-            "data:migration": "Transform existing data",
-            "index:create": "Create a database index",
-            "sql:migration": "Raw SQL migration",
+            'schema:create_table': 'Create a new database table',
+            'schema:add_column': 'Add a column to an existing table',
+            'schema:drop_table': 'Drop an existing table',
+            'data:migration': 'Transform existing data',
+            'index:create': 'Create a database index',
+            'sql:migration': 'Raw SQL migration'
         }
 
-    def generate_migration_from_template(self, template_type: str, migration_id: str, name: str, **kwargs) -> str:
+    def generate_migration_from_template(
+        self,
+        template_type: str,
+        migration_id: str,
+        name: str,
+        **kwargs
+    ) -> str:
         """Generate migration from template type."""
-        if template_type.startswith("schema:"):
-            operation = template_type.split(":", 1)[1]
-            return self.generate_schema_migration(migration_id, name, operation=operation, **kwargs)
-        elif template_type == "data:migration":
+        if template_type.startswith('schema:'):
+            operation = template_type.split(':', 1)[1]
+            return self.generate_schema_migration(
+                migration_id, name, operation=operation, **kwargs
+            )
+        elif template_type == 'data:migration':
             return self.generate_data_migration(migration_id, name, **kwargs)
-        elif template_type == "index:create":
+        elif template_type == 'index:create':
             return self.generate_index_migration(migration_id, name, **kwargs)
-        elif template_type == "sql:migration":
+        elif template_type == 'sql:migration':
             return self.generate_sql_migration(migration_id, name, **kwargs)
         else:
             raise ValueError(f"Unknown template type: {template_type}")
@@ -335,9 +344,13 @@ class MigrationCommandGenerator:
     """Generates command-line migration commands."""
 
     @staticmethod
-    def generate_create_command(migration_type: str, name: str, output_dir: str = "migrations") -> str:
+    def generate_create_command(
+        migration_type: str,
+        name: str,
+        output_dir: str = "migrations"
+    ) -> str:
         """Generate migration creation command."""
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         migration_id = f"{timestamp}_{name.lower().replace(' ', '_')}"
 
         return f"""# Create a new {migration_type} migration
@@ -360,7 +373,10 @@ print(f"Migration created: {{file_path}}")
 """
 
     @staticmethod
-    def generate_execute_command(migration_ids: Optional[list] = None, dry_run: bool = False) -> str:
+    def generate_execute_command(
+        migration_ids: Optional[list] = None,
+        dry_run: bool = False
+    ) -> str:
         """Generate migration execution command."""
         args = []
         if migration_ids:
@@ -420,6 +436,6 @@ from infrastructure.migrations.sqlite_migration_manager import SQLiteMigrationMa
 
 manager = SQLiteMigrationManager("database.db")
 migration = manager.get_migration("{migration_id or 'target_migration'}")
-result = await manager.rollback_migration_with_tracking(migration)  # noqa: F821
-print(f"Rollback result: {result.status}")  # noqa: F821
+result = await manager.rollback_migration_with_tracking(migration)
+print(f"Rollback result: {result.status}")
 """

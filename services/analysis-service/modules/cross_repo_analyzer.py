@@ -1,9 +1,7 @@
 """Cross Repository Analyzer - Basic implementation."""
 
-from typing import Any, Dict, List
-
-# Using standardized logging service
-from services.shared.monitoring.logging import fire_and_forget
+from typing import Dict, Any, List
+from services.shared.core.logging.logger import get_logger
 
 
 class CrossRepositoryAnalyzer:
@@ -20,5 +18,5 @@ class CrossRepositoryAnalyzer:
             "analysis_id": "cross-repo-analysis",
             "repositories_analyzed": len(repositories),
             "issues_found": 0,
-            "status": "completed",
+            "status": "completed"
         }

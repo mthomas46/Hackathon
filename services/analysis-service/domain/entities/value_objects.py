@@ -1,13 +1,12 @@
 """Value objects for domain entities."""
 
 from dataclasses import dataclass
+from typing import List, Dict, Any, Optional
 from enum import Enum
-from typing import Any, Dict, List, Optional
 
 
 class AnalysisType(Enum):
     """Analysis type enumeration."""
-
     SEMANTIC_SIMILARITY = "semantic_similarity"
     SENTIMENT = "sentiment"
     CONTENT_QUALITY = "content_quality"
@@ -22,7 +21,6 @@ class AnalysisType(Enum):
 
 class Confidence(Enum):
     """Confidence level enumeration."""
-
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -32,7 +30,6 @@ class Confidence(Enum):
 @dataclass(frozen=True)
 class AnalysisConfiguration:
     """Value object for analysis configuration."""
-
     detectors: List[str]
     options: Dict[str, Any]
     priority: str = "normal"
@@ -53,7 +50,6 @@ class AnalysisConfiguration:
 @dataclass(frozen=True)
 class Location:
     """Value object for finding location in document."""
-
     start_line: Optional[int] = None
     end_line: Optional[int] = None
     start_column: Optional[int] = None
@@ -72,7 +68,6 @@ class Location:
 @dataclass(frozen=True)
 class Suggestion:
     """Value object for finding suggestions."""
-
     description: str
     action_type: str
     parameters: Dict[str, Any] = None
@@ -92,7 +87,6 @@ class Suggestion:
 @dataclass(frozen=True)
 class Metrics:
     """Value object for analysis metrics."""
-
     execution_time_seconds: float
     memory_usage_mb: Optional[float] = None
     cpu_usage_percent: Optional[float] = None

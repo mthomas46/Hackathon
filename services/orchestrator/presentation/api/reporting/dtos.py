@@ -1,8 +1,8 @@
 """DTOs for Reporting API"""
 
-from typing import Any, Dict, List, Optional
-
 from pydantic import BaseModel, Field, field_validator
+from typing import Dict, Any, Optional, List
+from datetime import datetime
 
 
 class GenerateReportRequest(BaseModel):
@@ -15,26 +15,18 @@ class GenerateReportRequest(BaseModel):
     format: str = Field("json", min_length=1, max_length=50)
     include_charts: bool = Field(True)
 
-    @field_validator("report_type")
+    @field_validator('report_type')
     @classmethod
     def validate_report_type(cls, v):
-        valid_types = [
-            "pr_confidence",
-            "summarization",
-            "analytics",
-            "performance",
-            "usage",
-            "health",
-            "custom",
-        ]
+        valid_types = ['pr_confidence', 'summarization', 'analytics', 'performance', 'usage', 'health', 'custom']
         if v not in valid_types:
             raise ValueError(f'Report type must be one of: {", ".join(valid_types)}')
         return v
 
-    @field_validator("format")
+    @field_validator('format')
     @classmethod
     def validate_format(cls, v):
-        valid_formats = ["json", "pdf", "html", "csv", "xlsx"]
+        valid_formats = ['json', 'pdf', 'html', 'csv', 'xlsx']
         if v not in valid_formats:
             raise ValueError(f'Format must be one of: {", ".join(valid_formats)}')
         return v

@@ -2,13 +2,12 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Optional, List, Dict, Any
 
 
 @dataclass(frozen=True)
 class RepositoryId:
     """Value object for repository identifier."""
-
     value: str
 
     def __post_init__(self):
@@ -21,7 +20,6 @@ class RepositoryId:
 @dataclass
 class Repository:
     """Repository domain entity."""
-
     id: RepositoryId
     name: str
     url: str
@@ -85,18 +83,18 @@ class Repository:
     def to_dict(self) -> Dict[str, Any]:
         """Convert repository to dictionary representation."""
         return {
-            "id": self.id.value,
-            "name": self.name,
-            "url": self.url,
-            "provider": self.provider,
-            "description": self.description,
-            "default_branch": self.default_branch,
-            "language": self.language,
-            "topics": self.topics,
-            "metadata": self.metadata,
-            "last_synced_at": (self.last_synced_at.isoformat() if self.last_synced_at else None),
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
-            "is_synced_recently": self.is_synced_recently,
-            "sync_age_days": self.sync_age_days,
+            'id': self.id.value,
+            'name': self.name,
+            'url': self.url,
+            'provider': self.provider,
+            'description': self.description,
+            'default_branch': self.default_branch,
+            'language': self.language,
+            'topics': self.topics,
+            'metadata': self.metadata,
+            'last_synced_at': self.last_synced_at.isoformat() if self.last_synced_at else None,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+            'is_synced_recently': self.is_synced_recently,
+            'sync_age_days': self.sync_age_days
         }

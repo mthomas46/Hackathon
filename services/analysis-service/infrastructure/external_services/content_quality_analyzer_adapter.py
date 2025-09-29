@@ -1,25 +1,25 @@
 """Content quality analyzer adapter."""
 
+from typing import Dict, Any, List
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+
+from ...domain.exceptions import ExternalServiceException
 
 
 class ContentQualityAnalysisResult:
     """Result of content quality analysis."""
 
-    def __init__(
-        self,
-        document_id: str,
-        readability_score: float,
-        complexity_score: float,
-        completeness_score: float,
-        overall_quality_score: float,
-        issues: List[str],
-        suggestions: List[str],
-        metrics: Dict[str, Any],
-        processing_time: float = 0.0,
-    ):
+    def __init__(self,
+                 document_id: str,
+                 readability_score: float,
+                 complexity_score: float,
+                 completeness_score: float,
+                 overall_quality_score: float,
+                 issues: List[str],
+                 suggestions: List[str],
+                 metrics: Dict[str, Any],
+                 processing_time: float = 0.0):
         """Initialize content quality analysis result."""
         self.document_id = document_id
         self.readability_score = readability_score
@@ -34,15 +34,15 @@ class ContentQualityAnalysisResult:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            "document_id": self.document_id,
-            "readability_score": self.readability_score,
-            "complexity_score": self.complexity_score,
-            "completeness_score": self.completeness_score,
-            "overall_quality_score": self.overall_quality_score,
-            "issues": self.issues,
-            "suggestions": self.suggestions,
-            "metrics": self.metrics,
-            "processing_time": self.processing_time,
+            'document_id': self.document_id,
+            'readability_score': self.readability_score,
+            'complexity_score': self.complexity_score,
+            'completeness_score': self.completeness_score,
+            'overall_quality_score': self.overall_quality_score,
+            'issues': self.issues,
+            'suggestions': self.suggestions,
+            'metrics': self.metrics,
+            'processing_time': self.processing_time
         }
 
 
@@ -52,10 +52,12 @@ class ContentQualityAnalyzerAdapter(ABC):
     @abstractmethod
     async def analyze_quality(self, document_text: str, document_id: str) -> ContentQualityAnalysisResult:
         """Analyze content quality."""
+        pass
 
     @abstractmethod
     def is_available(self) -> bool:
         """Check if the service is available."""
+        pass
 
 
 class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
@@ -63,6 +65,7 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
 
     def __init__(self):
         """Initialize local content quality analyzer."""
+        pass
 
     async def analyze_quality(self, document_text: str, document_id: str) -> ContentQualityAnalysisResult:
         """Analyze content quality using local algorithms."""
@@ -98,10 +101,10 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
 
         # Additional metrics
         metrics = {
-            "word_count": len(document_text.split()),
-            "sentence_count": len(document_text.split(".")),
-            "paragraph_count": len(document_text.split("\n\n")),
-            "avg_words_per_sentence": len(document_text.split()) / max(1, len(document_text.split("."))),
+            'word_count': len(document_text.split()),
+            'sentence_count': len(document_text.split('.')),
+            'paragraph_count': len(document_text.split('\n\n')),
+            'avg_words_per_sentence': len(document_text.split()) / max(1, len(document_text.split('.')))
         }
 
         processing_time = time.time() - start_time
@@ -115,7 +118,7 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
             issues=issues,
             suggestions=suggestions,
             metrics=metrics,
-            processing_time=processing_time,
+            processing_time=processing_time
         )
 
     def is_available(self) -> bool:
@@ -124,7 +127,7 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
 
     def _calculate_readability(self, text: str) -> float:
         """Calculate readability score."""
-        sentences = text.split(".")
+        sentences = text.split('.')
         words = text.split()
         avg_words_per_sentence = len(words) / len(sentences) if sentences else 0
 
@@ -147,14 +150,7 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
         complexity_ratio = len(complex_words) / len(words) if words else 0
 
         # Count technical indicators
-        technical_indicators = [
-            "api",
-            "function",
-            "class",
-            "method",
-            "algorithm",
-            "implementation",
-        ]
+        technical_indicators = ['api', 'function', 'class', 'method', 'algorithm', 'implementation']
         technical_count = sum(1 for word in words if word.lower() in technical_indicators)
 
         technical_ratio = technical_count / len(words) if words else 0
@@ -167,23 +163,15 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
 
         # Check for common documentation elements
         completeness_indicators = [
-            "introduction",
-            "overview",
-            "purpose",
-            "usage",
-            "example",
-            "installation",
-            "configuration",
-            "api",
-            "reference",
-            "faq",
+            'introduction', 'overview', 'purpose', 'usage', 'example',
+            'installation', 'configuration', 'api', 'reference', 'faq'
         ]
 
         found_indicators = sum(1 for indicator in completeness_indicators if indicator in text_lower)
         completeness_ratio = found_indicators / len(completeness_indicators)
 
         # Check for structured content (headings, lists)
-        has_structure = "#" in text or "*" in text or "-" in text or "1." in text
+        has_structure = '#' in text or '*' in text or '-' in text or '1.' in text
 
         structure_bonus = 0.2 if has_structure else 0.0
 

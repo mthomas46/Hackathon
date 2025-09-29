@@ -7,20 +7,17 @@ Provides endpoints for:
 - Event streaming
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from typing import List, Optional
+from datetime import datetime
 
-from ....main import container
 from .dtos import (
-    DLQRetryRequest,
-    DLQStatsResponse,
-    EventClearRequest,
-    EventHistoryResponse,
-    EventReplayRequest,
-    SagaDetailResponse,
-    SagaStatsResponse,
-    TraceDetailResponse,
-    TracingStatsResponse,
+    DLQRetryRequest, EventReplayRequest, EventClearRequest,
+    DLQStatsResponse, SagaStatsResponse, SagaDetailResponse,
+    EventHistoryResponse, TracingStatsResponse, TraceDetailResponse,
+    PeerInfoResponse
 )
+from ....main import container
 
 router = APIRouter()
 
@@ -41,7 +38,6 @@ async def get_saga(saga_id: str):
     """Get details of a specific saga."""
     try:
         from ....application.infrastructure.queries import GetSagaQuery
-
         query = GetSagaQuery(saga_id=saga_id)
         result = await container.get_saga_use_case.execute(query)
         if not result:
@@ -58,7 +54,6 @@ async def list_sagas(limit: int = 50, offset: int = 0):
     """List sagas with pagination."""
     try:
         from ....application.infrastructure.queries import ListSagasQuery
-
         query = ListSagasQuery(limit=limit, offset=offset)
         result = await container.list_sagas_use_case.execute(query)
         return result
@@ -72,9 +67,9 @@ async def start_trace(service_name: str, operation_name: str):
     """Start a new distributed trace."""
     try:
         from ....application.infrastructure.commands import StartTraceCommand
-
         command = StartTraceCommand(
-            service_name=service_name, operation_name=operation_name
+            service_name=service_name,
+            operation_name=operation_name
         )
         result = await container.start_trace_use_case.execute(command)
         return {"trace_id": result["trace_id"], "status": "started"}
@@ -87,7 +82,6 @@ async def get_trace(trace_id: str):
     """Get details of a specific trace."""
     try:
         from ....application.infrastructure.queries import GetTraceQuery
-
         query = GetTraceQuery(trace_id=trace_id)
         result = await container.get_trace_use_case.execute(query)
         if not result:
@@ -104,7 +98,6 @@ async def list_traces(limit: int = 50, offset: int = 0):
     """List traces with pagination."""
     try:
         from ....application.infrastructure.queries import ListTracesQuery
-
         query = ListTracesQuery(limit=limit, offset=offset)
         result = await container.list_traces_use_case.execute(query)
         return result
@@ -120,9 +113,7 @@ async def get_dlq_stats():
         result = await container.get_dlq_stats_use_case.execute()
         return result
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get DLQ stats: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get DLQ stats: {str(e)}")
 
 
 @router.get("/dlq/events", response_model=EventHistoryResponse)
@@ -130,14 +121,11 @@ async def list_dlq_events(limit: int = 50, offset: int = 0):
     """List events in the Dead Letter Queue."""
     try:
         from ....application.infrastructure.queries import ListDLQEventsQuery
-
         query = ListDLQEventsQuery(limit=limit, offset=offset)
         result = await container.list_dlq_events_use_case.execute(query)
         return result
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to list DLQ events: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to list DLQ events: {str(e)}")
 
 
 @router.post("/dlq/retry", response_model=dict)
@@ -145,9 +133,9 @@ async def retry_dlq_events(request: DLQRetryRequest):
     """Retry events from the Dead Letter Queue."""
     try:
         from ....application.infrastructure.commands import RetryEventCommand
-
         command = RetryEventCommand(
-            event_ids=request.event_ids, max_retries=request.max_retries
+            event_ids=request.event_ids,
+            max_retries=request.max_retries
         )
         result = await container.retry_event_use_case.execute(command)
         return result
@@ -163,9 +151,7 @@ async def get_event_stream_stats():
         result = await container.get_event_stream_stats_use_case.execute()
         return result
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get event stats: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get event stats: {str(e)}")
 
 
 @router.post("/events/publish", response_model=dict)
@@ -173,14 +159,14 @@ async def publish_event(event_type: str, payload: dict):
     """Publish an event to the event stream."""
     try:
         from ....application.infrastructure.commands import PublishEventCommand
-
-        command = PublishEventCommand(event_type=event_type, payload=payload)
+        command = PublishEventCommand(
+            event_type=event_type,
+            payload=payload
+        )
         result = await container.publish_event_use_case.execute(command)
         return result
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to publish event: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to publish event: {str(e)}")
 
 
 @router.post("/events/replay", response_model=dict)

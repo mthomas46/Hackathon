@@ -5,13 +5,13 @@ environment, with fallback mechanisms and service availability detection.
 """
 
 import asyncio
-from typing import Any, Dict, List, Optional, Tuple
+import socket
+import aiohttp
+from typing import Dict, Any, List, Optional, Tuple
 from urllib.parse import urlparse
 
-import aiohttp
-
-from ..logging import get_simulation_logger
 from .config_manager import get_config
+from ..logging import get_simulation_logger
 
 
 class ServiceDiscoveryError(Exception):
@@ -41,12 +41,10 @@ class ServiceHealth:
             "name": self.name,
             "url": self.url,
             "is_healthy": self.is_healthy,
-            "last_checked": (
-                self.last_checked.isoformat() if self.last_checked else None
-            ),
+            "last_checked": self.last_checked.isoformat() if self.last_checked else None,
             "response_time": self.response_time,
             "error_message": self.error_message,
-            "version": self.version,
+            "version": self.version
         }
 
 
@@ -74,9 +72,7 @@ class LocalServiceDiscovery:
             if url and isinstance(url, str):
                 self.services[service_name] = ServiceHealth(service_name, url)
 
-        self.logger.info(
-            f"Initialized service registry with {len(self.services)} services"
-        )
+        self.logger.info(f"Initialized service registry with {len(self.services)} services")
 
     async def start_discovery(self):
         """Start service discovery process."""
@@ -125,9 +121,7 @@ class LocalServiceDiscovery:
         # Log summary
         healthy_count = sum(1 for s in self.services.values() if s.is_healthy)
         total_count = len(self.services)
-        self.logger.debug(
-            f"Service health check completed: {healthy_count}/{total_count} services healthy"
-        )
+        self.logger.debug(f"Service health check completed: {healthy_count}/{total_count} services healthy")
 
     async def _check_service_health(self, service: ServiceHealth):
         """Check health of a single service."""
@@ -140,9 +134,7 @@ class LocalServiceDiscovery:
             parsed = urlparse(service.url)
             health_url = f"{parsed.scheme}://{parsed.netloc}/health"
 
-            async with aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=self.health_check_timeout)
-            ) as session:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.health_check_timeout)) as session:
                 async with session.get(health_url) as response:
                     response_time = time.time() - start_time
 
@@ -151,7 +143,7 @@ class LocalServiceDiscovery:
                         try:
                             data = await response.json()
                             service.version = data.get("version")
-                        except Exception:
+                        except:
                             pass
 
                         service.is_healthy = True
@@ -186,9 +178,7 @@ class LocalServiceDiscovery:
             if service.is_healthy:
                 return service.url
             else:
-                self.logger.warning(
-                    f"Service {service_name} is not healthy, using fallback"
-                )
+                self.logger.warning(f"Service {service_name} is not healthy, using fallback")
                 return fallback or service.url
         else:
             self.logger.warning(f"Service {service_name} not found in registry")
@@ -200,9 +190,7 @@ class LocalServiceDiscovery:
 
     def get_unhealthy_services(self) -> List[str]:
         """Get list of unhealthy services."""
-        return [
-            name for name, service in self.services.items() if not service.is_healthy
-        ]
+        return [name for name, service in self.services.items() if not service.is_healthy]
 
     def get_service_health(self, service_name: str) -> Optional[Dict[str, Any]]:
         """Get health information for a specific service."""
@@ -230,7 +218,7 @@ class LocalServiceDiscovery:
             "unhealthy_services": unhealthy_services,
             "discovery_running": self._running,
             "discovery_interval": self.discovery_interval,
-            "last_check": asyncio.get_event_loop().time() if self._running else None,
+            "last_check": asyncio.get_event_loop().time() if self._running else None
         }
 
 
@@ -243,9 +231,7 @@ class FallbackServiceClient:
         self.discovery = discovery
         self.logger = get_simulation_logger()
 
-    async def make_request(
-        self, method: str, endpoint: str, **kwargs
-    ) -> Optional[Dict[str, Any]]:
+    async def make_request(self, method: str, endpoint: str, **kwargs) -> Optional[Dict[str, Any]]:
         """Make request with automatic fallback handling."""
         service_url = self.discovery.get_service_url(self.service_name)
 
@@ -255,9 +241,7 @@ class FallbackServiceClient:
 
         # Check if service is available
         if not self.discovery.is_service_available(self.service_name):
-            self.logger.warning(
-                f"Service {self.service_name} is not available, request will fail"
-            )
+            self.logger.warning(f"Service {self.service_name} is not available, request will fail")
             return None
 
         # Make the request
@@ -268,9 +252,7 @@ class FallbackServiceClient:
                     if response.status == 200:
                         return await response.json()
                     else:
-                        self.logger.error(
-                            f"Request to {self.service_name} failed with status {response.status}"
-                        )
+                        self.logger.error(f"Request to {self.service_name} failed with status {response.status}")
                         return None
 
         except Exception as e:
@@ -296,7 +278,7 @@ class PortScanner:
                 writer.close()
                 await writer.wait_closed()
                 return True
-            except (OSError, IOError):
+            except:
                 return False
 
         tasks = []
@@ -325,7 +307,7 @@ class PortScanner:
             "rabbitmq": 5672,
             "ollama": 11434,
             "mailhog_smtp": 1025,
-            "mailhog_web": 8025,
+            "mailhog_web": 8025
         }
 
         # This would need to be implemented asynchronously
@@ -376,14 +358,14 @@ def get_service_health_summary() -> Dict[str, Any]:
 
 
 __all__ = [
-    "LocalServiceDiscovery",
-    "FallbackServiceClient",
-    "PortScanner",
-    "ServiceDiscoveryError",
-    "get_service_discovery",
-    "start_service_discovery",
-    "stop_service_discovery",
-    "get_service_url",
-    "is_service_available",
-    "get_service_health_summary",
+    'LocalServiceDiscovery',
+    'FallbackServiceClient',
+    'PortScanner',
+    'ServiceDiscoveryError',
+    'get_service_discovery',
+    'start_service_discovery',
+    'stop_service_discovery',
+    'get_service_url',
+    'is_service_available',
+    'get_service_health_summary'
 ]

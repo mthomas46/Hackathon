@@ -3,16 +3,15 @@ Domain entities for recommendations.
 Following DDD principles with clean, focused entities.
 """
 
-import uuid
 from dataclasses import dataclass, field
+from typing import List, Optional
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+import uuid
 
 
 class RecommendationType(Enum):
     """Types of recommendations that can be generated."""
-
     CONSOLIDATION = "consolidation"
     DUPLICATE = "duplicate"
     OUTDATED = "outdated"
@@ -25,7 +24,6 @@ class RecommendationType(Enum):
 @dataclass
 class Recommendation:
     """Represents a recommendation for document or content improvement."""
-
     type: RecommendationType
     description: str
     affected_documents: Optional[List[str]] = None
@@ -68,11 +66,11 @@ class Recommendation:
             "effort_level": self.effort_level,
             "tags": self.tags or [],
             "metadata": self.metadata or {},
-            "created_at": self.created_at.isoformat(),
+            "created_at": self.created_at.isoformat()
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Recommendation":
+    def from_dict(cls, data: dict) -> 'Recommendation':
         """Create recommendation from dictionary representation."""
         return cls(
             type=RecommendationType(data["type"]),
@@ -85,14 +83,13 @@ class Recommendation:
             effort_level=data.get("effort_level"),
             tags=data.get("tags"),
             metadata=data.get("metadata"),
-            id=data.get("id", str(uuid.uuid4())),
+            id=data.get("id", str(uuid.uuid4()))
         )
 
 
 @dataclass
 class RecommendationBatch:
     """Represents a batch of recommendations for processing."""
-
     recommendations: List[Recommendation]
     source: str = "unknown"
     processing_time_seconds: float = 0.0
@@ -107,18 +104,14 @@ class RecommendationBatch:
     def remove_recommendation(self, recommendation_id: str) -> bool:
         """Remove a recommendation from the batch."""
         original_length = len(self.recommendations)
-        self.recommendations = [
-            r for r in self.recommendations if r.id != recommendation_id
-        ]
+        self.recommendations = [r for r in self.recommendations if r.id != recommendation_id]
 
         if len(self.recommendations) < original_length:
             self._update_totals()
             return True
         return False
 
-    def get_recommendations_by_type(
-        self, rec_type: RecommendationType
-    ) -> List[Recommendation]:
+    def get_recommendations_by_type(self, rec_type: RecommendationType) -> List[Recommendation]:
         """Get recommendations filtered by type."""
         return [r for r in self.recommendations if r.type == rec_type]
 
@@ -129,22 +122,23 @@ class RecommendationBatch:
     def sort_by_confidence(self, descending: bool = True) -> List[Recommendation]:
         """Sort recommendations by confidence score."""
         return sorted(
-            self.recommendations, key=lambda r: r.confidence_score, reverse=descending
+            self.recommendations,
+            key=lambda r: r.confidence_score,
+            reverse=descending
         )
 
     def sort_by_priority(self) -> List[Recommendation]:
         """Sort recommendations by priority (high to low)."""
         priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
         return sorted(
-            self.recommendations, key=lambda r: priority_order.get(r.priority, 2)
+            self.recommendations,
+            key=lambda r: priority_order.get(r.priority, 2)
         )
 
     def _update_totals(self) -> None:
         """Update total confidence score."""
         if self.recommendations:
-            self.total_confidence = sum(
-                r.confidence_score for r in self.recommendations
-            ) / len(self.recommendations)
+            self.total_confidence = sum(r.confidence_score for r in self.recommendations) / len(self.recommendations)
         else:
             self.total_confidence = 0.0
 
@@ -156,5 +150,5 @@ class RecommendationBatch:
             "processing_time_seconds": self.processing_time_seconds,
             "total_confidence": self.total_confidence,
             "recommendation_count": len(self.recommendations),
-            "created_at": self.created_at.isoformat(),
+            "created_at": self.created_at.isoformat()
         }

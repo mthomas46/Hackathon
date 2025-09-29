@@ -2,10 +2,11 @@
 
 import asyncio
 import json
+import time
+from typing import Any, Dict, List, Optional, Callable
+from datetime import datetime, timedelta
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 
 from .event_bus import DomainEvent, EventEnvelope
 
@@ -47,59 +48,59 @@ class DeadLetterEntry:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            "event": self.event.to_dict(),
-            "envelope": {
-                "topic": self.envelope.topic,
-                "partition_key": self.envelope.partition_key,
-                "headers": self.envelope.headers,
-                "retry_count": self.envelope.retry_count,
-                "max_retries": self.envelope.max_retries,
+            'event': self.event.to_dict(),
+            'envelope': {
+                'topic': self.envelope.topic,
+                'partition_key': self.envelope.partition_key,
+                'headers': self.envelope.headers,
+                'retry_count': self.envelope.retry_count,
+                'max_retries': self.envelope.max_retries
             },
-            "error_message": self.error_message,
-            "error_type": self.error_type,
-            "timestamp": self.timestamp.isoformat(),
-            "retry_count": self.retry_count,
-            "max_retries": self.max_retries,
-            "next_retry_time": (self.next_retry_time.isoformat() if self.next_retry_time else None),
-            "metadata": self.metadata,
+            'error_message': self.error_message,
+            'error_type': self.error_type,
+            'timestamp': self.timestamp.isoformat(),
+            'retry_count': self.retry_count,
+            'max_retries': self.max_retries,
+            'next_retry_time': self.next_retry_time.isoformat() if self.next_retry_time else None,
+            'metadata': self.metadata
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "DeadLetterEntry":
+    def from_dict(cls, data: Dict[str, Any]) -> 'DeadLetterEntry':
         """Create from dictionary."""
         # Reconstruct event
-        event_data = data["event"]
+        event_data = data['event']
         event = DomainEvent.from_dict(event_data)
 
         # Reconstruct envelope
-        envelope_data = data["envelope"]
+        envelope_data = data['envelope']
         envelope = EventEnvelope(
             event=event,
-            topic=envelope_data["topic"],
-            partition_key=envelope_data.get("partition_key"),
-            headers=envelope_data.get("headers", {}),
-            retry_count=envelope_data.get("retry_count", 0),
-            max_retries=envelope_data.get("max_retries", 3),
+            topic=envelope_data['topic'],
+            partition_key=envelope_data.get('partition_key'),
+            headers=envelope_data.get('headers', {}),
+            retry_count=envelope_data.get('retry_count', 0),
+            max_retries=envelope_data.get('max_retries', 3)
         )
 
         # Handle timestamp
-        timestamp = datetime.fromisoformat(data["timestamp"]) if data.get("timestamp") else datetime.utcnow()
+        timestamp = datetime.fromisoformat(data['timestamp']) if data.get('timestamp') else datetime.utcnow()
 
         # Handle next retry time
         next_retry_time = None
-        if data.get("next_retry_time"):
-            next_retry_time = datetime.fromisoformat(data["next_retry_time"])
+        if data.get('next_retry_time'):
+            next_retry_time = datetime.fromisoformat(data['next_retry_time'])
 
         return cls(
             event=event,
             envelope=envelope,
-            error_message=data["error_message"],
-            error_type=data["error_type"],
+            error_message=data['error_message'],
+            error_type=data['error_type'],
             timestamp=timestamp,
-            retry_count=data.get("retry_count", 0),
-            max_retries=data.get("max_retries", 3),
+            retry_count=data.get('retry_count', 0),
+            max_retries=data.get('max_retries', 3),
             next_retry_time=next_retry_time,
-            metadata=data.get("metadata", {}),
+            metadata=data.get('metadata', {})
         )
 
 
@@ -112,33 +113,40 @@ class DeadLetterQueue(ABC):
         event: DomainEvent,
         error_message: str,
         envelope: Optional[EventEnvelope] = None,
-        error_type: Optional[str] = None,
+        error_type: Optional[str] = None
     ) -> None:
         """Add event to dead letter queue."""
+        pass
 
     @abstractmethod
     async def get_pending_events(self, limit: int = 100) -> List[DeadLetterEntry]:
         """Get events pending retry."""
+        pass
 
     @abstractmethod
     async def mark_retry_successful(self, event_id: str) -> bool:
         """Mark retry as successful and remove from queue."""
+        pass
 
     @abstractmethod
     async def mark_retry_failed(self, event_id: str, error_message: str) -> bool:
         """Mark retry as failed and update entry."""
+        pass
 
     @abstractmethod
     async def get_failed_events(self, limit: int = 100) -> List[DeadLetterEntry]:
         """Get permanently failed events."""
+        pass
 
     @abstractmethod
     async def purge_old_events(self, days_old: int = 30) -> int:
         """Purge events older than specified days."""
+        pass
 
     @abstractmethod
     async def get_stats(self) -> Dict[str, Any]:
         """Get queue statistics."""
+        pass
 
 
 class InMemoryDeadLetterQueue(DeadLetterQueue):
@@ -154,7 +162,7 @@ class InMemoryDeadLetterQueue(DeadLetterQueue):
         event: DomainEvent,
         error_message: str,
         envelope: Optional[EventEnvelope] = None,
-        error_type: Optional[str] = None,
+        error_type: Optional[str] = None
     ) -> None:
         """Add event to queue."""
         if envelope is None:
@@ -164,7 +172,7 @@ class InMemoryDeadLetterQueue(DeadLetterQueue):
             event=event,
             envelope=envelope,
             error_message=error_message,
-            error_type=error_type or "UnknownError",
+            error_type=error_type or "UnknownError"
         )
 
         self.entries.append(entry)
@@ -172,15 +180,15 @@ class InMemoryDeadLetterQueue(DeadLetterQueue):
         # Maintain max size
         if len(self.entries) > self.max_size:
             # Remove oldest entries
-            self.entries = self.entries[-self.max_size :]
+            self.entries = self.entries[-self.max_size:]
 
     async def get_pending_events(self, limit: int = 100) -> List[DeadLetterEntry]:
         """Get events pending retry."""
         current_time = datetime.utcnow()
         pending = [
-            entry
-            for entry in self.entries
-            if entry.should_retry() and (entry.next_retry_time is None or entry.next_retry_time <= current_time)
+            entry for entry in self.entries
+            if entry.should_retry() and
+            (entry.next_retry_time is None or entry.next_retry_time <= current_time)
         ]
 
         return pending[:limit]
@@ -199,13 +207,16 @@ class InMemoryDeadLetterQueue(DeadLetterQueue):
             if entry.event.event_id == event_id:
                 entry.increment_retry()
                 entry.error_message = error_message
-                entry.metadata["last_retry"] = datetime.utcnow().isoformat()
+                entry.metadata['last_retry'] = datetime.utcnow().isoformat()
                 return True
         return False
 
     async def get_failed_events(self, limit: int = 100) -> List[DeadLetterEntry]:
         """Get permanently failed events."""
-        failed = [entry for entry in self.entries if entry.retry_count >= entry.max_retries]
+        failed = [
+            entry for entry in self.entries
+            if entry.retry_count >= entry.max_retries
+        ]
 
         return failed[:limit]
 
@@ -214,7 +225,10 @@ class InMemoryDeadLetterQueue(DeadLetterQueue):
         cutoff_time = datetime.utcnow() - timedelta(days=days_old)
         original_count = len(self.entries)
 
-        self.entries = [entry for entry in self.entries if entry.timestamp > cutoff_time]
+        self.entries = [
+            entry for entry in self.entries
+            if entry.timestamp > cutoff_time
+        ]
 
         purged_count = original_count - len(self.entries)
         return purged_count
@@ -222,25 +236,29 @@ class InMemoryDeadLetterQueue(DeadLetterQueue):
     async def get_stats(self) -> Dict[str, Any]:
         """Get queue statistics."""
         current_time = datetime.utcnow()
-        pending_count = len(
-            [
-                entry
-                for entry in self.entries
-                if entry.should_retry() and (entry.next_retry_time is None or entry.next_retry_time <= current_time)
-            ]
-        )
+        pending_count = len([
+            entry for entry in self.entries
+            if entry.should_retry() and
+            (entry.next_retry_time is None or entry.next_retry_time <= current_time)
+        ])
 
-        failed_count = len([entry for entry in self.entries if entry.retry_count >= entry.max_retries])
+        failed_count = len([
+            entry for entry in self.entries
+            if entry.retry_count >= entry.max_retries
+        ])
 
-        retrying_count = len([entry for entry in self.entries if entry.retry_count > 0 and entry.retry_count < entry.max_retries])
+        retrying_count = len([
+            entry for entry in self.entries
+            if entry.retry_count > 0 and entry.retry_count < entry.max_retries
+        ])
 
         return {
-            "total_entries": len(self.entries),
-            "pending_retry": pending_count,
-            "permanently_failed": failed_count,
-            "currently_retrying": retrying_count,
-            "max_size": self.max_size,
-            "utilization": (len(self.entries) / self.max_size if self.max_size > 0 else 0),
+            'total_entries': len(self.entries),
+            'pending_retry': pending_count,
+            'permanently_failed': failed_count,
+            'currently_retrying': retrying_count,
+            'max_size': self.max_size,
+            'utilization': len(self.entries) / self.max_size if self.max_size > 0 else 0
         }
 
 
@@ -252,7 +270,7 @@ class RedisDeadLetterQueue(DeadLetterQueue):
         redis_client=None,
         queue_key: str = "dead_letter_queue",
         failed_key: str = "failed_events",
-        max_size: int = 10000,
+        max_size: int = 10000
     ):
         """Initialize Redis dead letter queue."""
         self.redis = redis_client
@@ -265,7 +283,7 @@ class RedisDeadLetterQueue(DeadLetterQueue):
         event: DomainEvent,
         error_message: str,
         envelope: Optional[EventEnvelope] = None,
-        error_type: Optional[str] = None,
+        error_type: Optional[str] = None
     ) -> None:
         """Add event to Redis queue."""
         if not self.redis:
@@ -278,7 +296,7 @@ class RedisDeadLetterQueue(DeadLetterQueue):
             event=event,
             envelope=envelope,
             error_message=error_message,
-            error_type=error_type or "UnknownError",
+            error_type=error_type or "UnknownError"
         )
 
         # Add to queue
@@ -297,7 +315,7 @@ class RedisDeadLetterQueue(DeadLetterQueue):
         entries_data = await self.redis.lrange(self.queue_key, 0, limit - 1)
 
         entries = []
-        datetime.utcnow()
+        current_time = datetime.utcnow()
 
         for entry_data in entries_data:
             try:
@@ -327,7 +345,7 @@ class RedisDeadLetterQueue(DeadLetterQueue):
         for i, entry_data in enumerate(entries_data):
             try:
                 entry_dict = json.loads(entry_data)
-                if entry_dict["event"]["event_id"] == event_id:
+                if entry_dict['event']['event_id'] == event_id:
                     await self.redis.lrem(self.queue_key, 1, entry_data)
                     return True
             except Exception:
@@ -346,11 +364,11 @@ class RedisDeadLetterQueue(DeadLetterQueue):
         for entry_data in entries_data:
             try:
                 entry_dict = json.loads(entry_data)
-                if entry_dict["event"]["event_id"] == event_id:
+                if entry_dict['event']['event_id'] == event_id:
                     entry = DeadLetterEntry.from_dict(entry_dict)
                     entry.increment_retry()
                     entry.error_message = error_message
-                    entry.metadata["last_retry"] = datetime.utcnow().isoformat()
+                    entry.metadata['last_retry'] = datetime.utcnow().isoformat()
 
                     # If max retries exceeded, move to failed queue
                     if entry.retry_count >= entry.max_retries:
@@ -402,7 +420,7 @@ class RedisDeadLetterQueue(DeadLetterQueue):
         for entry_data in entries_data:
             try:
                 entry_dict = json.loads(entry_data)
-                entry_timestamp = datetime.fromisoformat(entry_dict["timestamp"])
+                entry_timestamp = datetime.fromisoformat(entry_dict['timestamp'])
 
                 if entry_timestamp > cutoff_time:
                     remaining_entries.append(entry_data)
@@ -424,7 +442,7 @@ class RedisDeadLetterQueue(DeadLetterQueue):
         for entry_data in failed_data:
             try:
                 entry_dict = json.loads(entry_data)
-                entry_timestamp = datetime.fromisoformat(entry_dict["timestamp"])
+                entry_timestamp = datetime.fromisoformat(entry_dict['timestamp'])
 
                 if entry_timestamp > cutoff_time:
                     remaining_failed.append(entry_data)
@@ -443,10 +461,10 @@ class RedisDeadLetterQueue(DeadLetterQueue):
         """Get queue statistics from Redis."""
         if not self.redis:
             return {
-                "total_entries": 0,
-                "pending_retry": 0,
-                "permanently_failed": 0,
-                "error": "Redis client not configured",
+                'total_entries': 0,
+                'pending_retry': 0,
+                'permanently_failed': 0,
+                'error': 'Redis client not configured'
             }
 
         try:
@@ -463,14 +481,14 @@ class RedisDeadLetterQueue(DeadLetterQueue):
             for entry_data in entries_data:
                 try:
                     entry_dict = json.loads(entry_data)
-                    retry_count = entry_dict.get("retry_count", 0)
-                    max_retries = entry_dict.get("max_retries", 3)
+                    retry_count = entry_dict.get('retry_count', 0)
+                    max_retries = entry_dict.get('max_retries', 3)
 
                     if retry_count > 0:
                         retrying_count += 1
 
                     if retry_count < max_retries:
-                        next_retry = entry_dict.get("next_retry_time")
+                        next_retry = entry_dict.get('next_retry_time')
                         if not next_retry or datetime.fromisoformat(next_retry) <= current_time:
                             pending_count += 1
 
@@ -478,16 +496,19 @@ class RedisDeadLetterQueue(DeadLetterQueue):
                     continue
 
             return {
-                "total_entries": queue_length,
-                "pending_retry": min(pending_count, queue_length),  # Estimate based on sample
-                "permanently_failed": failed_length,
-                "currently_retrying": min(retrying_count, queue_length),
-                "max_size": self.max_size,
-                "queue_utilization": (queue_length / self.max_size if self.max_size > 0 else 0),
+                'total_entries': queue_length,
+                'pending_retry': min(pending_count, queue_length),  # Estimate based on sample
+                'permanently_failed': failed_length,
+                'currently_retrying': min(retrying_count, queue_length),
+                'max_size': self.max_size,
+                'queue_utilization': queue_length / self.max_size if self.max_size > 0 else 0
             }
 
         except Exception as e:
-            return {"total_entries": 0, "error": str(e)}
+            return {
+                'total_entries': 0,
+                'error': str(e)
+            }
 
     async def _move_to_failed_queue(self, entry: DeadLetterEntry) -> None:
         """Move entry to failed events queue."""
@@ -509,7 +530,7 @@ class DeadLetterQueueProcessor:
         dead_letter_queue: DeadLetterQueue,
         event_bus=None,
         retry_interval: int = 60,
-        batch_size: int = 10,
+        batch_size: int = 10
     ):
         """Initialize dead letter queue processor."""
         self.dead_letter_queue = dead_letter_queue
@@ -558,7 +579,10 @@ class DeadLetterQueueProcessor:
 
                     except Exception as e:
                         # Mark as failed
-                        await self.dead_letter_queue.mark_retry_failed(entry.event.event_id, str(e))
+                        await self.dead_letter_queue.mark_retry_failed(
+                            entry.event.event_id,
+                            str(e)
+                        )
                         print(f"Retry failed for event {entry.event.event_id}: {e}")
 
                 # Wait before next batch

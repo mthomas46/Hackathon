@@ -5,21 +5,19 @@ roles, and team dynamics in the domain-driven design architecture.
 """
 
 from __future__ import annotations
-
 from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timedelta
+from typing import List, Dict, Optional, Any
 from uuid import UUID, uuid4
+from enum import Enum
 
-from ..events import TeamMemberAdded, TeamMemberRemoved
 from ..value_objects import Money, Percentage
+from ..events import TeamMemberAdded, TeamMemberRemoved
 
 
 @dataclass(frozen=True)
 class TeamId:
     """Value object for Team ID."""
-
     value: UUID = field(default_factory=uuid4)
 
     @classmethod
@@ -33,7 +31,6 @@ class TeamId:
 
 class ExpertiseLevel(Enum):
     """Team member expertise levels."""
-
     JUNIOR = "junior"
     INTERMEDIATE = "intermediate"
     MID_LEVEL = "mid_level"
@@ -45,7 +42,6 @@ class ExpertiseLevel(Enum):
 
 class CommunicationStyle(Enum):
     """Team member communication styles."""
-
     DIRECT = "direct"
     COLLABORATIVE = "collaborative"
     ANALYTICAL = "analytical"
@@ -55,7 +51,6 @@ class CommunicationStyle(Enum):
 
 class WorkStyle(Enum):
     """Team member work styles."""
-
     INDEPENDENT = "independent"
     TEAM_PLAYER = "team_player"
     MENTOR = "mentor"
@@ -65,7 +60,6 @@ class WorkStyle(Enum):
 
 class MoraleLevel(Enum):
     """Team morale levels."""
-
     VERY_LOW = "very_low"
     LOW = "low"
     MEDIUM = "medium"
@@ -75,7 +69,6 @@ class MoraleLevel(Enum):
 
 class BurnoutRisk(Enum):
     """Team burnout risk levels."""
-
     NONE = "none"
     LOW = "low"
     MEDIUM = "medium"
@@ -86,7 +79,6 @@ class BurnoutRisk(Enum):
 @dataclass
 class TeamRole:
     """Entity representing a team role."""
-
     name: str
     description: str
     required_expertise: ExpertiseLevel
@@ -96,10 +88,8 @@ class TeamRole:
 
     def matches_member(self, member: TeamMemberEntity) -> bool:
         """Check if a team member matches this role."""
-        return (
-            member.expertise_level == self.required_expertise
-            or member.expertise_level.value >= self.required_expertise.value
-        )
+        return (member.expertise_level == self.required_expertise or
+                member.expertise_level.value >= self.required_expertise.value)
 
     def get_salary_range_text(self) -> str:
         """Get salary range as formatted text."""
@@ -115,7 +105,6 @@ class TeamRole:
 @dataclass
 class TeamMemberEntity:
     """Entity representing a team member with enhanced attributes."""
-
     id: str
     name: str
     email: str
@@ -143,15 +132,13 @@ class TeamMemberEntity:
             ExpertiseLevel.MID_LEVEL: 2,
             ExpertiseLevel.SENIOR: 3,
             ExpertiseLevel.EXPERT: 4,
-            ExpertiseLevel.LEAD: 5,
+            ExpertiseLevel.LEAD: 5
         }
         has_expertise = expertise_levels[self.expertise_level] >= required_level
 
         return has_skill or has_expertise
 
-    def get_productivity_for_task(
-        self, task_type: str, complexity: str = "medium"
-    ) -> float:
+    def get_productivity_for_task(self, task_type: str, complexity: str = "medium") -> float:
         """Get productivity multiplier for a specific task."""
         base_productivity = self.productivity_multiplier
 
@@ -159,7 +146,7 @@ class TeamMemberEntity:
         if self.can_handle_task(task_type, complexity):
             task_fit_bonus = 1.2
         else:
-            pass
+            task_fit_penalty = 0.8
 
         # Adjust for morale
         morale_multiplier = self.morale_level.to_fraction()
@@ -183,15 +170,14 @@ class TeamMemberEntity:
 
     def is_high_performer(self) -> bool:
         """Check if member is a high performer."""
-        return (
-            self.productivity_multiplier >= 1.2
-            and self.morale_level.value >= 70
-            and self.burnout_risk.value <= 30
-        )
+        return (self.productivity_multiplier >= 1.2 and
+                self.morale_level.value >= 70 and
+                self.burnout_risk.value <= 30)
 
     def needs_attention(self) -> bool:
         """Check if member needs attention (low morale or high burnout risk)."""
-        return self.morale_level.value < 50 or self.burnout_risk.value > 60
+        return (self.morale_level.value < 50 or
+                self.burnout_risk.value > 60)
 
     def get_days_since_active(self) -> int:
         """Get days since last active."""
@@ -205,22 +191,14 @@ class TeamMemberEntity:
 @dataclass
 class TeamDynamics:
     """Entity representing team dynamics and relationships."""
-
     communication_score: Percentage = field(default_factory=lambda: Percentage(75))
     collaboration_score: Percentage = field(default_factory=lambda: Percentage(70))
-    conflict_resolution_score: Percentage = field(
-        default_factory=lambda: Percentage(65)
-    )
+    conflict_resolution_score: Percentage = field(default_factory=lambda: Percentage(65))
     trust_level: Percentage = field(default_factory=lambda: Percentage(80))
     last_assessment: datetime = field(default_factory=datetime.now)
 
-    def update_scores(
-        self,
-        communication: float,
-        collaboration: float,
-        conflict_resolution: float,
-        trust: float,
-    ) -> None:
+    def update_scores(self, communication: float, collaboration: float,
+                     conflict_resolution: float, trust: float) -> None:
         """Update all dynamic scores."""
         self.communication_score = Percentage(communication)
         self.collaboration_score = Percentage(collaboration)
@@ -234,7 +212,7 @@ class TeamDynamics:
             self.communication_score.value,
             self.collaboration_score.value,
             self.conflict_resolution_score.value,
-            self.trust_level.value,
+            self.trust_level.value
         ]
         return Percentage(sum(scores) / len(scores))
 
@@ -250,7 +228,6 @@ class Team:
     This is the root entity for the Team aggregate, managing team members,
     roles, and team dynamics.
     """
-
     id: TeamId
     project_id: str
     name: str
@@ -278,14 +255,12 @@ class Team:
         self.members.append(member)
         self.updated_at = datetime.now()
 
-        self._add_domain_event(
-            TeamMemberAdded(
-                project_id=self.project_id,
-                member_id=member.id,
-                member_name=member.name,
-                role=member.role,
-            )
-        )
+        self._add_domain_event(TeamMemberAdded(
+            project_id=self.project_id,
+            member_id=member.id,
+            member_name=member.name,
+            role=member.role
+        ))
 
     def remove_member(self, member_id: str) -> None:
         """Remove a member from the team."""
@@ -293,11 +268,11 @@ class Team:
         self.members = [m for m in self.members if m.id != member_id]
         self.updated_at = datetime.now()
 
-        self._add_domain_event(
-            TeamMemberRemoved(
-                project_id=self.project_id, member_id=member.id, member_name=member.name
-            )
-        )
+        self._add_domain_event(TeamMemberRemoved(
+            project_id=self.project_id,
+            member_id=member.id,
+            member_name=member.name
+        ))
 
     def add_role(self, role: TeamRole) -> None:
         """Add a role to the team."""
@@ -312,9 +287,7 @@ class Team:
         role = self._get_role(role_name)
 
         if not role.matches_member(member):
-            raise ValueError(
-                f"Member {member.name} does not match requirements for role {role_name}"
-            )
+            raise ValueError(f"Member {member.name} does not match requirements for role {role_name}")
 
         member.role = role_name
         self.updated_at = datetime.now()
@@ -323,13 +296,9 @@ class Team:
         """Get all members with a specific role."""
         return [member for member in self.members if member.role == role_name]
 
-    def get_members_by_expertise(
-        self, expertise: ExpertiseLevel
-    ) -> List[TeamMemberEntity]:
+    def get_members_by_expertise(self, expertise: ExpertiseLevel) -> List[TeamMemberEntity]:
         """Get all members with a specific expertise level."""
-        return [
-            member for member in self.members if member.expertise_level == expertise
-        ]
+        return [member for member in self.members if member.expertise_level == expertise]
 
     def get_high_performers(self) -> List[TeamMemberEntity]:
         """Get all high-performing team members."""
@@ -358,31 +327,19 @@ class Team:
 
         # Simple assessment algorithm
         avg_morale = sum(m.morale_level.value for m in self.members) / len(self.members)
-        avg_burnout = sum(m.burnout_risk.value for m in self.members) / len(
-            self.members
-        )
+        avg_burnout = sum(m.burnout_risk.value for m in self.members) / len(self.members)
 
         # Communication score based on diversity and collaboration styles
         communication_styles = [m.communication_style for m in self.members]
-        communication_diversity = len(set(communication_styles)) / len(
-            communication_styles
-        )
-        communication_score = 100 - (
-            communication_diversity * 20
-        )  # Less diversity = better communication
+        communication_diversity = len(set(communication_styles)) / len(communication_styles)
+        communication_score = 100 - (communication_diversity * 20)  # Less diversity = better communication
 
         # Collaboration score based on work styles
-        team_players = sum(
-            1 for m in self.members if m.work_style == WorkStyle.TEAM_PLAYER
-        )
+        team_players = sum(1 for m in self.members if m.work_style == WorkStyle.TEAM_PLAYER)
         collaboration_score = (team_players / len(self.members)) * 100
 
         # Conflict resolution based on supportive members
-        supportive_members = sum(
-            1
-            for m in self.members
-            if m.communication_style == CommunicationStyle.SUPPORTIVE
-        )
+        supportive_members = sum(1 for m in self.members if m.communication_style == CommunicationStyle.SUPPORTIVE)
         conflict_resolution_score = (supportive_members / len(self.members)) * 100
 
         # Trust level based on overall team health
@@ -392,7 +349,7 @@ class Team:
             communication_score,
             collaboration_score,
             conflict_resolution_score,
-            trust_score,
+            trust_score
         )
         self.updated_at = datetime.now()
 
@@ -401,9 +358,7 @@ class Team:
         if not self.members:
             return 0.0
 
-        total_productivity = sum(
-            member.productivity_multiplier for member in self.members
-        )
+        total_productivity = sum(member.productivity_multiplier for member in self.members)
         return total_productivity / len(self.members)
 
     def get_team_morale(self) -> Percentage:
@@ -419,25 +374,19 @@ class Team:
         if not self.members:
             return Percentage(0)
 
-        avg_burnout = sum(m.burnout_risk.value for m in self.members) / len(
-            self.members
-        )
+        avg_burnout = sum(m.burnout_risk.value for m in self.members) / len(self.members)
         return Percentage(avg_burnout)
 
     def is_team_healthy(self) -> bool:
         """Check if the team is healthy overall."""
-        return (
-            self.get_team_morale().value >= 60
-            and self.get_team_burnout_risk().value <= 40
-            and self.dynamics.get_overall_health().value >= 65
-        )
+        return (self.get_team_morale().value >= 60 and
+                self.get_team_burnout_risk().value <= 40 and
+                self.dynamics.get_overall_health().value >= 65)
 
     def get_optimal_team_size(self) -> int:
         """Get optimal team size based on current dynamics."""
         base_size = 5
-        health_adjustment = (
-            int(self.dynamics.get_overall_health().value / 20) - 2
-        )  # -2 to +3
+        health_adjustment = int(self.dynamics.get_overall_health().value / 20) - 2  # -2 to +3
         return max(3, min(15, base_size + health_adjustment))
 
     def _get_member(self, member_id: str) -> TeamMemberEntity:

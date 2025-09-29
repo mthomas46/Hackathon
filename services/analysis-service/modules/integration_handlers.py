@@ -2,9 +2,8 @@
 
 Handles the complex logic for integration endpoints.
 """
-
 import os
-from typing import Any, Dict
+from typing import Dict, Any
 
 from .shared_utils import _create_analysis_error_response, get_analysis_service_client
 
@@ -29,10 +28,7 @@ class IntegrationHandlers:
                 return _create_analysis_error_response(
                     "Unsupported target type",
                     "UNSUPPORTED_TARGET_TYPE",
-                    {
-                        "target_type": type(target_id).__name__,
-                        "supported_types": ["Document", "str"],
-                    },
+                    {"target_type": type(target_id).__name__, "supported_types": ["Document", "str"]}
                 )
 
             # In a real implementation, this would call an LLM with the prompt
@@ -42,25 +38,18 @@ class IntegrationHandlers:
                 "target_id": target_id,
                 "content_length": len(content),
                 "analysis_type": f"{prompt_category}.{prompt_name}",
-                "status": "analysis_prepared",
+                "status": "analysis_prepared"
             }
 
         except Exception as e:
             return _create_analysis_error_response(
                 "Analysis failed",
                 "ANALYSIS_FAILED",
-                {
-                    "error": str(e),
-                    "target_id": target_id,
-                    "prompt_category": prompt_category,
-                    "prompt_name": prompt_name,
-                },
+                {"error": str(e), "target_id": target_id, "prompt_category": prompt_category, "prompt_name": prompt_name}
             )
 
     @staticmethod
-    async def handle_natural_language_analysis(
-        request_data: dict = None,
-    ) -> Dict[str, Any]:
+    async def handle_natural_language_analysis(request_data: dict = None) -> Dict[str, Any]:
         """Analyze using natural language query through Interpreter."""
         try:
             service_client = get_analysis_service_client()
@@ -77,32 +66,32 @@ class IntegrationHandlers:
                 return {
                     "interpretation": {"intent": "analyze_document", "confidence": 0.9},
                     "execution": {"status": "completed", "findings": []},
-                    "status": "completed",
+                    "status": "completed"
                 }
 
             # Interpret the query
             interpretation = await service_client.interpret_query(query)
 
             # If it's an analysis request, execute it
-            if interpretation.get("intent") in [
-                "analyze_document",
-                "consistency_check",
-            ]:
+            if interpretation.get("intent") in ["analyze_document", "consistency_check"]:
                 if interpretation.get("workflow"):
                     result = await service_client.execute_workflow(query)
                     return {
                         "interpretation": interpretation,
                         "execution": result,
-                        "status": "completed",
+                        "status": "completed"
                     }
 
-            return {"interpretation": interpretation, "status": "interpreted_only"}
+            return {
+                "interpretation": interpretation,
+                "status": "interpreted_only"
+            }
 
         except Exception as e:
             return _create_analysis_error_response(
                 "Natural language analysis failed",
                 "NATURAL_LANGUAGE_ANALYSIS_FAILED",
-                {"error": str(e), "query": query if "query" in locals() else "unknown"},
+                {"error": str(e), "query": query if 'query' in locals() else "unknown"}
             )
 
     @staticmethod
@@ -116,7 +105,7 @@ class IntegrationHandlers:
             return _create_analysis_error_response(
                 "Failed to retrieve prompt categories",
                 "CATEGORY_RETRIEVAL_FAILED",
-                {"error": str(e), "categories": []},
+                {"error": str(e), "categories": []}
             )
 
     @staticmethod
@@ -149,8 +138,8 @@ class IntegrationHandlers:
                         "input_tokens": input_tokens,
                         "output_tokens": output_tokens,
                         "response_time_ms": response_time_ms,
-                        "success": success,
-                    },
+                        "success": success
+                    }
                 }
 
             await service_client.log_prompt_usage(
@@ -159,7 +148,7 @@ class IntegrationHandlers:
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
                 response_time_ms=response_time_ms,
-                success=success,
+                success=success
             )
             return {"status": "logged"}
         except Exception as e:
@@ -179,14 +168,14 @@ class IntegrationHandlers:
                     "source-agent",
                     "prompt-store",
                     "interpreter",
-                    "orchestrator",
-                ],
+                    "orchestrator"
+                ]
             }
         except Exception as e:
             return {
                 "analysis_service": "healthy",
                 "integrations": {"error": str(e)},
-                "available_services": [],
+                "available_services": []
             }
 
     def get_architecture_analyzer(self, analysis_type: str):
@@ -198,7 +187,7 @@ class IntegrationHandlers:
             "consistency": ArchitectureAnalyzer(),
             "completeness": ArchitectureAnalyzer(),
             "best_practices": ArchitectureAnalyzer(),
-            "combined": ArchitectureAnalyzer(),
+            "combined": ArchitectureAnalyzer()
         }
 
         return analyzers.get(analysis_type)

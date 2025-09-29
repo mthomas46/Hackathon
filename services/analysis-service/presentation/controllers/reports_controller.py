@@ -1,10 +1,11 @@
 """Reports Controller - Handles report generation endpoints."""
 
-from fastapi import APIRouter
+from typing import Dict, Any, List
+from fastapi import APIRouter, HTTPException
 
-from ...modules.analysis_handlers import analysis_handlers
-from ...modules.models import NotifyOwnersRequest, ReportRequest
+from ...modules.models import ReportRequest, NotifyOwnersRequest
 from ...modules.report_handlers import report_handlers
+from ...modules.analysis_handlers import analysis_handlers
 
 
 class ReportsController:

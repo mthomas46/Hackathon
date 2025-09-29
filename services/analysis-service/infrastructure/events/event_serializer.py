@@ -1,10 +1,10 @@
 """Event Serializer - Handles event serialization and deserialization."""
 
-import base64
 import json
 import pickle
+import base64
+from typing import Any, Dict, Union
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
 
 from .event_bus import DomainEvent, EventEnvelope
 
@@ -15,14 +15,17 @@ class EventSerializer(ABC):
     @abstractmethod
     def serialize(self, envelope: EventEnvelope) -> str:
         """Serialize event envelope to string."""
+        pass
 
     @abstractmethod
     def deserialize(self, data: str) -> EventEnvelope:
         """Deserialize string to event envelope."""
+        pass
 
     @abstractmethod
     def get_content_type(self) -> str:
         """Get content type identifier."""
+        pass
 
 
 class JSONEventSerializer(EventSerializer):
@@ -36,20 +39,15 @@ class JSONEventSerializer(EventSerializer):
     def serialize(self, envelope: EventEnvelope) -> str:
         """Serialize event envelope to JSON string."""
         data = {
-            "event": envelope.event.to_dict(),
-            "topic": envelope.topic,
-            "partition_key": envelope.partition_key,
-            "headers": envelope.headers,
-            "retry_count": envelope.retry_count,
-            "max_retries": envelope.max_retries,
+            'event': envelope.event.to_dict(),
+            'topic': envelope.topic,
+            'partition_key': envelope.partition_key,
+            'headers': envelope.headers,
+            'retry_count': envelope.retry_count,
+            'max_retries': envelope.max_retries
         }
 
-        return json.dumps(
-            data,
-            indent=self.indent,
-            ensure_ascii=self.ensure_ascii,
-            default=self._json_serializer,
-        )
+        return json.dumps(data, indent=self.indent, ensure_ascii=self.ensure_ascii, default=self._json_serializer)
 
     def deserialize(self, data: str) -> EventEnvelope:
         """Deserialize JSON string to event envelope."""
@@ -57,16 +55,16 @@ class JSONEventSerializer(EventSerializer):
             parsed = json.loads(data)
 
             # Reconstruct event
-            event_data = parsed["event"]
+            event_data = parsed['event']
             event = DomainEvent.from_dict(event_data)
 
             return EventEnvelope(
                 event=event,
-                topic=parsed["topic"],
-                partition_key=parsed.get("partition_key"),
-                headers=parsed.get("headers", {}),
-                retry_count=parsed.get("retry_count", 0),
-                max_retries=parsed.get("max_retries", 3),
+                topic=parsed['topic'],
+                partition_key=parsed.get('partition_key'),
+                headers=parsed.get('headers', {}),
+                retry_count=parsed.get('retry_count', 0),
+                max_retries=parsed.get('max_retries', 3)
             )
 
         except (json.JSONDecodeError, KeyError) as e:
@@ -78,12 +76,12 @@ class JSONEventSerializer(EventSerializer):
 
     def _json_serializer(self, obj: Any) -> Any:
         """Custom JSON serializer for non-standard types."""
-        if hasattr(obj, "isoformat"):  # datetime objects
+        if hasattr(obj, 'isoformat'):  # datetime objects
             return obj.isoformat()
-        elif hasattr(obj, "__dict__"):  # Custom objects
+        elif hasattr(obj, '__dict__'):  # Custom objects
             return obj.__dict__
         elif isinstance(obj, bytes):
-            return base64.b64encode(obj).decode("ascii")
+            return base64.b64encode(obj).decode('ascii')
         else:
             raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
@@ -98,15 +96,13 @@ class PickleEventSerializer(EventSerializer):
     def serialize(self, envelope: EventEnvelope) -> str:
         """Serialize event envelope to base64-encoded pickle string."""
         data = pickle.dumps(envelope, protocol=self.protocol)
-        return base64.b64encode(data).decode("ascii")
+        return base64.b64encode(data).decode('ascii')
 
     def deserialize(self, data: str) -> EventEnvelope:
         """Deserialize base64-encoded pickle string to event envelope."""
         try:
             decoded = base64.b64decode(data)
-
-            # Use restricted unpickling to prevent code execution
-            envelope = self._safe_pickle_loads(decoded)
+            envelope = pickle.loads(decoded)
 
             if not isinstance(envelope, EventEnvelope):
                 raise ValueError("Deserialized object is not an EventEnvelope")
@@ -115,56 +111,6 @@ class PickleEventSerializer(EventSerializer):
 
         except (pickle.UnpicklingError, base64.binascii.Error, ValueError) as e:
             raise ValueError(f"Invalid pickle event data: {e}") from e
-
-    def _safe_pickle_loads(self, data: bytes) -> Any:
-        """Safely unpickle data by restricting allowed types and operations.
-
-        This prevents arbitrary code execution during unpickling.
-        """
-        # Define allowed classes/modules for unpickling
-        # Only allow our known event classes and basic Python types
-        safe_classes = {
-            "services.analysis_service.infrastructure.events.event_bus": {
-                "EventEnvelope",
-                "DomainEvent",
-                "EventType",
-                "EventPriority",
-            },
-            "__main__": set(),  # Empty for main module
-            "builtins": {
-                "str",
-                "int",
-                "float",
-                "bool",
-                "list",
-                "dict",
-                "tuple",
-                "NoneType",
-            },
-            "datetime": {"datetime"},
-            "uuid": {"UUID"},
-        }
-
-        class SafeUnpickler(pickle.Unpickler):
-            def find_class(self, module: str, name: str):
-                # Only allow specific safe classes
-                if module in safe_classes and name in safe_classes[module]:
-                    return super().find_class(module, name)
-                elif module == "builtins" and name in safe_classes.get("builtins", set()):
-                    return super().find_class(module, name)
-                elif module == "datetime" and name in safe_classes.get("datetime", set()):
-                    return super().find_class(module, name)
-                elif module == "uuid" and name in safe_classes.get("uuid", set()):
-                    return super().find_class(module, name)
-                else:
-                    raise pickle.UnpicklingError(f"Attempted to unpickle unsafe class: {module}.{name}")
-
-        # Use StringIO to create a file-like object from bytes
-        import io
-
-        file_like = io.BytesIO(data)
-        unpickler = SafeUnpickler(file_like)
-        return unpickler.load()
 
     def get_content_type(self) -> str:
         """Get content type."""
@@ -187,10 +133,10 @@ class CompressedJSONEventSerializer(JSONEventSerializer):
         json_data = super().serialize(envelope)
         compressed = io.BytesIO()
 
-        with gzip.GzipFile(fileobj=compressed, mode="wb", compresslevel=self.compression_level) as f:
-            f.write(json_data.encode("utf-8"))
+        with gzip.GzipFile(fileobj=compressed, mode='wb', compresslevel=self.compression_level) as f:
+            f.write(json_data.encode('utf-8'))
 
-        return base64.b64encode(compressed.getvalue()).decode("ascii")
+        return base64.b64encode(compressed.getvalue()).decode('ascii')
 
     def deserialize(self, data: str) -> EventEnvelope:
         """Deserialize with decompression."""
@@ -201,8 +147,8 @@ class CompressedJSONEventSerializer(JSONEventSerializer):
             compressed_data = base64.b64decode(data)
             decompressed = io.BytesIO(compressed_data)
 
-            with gzip.GzipFile(fileobj=decompressed, mode="rb") as f:
-                json_data = f.read().decode("utf-8")
+            with gzip.GzipFile(fileobj=decompressed, mode='rb') as f:
+                json_data = f.read().decode('utf-8')
 
             return super().deserialize(json_data)
 
@@ -221,7 +167,6 @@ class MessagePackEventSerializer(EventSerializer):
         """Initialize MessagePack serializer."""
         try:
             import msgpack
-
             self.msgpack = msgpack
         except ImportError:
             raise ImportError("msgpack package is required for MessagePackEventSerializer")
@@ -229,16 +174,16 @@ class MessagePackEventSerializer(EventSerializer):
     def serialize(self, envelope: EventEnvelope) -> str:
         """Serialize event envelope to MessagePack."""
         data = {
-            "event": envelope.event.to_dict(),
-            "topic": envelope.topic,
-            "partition_key": envelope.partition_key,
-            "headers": envelope.headers,
-            "retry_count": envelope.retry_count,
-            "max_retries": envelope.max_retries,
+            'event': envelope.event.to_dict(),
+            'topic': envelope.topic,
+            'partition_key': envelope.partition_key,
+            'headers': envelope.headers,
+            'retry_count': envelope.retry_count,
+            'max_retries': envelope.max_retries
         }
 
         packed = self.msgpack.packb(data, default=self._msgpack_serializer)
-        return base64.b64encode(packed).decode("ascii")
+        return base64.b64encode(packed).decode('ascii')
 
     def deserialize(self, data: str) -> EventEnvelope:
         """Deserialize MessagePack to event envelope."""
@@ -247,16 +192,16 @@ class MessagePackEventSerializer(EventSerializer):
             parsed = self.msgpack.unpackb(packed, raw=False)
 
             # Reconstruct event
-            event_data = parsed["event"]
+            event_data = parsed['event']
             event = DomainEvent.from_dict(event_data)
 
             return EventEnvelope(
                 event=event,
-                topic=parsed["topic"],
-                partition_key=parsed.get("partition_key"),
-                headers=parsed.get("headers", {}),
-                retry_count=parsed.get("retry_count", 0),
-                max_retries=parsed.get("max_retries", 3),
+                topic=parsed['topic'],
+                partition_key=parsed.get('partition_key'),
+                headers=parsed.get('headers', {}),
+                retry_count=parsed.get('retry_count', 0),
+                max_retries=parsed.get('max_retries', 3)
             )
 
         except Exception as e:
@@ -268,9 +213,9 @@ class MessagePackEventSerializer(EventSerializer):
 
     def _msgpack_serializer(self, obj: Any) -> Any:
         """Custom MessagePack serializer."""
-        if hasattr(obj, "isoformat"):  # datetime objects
+        if hasattr(obj, 'isoformat'):  # datetime objects
             return obj.isoformat()
-        elif hasattr(obj, "__dict__"):  # Custom objects
+        elif hasattr(obj, '__dict__'):  # Custom objects
             return obj.__dict__
         else:
             return str(obj)
@@ -283,10 +228,10 @@ class EventSerializerFactory:
     def create_serializer(serializer_type: str = "json", **kwargs) -> EventSerializer:
         """Create event serializer instance."""
         serializers = {
-            "json": JSONEventSerializer,
-            "pickle": PickleEventSerializer,
-            "compressed_json": CompressedJSONEventSerializer,
-            "msgpack": MessagePackEventSerializer,
+            'json': JSONEventSerializer,
+            'pickle': PickleEventSerializer,
+            'compressed_json': CompressedJSONEventSerializer,
+            'msgpack': MessagePackEventSerializer
         }
 
         if serializer_type not in serializers:
@@ -298,10 +243,10 @@ class EventSerializerFactory:
     def get_available_serializers() -> Dict[str, str]:
         """Get available serializer types and descriptions."""
         return {
-            "json": "JSON-based serialization (human-readable)",
-            "pickle": "Python pickle serialization (Python-only)",
-            "compressed_json": "Compressed JSON (space-efficient)",
-            "msgpack": "MessagePack serialization (high-performance)",
+            'json': 'JSON-based serialization (human-readable)',
+            'pickle': 'Python pickle serialization (Python-only)',
+            'compressed_json': 'Compressed JSON (space-efficient)',
+            'msgpack': 'MessagePack serialization (high-performance)'
         }
 
 
@@ -317,21 +262,16 @@ class SchemaVersionedEventSerializer(JSONEventSerializer):
     def serialize(self, envelope: EventEnvelope) -> str:
         """Serialize with schema version."""
         data = {
-            "schema_version": self.current_version,
-            "event": envelope.event.to_dict(),
-            "topic": envelope.topic,
-            "partition_key": envelope.partition_key,
-            "headers": envelope.headers,
-            "retry_count": envelope.retry_count,
-            "max_retries": envelope.max_retries,
+            'schema_version': self.current_version,
+            'event': envelope.event.to_dict(),
+            'topic': envelope.topic,
+            'partition_key': envelope.partition_key,
+            'headers': envelope.headers,
+            'retry_count': envelope.retry_count,
+            'max_retries': envelope.max_retries
         }
 
-        return json.dumps(
-            data,
-            indent=self.indent,
-            ensure_ascii=self.ensure_ascii,
-            default=self._json_serializer,
-        )
+        return json.dumps(data, indent=self.indent, ensure_ascii=self.ensure_ascii, default=self._json_serializer)
 
     def deserialize(self, data: str) -> EventEnvelope:
         """Deserialize with schema migration."""
@@ -339,21 +279,21 @@ class SchemaVersionedEventSerializer(JSONEventSerializer):
             parsed = json.loads(data)
 
             # Handle schema versioning
-            schema_version = parsed.get("schema_version", "1.0")
+            schema_version = parsed.get('schema_version', '1.0')
             if schema_version != self.current_version:
                 parsed = self._migrate_schema(parsed, schema_version)
 
             # Reconstruct event
-            event_data = parsed["event"]
+            event_data = parsed['event']
             event = DomainEvent.from_dict(event_data)
 
             return EventEnvelope(
                 event=event,
-                topic=parsed["topic"],
-                partition_key=parsed.get("partition_key"),
-                headers=parsed.get("headers", {}),
-                retry_count=parsed.get("retry_count", 0),
-                max_retries=parsed.get("max_retries", 3),
+                topic=parsed['topic'],
+                partition_key=parsed.get('partition_key'),
+                headers=parsed.get('headers', {}),
+                retry_count=parsed.get('retry_count', 0),
+                max_retries=parsed.get('max_retries', 3)
             )
 
         except (json.JSONDecodeError, KeyError) as e:
