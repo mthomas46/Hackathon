@@ -38,7 +38,7 @@ def test_service_imports():
         'architecture-digitizer': 'architecture_digitizer.main',
         'summarizer-hub': 'summarizer_hub.main',
         'secure-analyzer': 'secure_analyzer.main',
-        'code-analyzer': 'code_analyzer.main',
+        'code-analyzer': 'code-analyzer.main',
         'log-collector': 'log_collector.main',
     }
 

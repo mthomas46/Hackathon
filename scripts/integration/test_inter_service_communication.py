@@ -24,7 +24,7 @@ class InterServiceCommunicationTester:
 
     def __init__(self):
         self.base_urls = {
-            'code_analyzer': 'http://localhost:5085',
+            'code-analyzer': 'http://localhost:5085',
             'log_collector': 'http://localhost:5080',
             'secure_analyzer': 'http://localhost:5070',
             'summarizer_hub': 'http://localhost:5060',
@@ -48,8 +48,8 @@ class InterServiceCommunicationTester:
 
         test_cases = [
             # Code Analyzer
-            ('code_analyzer', 'GET', '/health', None, "Health check"),
-            ('code_analyzer', 'POST', '/analyze', {
+            ('code-analyzer', 'GET', '/health', None, "Health check"),
+            ('code-analyzer', 'POST', '/analyze', {
                 "code": "def hello():\n    print('Hello World')",
                 "language": "python"
             }, "Code analysis"),
@@ -110,7 +110,7 @@ class InterServiceCommunicationTester:
             {
                 'name': 'Code Analysis -> Secure Analysis',
                 'steps': [
-                    ('code_analyzer', 'POST', '/analyze', {
+                    ('code-analyzer', 'POST', '/analyze', {
                         "code": "import os\npassword = os.getenv('SECRET')",
                         "language": "python"
                     }),
@@ -201,7 +201,7 @@ class InterServiceCommunicationTester:
                 'description': 'Process document through multiple analysis services',
                 'steps': [
                     # 1. Analyze code
-                    ('code_analyzer', 'POST', '/analyze', {
+                    ('code-analyzer', 'POST', '/analyze', {
                         "code": "def authenticate_user(username, password):\n    return username == 'admin' and password == 'secret'",
                         "language": "python"
                     }),
@@ -268,7 +268,7 @@ class InterServiceCommunicationTester:
 
         # Test concurrent requests to different services
         concurrent_tests = [
-            ('code_analyzer', 'GET', '/health'),
+            ('code-analyzer', 'GET', '/health'),
             ('secure_analyzer', 'GET', '/health'),
             ('log_collector', 'GET', '/health'),
             ('summarizer_hub', 'GET', '/health')

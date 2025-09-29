@@ -63,7 +63,7 @@ class ExampleService:
         await self.mesh.initialize()
 
         # 5. Sync mesh with discovery agent
-        await self.mesh.sync_with_discovery_agent()
+        await self.mesh.sync_with_discovery-agent()
 
         self.logger.info(f"{self.service_name} initialized with discovery and mesh integration")
 

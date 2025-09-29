@@ -28,7 +28,7 @@ def main():
     try:
         cmd = [
             sys.executable,
-            "-m", "services.code_analyzer.main"
+            "-m", "services.code-analyzer.main"
         ]
 
         print(f"🔄 Command: {' '.join(cmd)}")

@@ -115,9 +115,9 @@ class DockerServiceTester:
                 "depends_on": ["redis"],
                 "health_url": "http://localhost:5120/health"
             },
-            "code_analyzer": {
+            "code-analyzer": {
                 "name": "Code Analyzer",
-                "build": {"context": ".", "dockerfile": "services/code_analyzer/Dockerfile"},
+                "build": {"context": ".", "dockerfile": "services/code-analyzer/Dockerfile"},
                 "ports": {"5085/tcp": 5085},
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],

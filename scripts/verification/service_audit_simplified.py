@@ -182,7 +182,7 @@ SERVICES = {
         ]
     },
 
-    "code_analyzer": {
+    "code-analyzer": {
         "name": "Code Analyzer",
         "maturity": ServiceMaturity.DEVELOPMENT,
         "current_depth": IntegrationDepth.INTERMEDIATE,
