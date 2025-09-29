@@ -285,22 +285,22 @@ except ImportError:
         return create_success_response(data)
 
     def get_consistency_engine_url():
-        return "http://localhost:5001"
+        return os.getenv("CONSISTENCY_ENGINE_URL", "http://localhost:5001")
 
     def get_doc_store_url():
-        return "http://localhost:5005"
+        return os.getenv("DOC_STORE_URL", "http://localhost:5005")
 
     def get_frontend_clients():
         return {}
 
     def get_orchestrator_url():
-        return "http://localhost:5007"
+        return os.getenv("ORCHESTRATOR_URL", "http://localhost:5007")
 
     def get_reporting_url():
-        return "http://localhost:5008"
+        return os.getenv("REPORTING_URL", "http://localhost:5008")
 
     def get_summarizer-hub_url():
-        return "http://localhost:5009"
+        return os.getenv("SUMMARIZER_HUB_URL", "http://localhost:5009")
 
     def handle_frontend_error(error):
         """Handle errors using shared utilities.
@@ -334,6 +334,43 @@ except ImportError:
             'server': type('Server', (), {'host': '0.0.0.0', 'port': 8080})(),
             'port': 8080,
         })()
+
+# ============================================================================
+# ENVIRONMENT VARIABLE CONFIGURATION
+# ============================================================================
+def configure_service_urls():
+    """Configure default service URLs as environment variables if not set."""
+    defaults = {
+        # Core Services
+        "CONSISTENCY_ENGINE_URL": "http://localhost:5001",
+        "DOC_STORE_URL": "http://localhost:5005",
+        "ORCHESTRATOR_URL": "http://localhost:5007",
+        "REPORTING_URL": "http://localhost:5008",
+        "SUMMARIZER_HUB_URL": "http://localhost:5009",
+        "ANALYSIS_SERVICE_URL": "http://localhost:5020",
+        "PROMPT_STORE_URL": "http://localhost:5110",
+        "MEMORY_AGENT_URL": "http://localhost:5040",
+        "SOURCE_AGENT_URL": "http://localhost:5000",
+        "CODE_ANALYZER_URL": "http://localhost:5090",
+        "BEDROCK_PROXY_URL": "http://localhost:5055",
+        "DISCOVERY_AGENT_URL": "http://localhost:5045",
+        "GITHUB_MCP_URL": "http://localhost:5072",
+        "INTERPRETER_URL": "http://localhost:5120",
+        "NOTIFICATION_SERVICE_URL": "http://localhost:5060",
+        "SECURE_ANALYZER_URL": "http://localhost:5070",
+
+        # Frontend Service Configuration
+        "FRONTEND_SERVICE_HOST": "127.0.0.1",
+        "FRONTEND_SERVICE_PORT": "8080",
+    }
+
+    # Set defaults only if not already set
+    for key, default_value in defaults.items():
+        if key not in os.environ:
+            os.environ[key] = default_value
+
+# Configure service URLs before application startup
+configure_service_urls()
 
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
@@ -3425,10 +3462,12 @@ if __name__ == "__main__":
     # Enable auto-reload in development
     is_dev = os.getenv("ENVIRONMENT", "production") == "development"
 
+    host = os.getenv("FRONTEND_SERVICE_HOST", "127.0.0.1")
+    port = int(os.getenv("FRONTEND_SERVICE_PORT", str(DEFAULT_PORT)))
     uvicorn.run(
         "main:app" if is_dev else app,
-        host="127.0.0.1",
-        port=DEFAULT_PORT,
+        host=host,
+        port=port,
         log_level="info",
         reload=is_dev,
         reload_dirs=["services/frontend"] if is_dev else None,
