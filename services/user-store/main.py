@@ -22,12 +22,12 @@ Dependencies:
 
 import time
 from contextlib import asynccontextmanager
-from typing import List, Optional
+from typing import List, Optional, Dict
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Form
 from fastapi.middleware.cors import CORSMiddleware
 
-from services.shared.utilities import attach_self_register, setup_common_middleware
+from services.shared.infrastructure.utilities import attach_self_register, setup_common_middleware
 
 # Import domain and application layers
 from .infrastructure.repositories.sqlite_user_repository import (
@@ -1007,4 +1007,7 @@ attach_self_register(app, SERVICE_NAME)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+    port = int(os.getenv("SERVICE_PORT", "5150"))
+    host = os.getenv("SERVICE_HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=port)

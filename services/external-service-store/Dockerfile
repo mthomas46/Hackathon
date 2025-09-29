@@ -1,16 +1,18 @@
 # =============================================================================
-# External Service Store Dockerfile
+# Standard Service Dockerfile Template
 # =============================================================================
-# Lightweight service for storing and managing external service configurations
+# Template for standard services with simple main.py structure
 
-FROM python:3.11-slim
+FROM python:3.12-slim
 
-# Metadata
+# Metadata - To be customized per service
 LABEL maintainer="LLM Documentation Ecosystem Team"
 LABEL service="external-service-store"
 LABEL version="1.0.0"
-LABEL description="External service configuration store"
-LABEL port="8010"
+LABEL description="External service store service"
+LABEL port="5140"
+LABEL dependencies="redis"
+LABEL profile="core"
 
 # Set working directory
 WORKDIR /app
@@ -19,32 +21,43 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Copy requirements files
+COPY services/requirements.base.txt ./
+COPY services/shared/requirements.txt ./shared_requirements.txt
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
+# Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.base.txt && \
+    pip install --no-cache-dir -r shared_requirements.txt
 
-# Copy application code
-COPY --chown=appuser:appuser . .
+# Copy service code maintaining directory structure
+COPY services/external-service-store/ ./services/external_service_store/
+COPY services/shared/ ./services/shared/
+COPY config.yml ./
+COPY config/ ./config/
 
-# Create data directory with proper permissions
-RUN mkdir -p data && chown -R appuser:appuser data
+# Set Python path and environment
+ENV PYTHONPATH=/app
+ENV SERVICE_NAME=external-service-store
+ENV SERVICE_PORT=5140
+ENV REDIS_HOST=redis
+ENV ENVIRONMENT=development
 
-# Switch to non-root user
-USER appuser
-
-# Expose port
-EXPOSE 8010
+# Create data directory and non-root user
+RUN mkdir -p /app/data && \
+    useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8010/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5140/health || exit 1
 
-# Run the application
-CMD ["python", "main.py"]
+# Expose port
+EXPOSE 5140
+
+USER appuser
+
+# Start command - using module path for proper imports
+CMD ["python", "-m", "services.external_service_store.main"]

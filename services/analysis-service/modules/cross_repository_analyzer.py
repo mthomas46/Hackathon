@@ -12,7 +12,7 @@ from collections import Counter, defaultdict
 from typing import Any, Dict, List, Optional, Set
 
 try:
-    from services.shared.presentation.responses import (
+    from services.shared.presentation.api.responses import (
         create_error_response,
         create_success_response,
     )

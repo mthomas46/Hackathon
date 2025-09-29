@@ -23,8 +23,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
 
 from services.shared.infrastructure.config import load_service_config
-from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities import attach_self_register
+from services.shared.infrastructure.monitoring.logging import fire_and_forget
+from services.shared.infrastructure.utilities import attach_self_register
 
 try:
     from .modules.circuit_breaker import circuit_breaker, operation_timeout_context
@@ -70,7 +70,7 @@ app = FastAPI(
 )
 
 # Setup standardized middleware and utilities
-from services.shared.utilities import setup_common_middleware
+from services.shared.infrastructure.utilities.middleware import setup_common_middleware
 
 setup_common_middleware(app, service_name=config.service_name)
 attach_self_register(app, config.service_name)
@@ -367,7 +367,7 @@ async def summarize(req: SummarizeRequest):
     # Set default prompt if none provided
     if not req.prompt:
         try:
-            from services.shared.prompt_manager import get_prompt
+            from services.shared.infrastructure.prompts.prompt_manager import get_prompt
 
             req.prompt = get_prompt("summarization.security_focused")
         except Exception:
@@ -402,7 +402,7 @@ async def summarize(req: SummarizeRequest):
         "providers": providers,
         "use_hub_config": True,
     }
-    from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+    from services.shared.infrastructure.external.clients.clients import ServiceClients  # type: ignore
 
     svc = ServiceClients(timeout=60)
     try:
@@ -422,4 +422,5 @@ if __name__ == "__main__":
     """Run the Secure Analyzer service directly."""
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")
+    host = os.getenv("SECURE_ANALYZER_HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=DEFAULT_PORT, log_level="info")

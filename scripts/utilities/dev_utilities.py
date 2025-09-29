@@ -88,13 +88,142 @@ class DevelopmentUtilities:
 
         console.print("✅ Data browsing complete")
 
+    def audit_services(self):
+        """Comprehensive service audit and standardization."""
+        console.print("🔍 Auditing all services...")
+
+        # Check port conflicts
+        self.check_port_conflicts()
+
+        # Standardize Dockerfiles
+        self.standardize_dockerfiles()
+
+        # Update docker-compose
+        self.update_docker_compose()
+
+        # Update Makefile
+        self.update_makefile()
+
+        console.print("✅ Service audit complete")
+
+    def check_port_conflicts(self):
+        """Check for port conflicts across all services."""
+        console.print("🔍 Checking port conflicts...")
+
+        # Read service-ports.yaml
+        try:
+            import yaml
+            with open('config/service-ports.yaml', 'r') as f:
+                ports_config = yaml.safe_load(f)
+        except Exception as e:
+            console.print(f"❌ Could not read service-ports.yaml: {e}")
+            return
+
+        # Extract all ports
+        used_ports = set()
+        conflicts = []
+
+        for category, services in ports_config.items():
+            if not isinstance(services, dict):
+                continue
+
+            for service_name, config in services.items():
+                if isinstance(config, dict) and 'external_port' in config:
+                    port = config['external_port']
+                    if port in used_ports:
+                        conflicts.append(f"{service_name}: port {port} already used")
+                    else:
+                        used_ports.add(port)
+
+        if conflicts:
+            console.print("❌ Port conflicts found:")
+            for conflict in conflicts:
+                console.print(f"   - {conflict}")
+        else:
+            console.print("✅ No port conflicts detected")
+
+    def standardize_dockerfiles(self):
+        """Standardize all service Dockerfiles according to audit framework."""
+        console.print("🏗️  Standardizing Dockerfiles...")
+
+        import os
+        import shutil
+
+        # Read the standard template
+        template_path = 'services/_template/Dockerfile.standard'
+        if not os.path.exists(template_path):
+            console.print(f"❌ Standard template not found: {template_path}")
+            return
+
+        with open(template_path, 'r') as f:
+            template = f.read()
+
+        # Get all service directories
+        services_dir = 'services'
+        if not os.path.exists(services_dir):
+            console.print(f"❌ Services directory not found: {services_dir}")
+            return
+
+        standardized = 0
+        for item in os.listdir(services_dir):
+            service_path = os.path.join(services_dir, item)
+            if os.path.isdir(service_path) and not item.startswith('_'):
+                dockerfile_path = os.path.join(service_path, 'Dockerfile')
+                if os.path.exists(dockerfile_path):
+                    # Read current Dockerfile
+                    with open(dockerfile_path, 'r') as f:
+                        current_content = f.read()
+
+                    # Check if it needs standardization
+                    if 'LABEL maintainer="LLM Documentation Ecosystem Team"' not in current_content:
+                        console.print(f"📝 Standardizing {item}/Dockerfile...")
+                        # Create standardized version
+                        standardized_content = template.replace('SERVICE_NAME', item)
+                        standardized_content = standardized_content.replace('SERVICE_DESCRIPTION', f"{item.replace('-', ' ').title()} service")
+                        standardized_content = standardized_content.replace('SERVICE_PORT', '5000')  # Default, will be updated
+                        standardized_content = standardized_content.replace('SERVICE_PROFILE', 'core')
+
+                        with open(dockerfile_path, 'w') as f:
+                            f.write(standardized_content)
+                        standardized += 1
+
+        console.print(f"✅ Standardized {standardized} Dockerfiles")
+
+    def update_docker_compose(self):
+        """Update docker-compose.dev.yml with all services and correct ports."""
+        console.print("📝 Updating docker-compose.dev.yml...")
+
+        # Read service-ports.yaml
+        try:
+            import yaml
+            with open('config/service-ports.yaml', 'r') as f:
+                ports_config = yaml.safe_load(f)
+        except Exception as e:
+            console.print(f"❌ Could not read service-ports.yaml: {e}")
+            return
+
+        # This would be a complex update - for now just log what needs to be done
+        console.print("ℹ️  Docker Compose update requires manual review")
+        console.print("   - Ensure all services from service-ports.yaml are included")
+        console.print("   - Verify port mappings match external_port values")
+        console.print("   - Check dependency chains are correct")
+
+    def update_makefile(self):
+        """Update Makefile with all services."""
+        console.print("📝 Updating Makefile...")
+
+        # This would require reading and updating the Makefile
+        console.print("ℹ️  Makefile update requires manual review")
+        console.print("   - Add targets for all services")
+        console.print("   - Update service management commands")
+
     def fix_environment(self, conflicts: bool = False, variables: bool = False):
         """Fix environment configuration."""
         console.print("🌍 Fixing environment configuration...")
 
         if conflicts:
             console.print("⚡ Resolving conflicts...")
-            # Implementation for conflict resolution
+            self.audit_services()
             pass
 
         if variables:
@@ -141,6 +270,9 @@ Examples:
     browse_parser.add_argument('--store', required=True, choices=['prompt-store', 'doc-store'], help='Data store to browse')
     browse_parser.add_argument('--limit', type=int, default=50, help='Maximum items to display')
 
+    # Audit services
+    audit_parser = subparsers.add_parser('audit-services', help='Comprehensive service audit and standardization')
+
     # Fix environment
     env_parser = subparsers.add_parser('fix-environment', help='Fix environment configuration')
     env_parser.add_argument('--conflicts', action='store_true', help='Resolve conflicts')
@@ -165,6 +297,8 @@ Examples:
             utils.optimize_infrastructure(dockerfiles=args.dockerfiles, ports=args.ports)
         elif args.command == 'browse-data':
             utils.browse_data(store=args.store, limit=args.limit)
+        elif args.command == 'audit-services':
+            utils.audit_services()
         elif args.command == 'fix-environment':
             utils.fix_environment(conflicts=args.conflicts, variables=args.variables)
     except Exception as e:

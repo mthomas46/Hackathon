@@ -21,7 +21,7 @@ sys.path.insert(0, str(shared_path))
 # STANDARDIZED SHARED INFRASTRUCTURE - Using consolidated utilities
 # ============================================================================
 try:
-    from services.shared.infrastructure.config.service_config import DocStoreConfig, load_service_config
+    from services.shared.infrastructure.config import load_service_config
     from services.shared.infrastructure.utilities.error_handling import ServiceException, ValidationException
     from services.shared.infrastructure.utilities.middleware import setup_common_middleware
     from services.shared.infrastructure.utilities.error_handling import create_standard_success_response as create_success_response, create_standard_error_response as create_error_response
@@ -76,13 +76,13 @@ except ImportError:
         """
         pass
 
-    def create_success_response(data):
+    def create_success_response(data=None, message="", **kwargs):
         """Create standardized success response.
 
         Fallback implementation when shared response utilities are unavailable.
         Returns a consistent success response format.
         """
-        return {"success": True, "data": data}
+        return {"success": True, "data": data, "message": message}
 
     def create_error_response(message, **kwargs):
         """Create standardized error response.
@@ -120,7 +120,11 @@ except ImportError:
         api_router = APIRouter()
 
         class DocStoreResourceMonitor:
-            pass
+            async def start_monitoring(self):
+                """Start resource monitoring for Doc Store."""
+                # Simple implementation - could be enhanced with actual monitoring
+                logger.info("Doc Store resource monitoring initialized")
+                pass
 
 # ============================================================================
 # DOMAIN EXCEPTIONS - Doc Store specific exceptions
@@ -788,7 +792,13 @@ if __name__ == "__main__":
     """Run the Doc Store service directly."""
     import uvicorn
 
-    # Load port from configuration
-    port = get_config_value("port", 5000, section="server", env_key="DOCSTORE_PORT")
+    # Load service configuration
+    config = load_service_config(
+        service_type="doc_store",
+        config_file="./config.yaml",  # Optional config file override
+    )
 
-    uvicorn.run(app, host="127.0.0.1", port=int(port), log_level="info")
+    # Get port from configuration
+    port = config.port
+
+    uvicorn.run(app, host="0.0.0.0", port=int(port), log_level="info")

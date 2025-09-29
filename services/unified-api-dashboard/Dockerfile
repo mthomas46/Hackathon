@@ -1,46 +1,61 @@
-# Development Dockerfile for Unified API Dashboard
-FROM python:3.11-slim
+# =============================================================================
+# Standard Service Dockerfile Template
+# =============================================================================
+# Template for standard services with simple main.py structure
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    SERVICE_NAME=unified-api-dashboard \
-    SERVICE_PORT=8000 \
-    ENVIRONMENT=development
+FROM python:3.12-slim
+
+# Metadata - To be customized per service
+LABEL maintainer="LLM Documentation Ecosystem Team"
+LABEL service="unified-api-dashboard"
+LABEL version="1.0.0"
+LABEL description="Unified Api Dashboard service"
+LABEL port="5000"
+LABEL dependencies="redis"
+LABEL profile="core"
+
+# Set working directory
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
-    build-essential \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Create app user
-RUN useradd --create-home --shell /bin/bash app
+# Copy requirements files
+COPY services/requirements.base.txt ./
+COPY services/shared/requirements.txt ./shared_requirements.txt
 
-# Set work directory
-WORKDIR /app
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.base.txt && \
+    pip install --no-cache-dir -r shared_requirements.txt
 
-# Copy requirements first for better caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy service code maintaining directory structure
+COPY services/unified-api-dashboard/ ./services/unified-api-dashboard/
+COPY services/shared/ ./services/shared/
+COPY config.yml ./
+COPY config/ ./config/
 
-# Copy application code (only the dashboard service files)
-COPY . .
+# Set Python path and environment
+ENV PYTHONPATH=/app
+ENV unified-api-dashboard=unified-api-dashboard
+ENV 5000=5000
+ENV REDIS_HOST=redis
+ENV ENVIRONMENT=development
 
-# Create necessary directories
-RUN mkdir -p /app/logs /app/cache && \
-    chown -R app:app /app
-
-# Switch to app user
-USER app
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
 
 # Expose port
-EXPOSE 8000
+EXPOSE 5000
 
-# Run application
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+USER appuser
+
+# Start command - using module path for proper imports
+CMD ["python", "-m", "services.unified-api-dashboard.main"]

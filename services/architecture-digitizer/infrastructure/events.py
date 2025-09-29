@@ -7,8 +7,8 @@ and shutdown procedures, service initialization, and cleanup operations.
 import time
 from typing import Any, Dict, Optional
 
-from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities.constants import ServiceNames
+from services.shared.infrastructure.monitoring.logging import fire_and_forget
+from services.shared.core.constants_new import ServiceNames
 
 
 async def startup_event(app) -> None:

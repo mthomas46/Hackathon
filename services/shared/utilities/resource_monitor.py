@@ -35,7 +35,7 @@ class ResourceMonitor:
     def get_current_metrics(self) -> ResourceMetrics:
         """Get current resource metrics."""
         memory = psutil.virtual_memory()
-        disk = psutil.disk_usage(/)
+        disk = psutil.disk_usage('/')
         
         # Get process-specific metrics if available
         process_metrics = self._get_process_metrics()
@@ -87,7 +87,7 @@ class ResourceMonitor:
                 cpu_count: psutil.cpu_count(),
                 cpu_count_logical: psutil.cpu_count(logical=True),
                 total_memory_mb: psutil.virtual_memory().total / 1024 / 1024,
-                total_disk_mb: psutil.disk_usage(/).total / 1024 / 1024
+                total_disk_mb: psutil.disk_usage('/').total / 1024 / 1024
             },
             health_status: self._assess_health_status(current),
             timestamp: current.timestamp.isoformat()

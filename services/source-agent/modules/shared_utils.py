@@ -121,7 +121,7 @@ def handle_fetch_error(error_msg: str, source_type: str, doc_id: str) -> None:
     Raises:
         ServiceException: With proper error details
     """
-    from services.shared.error_handling import ServiceException
+    from services.shared.infrastructure.utilities.error_handling import ServiceException
     raise ServiceException(
         message=error_msg,
         error_code="FETCH_ERROR",

@@ -4,7 +4,7 @@ This module provides business logic for user management, including
 user creation, updates, relationship management, and query operations.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 
 from ..entities.user import User, UserPreferences, UserRole, UserStatus
@@ -215,7 +215,7 @@ class UserService:
         self,
         document_id: str,
         document_content: str,
-        document_metadata: Dict[str, any],
+        document_metadata: Dict[str, Any],
         source_type: str,
         document_tags: Optional[List[str]] = None
     ) -> List[DocumentRelationship]:
@@ -396,7 +396,7 @@ class UserService:
 
         return result
 
-    def _extract_tags_from_metadata(self, metadata: Dict[str, any]) -> List[str]:
+    def _extract_tags_from_metadata(self, metadata: Dict[str, Any]) -> List[str]:
         """Extract tags from document metadata."""
         tags = []
 
@@ -476,7 +476,7 @@ class UserService:
 
         return users
 
-    async def get_user_expertise_profile(self, user_id: str) -> Dict[str, any]:
+    async def get_user_expertise_profile(self, user_id: str) -> Dict[str, Any]:
         """Get a comprehensive expertise profile for a user.
 
         Args:

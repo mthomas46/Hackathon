@@ -25,16 +25,16 @@ from services.shared.infrastructure.config import load_service_config
 # ============================================================================
 # SHARED MODULES - Following ecosystem patterns
 # ============================================================================
-from services.shared.monitoring.health import register_health_endpoints
-from services.shared.monitoring.logging import fire_and_forget
-from services.shared.monitoring.metrics import (
+from services.shared.infrastructure.monitoring.health import register_health_endpoints
+from services.shared.infrastructure.monitoring.logging import fire_and_forget
+from services.shared.infrastructure.monitoring.metrics import (
     get_service_metrics,
     metrics_endpoint,
     record_architecture_digitizer_api_failure,
     record_architecture_digitizer_file_upload,
     record_architecture_digitizer_request,
 )
-from services.shared.utilities import (
+from services.shared.infrastructure.utilities import (
     attach_self_register,
     get_service_client,
     setup_common_middleware,
@@ -360,9 +360,6 @@ app = FastAPI(
             "description": "Supported systems listing, capabilities discovery, and integration details",
         },
     ],
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json",
 )
 
 

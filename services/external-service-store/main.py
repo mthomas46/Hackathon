@@ -6,7 +6,7 @@ and technical specifications in the LLM Documentation Ecosystem.
 
 import time
 from typing import List, Optional, Dict, Any
-from fastapi import FastAPI, HTTPException, Query, Depends
+from fastapi import FastAPI, HTTPException, Query, Depends, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -776,7 +776,7 @@ async def get_service_users(service_id: str, relationship_type: Optional[str] = 
 async def get_user_services(user_id: str):
     """Get all services related to a user."""
     relationships = await user_repo.find_by_user(user_id)
-        return {"user_id": user_id, "services": [rel.__dict__ for rel in relationships]}
+    return {"user_id": user_id, "services": [rel.__dict__ for rel in relationships]}
 
 
 # ============================================================================
@@ -1266,4 +1266,7 @@ async def get_recent_service_activity(service_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8010)
+    import os
+    port = int(os.getenv("SERVICE_PORT", "5140"))
+    host = os.getenv("SERVICE_HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=port)

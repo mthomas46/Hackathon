@@ -47,7 +47,7 @@ except ImportError:
         pass
 
 # Import service modules
-from presentation.routes import document_router, summarization_router
+from .presentation.routes import document_router, summarization_router
 
 # Configure logging
 logging.basicConfig(

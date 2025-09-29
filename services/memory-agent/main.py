@@ -186,7 +186,14 @@ try:
 except ImportError:
     # Fallback for event processor
     class MockEventProcessor:
-        pass
+        async def initialize_redis(self):
+            return True
+
+        async def subscribe_to_channels(self):
+            pass
+
+        async def process_events(self):
+            pass
     event_processor = MockEventProcessor()
 
 # Import global memory state from dedicated module to avoid circular dependencies
@@ -249,7 +256,7 @@ attach_self_register(app, config.service_name)
 
 
 # Custom memory-specific health endpoint
-@app.get("/health", summary="Memory Agent Health Check", description="Returns service health status including memory statistics and operational metrics.", response_model=APIResponse, tags=["health"], responses={200: {"description": "Service is healthy with memory statistics"}, 500: {"description": "Service health check failed"}})
+@app.get("/health", summary="Memory Agent Health Check", description="Returns service health status including memory statistics and operational metrics.", tags=["health"], responses={200: {"description": "Service is healthy with memory statistics"}, 500: {"description": "Service health check failed"}})
 async def memory_health():
     """Memory agent health check with comprehensive memory statistics."""
     try:
@@ -257,24 +264,30 @@ async def memory_health():
         from datetime import datetime
 
         return {
-            "status": "healthy",
-            "service": SERVICE_NAME,
-            "version": SERVICE_VERSION,
-            "timestamp": datetime.utcnow().isoformat(),
-            "environment": os.environ.get("ENVIRONMENT", "development"),
-            "memory_count": stats.get("total_items", 0),
-            "memory_capacity": stats.get("max_items", 0),
-            "memory_usage_percent": stats.get("usage_percent", 0),
-            "ttl_seconds": stats.get("ttl_seconds", 0),
-            "description": "Memory agent operational with active memory management",
+            "success": True,
+            "message": "Memory agent operational with active memory management",
+            "data": {
+                "status": "healthy",
+                "service": SERVICE_NAME,
+                "version": SERVICE_VERSION,
+                "timestamp": datetime.utcnow().isoformat(),
+                "environment": os.environ.get("ENVIRONMENT", "development"),
+                "memory_count": stats.get("total_items", 0),
+                "memory_capacity": stats.get("max_items", 0),
+                "memory_usage_percent": stats.get("usage_percent", 0),
+                "ttl_seconds": stats.get("ttl_seconds", 0),
+            }
         }
     except Exception as e:
         return {
-            "status": "unhealthy",
-            "service": SERVICE_NAME,
-            "version": SERVICE_VERSION,
-            "error": str(e),
-            "description": "Memory agent experiencing issues",
+            "success": False,
+            "message": f"Memory agent experiencing issues: {str(e)}",
+            "data": {
+                "status": "unhealthy",
+                "service": SERVICE_NAME,
+                "version": SERVICE_VERSION,
+                "error": str(e),
+            }
         }
 
 
@@ -334,4 +347,5 @@ if __name__ == "__main__":
     """Run the Memory Agent service directly."""
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")
+    host = os.getenv("MEMORY_AGENT_HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=DEFAULT_PORT, log_level="info")

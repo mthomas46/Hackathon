@@ -64,5 +64,5 @@ EXPOSE 5020
 
 USER appuser
 
-# Start command using the wrapper script
-CMD ["python", "-m", "services.analysis_service.main_simple"]
+# Start command using the main service file
+CMD ["python", "-m", "services.analysis_service.main"]
