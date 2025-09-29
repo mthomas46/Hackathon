@@ -28,6 +28,7 @@ try:
 except ImportError:
     # Fallback definitions
     def create_success_response(data):
+        """Create standardized success response."""
         return {"success": True, "data": data}
 
     def load_service_config(**kwargs):
