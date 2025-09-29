@@ -4,6 +4,7 @@ A FastAPI-based CLI service that provides command execution and session manageme
 using Domain-Driven Design principles.
 """
 
+import os
 import uvicorn
 import logging
 from contextlib import asynccontextmanager
@@ -25,6 +26,53 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+# Configure default environment variables for service URLs
+def configure_service_urls():
+    """Configure default service URLs as environment variables if not set."""
+    defaults = {
+        # Core Services
+        "ANALYSIS_SERVICE_URL": "http://localhost:5020",
+        "PROMPT_STORE_URL": "http://localhost:5110",
+        "MEMORY_AGENT_URL": "http://localhost:5040",
+        "SOURCE_AGENT_URL": "http://localhost:5000",
+        "DOC_STORE_URL": "http://localhost:5010",
+        "GITHUB_AGENT_URL": "http://localhost:5072",
+        "INTERPRETER_URL": "http://localhost:5120",
+        "SECURE_ANALYZER_URL": "http://localhost:5070",
+
+        # Supporting Services
+        "LOG_COLLECTOR_URL": "http://localhost:5050",
+        "NOTIFICATION_SERVICE_URL": "http://localhost:5060",
+        "ORCHESTRATOR_URL": "http://localhost:5000",
+        "SUMMARIZER_HUB_URL": "http://localhost:5030",
+        "CODE_ANALYZER_URL": "http://localhost:5090",
+        "BEDROCK_PROXY_URL": "http://localhost:5055",
+        "ARCHITECTURE_DIGITIZER_URL": "http://localhost:5100",
+        "LLM_GATEWAY_URL": "http://localhost:5055",
+
+        # External Services
+        "OLLAMA_ENDPOINT": "http://localhost:11434",
+        "REDIS_URL": "redis://localhost:6379",
+        "DATABASE_URL": "sqlite:///./cli.db",
+
+        # CLI Service Configuration
+        "CLI_SERVICE_HOST": "127.0.0.1",
+        "CLI_SERVICE_PORT": "8000",
+        "CLI_DEBUG_MODE": "false",
+        "CLI_LOG_LEVEL": "INFO",
+    }
+
+    # Set defaults only if not already set
+    for key, default_value in defaults.items():
+        if key not in os.environ:
+            os.environ[key] = default_value
+            logger.debug(f"Set default {key}={default_value}")
+
+
+# Configure service URLs before application startup
+configure_service_urls()
 
 
 @asynccontextmanager
