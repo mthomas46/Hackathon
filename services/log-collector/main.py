@@ -30,7 +30,6 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from services.shared.utilities import attach_self_register  # type: ignore
 from services.shared.utilities.middleware import setup_common_middleware  # type: ignore
@@ -74,16 +73,7 @@ app = FastAPI(
 # MIDDLEWARE & CONFIGURATION
 # ============================================================================
 
-# Setup CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Setup shared middleware
+# Setup shared middleware (includes CORS)
 setup_common_middleware(app, service_name=SERVICE_NAME)
 
 # ============================================================================

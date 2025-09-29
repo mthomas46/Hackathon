@@ -159,7 +159,16 @@ class MiddlewareManager:
 
     def get_middlewares(self):
         """Get list of middleware factories for this service."""
+        from fastapi.middleware.cors import CORSMiddleware
+
         return [
+            lambda app: CORSMiddleware(
+                app,
+                allow_origins=["*"],  # Configure appropriately for production
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            ),
             lambda app: RequestIdMiddleware(app),
             lambda app: RequestMetricsMiddleware(app, self.service_name),
             lambda app: RateLimitMiddleware(app),
