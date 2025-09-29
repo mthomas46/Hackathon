@@ -60,6 +60,11 @@ except ImportError:
         data: Optional[Any] = None
 
     def load_service_config(**kwargs):
+        """Load fallback service configuration for memory-agent.
+
+        Returns a mock configuration object when the shared config module is unavailable.
+        Used for local development and testing scenarios.
+        """
         return type('Config', (), {
             'service_name': 'memory-agent',
             'service_description': 'Memory Agent Service',
@@ -76,9 +81,19 @@ try:
 except ImportError:
     # Fallback implementations
     def attach_self_register(app, service_name=None, **kwargs):
+        """Attach service self-registration functionality to FastAPI app.
+
+        This is a fallback implementation when the shared utilities are unavailable.
+        In a real implementation, this would register the service with an orchestrator.
+        """
         pass
 
     def setup_common_middleware(app, **kwargs):
+        """Setup common middleware for the FastAPI application.
+
+        This is a fallback implementation when shared utilities are unavailable.
+        In a real implementation, this would add logging, CORS, and other middleware.
+        """
         pass
 
 try:
@@ -118,24 +133,52 @@ except ImportError:
     except ImportError:
         # Mock implementations for local testing
         def get_memory_stats():
+            """Get mock memory statistics for testing.
+
+            Returns basic mock statistics when memory operations are unavailable.
+            """
             return {"total_items": 0, "total_sessions": 0}
 
         def list_memory_items(**kwargs):
+            """List mock memory items for testing.
+
+            Returns empty list when memory operations are unavailable.
+            """
             return []
 
         def put_memory_item(**kwargs):
+            """Store mock memory item for testing.
+
+            Returns mock success response when memory operations are unavailable.
+            """
             return {"id": "mock_id", "status": "stored"}
 
         def build_memory_agent_context(**kwargs):
+            """Build mock memory agent context for testing.
+
+            Returns empty context when shared utilities are unavailable.
+            """
             return {}
 
         def create_memory_agent_success_response(data):
+            """Create mock success response for testing.
+
+            Returns standardized success response when shared utilities are unavailable.
+            """
             return {"success": True, "data": data}
 
         def handle_memory_agent_error(error):
+            """Handle mock memory agent error for testing.
+
+            Returns standardized error response when shared utilities are unavailable.
+            """
             return {"success": False, "error": str(error)}
 
         def validate_memory_item(**kwargs):
+            """Validate mock memory item for testing.
+
+            Always returns True when validation utilities are unavailable.
+            """
             return True
 
 try:
