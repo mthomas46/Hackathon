@@ -1,5 +1,7 @@
 import logging
+import os
 from ....infrastructure.utilities.error_handling import CacheException
+from ....core.constants_new import EnvVars
 
 
 class RedisCache(CacheBackend):
@@ -7,8 +9,8 @@ class RedisCache(CacheBackend):
 
     def __init__(
         self,
-        host: str = "localhost",
-        port: int = 6379,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
         db: int = 0,
         password: Optional[str] = None,
         default_ttl: Optional[int] = None,
@@ -24,8 +26,8 @@ class RedisCache(CacheBackend):
             default_ttl: Default TTL in seconds
             key_prefix: Key prefix for namespacing
         """
-        self._host = host
-        self._port = port
+        self._host = host or os.getenv(EnvVars.REDIS_HOST, "localhost")
+        self._port = port or int(os.getenv(EnvVars.REDIS_PORT, "6379"))
         self._db = db
         self._password = password
         self._default_ttl = default_ttl

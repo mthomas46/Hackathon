@@ -52,6 +52,8 @@ class EnvVars:
     DEBUG = "DEBUG"
     DATABASE_URL = "DATABASE_URL"
     REDIS_URL = "REDIS_URL"
+    REDIS_HOST = "REDIS_HOST"
+    REDIS_PORT = "REDIS_PORT"
     SECRET_KEY = "SECRET_KEY"
 
     # HTTP Headers
@@ -84,6 +86,15 @@ class EnvVars:
     # Configuration
     HTTP_TIMEOUT = "HTTP_CLIENT_TIMEOUT"
     LOG_LEVEL = "LOG_LEVEL"
+
+    # Shared Service Configuration
+    SHARED_CONTACT_NAME = "SHARED_CONTACT_NAME"
+    SHARED_CONTACT_EMAIL = "SHARED_CONTACT_EMAIL"
+    SHARED_CONTACT_URL = "SHARED_CONTACT_URL"
+    SHARED_LICENSE_NAME = "SHARED_LICENSE_NAME"
+    SHARED_LICENSE_URL = "SHARED_LICENSE_URL"
+    SHARED_DOCS_HOST = "SHARED_DOCS_HOST"
+    SHARED_DOCS_PORT = "SHARED_DOCS_PORT"
 
 
 # ============================================================================
