@@ -38,7 +38,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy service code
 COPY services/orchestrator/ ./services/orchestrator/
 COPY services/shared/ ./services/shared/
-COPY config.yml ./
+COPY config/config.yml ./config.yml/
 COPY config/ ./config/
 
 # Set Python path

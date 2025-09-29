@@ -1,1 +1,2 @@
-# GitHub MCP service package
+# GitHub MCP Service
+# GitHub Model Context Protocol integration
