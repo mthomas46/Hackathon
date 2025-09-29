@@ -147,9 +147,18 @@ async def fetch_document(req: DocumentRequest) -> DocumentResponse:
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported source: {req.source}")
 
+    except ConnectionError as e:
+        logger.error(f"Connection error fetching document: {e}")
+        raise HTTPException(status_code=502, detail=f"External service unavailable: {str(e)}")
+    except TimeoutError as e:
+        logger.error(f"Timeout error fetching document: {e}")
+        raise HTTPException(status_code=504, detail=f"Request timeout: {str(e)}")
+    except ValueError as e:
+        logger.error(f"Validation error fetching document: {e}")
+        raise HTTPException(status_code=400, detail=f"Invalid request data: {str(e)}")
     except Exception as e:
-        logger.error(f"Error fetching document: {e}")
-        raise HTTPException(status_code=500, detail=f"Document fetch failed: {str(e)}")
+        logger.error(f"Unexpected error fetching document: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.post(
@@ -176,9 +185,15 @@ async def normalize_data(req: NormalizationRequest) -> NormalizationResponse:
             normalized_data=result,
             source=req.source
         )
+    except ValueError as e:
+        logger.error(f"Validation error during normalization: {e}")
+        raise HTTPException(status_code=400, detail=f"Invalid normalization data: {str(e)}")
+    except KeyError as e:
+        logger.error(f"Missing required field during normalization: {e}")
+        raise HTTPException(status_code=400, detail=f"Missing required field: {str(e)}")
     except Exception as e:
-        logger.error(f"Error normalizing data: {e}")
-        raise HTTPException(status_code=500, detail=f"Normalization failed: {str(e)}")
+        logger.error(f"Unexpected error during normalization: {e}")
+        raise HTTPException(status_code=500, detail=f"Normalization processing failed: {str(e)}")
 
 
 @app.post(
@@ -245,9 +260,18 @@ async def analyze_code(req: CodeAnalysisRequest) -> CodeAnalysisResponse:
             endpoints=result.get("endpoints", []),
             patterns=result.get("patterns", [])
         )
+    except ValueError as e:
+        logger.error(f"Validation error during code analysis: {e}")
+        raise HTTPException(status_code=400, detail=f"Invalid code analysis request: {str(e)}")
+    except FileNotFoundError as e:
+        logger.error(f"File not found during code analysis: {e}")
+        raise HTTPException(status_code=404, detail=f"Source file not found: {str(e)}")
+    except PermissionError as e:
+        logger.error(f"Permission error during code analysis: {e}")
+        raise HTTPException(status_code=403, detail=f"Access denied to source file: {str(e)}")
     except Exception as e:
-        logger.error(f"Error analyzing code: {e}")
-        raise HTTPException(status_code=500, detail=f"Code analysis failed: {str(e)}")
+        logger.error(f"Unexpected error during code analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Code analysis processing failed: {str(e)}")
 
 
 # ============================================================================
