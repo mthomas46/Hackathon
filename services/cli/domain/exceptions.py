@@ -17,7 +17,7 @@ class CliError(DomainError):
     pass
 
 
-class CliValidationError(ValidationError):
+class CliValidationError(CliError):
     """CLI validation error."""
     pass
 
@@ -37,7 +37,7 @@ class CliConfigurationError(CliError):
     pass
 
 
-class CliNetworkError(ExternalServiceError):
+class CliNetworkError(CliError):
     """Network communication error in CLI."""
     pass
 
