@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Import shared infrastructure
 from .infrastructure.config import load_service_config
+from .core.constants_new import EnvVars
 from .infrastructure.utilities.middleware import setup_common_middleware, get_request_id
 from .infrastructure.utilities.error_handling import (
     register_exception_handlers,
@@ -66,13 +67,13 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
     contact={
-        "name": "Shared Infrastructure Team",
-        "email": "shared@company.com",
-        "url": "https://shared.company.com/support"
+        "name": os.getenv(EnvVars.SHARED_CONTACT_NAME, "Shared Infrastructure Team"),
+        "email": os.getenv(EnvVars.SHARED_CONTACT_EMAIL, "shared@company.com"),
+        "url": os.getenv(EnvVars.SHARED_CONTACT_URL, "https://shared.company.com/support")
     },
     license_info={
-        "name": "Proprietary",
-        "url": "https://shared.company.com/license"
+        "name": os.getenv(EnvVars.SHARED_LICENSE_NAME, "Proprietary"),
+        "url": os.getenv(EnvVars.SHARED_LICENSE_URL, "https://shared.company.com/license")
     },
     tags_metadata=[
         {
@@ -363,7 +364,9 @@ async def lifespan(app: FastAPI):
     logger.info(f"📊 Service: {config.service_name}")
     logger.info(f"🏷️  Version: {config.service_version}")
     logger.info(f"🌐 Port: {config.port}")
-    logger.info("📚 Documentation: http://localhost:8000/docs")
+    docs_host = os.getenv(EnvVars.SHARED_DOCS_HOST, "localhost")
+    docs_port = os.getenv(EnvVars.SHARED_DOCS_PORT, "8000")
+    logger.info(f"📚 Documentation: http://{docs_host}:{docs_port}/docs")
     yield
 
     # Shutdown
@@ -382,7 +385,9 @@ if __name__ == "__main__":
 
     logger.info("🏗️  Starting Shared Infrastructure Service...")
     logger.info("This service demonstrates proper usage of shared ecosystem utilities.")
-    logger.info("Visit http://localhost:8000/docs for interactive API documentation.")
+    docs_host = os.getenv(EnvVars.SHARED_DOCS_HOST, "localhost")
+    docs_port = os.getenv(EnvVars.SHARED_DOCS_PORT, "8000")
+    logger.info(f"Visit http://{docs_host}:{docs_port}/docs for interactive API documentation.")
 
     uvicorn.run(
         "services.shared.main:app",
