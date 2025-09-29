@@ -74,7 +74,25 @@ class LogAnalyticsRouter:
     def _register_routes(self):
         """Register all analytics routes."""
 
-        @self.router.get("/stats", response_model=LogStatisticsModel)
+        @self.router.get(
+            "/stats",
+            response_model=LogStatisticsModel,
+            summary="Get Log Statistics",
+            description="Retrieve comprehensive log statistics and analytics for a specific service within a given time window.",
+            tags=["Analytics", "Statistics"],
+            responses={
+                200: {
+                    "description": "Successfully retrieved log statistics",
+                    "model": LogStatisticsModel
+                },
+                400: {
+                    "description": "Invalid parameters provided"
+                },
+                500: {
+                    "description": "Internal server error during statistics calculation"
+                }
+            }
+        )
         async def get_log_statistics(
             service_name: str = Query(..., description="Service name to analyze"),
             hours: int = Query(24, description="Hours of logs to analyze")
@@ -210,7 +228,23 @@ class LogAnalyticsRouter:
                     detail=f"Log query failed: {str(e)}"
                 )
 
-        @self.router.get("/errors", response_model=List[Dict[str, Any]])
+        @self.router.get(
+            "/errors",
+            summary="Get Error Logs",
+            description="Retrieve error logs and exceptions from specified services within a given time window.",
+            tags=["Analytics", "Errors"],
+            responses={
+                200: {
+                    "description": "Successfully retrieved error logs"
+                },
+                400: {
+                    "description": "Invalid query parameters"
+                },
+                500: {
+                    "description": "Internal server error during error log retrieval"
+                }
+            }
+        )
         async def get_error_logs(
             service_name: str = Query(..., description="Service name"),
             hours: int = Query(24, description="Hours to look back"),
@@ -290,7 +324,20 @@ class LogAnalyticsRouter:
                     detail=f"Pattern analysis failed: {str(e)}"
                 )
 
-        @self.router.get("/health", response_model=Dict[str, Any])
+        @self.router.get(
+            "/health",
+            summary="Get Log Health Status",
+            description="Retrieve health status and diagnostic information for log collection and analysis services.",
+            tags=["Health", "Monitoring"],
+            responses={
+                200: {
+                    "description": "Successfully retrieved health status information"
+                },
+                500: {
+                    "description": "Internal server error during health check"
+                }
+            }
+        )
         async def get_log_health_status(
             service_name: str = Query(..., description="Service name to check")
         ) -> Dict[str, Any]:
