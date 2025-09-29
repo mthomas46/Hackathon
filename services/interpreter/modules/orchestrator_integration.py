@@ -55,9 +55,9 @@ class OrchestratorIntegration:
             "security_audit": {
                 "name": "Security Audit Workflow",
                 "description": "Comprehensive security analysis and reporting",
-                "services": ["secure_analyzer", "analysis_service"],
+                "services": ["secure-analyzer", "analysis_service"],
                 "steps": [
-                    {"service": "secure_analyzer", "action": "scan_vulnerabilities"},
+                    {"service": "secure-analyzer", "action": "scan_vulnerabilities"},
                     {"service": "analysis_service", "action": "assess_risk"},
                     {
                         "service": "analysis_service",
@@ -69,9 +69,9 @@ class OrchestratorIntegration:
             "data_ingestion": {
                 "name": "Data Ingestion Pipeline",
                 "description": "Ingest and process data from various sources",
-                "services": ["source_agent", "doc_store", "analysis_service"],
+                "services": ["source-agent", "doc_store", "analysis_service"],
                 "steps": [
-                    {"service": "source_agent", "action": "fetch_data"},
+                    {"service": "source-agent", "action": "fetch_data"},
                     {"service": "analysis_service", "action": "process_data"},
                     {"service": "doc_store", "action": "store_results"},
                 ],
@@ -367,8 +367,8 @@ class OrchestratorIntegration:
             "doc_store": "http://doc-store:5020",
             "analysis_service": "http://analysis-service:5010",
             "github_mcp": "http://github-mcp:5050",
-            "secure_analyzer": "http://secure-analyzer:5055",
-            "source_agent": "http://source-agent:5025",
+            "secure-analyzer": "http://secure-analyzer:5055",
+            "source-agent": "http://source-agent:5025",
             "prompt_store": "http://prompt-store:5015",
         }
 
@@ -457,7 +457,7 @@ class OrchestratorIntegration:
                 },
             }
 
-        elif service_name == "secure_analyzer":
+        elif service_name == "secure-analyzer":
             return {
                 "success": True,
                 "data": {

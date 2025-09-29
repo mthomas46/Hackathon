@@ -218,7 +218,7 @@ class ConfigValidator:
             "interpreter": ecosystem_config.interpreter_url,
             "doc_store": ecosystem_config.doc_store_url,
             "llm_gateway": ecosystem_config.llm_gateway_url,
-            "notification_service": ecosystem_config.notification_service_url,
+            "notification-service": ecosystem_config.notification-service_url,
             "log_collector": ecosystem_config.log_collector_url,
             "discovery_agent": ecosystem_config.discovery_agent_url,
             "orchestrator": ecosystem_config.orchestrator_url,

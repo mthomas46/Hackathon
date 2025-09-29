@@ -164,9 +164,9 @@ class TestToolRegistry:
         # Register multiple tools
         tools = [
             {
-                'name': 'code_analyzer',
+                'name': 'code-analyzer',
                 'capabilities': ['analyze_code', 'read_files'],
-                'endpoint': '/api/tools/code_analyzer'
+                'endpoint': '/api/tools/code-analyzer'
             },
             {
                 'name': 'pr_manager',
@@ -186,7 +186,7 @@ class TestToolRegistry:
         # Search by capability
         code_tools = registry.find_tools_by_capability('analyze_code')
         assert len(code_tools) == 1
-        assert code_tools[0]['name'] == 'code_analyzer'
+        assert code_tools[0]['name'] == 'code-analyzer'
 
         # Search by multiple capabilities
         multi_cap_tools = registry.find_tools_by_capability(['read_files', 'review_code'])

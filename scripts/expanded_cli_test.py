@@ -150,7 +150,7 @@ class ExpandedCLITester:
         await self.test_frontend()
         await self.test_interpreter()
         await self.test_github_mcp()
-        await self.test_source_agent()
+        await self.test_source-agent()
         
         # Advanced integration tests
         await self.test_cross_service_integration()
@@ -296,9 +296,9 @@ class ExpandedCLITester:
             ["status", "repositories", "health", "stats"]
         )
     
-    async def test_source_agent(self) -> None:
+    async def test_source-agent(self) -> None:
         """Test Source Agent adapter"""
-        from services.cli.modules.adapters.source_agent_adapter import SourceAgentAdapter
+        from services.cli.modules.adapters.source-agent_adapter import SourceAgentAdapter
         await self.test_service_adapter(
             "source-agent",
             "http://hackathon-source-agent-1:5000",

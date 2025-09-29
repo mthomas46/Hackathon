@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from services.shared.infrastructure.utilities import utc_now
 
-from .shared_utils import get_frontend_clients, get_source_agent_url
+from .shared_utils import get_frontend_clients, get_source-agent_url
 
 
 class SourceAgentMonitor:
@@ -34,7 +34,7 @@ class SourceAgentMonitor:
 
         try:
             clients = get_frontend_clients()
-            source_url = get_source_agent_url()
+            source_url = get_source-agent_url()
 
             # Get health and sources info
             health_response = await clients.get_json(f"{source_url}/health")
@@ -79,7 +79,7 @@ class SourceAgentMonitor:
         """Fetch document from specified source."""
         try:
             clients = get_frontend_clients()
-            source_url = get_source_agent_url()
+            source_url = get_source-agent_url()
 
             payload = {"source": source, "identifier": identifier, "scope": scope or {}}
 
@@ -124,7 +124,7 @@ class SourceAgentMonitor:
         """Normalize data from specified source."""
         try:
             clients = get_frontend_clients()
-            source_url = get_source_agent_url()
+            source_url = get_source-agent_url()
 
             payload = {"source": source, "data": data, "correlation_id": correlation_id}
 
@@ -171,7 +171,7 @@ class SourceAgentMonitor:
         """Analyze code for API endpoints and patterns."""
         try:
             clients = get_frontend_clients()
-            source_url = get_source_agent_url()
+            source_url = get_source-agent_url()
 
             payload = {"text": text}
 
@@ -290,4 +290,4 @@ class SourceAgentMonitor:
 
 
 # Global instance
-source_agent_monitor = SourceAgentMonitor()
+source-agent_monitor = SourceAgentMonitor()

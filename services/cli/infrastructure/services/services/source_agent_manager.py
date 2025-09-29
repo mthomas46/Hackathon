@@ -27,7 +27,7 @@ class SourceAgentManager(BaseManager):
         """Return list of services required by this manager."""
         return ["source-agent"]
 
-    async def source_agent_menu(self):
+    async def source-agent_menu(self):
         """Main source agent management menu with enhanced interactive experience."""
         await self.run_menu_loop("Source Agent Management", use_interactive=True)
 
@@ -975,7 +975,7 @@ Details:
             choice = Prompt.ask("[bold green]Select option[/bold green]")
 
             if choice == "1":
-                await self.source_agent_health()
+                await self.source-agent_health()
                 Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
             elif choice == "2":
                 await self.integration_metrics()
@@ -991,7 +991,7 @@ Details:
             else:
                 self.console.print("[red]Invalid option. Please try again.[/red]")
 
-    async def source_agent_health(self):
+    async def source-agent_health(self):
         """Source agent health."""
         try:
             with self.console.status(

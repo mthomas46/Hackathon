@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def test_categorizer_import():
     """Test that the categorizer module can be imported."""
     try:
-        from services.summarizer_hub.modules.categorizer import DocumentCategorizer, categorize_document
+        from services.summarizer-hub.modules.categorizer import DocumentCategorizer, categorize_document
         print("✅ Categorizer module imported successfully")
         return True
     except ImportError as e:
@@ -23,7 +23,7 @@ def test_categorizer_import():
 def test_categorizer_initialization():
     """Test that the categorizer can be initialized."""
     try:
-        from services.summarizer_hub.modules.categorizer import DocumentCategorizer
+        from services.summarizer-hub.modules.categorizer import DocumentCategorizer
 
         categorizer = DocumentCategorizer()
         print("✅ DocumentCategorizer initialized successfully")
@@ -37,7 +37,7 @@ def test_categorizer_initialization():
 def test_rule_based_categorization():
     """Test rule-based categorization functionality."""
     try:
-        from services.summarizer_hub.modules.categorizer import DocumentCategorizer
+        from services.summarizer-hub.modules.categorizer import DocumentCategorizer
 
         categorizer = DocumentCategorizer()
 
@@ -62,7 +62,7 @@ def test_rule_based_categorization():
 def test_keyword_extraction():
     """Test keyword extraction functionality."""
     try:
-        from services.summarizer_hub.modules.categorizer import DocumentCategorizer
+        from services.summarizer-hub.modules.categorizer import DocumentCategorizer
 
         categorizer = DocumentCategorizer()
 
@@ -80,7 +80,7 @@ def test_keyword_extraction():
 def test_main_app_import():
     """Test that the main app can be imported."""
     try:
-        from services.summarizer_hub.main import app
+        from services.summarizer-hub.main import app
         print("✅ Main app imported successfully")
 
         # Check that categorization endpoints exist

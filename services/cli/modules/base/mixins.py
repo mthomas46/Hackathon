@@ -435,17 +435,17 @@ class HealthCheckMixin(ABC):
             "orchestrator": f"{self.clients.orchestrator_url()}/health",
             "analysis-service": f"{self.clients.analysis_service_url()}/health",
             "doc-store": f"{self.clients.doc_store_url()}/health",
-            "source-agent": f"{self.clients.source_agent_url()}/health",
+            "source-agent": f"{self.clients.source-agent_url()}/health",
             "prompt-store": f"{self.clients.prompt_store_url()}/health",
             "discovery-agent": f"{self.clients.discovery_agent_url()}/health",
             "interpreter": f"{self.clients.interpreter_url()}/health",
             "frontend": f"{self.clients.frontend_url()}/health",
-            "summarizer-hub": f"{self.clients.summarizer_hub_url()}/health",
-            "secure-analyzer": f"{self.clients.secure_analyzer_url()}/health",
+            "summarizer-hub": f"{self.clients.summarizer-hub_url()}/health",
+            "secure-analyzer": f"{self.clients.secure-analyzer_url()}/health",
             "memory-agent": f"{self.clients.memory_agent_url()}/health",
-            "code-analyzer": f"{self.clients.code_analyzer_url()}/health",
+            "code-analyzer": f"{self.clients.code-analyzer_url()}/health",
             "log-collector": f"{self.clients.log_collector_url()}/health",
-            "notification-service": f"{self.clients.notification_service_url()}/health",
+            "notification-service": f"{self.clients.notification-service_url()}/health",
         }
 
         return url_map.get(service_name, f"http://localhost:5000/health")

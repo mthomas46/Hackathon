@@ -321,9 +321,9 @@ def run_functional_tests():
 
 ### **Services Discoverable**: 17+ Docker Services
 - orchestrator, doc_store, prompt_store, analysis_service
-- source_agent, github_mcp, bedrock_proxy, interpreter
-- cli, memory_agent, notification_service, code_analyzer
-- secure_analyzer, log_collector, frontend, summarizer_hub
+- source-agent, github_mcp, bedrock_proxy, interpreter
+- cli, memory_agent, notification-service, code-analyzer
+- secure-analyzer, log_collector, frontend, summarizer-hub
 - architecture_digitizer
 
 ### **API Endpoints**: 500+ Total Endpoints

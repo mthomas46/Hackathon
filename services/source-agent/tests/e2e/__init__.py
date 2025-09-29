@@ -1,1 +1,1 @@
-"""Tests for source_agent e2e layer."""
+"""Tests for source-agent e2e layer."""

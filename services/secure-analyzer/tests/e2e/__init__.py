@@ -1,1 +1,1 @@
-"""Tests for secure_analyzer e2e layer."""
+"""Tests for secure-analyzer e2e layer."""

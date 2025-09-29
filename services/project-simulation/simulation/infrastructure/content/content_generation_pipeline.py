@@ -23,7 +23,7 @@ from simulation.infrastructure.clients.ecosystem_clients import (
     get_doc_store_client,
     get_llm_gateway_client,
     get_mock_data_generator_client,
-    get_summarizer_hub_client,
+    get_summarizer-hub_client,
 )
 from simulation.infrastructure.logging import get_simulation_logger
 from simulation.infrastructure.resilience.circuit_breaker import execute_with_resilience
@@ -39,7 +39,7 @@ class ContentGenerationPipeline:
         self.doc_store_client = get_doc_store_client()
         self.analysis_client = get_analysis_service_client()
         self.llm_client = get_llm_gateway_client()
-        self.summarizer_client = get_summarizer_hub_client()
+        self.summarizer_client = get_summarizer-hub_client()
 
     async def execute_document_generation(
         self, phase_config: Dict[str, Any]
@@ -720,7 +720,7 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
             # Generate summary using summarizer
             if len(insights) > 500:
                 summary_response = await execute_with_resilience(
-                    "summarizer_hub", "summarize_text", text=insights, max_length=200
+                    "summarizer-hub", "summarize_text", text=insights, max_length=200
                 )
                 summary = summary_response.get("summary", insights[:200])
             else:

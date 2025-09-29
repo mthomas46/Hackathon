@@ -45,7 +45,7 @@ from ...application.services.monitoring_service import (
     MetricType,
     MonitoringService,
 )
-from ...application.services.notification_service import (
+from ...application.services.notification-service import (
     EmailChannel,
     NotificationChannel,
     NotificationService,
@@ -488,7 +488,7 @@ class TestHealthService:
 class TestNotificationService:
     """Test cases for NotificationService."""
 
-    def test_notification_service_with_valid_data_succeeds(self):
+    def test_notification-service_with_valid_data_succeeds(self):
         """Test creating notification service."""
         service = NotificationService()
         assert service is not None

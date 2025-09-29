@@ -39,7 +39,7 @@ ai_services:
     external_port: 5065
     description: "AI-powered mock data generation"
     
-  summarizer_hub:
+  summarizer-hub:
     internal_port: 5160
     external_port: 5160
     description: "Content summarization service"
@@ -66,7 +66,7 @@ agent_services:
     external_port: 5050
     description: "Service discovery and registry"
     
-  source_agent:
+  source-agent:
     internal_port: 5085
     external_port: 5085
     description: "Source code analysis agent"
@@ -78,12 +78,12 @@ analysis_services:
     external_port: 5080
     description: "Document analysis and consistency"
     
-  code_analyzer:
+  code-analyzer:
     internal_port: 5025
     external_port: 5025
     description: "Code analysis and metrics"
     
-  secure_analyzer:
+  secure-analyzer:
     internal_port: 5070
     external_port: 5100
     description: "Security analysis and scanning"
@@ -110,7 +110,7 @@ utility_services:
     external_port: 5105
     description: "Architecture diagram processing"
     
-  notification_service:
+  notification-service:
     internal_port: 5130
     external_port: 5130
     description: "Event notification system"

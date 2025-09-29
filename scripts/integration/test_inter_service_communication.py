@@ -26,8 +26,8 @@ class InterServiceCommunicationTester:
         self.base_urls = {
             'code-analyzer': 'http://localhost:5085',
             'log_collector': 'http://localhost:5080',
-            'secure_analyzer': 'http://localhost:5070',
-            'summarizer_hub': 'http://localhost:5060',
+            'secure-analyzer': 'http://localhost:5070',
+            'summarizer-hub': 'http://localhost:5060',
             'doc_store': 'http://localhost:5087',
             'analysis_service': 'http://localhost:5020',
             'orchestrator': 'http://localhost:5099'
@@ -55,8 +55,8 @@ class InterServiceCommunicationTester:
             }, "Code analysis"),
 
             # Secure Analyzer
-            ('secure_analyzer', 'GET', '/health', None, "Health check"),
-            ('secure_analyzer', 'POST', '/detect', {
+            ('secure-analyzer', 'GET', '/health', None, "Health check"),
+            ('secure-analyzer', 'POST', '/detect', {
                 "content": "password = 'admin123'",
                 "language": "python"
             }, "Security detection"),
@@ -71,8 +71,8 @@ class InterServiceCommunicationTester:
             ('log_collector', 'GET', '/logs', None, "Log retrieval"),
 
             # Summarizer Hub
-            ('summarizer_hub', 'GET', '/health', None, "Health check"),
-            ('summarizer_hub', 'POST', '/summarize', {
+            ('summarizer-hub', 'GET', '/health', None, "Health check"),
+            ('summarizer-hub', 'POST', '/summarize', {
                 "content": "This is a test document for summarization.",
                 "format": "text"
             }, "Document summarization"),
@@ -114,7 +114,7 @@ class InterServiceCommunicationTester:
                         "code": "import os\npassword = os.getenv('SECRET')",
                         "language": "python"
                     }),
-                    ('secure_analyzer', 'POST', '/detect', {
+                    ('secure-analyzer', 'POST', '/detect', {
                         "content": "import os\npassword = os.getenv('SECRET')",
                         "language": "python"
                     })
@@ -135,13 +135,13 @@ class InterServiceCommunicationTester:
             {
                 'name': 'Summarization Pipeline',
                 'steps': [
-                    ('summarizer_hub', 'POST', '/categorize', {
+                    ('summarizer-hub', 'POST', '/categorize', {
                         "document": {
                             "id": "test_doc_001",
                             "content": "This document contains information about machine learning algorithms and their applications in natural language processing."
                         }
                     }),
-                    ('summarizer_hub', 'POST', '/summarize', {
+                    ('summarizer-hub', 'POST', '/summarize', {
                         "content": "Machine learning algorithms are powerful tools for processing natural language data.",
                         "format": "markdown"
                     })
@@ -206,7 +206,7 @@ class InterServiceCommunicationTester:
                         "language": "python"
                     }),
                     # 2. Check for security issues
-                    ('secure_analyzer', 'POST', '/detect', {
+                    ('secure-analyzer', 'POST', '/detect', {
                         "content": "def authenticate_user(username, password):\n    return username == 'admin' and password == 'secret'",
                         "language": "python"
                     }),
@@ -217,7 +217,7 @@ class InterServiceCommunicationTester:
                         "service": "analysis_pipeline"
                     }),
                     # 4. Generate summary
-                    ('summarizer_hub', 'POST', '/summarize', {
+                    ('summarizer-hub', 'POST', '/summarize', {
                         "content": "Security analysis completed for authentication function. Found hardcoded credentials.",
                         "format": "text"
                     })
@@ -269,9 +269,9 @@ class InterServiceCommunicationTester:
         # Test concurrent requests to different services
         concurrent_tests = [
             ('code-analyzer', 'GET', '/health'),
-            ('secure_analyzer', 'GET', '/health'),
+            ('secure-analyzer', 'GET', '/health'),
             ('log_collector', 'GET', '/health'),
-            ('summarizer_hub', 'GET', '/health')
+            ('summarizer-hub', 'GET', '/health')
         ]
 
         console.print("Testing concurrent requests...")

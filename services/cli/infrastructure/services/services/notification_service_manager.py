@@ -36,7 +36,7 @@ class NotificationServiceManager(BaseManager):
         self.display.show_error("Feature not yet implemented")
         return True
 
-    async def notification_service_menu(self):
+    async def notification-service_menu(self):
         """Main notification service menu."""
         while True:
             menu = create_menu_table(
@@ -75,7 +75,7 @@ class NotificationServiceManager(BaseManager):
             elif choice == "5":
                 await self.channel_configuration_menu()
             elif choice == "6":
-                await self.notification_service_health_menu()
+                await self.notification-service_health_menu()
             elif choice.lower() in ["b", "back"]:
                 break
             else:
@@ -918,7 +918,7 @@ class NotificationServiceManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error tuning performance: {e}[/red]")
 
-    async def notification_service_health_menu(self):
+    async def notification-service_health_menu(self):
         """Notification service health and configuration submenu."""
         while True:
             menu = create_menu_table(

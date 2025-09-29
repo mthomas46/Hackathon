@@ -9,17 +9,17 @@ _service_mappings = {
     "analysis_service": "analysis-service",
     "architecture_digitizer": "architecture-digitizer",
     "bedrock_proxy": "bedrock-proxy",
-    "code_analyzer": "code-analyzer",
+    "code-analyzer": "code-analyzer",
     "discovery_agent": "discovery-agent",
     "github_mcp": "github-mcp",
     "log_collector": "log-collector",
     "memory_agent": "memory-agent",
-    "notification_service": "notification-service",
+    "notification-service": "notification-service",
     "prompt_store": "prompt-store",
     "project_simulation": "project-simulation",
-    "secure_analyzer": "secure-analyzer",
-    "source_agent": "source-agent",
-    "summarizer_hub": "summarizer-hub",
+    "secure-analyzer": "secure-analyzer",
+    "source-agent": "source-agent",
+    "summarizer-hub": "summarizer-hub",
 }
 
 

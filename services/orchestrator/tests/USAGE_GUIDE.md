@@ -502,7 +502,7 @@ def complex_workflow_data() -> Dict[str, Any]:
                 "action_type": "service_call",
                 "name": "Fetch Document",
                 "config": {
-                    "service": "source_agent",
+                    "service": "source-agent",
                     "endpoint": "/fetch",
                     "method": "POST",
                     "parameters": {"url": "{{document_url}}"}
@@ -528,7 +528,7 @@ def complex_workflow_data() -> Dict[str, Any]:
                 "action_type": "service_call",
                 "name": "Generate Summary",
                 "config": {
-                    "service": "summarizer_hub",
+                    "service": "summarizer-hub",
                     "endpoint": "/summarize",
                     "method": "POST",
                     "parameters": {

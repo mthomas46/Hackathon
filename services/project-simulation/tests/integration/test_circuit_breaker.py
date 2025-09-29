@@ -203,7 +203,7 @@ class TestEcosystemCircuitBreakerRegistry:
         assert critical_breaker.failure_threshold == 3  # More lenient
 
         # Other services should have stricter thresholds
-        other_breaker = registry.breakers["source_agent"]
+        other_breaker = registry.breakers["source-agent"]
         assert other_breaker.failure_threshold == 5  # Stricter
 
     def test_registry_get_breaker(self):

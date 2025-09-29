@@ -1,1 +1,1 @@
-"""Tests for code_analyzer integration layer."""
+"""Tests for code-analyzer integration layer."""

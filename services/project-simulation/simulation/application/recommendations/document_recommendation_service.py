@@ -6,7 +6,7 @@ Following DDD application layer patterns with clean separation of concerns.
 import asyncio
 from typing import Any, Dict, List
 
-from simulation.infrastructure.recommendations.summarizer_hub_client import (
+from simulation.infrastructure.recommendations.summarizer-hub_client import (
     SummarizerHubClient,
 )
 

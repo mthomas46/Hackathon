@@ -66,8 +66,8 @@ class TestNotificationCLIIntegration:
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
                 # Execute complete workflow
-                await self.cli.notification_service_command("list")
-                await self.cli.notification_service_command("send",
+                await self.cli.notification-service_command("list")
+                await self.cli.notification-service_command("send",
                     recipient="test@example.com",
                     title="Integration Test",
                     message="Testing notification workflow",
@@ -86,8 +86,8 @@ class TestNotificationCLIIntegration:
                 get_response = MockServiceResponse(status_code=200, json_data=notification_data)
                 self.mock_framework.http_client.add_response("notification_get", get_response)
 
-                await self.cli.notification_service_command("get", id="notif_001")
-                await self.cli.notification_service_command("history", recipient="test@example.com")
+                await self.cli.notification-service_command("get", id="notif_001")
+                await self.cli.notification-service_command("history", recipient="test@example.com")
 
                 output = mock_stdout.getvalue()
 
@@ -119,7 +119,7 @@ class TestNotificationCLIIntegration:
                 ]
 
                 for i, notif in enumerate(notifications):
-                    await self.cli.notification_service_command("send",
+                    await self.cli.notification-service_command("send",
                         recipient=notif["recipient"],
                         title=notif["title"],
                         message=notif["message"],
@@ -127,7 +127,7 @@ class TestNotificationCLIIntegration:
                     )
 
                 # List all notifications
-                await self.cli.notification_service_command("list", limit=10)
+                await self.cli.notification-service_command("list", limit=10)
 
                 output = mock_stdout.getvalue()
 
@@ -157,7 +157,7 @@ class TestNotificationCLIIntegration:
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
                 # List all notifications
-                await self.cli.notification_service_command("list")
+                await self.cli.notification-service_command("list")
 
                 # Filter by high priority
                 high_priority_response = MockServiceResponse(
@@ -166,7 +166,7 @@ class TestNotificationCLIIntegration:
                 )
                 self.mock_framework.http_client.add_response("notification_list_high", high_priority_response)
 
-                await self.cli.notification_service_command("list", priority="high")
+                await self.cli.notification-service_command("list", priority="high")
 
                 output = mock_stdout.getvalue()
 
@@ -203,10 +203,10 @@ class TestNotificationCLIIntegration:
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
                 # Get notification (should be unread)
-                await self.cli.notification_service_command("get", id="notif_status_test")
+                await self.cli.notification-service_command("get", id="notif_status_test")
 
                 # Update status to read
-                await self.cli.notification_service_command("update", id="notif_status_test", status="read")
+                await self.cli.notification-service_command("update", id="notif_status_test", status="read")
 
                 output = mock_stdout.getvalue()
 
@@ -256,14 +256,14 @@ class TestNotificationCLIIntegration:
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
                 # Get history for admin
-                await self.cli.notification_service_command("history", recipient="admin@example.com")
+                await self.cli.notification-service_command("history", recipient="admin@example.com")
 
                 # Get history for user
                 user_history = [n for n in history_data if n["recipient"] == "user@example.com"]
                 user_history_response = MockServiceResponse(status_code=200, json_data=user_history)
                 self.mock_framework.http_client.add_response("notification_history_user", user_history_response)
 
-                await self.cli.notification_service_command("history", recipient="user@example.com")
+                await self.cli.notification-service_command("history", recipient="user@example.com")
 
                 output = mock_stdout.getvalue()
 
@@ -309,7 +309,7 @@ class TestNotificationCLIIntegration:
             self.mock_framework.http_client.add_response("notification_stats", stats_response)
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                await self.cli.notification_service_command("stats")
+                await self.cli.notification-service_command("stats")
 
                 output = mock_stdout.getvalue()
 
@@ -335,15 +335,15 @@ class TestNotificationCLIIntegration:
 
                 with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
                     if "send" in expected_message:
-                        await self.cli.notification_service_command("send",
+                        await self.cli.notification-service_command("send",
                             recipient="test@example.com",
                             title="Test",
                             message="Test message"
                         )
                     elif "list" in expected_message:
-                        await self.cli.notification_service_command("list")
+                        await self.cli.notification-service_command("list")
                     else:
-                        await self.cli.notification_service_command("get", id="test_id")
+                        await self.cli.notification-service_command("get", id="test_id")
 
                     output = mock_stdout.getvalue()
                     assert "❌" in output
@@ -364,12 +364,12 @@ class TestNotificationCLIIntegration:
 
             # Multiple list operations
             for i in range(3):
-                task = asyncio.create_task(self.cli.notification_service_command("list"))
+                task = asyncio.create_task(self.cli.notification-service_command("list"))
                 tasks.append(task)
 
             # Multiple send operations
             for i in range(2):
-                task = asyncio.create_task(self.cli.notification_service_command("send",
+                task = asyncio.create_task(self.cli.notification-service_command("send",
                     recipient=f"user{i}@example.com",
                     title=f"Concurrent Test {i}",
                     message=f"Message {i}"
@@ -416,10 +416,10 @@ class TestNotificationCLIIntegration:
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
                 # List notifications
-                await self.cli.notification_service_command("list")
+                await self.cli.notification-service_command("list")
 
                 # Get specific notification
-                await self.cli.notification_service_command("get", id=notification_id)
+                await self.cli.notification-service_command("get", id=notification_id)
 
                 output = mock_stdout.getvalue()
 
@@ -456,7 +456,7 @@ class TestNotificationCLIIntegration:
             self.mock_framework.http_client.add_response("notification_list_large", large_response)
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                await self.cli.notification_service_command("list", limit=50)
+                await self.cli.notification-service_command("list", limit=50)
 
                 output = mock_stdout.getvalue()
 
@@ -479,7 +479,7 @@ class TestNotificationCLIIntegration:
             metadata_string = "source:cli,version:1.0,user_agent:test_suite,timestamp:2024-01-20"
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                await self.cli.notification_service_command("send",
+                await self.cli.notification-service_command("send",
                     recipient="metadata@example.com",
                     title="Metadata Test",
                     message="Testing metadata handling",
@@ -504,7 +504,7 @@ class TestNotificationCLIIntegration:
             self.mock_framework.setup_service_responses("notification-service", "send", send_response)
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                await self.cli.notification_service_command("send",
+                await self.cli.notification-service_command("send",
                     recipient="workflow@example.com",
                     title="Workflow Test",
                     message="Testing complete workflow",
@@ -525,7 +525,7 @@ class TestNotificationCLIIntegration:
             self.mock_framework.setup_service_responses("notification-service", "list", list_response)
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                await self.cli.notification_service_command("list")
+                await self.cli.notification-service_command("list")
                 workflow_steps.append("list")
 
             # Step 3: Get specific notification details
@@ -543,7 +543,7 @@ class TestNotificationCLIIntegration:
             self.mock_framework.http_client.add_response("notification_get", get_response)
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                await self.cli.notification_service_command("get", id="workflow_test")
+                await self.cli.notification-service_command("get", id="workflow_test")
                 workflow_steps.append("get")
 
             # Step 4: Update notification status
@@ -551,7 +551,7 @@ class TestNotificationCLIIntegration:
             self.mock_framework.http_client.add_response("notification_update", update_response)
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                await self.cli.notification_service_command("update", id="workflow_test", status="read")
+                await self.cli.notification-service_command("update", id="workflow_test", status="read")
                 workflow_steps.append("update")
 
             # Step 5: Check history
@@ -560,7 +560,7 @@ class TestNotificationCLIIntegration:
             self.mock_framework.http_client.add_response("notification_history", history_response)
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                await self.cli.notification_service_command("history", recipient="workflow@example.com")
+                await self.cli.notification-service_command("history", recipient="workflow@example.com")
                 workflow_steps.append("history")
 
             # Verify complete workflow
@@ -574,7 +574,7 @@ class TestNotificationCLIIntegration:
     def test_notification_cli_help_display(self):
         """Test notification CLI help display"""
         with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-            asyncio.run(self.cli.notification_service_command("invalid_command"))
+            asyncio.run(self.cli.notification-service_command("invalid_command"))
 
             output = mock_stdout.getvalue()
 

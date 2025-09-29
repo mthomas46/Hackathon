@@ -432,13 +432,13 @@ class AutomatedHealthMonitor:
             {"name": "llm_gateway", "url": "http://localhost:5055/health", "critical": True},
             {"name": "discovery_agent", "url": "http://localhost:5045/health", "critical": False},
             {"name": "github_mcp", "url": "http://localhost:5030/health", "critical": False},
-            {"name": "source_agent", "url": "http://localhost:5070/health", "critical": False},
+            {"name": "source-agent", "url": "http://localhost:5070/health", "critical": False},
             {"name": "memory_agent", "url": "http://localhost:5090/health", "critical": False},
-            {"name": "secure_analyzer", "url": "http://localhost:5100/health", "critical": False},
-            {"name": "summarizer_hub", "url": "http://localhost:5160/health", "critical": False},
+            {"name": "secure-analyzer", "url": "http://localhost:5100/health", "critical": False},
+            {"name": "summarizer-hub", "url": "http://localhost:5160/health", "critical": False},
             {"name": "code-analyzer", "url": "http://localhost:5050/health", "critical": False},
             {"name": "bedrock_proxy", "url": "http://localhost:5060/health", "critical": False},
-            {"name": "notification_service", "url": "http://localhost:5020/health", "critical": False},
+            {"name": "notification-service", "url": "http://localhost:5020/health", "critical": False},
             {"name": "log_collector", "url": "http://localhost:5040/health", "critical": False},
             {"name": "frontend", "url": "http://localhost:3000/health", "critical": False}
         ]

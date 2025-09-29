@@ -387,7 +387,7 @@ class TestSummarizerHubClient:
             "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
             [
                 Mock(
-                    name="summarizer_hub",
+                    name="summarizer-hub",
                     endpoint=ServiceEndpoint("http://httpbin.org"),
                 )
             ],
@@ -428,7 +428,7 @@ class TestNotificationServiceClient:
             "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
             [
                 Mock(
-                    name="notification_service",
+                    name="notification-service",
                     endpoint=ServiceEndpoint("http://httpbin.org"),
                 )
             ],
@@ -468,7 +468,7 @@ class TestSourceAgentClient:
         """Create Source Agent client for testing."""
         with patch(
             "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
-            [Mock(name="source_agent", endpoint=ServiceEndpoint("http://httpbin.org"))],
+            [Mock(name="source-agent", endpoint=ServiceEndpoint("http://httpbin.org"))],
         ):
             client = SourceAgentClient()
             yield client
@@ -495,7 +495,7 @@ class TestCodeAnalyzerClient:
             "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
             [
                 Mock(
-                    name="code_analyzer", endpoint=ServiceEndpoint("http://httpbin.org")
+                    name="code-analyzer", endpoint=ServiceEndpoint("http://httpbin.org")
                 )
             ],
         ):
@@ -759,12 +759,12 @@ class TestEcosystemClientsIntegrationSuite:
             "llm_gateway",
             "orchestrator",
             "mock_data_generator",
-            "source_agent",
-            "code_analyzer",
+            "source-agent",
+            "code-analyzer",
             "github_mcp",
             "bedrock_proxy",
-            "summarizer_hub",
-            "notification_service",
+            "summarizer-hub",
+            "notification-service",
             "frontend",
             "discovery_agent",
             "log_collector",
@@ -773,7 +773,7 @@ class TestEcosystemClientsIntegrationSuite:
             "architecture_digitizer",
             "interpreter",
             "memory_agent",
-            "secure_analyzer",
+            "secure-analyzer",
         ]
 
         for expected_service in expected_services:

@@ -12,19 +12,19 @@ from pathlib import Path
 
 SERVICE_REGISTRY: Dict[str, Tuple[str, str]] = {
     "orchestrator": ("services.orchestrator.main", "app"),
-    "source_agent": ("services.source-agent.main", "app"),
+    "source-agent": ("services.source-agent.main", "app"),
     "analysis_service": ("services.analysis-service.main", "app"),
     "doc_store": ("services.doc_store.main", "app"),
     "frontend": ("services.frontend.main", "app"),
     "memory_agent": ("services.memory-agent.main", "app"),
     "discovery_agent": ("services.discovery-agent.main", "app"),
-    "secure_analyzer": ("services.secure-analyzer.main", "app"),
-    "summarizer_hub": ("services.summarizer-hub.main", "app"),
+    "secure-analyzer": ("services.secure-analyzer.main", "app"),
+    "summarizer-hub": ("services.summarizer-hub.main", "app"),
     "prompt_store": ("services.prompt-store.main", "app"),
     "interpreter": ("services.interpreter.main", "app"),
-    "code_analyzer": ("services.code-analyzer.main", "app"),
+    "code-analyzer": ("services.code-analyzer.main", "app"),
     "bedrock_proxy": ("services.bedrock-proxy.main", "app"),
-    "notification_service": ("services.notification-service.main", "app"),
+    "notification-service": ("services.notification-service.main", "app"),
     "log_collector": ("services.log-collector.main", "app"),
 }
 

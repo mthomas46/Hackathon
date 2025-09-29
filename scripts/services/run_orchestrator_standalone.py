@@ -28,8 +28,8 @@ from services.orchestrator.modules.langgraph.state import create_workflow_state
 from services.interpreter.modules.advanced_nlp_engine import (
     ConversationMemoryManager, AdvancedIntentRecognizer
 )
-from services.source_agent.modules.intelligent_ingestion import IntelligentIngestionEngine
-from services.summarizer_hub.modules.multi_model_summarization import MultiModelSummarizer
+from services.source-agent.modules.intelligent_ingestion import IntelligentIngestionEngine
+from services.summarizer-hub.modules.multi_model_summarization import MultiModelSummarizer
 from services.frontend.modules.realtime_interface import RealTimeCollaborationEngine
 
 # Import shared components
@@ -63,11 +63,11 @@ class OrchestratorStandaloneRunner:
             await initialize_advanced_nlp()
 
             print("🔄 Initializing Intelligent Data Ingestion...")
-            from services.source_agent.modules.intelligent_ingestion import initialize_intelligent_ingestion
+            from services.source-agent.modules.intelligent_ingestion import initialize_intelligent_ingestion
             await initialize_intelligent_ingestion()
 
             print("📝 Initializing Multi-Model Summarization...")
-            from services.summarizer_hub.modules.multi_model_summarization import initialize_multi_model_summarization
+            from services.summarizer-hub.modules.multi_model_summarization import initialize_multi_model_summarization
             await initialize_multi_model_summarization()
 
             print("🔗 Initializing Real-Time Collaboration...")
@@ -304,7 +304,7 @@ class OrchestratorStandaloneRunner:
 
         try:
             # Create ingestion job
-            from services.source_agent.modules.intelligent_ingestion import DataSource
+            from services.source-agent.modules.intelligent_ingestion import DataSource
 
             if source.lower() == "github":
                 data_source = DataSource.GITHUB
@@ -344,7 +344,7 @@ class OrchestratorStandaloneRunner:
         print("📝 Testing multi-model summarization...")
 
         try:
-            from services.summarizer_hub.modules.multi_model_summarization import (
+            from services.summarizer-hub.modules.multi_model_summarization import (
                 SummarizationRequest, ContentType, SummarizationStrategy
             )
 

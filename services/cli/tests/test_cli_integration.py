@@ -250,8 +250,8 @@ class TestCLIIntegration:
             self.mock_framework.setup_service_responses("notification-service", "send")
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                await self.cli.notification_service_command("list")
-                await self.cli.notification_service_command("send",
+                await self.cli.notification-service_command("list")
+                await self.cli.notification-service_command("send",
                     title="Test Notification",
                     message="Integration test",
                     priority="normal"

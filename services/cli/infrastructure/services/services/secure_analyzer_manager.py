@@ -22,7 +22,7 @@ class SecureAnalyzerManager(BaseManager):
     ):
         super().__init__(console, clients, cache)
 
-    async def secure_analyzer_menu(self):
+    async def secure-analyzer_menu(self):
         """Main secure analyzer management menu with enhanced interactive experience."""
         await self.run_menu_loop("Secure Analyzer Management", use_interactive=True)
 
@@ -50,7 +50,7 @@ class SecureAnalyzerManager(BaseManager):
         elif choice == "5":
             await self.compliance_reporting_menu()
         elif choice == "6":
-            await self.secure_analyzer_monitoring_menu()
+            await self.secure-analyzer_monitoring_menu()
         else:
             self.display.show_error("Invalid option. Please try again.")
         return True
@@ -1000,7 +1000,7 @@ class SecureAnalyzerManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error with incident log: {e}[/red]")
 
-    async def secure_analyzer_monitoring_menu(self):
+    async def secure-analyzer_monitoring_menu(self):
         """Secure analyzer health and monitoring submenu."""
         while True:
             menu = create_menu_table(

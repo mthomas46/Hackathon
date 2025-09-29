@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-def load_secure_analyzer_service():
+def load_secure-analyzer_service():
     """Load secure-analyzer service dynamically.
 
     Provides a standardized way to load the service for testing across
@@ -83,7 +83,7 @@ def load_secure_analyzer_service():
 @pytest.fixture(scope="module")
 def client():
     """Test client fixture for secure analyzer service."""
-    app = load_secure_analyzer_service()
+    app = load_secure-analyzer_service()
     return TestClient(app)
 
 

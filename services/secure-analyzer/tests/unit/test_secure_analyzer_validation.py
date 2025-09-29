@@ -7,13 +7,13 @@ Focused on validation logic following TDD principles.
 import pytest
 from fastapi.testclient import TestClient
 
-from .test_utils import load_secure_analyzer_service
+from .test_utils import load_secure-analyzer_service
 
 
 @pytest.fixture(scope="module")
 def client():
     """Test client fixture for secure analyzer service."""
-    app = load_secure_analyzer_service()
+    app = load_secure-analyzer_service()
     from fastapi.testclient import TestClient
     return TestClient(app)
 

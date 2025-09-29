@@ -250,7 +250,7 @@ class MockEcosystemClients:
         self.interpreter = MockInterpreterClient()
         self.doc_store = MockDocStoreClient()
         self.llm_gateway = MockLLMGatewayClient()
-        self.notification_service = MockNotificationServiceClient()
+        self.notification-service = MockNotificationServiceClient()
         self.mock_data_generator = MockMockDataGeneratorClient()
 
         # Dictionary access
@@ -259,7 +259,7 @@ class MockEcosystemClients:
             "interpreter": self.interpreter,
             "doc_store": self.doc_store,
             "llm_gateway": self.llm_gateway,
-            "notification_service": self.notification_service,
+            "notification-service": self.notification-service,
             "mock_data_generator": self.mock_data_generator,
         }
 

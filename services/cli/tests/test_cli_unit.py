@@ -133,7 +133,7 @@ class TestCLIUnit:
             self.mock_framework.setup_service_responses("notification-service", "list")
 
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                await self.cli.notification_service_command("list")
+                await self.cli.notification-service_command("list")
 
                 output = mock_stdout.getvalue()
                 assert "📬 NOTIFICATIONS" in output or "notifications" in output.lower()

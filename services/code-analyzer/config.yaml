@@ -6,7 +6,7 @@ server:
   port: 5085
 
 # Code-analyzer specific settings
-code_analyzer:
+code-analyzer:
   rate_limit_enabled: ${RATE_LIMIT_ENABLED:-false}
 
 # Service URLs

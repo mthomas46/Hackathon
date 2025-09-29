@@ -37,7 +37,7 @@ def analysis_service_app():
 
 
 @pytest.fixture(scope="module")
-def source_agent_app():
+def source-agent_app():
     """Load source-agent service."""
     return _load_service("source-agent", "source-agent")
 

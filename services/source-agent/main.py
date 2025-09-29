@@ -61,7 +61,7 @@ SOURCE_CAPABILITIES = {
 # ============================================================================
 from .domain.services.fetch_handler import FetchHandler
 from .domain.services.normalize_handler import NormalizeHandler
-from .domain.services.code_analyzer import CodeAnalyzer
+from .domain.services.code-analyzer import CodeAnalyzer
 from .domain.services.intelligent_ingestion import IntelligentIngestionService
 
 # ============================================================================
@@ -221,12 +221,12 @@ async def process_architecture(req: ArchitectureProcessRequest) -> ArchitectureP
             {"system": req.system, "board_id": req.board_id, "token": req.token},
         )
 
-        context = build_source_agent_context("architecture_process", system=req.system)
-        return create_source_agent_success_response("processed", result, **context)
+        context = build_source-agent_context("architecture_process", system=req.system)
+        return create_source-agent_success_response("processed", result, **context)
 
     except Exception as e:
-        context = build_source_agent_context("architecture_process", system=req.system)
-        return handle_source_agent_error("process architecture", e, **context)
+        context = build_source-agent_context("architecture_process", system=req.system)
+        return handle_source-agent_error("process architecture", e, **context)
 
 
 @app.post(

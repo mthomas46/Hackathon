@@ -181,7 +181,7 @@ services:
 
 # After
 services:
-  source_agent:
+  source-agent:
     url: http://source-agent:5000
 ```
 
@@ -192,11 +192,11 @@ github_data = await github_agent.post_json("/docs/readme", {"owner": "org", "rep
 jira_data = await jira_agent.post_json("/issue/normalize", {"key": "PROJ-123"})
 
 # After
-github_data = await source_agent.post_json("/docs/fetch", {
+github_data = await source-agent.post_json("/docs/fetch", {
     "source": "github",
     "identifier": "org:repo"
 })
-jira_data = await source_agent.post_json("/normalize", {
+jira_data = await source-agent.post_json("/normalize", {
     "source": "jira",
     "data": {"key": "PROJ-123"}
 })

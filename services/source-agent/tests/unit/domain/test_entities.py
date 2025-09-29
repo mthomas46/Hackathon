@@ -4,7 +4,7 @@ import pytest
 from datetime import datetime, timezone, timedelta
 from unittest.mock import Mock
 
-from services.source_agent.domain.entities import Document, Source, IngestionResult
+from services.source-agent.domain.entities import Document, Source, IngestionResult
 
 
 class TestDocument:

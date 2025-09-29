@@ -1,7 +1,7 @@
 # Secure Analyzer
 
 Navigation: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)
-Tests: [tests/unit/secure_analyzer](../../tests/unit/secure_analyzer)
+Tests: [tests/unit/secure-analyzer](../../tests/unit/secure-analyzer)
 
 ## Key Features
 - Sensitive content detection with configurable keyword sources.
@@ -59,7 +59,7 @@ POST /suggest
 - Summarizer Hub: [../summarizer-hub/README.md](../summarizer-hub/README.md)
 
 ## Testing
-- Unit tests: [tests/unit/secure_analyzer](../../tests/unit/secure_analyzer)
+- Unit tests: [tests/unit/secure-analyzer](../../tests/unit/secure-analyzer)
 - Strategies:
   - Ensure policy enforcement reflected in provider list and summary responses
   - Include `analysis` field in summarize mock for compatibility

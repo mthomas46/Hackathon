@@ -6,7 +6,7 @@ policy enforcement, and secure summarization monitoring.
 
 from fastapi.responses import HTMLResponse
 
-from ..secure_analyzer_monitor import secure_analyzer_monitor
+from ..secure-analyzer_monitor import secure-analyzer_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
@@ -19,18 +19,18 @@ class SecureAnalyzerUIHandlers:
     """Handles secure analyzer UI rendering."""
 
     @staticmethod
-    def handle_secure_analyzer_dashboard() -> HTMLResponse:
+    def handle_secure-analyzer_dashboard() -> HTMLResponse:
         """Render secure analyzer service monitoring dashboard."""
         try:
             get_frontend_clients()
 
             # Get secure analyzer status and cached data
-            status_data = secure_analyzer_monitor.get_secure_status()
-            detection_history = secure_analyzer_monitor.get_detection_history(limit=20)
-            suggestion_history = secure_analyzer_monitor.get_suggestion_history(
+            status_data = secure-analyzer_monitor.get_secure_status()
+            detection_history = secure-analyzer_monitor.get_detection_history(limit=20)
+            suggestion_history = secure-analyzer_monitor.get_suggestion_history(
                 limit=20
             )
-            summary_history = secure_analyzer_monitor.get_summary_history(limit=20)
+            summary_history = secure-analyzer_monitor.get_summary_history(limit=20)
 
             # Build context for template
             context = {
@@ -1056,5 +1056,5 @@ class SecureAnalyzerUIHandlers:
             return handle_frontend_error(
                 "render secure analyzer dashboard",
                 e,
-                **build_frontend_context("render_secure_analyzer_dashboard")
+                **build_frontend_context("render_secure-analyzer_dashboard")
             )

@@ -1,4 +1,4 @@
-"""Test configuration for notification_service service."""
+"""Test configuration for notification-service service."""
 
 import pytest
 import sys

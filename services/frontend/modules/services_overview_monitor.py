@@ -11,7 +11,7 @@ from services.shared.infrastructure.utilities import utc_now
 from .shared_utils import (
     get_analysis_service_url,
     get_bedrock_proxy_url,
-    get_code_analyzer_url,
+    get_code-analyzer_url,
     get_discovery_agent_url,
     get_doc_store_url,
     get_frontend_clients,
@@ -19,12 +19,12 @@ from .shared_utils import (
     get_interpreter_url,
     get_log_collector_url,
     get_memory_agent_url,
-    get_notification_service_url,
+    get_notification-service_url,
     get_orchestrator_url,
     get_prompt_store_url,
-    get_secure_analyzer_url,
-    get_source_agent_url,
-    get_summarizer_hub_url,
+    get_secure-analyzer_url,
+    get_source-agent_url,
+    get_summarizer-hub_url,
 )
 
 
@@ -69,7 +69,7 @@ class ServicesOverviewMonitor:
                     "endpoint": "/health",
                 },
                 "summarizer-hub": {
-                    "url_func": get_summarizer_hub_url,
+                    "url_func": get_summarizer-hub_url,
                     "endpoint": "/health",
                 },
                 "log-collector": {
@@ -81,7 +81,7 @@ class ServicesOverviewMonitor:
                     "endpoint": "/health",
                 },
                 "code-analyzer": {
-                    "url_func": get_code_analyzer_url,
+                    "url_func": get_code-analyzer_url,
                     "endpoint": "/health",
                 },
                 "discovery-agent": {
@@ -95,15 +95,15 @@ class ServicesOverviewMonitor:
                     "endpoint": "/health",
                 },
                 "notification-service": {
-                    "url_func": get_notification_service_url,
+                    "url_func": get_notification-service_url,
                     "endpoint": "/health",
                 },
                 "secure-analyzer": {
-                    "url_func": get_secure_analyzer_url,
+                    "url_func": get_secure-analyzer_url,
                     "endpoint": "/health",
                 },
                 "source-agent": {
-                    "url_func": get_source_agent_url,
+                    "url_func": get_source-agent_url,
                     "endpoint": "/health",
                 },
                 "frontend": {
@@ -272,17 +272,17 @@ class ServicesOverviewMonitor:
                 "doc_store": (get_doc_store_url, "/health"),
                 "prompt-store": (get_prompt_store_url, "/health"),
                 "analysis-service": (get_analysis_service_url, "/health"),
-                "summarizer-hub": (get_summarizer_hub_url, "/health"),
+                "summarizer-hub": (get_summarizer-hub_url, "/health"),
                 "log-collector": (get_log_collector_url, "/health"),
                 "bedrock-proxy": (get_bedrock_proxy_url, "/health"),
-                "code-analyzer": (get_code_analyzer_url, "/health"),
+                "code-analyzer": (get_code-analyzer_url, "/health"),
                 "discovery-agent": (get_discovery_agent_url, "/health"),
                 "github-mcp": (get_github_mcp_url, "/health"),
                 "interpreter": (get_interpreter_url, "/health"),
                 "memory-agent": (get_memory_agent_url, "/health"),
-                "notification-service": (get_notification_service_url, "/health"),
-                "secure-analyzer": (get_secure_analyzer_url, "/health"),
-                "source-agent": (get_source_agent_url, "/health"),
+                "notification-service": (get_notification-service_url, "/health"),
+                "secure-analyzer": (get_secure-analyzer_url, "/health"),
+                "source-agent": (get_source-agent_url, "/health"),
             }
 
             if service_name not in service_configs:

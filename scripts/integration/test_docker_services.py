@@ -70,9 +70,9 @@ class DockerServiceTester:
                 "depends_on": ["redis"],
                 "health_url": "http://localhost:5110/health"
             },
-            "summarizer_hub": {
+            "summarizer-hub": {
                 "name": "Summarizer Hub",
-                "build": {"context": ".", "dockerfile": "services/summarizer_hub/Dockerfile"},
+                "build": {"context": ".", "dockerfile": "services/summarizer-hub/Dockerfile"},
                 "ports": {"5060/tcp": 5060},
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
@@ -124,9 +124,9 @@ class DockerServiceTester:
                 "depends_on": ["redis"],
                 "health_url": "http://localhost:5085/health"
             },
-            "secure_analyzer": {
+            "secure-analyzer": {
                 "name": "Secure Analyzer",
-                "build": {"context": ".", "dockerfile": "services/secure_analyzer/Dockerfile"},
+                "build": {"context": ".", "dockerfile": "services/secure-analyzer/Dockerfile"},
                 "ports": {"5070/tcp": 5070},
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],

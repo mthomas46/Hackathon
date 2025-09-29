@@ -113,7 +113,7 @@ class DiscoveryAgentMonitoring:
         # Extract security metrics
         risk_level = scan_result.get("risk_level", "unknown")
         vulnerabilities_count = len(scan_result.get("vulnerabilities", []))
-        secure_analyzer_success = scan_result.get("secure_analyzer_result", {}).get("success", False)
+        secure-analyzer_success = scan_result.get("secure-analyzer_result", {}).get("success", False)
         
         # Categorize vulnerabilities by severity
         high_vulns = len([v for v in scan_result.get("vulnerabilities", []) if v.get("severity") == "high"])
@@ -129,7 +129,7 @@ class DiscoveryAgentMonitoring:
             "vulnerabilities_high": high_vulns,
             "vulnerabilities_medium": medium_vulns,
             "vulnerabilities_low": low_vulns,
-            "secure_analyzer_success": secure_analyzer_success,
+            "secure-analyzer_success": secure-analyzer_success,
             "scan_timestamp": scan_result.get("timestamp")
         }, level="WARNING" if risk_level == "high" else "INFO")
         
@@ -452,7 +452,7 @@ async def simulate_discovery_monitoring():
             "service": "analysis-service",
             "risk_level": "low", 
             "vulnerabilities": [{"severity": "low", "type": "minor_exposure"}],
-            "secure_analyzer_result": {"success": True},
+            "secure-analyzer_result": {"success": True},
             "timestamp": datetime.now().isoformat()
         },
         {
@@ -462,7 +462,7 @@ async def simulate_discovery_monitoring():
                 {"severity": "medium", "type": "auth_issue"},
                 {"severity": "low", "type": "data_exposure"}
             ],
-            "secure_analyzer_result": {"success": True},
+            "secure-analyzer_result": {"success": True},
             "timestamp": datetime.now().isoformat()
         }
     ]

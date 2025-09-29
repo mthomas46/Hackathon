@@ -503,7 +503,7 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                 {"name": "doc_store", "port": "5050"},
                 {"name": "prompt_store", "port": "5051"},
                 {"name": "analysis_service", "port": "5052"},
-                {"name": "source_agent", "port": "5053"},
+                {"name": "source-agent", "port": "5053"},
                 {"name": "github_mcp", "port": "5054"},
                 {"name": "cli", "port": "5057"},
                 {"name": "memory_agent", "port": "5058"},
@@ -697,7 +697,7 @@ async def get_registry_stats():
                 "analysis_service",
                 "cli",
                 "memory_agent",
-                "source_agent",
+                "source-agent",
                 "github_mcp",
             ],
             "capabilities": [

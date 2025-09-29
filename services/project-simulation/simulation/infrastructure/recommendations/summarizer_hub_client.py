@@ -27,7 +27,7 @@ class SummarizerHubClient:
         """Get the appropriate Summarizer-Hub service URL."""
         # Use the same environment detection logic as the analyzer
         return self._analyzer.service_urls.get(
-            "summarizer_hub", "http://localhost:5160"
+            "summarizer-hub", "http://localhost:5160"
         )
 
     async def analyze_document(self, document: Dict[str, Any]) -> Dict[str, Any]:

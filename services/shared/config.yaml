@@ -29,14 +29,14 @@ services:
   orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
   doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}
   analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
-  source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
+  source-agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
   frontend_url: ${FRONTEND_URL:-http://frontend:3000}
 
   # Agent services
   memory_agent_url: ${MEMORY_AGENT_URL:-http://memory-agent:5040}
   discovery_agent_url: ${DISCOVERY_AGENT_URL:-http://discovery-agent:5045}
   github_mcp_url: ${GITHUB_MCP_URL:-http://github-mcp:5072}
-  notification_service_url: ${NOTIFICATION_SERVICE_URL:-http://notification-service:5095}
+  notification-service_url: ${NOTIFICATION_SERVICE_URL:-http://notification-service:5095}
 
   # Utility services
   prompt_store_url: ${PROMPT_STORE_URL:-http://prompt-store:5110}
@@ -51,9 +51,9 @@ services:
   swagger_agent_url: ${SWAGGER_AGENT_URL:-http://swagger-agent:5010}
   consistency_engine_url: ${CONSISTENCY_ENGINE_URL:-http://consistency-engine:5020}
   reporting_url: ${REPORTING_URL:-http://reporting:5030}
-  summarizer_hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
-  secure_analyzer_url: ${SECURE_ANALYZER_URL:-http://secure-analyzer:5070}
-  code_analyzer_url: ${CODE_ANALYZER_URL:-http://code-analyzer:5085}
+  summarizer-hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
+  secure-analyzer_url: ${SECURE_ANALYZER_URL:-http://secure-analyzer:5070}
+  code-analyzer_url: ${CODE_ANALYZER_URL:-http://code-analyzer:5085}
   log_collector_url: ${LOG_COLLECTOR_URL:-http://log-collector:5080}
 
 # ============================================================================

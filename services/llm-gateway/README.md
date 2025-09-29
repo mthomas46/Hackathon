@@ -228,12 +228,12 @@ INTEGRATED_SERVICES = {
     "interpreter": "Enhanced natural language processing",
     "prompt_store": "Optimized prompt retrieval and management", 
     "memory_agent": "Conversation context and state management",
-    "secure_analyzer": "Enhanced security analysis with LLM insights",
-    "code_analyzer": "LLM-enhanced code understanding",
+    "secure-analyzer": "Enhanced security analysis with LLM insights",
+    "code-analyzer": "LLM-enhanced code understanding",
     "doc_store": "AI-powered document analysis and insights",
-    "summarizer_hub": "Advanced content summarization capabilities",
+    "summarizer-hub": "Advanced content summarization capabilities",
     "analysis_service": "AI-enhanced document consistency checking",
-    "source_agent": "Intelligent content ingestion and processing",
+    "source-agent": "Intelligent content ingestion and processing",
     "orchestrator": "Workflow-powered query execution"
 }
 ```
@@ -801,21 +801,21 @@ The LLM Gateway is fully integrated with all major ecosystem services:
 
 #### AI/ML Services Integration
 
-**6. Summarizer Hub (`/integrations/summarizer_hub/{operation}`)**
+**6. Summarizer Hub (`/integrations/summarizer-hub/{operation}`)**
 - **Enhanced Summarization**: Improve summaries with LLM analysis
 - **Provider Selection**: Choose optimal providers for summarization
 - **Quality Assessment**: LLM-powered quality evaluation
 - **Metadata Generation**: Rich metadata using LLM analysis
 - **Integration Module**: `services/summarizer-hub/modules/llm_gateway_integration.py`
 
-**7. Secure Analyzer (`/integrations/secure_analyzer/{operation}`)**
+**7. Secure Analyzer (`/integrations/secure-analyzer/{operation}`)**
 - **Enhanced Security Analysis**: LLM-powered threat detection
 - **Provider Recommendations**: Security-aware provider selection
 - **Policy Generation**: Intelligent security policy creation
 - **Compliance Analysis**: LLM-powered compliance assessment
 - **Integration Module**: `services/secure-analyzer/modules/llm_gateway_integration.py`
 
-**8. Code Analyzer (`/integrations/code_analyzer/{operation}`)**
+**8. Code Analyzer (`/integrations/code-analyzer/{operation}`)**
 - **Code Analysis**: LLM-enhanced code understanding
 - **Endpoint Extraction**: Advanced API endpoint discovery
 - **Integration Module**: `services/llm-gateway/modules/service_integrations.py`
@@ -908,7 +908,7 @@ from services.orchestrator.modules.llm_gateway_integration import llm_gateway_in
 # Generate workflow from natural language
 workflow = await llm_gateway_integration.generate_workflow_from_nlp(
     natural_language_request="Build and deploy a microservice",
-    available_services=["code_analyzer", "doc_store", "ci_cd"]
+    available_services=["code-analyzer", "doc_store", "ci_cd"]
 )
 
 # Optimize existing workflow
@@ -920,7 +920,7 @@ optimized = await llm_gateway_integration.optimize_workflow_execution(
 
 #### Summarizer Hub Integration
 ```python
-from services.summarizer_hub.modules.llm_gateway_integration import llm_gateway_integration
+from services.summarizer-hub.modules.llm_gateway_integration import llm_gateway_integration
 
 # Enhance existing summary
 enhanced = await llm_gateway_integration.enhance_summarization_with_llm(
@@ -938,7 +938,7 @@ recommendation = await llm_gateway_integration.intelligent_provider_selection_fo
 
 #### Secure Analyzer Integration
 ```python
-from services.secure_analyzer.modules.llm_gateway_integration import llm_gateway_integration
+from services.secure-analyzer.modules.llm_gateway_integration import llm_gateway_integration
 
 # Enhanced security analysis
 enhanced_analysis = await llm_gateway_integration.enhance_security_analysis_with_llm(

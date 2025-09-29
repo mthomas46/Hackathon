@@ -28,7 +28,7 @@ from .github_mcp_adapter import GitHubMCPAdapter
 from .interpreter_adapter import InterpreterAdapter
 from .memory_agent_adapter import MemoryAgentAdapter
 from .orchestrator_adapter import OrchestratorAdapter
-from .source_agent_adapter import SourceAgentAdapter
+from .source-agent_adapter import SourceAgentAdapter
 
 
 class ServiceRegistry:

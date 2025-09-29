@@ -181,9 +181,9 @@ class MetricsEventHandler(EventHandler):
 class NotificationEventHandler(EventHandler):
     """Event handler that sends notifications."""
 
-    def __init__(self, notification_service=None):
+    def __init__(self, notification-service=None):
         """Initialize notification handler."""
-        self.notification_service = notification_service
+        self.notification-service = notification-service
 
     @property
     def event_types(self) -> List[EventType]:
@@ -196,7 +196,7 @@ class NotificationEventHandler(EventHandler):
 
     async def handle(self, event: ApplicationEvent) -> None:
         """Send notification for the event."""
-        if not self.notification_service:
+        if not self.notification-service:
             logger.warning("Notification service not configured")
             return
 
@@ -211,7 +211,7 @@ class NotificationEventHandler(EventHandler):
     async def _notify_analysis_failed(self, event: ApplicationEvent) -> None:
         """Notify about failed analysis."""
         message = f"Analysis failed: {getattr(event, 'error_message', 'Unknown error')}"
-        await self.notification_service.send_notification(
+        await self.notification-service.send_notification(
             recipient="admin@company.com",
             subject="Analysis Service - Analysis Failed",
             message=message,
@@ -223,7 +223,7 @@ class NotificationEventHandler(EventHandler):
         severity = getattr(event, "severity", "unknown")
         if severity in ["critical", "high"]:
             message = f"High priority finding created: {getattr(event, 'description', '')}"
-            await self.notification_service.send_notification(
+            await self.notification-service.send_notification(
                 recipient="team@company.com",
                 subject=f"Analysis Service - {severity.title()} Finding",
                 message=message,
@@ -233,7 +233,7 @@ class NotificationEventHandler(EventHandler):
     async def _notify_workflow_triggered(self, event: ApplicationEvent) -> None:
         """Notify about triggered workflow."""
         message = f"Workflow triggered: {getattr(event, 'trigger_type', 'unknown')}"
-        await self.notification_service.send_notification(
+        await self.notification-service.send_notification(
             recipient="devops@company.com",
             subject="Analysis Service - Workflow Triggered",
             message=message,
@@ -287,9 +287,9 @@ class EventHandlerFactory:
         return MetricsEventHandler()
 
     @staticmethod
-    def create_notification_handler(notification_service=None) -> EventHandler:
+    def create_notification_handler(notification-service=None) -> EventHandler:
         """Create notification event handler."""
-        return NotificationEventHandler(notification_service)
+        return NotificationEventHandler(notification-service)
 
     @staticmethod
     def create_audit_handler(audit_service=None) -> EventHandler:

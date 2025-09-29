@@ -142,7 +142,7 @@ ecosystem:
         recovery_timeout: 30
         success_threshold: 3
 
-    summarizer_hub:
+    summarizer-hub:
       url: "${SUMMARIZER_HUB_URL}"
       timeout: 60
       retry_attempts: 3
@@ -151,7 +151,7 @@ ecosystem:
         recovery_timeout: 40
         success_threshold: 3
 
-    notification_service:
+    notification-service:
       url: "${NOTIFICATION_SERVICE_URL}"
       timeout: 10
       retry_attempts: 3
@@ -160,7 +160,7 @@ ecosystem:
         recovery_timeout: 25
         success_threshold: 3
 
-    source_agent:
+    source-agent:
       url: "${SOURCE_AGENT_URL}"
       timeout: 120
       retry_attempts: 2
@@ -169,7 +169,7 @@ ecosystem:
         recovery_timeout: 60
         success_threshold: 2
 
-    code_analyzer:
+    code-analyzer:
       url: "${CODE_ANALYZER_URL}"
       timeout: 90
       retry_attempts: 3

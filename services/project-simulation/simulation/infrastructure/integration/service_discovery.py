@@ -161,20 +161,20 @@ class SimulationServiceDiscovery:
                 "description": "Centralized logging service",
                 "dependencies": [],
             },
-            "notification_service": {
+            "notification-service": {
                 "default_url": "http://localhost:5009",
                 "description": "Event notification service",
                 "dependencies": [],
             },
-            "source_agent": {
+            "source-agent": {
                 "default_url": "http://localhost:5010",
                 "description": "Code analysis and documentation",
                 "dependencies": [],
             },
-            "code_analyzer": {
+            "code-analyzer": {
                 "default_url": "http://localhost:5011",
                 "description": "Advanced code analysis",
-                "dependencies": ["source_agent"],
+                "dependencies": ["source-agent"],
             },
             "github_mcp": {
                 "default_url": "http://localhost:5012",
@@ -186,7 +186,7 @@ class SimulationServiceDiscovery:
                 "description": "AWS AI services proxy",
                 "dependencies": [],
             },
-            "summarizer_hub": {
+            "summarizer-hub": {
                 "default_url": "http://localhost:5014",
                 "description": "Content summarization service",
                 "dependencies": ["analysis_service"],
@@ -206,10 +206,10 @@ class SimulationServiceDiscovery:
                 "description": "Context and conversation management",
                 "dependencies": [],
             },
-            "secure_analyzer": {
+            "secure-analyzer": {
                 "default_url": "http://localhost:5018",
                 "description": "Security analysis and compliance",
-                "dependencies": ["code_analyzer"],
+                "dependencies": ["code-analyzer"],
             },
             "cli": {
                 "default_url": "http://localhost:5019",

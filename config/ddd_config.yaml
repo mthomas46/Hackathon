@@ -75,7 +75,7 @@ analysis_service_ddd:
     domain_events:
       analysis_completed:
         required_fields: ["analysis_id", "result", "timestamp"]
-        subscribers: ["reporting_service", "notification_service"]
+        subscribers: ["reporting_service", "notification-service"]
 
       finding_created:
         required_fields: ["finding_id", "severity", "location"]
@@ -366,7 +366,7 @@ migration:
   rollout:
     phase_1_services: ["analysis_service"]
     phase_2_services: ["doc_store", "orchestrator"]
-    phase_3_services: ["source_agent", "summarizer_hub"]
+    phase_3_services: ["source-agent", "summarizer-hub"]
     monitoring_enabled: true
 
 # ============================================================================

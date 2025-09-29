@@ -192,7 +192,7 @@ class TestDataSynchronization:
         # Simulate event processing by different services
         service_events = {
             "event_store": base_event.copy(),
-            "notification_service": {
+            "notification-service": {
                 **base_event,
                 "notification_sent": True,
                 "recipients": ["alice_dev", "bob_pm"],

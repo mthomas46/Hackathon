@@ -1,1 +1,1 @@
-"""Tests for source_agent performance layer."""
+"""Tests for source-agent performance layer."""

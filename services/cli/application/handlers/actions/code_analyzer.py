@@ -53,7 +53,7 @@ def build_actions(
             "include_classes": include_classes,
         }
 
-        url = f"{clients.code_analyzer_url()}/analyze"
+        url = f"{clients.code-analyzer_url()}/analyze"
         rx = await clients.post_json(url, payload)
 
         if rx.get("success"):
@@ -159,7 +159,7 @@ def build_actions(
                 "include_classes": True,
             }
 
-            url = f"{clients.code_analyzer_url()}/analyze"
+            url = f"{clients.code-analyzer_url()}/analyze"
             rx = await clients.post_json(url, payload)
 
             if rx.get("success"):
@@ -239,7 +239,7 @@ def build_actions(
                     "include_classes": True,
                 }
 
-                url = f"{clients.code_analyzer_url()}/analyze"
+                url = f"{clients.code-analyzer_url()}/analyze"
                 rx = await clients.post_json(url, payload)
 
                 results.append(
@@ -317,9 +317,9 @@ def build_actions(
     # TESTING AND DIAGNOSTICS
     # ============================================================================
 
-    async def test_code_analyzer_health():
+    async def test_code-analyzer_health():
         """Test code analyzer service health."""
-        url = f"{clients.code_analyzer_url()}/health"
+        url = f"{clients.code-analyzer_url()}/health"
         rx = await clients.get_json(url)
         print_kv(console, "Code Analyzer Health", rx)
 
@@ -352,7 +352,7 @@ def build_actions(
             for j in range(iterations):
                 try:
                     start_time = time.time()
-                    url = f"{clients.code_analyzer_url()}/analyze"
+                    url = f"{clients.code-analyzer_url()}/analyze"
                     await clients.post_json(
                         url,
                         {
@@ -428,6 +428,6 @@ def build_actions(
         ("📁 Analyze code file", analyze_file),
         ("📦 Batch analyze multiple items", batch_analyze),
         # Testing & Diagnostics
-        ("🩺 Service health check", test_code_analyzer_health),
+        ("🩺 Service health check", test_code-analyzer_health),
         ("⚡ Benchmark analysis performance", benchmark_analysis),
     ]

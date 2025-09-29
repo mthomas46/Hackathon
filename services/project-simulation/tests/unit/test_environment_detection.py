@@ -89,10 +89,10 @@ class TestServiceUrlConfiguration:
             analyzer = SimulationAnalyzer()
 
             expected_urls = {
-                "summarizer_hub": "http://summarizer-hub:5160",
+                "summarizer-hub": "http://summarizer-hub:5160",
                 "doc_store": "http://doc-store:5010",
                 "analysis_service": "http://analysis-service:5020",
-                "code_analyzer": "http://code-analyzer:5025",
+                "code-analyzer": "http://code-analyzer:5025",
             }
 
             assert analyzer.service_urls == expected_urls
@@ -109,10 +109,10 @@ class TestServiceUrlConfiguration:
             analyzer = SimulationAnalyzer()
 
             expected_urls = {
-                "summarizer_hub": "http://localhost:5160",
+                "summarizer-hub": "http://localhost:5160",
                 "doc_store": "http://localhost:5087",
                 "analysis_service": "http://localhost:5080",
-                "code_analyzer": "http://localhost:5025",
+                "code-analyzer": "http://localhost:5025",
             }
 
             assert analyzer.service_urls == expected_urls
@@ -129,7 +129,7 @@ class TestServiceUrlConfiguration:
                 overrides = {
                     "SUMMARIZER_HUB_URL": "http://custom-summarizer:9999",
                     "DOC_STORE_URL": "http://custom-docstore:8888",
-                    # analysis_service and code_analyzer not overridden
+                    # analysis_service and code-analyzer not overridden
                 }
                 return overrides.get(key)
 
@@ -138,10 +138,10 @@ class TestServiceUrlConfiguration:
             analyzer = SimulationAnalyzer()
 
             expected_urls = {
-                "summarizer_hub": "http://custom-summarizer:9999",  # Overridden
+                "summarizer-hub": "http://custom-summarizer:9999",  # Overridden
                 "doc_store": "http://custom-docstore:8888",  # Overridden
                 "analysis_service": "http://localhost:5080",  # Default (not overridden)
-                "code_analyzer": "http://localhost:5025",  # Default (not overridden)
+                "code-analyzer": "http://localhost:5025",  # Default (not overridden)
             }
 
             assert analyzer.service_urls == expected_urls
@@ -182,7 +182,7 @@ class TestIntegrationWithEcosystem:
         analyzer = SimulationAnalyzer()
 
         # Test with a mock service
-        result = await analyzer._get_service_health_status("summarizer_hub")
+        result = await analyzer._get_service_health_status("summarizer-hub")
         # Result should be False since the service isn't actually running in tests
         assert isinstance(result, bool)
 
@@ -206,10 +206,10 @@ class TestIntegrationWithEcosystem:
 
         # Verify all expected services are configured
         expected_services = {
-            "summarizer_hub",
+            "summarizer-hub",
             "doc_store",
             "analysis_service",
-            "code_analyzer",
+            "code-analyzer",
         }
         assert set(docker_analyzer.service_urls.keys()) == expected_services
 

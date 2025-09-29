@@ -190,11 +190,11 @@ maintenance_protocol:
       }
     ],
     "service_capability_vectors": {
-      "data_management": ["doc_store", "prompt_store", "memory_agent", "source_agent"],
-      "ai_processing": ["llm_gateway", "ollama", "analysis_service", "secure_analyzer"],
+      "data_management": ["doc_store", "prompt_store", "memory_agent", "source-agent"],
+      "ai_processing": ["llm_gateway", "ollama", "analysis_service", "secure-analyzer"],
       "orchestration": ["orchestrator", "discovery_agent", "interpreter", "workflow_management"],
-      "integration": ["github_mcp", "bedrock_proxy", "source_agent", "notification_service"],
-      "analysis": ["analysis_service", "code_analyzer", "secure_analyzer", "summarizer_hub"],
+      "integration": ["github_mcp", "bedrock_proxy", "source-agent", "notification-service"],
+      "analysis": ["analysis_service", "code-analyzer", "secure-analyzer", "summarizer-hub"],
       "infrastructure": ["redis", "postgresql", "log_collector", "health_monitoring"]
     },
     "processing_patterns": {
@@ -213,12 +213,12 @@ maintenance_protocol:
       "discovery_agent": ["orchestrator", "openapi_sources", "langgraph_tools"]
     },
     "data_flow_patterns": {
-      "ingestion_flow": "source_agent → doc_store → analysis_service → prompt_store",
+      "ingestion_flow": "source-agent → doc_store → analysis_service → prompt_store",
       "ai_workflow": "interpreter → orchestrator → llm_gateway → service_execution",
-      "monitoring_flow": "all_services → log_collector → notification_service"
+      "monitoring_flow": "all_services → log_collector → notification-service"
     },
     "security_context": {
-      "content_analysis": "secure_analyzer → content_sensitivity → provider_routing",
+      "content_analysis": "secure-analyzer → content_sensitivity → provider_routing",
       "authentication": "service_to_service → jwt_tokens → role_based_access",
       "data_protection": "encryption → secure_storage → audit_trails"
     }
@@ -270,10 +270,10 @@ recreation_guidance:
 ```yaml
 workflow_optimization:
   ai_workflow_patterns:
-    document_analysis: "source_agent → doc_store → analysis_service → findings_generation"
-    intelligent_summarization: "content_input → summarizer_hub → llm_gateway → structured_output"
-    security_assessment: "content_input → secure_analyzer → security_routing → safe_processing"
-    code_analysis: "code_input → code_analyzer → security_scan → improvement_suggestions"
+    document_analysis: "source-agent → doc_store → analysis_service → findings_generation"
+    intelligent_summarization: "content_input → summarizer-hub → llm_gateway → structured_output"
+    security_assessment: "content_input → secure-analyzer → security_routing → safe_processing"
+    code_analysis: "code_input → code-analyzer → security_scan → improvement_suggestions"
   
   service_coordination:
     orchestrator_role: "Central coordination for complex multi-service workflows"

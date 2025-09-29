@@ -13,7 +13,7 @@ services:
   swagger_agent_url: ${SWAGGER_AGENT_URL:-http://swagger-agent:5010}
   consistency_engine_url: ${CONSISTENCY_ENGINE_URL:-http://consistency-engine:5020}
   reporting_url: ${REPORTING_URL:-http://reporting:5030}
-  summarizer_hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
+  summarizer-hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
 
 # Orchestrator-specific settings
 registry:

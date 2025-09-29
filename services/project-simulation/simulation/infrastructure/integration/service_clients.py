@@ -425,7 +425,7 @@ class NotificationServiceClient(BaseServiceClient):
     """Client for notification-service."""
 
     def __init__(self):
-        super().__init__("notification_service")
+        super().__init__("notification-service")
 
     async def send_notification(self, notification: Dict[str, Any]) -> bool:
         """Send a notification."""
@@ -452,7 +452,7 @@ class SummarizerHubClient(BaseServiceClient):
     """Client for summarizer-hub service."""
 
     def __init__(self):
-        super().__init__("summarizer_hub")
+        super().__init__("summarizer-hub")
 
     async def summarize_text(self, text: str, max_length: int = 200) -> Dict[str, Any]:
         """Summarize text content."""
@@ -502,7 +502,7 @@ class SourceAgentClient(BaseServiceClient):
     """Client for source-agent service."""
 
     def __init__(self):
-        super().__init__("source_agent")
+        super().__init__("source-agent")
 
     async def analyze_codebase(
         self, repository_url: str, config: Dict[str, Any] = None
@@ -523,7 +523,7 @@ class CodeAnalyzerClient(BaseServiceClient):
     """Client for code-analyzer service."""
 
     def __init__(self):
-        super().__init__("code_analyzer")
+        super().__init__("code-analyzer")
 
     async def analyze_code_quality(self, code: str, language: str) -> Dict[str, Any]:
         """Analyze code quality metrics."""
@@ -548,7 +548,7 @@ class SecureAnalyzerClient(BaseServiceClient):
     """Client for secure-analyzer service."""
 
     def __init__(self):
-        super().__init__("secure_analyzer")
+        super().__init__("secure-analyzer")
 
     async def analyze_security(
         self, target: str, scan_type: str = "full"
@@ -589,12 +589,12 @@ class EcosystemServiceClientRegistry:
             "llm_gateway": LLMGatewayClient,
             "orchestrator": OrchestratorClient,
             "log_collector": LogCollectorClient,
-            "notification_service": NotificationServiceClient,
-            "summarizer_hub": SummarizerHubClient,
+            "notification-service": NotificationServiceClient,
+            "summarizer-hub": SummarizerHubClient,
             "interpreter": InterpreterClient,
-            "source_agent": SourceAgentClient,
-            "code_analyzer": CodeAnalyzerClient,
-            "secure_analyzer": SecureAnalyzerClient,
+            "source-agent": SourceAgentClient,
+            "code-analyzer": CodeAnalyzerClient,
+            "secure-analyzer": SecureAnalyzerClient,
             # Additional services can be added here
         }
 

@@ -96,16 +96,16 @@ class TestCLIWorkflowIntegration:
             'orchestrator_manager',
             'analysis_manager',
             'docstore_manager',
-            'source_agent_manager',
+            'source-agent_manager',
             'infrastructure_manager',
             'bulk_operations_manager',
             'interpreter_manager',
             'discovery_agent_manager',
             'memory_agent_manager',
-            'secure_analyzer_manager',
-            'summarizer_hub_manager',
-            'code_analyzer_manager',
-            'notification_service_manager',
+            'secure-analyzer_manager',
+            'summarizer-hub_manager',
+            'code-analyzer_manager',
+            'notification-service_manager',
             'log_collector_manager',
             'bedrock_proxy_manager',
             'deployment_manager',
@@ -137,7 +137,7 @@ class TestCLIWorkflowIntegration:
             cli_commands.orchestrator_manager,
             cli_commands.analysis_manager,
             cli_commands.docstore_manager,
-            cli_commands.source_agent_manager
+            cli_commands.source-agent_manager
         ]
 
         for manager in service_managers:

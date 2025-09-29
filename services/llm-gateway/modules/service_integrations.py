@@ -513,7 +513,7 @@ class ServiceIntegrations:
     # INTEGRATION METHODS - AI/ML Services
     # ============================================================================
 
-    async def integrate_with_summarizer_hub(
+    async def integrate_with_summarizer-hub(
         self, operation: str, **kwargs
     ) -> Dict[str, Any]:
         """Integrate with Summarizer Hub service."""
@@ -539,14 +539,14 @@ class ServiceIntegrations:
 
         except Exception as e:
             fire_and_forget(
-                "llm_gateway_summarizer_hub_integration_error",
+                "llm_gateway_summarizer-hub_integration_error",
                 f"Summarizer Hub integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
                 {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
-    async def integrate_with_secure_analyzer(
+    async def integrate_with_secure-analyzer(
         self, operation: str, **kwargs
     ) -> Dict[str, Any]:
         """Integrate with Secure Analyzer service."""
@@ -575,14 +575,14 @@ class ServiceIntegrations:
 
         except Exception as e:
             fire_and_forget(
-                "llm_gateway_secure_analyzer_integration_error",
+                "llm_gateway_secure-analyzer_integration_error",
                 f"Secure Analyzer integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
                 {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
-    async def integrate_with_code_analyzer(
+    async def integrate_with_code-analyzer(
         self, operation: str, **kwargs
     ) -> Dict[str, Any]:
         """Integrate with Code Analyzer service."""
@@ -609,7 +609,7 @@ class ServiceIntegrations:
 
         except Exception as e:
             fire_and_forget(
-                "llm_gateway_code_analyzer_integration_error",
+                "llm_gateway_code-analyzer_integration_error",
                 f"Code Analyzer integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
                 {"operation": operation, "error": str(e)},
@@ -712,7 +712,7 @@ class ServiceIntegrations:
         )
 
         # Step 4: Analyze security with Secure Analyzer
-        security_analysis = await self.integrate_with_secure_analyzer(
+        security_analysis = await self.integrate_with_secure-analyzer(
             "analyze_security", content=query.prompt + (query.context or "")
         )
 

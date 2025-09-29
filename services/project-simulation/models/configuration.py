@@ -128,7 +128,7 @@ class EcosystemServices(BaseModel):
     orchestrator: ServiceEndpoint
     analysis_service: ServiceEndpoint
     llm_gateway: ServiceEndpoint
-    notification_service: Optional[ServiceEndpoint] = None
+    notification-service: Optional[ServiceEndpoint] = None
     frontend: Optional[ServiceEndpoint] = None
 
 

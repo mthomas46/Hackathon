@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 
-from services.summarizer_hub.modules.multi_model_summarization import MultiModelSummarization
+from services.summarizer-hub.modules.multi_model_summarization import MultiModelSummarization
 
 
 class TestMultiModelSummarization:

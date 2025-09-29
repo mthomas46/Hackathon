@@ -8,12 +8,12 @@ LLM Processing Metadata:
 - key_concepts: ["ai_summarization", "multi_provider", "content_categorization", "ensemble_analysis", "nlp"]
 - architecture: "multi_provider_ai_hub"
 - processing_hints: "Advanced AI-powered content summarization and categorization with multi-provider ensemble analysis"
-- cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../secure-analyzer/README.md", "../../tests/unit/summarizer_hub/"]
+- cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../secure-analyzer/README.md", "../../tests/unit/summarizer-hub/"]
 - integration_points: ["bedrock_proxy", "llm_gateway", "doc_store", "analysis_service"]
 -->
 
 **Navigation**: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)  
-**Tests**: [tests/unit/summarizer_hub](../../tests/unit/summarizer_hub)
+**Tests**: [tests/unit/summarizer-hub](../../tests/unit/summarizer-hub)
 
 **Status**: ✅ Production Ready  
 **Port**: `5160` (External) → `5160` (Internal)  
@@ -232,7 +232,7 @@ ensemble:
 ## 🧪 **Testing**
 
 ### **🔧 Test Coverage**
-- **Unit Tests**: [tests/unit/summarizer_hub](../../tests/unit/summarizer_hub) - Comprehensive unit test suite
+- **Unit Tests**: [tests/unit/summarizer-hub](../../tests/unit/summarizer-hub) - Comprehensive unit test suite
 - **Provider Integration**: Multi-provider AI integration and response validation
 - **Ensemble Testing**: Cross-provider consensus analysis and quality validation
 - **Performance Testing**: High-volume processing and response time validation

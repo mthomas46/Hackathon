@@ -7,13 +7,13 @@ Focused on provider setup and configuration following TDD principles.
 import pytest
 from fastapi.testclient import TestClient
 
-from .test_utils import load_summarizer_hub_service
+from .test_utils import load_summarizer-hub_service
 
 
 @pytest.fixture(scope="module")
 def client():
     """Test client fixture for summarizer hub service."""
-    app = load_summarizer_hub_service()
+    app = load_summarizer-hub_service()
     from fastapi.testclient import TestClient
     return TestClient(app)
 

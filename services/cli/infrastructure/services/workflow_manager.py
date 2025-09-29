@@ -101,7 +101,7 @@ class WorkflowManager(BaseManager):
             with self.console.status(
                 "[bold green]Triggering data ingestion...[/bold green]"
             ):
-                url = f"{self.clients.source_agent_url()}/ingest"
+                url = f"{self.clients.source-agent_url()}/ingest"
                 response = await self.clients.post_json(url, payload)
 
             self.console.print(

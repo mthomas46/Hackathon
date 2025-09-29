@@ -230,7 +230,7 @@ class ServiceMocks:
         return mock
 
     @staticmethod
-    def create_source_agent_mock():
+    def create_source-agent_mock():
         """Create mock for Source Agent."""
         mock = Mock(name="SourceAgentMock")
         mock.fetch_github.return_value = {
@@ -297,7 +297,7 @@ def service_mocks():
     return {
         "doc_store": ServiceMocks.create_doc_store_mock(),
         "analysis_service": ServiceMocks.create_analysis_service_mock(),
-        "source_agent": ServiceMocks.create_source_agent_mock(),
+        "source-agent": ServiceMocks.create_source-agent_mock(),
         "orchestrator": ServiceMocks.create_orchestrator_mock(),
         "frontend": ServiceMocks.create_frontend_mock()
     }

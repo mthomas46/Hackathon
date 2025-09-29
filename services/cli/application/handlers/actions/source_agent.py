@@ -17,7 +17,7 @@ def build_actions(
     async def fetch_doc():
         source = Prompt.ask("Source", default="github")
         ident = Prompt.ask("Identifier (e.g., owner:repo or JIRA key)")
-        url = f"{clients.source_agent_url()}/docs/fetch"
+        url = f"{clients.source-agent_url()}/docs/fetch"
         rx = await clients.post_json(url, {"source": source, "identifier": ident})
         print_kv(console, "Result", rx)
 
@@ -30,13 +30,13 @@ def build_actions(
             data = json.loads(data_raw)
         except Exception:
             data = {}
-        url = f"{clients.source_agent_url()}/normalize"
+        url = f"{clients.source-agent_url()}/normalize"
         rx = await clients.post_json(url, {"source": source, "data": data})
         print_kv(console, "Result", rx)
 
     async def analyze_code():
         text = Prompt.ask("Code/Text to analyze")
-        url = f"{clients.source_agent_url()}/code/analyze"
+        url = f"{clients.source-agent_url()}/code/analyze"
         rx = await clients.post_json(url, {"text": text})
         print_kv(console, "Result", rx)
 
@@ -47,7 +47,7 @@ def build_actions(
         path = Prompt.ask(
             "Output path", default=f"./{source}_{ident.replace(':','_')}.{fmt}"
         )
-        url = f"{clients.source_agent_url()}/docs/fetch"
+        url = f"{clients.source-agent_url()}/docs/fetch"
         rx = await clients.post_json(url, {"source": source, "identifier": ident})
         data = rx.get("data") or rx
         doc = (data.get("document") if isinstance(data, dict) else None) or data

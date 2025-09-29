@@ -555,13 +555,13 @@ ECOSYSTEM_SERVICES = [
         description="Document generation service",
     ),
     EcosystemService(
-        name="source_agent",
-        endpoint=ServiceEndpoint("http://source_agent:5070"),
+        name="source-agent",
+        endpoint=ServiceEndpoint("http://source-agent:5070"),
         description="Code analysis and documentation",
     ),
     EcosystemService(
-        name="code_analyzer",
-        endpoint=ServiceEndpoint("http://code_analyzer:5025"),
+        name="code-analyzer",
+        endpoint=ServiceEndpoint("http://code-analyzer:5025"),
         description="Code quality analysis",
     ),
     EcosystemService(
@@ -575,13 +575,13 @@ ECOSYSTEM_SERVICES = [
         description="AWS AI services",
     ),
     EcosystemService(
-        name="summarizer_hub",
-        endpoint=ServiceEndpoint("http://summarizer_hub:5100"),
+        name="summarizer-hub",
+        endpoint=ServiceEndpoint("http://summarizer-hub:5100"),
         description="Content summarization",
     ),
     EcosystemService(
-        name="notification_service",
-        endpoint=ServiceEndpoint("http://notification_service:5130"),
+        name="notification-service",
+        endpoint=ServiceEndpoint("http://notification-service:5130"),
         description="Event notifications",
     ),
     EcosystemService(
@@ -626,8 +626,8 @@ ECOSYSTEM_SERVICES = [
         description="Context management",
     ),
     EcosystemService(
-        name="secure_analyzer",
-        endpoint=ServiceEndpoint("http://secure_analyzer:5190"),
+        name="secure-analyzer",
+        endpoint=ServiceEndpoint("http://secure-analyzer:5190"),
         description="Security analysis",
     ),
 ]

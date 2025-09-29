@@ -23,12 +23,12 @@ from services.interpreter.modules.advanced_nlp_engine import (
     MultiModalProcessor, test_advanced_nlp
 )
 
-from services.source_agent.modules.intelligent_ingestion import (
+from services.source-agent.modules.intelligent_ingestion import (
     IntelligentIngestionEngine, DataIngestionJob, DataSource,
     test_intelligent_ingestion
 )
 
-from services.summarizer_hub.modules.multi_model_summarization import (
+from services.summarizer-hub.modules.multi_model_summarization import (
     MultiModelSummarizer, SummarizationRequest, ContentType,
     test_multi_model_summarization
 )
@@ -49,8 +49,8 @@ async def run_phase2_integration_test():
     test_start_time = time.time()
     test_results = {
         "interpreter": {"passed": False, "duration": 0, "details": {}},
-        "source_agent": {"passed": False, "duration": 0, "details": {}},
-        "summarizer_hub": {"passed": False, "duration": 0, "details": {}},
+        "source-agent": {"passed": False, "duration": 0, "details": {}},
+        "summarizer-hub": {"passed": False, "duration": 0, "details": {}},
         "frontend": {"passed": False, "duration": 0, "details": {}},
         "integration": {"passed": False, "duration": 0, "details": {}}
     }
@@ -84,13 +84,13 @@ async def run_phase2_integration_test():
     print("🔄 TESTING SOURCE AGENT - INTELLIGENT DATA INGESTION")
     print("-" * 50)
     try:
-        source_agent_start = time.time()
+        source-agent_start = time.time()
         await test_intelligent_ingestion()
-        source_agent_duration = time.time() - source_agent_start
+        source-agent_duration = time.time() - source-agent_start
 
-        test_results["source_agent"] = {
+        test_results["source-agent"] = {
             "passed": True,
-            "duration": source_agent_duration,
+            "duration": source-agent_duration,
             "details": {
                 "predictive_ingestion": True,
                 "conflict_resolution": True,
@@ -100,7 +100,7 @@ async def run_phase2_integration_test():
         }
         print("✅ Source Agent test completed successfully")
     except Exception as e:
-        test_results["source_agent"]["details"]["error"] = str(e)
+        test_results["source-agent"]["details"]["error"] = str(e)
         print(f"❌ Source Agent test failed: {e}")
 
     print()
@@ -113,7 +113,7 @@ async def run_phase2_integration_test():
         await test_multi_model_summarization()
         summarizer_duration = time.time() - summarizer_start
 
-        test_results["summarizer_hub"] = {
+        test_results["summarizer-hub"] = {
             "passed": True,
             "duration": summarizer_duration,
             "details": {
@@ -125,7 +125,7 @@ async def run_phase2_integration_test():
         }
         print("✅ Summarizer Hub test completed successfully")
     except Exception as e:
-        test_results["summarizer_hub"]["details"]["error"] = str(e)
+        test_results["summarizer-hub"]["details"]["error"] = str(e)
         print(f"❌ Summarizer Hub test failed: {e}")
 
     print()

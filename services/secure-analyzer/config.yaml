@@ -19,7 +19,7 @@ circuit_breaker:
 
 # Service URLs
 services:
-  summarizer_hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
+  summarizer-hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
 
 # Testing configuration
 testing: ${TESTING:-false}

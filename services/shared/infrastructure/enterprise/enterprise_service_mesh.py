@@ -456,7 +456,7 @@ class EnterpriseServiceMesh:
         await self.register_service("prompt_store", ["prompts", "optimization"])
         await self.register_service("orchestrator", ["orchestration", "coordination"])
         await self.register_service("interpreter", ["nlp", "interpretation"])
-        await self.register_service("source_agent", ["data_ingestion", "sync"])
+        await self.register_service("source-agent", ["data_ingestion", "sync"])
 
         # Configure endpoints
         await self.configure_endpoints()
@@ -569,7 +569,7 @@ class EnterpriseServiceMesh:
                 ("interpretation", AuthorizationLevel.WRITE),
                 ("documents", AuthorizationLevel.READ),
             ],
-            "source_agent": [
+            "source-agent": [
                 ("documents", AuthorizationLevel.WRITE),
                 ("data_ingestion", AuthorizationLevel.WRITE),
             ],

@@ -67,7 +67,7 @@ class TestHealthMonitor:
         assert health_status.api_connected is True
 
     @pytest.mark.asyncio
-    async def test_basic_health_summarizer_hub(self, health_monitor):
+    async def test_basic_health_summarizer-hub(self, health_monitor):
         """Test basic health check for summarizer hub."""
         health_monitor.service_name = "summarizer-hub"
 
@@ -97,7 +97,7 @@ class TestHealthMonitor:
         assert health_status.data_sources == 5
 
     @pytest.mark.asyncio
-    async def test_basic_health_notification_service(self, health_monitor):
+    async def test_basic_health_notification-service(self, health_monitor):
         """Test basic health check for notification service."""
         health_monitor.service_name = "notification-service"
 
@@ -107,7 +107,7 @@ class TestHealthMonitor:
         assert health_status.email_configured is True
 
     @pytest.mark.asyncio
-    async def test_basic_health_code_analyzer(self, health_monitor):
+    async def test_basic_health_code-analyzer(self, health_monitor):
         """Test basic health check for code analyzer."""
         health_monitor.service_name = "code-analyzer"
 

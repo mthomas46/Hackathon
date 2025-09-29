@@ -103,12 +103,12 @@ class OrchestratorDiscoveryIntegration:
                 {"name": "doc_store", "url": "http://doc_store:5050"}, 
                 {"name": "prompt_store", "url": "http://prompt_store:5051"},
                 {"name": "analysis_service", "url": "http://analysis_service:5052"},
-                {"name": "source_agent", "url": "http://source_agent:5053"},
+                {"name": "source-agent", "url": "http://source-agent:5053"},
                 {"name": "github_mcp", "url": "http://github_mcp:5054"},
                 {"name": "bedrock_proxy", "url": "http://bedrock_proxy:5055"},
                 {"name": "memory_agent", "url": "http://memory_agent:5058"},
                 {"name": "cli", "url": "http://cli:5057"},
-                {"name": "secure_analyzer", "url": "http://secure_analyzer:5061"},
+                {"name": "secure-analyzer", "url": "http://secure-analyzer:5061"},
                 {"name": "log_collector", "url": "http://log_collector:5062"}
             ]
             

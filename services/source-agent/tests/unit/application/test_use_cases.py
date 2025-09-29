@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 
-from services.source_agent.application.use_cases.fetch_document_use_case import (
+from services.source-agent.application.use_cases.fetch_document_use_case import (
     FetchDocumentUseCase,
     FetchDocumentRequest,
     FetchDocumentResponse

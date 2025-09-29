@@ -109,7 +109,7 @@ def get_service_health_url(clients: ServiceClients, service_name: str) -> str:
         ServiceNames.ORCHESTRATOR: f"{clients.orchestrator_url()}/health",
         ServiceNames.ANALYSIS_SERVICE: f"{clients.analysis_service_url()}/health",
         ServiceNames.DOC_STORE: f"{clients.doc_store_url()}/health",
-        ServiceNames.SOURCE_AGENT: f"{clients.source_agent_url()}/health",
+        ServiceNames.SOURCE_AGENT: f"{clients.source-agent_url()}/health",
         ServiceNames.PROMPT_STORE: f"{clients.prompt_store_url()}/health",
         ServiceNames.DISCOVERY_AGENT: f"{clients.discovery_agent_url()}/health",
         ServiceNames.INTERPRETER: f"{clients.interpreter_url()}/health",

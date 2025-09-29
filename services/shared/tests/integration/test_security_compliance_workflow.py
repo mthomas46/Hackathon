@@ -25,7 +25,7 @@ def _load_service(service_name, service_dir):
 
 
 @pytest.fixture(scope="module")
-def secure_analyzer_app():
+def secure-analyzer_app():
     """Load secure-analyzer service."""
     return _load_service("secure-analyzer", "secure-analyzer")
 
@@ -43,7 +43,7 @@ def analysis_service_app():
 
 
 @pytest.fixture(scope="module")
-def notification_service_app():
+def notification-service_app():
     """Load notification-service."""
     return _load_service("notification-service", "notification-service")
 
@@ -56,12 +56,12 @@ def _assert_http_ok(response):
 class TestSecurityComplianceWorkflow:
     """Test security scanning and compliance workflows."""
 
-    def test_code_security_scanning_and_analysis(self, secure_analyzer_app, doc_store_app):
+    def test_code_security_scanning_and_analysis(self, secure-analyzer_app, doc_store_app):
         """Test comprehensive security scanning of code and documentation."""
-        if not secure_analyzer_app:
+        if not secure-analyzer_app:
             pytest.skip("secure-analyzer service not available")
 
-        secure_client = TestClient(secure_analyzer_app)
+        secure_client = TestClient(secure-analyzer_app)
         doc_client = TestClient(doc_store_app)
 
         # Code with various security issues
@@ -281,14 +281,14 @@ Retrieve payment history.
             # Verify compliance analysis request
             assert compliance_resp.status_code in [200, 202, 404]
 
-    def test_security_incident_response_workflow(self, secure_analyzer_app, doc_store_app, notification_service_app):
+    def test_security_incident_response_workflow(self, secure-analyzer_app, doc_store_app, notification-service_app):
         """Test security incident detection and response workflow."""
-        if not secure_analyzer_app:
+        if not secure-analyzer_app:
             pytest.skip("secure-analyzer service not available")
 
-        secure_client = TestClient(secure_analyzer_app)
+        secure_client = TestClient(secure-analyzer_app)
         doc_client = TestClient(doc_store_app)
-        notify_client = TestClient(notification_service_app) if notification_service_app else None
+        notify_client = TestClient(notification-service_app) if notification-service_app else None
 
         # Step 1: Detect security incident in code
         incident_code = '''
@@ -505,13 +505,13 @@ model = pickle.loads(model_data)  # SECURITY RISK
             assert "type" in doc["metadata"]
             assert "status" in doc["metadata"]
 
-    def test_access_control_and_audit_workflow(self, doc_store_app, secure_analyzer_app):
+    def test_access_control_and_audit_workflow(self, doc_store_app, secure-analyzer_app):
         """Test access control and audit logging for sensitive documentation."""
-        if not secure_analyzer_app:
+        if not secure-analyzer_app:
             pytest.skip("secure-analyzer service not available")
 
         doc_client = TestClient(doc_store_app)
-        secure_client = TestClient(secure_analyzer_app)
+        secure_client = TestClient(secure-analyzer_app)
 
         # Sensitive documentation with access controls
         sensitive_docs = [

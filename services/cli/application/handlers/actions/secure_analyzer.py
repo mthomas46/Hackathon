@@ -44,7 +44,7 @@ def build_actions(
         if keywords:
             payload["keywords"] = keywords
 
-        url = f"{clients.secure_analyzer_url()}/detect"
+        url = f"{clients.secure-analyzer_url()}/detect"
         rx = await clients.post_json(url, payload)
 
         if rx.get("success"):
@@ -134,7 +134,7 @@ def build_actions(
         if providers:
             payload["preferred_providers"] = providers
 
-        url = f"{clients.secure_analyzer_url()}/suggest"
+        url = f"{clients.secure-analyzer_url()}/suggest"
         rx = await clients.post_json(url, payload)
 
         if rx.get("success"):
@@ -219,7 +219,7 @@ def build_actions(
         if providers:
             payload["allowed_providers"] = providers
 
-        url = f"{clients.secure_analyzer_url()}/summarize"
+        url = f"{clients.secure-analyzer_url()}/summarize"
         rx = await clients.post_json(url, payload)
 
         if rx.get("success"):
@@ -315,7 +315,7 @@ def build_actions(
                     payload = {"content": item["content"], "max_length": 100}
                     endpoint = "/summarize"
 
-                url = f"{clients.secure_analyzer_url()}{endpoint}"
+                url = f"{clients.secure-analyzer_url()}{endpoint}"
                 rx = await clients.post_json(url, payload)
 
                 results.append(
@@ -407,9 +407,9 @@ def build_actions(
     # TESTING AND DIAGNOSTICS
     # ============================================================================
 
-    async def test_secure_analyzer_health():
+    async def test_secure-analyzer_health():
         """Test secure analyzer service health."""
-        url = f"{clients.secure_analyzer_url()}/health"
+        url = f"{clients.secure-analyzer_url()}/health"
         rx = await clients.get_json(url)
         print_kv(console, "Secure Analyzer Health", rx)
 
@@ -453,7 +453,7 @@ def build_actions(
             for j in range(iterations):
                 try:
                     start_time = time.time()
-                    url = f"{clients.secure_analyzer_url()}/detect"
+                    url = f"{clients.secure-analyzer_url()}/detect"
                     await clients.post_json(url, {"content": content})
                     end_time = time.time()
                     sample_times.append(end_time - start_time)
@@ -523,6 +523,6 @@ def build_actions(
         # Batch Operations
         ("📦 Batch security analysis", batch_security_analysis),
         # Testing & Diagnostics
-        ("🩺 Service health check", test_secure_analyzer_health),
+        ("🩺 Service health check", test_secure-analyzer_health),
         ("⚡ Benchmark security analysis", benchmark_security_analysis),
     ]

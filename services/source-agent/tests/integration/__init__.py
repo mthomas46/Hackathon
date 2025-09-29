@@ -1,1 +1,1 @@
-"""Tests for source_agent integration layer."""
+"""Tests for source-agent integration layer."""

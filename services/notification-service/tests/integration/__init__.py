@@ -1,1 +1,1 @@
-"""Tests for notification_service integration layer."""
+"""Tests for notification-service integration layer."""

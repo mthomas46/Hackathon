@@ -273,14 +273,14 @@ integrated_services = [
     # ✅ Core Documentation Services
     "doc_store", "prompt_store", "analysis_service", "llm_gateway",
     # ✅ Development Tools
-    "source_agent", "code_analyzer", "github_mcp", "bedrock_proxy",
+    "source-agent", "code-analyzer", "github_mcp", "bedrock_proxy",
     # ✅ Content & Communication
-    "summarizer_hub", "notification_service", "frontend",
+    "summarizer-hub", "notification-service", "frontend",
     # ✅ Infrastructure & Monitoring
     "orchestrator", "discovery_agent", "log_collector", "redis",
     # ✅ Specialized Services
     "architecture_digitizer", "interpreter", "memory_agent",
-    "secure_analyzer", "mock_data_generator", "cli", "ollama"
+    "secure-analyzer", "mock_data_generator", "cli", "ollama"
 ]
 ```
 
@@ -367,7 +367,7 @@ implemented_domain_events = [
 #### **4.3 Real-Time Progress Tracking** ✅ (Enterprise Monitoring)
 - ✅ **DRY**: Complete progress tracking integration from `services/shared/monitoring/`
 - ✅ **DRY**: Full `log_collector` integration for centralized, correlated event logging
-- ✅ **DRY**: Enterprise `notification_service` integration for real-time updates
+- ✅ **DRY**: Enterprise `notification-service` integration for real-time updates
 - ✅ **COMPLETED**: Production WebSocket integration with event broadcasting
 
 ### **Phase 5: Enterprise Analytics & Intelligence** ✅ **COMPLETED**
@@ -378,11 +378,11 @@ implemented_domain_events = [
 # FULLY INTEGRATED Analysis Ecosystem:
 integrated_analysis_services = {
     "analysis_service": "✅ Document quality, duplicates, consistency analysis",
-    "code_analyzer": "✅ Code quality, complexity, and security analysis",
-    "secure_analyzer": "✅ Security analysis and compliance validation",
+    "code-analyzer": "✅ Code quality, complexity, and security analysis",
+    "secure-analyzer": "✅ Security analysis and compliance validation",
     "architecture_digitizer": "✅ Architecture analysis and diagram generation",
     "interpreter": "✅ Cross-document analysis and intelligent insights",
-    "summarizer_hub": "✅ Content summarization and key point extraction"
+    "summarizer-hub": "✅ Content summarization and key point extraction"
 }
 ```
 
@@ -429,7 +429,7 @@ GET /api/v1/simulations/{id}
 
 #### **6.3 Production WebSocket Streaming** ✅ (Real-Time Enterprise Updates)
 - ✅ **DRY**: Complete WebSocket pattern reuse from existing ecosystem services
-- ✅ **DRY**: Full `notification_service` integration for event broadcasting
+- ✅ **DRY**: Full `notification-service` integration for event broadcasting
 - ✅ **COMPLETED**: Production event streaming with comprehensive message formats
 
 ### **Phase 7: Enterprise Testing & Quality Assurance** ✅ **COMPLETED**
@@ -635,7 +635,7 @@ GET /api/v1/simulations/{id}
 
 #### **16.2 Intelligent Reporting** (Automated Insights)
 - 📋 **PENDING**: Reuse existing report generation patterns from ecosystem
-- 📋 **PENDING**: Leverage summarizer_hub for content summarization
+- 📋 **PENDING**: Leverage summarizer-hub for content summarization
 - 📋 **PENDING**: Use existing document generation pipeline for reports
 - 📋 **PENDING**: Implement template-based report generation system
 
@@ -661,7 +661,7 @@ GET /api/v1/simulations/{id}
 
 #### **17.3 Real-Time Features** (Live Experience)
 - ✅ **COMPLETED**: Reuse WebSocket patterns from ecosystem services
-- ✅ **COMPLETED**: Leverage notification_service for real-time event broadcasting
+- ✅ **COMPLETED**: Leverage notification-service for real-time event broadcasting
 - 📋 **PENDING**: Use existing real-time streaming patterns
 - 📋 **PENDING**: Implement advanced event broadcasting system
 - 📋 **PENDING**: Enhance WebSocket integration with ecosystem services
@@ -787,7 +787,7 @@ GET /api/v1/simulations/{id}
 - 📋 **PLANNED**: Use insight generation patterns from interpreter
 - 📋 **PLANNED**: Implement benefit calculation algorithms using ecosystem metrics
 - 📋 **PLANNED**: Reuse existing report generation patterns from ecosystem
-- 📋 **PLANNED**: Leverage summarizer_hub for content summarization
+- 📋 **PLANNED**: Leverage summarizer-hub for content summarization
 - 📋 **PLANNED**: Use existing document generation pipeline for reports
 - 📋 **PLANNED**: Implement template-based report generation system
 - 📋 **PLANNED**: Reuse interpreter analysis patterns for cross-document insights
@@ -796,7 +796,7 @@ GET /api/v1/simulations/{id}
 
 #### **22.3 Real-Time Features & CLI Enhancement** (Interactive Experience)
 - 📋 **PLANNED**: Reuse WebSocket patterns from ecosystem services
-- 📋 **PLANNED**: Leverage notification_service for real-time event broadcasting
+- 📋 **PLANNED**: Leverage notification-service for real-time event broadcasting
 - 📋 **PLANNED**: Use existing real-time streaming patterns
 - 📋 **PLANNED**: Implement simple event broadcasting system
 - 📋 **PLANNED**: Reuse existing CLI argument parsing patterns
@@ -1770,14 +1770,14 @@ ecosystem_services = {
     "llm_gateway": "AI content generation, multiple providers",
 
     # Development Tools (4 services)
-    "source_agent": "Code analysis, documentation generation",
-    "code_analyzer": "Code quality, complexity, security",
+    "source-agent": "Code analysis, documentation generation",
+    "code-analyzer": "Code quality, complexity, security",
     "github_mcp": "GitHub integration, PR management",
     "bedrock_proxy": "AWS AI services integration",
 
     # Content & Communication (3 services)
-    "summarizer_hub": "Content summarization, key points",
-    "notification_service": "Event notifications, webhooks",
+    "summarizer-hub": "Content summarization, key points",
+    "notification-service": "Event notifications, webhooks",
     "frontend": "Web interface, real-time dashboards",
 
     # Infrastructure & Monitoring (4 services)
@@ -1790,7 +1790,7 @@ ecosystem_services = {
     "architecture_digitizer": "Architecture diagrams, analysis",
     "interpreter": "Cross-document analysis, insights",
     "memory_agent": "Context management, conversation history",
-    "secure_analyzer": "Security analysis, compliance",
+    "secure-analyzer": "Security analysis, compliance",
     "mock_data_generator": "Test data generation, scenarios",
     "cli": "Command-line interface, automation"
 }
@@ -1999,15 +1999,15 @@ The architecture is designed for easy extension with:
    - `mock-data-generator`: Generate technical design docs, API specifications, database schemas
    - `analysis_service`: Analyze generated requirements for completeness and consistency
    - `interpreter`: Cross-document analysis for requirement conflicts
-   - `source_agent`: Generate initial code structure and documentation
-   - `code_analyzer`: Review generated code quality
+   - `source-agent`: Generate initial code structure and documentation
+   - `code-analyzer`: Review generated code quality
 
 3. **🚀 Development Phase**:
    - `mock-data-generator`: Generate deployment guides, configuration docs, change logs
    - `github_mcp`: Create repository and manage development workflow
-   - `code_analyzer`: Continuous code quality analysis
-   - `secure_analyzer`: Security vulnerability scanning
-   - `source_agent`: Auto-generate API documentation from code
+   - `code-analyzer`: Continuous code quality analysis
+   - `secure-analyzer`: Security vulnerability scanning
+   - `source-agent`: Auto-generate API documentation from code
 
 4. **🧪 Testing Phase**:
    - `mock-data-generator`: Generate test scenarios, test cases, QA documentation
@@ -2018,7 +2018,7 @@ The architecture is designed for easy extension with:
    - `mock-data-generator`: Generate retrospective docs, maintenance guides, team reports
    - `analysis_service`: Project quality metrics and insights
    - `interpreter`: Cross-phase analysis and recommendations
-   - `summarizer_hub`: Executive summary generation
+   - `summarizer-hub`: Executive summary generation
    - `doc_store`: Store all analysis results with search
 
 #### **🔗 Service Integration Points**: 18 services actively used
@@ -2032,21 +2032,21 @@ The architecture is designed for easy extension with:
 #### **🔒 Security-First Ecosystem Integration**:
 1. **🛡️ Security Design**:
    - `mock-data-generator`: Generate security requirements, threat models, compliance docs
-   - `secure_analyzer`: Threat modeling and security requirements analysis
+   - `secure-analyzer`: Threat modeling and security requirements analysis
    - `analysis_service`: Compliance analysis and risk assessment
    - `architecture_digitizer`: Security architecture diagrams
 
 2. **🔧 API Development**:
    - `mock-data-generator`: Generate API specifications, technical design docs, test scenarios
-   - `source_agent`: Generate OpenAPI specifications and code
-   - `code_analyzer`: Security and performance code analysis
+   - `source-agent`: Generate OpenAPI specifications and code
+   - `code-analyzer`: Security and performance code analysis
    - `llm_gateway`: Generate comprehensive API documentation
    - `prompt_store`: Version and track API documentation prompts
 
 3. **📋 Documentation Generation**:
    - `mock-data-generator/collections`: Create bulk API documentation collections
    - `doc_store`: Versioned API documentation storage
-   - `summarizer_hub`: Generate API usage examples and guides
+   - `summarizer-hub`: Generate API usage examples and guides
    - `interpreter`: Cross-reference API docs with implementation
 
 4. **🔍 Quality Assurance**:
@@ -2070,8 +2070,8 @@ The architecture is designed for easy extension with:
    - `frontend`: Prototype validation and user testing
 
 2. **🔧 Cross-Platform Development**:
-   - `source_agent`: Generate platform-specific code structures
-   - `code_analyzer`: Cross-platform code quality analysis
+   - `source-agent`: Generate platform-specific code structures
+   - `code-analyzer`: Cross-platform code quality analysis
    - `github_mcp`: Multi-branch development workflow management
 
 3. **📊 Analytics Integration**:
@@ -2082,7 +2082,7 @@ The architecture is designed for easy extension with:
 4. **🚀 Deployment & Monitoring**:
    - `orchestrator`: Automated deployment and rollback workflows
    - `log_collector`: Centralized application monitoring
-   - `notification_service`: Real-time alerting and user notifications
+   - `notification-service`: Real-time alerting and user notifications
 
 #### **🔗 Service Integration Points**: 16 services actively used
 #### **📈 Expected Benefits**: 75% faster cross-platform development, 90% UX consistency
@@ -2101,16 +2101,16 @@ The architecture is designed for easy extension with:
 2. **🎯 Migration Planning**:
    - `orchestrator`: Large-scale migration workflow orchestration
    - `mock_data_generator`: Generate migration test scenarios
-   - `secure_analyzer`: Security assessment for migration risks
+   - `secure-analyzer`: Security assessment for migration risks
 
 3. **📈 Progress Tracking**:
    - `log_collector`: Centralized progress monitoring across teams
-   - `notification_service`: Stakeholder communication and reporting
+   - `notification-service`: Stakeholder communication and reporting
    - `frontend`: Executive dashboards and progress visualization
 
 4. **🎉 Success Measurement**:
    - `analysis_service`: ROI and benefit analysis
-   - `summarizer_hub`: Executive summary and recommendation reports
+   - `summarizer-hub`: Executive summary and recommendation reports
    - `doc_store`: Comprehensive transformation documentation
 
 #### **🔗 Service Integration Points**: 21 services actively used
@@ -2218,7 +2218,7 @@ The architecture is designed for easy extension with:
 
 #### **Priority 5B: Reporting Engine** (Day 3-4)
 - [ ] **DRY**: Reuse existing report generation patterns
-- [ ] **DRY**: Leverage `summarizer_hub` for content summarization
+- [ ] **DRY**: Leverage `summarizer-hub` for content summarization
 - [ ] **DRY**: Use existing document generation pipeline
 - [ ] Implement template-based report generation
 
@@ -2243,7 +2243,7 @@ The architecture is designed for easy extension with:
 
 #### **Priority 6C: Real-Time Features** (Day 5-6)
 - [ ] **DRY**: Reuse existing WebSocket patterns
-- [ ] **DRY**: Leverage `notification_service` for events
+- [ ] **DRY**: Leverage `notification-service` for events
 - [ ] **DRY**: Use existing real-time streaming patterns
 - [ ] Implement simple event broadcasting
 

@@ -361,7 +361,7 @@ class SimulationConfiguration(BaseModel):
             "mock_data_generator",
             "orchestrator",
             "log_collector",
-            "notification_service",
+            "notification-service",
         }
         invalid_services = set(v) - valid_services
         if invalid_services:

@@ -15,18 +15,18 @@ SERVICES = {
     "orchestrator": {"port": 5099, "health_path": "/health", "type": "core"},
     "doc_store": {"port": 5087, "health_path": "/health", "type": "storage"},
     "analysis_service": {"port": 5020, "health_path": "/health", "type": "analysis"},
-    "source_agent": {"port": 5000, "health_path": "/health", "type": "agent"},
+    "source-agent": {"port": 5000, "health_path": "/health", "type": "agent"},
     "frontend": {"port": 3000, "health_path": "/health", "type": "ui"},
     "architecture_digitizer": {"port": 5105, "health_path": "/health", "type": "analysis"},
-    "log_collector": {"port": 5080, "health_path": "/health", "type": "monitoring"},
+    "log-collector": {"port": 5080, "health_path": "/health", "type": "monitoring"},
     "github-mcp": {"port": 5072, "health_path": "/health", "type": "integration"},
     "prompt_store": {"port": 5110, "health_path": "/health", "type": "storage"},
     "memory-agent": {"port": 5040, "health_path": "/health", "type": "agent"},
     "interpreter": {"port": 5120, "health_path": "/health", "type": "execution"},
     "discovery-agent": {"port": 5045, "health_path": "/health", "type": "agent"},
     "bedrock_proxy": {"port": 7090, "health_path": "/health", "type": "llm"},
-    "notification_service": {"port": 5095, "health_path": "/health", "type": "communication"},
-    "secure_analyzer": {"port": 5070, "health_path": "/health", "type": "security"},
+    "notification-service": {"port": 5095, "health_path": "/health", "type": "communication"},
+    "secure-analyzer": {"port": 5070, "health_path": "/health", "type": "security"},
 }
 
 def test_service_health(service_name: str, config: Dict) -> Tuple[bool, Dict]:

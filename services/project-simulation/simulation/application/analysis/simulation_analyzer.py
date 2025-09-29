@@ -74,7 +74,7 @@ class SimulationAnalyzer:
         # Base service configurations for different environments
         # Ports based on docker-compose.dev.yml configuration
         service_configs = {
-            "summarizer_hub": {
+            "summarizer-hub": {
                 "docker": "http://summarizer-hub:5160",
                 "local": "http://localhost:5160",
             },
@@ -86,7 +86,7 @@ class SimulationAnalyzer:
                 "docker": "http://analysis-service:5020",  # Internal Docker port
                 "local": "http://localhost:5080",  # External Docker port for local access
             },
-            "code_analyzer": {
+            "code-analyzer": {
                 "docker": "http://code-analyzer:5025",
                 "local": "http://localhost:5025",
             },
@@ -152,7 +152,7 @@ class SimulationAnalyzer:
         else:
             # Get recommendations report from summarizer-hub
             recommendations_report = (
-                await self._get_recommendations_report_from_summarizer_hub(
+                await self._get_recommendations_report_from_summarizer-hub(
                     simulation_id, documents
                 )
             )
@@ -493,13 +493,13 @@ class SimulationAnalyzer:
     # RECOMMENDATIONS REPORT MANAGEMENT
     # ============================================================================
 
-    async def _get_recommendations_report_from_summarizer_hub(
+    async def _get_recommendations_report_from_summarizer-hub(
         self, simulation_id: str, documents: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
         """Get recommendations report from summarizer-hub and store it."""
         try:
             # Get recommendations from summarizer-hub
-            recommendations = await self._get_recommendations_from_summarizer_hub(
+            recommendations = await self._get_recommendations_from_summarizer-hub(
                 documents
             )
 
@@ -544,13 +544,13 @@ class SimulationAnalyzer:
             print(f"Error getting recommendations report: {e}")
             return None
 
-    async def _get_recommendations_from_summarizer_hub(
+    async def _get_recommendations_from_summarizer-hub(
         self, documents: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Get recommendations from summarizer-hub service."""
         try:
             summarizer_url = self.service_urls.get(
-                "summarizer_hub", "http://localhost:5160"
+                "summarizer-hub", "http://localhost:5160"
             )
 
             # DRY refactoring: Use instance http_client instead of creating new httpx client
@@ -1488,7 +1488,7 @@ class SimulationAnalyzer:
     ) -> Dict[str, Any]:
         """Gather all data sources needed for report generation."""
         return {
-            "recommendations": await self._get_recommendations_report_from_summarizer_hub(
+            "recommendations": await self._get_recommendations_report_from_summarizer-hub(
                 simulation_id, documents
             ),
             "analysis": await self._get_analysis_report_from_analysis_service(
@@ -1558,7 +1558,7 @@ class SimulationAnalyzer:
             "report_generated": False,
         }
 
-    async def _get_recommendations_report_from_summarizer_hub(
+    async def _get_recommendations_report_from_summarizer-hub(
         self, simulation_id: str, documents: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
         """Get recommendations report from summarizer-hub service."""
@@ -1581,7 +1581,7 @@ class SimulationAnalyzer:
 
             # Request recommendations from summarizer-hub
             recommendations_result = (
-                await self._request_recommendations_from_summarizer_hub(
+                await self._request_recommendations_from_summarizer-hub(
                     simulation_id, docs_for_analysis
                 )
             )
@@ -2206,12 +2206,12 @@ class SimulationAnalyzer:
     # ECOSYSTEM SERVICE INTEGRATION METHODS
     # ============================================================================
 
-    async def _analyze_with_summarizer_hub(
+    async def _analyze_with_summarizer-hub(
         self, documents: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
         """Analyze documents using the summarizer-hub service."""
         try:
-            summarizer_url = f"{self.service_urls['summarizer_hub']}/api/v1/analyze"
+            summarizer_url = f"{self.service_urls['summarizer-hub']}/api/v1/analyze"
 
             # Prepare document content for analysis
             analysis_request = {
@@ -2289,12 +2289,12 @@ class SimulationAnalyzer:
         except Exception:
             return None
 
-    async def _analyze_with_code_analyzer(
+    async def _analyze_with_code-analyzer(
         self, code_content: str
     ) -> Optional[Dict[str, Any]]:
         """Analyze code using the code analyzer service."""
         try:
-            code_analyzer_url = f"{self.service_urls['code_analyzer']}/api/v1/analyze"
+            code-analyzer_url = f"{self.service_urls['code-analyzer']}/api/v1/analyze"
 
             analysis_request = {
                 "code": code_content,
@@ -2302,7 +2302,7 @@ class SimulationAnalyzer:
             }
 
             response = await self.http_client.post(
-                code_analyzer_url,
+                code-analyzer_url,
                 json=analysis_request,
                 headers={"Content-Type": "application/json"},
             )

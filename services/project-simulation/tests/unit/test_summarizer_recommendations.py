@@ -17,7 +17,7 @@ from simulation.domain.recommendations.recommendation import (
     Recommendation,
     RecommendationType,
 )
-from simulation.infrastructure.recommendations.summarizer_hub_client import (
+from simulation.infrastructure.recommendations.summarizer-hub_client import (
     SummarizerHubClient,
 )
 
@@ -447,7 +447,7 @@ class TestSummarizerHubClient:
         self.client = SummarizerHubClient()
 
     @pytest.mark.asyncio
-    async def test_analyze_document_with_summarizer_hub(self):
+    async def test_analyze_document_with_summarizer-hub(self):
         """Test document analysis using summarizer-hub service."""
         # Arrange
         document = {

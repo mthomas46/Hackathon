@@ -61,7 +61,7 @@ class EcosystemConfig:
     interpreter_url: str = "http://localhost:5003"
     doc_store_url: str = "http://localhost:5004"
     llm_gateway_url: str = "http://localhost:5005"
-    notification_service_url: str = "http://localhost:5006"
+    notification-service_url: str = "http://localhost:5006"
     log_collector_url: str = "http://localhost:5007"
     discovery_agent_url: str = "http://localhost:5008"
     orchestrator_url: str = "http://localhost:5099"
@@ -298,8 +298,8 @@ class ConfigManager:
         self.config.ecosystem.llm_gateway_url = os.getenv(
             "LLM_GATEWAY_URL", self.config.ecosystem.llm_gateway_url
         )
-        self.config.ecosystem.notification_service_url = os.getenv(
-            "NOTIFICATION_SERVICE_URL", self.config.ecosystem.notification_service_url
+        self.config.ecosystem.notification-service_url = os.getenv(
+            "NOTIFICATION_SERVICE_URL", self.config.ecosystem.notification-service_url
         )
         self.config.ecosystem.log_collector_url = os.getenv(
             "LOG_COLLECTOR_URL", self.config.ecosystem.log_collector_url
@@ -467,7 +467,7 @@ class ConfigManager:
             "interpreter": self.config.ecosystem.interpreter_url,
             "doc_store": self.config.ecosystem.doc_store_url,
             "llm_gateway": self.config.ecosystem.llm_gateway_url,
-            "notification_service": self.config.ecosystem.notification_service_url,
+            "notification-service": self.config.ecosystem.notification-service_url,
             "log_collector": self.config.ecosystem.log_collector_url,
             "discovery_agent": self.config.ecosystem.discovery_agent_url,
             "orchestrator": self.config.ecosystem.orchestrator_url,

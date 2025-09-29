@@ -8,13 +8,13 @@ import pytest
 import time
 from fastapi.testclient import TestClient
 
-from .test_utils import load_notification_service
+from .test_utils import load_notification-service
 
 
 @pytest.fixture(scope="module")
 def client():
     """Test client fixture for notification service."""
-    app = load_notification_service()
+    app = load_notification-service()
     from fastapi.testclient import TestClient
     return TestClient(app)
 

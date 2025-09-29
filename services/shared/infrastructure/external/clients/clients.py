@@ -203,7 +203,7 @@ class ServiceClients:
             env_key="DOC_STORE_URL",
         )
 
-    def source_agent_url(self) -> str:
+    def source-agent_url(self) -> str:
         """Get Source Agent service URL."""
         return get_config_value(
             "SOURCE_AGENT_URL",
@@ -234,7 +234,7 @@ class ServiceClients:
             env_key="FRONTEND_URL",
         )
 
-    def summarizer_hub_url(self) -> str:
+    def summarizer-hub_url(self) -> str:
         """Get Summarizer Hub service URL."""
         return get_config_value(
             "SUMMARIZER_HUB_URL",
@@ -243,7 +243,7 @@ class ServiceClients:
             env_key="SUMMARIZER_HUB_URL",
         )
 
-    def secure_analyzer_url(self) -> str:
+    def secure-analyzer_url(self) -> str:
         """Get Secure Analyzer service URL."""
         return get_config_value(
             "SECURE_ANALYZER_URL",
@@ -261,7 +261,7 @@ class ServiceClients:
             env_key="MEMORY_AGENT_URL",
         )
 
-    def code_analyzer_url(self) -> str:
+    def code-analyzer_url(self) -> str:
         """Get Code Analyzer service URL."""
         return get_config_value(
             "CODE_ANALYZER_URL",
@@ -279,7 +279,7 @@ class ServiceClients:
             env_key="LOG_COLLECTOR_URL",
         )
 
-    def notification_service_url(self) -> str:
+    def notification-service_url(self) -> str:
         """Get Notification Service URL."""
         return get_config_value(
             "NOTIFICATION_SERVICE_URL",
@@ -298,7 +298,7 @@ class ServiceClients:
         labels: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Send notification via notification service."""
-        url = f"{self.notification_service_url()}/notify"
+        url = f"{self.notification-service_url()}/notify"
         payload = {
             "channel": channel,
             "target": target,
@@ -311,7 +311,7 @@ class ServiceClients:
 
     async def resolve_owners_via_service(self, owners: List[str]) -> Dict[str, Any]:
         """Resolve owners to notification targets via notification service."""
-        url = f"{self.notification_service_url()}/owners/resolve"
+        url = f"{self.notification-service_url()}/owners/resolve"
         payload = {"owners": owners}
         return await self.post_json(url, payload)
 
@@ -381,7 +381,7 @@ class ServiceClients:
             "orchestrator": self.orchestrator_url(),
             "analysis-service": self.analysis_service_url(),
             "doc_store": self.doc_store_url(),
-            "source-agent": self.source_agent_url(),
+            "source-agent": self.source-agent_url(),
             "prompt-store": self.prompt_store_url(),
             "interpreter": self.interpreter_url(),
         }
@@ -820,7 +820,7 @@ class ServiceClients:
 
     async def ingest_source(self, source_type: str, source_url: str) -> Dict[str, Any]:
         """Convenience method for data ingestion."""
-        url = f"{self.source_agent_url()}/ingest"
+        url = f"{self.source-agent_url()}/ingest"
         payload = {"source_type": source_type, "source_url": source_url}
         return await self.post_json(url, payload)
 

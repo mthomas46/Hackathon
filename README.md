@@ -701,7 +701,7 @@ VALIDATION SCRIPTS (35 total)
 # Apply DDD transformation to remaining services
 python scripts/architecture/ddd_transform.py --service orchestrator
 python scripts/architecture/ddd_transform.py --service doc_store
-python scripts/architecture/ddd_transform.py --service source_agent
+python scripts/architecture/ddd_transform.py --service source-agent
 ```
 
 #### **Phase 2: Advanced Features (Future)**

@@ -11,7 +11,7 @@ Phase 1: Critical Foundation (Months 1-2)
 - Total Effort: 235 days, Business Value: 3.73
 
 Phase 2: Advanced Orchestration (Months 3-4)
-- 4 High-Priority Services: interpreter, source_agent, summarizer_hub, frontend
+- 4 High-Priority Services: interpreter, source-agent, summarizer-hub, frontend
 - Focus: AI/ML optimization, multi-agent coordination, resource management, collaboration
 - Total Effort: 198 days, Business Value: 3.25
 """
@@ -376,7 +376,7 @@ class EnterpriseIntegrationImplementation:
             description="AI/ML-powered orchestration and advanced workflows",
             total_estimated_effort=198,
             total_business_value=3.25,
-            services=["interpreter", "source_agent", "summarizer_hub", "frontend"]
+            services=["interpreter", "source-agent", "summarizer-hub", "frontend"]
         )
 
         # Define Phase 2 tasks
@@ -463,7 +463,7 @@ class EnterpriseIntegrationImplementation:
                 name="Real-Time Data Synchronization",
                 description="Implement real-time data synchronization with change detection",
                 phase=ImplementationPhase.PHASE_2_ADVANCED,
-                service="source_agent",
+                service="source-agent",
                 estimated_effort_days=16,
                 deliverables=[
                     "Real-time change detection",
@@ -481,7 +481,7 @@ class EnterpriseIntegrationImplementation:
                 name="Advanced Conflict Resolution",
                 description="Implement advanced conflict resolution for multi-source data",
                 phase=ImplementationPhase.PHASE_2_ADVANCED,
-                service="source_agent",
+                service="source-agent",
                 estimated_effort_days=14,
                 dependencies=["p2_source_01"],
                 deliverables=[
@@ -500,7 +500,7 @@ class EnterpriseIntegrationImplementation:
                 name="Predictive Data Ingestion",
                 description="Implement predictive data ingestion based on usage patterns",
                 phase=ImplementationPhase.PHASE_2_ADVANCED,
-                service="source_agent",
+                service="source-agent",
                 estimated_effort_days=12,
                 dependencies=["p2_source_02"],
                 deliverables=[
@@ -519,7 +519,7 @@ class EnterpriseIntegrationImplementation:
                 name="Intelligent Data Quality Assessment",
                 description="Implement intelligent data quality assessment and cleansing",
                 phase=ImplementationPhase.PHASE_2_ADVANCED,
-                service="source_agent",
+                service="source-agent",
                 estimated_effort_days=10,
                 dependencies=["p2_source_03"],
                 deliverables=[
@@ -539,7 +539,7 @@ class EnterpriseIntegrationImplementation:
                 name="Dynamic Model Selection",
                 description="Implement dynamic model selection based on content characteristics",
                 phase=ImplementationPhase.PHASE_2_ADVANCED,
-                service="summarizer_hub",
+                service="summarizer-hub",
                 estimated_effort_days=12,
                 deliverables=[
                     "Content characteristic analysis",
@@ -557,7 +557,7 @@ class EnterpriseIntegrationImplementation:
                 name="Real-Time Summarization Streaming",
                 description="Implement real-time summarization with streaming support",
                 phase=ImplementationPhase.PHASE_2_ADVANCED,
-                service="summarizer_hub",
+                service="summarizer-hub",
                 estimated_effort_days=10,
                 dependencies=["p2_summ_01"],
                 deliverables=[
@@ -576,7 +576,7 @@ class EnterpriseIntegrationImplementation:
                 name="Multi-Language Support",
                 description="Implement multi-language and multi-domain specialization",
                 phase=ImplementationPhase.PHASE_2_ADVANCED,
-                service="summarizer_hub",
+                service="summarizer-hub",
                 estimated_effort_days=14,
                 dependencies=["p2_summ_02"],
                 deliverables=[
@@ -595,7 +595,7 @@ class EnterpriseIntegrationImplementation:
                 name="Quality Assessment and Iteration",
                 description="Implement quality assessment with iterative improvement",
                 phase=ImplementationPhase.PHASE_2_ADVANCED,
-                service="summarizer_hub",
+                service="summarizer-hub",
                 estimated_effort_days=8,
                 dependencies=["p2_summ_03"],
                 deliverables=[

@@ -34,7 +34,7 @@
 **Current Problematic Commands**:
 ```bash
 CMD ["python", "github_mcp/main.py"]      # ❌ Wrong
-CMD ["python", "source_agent/main.py"]    # ❌ Wrong  
+CMD ["python", "source-agent/main.py"]    # ❌ Wrong  
 CMD ["python", "frontend/main.py"]        # ❌ Wrong
 ```
 

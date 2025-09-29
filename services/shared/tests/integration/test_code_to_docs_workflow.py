@@ -22,7 +22,7 @@ def _load_service(service_name, service_dir):
 
 
 @pytest.fixture(scope="module")
-def code_analyzer_app():
+def code-analyzer_app():
     """Load code-analyzer service."""
     return _load_service("code-analyzer", "code-analyzer")
 
@@ -47,9 +47,9 @@ def _assert_http_ok(response):
 class TestCodeToDocumentationWorkflow:
     """Test complete code analysis to documentation workflow."""
 
-    def test_api_code_analysis_and_documentation(self, code_analyzer_app, doc_store_app):
+    def test_api_code_analysis_and_documentation(self, code-analyzer_app, doc_store_app):
         """Test API code analysis, documentation storage, and retrieval."""
-        code_client = TestClient(code_analyzer_app)
+        code_client = TestClient(code-analyzer_app)
         doc_client = TestClient(doc_store_app)
 
         # Step 1: Analyze FastAPI code with endpoints
@@ -145,9 +145,9 @@ async def delete_user(user_id: int):
         else:
             assert "users" in found_docs[0]["content"].lower()
 
-    def test_microservice_architecture_analysis(self, code_analyzer_app, doc_store_app):
+    def test_microservice_architecture_analysis(self, code-analyzer_app, doc_store_app):
         """Test analysis of microservice architecture code."""
-        code_client = TestClient(code_analyzer_app)
+        code_client = TestClient(code-analyzer_app)
         doc_client = TestClient(doc_store_app)
 
         # Complex microservice code
@@ -221,9 +221,9 @@ def health():
         found_microservice = any(doc["id"] == service_doc_id for doc in search_results)
         assert found_microservice, "Microservice documentation not found in search results"
 
-    def test_cross_service_documentation_consistency(self, code_analyzer_app, doc_store_app, analysis_service_app):
+    def test_cross_service_documentation_consistency(self, code-analyzer_app, doc_store_app, analysis_service_app):
         """Test consistency analysis across multiple service documentations."""
-        code_client = TestClient(code_analyzer_app)
+        code_client = TestClient(code-analyzer_app)
         doc_client = TestClient(doc_store_app)
         analysis_client = TestClient(analysis_service_app)
 
@@ -375,9 +375,9 @@ Creates a new user account.
                     scores = [item.get("quality_score", 0) for item in items]
                     assert scores == sorted(scores, reverse=True)
 
-    def test_api_versioning_and_deprecation_workflow(self, code_analyzer_app, doc_store_app):
+    def test_api_versioning_and_deprecation_workflow(self, code-analyzer_app, doc_store_app):
         """Test API versioning and deprecation documentation workflow."""
-        code_client = TestClient(code_analyzer_app)
+        code_client = TestClient(code-analyzer_app)
         doc_client = TestClient(doc_store_app)
 
         # Step 1: Analyze multiple API versions

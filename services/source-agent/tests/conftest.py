@@ -1,4 +1,4 @@
-"""Test configuration for source_agent service."""
+"""Test configuration for source-agent service."""
 
 import pytest
 import sys

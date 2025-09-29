@@ -42,7 +42,7 @@ _SERVICE_URL_CONFIGS = {
         "default_url": "http://orchestrator:5000",
         "env_key": EnvVars.ORCHESTRATOR_URL_ENV,
     },
-    "summarizer_hub": {
+    "summarizer-hub": {
         "config_key": "SUMMARIZER_HUB_URL",
         "default_url": "http://summarizer-hub:5040",
         "env_key": EnvVars.SUMMARIZER_HUB_URL_ENV,
@@ -67,7 +67,7 @@ _SERVICE_URL_CONFIGS = {
         "default_url": "http://bedrock-proxy:5080",
         "env_key": "BEDROCK_PROXY_URL",
     },
-    "code_analyzer": {
+    "code-analyzer": {
         "config_key": "CODE_ANALYZER_URL",
         "default_url": "http://code-analyzer:5090",
         "env_key": "CODE_ANALYZER_URL",
@@ -92,17 +92,17 @@ _SERVICE_URL_CONFIGS = {
         "default_url": "http://memory-agent:5130",
         "env_key": "MEMORY_AGENT_URL",
     },
-    "notification_service": {
+    "notification-service": {
         "config_key": "NOTIFICATION_SERVICE_URL",
         "default_url": "http://notification-service:5140",
         "env_key": "NOTIFICATION_SERVICE_URL",
     },
-    "secure_analyzer": {
+    "secure-analyzer": {
         "config_key": "SECURE_ANALYZER_URL",
         "default_url": "http://secure-analyzer:5150",
         "env_key": EnvVars.SECURE_ANALYZER_URL_ENV,
     },
-    "source_agent": {
+    "source-agent": {
         "config_key": "SOURCE_AGENT_URL",
         "default_url": "http://source-agent:5160",
         "env_key": EnvVars.SOURCE_AGENT_URL,
@@ -171,9 +171,9 @@ def get_orchestrator_url() -> str:
     return _get_service_url("orchestrator")
 
 
-def get_summarizer_hub_url() -> str:
+def get_summarizer-hub_url() -> str:
     """Get summarizer hub service URL from config/env with fallback."""
-    return _get_service_url("summarizer_hub")
+    return _get_service_url("summarizer-hub")
 
 
 def get_log_collector_url() -> str:
@@ -196,9 +196,9 @@ def get_bedrock_proxy_url() -> str:
     return _get_service_url("bedrock_proxy")
 
 
-def get_code_analyzer_url() -> str:
+def get_code-analyzer_url() -> str:
     """Get code analyzer service URL from config/env with fallback."""
-    return _get_service_url("code_analyzer")
+    return _get_service_url("code-analyzer")
 
 
 def get_discovery_agent_url() -> str:
@@ -221,19 +221,19 @@ def get_memory_agent_url() -> str:
     return _get_service_url("memory_agent")
 
 
-def get_notification_service_url() -> str:
+def get_notification-service_url() -> str:
     """Get notification service URL from config/env with fallback."""
-    return _get_service_url("notification_service")
+    return _get_service_url("notification-service")
 
 
-def get_secure_analyzer_url() -> str:
+def get_secure-analyzer_url() -> str:
     """Get secure analyzer service URL from config/env with fallback."""
-    return _get_service_url("secure_analyzer")
+    return _get_service_url("secure-analyzer")
 
 
-def get_source_agent_url() -> str:
+def get_source-agent_url() -> str:
     """Get source agent service URL from config/env with fallback."""
-    return _get_service_url("source_agent")
+    return _get_service_url("source-agent")
 
 
 def get_cli_url() -> str:
@@ -375,7 +375,7 @@ def fetch_service_data(
     service_url_map = {
         "doc_store": clients.doc_store_url(),
         "analysis-service": clients.analysis_service_url(),
-        "source-agent": clients.source_agent_url(),
+        "source-agent": clients.source-agent_url(),
         "orchestrator": clients.orchestrator_url(),
         "reporting": get_reporting_url(),
         "consistency-engine": get_consistency_engine_url(),

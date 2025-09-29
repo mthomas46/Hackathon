@@ -1,4 +1,4 @@
-"""Test configuration for summarizer_hub service."""
+"""Test configuration for summarizer-hub service."""
 
 import pytest
 import sys
