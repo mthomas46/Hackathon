@@ -2,15 +2,13 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Optional, Dict, Any
 from enum import Enum
-from typing import Any, Dict, Optional
-
 from .document import DocumentId
 
 
 class Severity(Enum):
     """Finding severity levels."""
-
     INFO = "info"
     LOW = "low"
     MEDIUM = "medium"
@@ -21,7 +19,6 @@ class Severity(Enum):
 @dataclass(frozen=True)
 class FindingId:
     """Value object for finding identifier."""
-
     value: str
 
     def __post_init__(self):
@@ -32,7 +29,6 @@ class FindingId:
 @dataclass
 class Finding:
     """Finding domain entity."""
-
     id: FindingId
     document_id: DocumentId
     analysis_id: str
@@ -89,27 +85,27 @@ class Finding:
             Severity.LOW: 2,
             Severity.MEDIUM: 3,
             Severity.HIGH: 4,
-            Severity.CRITICAL: 5,
+            Severity.CRITICAL: 5
         }
         return severity_scores[self.severity]
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert finding to dictionary representation."""
         return {
-            "id": self.id.value,
-            "document_id": self.document_id.value,
-            "analysis_id": self.analysis_id,
-            "title": self.title,
-            "description": self.description,
-            "severity": self.severity.value,
-            "category": self.category,
-            "location": self.location,
-            "suggestion": self.suggestion,
-            "confidence": self.confidence,
-            "metadata": self.metadata,
-            "created_at": self.created_at.isoformat(),
-            "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,
-            "resolved_by": self.resolved_by,
-            "age_days": self.age_days,
-            "is_resolved": self.is_resolved(),
+            'id': self.id.value,
+            'document_id': self.document_id.value,
+            'analysis_id': self.analysis_id,
+            'title': self.title,
+            'description': self.description,
+            'severity': self.severity.value,
+            'category': self.category,
+            'location': self.location,
+            'suggestion': self.suggestion,
+            'confidence': self.confidence,
+            'metadata': self.metadata,
+            'created_at': self.created_at.isoformat(),
+            'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
+            'resolved_by': self.resolved_by,
+            'age_days': self.age_days,
+            'is_resolved': self.is_resolved()
         }

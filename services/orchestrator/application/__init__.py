@@ -1,5 +1,4 @@
-"""Application layer - Delegates to existing application structure."""
+"""Application layer - Orchestrator service application logic."""
 
-from application import *
-
+# Application layer modules are imported directly where needed
 __all__ = []

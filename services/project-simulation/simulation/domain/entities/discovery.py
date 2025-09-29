@@ -4,14 +4,13 @@ Following DDD principles with clean, focused entities.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import List, Optional
+from datetime import datetime
 
 
 @dataclass
 class ServiceEndpoint:
     """Represents a service endpoint."""
-
     path: str
     method: str
     description: Optional[str] = None
@@ -23,7 +22,6 @@ class ServiceEndpoint:
 @dataclass
 class ServiceRegistration:
     """Represents a service registration in the discovery system."""
-
     service_name: str
     base_url: str
     endpoints: List[ServiceEndpoint] = field(default_factory=list)
@@ -38,7 +36,6 @@ class ServiceRegistration:
 @dataclass
 class HealthStatus:
     """Represents the health status of a service."""
-
     is_healthy: bool
     version: Optional[str] = None
     uptime_seconds: Optional[int] = None
@@ -50,7 +47,6 @@ class HealthStatus:
 @dataclass
 class EndpointValidation:
     """Represents the validation result of an endpoint."""
-
     endpoint: ServiceEndpoint
     is_accessible: bool
     response_time_ms: Optional[int] = None
@@ -62,7 +58,6 @@ class EndpointValidation:
 @dataclass
 class DiscoveryResult:
     """Represents the result of a service discovery operation."""
-
     service_name: str
     base_url: Optional[str] = None
     status: str = "not_found"  # found, not_found, error

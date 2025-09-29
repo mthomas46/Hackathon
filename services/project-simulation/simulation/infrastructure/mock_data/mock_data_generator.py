@@ -3,8 +3,9 @@ Mock Data Generator for Project Simulations.
 Following TDD principles with clean, testable code.
 """
 
+from typing import List, Dict, Any
 from datetime import datetime
-from typing import Any, Dict, List
+import random
 
 
 class MockDataGenerator:
@@ -13,44 +14,21 @@ class MockDataGenerator:
     def __init__(self):
         """Initialize the mock data generator."""
         self.common_keywords = [
-            "api",
-            "database",
-            "frontend",
-            "backend",
-            "authentication",
-            "security",
-            "microservices",
-            "deployment",
-            "testing",
-            "documentation",
-            "analytics",
+            "api", "database", "frontend", "backend", "authentication", "security",
+            "microservices", "deployment", "testing", "documentation", "analytics"
         ]
 
         self.tech_mapping = {
             "api": ["REST", "GraphQL", "Swagger", "OpenAPI", "FastAPI"],
             "database": ["PostgreSQL", "Redis", "MongoDB", "MySQL", "SQLite"],
-            "frontend": [
-                "React",
-                "Vue.js",
-                "Angular",
-                "Next.js",
-                "JavaScript",
-                "TypeScript",
-            ],
-            "backend": [
-                "Node.js",
-                "Express",
-                "Django",
-                "Flask",
-                "Spring Boot",
-                "FastAPI",
-            ],
+            "frontend": ["React", "Vue.js", "Angular", "Next.js", "JavaScript", "TypeScript"],
+            "backend": ["Node.js", "Express", "Django", "Flask", "Spring Boot", "FastAPI"],
             "react": ["React", "Redux", "React Router", "Next.js"],
             "node": ["Node.js", "Express", "npm", "yarn"],
             "postgres": ["PostgreSQL", "PostGIS", "pgAdmin", "Database"],
             "authentication": ["JWT", "OAuth2", "Auth0", "Firebase Auth"],
             "deployment": ["Docker", "Kubernetes", "AWS", "Heroku", "CI/CD"],
-            "testing": ["pytest", "Jest", "Selenium", "Cypress", "unittest"],
+            "testing": ["pytest", "Jest", "Selenium", "Cypress", "unittest"]
         }
 
     def extract_keywords_from_query(self, query: str) -> List[str]:
@@ -67,17 +45,7 @@ class MockDataGenerator:
                 keywords.append(keyword)
 
         # Extract technology names from query (e.g., "React", "Node.js", "PostgreSQL")
-        tech_indicators = [
-            "react",
-            "vue",
-            "angular",
-            "node",
-            "python",
-            "java",
-            "postgres",
-            "mysql",
-            "mongodb",
-        ]
+        tech_indicators = ["react", "vue", "angular", "node", "python", "java", "postgres", "mysql", "mongodb"]
         for tech in tech_indicators:
             if tech in query_lower:
                 keywords.append(tech)
@@ -95,9 +63,7 @@ class MockDataGenerator:
 
         return keywords[:10]  # Limit to 10 keywords
 
-    def generate_mock_team_members(
-        self, keywords: List[str], team_size: int
-    ) -> List[Dict[str, Any]]:
+    def generate_mock_team_members(self, keywords: List[str], team_size: int) -> List[Dict[str, Any]]:
         """Generate mock team members based on keywords."""
         roles = ["developer", "qa_engineer", "product_owner", "designer", "architect"]
         team_members = []
@@ -108,56 +74,37 @@ class MockDataGenerator:
         for i in range(actual_team_size):
             role = roles[i]
             # Use keywords as skills, limited to 3 per member
-            skills = (
-                keywords[:3]
-                if len(keywords) >= 3
-                else keywords + ["general"] * (3 - len(keywords))
-            )
+            skills = keywords[:3] if len(keywords) >= 3 else keywords + ["general"] * (3 - len(keywords))
 
-            team_members.append(
-                {
-                    "id": f"member_{i+1}",
-                    "name": f"Mock {role.title().replace('_', ' ')} {i+1}",
-                    "role": role,
-                    "skills": skills,
-                    "experience_years": 3 + i,  # 3, 4, 5, 6, 7 years
-                    "productivity_factor": round(
-                        0.8 + (i * 0.1), 1
-                    ),  # 0.8, 0.9, 1.0, 1.1, 1.2
-                }
-            )
+            team_members.append({
+                "id": f"member_{i+1}",
+                "name": f"Mock {role.title().replace('_', ' ')} {i+1}",
+                "role": role,
+                "skills": skills,
+                "experience_years": 3 + i,  # 3, 4, 5, 6, 7 years
+                "productivity_factor": round(0.8 + (i * 0.1), 1)  # 0.8, 0.9, 1.0, 1.1, 1.2
+            })
 
         return team_members
 
-    def generate_mock_documents(
-        self, keywords: List[str], context: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def generate_mock_documents(self, keywords: List[str], context: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate mock documents based on keywords and context."""
-        doc_types = [
-            "api_documentation",
-            "architecture_diagram",
-            "requirements_spec",
-            "user_manual",
-        ]
+        doc_types = ["api_documentation", "architecture_diagram", "requirements_spec", "user_manual"]
         documents = []
 
         for i, doc_type in enumerate(doc_types):
-            documents.append(
-                {
-                    "id": f"doc_{i+1}",
-                    "type": doc_type,
-                    "title": f"Mock {doc_type.title().replace('_', ' ')}",
-                    "content": f"Mock content for {doc_type} related to {', '.join(keywords[:3])}",
-                    "keywords": keywords[:5],
-                    "created_at": datetime.now().isoformat(),
-                }
-            )
+            documents.append({
+                "id": f"doc_{i+1}",
+                "type": doc_type,
+                "title": f"Mock {doc_type.title().replace('_', ' ')}",
+                "content": f"Mock content for {doc_type} related to {', '.join(keywords[:3])}",
+                "keywords": keywords[:5],
+                "created_at": datetime.now().isoformat()
+            })
 
         return documents
 
-    def infer_technologies_from_query(
-        self, query: str, keywords: List[str]
-    ) -> List[str]:
+    def infer_technologies_from_query(self, query: str, keywords: List[str]) -> List[str]:
         """Infer technology stack from query and keywords."""
         base_technologies = ["Python", "FastAPI"]
         inferred_tech = []
@@ -171,9 +118,7 @@ class MockDataGenerator:
         all_tech = base_technologies + list(set(inferred_tech))
         return all_tech[:7]  # Base + 5 inferred
 
-    def generate_mock_timeline(
-        self, duration_weeks: int, keywords: List[str]
-    ) -> List[Dict[str, Any]]:
+    def generate_mock_timeline(self, duration_weeks: int, keywords: List[str]) -> List[Dict[str, Any]]:
         """Generate mock project timeline."""
         phases = ["Planning", "Development", "Testing", "Deployment", "Maintenance"]
         timeline = []
@@ -183,21 +128,17 @@ class MockDataGenerator:
             phase_duration = min(2, duration_weeks - start_week)
 
             if phase_duration > 0:
-                timeline.append(
-                    {
-                        "phase": phase,
-                        "start_week": start_week,
-                        "duration_weeks": phase_duration,
-                        "milestones": [f"Complete {phase.lower()} phase"],
-                        "deliverables": [f"{phase} documentation and artifacts"],
-                    }
-                )
+                timeline.append({
+                    "phase": phase,
+                    "start_week": start_week,
+                    "duration_weeks": phase_duration,
+                    "milestones": [f"Complete {phase.lower()} phase"],
+                    "deliverables": [f"{phase} documentation and artifacts"]
+                })
 
         return timeline
 
-    def generate_comprehensive_mock_data(
-        self, query: str, context: Dict[str, Any], config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def generate_comprehensive_mock_data(self, query: str, context: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
         """Generate comprehensive mock data for simulation."""
         try:
             # Extract keywords from query
@@ -223,7 +164,7 @@ class MockDataGenerator:
                 "technologies": technologies,
                 "timeline": timeline,
                 "keywords_extracted": keywords,
-                "generated_at": datetime.now().isoformat(),
+                "generated_at": datetime.now().isoformat()
             }
 
         except Exception as e:
@@ -235,5 +176,5 @@ class MockDataGenerator:
                 "timeline": [],
                 "keywords_extracted": ["error"],
                 "error": str(e),
-                "generated_at": datetime.now().isoformat(),
+                "generated_at": datetime.now().isoformat()
             }

@@ -1,8 +1,7 @@
 """PR Confidence Controller - Handles PR confidence analysis endpoints."""
 
-from typing import Any, Dict
-
-from fastapi import APIRouter
+from typing import Dict, Any
+from fastapi import APIRouter, HTTPException
 
 from ...modules.pr_confidence_analysis import pr_confidence_analyzer
 

@@ -1,47 +1,56 @@
-"""Query handlers for CQRS pattern using standardized base classes."""
+"""Query handlers for CQRS pattern."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Dict, Any
+from abc import ABC, abstractmethod
 
-from services.shared.utilities import QueryHandler
-
-from ...domain.entities import Analysis, Document, Finding
-from ...infrastructure.repositories import (
-    AnalysisRepository,
-    DocumentRepository,
-    FindingRepository,
-)
 from .queries import (
-    GetAnalysesQuery,
-    GetAnalysisQuery,
     GetDocumentQuery,
     GetDocumentsQuery,
+    GetAnalysisQuery,
+    GetAnalysesQuery,
     GetFindingQuery,
     GetFindingsQuery,
-    GetStatisticsQuery,
+    GetRepositoryQuery,
+    GetRepositoriesQuery,
+    GetStatisticsQuery
+)
+from ...domain.entities import Document, Analysis, Finding
+from ...infrastructure.repositories import (
+    DocumentRepository,
+    AnalysisRepository,
+    FindingRepository
 )
 
 
-class GetDocumentQueryHandler(QueryHandler[GetDocumentQuery, Document]):
+class QueryHandler(ABC):
+    """Base class for query handlers."""
+
+    @abstractmethod
+    async def handle(self, query):
+        """Handle the query."""
+        pass
+
+
+class GetDocumentQueryHandler(QueryHandler):
     """Handler for getting documents."""
 
     def __init__(self, document_repository: DocumentRepository):
         """Initialize handler with dependencies."""
         self.document_repository = document_repository
 
-    async def _execute(self, query: GetDocumentQuery) -> Tuple[Optional[Document], Optional[int]]:
-        """Execute get document query."""
-        result = await self.document_repository.get_by_id(query.document_id)
-        return result, 1 if result else 0
+    async def handle(self, query: GetDocumentQuery) -> Optional[Document]:
+        """Handle get document query."""
+        return await self.document_repository.get_by_id(query.document_id)
 
 
-class GetDocumentsQueryHandler(QueryHandler[GetDocumentsQuery, List[Document]]):
+class GetDocumentsQueryHandler(QueryHandler):
     """Handler for getting multiple documents."""
 
     def __init__(self, document_repository: DocumentRepository):
         """Initialize handler with dependencies."""
         self.document_repository = document_repository
 
-    async def _execute(self, query: GetDocumentsQuery) -> Tuple[List[Document], Optional[int]]:
+    async def handle(self, query: GetDocumentsQuery) -> List[Document]:
         """Handle get documents query."""
         # Get all documents (in a real implementation, this would be filtered in the repository)
         all_documents = await self.document_repository.get_all()
@@ -52,15 +61,15 @@ class GetDocumentsQueryHandler(QueryHandler[GetDocumentsQuery, List[Document]]):
         # Apply pagination
         start_idx = query.offset
         end_idx = start_idx + query.limit
-        paginated_documents = filtered_documents[start_idx:end_idx]
-        return paginated_documents, len(filtered_documents)
+        return filtered_documents[start_idx:end_idx]
 
     def _apply_filters(self, documents: List[Document], query: GetDocumentsQuery) -> List[Document]:
         """Apply filters to document list."""
         filtered = documents
 
         if query.author:
-            filtered = [d for d in filtered if d.metadata.author and query.author.lower() in d.metadata.author.lower()]
+            filtered = [d for d in filtered if d.metadata.author and
+                       query.author.lower() in d.metadata.author.lower()]
 
         if query.tags:
             filtered = [d for d in filtered if any(tag in d.metadata.tags for tag in query.tags)]
@@ -179,7 +188,6 @@ class GetFindingsQueryHandler(QueryHandler):
 
     def _sort_findings(self, findings: List[Finding]) -> List[Finding]:
         """Sort findings by priority (severity and confidence)."""
-
         def priority_key(finding: Finding) -> tuple:
             # Sort by: severity (desc), confidence (desc), age (desc)
             severity_score = finding.severity_score
@@ -193,12 +201,10 @@ class GetFindingsQueryHandler(QueryHandler):
 class GetStatisticsQueryHandler(QueryHandler):
     """Handler for getting system statistics."""
 
-    def __init__(
-        self,
-        document_repository: DocumentRepository,
-        analysis_repository: AnalysisRepository,
-        finding_repository: FindingRepository,
-    ):
+    def __init__(self,
+                 document_repository: DocumentRepository,
+                 analysis_repository: AnalysisRepository,
+                 finding_repository: FindingRepository):
         """Initialize handler with dependencies."""
         self.document_repository = document_repository
         self.analysis_repository = analysis_repository
@@ -210,31 +216,31 @@ class GetStatisticsQueryHandler(QueryHandler):
 
         if query.include_documents:
             documents = await self.document_repository.get_all()
-            stats["documents"] = {
-                "total": len(documents),
-                "by_format": self._count_by_attribute(documents, lambda d: d.content.format),
-                "by_author": self._count_by_attribute(documents, lambda d: d.metadata.author or "Unknown"),
-                "recent": len([d for d in documents if d.is_recently_updated]),
+            stats['documents'] = {
+                'total': len(documents),
+                'by_format': self._count_by_attribute(documents, lambda d: d.content.format),
+                'by_author': self._count_by_attribute(documents, lambda d: d.metadata.author or 'Unknown'),
+                'recent': len([d for d in documents if d.is_recently_updated])
             }
 
         if query.include_analyses:
             analyses = await self.analysis_repository.get_all()
-            stats["analyses"] = {
-                "total": len(analyses),
-                "by_type": self._count_by_attribute(analyses, lambda a: a.analysis_type),
-                "by_status": self._count_by_attribute(analyses, lambda a: a.status.value),
-                "completed": len([a for a in analyses if a.is_completed]),
+            stats['analyses'] = {
+                'total': len(analyses),
+                'by_type': self._count_by_attribute(analyses, lambda a: a.analysis_type),
+                'by_status': self._count_by_attribute(analyses, lambda a: a.status.value),
+                'completed': len([a for a in analyses if a.is_completed])
             }
 
         if query.include_findings:
             findings = await self.finding_repository.get_all()
             unresolved = await self.finding_repository.get_unresolved()
-            stats["findings"] = {
-                "total": len(findings),
-                "by_category": self._count_by_attribute(findings, lambda f: f.category),
-                "by_severity": self._count_by_attribute(findings, lambda f: f.severity.value),
-                "unresolved": len(unresolved),
-                "resolved": len(findings) - len(unresolved),
+            stats['findings'] = {
+                'total': len(findings),
+                'by_category': self._count_by_attribute(findings, lambda f: f.category),
+                'by_severity': self._count_by_attribute(findings, lambda f: f.severity.value),
+                'unresolved': len(unresolved),
+                'resolved': len(findings) - len(unresolved)
             }
 
         return stats

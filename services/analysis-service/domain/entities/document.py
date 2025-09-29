@@ -2,13 +2,12 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Optional, Dict, Any, List
 
 
 @dataclass(frozen=True)
 class DocumentId:
     """Value object for document identifier."""
-
     value: str
 
     def __post_init__(self):
@@ -21,7 +20,6 @@ class DocumentId:
 @dataclass(frozen=True)
 class Content:
     """Value object for document content."""
-
     text: str
     format: str = "markdown"
 
@@ -35,7 +33,6 @@ class Content:
 @dataclass(frozen=True)
 class Metadata:
     """Value object for document metadata."""
-
     created_at: datetime
     updated_at: datetime
     author: Optional[str] = None
@@ -50,7 +47,6 @@ class Metadata:
 @dataclass
 class Document:
     """Document domain entity."""
-
     id: DocumentId
     title: str
     content: Content
@@ -65,75 +61,50 @@ class Document:
             raise ValueError("Document title too long (max 200 characters)")
 
     def update_content(self, new_content: Content) -> None:
-        """Update document content.
-
-        Args:
-            new_content: New content object to replace current content
-        """
+        """Update document content."""
         self.content = new_content
         # In a real implementation, this would trigger domain events
 
     def update_metadata(self, new_metadata: Metadata) -> None:
-        """Update document metadata.
-
-        Args:
-            new_metadata: New metadata object to replace current metadata
-        """
+        """Update document metadata."""
         self.metadata = new_metadata
 
     def add_tag(self, tag: str) -> None:
-        """Add a tag to the document.
-
-        Args:
-            tag: Tag string to add (duplicates are ignored)
-        """
+        """Add a tag to the document."""
         if tag not in self.metadata.tags:
             self.metadata.tags.append(tag)
 
     def remove_tag(self, tag: str) -> None:
-        """Remove a tag from the document.
-
-        Args:
-            tag: Tag string to remove (no-op if tag doesn't exist)
-        """
+        """Remove a tag from the document."""
         if tag in self.metadata.tags:
             self.metadata.tags.remove(tag)
 
     @property
     def is_recently_updated(self) -> bool:
-        """Check if document was updated recently.
-
-        Returns:
-            True if document was updated within the last 24 hours
-        """
+        """Check if document was updated recently (within last 24 hours)."""
         return (datetime.now() - self.metadata.updated_at).days < 1
 
     @property
     def word_count(self) -> int:
-        """Get word count of document content.
-
-        Returns:
-            Number of words in the document content
-        """
+        """Get word count of document content."""
         return len(self.content.text.split())
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert document to dictionary representation.
-
-        Returns:
-            Dictionary containing document data with serialized timestamps
-        """
+        """Convert document to dictionary representation."""
         return {
-            "id": self.id.value,
-            "title": self.title,
-            "content": {"text": self.content.text, "format": self.content.format},
-            "metadata": {
-                "created_at": self.metadata.created_at.isoformat(),
-                "updated_at": self.metadata.updated_at.isoformat(),
-                "author": self.metadata.author,
-                "tags": self.metadata.tags,
-                "properties": self.metadata.properties,
+            'id': self.id.value,
+            'title': self.title,
+            'content': {
+                'text': self.content.text,
+                'format': self.content.format
             },
-            "repository_id": self.repository_id,
-            "version": self.version,
+            'metadata': {
+                'created_at': self.metadata.created_at.isoformat(),
+                'updated_at': self.metadata.updated_at.isoformat(),
+                'author': self.metadata.author,
+                'tags': self.metadata.tags,
+                'properties': self.metadata.properties
+            },
+            'repository_id': self.repository_id,
+            'version': self.version
         }

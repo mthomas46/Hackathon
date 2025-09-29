@@ -3,8 +3,8 @@ Summary Processor for consolidating analysis results.
 Following DDD principles with clean, focused functionality.
 """
 
+from typing import List, Dict, Any
 from datetime import datetime
-from typing import Any, Dict, List
 
 
 class SummaryProcessor:
@@ -18,7 +18,7 @@ class SummaryProcessor:
             "priority_level": "medium",
             "processing_timestamp": datetime.now().isoformat(),
             "summary_metrics": {},
-            "confidence_score": 0.0,
+            "confidence_score": 0.0
         }
 
         all_findings = []
@@ -38,9 +38,7 @@ class SummaryProcessor:
 
         # Remove duplicates while preserving order
         consolidated["consolidated_findings"] = self._remove_duplicates(all_findings)
-        consolidated["consolidated_recommendations"] = self._remove_duplicates(
-            all_recommendations
-        )
+        consolidated["consolidated_recommendations"] = self._remove_duplicates(all_recommendations)
 
         # Calculate overall confidence
         if summaries:
@@ -49,27 +47,21 @@ class SummaryProcessor:
         # Determine priority level
         high_priority_indicators = ["critical", "urgent", "immediate", "risk", "issue"]
         high_priority_count = sum(
-            1
-            for rec in consolidated["consolidated_recommendations"]
+            1 for rec in consolidated["consolidated_recommendations"]
             if any(indicator in rec.lower() for indicator in high_priority_indicators)
         )
 
-        if (
-            high_priority_count
-            > len(consolidated["consolidated_recommendations"]) * 0.5
-        ):
+        if high_priority_count > len(consolidated["consolidated_recommendations"]) * 0.5:
             consolidated["priority_level"] = "high"
         elif high_priority_count == 0:
             consolidated["priority_level"] = "low"
 
         return consolidated
 
-    def identify_action_items(
-        self, summary_data: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def identify_action_items(self, summary_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Identify actionable items from summary data."""
         action_items = []
-        summary_data.get("findings", [])
+        findings = summary_data.get("findings", [])
         recommendations = summary_data.get("recommendations", [])
 
         # Create action items from recommendations
@@ -79,15 +71,13 @@ class SummaryProcessor:
                 "priority": self._determine_action_priority(rec),
                 "category": self._categorize_action(rec),
                 "estimated_effort": self._estimate_effort(rec),
-                "dependencies": [],
+                "dependencies": []
             }
             action_items.append(action_item)
 
         return action_items
 
-    def calculate_confidence_score(
-        self, analysis_results: List[Dict[str, Any]]
-    ) -> float:
+    def calculate_confidence_score(self, analysis_results: List[Dict[str, Any]]) -> float:
         """Calculate overall confidence score from multiple analysis results."""
         if not analysis_results:
             return 0.0
@@ -133,16 +123,11 @@ class SummaryProcessor:
         rec_lower = recommendation.lower()
 
         # High priority indicators
-        if any(
-            word in rec_lower
-            for word in ["critical", "urgent", "immediate", "fix", "resolve"]
-        ):
+        if any(word in rec_lower for word in ["critical", "urgent", "immediate", "fix", "resolve"]):
             return "high"
 
         # Medium priority indicators
-        if any(
-            word in rec_lower for word in ["review", "consider", "monitor", "improve"]
-        ):
+        if any(word in rec_lower for word in ["review", "consider", "monitor", "improve"]):
             return "medium"
 
         # Low priority indicators
@@ -159,7 +144,7 @@ class SummaryProcessor:
             "budget": ["budget", "cost", "finance", "spending"],
             "risk": ["risk", "issue", "problem", "mitigation"],
             "quality": ["quality", "testing", "review", "standards"],
-            "technical": ["technical", "architecture", "design", "implementation"],
+            "technical": ["technical", "architecture", "design", "implementation"]
         }
 
         for category, keywords in categories.items():
@@ -173,22 +158,15 @@ class SummaryProcessor:
         rec_lower = recommendation.lower()
 
         # High effort indicators
-        if any(
-            word in rec_lower
-            for word in ["redesign", "restructure", "rebuild", "comprehensive"]
-        ):
+        if any(word in rec_lower for word in ["redesign", "restructure", "rebuild", "comprehensive"]):
             return "high"
 
         # Medium effort indicators
-        if any(
-            word in rec_lower for word in ["review", "update", "modify", "implement"]
-        ):
+        if any(word in rec_lower for word in ["review", "update", "modify", "implement"]):
             return "medium"
 
         # Low effort indicators
-        if any(
-            word in rec_lower for word in ["monitor", "check", "verify", "document"]
-        ):
+        if any(word in rec_lower for word in ["monitor", "check", "verify", "document"]):
             return "low"
 
         return "medium"

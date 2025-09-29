@@ -1,38 +1,34 @@
 """Handler Factory - Creates handlers with dependency injection."""
 
-from typing import Dict, List, Optional, Type
-
-from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.intelligent_caching import get_service_cache
-
-# Using standardized shared services
-from services.shared.monitoring.logging import fire_and_forget
-
+from typing import Dict, Any, Type, Optional, List
 from .base_handler import BaseAnalysisHandler
-from .cross_repository_handler import CrossRepositoryAnalysisHandler
-from .distributed_handler import DistributedAnalysisHandler
-from .impact_handler import ChangeImpactAnalysisHandler
-from .maintenance_handler import MaintenanceAnalysisHandler
-from .quality_handler import QualityAnalysisHandler
-from .remediation_handler import RemediationHandler
-from .risk_handler import RiskAnalysisHandler
 from .semantic_handler import SemanticAnalysisHandler
 from .sentiment_handler import SentimentAnalysisHandler
-from .trend_handler import TrendAnalysisHandler
+from .impact_handler import ChangeImpactAnalysisHandler
+from .risk_handler import RiskAnalysisHandler
+from .maintenance_handler import MaintenanceAnalysisHandler
+from .remediation_handler import RemediationHandler
 from .workflow_handler import WorkflowAnalysisHandler
+from .distributed_handler import DistributedAnalysisHandler
+from .cross_repository_handler import CrossRepositoryAnalysisHandler
+from .quality_handler import QualityAnalysisHandler
+from .trend_handler import TrendAnalysisHandler
+
+from services.shared.core.di.services import (
+    ILoggerService, ICacheService, IEventPublisher, IServiceClient, IMetricsService
+)
+from services.shared.core.di.registry import get_service
 
 
 class HandlerFactory:
     """Factory for creating analysis handlers with dependency injection."""
 
-    def __init__(
-        self,
-        logger: Optional[ILoggerService] = None,
-        cache: Optional[ICacheService] = None,
-        event_publisher: Optional[IEventPublisher] = None,
-        service_client: Optional[IServiceClient] = None,
-        metrics: Optional[IMetricsService] = None,
-    ) -> None:
+    def __init__(self,
+                 logger: Optional[ILoggerService] = None,
+                 cache: Optional[ICacheService] = None,
+                 event_publisher: Optional[IEventPublisher] = None,
+                 service_client: Optional[IServiceClient] = None,
+                 metrics: Optional[IMetricsService] = None) -> None:
         # Use injected services or get from registry
         self._logger = logger or get_service(ILoggerService)
         self._cache = cache or get_service(ICacheService)
@@ -93,7 +89,7 @@ class HandlerFactory:
                 event_publisher=self._event_publisher,
                 service_client=self._service_client,
                 metrics=self._metrics,
-                **kwargs,
+                **kwargs
             )
             return handler
         except Exception as e:
@@ -125,10 +121,8 @@ class HandlerFactory:
                 handler = self.create_handler(handler_type)
                 handlers[handler_type] = handler
             except Exception as e:
-                await self._logger.warning(
-                    f"Failed to create handler {handler_type}: {e}",
-                    handler_type=handler_type,
-                )
+                await self._logger.warning(f"Failed to create handler {handler_type}: {e}",
+                                         handler_type=handler_type)
         return handlers
 
 
@@ -157,10 +151,10 @@ async def initialize_handlers() -> Dict[str, BaseAnalysisHandler]:
     # Log initialization
     try:
         logger = factory._logger
-        await logger.info(
-            "Handlers initialized successfully",
-            {"handler_count": len(handlers), "handler_types": list(handlers.keys())},
-        )
+        await logger.info("Handlers initialized successfully", {
+            "handler_count": len(handlers),
+            "handler_types": list(handlers.keys())
+        })
     except Exception:
         pass  # Ignore logging errors during initialization
 

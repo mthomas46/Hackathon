@@ -5,11 +5,9 @@ extracted from the main analysis service to improve maintainability.
 """
 
 import re
-from typing import Any, Dict, List, Set
-
+from typing import List, Dict, Any, Set
 try:
-    # Using standardized analysis-service domain entities
-    from ..domain.entities import Document, Finding
+    from services.shared.core.models.models import Document, Finding
 except ImportError:
     # Fallback for testing or when shared services are not available
     class Document:
@@ -22,18 +20,17 @@ except ImportError:
             for key, value in kwargs.items():
                 setattr(self, key, value)
 
-
 # Import shared utilities for consistency across analysis modules
 from .shared_utils import (
-    build_analysis_context,
-    get_critical_score,
-    get_drift_overlap_threshold,
-    get_high_priority_score,
-    get_medium_priority_score,
     handle_analysis_error,
+    build_analysis_context,
+    validate_analysis_targets,
+    get_drift_overlap_threshold,
+    get_critical_score,
+    get_high_priority_score,
+    get_medium_priority_score
 )
-from .error_handling_utils import create_error_response, handle_analysis_error
-from ..domain.exceptions.domain_exceptions import AnalysisOperationException
+
 
 # Constants for analysis thresholds and scoring (using shared configuration)
 DRIFT_OVERLAP_THRESHOLD = get_drift_overlap_threshold()
@@ -63,7 +60,7 @@ def _create_finding(
     evidence: List[str],
     suggestion: str,
     score: int,
-    rationale: str,
+    rationale: str
 ) -> Finding:
     """Create a standardized Finding object with consistent structure."""
     return Finding(
@@ -77,7 +74,7 @@ def _create_finding(
         suggestion=suggestion,
         correlation_id=finding_id,
         score=score,
-        rationale=rationale,
+        rationale=rationale
     )
 
 
@@ -116,7 +113,7 @@ def _extract_endpoints_from_docs(docs: List[Document]) -> Set[str]:
             continue
 
         # Find API endpoint patterns in documentation
-        matches = re.findall(r"`(GET|POST|PUT|DELETE|PATCH)\s+(/[^`\s]+)`", doc.content)
+        matches = re.findall(r'`(GET|POST|PUT|DELETE|PATCH)\s+(/[^`\s]+)`', doc.content)
         for method, path in matches:
             endpoints.add(f"{method} {path}")
 
@@ -132,8 +129,8 @@ def _extract_endpoints_from_apis(apis: List[Dict[str, Any]]) -> Set[str]:
             continue
 
         for endpoint in api["endpoints"]:
-            method = endpoint.get("method", "GET")
-            path = endpoint.get("path", "/")
+            method = endpoint.get('method', 'GET')
+            path = endpoint.get('path', '/')
             endpoints.add(f"{method} {path}")
 
     return endpoints
@@ -148,98 +145,59 @@ def detect_readme_drift(docs: List[Document]) -> List[Finding]:
         if not docs:
             return findings
 
-        # Prepare document data
-        doc_data = _prepare_document_data(docs)
-        if not doc_data["readmes"] or not doc_data["other_docs"]:
+        # Performance optimization: Pre-filter and cache document properties
+        valid_docs = [(d, d.title.lower() if d.title else "", d.content or "") for d in docs if d.content]
+
+        # Separate READMEs from other documentation
+        readmes = [(d, title, content) for d, title, content in valid_docs if "readme" in title]
+        other_docs = [(d, title, content) for d, title, content in valid_docs if "readme" not in title]
+
+        if not readmes or not other_docs:
             return findings
 
-        # Performance check
-        if _should_skip_large_dataset(doc_data, context):
+        # Performance optimization: Early exit for large datasets
+        if len(readmes) * len(other_docs) > 1000:  # Limit computational complexity
+            context["optimization"] = "early_exit_large_dataset"
             return findings
 
-        # Analyze drift between READMEs and other docs
-        findings.extend(_analyze_readme_drift(doc_data["readmes"], doc_data["other_docs"]))
+        for readme_doc, readme_title, readme_content in readmes:
+            # Performance optimization: Pre-calculate word sets for README
+            readme_words = set(readme_content.lower().split())
+
+            for doc_doc, doc_title, doc_content in other_docs:
+                # Performance optimization: Skip obviously different documents
+                if abs(len(readme_content) - len(doc_content)) > len(readme_content) * 0.8:
+                    continue
+
+                # Calculate text overlap using optimized helper function
+                overlap = _extract_text_overlap(readme_content, doc_content)
+
+                # Check if overlap indicates potential drift
+                if overlap < DRIFT_OVERLAP_THRESHOLD:
+                    finding_id = f"drift:{readme_doc.id}:{doc_doc.id}"
+
+                    findings.append(_create_finding(
+                        finding_id=finding_id,
+                        finding_type=FINDING_TYPE_DRIFT,
+                        title="Documentation Drift Detected",
+                        description=f"Low content overlap between {readme_title} and {doc_title}",
+                        severity=SEVERITY_MEDIUM,
+                        source_refs=[
+                            {"id": readme_doc.id, "type": "document"},
+                            {"id": doc_doc.id, "type": "document"}
+                        ],
+                        evidence=[f"Content overlap ratio: {overlap:.3f}"],
+                        suggestion="Review and synchronize documentation to ensure consistency",
+                        score=int(overlap * 100),
+                        rationale=f"Low content overlap ({overlap:.3f}) suggests documentation drift requiring attention"
+                    ))
 
         return findings
 
     except Exception as e:
         # Log error and return empty findings rather than failing completely
-        operation_exception = AnalysisOperationException(
-            operation="detect_readme_drift",
-            error_message=str(e),
-            context={"doc_count": len(docs), **context}
-        )
-        handle_analysis_error("detect README drift", operation_exception, doc_count=len(docs), **context)
+        handle_analysis_error("detect README drift", e, doc_count=len(docs), **context)
         return []
-
-
-def _prepare_document_data(docs: List[Document]) -> Dict[str, List]:
-    """Prepare and categorize document data for analysis."""
-    # Performance optimization: Pre-filter and cache document properties
-    valid_docs = [(d, d.title.lower() if d.title else "", d.content or "") for d in docs if d.content]
-
-    # Separate READMEs from other documentation
-    readmes = [(d, title, content) for d, title, content in valid_docs if "readme" in title]
-    other_docs = [(d, title, content) for d, title, content in valid_docs if "readme" not in title]
-
-    return {"readmes": readmes, "other_docs": other_docs}
-
-
-def _should_skip_large_dataset(doc_data: Dict[str, List], context: Dict) -> bool:
-    """Check if dataset is too large for efficient processing."""
-    readmes, other_docs = doc_data["readmes"], doc_data["other_docs"]
-    if len(readmes) * len(other_docs) > 1000:  # Limit computational complexity
-        context["optimization"] = "early_exit_large_dataset"
-        return True
-    return False
-
-
-def _analyze_readme_drift(readmes: List, other_docs: List) -> List[Finding]:
-    """Analyze drift between READMEs and other documentation."""
-    findings = []
-
-    for readme_doc, readme_title, readme_content in readmes:
-        readme_words = set(readme_content.lower().split())
-
-        for doc_doc, doc_title, doc_content in other_docs:
-            # Skip obviously different documents
-            if _should_skip_document_comparison(readme_content, doc_content):
-                continue
-
-            # Calculate text overlap
-            overlap = _extract_text_overlap(readme_content, doc_content)
-
-            # Check if overlap indicates potential drift
-            if overlap < DRIFT_OVERLAP_THRESHOLD:
-                findings.append(_create_drift_finding(readme_doc, readme_title, doc_doc, doc_title, overlap))
-
-    return findings
-
-
-def _should_skip_document_comparison(readme_content: str, doc_content: str) -> bool:
-    """Check if document comparison should be skipped based on size difference."""
-    return abs(len(readme_content) - len(doc_content)) > len(readme_content) * 0.8
-
-
-def _create_drift_finding(readme_doc, readme_title, doc_doc, doc_title, overlap):
-    """Create a drift finding between documents."""
-    finding_id = f"drift:{readme_doc.id}:{doc_doc.id}"
-
-    return _create_finding(
-        finding_id=finding_id,
-        finding_type=FINDING_TYPE_DRIFT,
-        title="Documentation Drift Detected",
-        description=f"Low content overlap between {readme_title} and {doc_title}",
-        severity=SEVERITY_MEDIUM,
-        source_refs=[
-            {"id": readme_doc.id, "type": "document"},
-            {"id": doc_doc.id, "type": "document"},
-        ],
-        evidence=[f"Content overlap ratio: {overlap:.3f}"],
-        suggestion="Review and synchronize documentation to ensure consistency",
-        score=int(overlap * 100),
-        rationale=f"Low content overlap ({overlap:.3f}) suggests documentation drift requiring attention",
-    )
 
 
 def detect_api_mismatches(docs: List[Document], apis: List[Dict[str, Any]]) -> List[Finding]:
@@ -261,54 +219,39 @@ def detect_api_mismatches(docs: List[Document], apis: List[Dict[str, Any]]) -> L
 
         # Create findings for undocumented endpoints
         for endpoint in undocumented:
-            findings.append(
-                _create_finding(
-                    finding_id=f"undocumented:{endpoint}",
-                    finding_type=FINDING_TYPE_MISSING_DOC,
-                    title="Undocumented API Endpoint",
-                    description=f"API endpoint '{endpoint}' exists in implementation but lacks documentation",
-                    severity=SEVERITY_HIGH,
-                    source_refs=[{"id": endpoint, "type": "endpoint"}],
-                    evidence=[f"Endpoint {endpoint} found in API implementation but missing from documentation"],
-                    suggestion="Add comprehensive documentation for this endpoint including parameters and responses",
-                    score=CRITICAL_SCORE,
-                    rationale="Undocumented endpoints create maintenance burden and usability issues for API consumers",
-                )
-            )
+            findings.append(_create_finding(
+                finding_id=f"undocumented:{endpoint}",
+                finding_type=FINDING_TYPE_MISSING_DOC,
+                title="Undocumented API Endpoint",
+                description=f"API endpoint '{endpoint}' exists in implementation but lacks documentation",
+                severity=SEVERITY_HIGH,
+                source_refs=[{"id": endpoint, "type": "endpoint"}],
+                evidence=[f"Endpoint {endpoint} found in API implementation but missing from documentation"],
+                suggestion="Add comprehensive documentation for this endpoint including parameters and responses",
+                score=CRITICAL_SCORE,
+                rationale="Undocumented endpoints create maintenance burden and usability issues for API consumers"
+            ))
 
         # Create findings for unimplemented endpoints
         for endpoint in unimplemented:
-            findings.append(
-                _create_finding(
-                    finding_id=f"unimplemented:{endpoint}",
-                    finding_type=FINDING_TYPE_MISSING_IMPL,
-                    title="Unimplemented Documented Endpoint",
-                    description=f"Documented endpoint '{endpoint}' lacks implementation",
-                    severity=SEVERITY_HIGH,
-                    source_refs=[{"id": endpoint, "type": "endpoint"}],
-                    evidence=[f"Endpoint {endpoint} documented but not found in API implementation"],
-                    suggestion="Implement the documented endpoint or remove it from documentation to avoid confusion",
-                    score=HIGH_PRIORITY_SCORE,
-                    rationale="Documentation promises functionality that doesn't exist, breaking developer expectations",
-                )
-            )
+            findings.append(_create_finding(
+                finding_id=f"unimplemented:{endpoint}",
+                finding_type=FINDING_TYPE_MISSING_IMPL,
+                title="Unimplemented Documented Endpoint",
+                description=f"Documented endpoint '{endpoint}' lacks implementation",
+                severity=SEVERITY_HIGH,
+                source_refs=[{"id": endpoint, "type": "endpoint"}],
+                evidence=[f"Endpoint {endpoint} documented but not found in API implementation"],
+                suggestion="Implement the documented endpoint or remove it from documentation to avoid confusion",
+                score=HIGH_PRIORITY_SCORE,
+                rationale="Documentation promises functionality that doesn't exist, breaking developer expectations"
+            ))
 
         return findings
 
     except Exception as e:
         # Log error and return empty findings rather than failing completely
-        operation_exception = AnalysisOperationException(
-            operation="detect_api_mismatches",
-            error_message=str(e),
-            context={"docs_count": len(docs), "apis_count": len(apis), **context}
-        )
-        handle_analysis_error(
-            "detect API mismatches",
-            operation_exception,
-            docs_count=len(docs),
-            apis_count=len(apis),
-            **context,
-        )
+        handle_analysis_error("detect API mismatches", e, docs_count=len(docs), apis_count=len(apis), **context)
         return []
 
 
@@ -320,18 +263,15 @@ def _count_by_attribute(findings: List[Finding], attribute: str) -> Dict[str, in
         counts[value] = counts.get(value, 0) + 1
     return counts
 
-
 def _filter_by_severity(findings: List[Finding], severities: List[str]) -> List[Finding]:
     """Filter findings by severity levels."""
     return [f for f in findings if f.severity in severities]
-
 
 def _calculate_health_score(findings: List[Finding]) -> int:
     """Calculate documentation health score based on findings."""
     high_priority_count = len(_filter_by_severity(findings, [SEVERITY_CRITICAL, SEVERITY_HIGH]))
     # Deduct 5 points per high-priority finding, minimum score of 0
     return max(0, 100 - (high_priority_count * 5))
-
 
 def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
     """Generate comprehensive summary report of findings with improved analysis."""
@@ -346,7 +286,7 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
                 "critical_issues": 0,
                 "high_priority": 0,
                 "health_score": 100,
-                "recommendations": ["Documentation appears healthy - no issues found"],
+                "recommendations": ["Documentation appears healthy - no issues found"]
             }
 
         # Calculate various metrics
@@ -376,17 +316,12 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
             "critical_issues": len(critical_issues),
             "high_priority": len(high_priority),
             "health_score": health_score,
-            "recommendations": recommendations,
+            "recommendations": recommendations
         }
 
     except Exception as e:
         # Return a minimal report on error rather than failing completely
-        operation_exception = AnalysisOperationException(
-            operation="generate_summary_report",
-            error_message=str(e),
-            context={"total_findings": len(findings), **context}
-        )
-        handle_analysis_error("generate summary report", operation_exception, total_findings=len(findings), **context)
+        handle_analysis_error("generate summary report", e, total_findings=len(findings), **context)
         return {
             "total_findings": len(findings) if findings else 0,
             "severity_breakdown": {},
@@ -395,7 +330,7 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
             "high_priority": 0,
             "health_score": 0,
             "recommendations": ["Error occurred during report generation"],
-            "error": str(e),
+            "error": str(e)
         }
 
 
@@ -406,7 +341,7 @@ def _analyze_trends(findings: List[Finding]) -> Dict[str, Any]:
             "increasing": [],
             "stable": [],
             "decreasing": [],
-            "insights": ["No findings available for trend analysis"],
+            "insights": ["No findings available for trend analysis"]
         }
 
     # Count findings by type for trend analysis
@@ -446,9 +381,8 @@ def _analyze_trends(findings: List[Finding]) -> Dict[str, Any]:
         "increasing": increasing,
         "stable": stable,
         "decreasing": decreasing,
-        "insights": insights,
+        "insights": insights
     }
-
 
 def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> Dict[str, Any]:
     """Generate comprehensive trends report showing patterns over time."""
@@ -461,7 +395,7 @@ def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> 
                 "total_findings": 0,
                 "severity_trends": {"increasing": [], "stable": [], "decreasing": []},
                 "type_distribution": {},
-                "insights": ["No findings available for trend analysis"],
+                "insights": ["No findings available for trend analysis"]
             }
 
         # Analyze trends and patterns
@@ -474,31 +408,20 @@ def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> 
             "severity_trends": {
                 "increasing": trends_analysis["increasing"],
                 "stable": trends_analysis["stable"],
-                "decreasing": trends_analysis["decreasing"],
+                "decreasing": trends_analysis["decreasing"]
             },
             "type_distribution": type_distribution,
             "insights": trends_analysis["insights"],
             "recommendations": [
                 "Monitor increasing trend categories closely",
                 "Address stable issues to prevent escalation",
-                "Track decreasing trends as indicators of improvement",
-            ],
+                "Track decreasing trends as indicators of improvement"
+            ]
         }
 
     except Exception as e:
         # Return a minimal report on error rather than failing completely
-        operation_exception = AnalysisOperationException(
-            operation="generate_trends_report",
-            error_message=str(e),
-            context={"total_findings": len(findings), "time_window": time_window, **context}
-        )
-        handle_analysis_error(
-            "generate trends report",
-            operation_exception,
-            total_findings=len(findings),
-            time_window=time_window,
-            **context,
-        )
+        handle_analysis_error("generate trends report", e, total_findings=len(findings), time_window=time_window, **context)
         return {
             "time_window": time_window,
             "total_findings": len(findings) if findings else 0,
@@ -506,5 +429,5 @@ def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> 
             "type_distribution": {},
             "insights": ["Error occurred during trend analysis"],
             "recommendations": ["Unable to generate trend analysis due to error"],
-            "error": str(e),
+            "error": str(e)
         }

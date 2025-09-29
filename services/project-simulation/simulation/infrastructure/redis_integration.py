@@ -7,13 +7,12 @@ This module provides Redis-based publish/subscribe functionality for:
 - Service health monitoring
 """
 
-import asyncio
 import json
-from dataclasses import dataclass
+import asyncio
+from typing import Dict, Any, Optional, Callable, List
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
-
 import redis.asyncio as redis
+from dataclasses import dataclass
 
 from .logging import SimulationLogger
 
@@ -21,7 +20,6 @@ from .logging import SimulationLogger
 @dataclass
 class RedisConfig:
     """Configuration for Redis connection."""
-
     host: str = "localhost"
     port: int = 6379
     db: int = 0
@@ -48,7 +46,7 @@ class RedisPubSubManager:
                 port=self.config.port,
                 db=self.config.db,
                 password=self.config.password,
-                decode_responses=self.config.decode_responses,
+                decode_responses=self.config.decode_responses
             )
 
             # Test connection
@@ -80,7 +78,7 @@ class RedisPubSubManager:
             enriched_message = {
                 **message,
                 "timestamp": datetime.now().isoformat(),
-                "publisher": "simulation-service",
+                "publisher": "simulation-service"
             }
 
             # Publish to Redis
@@ -89,20 +87,16 @@ class RedisPubSubManager:
             self.logger.debug(
                 "Published message to Redis channel",
                 channel=channel,
-                message_type=message.get("type", "unknown"),
+                message_type=message.get("type", "unknown")
             )
 
             return True
 
         except Exception as e:
-            self.logger.error(
-                "Failed to publish message to Redis", error=str(e), channel=channel
-            )
+            self.logger.error("Failed to publish message to Redis", error=str(e), channel=channel)
             return False
 
-    async def subscribe(
-        self, channel: str, callback: Callable[[Dict[str, Any]], None]
-    ) -> None:
+    async def subscribe(self, channel: str, callback: Callable[[Dict[str, Any]], None]) -> None:
         """Subscribe to a Redis channel with a callback function."""
         if not self.is_connected:
             self.logger.warning("Cannot subscribe - Redis not connected")
@@ -123,9 +117,7 @@ class RedisPubSubManager:
             self.logger.info("Subscribed to Redis channel", channel=channel)
 
         except Exception as e:
-            self.logger.error(
-                "Failed to subscribe to Redis channel", error=str(e), channel=channel
-            )
+            self.logger.error("Failed to subscribe to Redis channel", error=str(e), channel=channel)
 
     async def unsubscribe(self, channel: str) -> None:
         """Unsubscribe from a Redis channel."""
@@ -154,7 +146,7 @@ class RedisPubSubManager:
                                 self.logger.error(
                                     "Error in Redis message callback",
                                     error=str(e),
-                                    channel=channel,
+                                    channel=channel
                                 )
 
         except Exception as e:
@@ -168,46 +160,42 @@ class SimulationRedisClient:
         self.redis_manager = redis_manager
         self.logger = logger
 
-    async def publish_simulation_event(
-        self, simulation_id: str, event_type: str, event_data: Dict[str, Any]
-    ) -> bool:
+    async def publish_simulation_event(self, simulation_id: str, event_type: str, event_data: Dict[str, Any]) -> bool:
         """Publish a simulation event to Redis."""
         channel = f"simulation:{simulation_id}"
-        message = {"type": event_type, "simulation_id": simulation_id, **event_data}
+        message = {
+            "type": event_type,
+            "simulation_id": simulation_id,
+            **event_data
+        }
 
         return await self.redis_manager.publish(channel, message)
 
-    async def publish_document_generated(
-        self, simulation_id: str, document_id: str, document_type: str
-    ) -> bool:
+    async def publish_document_generated(self, simulation_id: str, document_id: str, document_type: str) -> bool:
         """Publish document generation event."""
         channel = "documents:generated"
         message = {
             "type": "document_generated",
             "simulation_id": simulation_id,
             "document_id": document_id,
-            "document_type": document_type,
+            "document_type": document_type
         }
 
         return await self.redis_manager.publish(channel, message)
 
-    async def publish_prompt_used(
-        self, simulation_id: str, prompt_id: str, prompt_type: str
-    ) -> bool:
+    async def publish_prompt_used(self, simulation_id: str, prompt_id: str, prompt_type: str) -> bool:
         """Publish prompt usage event."""
         channel = "prompts:used"
         message = {
             "type": "prompt_used",
             "simulation_id": simulation_id,
             "prompt_id": prompt_id,
-            "prompt_type": prompt_type,
+            "prompt_type": prompt_type
         }
 
         return await self.redis_manager.publish(channel, message)
 
-    async def subscribe_to_simulation_events(
-        self, simulation_id: str, callback: Callable
-    ) -> None:
+    async def subscribe_to_simulation_events(self, simulation_id: str, callback: Callable) -> None:
         """Subscribe to events for a specific simulation."""
         channel = f"simulation:{simulation_id}"
         await self.redis_manager.subscribe(channel, callback)
@@ -227,9 +215,7 @@ _redis_manager = None
 _simulation_redis_client = None
 
 
-async def initialize_redis_integration(
-    logger: SimulationLogger, config: Optional[RedisConfig] = None
-) -> SimulationRedisClient:
+async def initialize_redis_integration(logger: SimulationLogger, config: Optional[RedisConfig] = None) -> SimulationRedisClient:
     """Initialize Redis integration with default configuration."""
     global _redis_config, _redis_manager, _simulation_redis_client
 
@@ -249,9 +235,7 @@ async def initialize_redis_integration(
 
         logger.info("Redis integration initialized successfully")
     except Exception as e:
-        logger.warning(
-            "Redis connection failed, continuing without Redis", error=str(e)
-        )
+        logger.warning("Redis connection failed, continuing without Redis", error=str(e))
 
     return _simulation_redis_client
 
@@ -261,33 +245,23 @@ async def get_simulation_redis_client() -> Optional[SimulationRedisClient]:
     return _simulation_redis_client
 
 
-async def publish_simulation_update(
-    simulation_id: str, update_type: str, update_data: Dict[str, Any]
-) -> bool:
+async def publish_simulation_update(simulation_id: str, update_type: str, update_data: Dict[str, Any]) -> bool:
     """Convenience function to publish simulation updates."""
     client = await get_simulation_redis_client()
     if client:
-        return await client.publish_simulation_event(
-            simulation_id, update_type, update_data
-        )
+        return await client.publish_simulation_event(simulation_id, update_type, update_data)
     return False
 
 
-async def publish_document_event(
-    simulation_id: str, document_id: str, document_type: str
-) -> bool:
+async def publish_document_event(simulation_id: str, document_id: str, document_type: str) -> bool:
     """Convenience function to publish document generation events."""
     client = await get_simulation_redis_client()
     if client:
-        return await client.publish_document_generated(
-            simulation_id, document_id, document_type
-        )
+        return await client.publish_document_generated(simulation_id, document_id, document_type)
     return False
 
 
-async def publish_prompt_event(
-    simulation_id: str, prompt_id: str, prompt_type: str
-) -> bool:
+async def publish_prompt_event(simulation_id: str, prompt_id: str, prompt_type: str) -> bool:
     """Convenience function to publish prompt usage events."""
     client = await get_simulation_redis_client()
     if client:

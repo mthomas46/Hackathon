@@ -3,8 +3,9 @@ Service registry for managing service registrations.
 Following DDD infrastructure patterns with clean separation of concerns.
 """
 
-from threading import Lock
 from typing import Dict, List, Optional
+from threading import Lock
+from datetime import datetime
 
 from simulation.domain.entities.discovery import ServiceRegistration
 
@@ -26,9 +27,7 @@ class ServiceRegistry:
         with self._lock:
             return self._services.get(service_name)
 
-    def update_service(
-        self, service_name: str, updated_registration: ServiceRegistration
-    ) -> bool:
+    def update_service(self, service_name: str, updated_registration: ServiceRegistration) -> bool:
         """Update an existing service registration."""
         with self._lock:
             if service_name in self._services:
@@ -53,8 +52,7 @@ class ServiceRegistry:
         """Get services whose names match the given pattern."""
         with self._lock:
             return [
-                service
-                for service in self._services.values()
+                service for service in self._services.values()
                 if pattern.lower() in service.service_name.lower()
             ]
 

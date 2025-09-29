@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from ..entities import Analysis, Document, Finding
+from ..entities import Document, Analysis, Finding
 
 
 class Specification(ABC):
@@ -12,16 +12,17 @@ class Specification(ABC):
     @abstractmethod
     def is_satisfied_by(self, candidate: Any) -> bool:
         """Check if candidate satisfies the specification."""
+        pass
 
-    def __and__(self, other: "Specification") -> "Specification":
+    def __and__(self, other: 'Specification') -> 'Specification':
         """Combine specifications with AND logic."""
         return AndSpecification(self, other)
 
-    def __or__(self, other: "Specification") -> "Specification":
+    def __or__(self, other: 'Specification') -> 'Specification':
         """Combine specifications with OR logic."""
         return OrSpecification(self, other)
 
-    def __invert__(self) -> "Specification":
+    def __invert__(self) -> 'Specification':
         """Negate specification."""
         return NotSpecification(self)
 
@@ -70,11 +71,9 @@ class DocumentSpecifications:
     @staticmethod
     def has_author(author: str) -> Specification:
         """Specification for documents with specific author."""
-
         class HasAuthorSpec(Specification):
             def is_satisfied_by(self, candidate: Document) -> bool:
                 return candidate.metadata.author == author
-
         return HasAuthorSpec()
 
     @staticmethod
@@ -88,27 +87,22 @@ class DocumentSpecifications:
 
             def is_satisfied_by(self, candidate: Document) -> bool:
                 return candidate.metadata.updated_at >= self.cutoff_date
-
         return IsRecentSpec(days)
 
     @staticmethod
     def has_tag(tag: str) -> Specification:
         """Specification for documents with specific tag."""
-
         class HasTagSpec(Specification):
             def is_satisfied_by(self, candidate: Document) -> bool:
                 return tag in candidate.metadata.tags
-
         return HasTagSpec()
 
     @staticmethod
     def word_count_above(count: int) -> Specification:
         """Specification for documents with word count above threshold."""
-
         class WordCountAboveSpec(Specification):
             def is_satisfied_by(self, candidate: Document) -> bool:
                 return candidate.word_count > count
-
         return WordCountAboveSpec()
 
 
@@ -118,31 +112,25 @@ class AnalysisSpecifications:
     @staticmethod
     def has_status(status: str) -> Specification:
         """Specification for analyses with specific status."""
-
         class HasStatusSpec(Specification):
             def is_satisfied_by(self, candidate: Analysis) -> bool:
                 return candidate.status.value == status
-
         return HasStatusSpec()
 
     @staticmethod
     def is_completed() -> Specification:
         """Specification for completed analyses."""
-
         class IsCompletedSpec(Specification):
             def is_satisfied_by(self, candidate: Analysis) -> bool:
                 return candidate.is_completed()
-
         return IsCompletedSpec()
 
     @staticmethod
     def has_analysis_type(analysis_type: str) -> Specification:
         """Specification for analyses of specific type."""
-
         class HasAnalysisTypeSpec(Specification):
             def is_satisfied_by(self, candidate: Analysis) -> bool:
                 return candidate.analysis_type == analysis_type
-
         return HasAnalysisTypeSpec()
 
 
@@ -152,39 +140,31 @@ class FindingSpecifications:
     @staticmethod
     def has_severity(severity: str) -> Specification:
         """Specification for findings with specific severity."""
-
         class HasSeveritySpec(Specification):
             def is_satisfied_by(self, candidate: Finding) -> bool:
                 return candidate.severity.value == severity
-
         return HasSeveritySpec()
 
     @staticmethod
     def has_category(category: str) -> Specification:
         """Specification for findings with specific category."""
-
         class HasCategorySpec(Specification):
             def is_satisfied_by(self, candidate: Finding) -> bool:
                 return candidate.category == category
-
         return HasCategorySpec()
 
     @staticmethod
     def is_unresolved() -> Specification:
         """Specification for unresolved findings."""
-
         class IsUnresolvedSpec(Specification):
             def is_satisfied_by(self, candidate: Finding) -> bool:
                 return not candidate.is_resolved()
-
         return IsUnresolvedSpec()
 
     @staticmethod
     def confidence_above(threshold: float) -> Specification:
         """Specification for findings with confidence above threshold."""
-
         class ConfidenceAboveSpec(Specification):
             def is_satisfied_by(self, candidate: Finding) -> bool:
                 return candidate.confidence >= threshold
-
         return ConfidenceAboveSpec()

@@ -5,20 +5,18 @@ milestones, and timeline progression in the domain-driven design architecture.
 """
 
 from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import List, Dict, Optional, Any
 from uuid import UUID, uuid4
 
-from ..events import MilestoneAchieved, PhaseDelayed, PhaseStarted
 from ..value_objects import Duration, Percentage
+from ..events import PhaseStarted, PhaseDelayed, MilestoneAchieved
 
 
 @dataclass(frozen=True)
 class TimelineId:
     """Value object for Timeline ID."""
-
     value: UUID = field(default_factory=uuid4)
 
     @classmethod
@@ -33,7 +31,6 @@ class TimelineId:
 @dataclass
 class Milestone:
     """Entity representing a project milestone."""
-
     id: str
     name: str
     description: str
@@ -70,7 +67,6 @@ class Milestone:
 @dataclass
 class TimelinePhase:
     """Enhanced entity representing a timeline phase with detailed tracking."""
-
     id: str
     name: str
     display_name: str
@@ -92,9 +88,7 @@ class TimelinePhase:
         """Start the timeline phase."""
         self.status = "in_progress"
         self.start_date = start_date or datetime.now()
-        self.planned_end_date = self.start_date + timedelta(
-            days=self.planned_duration.total_days
-        )
+        self.planned_end_date = self.start_date + timedelta(days=self.planned_duration.total_days)
 
     def update_progress(self, progress: Percentage) -> None:
         """Update phase progress percentage."""
@@ -106,7 +100,7 @@ class TimelinePhase:
         self.end_date = end_date or datetime.now()
         self.actual_duration = Duration(
             weeks=int((self.end_date - self.start_date).days // 7),
-            days=(self.end_date - self.start_date).days % 7,
+            days=(self.end_date - self.start_date).days % 7
         )
         self.progress_percentage = Percentage(100)
 
@@ -160,7 +154,6 @@ class Timeline:
     This is the root entity for the Timeline aggregate, managing project phases,
     milestones, and overall timeline progression.
     """
-
     id: TimelineId
     project_id: str
     phases: List[TimelinePhase] = field(default_factory=list)
@@ -190,18 +183,14 @@ class Timeline:
         phase.start_phase(start_date)
         self.updated_at = datetime.now()
 
-        self._add_domain_event(
-            PhaseStarted(
-                timeline_id=str(self.id.value),
-                project_id=self.project_id,
-                phase_name=phase.name,
-                start_date=phase.start_date,
-            )
-        )
+        self._add_domain_event(PhaseStarted(
+            timeline_id=str(self.id.value),
+            project_id=self.project_id,
+            phase_name=phase.name,
+            start_date=phase.start_date
+        ))
 
-    def complete_phase(
-        self, phase_id: str, end_date: Optional[datetime] = None
-    ) -> None:
+    def complete_phase(self, phase_id: str, end_date: Optional[datetime] = None) -> None:
         """Complete a timeline phase."""
         phase = self._get_phase(phase_id)
         phase.complete_phase(end_date)
@@ -216,16 +205,14 @@ class Timeline:
         self.updated_at = datetime.now()
 
         if old_end_date and phase.planned_end_date:
-            self._add_domain_event(
-                PhaseDelayed(
-                    timeline_id=str(self.id.value),
-                    project_id=self.project_id,
-                    phase_name=phase.name,
-                    original_end_date=old_end_date,
-                    new_end_date=phase.planned_end_date,
-                    delay_reason=reason,
-                )
-            )
+            self._add_domain_event(PhaseDelayed(
+                timeline_id=str(self.id.value),
+                project_id=self.project_id,
+                phase_name=phase.name,
+                original_end_date=old_end_date,
+                new_end_date=phase.planned_end_date,
+                delay_reason=reason
+            ))
 
     def add_milestone(self, phase_id: str, milestone: Milestone) -> None:
         """Add a milestone to a specific phase."""
@@ -233,33 +220,25 @@ class Timeline:
         phase.add_milestone(milestone)
         self.updated_at = datetime.now()
 
-    def achieve_milestone(
-        self, phase_id: str, milestone_id: str, achieved_date: Optional[datetime] = None
-    ) -> None:
+    def achieve_milestone(self, phase_id: str, milestone_id: str, achieved_date: Optional[datetime] = None) -> None:
         """Achieve a milestone."""
         phase = self._get_phase(phase_id)
         milestone = self._get_milestone(phase, milestone_id)
 
         # Check milestone dependencies
-        achieved_milestone_ids = [
-            m.id for p in self.phases for m in p.get_achieved_milestones()
-        ]
+        achieved_milestone_ids = [m.id for p in self.phases for m in p.get_achieved_milestones()]
         if not milestone.can_be_achieved(achieved_milestone_ids):
-            raise ValueError(
-                f"Cannot achieve milestone {milestone_id}: dependencies not met"
-            )
+            raise ValueError(f"Cannot achieve milestone {milestone_id}: dependencies not met")
 
         milestone.achieve_milestone(achieved_date)
         self.updated_at = datetime.now()
 
-        self._add_domain_event(
-            MilestoneAchieved(
-                timeline_id=str(self.id.value),
-                project_id=self.project_id,
-                milestone_name=milestone.name,
-                achieved_date=milestone.achieved_date,
-            )
-        )
+        self._add_domain_event(MilestoneAchieved(
+            timeline_id=str(self.id.value),
+            project_id=self.project_id,
+            milestone_name=milestone.name,
+            achieved_date=milestone.achieved_date
+        ))
 
     def get_current_phase(self) -> Optional[TimelinePhase]:
         """Get the currently active phase."""
@@ -274,11 +253,7 @@ class Timeline:
 
     def get_overdue_phases(self) -> List[TimelinePhase]:
         """Get all overdue phases."""
-        return [
-            phase
-            for phase in self.phases
-            if not phase.is_on_track() and phase.status != "completed"
-        ]
+        return [phase for phase in self.phases if not phase.is_on_track() and phase.status != "completed"]
 
     def get_overall_progress(self) -> Percentage:
         """Calculate overall timeline progress."""
@@ -309,9 +284,7 @@ class Timeline:
         # Estimate based on current phase progress
         if current_phase.progress_percentage.value > 0:
             days_per_percent = current_phase.planned_duration.total_days / 100
-            remaining_current_phase = days_per_percent * (
-                100 - current_phase.progress_percentage.value
-            )
+            remaining_current_phase = days_per_percent * (100 - current_phase.progress_percentage.value)
             remaining_days += remaining_current_phase
 
         return datetime.now() + timedelta(days=remaining_days)
@@ -342,7 +315,8 @@ class Timeline:
         upcoming = []
         for phase in self.phases:
             for milestone in phase.milestones:
-                if not milestone.is_achieved() and milestone.due_date <= cutoff_date:
+                if (not milestone.is_achieved() and
+                    milestone.due_date <= cutoff_date):
                     upcoming.append(milestone)
         return sorted(upcoming, key=lambda m: m.due_date)
 

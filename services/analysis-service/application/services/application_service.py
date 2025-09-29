@@ -1,24 +1,25 @@
 """Base Application Service - Foundation for cross-cutting concerns."""
 
+import asyncio
 import logging
 import time
-from abc import ABC
+from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
+from typing import Any, Dict, Optional, TypeVar, Generic
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, TypeVar
 
 from ..events import EventBus
+
 
 logger = logging.getLogger(__name__)
 
 
-T = TypeVar("T")
+T = TypeVar('T')
 
 
 @dataclass
 class ServiceContext:
     """Context for service operations."""
-
     correlation_id: Optional[str] = None
     user_id: Optional[str] = None
     session_id: Optional[str] = None
@@ -40,7 +41,7 @@ class ApplicationService(ABC):
         self,
         service_name: str,
         event_bus: Optional[EventBus] = None,
-        logger: Optional[logging.Logger] = None,
+        logger: Optional[logging.Logger] = None
     ):
         """Initialize application service."""
         self.service_name = service_name
@@ -77,7 +78,11 @@ class ApplicationService(ABC):
         return self._running
 
     @asynccontextmanager
-    async def operation_context(self, operation_name: str, context: Optional[ServiceContext] = None):
+    async def operation_context(
+        self,
+        operation_name: str,
+        context: Optional[ServiceContext] = None
+    ):
         """Context manager for service operations with monitoring."""
         if context is None:
             context = ServiceContext()
@@ -89,10 +94,10 @@ class ApplicationService(ABC):
             self.logger.debug(
                 f"Starting operation: {operation_name}",
                 extra={
-                    "operation": operation_name,
-                    "correlation_id": context.correlation_id,
-                    "service": self.service_name,
-                },
+                    'operation': operation_name,
+                    'correlation_id': context.correlation_id,
+                    'service': self.service_name
+                }
             )
 
             yield context
@@ -101,11 +106,11 @@ class ApplicationService(ABC):
             self.logger.info(
                 f"Completed operation: {operation_name} in {operation_duration:.3f}s",
                 extra={
-                    "operation": operation_name,
-                    "duration": operation_duration,
-                    "correlation_id": context.correlation_id,
-                    "service": self.service_name,
-                },
+                    'operation': operation_name,
+                    'duration': operation_duration,
+                    'correlation_id': context.correlation_id,
+                    'service': self.service_name
+                }
             )
 
         except Exception as e:
@@ -116,12 +121,12 @@ class ApplicationService(ABC):
                 f"Failed operation: {operation_name} in {operation_duration:.3f}s",
                 exc_info=True,
                 extra={
-                    "operation": operation_name,
-                    "duration": operation_duration,
-                    "error": str(e),
-                    "correlation_id": context.correlation_id,
-                    "service": self.service_name,
-                },
+                    'operation': operation_name,
+                    'duration': operation_duration,
+                    'error': str(e),
+                    'correlation_id': context.correlation_id,
+                    'service': self.service_name
+                }
             )
 
             # Publish operation failed event
@@ -131,7 +136,7 @@ class ApplicationService(ABC):
                     operation_name,
                     context,
                     error=str(e),
-                    duration=operation_duration,
+                    duration=operation_duration
                 )
 
             raise
@@ -141,15 +146,15 @@ class ApplicationService(ABC):
         current_time = time.time()
 
         health_status = {
-            "service": self.service_name,
-            "status": "healthy" if self._running else "stopped",
-            "timestamp": current_time,
-            "uptime": (current_time - self._last_health_check if self._last_health_check > 0 else 0),
-            "operations": {
-                "total": self._operation_count,
-                "errors": self._error_count,
-                "success_rate": (self._operation_count - self._error_count) / max(1, self._operation_count),
-            },
+            'service': self.service_name,
+            'status': 'healthy' if self._running else 'stopped',
+            'timestamp': current_time,
+            'uptime': current_time - self._last_health_check if self._last_health_check > 0 else 0,
+            'operations': {
+                'total': self._operation_count,
+                'errors': self._error_count,
+                'success_rate': (self._operation_count - self._error_count) / max(1, self._operation_count)
+            }
         }
 
         self._last_health_check = current_time
@@ -165,19 +170,25 @@ class ApplicationService(ABC):
         event = SystemHealthCheckEvent(
             event_id=f"{self.service_name}_{event_type}_{int(time.time())}",
             service_name=self.service_name,
-            service_version=getattr(self, "version", "1.0.0"),
+            service_version=getattr(self, 'version', '1.0.0'),
             health_status=event_type,
             response_time_ms=0.0,
             system_metrics={
-                "operation_count": self._operation_count,
-                "error_count": self._error_count,
-                **kwargs,
-            },
+                'operation_count': self._operation_count,
+                'error_count': self._error_count,
+                **kwargs
+            }
         )
 
         await self.event_bus.publish(event)
 
-    async def _publish_operation_event(self, event_type: str, operation_name: str, context: ServiceContext, **kwargs) -> None:
+    async def _publish_operation_event(
+        self,
+        event_type: str,
+        operation_name: str,
+        context: ServiceContext,
+        **kwargs
+    ) -> None:
         """Publish operation-related event."""
         if not self.event_bus:
             return
@@ -190,13 +201,13 @@ class ApplicationService(ABC):
             event_type=EventType.SYSTEM_HEALTH_CHECK,  # Using existing event type for now
             correlation_id=context.correlation_id,
             metadata={
-                "service": self.service_name,
-                "operation": operation_name,
-                "event_type": event_type,
-                "user_id": context.user_id,
-                "session_id": context.session_id,
-                **kwargs,
-            },
+                'service': self.service_name,
+                'operation': operation_name,
+                'event_type': event_type,
+                'user_id': context.user_id,
+                'session_id': context.session_id,
+                **kwargs
+            }
         )
 
         await self.event_bus.publish(event)
@@ -215,7 +226,7 @@ class ServiceRegistry:
         self,
         service: ApplicationService,
         startup_priority: int = 50,
-        shutdown_priority: int = 50,
+        shutdown_priority: int = 50
     ) -> None:
         """Register a service."""
         service_name = service.service_name
@@ -295,9 +306,9 @@ class ServiceRegistry:
             except Exception as e:
                 logger.error(f"Health check failed for {service_name}: {e}")
                 results[service_name] = {
-                    "service": service_name,
-                    "status": "error",
-                    "error": str(e),
+                    'service': service_name,
+                    'status': 'error',
+                    'error': str(e)
                 }
 
         return results

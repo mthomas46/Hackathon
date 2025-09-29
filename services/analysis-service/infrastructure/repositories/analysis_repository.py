@@ -1,9 +1,9 @@
 """Analysis repository implementation."""
 
+from typing import List, Optional, Dict, Any
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
 
-from ...domain.entities import Analysis
+from ...domain.entities import Analysis, AnalysisId, DocumentId
 
 
 class AnalysisRepository(ABC):
@@ -12,26 +12,32 @@ class AnalysisRepository(ABC):
     @abstractmethod
     async def save(self, analysis: Analysis) -> None:
         """Save an analysis."""
+        pass
 
     @abstractmethod
     async def get_by_id(self, analysis_id: str) -> Optional[Analysis]:
         """Get analysis by ID."""
+        pass
 
     @abstractmethod
     async def get_by_document_id(self, document_id: str) -> List[Analysis]:
         """Get all analyses for a document."""
+        pass
 
     @abstractmethod
     async def get_all(self) -> List[Analysis]:
         """Get all analyses."""
+        pass
 
     @abstractmethod
     async def get_by_status(self, status: str) -> List[Analysis]:
         """Get analyses by status."""
+        pass
 
     @abstractmethod
     async def delete(self, analysis_id: str) -> bool:
         """Delete an analysis."""
+        pass
 
 
 class InMemoryAnalysisRepository(AnalysisRepository):
@@ -70,7 +76,10 @@ class InMemoryAnalysisRepository(AnalysisRepository):
 
     async def get_by_status(self, status: str) -> List[Analysis]:
         """Get analyses by status from memory."""
-        return [analysis for analysis in self._analyses.values() if analysis.status.value == status]
+        return [
+            analysis for analysis in self._analyses.values()
+            if analysis.status.value == status
+        ]
 
     async def delete(self, analysis_id: str) -> bool:
         """Delete an analysis from memory."""

@@ -1,8 +1,7 @@
 """Integration Controller - Handles integration endpoints."""
 
-from typing import Any, Dict
-
-from fastapi import APIRouter
+from typing import Dict, Any
+from fastapi import APIRouter, HTTPException
 
 from ...modules.integration_handlers import integration_handlers
 

@@ -5,12 +5,12 @@ overrides, validation, and dynamic loading capabilities for the Project
 Simulation Service.
 """
 
-import json
 import os
-from dataclasses import dataclass, field
+import json
+import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-
+from typing import Dict, Any, Optional, List, Union
+from dataclasses import dataclass, field
 from dotenv import load_dotenv
 
 from ..logging import get_simulation_logger
@@ -19,7 +19,6 @@ from ..logging import get_simulation_logger
 @dataclass
 class ServiceConfig:
     """Service configuration settings."""
-
     name: str = "project-simulation"
     version: str = "1.0.0"
     environment: str = "development"
@@ -33,7 +32,6 @@ class ServiceConfig:
 @dataclass
 class DatabaseConfig:
     """Database configuration settings."""
-
     url: str = "sqlite:///./data/project_simulation.db"
     pool_size: int = 10
     max_overflow: int = 20
@@ -44,7 +42,6 @@ class DatabaseConfig:
 @dataclass
 class RedisConfig:
     """Redis configuration settings."""
-
     url: str = "redis://localhost:6379/0"
     db: int = 0
     max_connections: int = 20
@@ -55,13 +52,12 @@ class RedisConfig:
 @dataclass
 class EcosystemConfig:
     """Ecosystem service configuration."""
-
     mock_data_generator_url: str = "http://localhost:5001"
     analysis_service_url: str = "http://localhost:5002"
     interpreter_url: str = "http://localhost:5003"
     doc_store_url: str = "http://localhost:5004"
     llm_gateway_url: str = "http://localhost:5005"
-    notification-service_url: str = "http://localhost:5006"
+    notification_service_url: str = "http://localhost:5006"
     log_collector_url: str = "http://localhost:5007"
     discovery_agent_url: str = "http://localhost:5008"
     orchestrator_url: str = "http://localhost:5099"
@@ -71,7 +67,6 @@ class EcosystemConfig:
 @dataclass
 class ExternalServicesConfig:
     """External services configuration."""
-
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama2"
 
@@ -79,7 +74,6 @@ class ExternalServicesConfig:
 @dataclass
 class DevelopmentConfig:
     """Development-specific configuration."""
-
     enable_swagger: bool = True
     enable_redoc: bool = True
     enable_cors: bool = True
@@ -91,7 +85,6 @@ class DevelopmentConfig:
 @dataclass
 class SecurityConfig:
     """Security configuration."""
-
     rate_limit_enabled: bool = True
     jwt_secret: Optional[str] = None
     api_key: Optional[str] = None
@@ -103,7 +96,6 @@ class SecurityConfig:
 @dataclass
 class LoggingConfig:
     """Logging configuration."""
-
     format: str = "json"
     level: str = "INFO"
     enable_console: bool = True
@@ -115,7 +107,6 @@ class LoggingConfig:
 @dataclass
 class MonitoringConfig:
     """Monitoring configuration."""
-
     enable_metrics: bool = True
     metrics_port: int = 8001
     enable_health_checks: bool = True
@@ -126,7 +117,6 @@ class MonitoringConfig:
 @dataclass
 class FeatureFlags:
     """Feature flags for experimental features."""
-
     enable_advanced_analytics: bool = False
     enable_real_time_updates: bool = False
     enable_extended_logging: bool = False
@@ -136,7 +126,6 @@ class FeatureFlags:
 @dataclass
 class TestingConfig:
     """Testing configuration."""
-
     database_url: str = "sqlite:///./data/project_simulation_test.db"
     use_mock_services: bool = False
     mock_data_enabled: bool = True
@@ -145,7 +134,6 @@ class TestingConfig:
 @dataclass
 class DockerConfig:
     """Docker configuration."""
-
     image_tag: str = "latest"
     build_context: str = "."
     compose_file: str = "docker-compose.yml"
@@ -154,7 +142,6 @@ class DockerConfig:
 @dataclass
 class Config:
     """Main configuration class containing all settings."""
-
     service: ServiceConfig = field(default_factory=ServiceConfig)
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     redis: RedisConfig = field(default_factory=RedisConfig)
@@ -175,11 +162,7 @@ class ConfigManager:
     def __init__(self, config_dir: Optional[str] = None):
         """Initialize configuration manager."""
         self.logger = get_simulation_logger()
-        self.config_dir = (
-            Path(config_dir)
-            if config_dir
-            else Path(__file__).parent.parent.parent / "config"
-        )
+        self.config_dir = Path(config_dir) if config_dir else Path(__file__).parent.parent.parent / "config"
         self.config = Config()
         self._loaded = False
 
@@ -214,9 +197,7 @@ class ConfigManager:
         if base_config_file.exists():
             self._load_yaml_config(base_config_file)
         else:
-            self.logger.warning(
-                "Base configuration file not found", file=str(base_config_file)
-            )
+            self.logger.warning("Base configuration file not found", file=str(base_config_file))
 
     def _load_environment_config(self, environment: str):
         """Load environment-specific configuration."""
@@ -229,24 +210,19 @@ class ConfigManager:
         elif env_env_file.exists():
             self._load_env_config(env_env_file)
         else:
-            self.logger.warning(
-                f"No configuration file found for environment: {environment}"
-            )
+            self.logger.warning(f"No configuration file found for environment: {environment}")
 
     def _load_yaml_config(self, config_file: Path):
         """Load configuration from YAML file."""
         try:
             import yaml
-
-            with open(config_file, "r") as f:
+            with open(config_file, 'r') as f:
                 config_data = yaml.safe_load(f)
             self._apply_config_data(config_data)
         except ImportError:
             self.logger.warning("PyYAML not installed, skipping YAML config loading")
         except Exception as e:
-            self.logger.error(
-                "Failed to load YAML config", error=str(e), file=str(config_file)
-            )
+            self.logger.error("Failed to load YAML config", error=str(e), file=str(config_file))
 
     def _load_env_config(self, env_file: Path):
         """Load configuration from environment file."""
@@ -254,27 +230,19 @@ class ConfigManager:
             load_dotenv(env_file)
             self.logger.info("Environment configuration loaded", file=str(env_file))
         except Exception as e:
-            self.logger.error(
-                "Failed to load environment config", error=str(e), file=str(env_file)
-            )
+            self.logger.error("Failed to load environment config", error=str(e), file=str(env_file))
 
     def _load_from_environment(self):
         """Load configuration from environment variables."""
         # Service configuration
         self.config.service.name = os.getenv("SERVICE_NAME", self.config.service.name)
-        self.config.service.version = os.getenv(
-            "SERVICE_VERSION", self.config.service.version
-        )
-        self.config.service.environment = os.getenv(
-            "ENVIRONMENT", self.config.service.environment
-        )
+        self.config.service.version = os.getenv("SERVICE_VERSION", self.config.service.version)
+        self.config.service.environment = os.getenv("ENVIRONMENT", self.config.service.environment)
         self.config.service.host = os.getenv("HOST", self.config.service.host)
         self.config.service.port = int(os.getenv("PORT", self.config.service.port))
         self.config.service.debug = os.getenv("DEBUG", "").lower() == "true"
         self.config.service.reload = os.getenv("RELOAD", "").lower() == "true"
-        self.config.service.log_level = os.getenv(
-            "LOG_LEVEL", self.config.service.log_level
-        )
+        self.config.service.log_level = os.getenv("LOG_LEVEL", self.config.service.log_level)
 
         # Database configuration
         self.config.database.url = os.getenv("DATABASE_URL", self.config.database.url)
@@ -283,142 +251,71 @@ class ConfigManager:
         self.config.redis.url = os.getenv("REDIS_URL", self.config.redis.url)
 
         # Ecosystem service URLs
-        self.config.ecosystem.mock_data_generator_url = os.getenv(
-            "MOCK_DATA_GENERATOR_URL", self.config.ecosystem.mock_data_generator_url
-        )
-        self.config.ecosystem.analysis_service_url = os.getenv(
-            "ANALYSIS_SERVICE_URL", self.config.ecosystem.analysis_service_url
-        )
-        self.config.ecosystem.interpreter_url = os.getenv(
-            "INTERPRETER_URL", self.config.ecosystem.interpreter_url
-        )
-        self.config.ecosystem.doc_store_url = os.getenv(
-            "DOC_STORE_URL", self.config.ecosystem.doc_store_url
-        )
-        self.config.ecosystem.llm_gateway_url = os.getenv(
-            "LLM_GATEWAY_URL", self.config.ecosystem.llm_gateway_url
-        )
-        self.config.ecosystem.notification-service_url = os.getenv(
-            "NOTIFICATION_SERVICE_URL", self.config.ecosystem.notification-service_url
-        )
-        self.config.ecosystem.log_collector_url = os.getenv(
-            "LOG_COLLECTOR_URL", self.config.ecosystem.log_collector_url
-        )
-        self.config.ecosystem.discovery_agent_url = os.getenv(
-            "DISCOVERY_AGENT_URL", self.config.ecosystem.discovery_agent_url
-        )
-        self.config.ecosystem.orchestrator_url = os.getenv(
-            "ORCHESTRATOR_URL", self.config.ecosystem.orchestrator_url
-        )
-        self.config.ecosystem.frontend_url = os.getenv(
-            "FRONTEND_URL", self.config.ecosystem.frontend_url
-        )
+        self.config.ecosystem.mock_data_generator_url = os.getenv("MOCK_DATA_GENERATOR_URL", self.config.ecosystem.mock_data_generator_url)
+        self.config.ecosystem.analysis_service_url = os.getenv("ANALYSIS_SERVICE_URL", self.config.ecosystem.analysis_service_url)
+        self.config.ecosystem.interpreter_url = os.getenv("INTERPRETER_URL", self.config.ecosystem.interpreter_url)
+        self.config.ecosystem.doc_store_url = os.getenv("DOC_STORE_URL", self.config.ecosystem.doc_store_url)
+        self.config.ecosystem.llm_gateway_url = os.getenv("LLM_GATEWAY_URL", self.config.ecosystem.llm_gateway_url)
+        self.config.ecosystem.notification_service_url = os.getenv("NOTIFICATION_SERVICE_URL", self.config.ecosystem.notification_service_url)
+        self.config.ecosystem.log_collector_url = os.getenv("LOG_COLLECTOR_URL", self.config.ecosystem.log_collector_url)
+        self.config.ecosystem.discovery_agent_url = os.getenv("DISCOVERY_AGENT_URL", self.config.ecosystem.discovery_agent_url)
+        self.config.ecosystem.orchestrator_url = os.getenv("ORCHESTRATOR_URL", self.config.ecosystem.orchestrator_url)
+        self.config.ecosystem.frontend_url = os.getenv("FRONTEND_URL", self.config.ecosystem.frontend_url)
 
         # External services
-        self.config.external.ollama_base_url = os.getenv(
-            "OLLAMA_BASE_URL", self.config.external.ollama_base_url
-        )
-        self.config.external.ollama_model = os.getenv(
-            "OLLAMA_MODEL", self.config.external.ollama_model
-        )
+        self.config.external.ollama_base_url = os.getenv("OLLAMA_BASE_URL", self.config.external.ollama_base_url)
+        self.config.external.ollama_model = os.getenv("OLLAMA_MODEL", self.config.external.ollama_model)
 
         # Development features
-        self.config.development.enable_swagger = (
-            os.getenv("ENABLE_SWAGGER", "true").lower() == "true"
-        )
-        self.config.development.enable_redoc = (
-            os.getenv("ENABLE_REDOC", "true").lower() == "true"
-        )
-        self.config.development.enable_cors = (
-            os.getenv("ENABLE_CORS", "true").lower() == "true"
-        )
+        self.config.development.enable_swagger = os.getenv("ENABLE_SWAGGER", "true").lower() == "true"
+        self.config.development.enable_redoc = os.getenv("ENABLE_REDOC", "true").lower() == "true"
+        self.config.development.enable_cors = os.getenv("ENABLE_CORS", "true").lower() == "true"
         cors_origins = os.getenv("CORS_ORIGINS", "")
         if cors_origins:
-            self.config.development.cors_origins = [
-                origin.strip() for origin in cors_origins.split(",")
-            ]
-        self.config.development.auto_reload = (
-            os.getenv("AUTO_RELOAD", "").lower() == "true"
-        )
-        self.config.development.debug_mode = (
-            os.getenv("DEBUG_MODE", "").lower() == "true"
-        )
+            self.config.development.cors_origins = [origin.strip() for origin in cors_origins.split(",")]
+        self.config.development.auto_reload = os.getenv("AUTO_RELOAD", "").lower() == "true"
+        self.config.development.debug_mode = os.getenv("DEBUG_MODE", "").lower() == "true"
 
         # Security
-        self.config.security.rate_limit_enabled = (
-            os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
-        )
+        self.config.security.rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
         self.config.security.jwt_secret = os.getenv("JWT_SECRET")
         self.config.security.api_key = os.getenv("API_KEY")
 
         # Logging
         self.config.logging.format = os.getenv("LOG_FORMAT", self.config.logging.format)
         self.config.logging.level = os.getenv("LOG_LEVEL", self.config.logging.level)
-        self.config.logging.enable_console = (
-            os.getenv("ENABLE_CONSOLE_LOGGING", "true").lower() == "true"
-        )
-        self.config.logging.enable_file = (
-            os.getenv("ENABLE_FILE_LOGGING", "true").lower() == "true"
-        )
+        self.config.logging.enable_console = os.getenv("ENABLE_CONSOLE_LOGGING", "true").lower() == "true"
+        self.config.logging.enable_file = os.getenv("ENABLE_FILE_LOGGING", "true").lower() == "true"
         self.config.logging.log_file = os.getenv("LOG_FILE")
-        self.config.logging.enable_correlation_id = (
-            os.getenv("ENABLE_CORRELATION_ID", "true").lower() == "true"
-        )
+        self.config.logging.enable_correlation_id = os.getenv("ENABLE_CORRELATION_ID", "true").lower() == "true"
 
         # Monitoring
-        self.config.monitoring.enable_metrics = (
-            os.getenv("ENABLE_METRICS", "true").lower() == "true"
-        )
-        self.config.monitoring.metrics_port = int(
-            os.getenv("METRICS_PORT", self.config.monitoring.metrics_port)
-        )
-        self.config.monitoring.enable_health_checks = (
-            os.getenv("ENABLE_HEALTH_CHECKS", "true").lower() == "true"
-        )
-        self.config.monitoring.enable_profiling = (
-            os.getenv("ENABLE_PROFILING", "false").lower() == "true"
-        )
-        self.config.monitoring.profiling_output_dir = os.getenv(
-            "PROFILING_OUTPUT_DIR", self.config.monitoring.profiling_output_dir
-        )
+        self.config.monitoring.enable_metrics = os.getenv("ENABLE_METRICS", "true").lower() == "true"
+        self.config.monitoring.metrics_port = int(os.getenv("METRICS_PORT", self.config.monitoring.metrics_port))
+        self.config.monitoring.enable_health_checks = os.getenv("ENABLE_HEALTH_CHECKS", "true").lower() == "true"
+        self.config.monitoring.enable_profiling = os.getenv("ENABLE_PROFILING", "false").lower() == "true"
+        self.config.monitoring.profiling_output_dir = os.getenv("PROFILING_OUTPUT_DIR", self.config.monitoring.profiling_output_dir)
 
         # Feature flags
-        self.config.features.enable_advanced_analytics = (
-            os.getenv("ENABLE_ADVANCED_ANALYTICS", "false").lower() == "true"
-        )
-        self.config.features.enable_real_time_updates = (
-            os.getenv("ENABLE_REAL_TIME_UPDATES", "false").lower() == "true"
-        )
-        self.config.features.enable_extended_logging = (
-            os.getenv("ENABLE_EXTENDED_LOGGING", "false").lower() == "true"
-        )
-        self.config.features.enable_detailed_metrics = (
-            os.getenv("ENABLE_DETAILED_METRICS", "false").lower() == "true"
-        )
+        self.config.features.enable_advanced_analytics = os.getenv("ENABLE_ADVANCED_ANALYTICS", "false").lower() == "true"
+        self.config.features.enable_real_time_updates = os.getenv("ENABLE_REAL_TIME_UPDATES", "false").lower() == "true"
+        self.config.features.enable_extended_logging = os.getenv("ENABLE_EXTENDED_LOGGING", "false").lower() == "true"
+        self.config.features.enable_detailed_metrics = os.getenv("ENABLE_DETAILED_METRICS", "false").lower() == "true"
 
         # Testing
-        self.config.testing.database_url = os.getenv(
-            "TEST_DATABASE_URL", self.config.testing.database_url
-        )
-        self.config.testing.use_mock_services = (
-            os.getenv("USE_MOCK_SERVICES", "false").lower() == "true"
-        )
-        self.config.testing.mock_data_enabled = (
-            os.getenv("MOCK_DATA_ENABLED", "true").lower() == "true"
-        )
+        self.config.testing.database_url = os.getenv("TEST_DATABASE_URL", self.config.testing.database_url)
+        self.config.testing.use_mock_services = os.getenv("USE_MOCK_SERVICES", "false").lower() == "true"
+        self.config.testing.mock_data_enabled = os.getenv("MOCK_DATA_ENABLED", "true").lower() == "true"
 
         # Docker
-        self.config.docker.image_tag = os.getenv(
-            "DOCKER_IMAGE_TAG", self.config.docker.image_tag
-        )
-        self.config.docker.compose_file = os.getenv(
-            "DOCKER_COMPOSE_FILE", self.config.docker.compose_file
-        )
+        self.config.docker.image_tag = os.getenv("DOCKER_IMAGE_TAG", self.config.docker.image_tag)
+        self.config.docker.compose_file = os.getenv("DOCKER_COMPOSE_FILE", self.config.docker.compose_file)
 
     def _apply_config_data(self, config_data: Dict[str, Any]):
         """Apply configuration data to the config object."""
         # This would map the flat config data to the nested dataclass structure
         # Implementation would depend on the structure of the config files
+        pass
 
     def _validate_config(self):
         """Validate the loaded configuration."""
@@ -448,7 +345,7 @@ class ConfigManager:
             self.config.ecosystem.interpreter_url,
             self.config.ecosystem.doc_store_url,
             self.config.ecosystem.llm_gateway_url,
-            self.config.external.ollama_base_url,
+            self.config.external.ollama_base_url
         ]
 
         for url in urls_to_validate:
@@ -467,11 +364,11 @@ class ConfigManager:
             "interpreter": self.config.ecosystem.interpreter_url,
             "doc_store": self.config.ecosystem.doc_store_url,
             "llm_gateway": self.config.ecosystem.llm_gateway_url,
-            "notification-service": self.config.ecosystem.notification-service_url,
+            "notification_service": self.config.ecosystem.notification_service_url,
             "log_collector": self.config.ecosystem.log_collector_url,
             "discovery_agent": self.config.ecosystem.discovery_agent_url,
             "orchestrator": self.config.ecosystem.orchestrator_url,
-            "frontend": self.config.ecosystem.frontend_url,
+            "frontend": self.config.ecosystem.frontend_url
         }
 
     def is_development_mode(self) -> bool:
@@ -491,7 +388,7 @@ class ConfigManager:
     def save_to_file(self, file_path: str):
         """Save current configuration to a file."""
         config_dict = self.to_dict()
-        with open(file_path, "w") as f:
+        with open(file_path, 'w') as f:
             json.dump(config_dict, f, indent=2)
 
     def reload_config(self):
@@ -562,14 +459,14 @@ def is_production() -> bool:
 
 
 __all__ = [
-    "ConfigManager",
-    "get_config_manager",
-    "get_config",
-    "reload_config",
-    "get_service_name",
-    "get_environment",
-    "get_database_url",
-    "get_service_urls",
-    "is_development",
-    "is_production",
+    'ConfigManager',
+    'get_config_manager',
+    'get_config',
+    'reload_config',
+    'get_service_name',
+    'get_environment',
+    'get_database_url',
+    'get_service_urls',
+    'is_development',
+    'is_production'
 ]

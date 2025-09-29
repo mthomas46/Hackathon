@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Dict, Any
 
 from ..entities import AnalysisId, DocumentId
 
@@ -10,7 +10,6 @@ from ..entities import AnalysisId, DocumentId
 @dataclass(frozen=True)
 class AnalysisStarted:
     """Event fired when analysis starts."""
-
     analysis_id: AnalysisId
     document_id: DocumentId
     analysis_type: str
@@ -25,7 +24,6 @@ class AnalysisStarted:
 @dataclass(frozen=True)
 class AnalysisCompleted:
     """Event fired when analysis completes successfully."""
-
     analysis_id: AnalysisId
     document_id: DocumentId
     analysis_type: str
@@ -41,7 +39,6 @@ class AnalysisCompleted:
 @dataclass(frozen=True)
 class AnalysisFailed:
     """Event fired when analysis fails."""
-
     analysis_id: AnalysisId
     document_id: DocumentId
     analysis_type: str

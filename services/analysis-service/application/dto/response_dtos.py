@@ -1,14 +1,13 @@
 """Response DTOs for application layer."""
 
 from dataclasses import dataclass, field
+from typing import Optional, List, Dict, Any
 from datetime import datetime
-from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class DocumentResponse:
     """Response DTO for document data."""
-
     id: str
     title: str
     content_format: str
@@ -22,7 +21,7 @@ class DocumentResponse:
     is_recently_updated: bool
 
     @classmethod
-    def from_domain(cls, document) -> "DocumentResponse":
+    def from_domain(cls, document) -> 'DocumentResponse':
         """Create response from domain document entity."""
         return cls(
             id=document.id.value,
@@ -35,14 +34,13 @@ class DocumentResponse:
             word_count=document.word_count,
             created_at=document.metadata.created_at,
             updated_at=document.metadata.updated_at,
-            is_recently_updated=document.is_recently_updated,
+            is_recently_updated=document.is_recently_updated
         )
 
 
 @dataclass
 class AnalysisResponse:
     """Response DTO for analysis data."""
-
     id: str
     document_id: str
     analysis_type: str
@@ -55,7 +53,7 @@ class AnalysisResponse:
     error_message: Optional[str]
 
     @classmethod
-    def from_domain(cls, analysis) -> "AnalysisResponse":
+    def from_domain(cls, analysis) -> 'AnalysisResponse':
         """Create response from domain analysis entity."""
         return cls(
             id=analysis.id.value,
@@ -67,14 +65,13 @@ class AnalysisResponse:
             completed_at=analysis.completed_at,
             duration=analysis.duration,
             result=analysis.result,
-            error_message=analysis.error_message,
+            error_message=analysis.error_message
         )
 
 
 @dataclass
 class FindingResponse:
     """Response DTO for finding data."""
-
     id: str
     document_id: str
     analysis_id: str
@@ -92,7 +89,7 @@ class FindingResponse:
     is_resolved: bool
 
     @classmethod
-    def from_domain(cls, finding) -> "FindingResponse":
+    def from_domain(cls, finding) -> 'FindingResponse':
         """Create response from domain finding entity."""
         return cls(
             id=finding.id.value,
@@ -109,53 +106,51 @@ class FindingResponse:
             resolved_at=finding.resolved_at,
             resolved_by=finding.resolved_by,
             age_days=finding.age_days,
-            is_resolved=finding.is_resolved(),
+            is_resolved=finding.is_resolved()
         )
 
 
 @dataclass
 class ErrorResponse:
     """Response DTO for error cases."""
-
     error_code: str
     message: str
     details: Optional[Dict[str, Any]] = None
     timestamp: datetime = field(default_factory=datetime.now)
 
     @classmethod
-    def from_exception(cls, exception: Exception, error_code: str = "INTERNAL_ERROR") -> "ErrorResponse":
+    def from_exception(cls, exception: Exception, error_code: str = "INTERNAL_ERROR") -> 'ErrorResponse':
         """Create error response from exception."""
         return cls(
             error_code=error_code,
             message=str(exception),
-            details={"exception_type": type(exception).__name__},
+            details={"exception_type": type(exception).__name__}
         )
 
     @classmethod
-    def from_validation_errors(cls, errors: List[str]) -> "ErrorResponse":
+    def from_validation_errors(cls, errors: List[str]) -> 'ErrorResponse':
         """Create error response from validation errors."""
         return cls(
             error_code="VALIDATION_ERROR",
             message="Validation failed",
-            details={"validation_errors": errors},
+            details={"validation_errors": errors}
         )
 
 
 @dataclass
 class SuccessResponse:
     """Response DTO for successful operations."""
-
     message: str
     data: Optional[Dict[str, Any]] = None
     timestamp: datetime = field(default_factory=datetime.now)
 
     @classmethod
-    def with_data(cls, message: str, data: Dict[str, Any]) -> "SuccessResponse":
+    def with_data(cls, message: str, data: Dict[str, Any]) -> 'SuccessResponse':
         """Create success response with data."""
         return cls(message=message, data=data)
 
     @classmethod
-    def simple(cls, message: str) -> "SuccessResponse":
+    def simple(cls, message: str) -> 'SuccessResponse':
         """Create simple success response."""
         return cls(message=message)
 
@@ -163,7 +158,6 @@ class SuccessResponse:
 @dataclass
 class PaginatedResponse:
     """Response DTO for paginated results."""
-
     items: List[Any]
     total: int
     page: int
@@ -173,7 +167,7 @@ class PaginatedResponse:
     has_previous: bool
 
     @classmethod
-    def create(cls, items: List[Any], total: int, page: int, page_size: int) -> "PaginatedResponse":
+    def create(cls, items: List[Any], total: int, page: int, page_size: int) -> 'PaginatedResponse':
         """Create paginated response."""
         total_pages = (total + page_size - 1) // page_size  # Ceiling division
 
@@ -184,69 +178,62 @@ class PaginatedResponse:
             page_size=page_size,
             total_pages=total_pages,
             has_next=page < total_pages,
-            has_previous=page > 1,
+            has_previous=page > 1
         )
 
 
 @dataclass
 class DocumentListResponse:
     """Response DTO for document list with pagination."""
-
     documents: List[DocumentResponse]
     pagination: PaginatedResponse
     filters: Dict[str, Any]
 
     @classmethod
-    def create(
-        cls,
-        documents: List[DocumentResponse],
-        total: int,
-        page: int,
-        page_size: int,
-        filters: Dict[str, Any],
-    ) -> "DocumentListResponse":
+    def create(cls, documents: List[DocumentResponse], total: int,
+              page: int, page_size: int, filters: Dict[str, Any]) -> 'DocumentListResponse':
         """Create document list response."""
         pagination = PaginatedResponse.create(documents, total, page, page_size)
 
-        return cls(documents=documents, pagination=pagination, filters=filters)
+        return cls(
+            documents=documents,
+            pagination=pagination,
+            filters=filters
+        )
 
 
 @dataclass
 class FindingListResponse:
     """Response DTO for finding list with pagination."""
-
     findings: List[FindingResponse]
     pagination: PaginatedResponse
     filters: Dict[str, Any]
     summary: Dict[str, Any]
 
     @classmethod
-    def create(
-        cls,
-        findings: List[FindingResponse],
-        total: int,
-        page: int,
-        page_size: int,
-        filters: Dict[str, Any],
-    ) -> "FindingListResponse":
+    def create(cls, findings: List[FindingResponse], total: int,
+              page: int, page_size: int, filters: Dict[str, Any]) -> 'FindingListResponse':
         """Create finding list response."""
         pagination = PaginatedResponse.create(findings, total, page, page_size)
 
         # Calculate summary
         summary = {
-            "total_findings": total,
-            "severity_breakdown": cls._calculate_severity_breakdown(findings),
-            "category_breakdown": cls._calculate_category_breakdown(findings),
-            "resolved_count": sum(1 for f in findings if f.is_resolved),
-            "unresolved_count": sum(1 for f in findings if not f.is_resolved),
+            'total_findings': total,
+            'severity_breakdown': cls._calculate_severity_breakdown(findings),
+            'category_breakdown': cls._calculate_category_breakdown(findings),
+            'resolved_count': sum(1 for f in findings if f.is_resolved),
+            'unresolved_count': sum(1 for f in findings if not f.is_resolved)
         }
 
-        return cls(findings=findings, pagination=pagination, filters=filters, summary=summary)
+        return cls(
+            findings=findings,
+            pagination=pagination,
+            filters=filters,
+            summary=summary
+        )
 
     @staticmethod
-    def _calculate_severity_breakdown(
-        findings: List[FindingResponse],
-    ) -> Dict[str, int]:
+    def _calculate_severity_breakdown(findings: List[FindingResponse]) -> Dict[str, int]:
         """Calculate severity breakdown."""
         breakdown = {}
         for finding in findings:
@@ -255,9 +242,7 @@ class FindingListResponse:
         return breakdown
 
     @staticmethod
-    def _calculate_category_breakdown(
-        findings: List[FindingResponse],
-    ) -> Dict[str, int]:
+    def _calculate_category_breakdown(findings: List[FindingResponse]) -> Dict[str, int]:
         """Calculate category breakdown."""
         breakdown = {}
         for finding in findings:
@@ -269,7 +254,6 @@ class FindingListResponse:
 @dataclass
 class AnalysisResultResponse:
     """Response DTO for analysis results."""
-
     analysis_id: str
     document_id: str
     analysis_type: str
@@ -280,7 +264,7 @@ class AnalysisResultResponse:
     completed_at: datetime
 
     @classmethod
-    def create(cls, analysis, findings: List[FindingResponse]) -> "AnalysisResultResponse":
+    def create(cls, analysis, findings: List[FindingResponse]) -> 'AnalysisResultResponse':
         """Create analysis result response."""
         return cls(
             analysis_id=analysis.id.value,
@@ -290,35 +274,34 @@ class AnalysisResultResponse:
             results=analysis.result or {},
             findings=findings,
             execution_time_seconds=analysis.duration,
-            completed_at=analysis.completed_at or datetime.now(),
+            completed_at=analysis.completed_at or datetime.now()
         )
 
 
 @dataclass
 class HealthCheckResponse:
     """Response DTO for health check."""
-
     status: str
     timestamp: datetime
     services: Dict[str, str]
     metrics: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def healthy(cls, services: Dict[str, str], metrics: Dict[str, Any] = None) -> "HealthCheckResponse":
+    def healthy(cls, services: Dict[str, str], metrics: Dict[str, Any] = None) -> 'HealthCheckResponse':
         """Create healthy response."""
         return cls(
             status="healthy",
             timestamp=datetime.now(),
             services=services,
-            metrics=metrics or {},
+            metrics=metrics or {}
         )
 
     @classmethod
-    def unhealthy(cls, services: Dict[str, str], issue: str) -> "HealthCheckResponse":
+    def unhealthy(cls, services: Dict[str, str], issue: str) -> 'HealthCheckResponse':
         """Create unhealthy response."""
         return cls(
             status="unhealthy",
             timestamp=datetime.now(),
             services=services,
-            metrics={"issue": issue},
+            metrics={"issue": issue}
         )

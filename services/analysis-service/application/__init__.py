@@ -1,5 +1,10 @@
-"""Application layer - Delegates to existing application structure."""
+"""Application layer for Analysis Service."""
 
-from application import *
+# Import services and handlers separately to avoid import issues
+# from .services.analysis_application_service import AnalysisApplicationService
+# from .handlers.analysis_handler import AnalysisHandler
 
-__all__ = []
+__all__ = [
+    # 'AnalysisApplicationService',
+    # 'AnalysisHandler'
+]

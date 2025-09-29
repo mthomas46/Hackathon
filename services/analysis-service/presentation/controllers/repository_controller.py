@@ -1,13 +1,14 @@
 """Repository Controller - Handles repository analysis endpoints."""
 
-from fastapi import APIRouter
+from typing import Dict, Any
+from fastapi import APIRouter, HTTPException
 
-from ...modules.analysis_handlers import analysis_handlers
 from ...modules.models import (
     CrossRepositoryAnalysisRequest,
     RepositoryConnectivityRequest,
-    RepositoryConnectorConfigRequest,
+    RepositoryConnectorConfigRequest
 )
+from ...modules.analysis_handlers import analysis_handlers
 
 
 class RepositoryController:
@@ -31,9 +32,7 @@ class RepositoryController:
             return await analysis_handlers.handle_cross_repository_analysis(req)
 
         @self.router.post("/repositories/connectivity")
-        async def analyze_repository_connectivity_endpoint(
-            req: RepositoryConnectivityRequest,
-        ):
+        async def analyze_repository_connectivity_endpoint(req: RepositoryConnectivityRequest):
             """Analyze connectivity and dependencies between repositories.
 
             Examines how repositories are connected through documentation references,
@@ -42,9 +41,7 @@ class RepositoryController:
             return await analysis_handlers.handle_repository_connectivity(req)
 
         @self.router.post("/repositories/connectors/config")
-        async def configure_repository_connectors_endpoint(
-            req: RepositoryConnectorConfigRequest,
-        ):
+        async def configure_repository_connectors_endpoint(req: RepositoryConnectorConfigRequest):
             """Configure repository connectors for external systems.
 
             Configures connectors and authentication for external repository systems

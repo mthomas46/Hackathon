@@ -1,34 +1,36 @@
 """Validation pipeline for orchestrating validation across the application."""
 
+import asyncio
 import logging
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
-from ..cqrs.command_bus import CommandBus
-from ..cqrs.query_bus import QueryBus
 from .base_validator import (
     BaseValidator,
-    CompositeValidator,
-    ValidationContext,
+    ValidationResult,
     ValidationError,
     ValidationException,
-    ValidationResult,
-)
-from .business_validators import (
-    AnalysisBusinessValidator,
-    DocumentBusinessValidator,
-    FindingBusinessValidator,
+    ValidationContext,
+    CompositeValidator
 )
 from .command_validators import (
     CreateDocumentCommandValidator,
-    CreateFindingCommandValidator,
-    PerformAnalysisCommandValidator,
     UpdateDocumentCommandValidator,
+    PerformAnalysisCommandValidator,
+    CreateFindingCommandValidator
 )
 from .query_validators import (
-    GetAnalysisQueryValidator,
     GetDocumentQueryValidator,
-    ListFindingsQueryValidator,
+    GetAnalysisQueryValidator,
+    ListFindingsQueryValidator
 )
+from .business_validators import (
+    DocumentBusinessValidator,
+    AnalysisBusinessValidator,
+    FindingBusinessValidator
+)
+from ..cqrs.command_bus import CommandBus
+from ..cqrs.query_bus import QueryBus
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,16 +59,16 @@ class ValidationPipeline:
         self.register_query_validator(ListFindingsQueryValidator())
 
         # Business validators
-        self.register_business_validator("document", DocumentBusinessValidator())
-        self.register_business_validator("analysis", AnalysisBusinessValidator())
-        self.register_business_validator("finding", FindingBusinessValidator())
+        self.register_business_validator('document', DocumentBusinessValidator())
+        self.register_business_validator('analysis', AnalysisBusinessValidator())
+        self.register_business_validator('finding', FindingBusinessValidator())
 
     def register_command_validator(self, validator: BaseValidator):
         """Register a validator for a specific command type."""
         # Extract command type from validator name
         validator_name = validator.__class__.__name__
-        if validator_name.endswith("Validator"):
-            command_name = validator_name.replace("Validator", "").replace("Command", "Command")
+        if validator_name.endswith('Validator'):
+            command_name = validator_name.replace('Validator', '').replace('Command', 'Command')
             # This is a simplified mapping - in practice you'd want a more robust system
             command_type = self._get_command_type_from_name(command_name)
             if command_type:
@@ -77,8 +79,8 @@ class ValidationPipeline:
         """Register a validator for a specific query type."""
         # Extract query type from validator name
         validator_name = validator.__class__.__name__
-        if validator_name.endswith("Validator"):
-            query_name = validator_name.replace("Validator", "").replace("Query", "Query")
+        if validator_name.endswith('Validator'):
+            query_name = validator_name.replace('Validator', '').replace('Query', 'Query')
             query_type = self._get_query_type_from_name(query_name)
             if query_type:
                 self.query_validators[query_type] = validator
@@ -93,19 +95,19 @@ class ValidationPipeline:
         """Get command type from name. This is a simplified implementation."""
         # In a real implementation, you'd have a registry or use type hints
         command_mappings = {
-            "CreateDocument": "CreateDocumentCommand",
-            "UpdateDocument": "UpdateDocumentCommand",
-            "PerformAnalysis": "PerformAnalysisCommand",
-            "CreateFinding": "CreateFindingCommand",
+            'CreateDocument': 'CreateDocumentCommand',
+            'UpdateDocument': 'UpdateDocumentCommand',
+            'PerformAnalysis': 'PerformAnalysisCommand',
+            'CreateFinding': 'CreateFindingCommand'
         }
         return command_mappings.get(name)
 
     def _get_query_type_from_name(self, name: str):
         """Get query type from name. This is a simplified implementation."""
         query_mappings = {
-            "GetDocument": "GetDocumentQuery",
-            "GetAnalysis": "GetAnalysisQuery",
-            "ListFindings": "ListFindingsQuery",
+            'GetDocument': 'GetDocumentQuery',
+            'GetAnalysis': 'GetAnalysisQuery',
+            'ListFindings': 'ListFindingsQuery'
         }
         return query_mappings.get(name)
 
@@ -124,14 +126,11 @@ class ValidationPipeline:
         result = await validator.validate(command)
 
         if not result.is_valid:
-            logger.warning(
-                f"Command validation failed: {command_type.__name__}",
-                extra={
-                    "command_type": command_type.__name__,
-                    "errors": [e.message for e in result.errors],
-                    "correlation_id": context.correlation_id,
-                },
-            )
+            logger.warning(f"Command validation failed: {command_type.__name__}", extra={
+                'command_type': command_type.__name__,
+                'errors': [e.message for e in result.errors],
+                'correlation_id': context.correlation_id
+            })
 
         return result
 
@@ -150,20 +149,15 @@ class ValidationPipeline:
         result = await validator.validate(query)
 
         if not result.is_valid:
-            logger.warning(
-                f"Query validation failed: {query_type.__name__}",
-                extra={
-                    "query_type": query_type.__name__,
-                    "errors": [e.message for e in result.errors],
-                    "correlation_id": context.correlation_id,
-                },
-            )
+            logger.warning(f"Query validation failed: {query_type.__name__}", extra={
+                'query_type': query_type.__name__,
+                'errors': [e.message for e in result.errors],
+                'correlation_id': context.correlation_id
+            })
 
         return result
 
-    async def validate_business_rules(
-        self, entity: Any, entity_type: str, context: Optional[ValidationContext] = None
-    ) -> ValidationResult:
+    async def validate_business_rules(self, entity: Any, entity_type: str, context: Optional[ValidationContext] = None) -> ValidationResult:
         """Validate business rules for an entity."""
         context = context or ValidationContext()
 
@@ -177,14 +171,11 @@ class ValidationPipeline:
         result = await validator.validate(entity)
 
         if result.warnings:
-            logger.info(
-                f"Business rule warnings for {entity_type}",
-                extra={
-                    "entity_type": entity_type,
-                    "warnings": [w.message for w in result.warnings],
-                    "correlation_id": context.correlation_id,
-                },
-            )
+            logger.info(f"Business rule warnings for {entity_type}", extra={
+                'entity_type': entity_type,
+                'warnings': [w.message for w in result.warnings],
+                'correlation_id': context.correlation_id
+            })
 
         return result
 
@@ -199,23 +190,23 @@ class ValidationPipeline:
         validators = []
 
         # Add command/query validator
-        if "Command" in obj_name:
+        if 'Command' in obj_name:
             validator = self.command_validators.get(obj_type)
             if validator:
                 validators.append(validator)
-        elif "Query" in obj_name:
+        elif 'Query' in obj_name:
             validator = self.query_validators.get(obj_type)
             if validator:
                 validators.append(validator)
 
         # Add business validators if applicable
-        if hasattr(command_or_query, "document_id"):
-            doc_validator = self.business_validators.get("document")
+        if hasattr(command_or_query, 'document_id'):
+            doc_validator = self.business_validators.get('document')
             if doc_validator:
                 validators.append(doc_validator)
 
-        if hasattr(command_or_query, "analysis_id"):
-            analysis_validator = self.business_validators.get("analysis")
+        if hasattr(command_or_query, 'analysis_id'):
+            analysis_validator = self.business_validators.get('analysis')
             if analysis_validator:
                 validators.append(analysis_validator)
 
@@ -229,15 +220,12 @@ class ValidationPipeline:
         result = await composite.validate(command_or_query)
 
         if not result.is_valid:
-            logger.warning(
-                f"Validation failed for {obj_name}",
-                extra={
-                    "object_type": obj_name,
-                    "errors": [e.message for e in result.errors],
-                    "warnings": [w.message for w in result.warnings],
-                    "correlation_id": context.correlation_id,
-                },
-            )
+            logger.warning(f"Validation failed for {obj_name}", extra={
+                'object_type': obj_name,
+                'errors': [e.message for e in result.errors],
+                'warnings': [w.message for w in result.warnings],
+                'correlation_id': context.correlation_id
+            })
 
         return result
 
@@ -252,9 +240,9 @@ class ValidationMiddleware:
     async def validate_command(self, command: Any) -> None:
         """Validate command and raise exception if invalid."""
         context = ValidationContext(
-            user_id=getattr(command, "user_id", None),
-            session_id=getattr(command, "session_id", None),
-            correlation_id=getattr(command, "correlation_id", None),
+            user_id=getattr(command, 'user_id', None),
+            session_id=getattr(command, 'session_id', None),
+            correlation_id=getattr(command, 'correlation_id', None)
         )
 
         result = await self.validation_pipeline.validate_command(command, context)
@@ -265,9 +253,9 @@ class ValidationMiddleware:
     async def validate_query(self, query: Any) -> None:
         """Validate query and raise exception if invalid."""
         context = ValidationContext(
-            user_id=getattr(query, "user_id", None),
-            session_id=getattr(query, "session_id", None),
-            correlation_id=getattr(query, "correlation_id", None),
+            user_id=getattr(query, 'user_id', None),
+            session_id=getattr(query, 'session_id', None),
+            correlation_id=getattr(query, 'correlation_id', None)
         )
 
         result = await self.validation_pipeline.validate_query(query, context)

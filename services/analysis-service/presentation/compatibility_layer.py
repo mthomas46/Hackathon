@@ -10,40 +10,22 @@
 
 import logging
 import warnings
-from typing import Any, Dict, Optional
-
-from fastapi import APIRouter, HTTPException
+from typing import Any, Dict, List, Optional
+from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 
 from ..domain.models import (
-    AnalysisRequest,
-    ArchitectureAnalysisRequest,
-    ChangeImpactRequest,
-    ContentQualityRequest,
-    DistributedTaskRequest,
-    FindingsRequest,
-    MaintenanceForecastRequest,
-    NotifyOwnersRequest,
-    PRConfidenceRequest,
-    QualityDegradationRequest,
-    RemediationRequest,
-    ReportRequest,
-    RepositoryAnalysisRequest,
-    RiskAssessmentRequest,
-    SemanticSimilarityRequest,
-    SentimentAnalysisRequest,
-    ToneAnalysisRequest,
-    TrendAnalysisRequest,
-    WorkflowEventRequest,
+    AnalysisRequest, AnalysisResponse, SemanticSimilarityRequest, SentimentAnalysisRequest,
+    ToneAnalysisRequest, ContentQualityRequest, TrendAnalysisRequest, RiskAssessmentRequest,
+    MaintenanceForecastRequest, QualityDegradationRequest, ChangeImpactRequest,
+    RemediationRequest, WorkflowEventRequest, RepositoryAnalysisRequest,
+    DistributedTaskRequest, ReportRequest, FindingsRequest, NotifyOwnersRequest,
+    ArchitectureAnalysisRequest, PRConfidenceRequest
 )
 from .controllers import (
-    AnalysisController,
-    DistributedController,
-    FindingsController,
-    PRConfidenceController,
-    RemediationController,
-    ReportsController,
-    RepositoryController,
-    WorkflowController,
+    AnalysisController, RemediationController, WorkflowController,
+    RepositoryController, DistributedController, ReportsController,
+    FindingsController, PRConfidenceController
 )
 
 logger = logging.getLogger(__name__)
@@ -55,34 +37,30 @@ compatibility_router = APIRouter(prefix="", tags=["compatibility"])
 # UTILITY FUNCTIONS
 # ============================================================================
 
-
 def add_deprecation_warning(response_data: Dict[str, Any], endpoint: str, new_endpoint: Optional[str] = None) -> Dict[str, Any]:
     """Add deprecation warning to response data."""
     warnings.warn(
-        f"Endpoint '{endpoint}' is deprecated. "
-        + (f"Consider using '{new_endpoint}' instead." if new_endpoint else "This endpoint will be removed in a future version."),
+        f"Endpoint '{endpoint}' is deprecated. " +
+        (f"Consider using '{new_endpoint}' instead." if new_endpoint else "This endpoint will be removed in a future version."),
         DeprecationWarning,
-        stacklevel=2,
+        stacklevel=2
     )
 
     if isinstance(response_data, dict) and "warnings" not in response_data:
         response_data["warnings"] = []
 
     if isinstance(response_data, dict):
-        response_data["warnings"].append(
-            {
-                "type": "deprecation",
-                "message": f"Endpoint '{endpoint}' is deprecated",
-                "recommended_action": (f"Use '{new_endpoint}' instead" if new_endpoint else "Migrate to new API version"),
-            }
-        )
+        response_data["warnings"].append({
+            "type": "deprecation",
+            "message": f"Endpoint '{endpoint}' is deprecated",
+            "recommended_action": f"Use '{new_endpoint}' instead" if new_endpoint else "Migrate to new API version"
+        })
 
     return response_data
 
-
 def ensure_backward_compatibility(response: Any) -> Any:
     """Ensure response maintains backward compatibility."""
-    if hasattr(response, "dict"):
+    if hasattr(response, 'dict'):
         response_dict = response.dict()
     elif isinstance(response, dict):
         response_dict = response
@@ -94,16 +72,14 @@ def ensure_backward_compatibility(response: Any) -> Any:
         response_dict["_compatibility"] = {
             "version": "legacy",
             "ddd_backend": True,
-            "maintained_until": "2026-09-17",
+            "maintained_until": "2026-09-17"
         }
 
     return response_dict
 
-
 # ============================================================================
 # LEGACY ENDPOINT IMPLEMENTATIONS
 # ============================================================================
-
 
 @compatibility_router.post("/analyze")
 async def legacy_analyze_endpoint(request: AnalysisRequest):
@@ -117,7 +93,6 @@ async def legacy_analyze_endpoint(request: AnalysisRequest):
         logger.error(f"Error in legacy /analyze endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/analyze/semantic-similarity")
 async def legacy_semantic_similarity_endpoint(request: SemanticSimilarityRequest):
     """LEGACY: Semantic similarity analysis - Original endpoint preserved."""
@@ -129,7 +104,6 @@ async def legacy_semantic_similarity_endpoint(request: SemanticSimilarityRequest
     except Exception as e:
         logger.error(f"Error in legacy semantic similarity endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/analyze/sentiment")
 async def legacy_sentiment_analysis_endpoint(request: SentimentAnalysisRequest):
@@ -143,7 +117,6 @@ async def legacy_sentiment_analysis_endpoint(request: SentimentAnalysisRequest):
         logger.error(f"Error in legacy sentiment analysis endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/analyze/tone")
 async def legacy_tone_analysis_endpoint(request: ToneAnalysisRequest):
     """LEGACY: Tone analysis - Original endpoint preserved."""
@@ -155,7 +128,6 @@ async def legacy_tone_analysis_endpoint(request: ToneAnalysisRequest):
     except Exception as e:
         logger.error(f"Error in legacy tone analysis endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/analyze/quality")
 async def legacy_content_quality_endpoint(request: ContentQualityRequest):
@@ -169,7 +141,6 @@ async def legacy_content_quality_endpoint(request: ContentQualityRequest):
         logger.error(f"Error in legacy content quality endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/analyze/trends")
 async def legacy_trend_analysis_endpoint(request: TrendAnalysisRequest):
     """LEGACY: Trend analysis - Original endpoint preserved."""
@@ -181,7 +152,6 @@ async def legacy_trend_analysis_endpoint(request: TrendAnalysisRequest):
     except Exception as e:
         logger.error(f"Error in legacy trend analysis endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/analyze/trends/portfolio")
 async def legacy_portfolio_trend_analysis_endpoint(request: Dict[str, Any]):
@@ -195,7 +165,6 @@ async def legacy_portfolio_trend_analysis_endpoint(request: Dict[str, Any]):
         logger.error(f"Error in legacy portfolio trend analysis endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/analyze/risk")
 async def legacy_risk_assessment_endpoint(request: RiskAssessmentRequest):
     """LEGACY: Risk assessment - Original endpoint preserved."""
@@ -207,7 +176,6 @@ async def legacy_risk_assessment_endpoint(request: RiskAssessmentRequest):
     except Exception as e:
         logger.error(f"Error in legacy risk assessment endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/analyze/risk/portfolio")
 async def legacy_portfolio_risk_assessment_endpoint(request: Dict[str, Any]):
@@ -221,7 +189,6 @@ async def legacy_portfolio_risk_assessment_endpoint(request: Dict[str, Any]):
         logger.error(f"Error in legacy portfolio risk assessment endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/analyze/maintenance/forecast")
 async def legacy_maintenance_forecast_endpoint(request: MaintenanceForecastRequest):
     """LEGACY: Maintenance forecast - Original endpoint preserved."""
@@ -233,7 +200,6 @@ async def legacy_maintenance_forecast_endpoint(request: MaintenanceForecastReque
     except Exception as e:
         logger.error(f"Error in legacy maintenance forecast endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/analyze/maintenance/forecast/portfolio")
 async def legacy_portfolio_maintenance_forecast_endpoint(request: Dict[str, Any]):
@@ -247,7 +213,6 @@ async def legacy_portfolio_maintenance_forecast_endpoint(request: Dict[str, Any]
         logger.error(f"Error in legacy portfolio maintenance forecast endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/analyze/quality/degradation")
 async def legacy_quality_degradation_endpoint(request: QualityDegradationRequest):
     """LEGACY: Quality degradation detection - Original endpoint preserved."""
@@ -259,7 +224,6 @@ async def legacy_quality_degradation_endpoint(request: QualityDegradationRequest
     except Exception as e:
         logger.error(f"Error in legacy quality degradation endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/analyze/quality/degradation/portfolio")
 async def legacy_portfolio_quality_degradation_endpoint(request: Dict[str, Any]):
@@ -273,7 +237,6 @@ async def legacy_portfolio_quality_degradation_endpoint(request: Dict[str, Any])
         logger.error(f"Error in legacy portfolio quality degradation endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/analyze/change/impact")
 async def legacy_change_impact_endpoint(request: ChangeImpactRequest):
     """LEGACY: Change impact analysis - Original endpoint preserved."""
@@ -285,7 +248,6 @@ async def legacy_change_impact_endpoint(request: ChangeImpactRequest):
     except Exception as e:
         logger.error(f"Error in legacy change impact endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/analyze/change/impact/portfolio")
 async def legacy_portfolio_change_impact_endpoint(request: Dict[str, Any]):
@@ -299,7 +261,6 @@ async def legacy_portfolio_change_impact_endpoint(request: Dict[str, Any]):
         logger.error(f"Error in legacy portfolio change impact endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/remediate")
 async def legacy_remediation_endpoint(request: RemediationRequest):
     """LEGACY: Automated remediation - Original endpoint preserved."""
@@ -311,7 +272,6 @@ async def legacy_remediation_endpoint(request: RemediationRequest):
     except Exception as e:
         logger.error(f"Error in legacy remediation endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/remediate/preview")
 async def legacy_remediation_preview_endpoint(request: Dict[str, Any]):
@@ -325,7 +285,6 @@ async def legacy_remediation_preview_endpoint(request: Dict[str, Any]):
         logger.error(f"Error in legacy remediation preview endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/workflows/events")
 async def legacy_workflow_events_endpoint(request: WorkflowEventRequest):
     """LEGACY: Workflow events - Original endpoint preserved."""
@@ -337,7 +296,6 @@ async def legacy_workflow_events_endpoint(request: WorkflowEventRequest):
     except Exception as e:
         logger.error(f"Error in legacy workflow events endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.get("/workflows/{workflow_id}")
 async def legacy_workflow_status_endpoint(workflow_id: str):
@@ -351,7 +309,6 @@ async def legacy_workflow_status_endpoint(workflow_id: str):
         logger.error(f"Error in legacy workflow status endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.get("/workflows/queue/status")
 async def legacy_workflow_queue_status_endpoint():
     """LEGACY: Workflow queue status - Original endpoint preserved."""
@@ -363,7 +320,6 @@ async def legacy_workflow_queue_status_endpoint():
     except Exception as e:
         logger.error(f"Error in legacy workflow queue status endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/workflows/webhook/config")
 async def legacy_webhook_config_endpoint(request: Dict[str, Any]):
@@ -377,7 +333,6 @@ async def legacy_webhook_config_endpoint(request: Dict[str, Any]):
         logger.error(f"Error in legacy webhook config endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/repositories/analyze")
 async def legacy_repository_analysis_endpoint(request: RepositoryAnalysisRequest):
     """LEGACY: Repository analysis - Original endpoint preserved."""
@@ -389,7 +344,6 @@ async def legacy_repository_analysis_endpoint(request: RepositoryAnalysisRequest
     except Exception as e:
         logger.error(f"Error in legacy repository analysis endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/repositories/connectivity")
 async def legacy_repository_connectivity_endpoint(request: Dict[str, Any]):
@@ -403,7 +357,6 @@ async def legacy_repository_connectivity_endpoint(request: Dict[str, Any]):
         logger.error(f"Error in legacy repository connectivity endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/repositories/connectors/config")
 async def legacy_connector_config_endpoint(request: Dict[str, Any]):
     """LEGACY: Connector configuration - Original endpoint preserved."""
@@ -415,7 +368,6 @@ async def legacy_connector_config_endpoint(request: Dict[str, Any]):
     except Exception as e:
         logger.error(f"Error in legacy connector config endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.get("/repositories/connectors")
 async def legacy_supported_connectors_endpoint():
@@ -429,7 +381,6 @@ async def legacy_supported_connectors_endpoint():
         logger.error(f"Error in legacy supported connectors endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.get("/repositories/frameworks")
 async def legacy_analysis_frameworks_endpoint():
     """LEGACY: Analysis frameworks - Original endpoint preserved."""
@@ -441,7 +392,6 @@ async def legacy_analysis_frameworks_endpoint():
     except Exception as e:
         logger.error(f"Error in legacy analysis frameworks endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/distributed/tasks")
 async def legacy_submit_task_endpoint(request: DistributedTaskRequest):
@@ -455,7 +405,6 @@ async def legacy_submit_task_endpoint(request: DistributedTaskRequest):
         logger.error(f"Error in legacy submit task endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/distributed/tasks/batch")
 async def legacy_submit_batch_tasks_endpoint(request: Dict[str, Any]):
     """LEGACY: Submit batch tasks - Original endpoint preserved."""
@@ -467,7 +416,6 @@ async def legacy_submit_batch_tasks_endpoint(request: Dict[str, Any]):
     except Exception as e:
         logger.error(f"Error in legacy submit batch tasks endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.get("/distributed/tasks/{task_id}")
 async def legacy_get_task_status_endpoint(task_id: str):
@@ -481,7 +429,6 @@ async def legacy_get_task_status_endpoint(task_id: str):
         logger.error(f"Error in legacy get task status endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.delete("/distributed/tasks/{task_id}")
 async def legacy_cancel_task_endpoint(task_id: str):
     """LEGACY: Cancel task - Original endpoint preserved."""
@@ -493,7 +440,6 @@ async def legacy_cancel_task_endpoint(task_id: str):
     except Exception as e:
         logger.error(f"Error in legacy cancel task endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.get("/distributed/workers")
 async def legacy_get_workers_status_endpoint():
@@ -507,7 +453,6 @@ async def legacy_get_workers_status_endpoint():
         logger.error(f"Error in legacy get workers status endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.get("/distributed/stats")
 async def legacy_get_processing_stats_endpoint():
     """LEGACY: Get processing stats - Original endpoint preserved."""
@@ -519,7 +464,6 @@ async def legacy_get_processing_stats_endpoint():
     except Exception as e:
         logger.error(f"Error in legacy get processing stats endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/distributed/workers/scale")
 async def legacy_scale_workers_endpoint(request: Dict[str, Any]):
@@ -533,7 +477,6 @@ async def legacy_scale_workers_endpoint(request: Dict[str, Any]):
         logger.error(f"Error in legacy scale workers endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/distributed/start")
 async def legacy_start_distributed_processing_endpoint():
     """LEGACY: Start distributed processing - Original endpoint preserved."""
@@ -545,7 +488,6 @@ async def legacy_start_distributed_processing_endpoint():
     except Exception as e:
         logger.error(f"Error in legacy start distributed processing endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.put("/distributed/load-balancing/strategy")
 async def legacy_set_load_balancing_strategy_endpoint(request: Dict[str, Any]):
@@ -559,7 +501,6 @@ async def legacy_set_load_balancing_strategy_endpoint(request: Dict[str, Any]):
         logger.error(f"Error in legacy set load balancing strategy endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.get("/distributed/queue/status")
 async def legacy_get_queue_status_endpoint():
     """LEGACY: Get queue status - Original endpoint preserved."""
@@ -571,7 +512,6 @@ async def legacy_get_queue_status_endpoint():
     except Exception as e:
         logger.error(f"Error in legacy get queue status endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.put("/distributed/load-balancing/config")
 async def legacy_configure_load_balancing_endpoint(request: Dict[str, Any]):
@@ -585,7 +525,6 @@ async def legacy_configure_load_balancing_endpoint(request: Dict[str, Any]):
         logger.error(f"Error in legacy configure load balancing endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.get("/distributed/load-balancing/config")
 async def legacy_get_load_balancing_config_endpoint():
     """LEGACY: Get load balancing config - Original endpoint preserved."""
@@ -598,7 +537,6 @@ async def legacy_get_load_balancing_config_endpoint():
         logger.error(f"Error in legacy get load balancing config endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/reports/generate")
 async def legacy_generate_report_endpoint(request: ReportRequest):
     """LEGACY: Generate report - Original endpoint preserved."""
@@ -610,7 +548,6 @@ async def legacy_generate_report_endpoint(request: ReportRequest):
     except Exception as e:
         logger.error(f"Error in legacy generate report endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.get("/findings")
 async def legacy_get_findings_endpoint(request: FindingsRequest = None):
@@ -626,7 +563,6 @@ async def legacy_get_findings_endpoint(request: FindingsRequest = None):
         logger.error(f"Error in legacy get findings endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.get("/detectors")
 async def legacy_list_detectors_endpoint():
     """LEGACY: List detectors - Original endpoint preserved."""
@@ -638,7 +574,6 @@ async def legacy_list_detectors_endpoint():
     except Exception as e:
         logger.error(f"Error in legacy list detectors endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.get("/reports/confluence/consolidation")
 async def legacy_confluence_consolidation_endpoint():
@@ -652,7 +587,6 @@ async def legacy_confluence_consolidation_endpoint():
         logger.error(f"Error in legacy confluence consolidation endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.get("/reports/jira/staleness")
 async def legacy_jira_staleness_endpoint():
     """LEGACY: Jira staleness report - Original endpoint preserved."""
@@ -664,7 +598,6 @@ async def legacy_jira_staleness_endpoint():
     except Exception as e:
         logger.error(f"Error in legacy jira staleness endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/reports/findings/notify-owners")
 async def legacy_notify_owners_endpoint(request: NotifyOwnersRequest):
@@ -678,7 +611,6 @@ async def legacy_notify_owners_endpoint(request: NotifyOwnersRequest):
         logger.error(f"Error in legacy notify owners endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.get("/integration/health")
 async def legacy_integration_health_endpoint():
     """LEGACY: Integration health - Original endpoint preserved."""
@@ -690,7 +622,6 @@ async def legacy_integration_health_endpoint():
     except Exception as e:
         logger.error(f"Error in legacy integration health endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/integration/analyze-with-prompt")
 async def legacy_analyze_with_prompt_endpoint(request: Dict[str, Any]):
@@ -704,7 +635,6 @@ async def legacy_analyze_with_prompt_endpoint(request: Dict[str, Any]):
         logger.error(f"Error in legacy analyze with prompt endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/integration/natural-language-analysis")
 async def legacy_natural_language_analysis_endpoint(request: Dict[str, Any]):
     """LEGACY: Natural language analysis - Original endpoint preserved."""
@@ -716,7 +646,6 @@ async def legacy_natural_language_analysis_endpoint(request: Dict[str, Any]):
     except Exception as e:
         logger.error(f"Error in legacy natural language analysis endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.get("/integration/prompts/categories")
 async def legacy_prompts_categories_endpoint():
@@ -730,7 +659,6 @@ async def legacy_prompts_categories_endpoint():
         logger.error(f"Error in legacy prompts categories endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/integration/log-analysis")
 async def legacy_log_analysis_endpoint(request: Dict[str, Any]):
     """LEGACY: Log analysis - Original endpoint preserved."""
@@ -742,7 +670,6 @@ async def legacy_log_analysis_endpoint(request: Dict[str, Any]):
     except Exception as e:
         logger.error(f"Error in legacy log analysis endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.post("/architecture/analyze")
 async def legacy_architecture_analysis_endpoint(request: ArchitectureAnalysisRequest):
@@ -756,7 +683,6 @@ async def legacy_architecture_analysis_endpoint(request: ArchitectureAnalysisReq
         logger.error(f"Error in legacy architecture analysis endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.post("/pr-confidence/analyze")
 async def legacy_pr_confidence_analysis_endpoint(request: PRConfidenceRequest):
     """LEGACY: PR confidence analysis - Original endpoint preserved."""
@@ -768,7 +694,6 @@ async def legacy_pr_confidence_analysis_endpoint(request: PRConfidenceRequest):
     except Exception as e:
         logger.error(f"Error in legacy PR confidence analysis endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @compatibility_router.get("/pr-confidence/history/{pr_id}")
 async def legacy_pr_confidence_history_endpoint(pr_id: str):
@@ -782,7 +707,6 @@ async def legacy_pr_confidence_history_endpoint(pr_id: str):
         logger.error(f"Error in legacy PR confidence history endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @compatibility_router.get("/pr-confidence/statistics")
 async def legacy_pr_confidence_statistics_endpoint():
     """LEGACY: PR confidence statistics - Original endpoint preserved."""
@@ -795,11 +719,9 @@ async def legacy_pr_confidence_statistics_endpoint():
         logger.error(f"Error in legacy PR confidence statistics endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 # ============================================================================
 # COMPATIBILITY ENDPOINT REGISTRATION
 # ============================================================================
-
 
 def register_compatibility_endpoints(app: Any) -> None:
     """Register all compatibility endpoints with the FastAPI application."""

@@ -14,22 +14,20 @@ Features:
 """
 
 import sys
+from pathlib import Path
+from typing import Dict, Any, List, Optional, Union, Set
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+import json
 
 # Import from shared infrastructure
-sys.path.append(
-    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
-)
+sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
 from simulation.infrastructure.logging import get_simulation_logger
 
 
 class LinkRelation(Enum):
     """Standard IANA link relations with custom extensions."""
-
     # Standard IANA relations
     SELF = "self"
     NEXT = "next"
@@ -61,13 +59,11 @@ class LinkRelation(Enum):
 class LinkTemplate:
     """Template for generating parameterized links."""
 
-    def __init__(
-        self,
-        relation: LinkRelation,
-        template: str,
-        parameters: Dict[str, Any] = None,
-        conditions: List[str] = None,
-    ):
+    def __init__(self,
+                 relation: LinkRelation,
+                 template: str,
+                 parameters: Dict[str, Any] = None,
+                 conditions: List[str] = None):
         """Initialize link template."""
         self.relation = relation
         self.template = template
@@ -82,7 +78,7 @@ class LinkTemplate:
                 "rel": self.relation.value,
                 "href": url,
                 "templated": True,
-                "parameters": self.parameters,
+                "parameters": self.parameters
             }
         except KeyError as e:
             raise ValueError(f"Missing parameter for link template: {e}")
@@ -120,20 +116,18 @@ class HypermediaResource:
         self.embedded: Dict[str, Any] = {}
         self.actions: List[Dict[str, Any]] = []
 
-    def add_link(
-        self,
-        relation: LinkRelation,
-        href: str,
-        method: str = "GET",
-        title: Optional[str] = None,
-        templated: bool = False,
-    ):
+    def add_link(self,
+                 relation: LinkRelation,
+                 href: str,
+                 method: str = "GET",
+                 title: Optional[str] = None,
+                 templated: bool = False):
         """Add a link to the resource."""
         link = {
             "rel": relation.value,
             "href": href,
             "method": method,
-            "templated": templated,
+            "templated": templated
         }
 
         if title:
@@ -145,16 +139,19 @@ class HypermediaResource:
         """Add an embedded resource."""
         self.embedded[relation] = resource
 
-    def add_action(
-        self,
-        name: str,
-        href: str,
-        method: str = "POST",
-        fields: List[Dict[str, Any]] = None,
-        title: Optional[str] = None,
-    ):
+    def add_action(self,
+                   name: str,
+                   href: str,
+                   method: str = "POST",
+                   fields: List[Dict[str, Any]] = None,
+                   title: Optional[str] = None):
         """Add an action to the resource."""
-        action = {"name": name, "href": href, "method": method, "fields": fields or []}
+        action = {
+            "name": name,
+            "href": href,
+            "method": method,
+            "fields": fields or []
+        }
 
         if title:
             action["title"] = title
@@ -166,7 +163,7 @@ class HypermediaResource:
         result = {
             "links": self.links,
             "_embedded": self.embedded,
-            "_actions": self.actions,
+            "_actions": self.actions
         }
 
         if self.resource_id:
@@ -179,172 +176,140 @@ class SimulationResource(HypermediaResource):
     """Hypermedia resource for simulations."""
 
     @staticmethod
-    def create_simulation_links(
-        simulation_id: str, status: str = "pending", user_permissions: List[str] = None
-    ) -> List[Dict[str, Any]]:
+    def create_simulation_links(simulation_id: str,
+                               status: str = "pending",
+                               user_permissions: List[str] = None) -> List[Dict[str, Any]]:
         """Create comprehensive links for a simulation resource."""
         links = []
 
         # Self link
-        links.append(
-            {
-                "rel": LinkRelation.SELF.value,
-                "href": f"/api/v1/simulations/{simulation_id}",
-                "method": "GET",
-                "title": "Simulation details",
-            }
-        )
+        links.append({
+            "rel": LinkRelation.SELF.value,
+            "href": f"/api/v1/simulations/{simulation_id}",
+            "method": "GET",
+            "title": "Simulation details"
+        })
 
         # Status-specific links
         if status in ["pending", "created"]:
-            links.append(
-                {
-                    "rel": LinkRelation.EXECUTE.value,
-                    "href": f"/api/v1/simulations/{simulation_id}/execute",
-                    "method": "POST",
-                    "title": "Execute simulation",
-                }
-            )
+            links.append({
+                "rel": LinkRelation.EXECUTE.value,
+                "href": f"/api/v1/simulations/{simulation_id}/execute",
+                "method": "POST",
+                "title": "Execute simulation"
+            })
 
         if status in ["running", "executing"]:
-            links.append(
-                {
-                    "rel": LinkRelation.STATUS.value,
-                    "href": f"/api/v1/simulations/{simulation_id}",
-                    "method": "GET",
-                    "title": "Check execution status",
-                }
-            )
-            links.append(
-                {
-                    "rel": LinkRelation.PROGRESS.value,
-                    "href": f"/api/v1/simulations/{simulation_id}/progress",
-                    "method": "GET",
-                    "title": "View execution progress",
-                }
-            )
+            links.append({
+                "rel": LinkRelation.STATUS.value,
+                "href": f"/api/v1/simulations/{simulation_id}",
+                "method": "GET",
+                "title": "Check execution status"
+            })
+            links.append({
+                "rel": LinkRelation.PROGRESS.value,
+                "href": f"/api/v1/simulations/{simulation_id}/progress",
+                "method": "GET",
+                "title": "View execution progress"
+            })
 
         if status in ["completed", "finished"]:
-            links.append(
-                {
-                    "rel": LinkRelation.RESULTS.value,
-                    "href": f"/api/v1/simulations/{simulation_id}/results",
-                    "method": "GET",
-                    "title": "View simulation results",
-                }
-            )
-            links.append(
-                {
-                    "rel": LinkRelation.ANALYTICS.value,
-                    "href": f"/api/v1/simulations/{simulation_id}/analytics",
-                    "method": "GET",
-                    "title": "View analytics and insights",
-                }
-            )
-            links.append(
-                {
-                    "rel": LinkRelation.REPORTS.value,
-                    "href": f"/api/v1/simulations/{simulation_id}/reports",
-                    "method": "GET",
-                    "title": "Generate reports",
-                }
-            )
+            links.append({
+                "rel": LinkRelation.RESULTS.value,
+                "href": f"/api/v1/simulations/{simulation_id}/results",
+                "method": "GET",
+                "title": "View simulation results"
+            })
+            links.append({
+                "rel": LinkRelation.ANALYTICS.value,
+                "href": f"/api/v1/simulations/{simulation_id}/analytics",
+                "method": "GET",
+                "title": "View analytics and insights"
+            })
+            links.append({
+                "rel": LinkRelation.REPORTS.value,
+                "href": f"/api/v1/simulations/{simulation_id}/reports",
+                "method": "GET",
+                "title": "Generate reports"
+            })
 
         # Always available links
-        links.append(
-            {
-                "rel": LinkRelation.EDIT.value,
-                "href": f"/api/v1/simulations/{simulation_id}",
-                "method": "PUT",
-                "title": "Update simulation",
-            }
-        )
+        links.append({
+            "rel": LinkRelation.EDIT.value,
+            "href": f"/api/v1/simulations/{simulation_id}",
+            "method": "PUT",
+            "title": "Update simulation"
+        })
 
         if status not in ["running", "executing"]:
-            links.append(
-                {
-                    "rel": LinkRelation.DELETE.value,
-                    "href": f"/api/v1/simulations/{simulation_id}",
-                    "method": "DELETE",
-                    "title": "Delete simulation",
-                }
-            )
+            links.append({
+                "rel": LinkRelation.DELETE.value,
+                "href": f"/api/v1/simulations/{simulation_id}",
+                "method": "DELETE",
+                "title": "Delete simulation"
+            })
 
         if status in ["pending", "created", "paused"]:
-            links.append(
-                {
-                    "rel": LinkRelation.CANCEL.value,
-                    "href": f"/api/v1/simulations/{simulation_id}",
-                    "method": "DELETE",
-                    "title": "Cancel simulation",
-                }
-            )
+            links.append({
+                "rel": LinkRelation.CANCEL.value,
+                "href": f"/api/v1/simulations/{simulation_id}",
+                "method": "DELETE",
+                "title": "Cancel simulation"
+            })
 
         return links
 
     @staticmethod
-    def create_simulation_collection_links(
-        page: int = 1, page_size: int = 20, total_pages: int = 1
-    ) -> List[Dict[str, Any]]:
+    def create_simulation_collection_links(page: int = 1,
+                                         page_size: int = 20,
+                                         total_pages: int = 1) -> List[Dict[str, Any]]:
         """Create links for simulation collection."""
         links = []
 
         # Self link
-        links.append(
-            {
-                "rel": LinkRelation.SELF.value,
-                "href": f"/api/v1/simulations?page={page}&page_size={page_size}",
-                "method": "GET",
-                "title": "Current page",
-            }
-        )
+        links.append({
+            "rel": LinkRelation.SELF.value,
+            "href": f"/api/v1/simulations?page={page}&page_size={page_size}",
+            "method": "GET",
+            "title": "Current page"
+        })
 
         # Pagination links
         if page > 1:
-            links.append(
-                {
-                    "rel": LinkRelation.PREVIOUS.value,
-                    "href": f"/api/v1/simulations?page={page-1}&page_size={page_size}",
-                    "method": "GET",
-                    "title": "Previous page",
-                }
-            )
-            links.append(
-                {
-                    "rel": LinkRelation.FIRST.value,
-                    "href": f"/api/v1/simulations?page=1&page_size={page_size}",
-                    "method": "GET",
-                    "title": "First page",
-                }
-            )
+            links.append({
+                "rel": LinkRelation.PREVIOUS.value,
+                "href": f"/api/v1/simulations?page={page-1}&page_size={page_size}",
+                "method": "GET",
+                "title": "Previous page"
+            })
+            links.append({
+                "rel": LinkRelation.FIRST.value,
+                "href": f"/api/v1/simulations?page=1&page_size={page_size}",
+                "method": "GET",
+                "title": "First page"
+            })
 
         if page < total_pages:
-            links.append(
-                {
-                    "rel": LinkRelation.NEXT.value,
-                    "href": f"/api/v1/simulations?page={page+1}&page_size={page_size}",
-                    "method": "GET",
-                    "title": "Next page",
-                }
-            )
-            links.append(
-                {
-                    "rel": LinkRelation.LAST.value,
-                    "href": f"/api/v1/simulations?page={total_pages}&page_size={page_size}",
-                    "method": "GET",
-                    "title": "Last page",
-                }
-            )
+            links.append({
+                "rel": LinkRelation.NEXT.value,
+                "href": f"/api/v1/simulations?page={page+1}&page_size={page_size}",
+                "method": "GET",
+                "title": "Next page"
+            })
+            links.append({
+                "rel": LinkRelation.LAST.value,
+                "href": f"/api/v1/simulations?page={total_pages}&page_size={page_size}",
+                "method": "GET",
+                "title": "Last page"
+            })
 
         # Collection-level actions
-        links.append(
-            {
-                "rel": "create-form",
-                "href": "/api/v1/simulations",
-                "method": "POST",
-                "title": "Create new simulation",
-            }
-        )
+        links.append({
+            "rel": "create-form",
+            "href": "/api/v1/simulations",
+            "method": "POST",
+            "title": "Create new simulation"
+        })
 
         return links
 
@@ -353,94 +318,74 @@ class AnalyticsResource(HypermediaResource):
     """Hypermedia resource for analytics and insights."""
 
     @staticmethod
-    def create_analytics_links(
-        simulation_id: str, available_analyses: List[str] = None
-    ) -> List[Dict[str, Any]]:
+    def create_analytics_links(simulation_id: str,
+                              available_analyses: List[str] = None) -> List[Dict[str, Any]]:
         """Create links for analytics resources."""
         links = []
-        available_analyses = available_analyses or [
-            "quality",
-            "performance",
-            "risk",
-            "benefits",
-        ]
+        available_analyses = available_analyses or ["quality", "performance", "risk", "benefits"]
 
         # Base analytics link
-        links.append(
-            {
-                "rel": LinkRelation.SELF.value,
-                "href": f"/api/v1/simulations/{simulation_id}/analytics",
-                "method": "GET",
-                "title": "Analytics overview",
-            }
-        )
+        links.append({
+            "rel": LinkRelation.SELF.value,
+            "href": f"/api/v1/simulations/{simulation_id}/analytics",
+            "method": "GET",
+            "title": "Analytics overview"
+        })
 
         # Specific analysis types
         analysis_types = {
             "quality": "Document and code quality analysis",
             "performance": "Performance metrics and trends",
             "risk": "Risk assessment and mitigation",
-            "benefits": "ROI and benefit calculations",
+            "benefits": "ROI and benefit calculations"
         }
 
         for analysis_type, description in analysis_types.items():
             if analysis_type in available_analyses:
-                links.append(
-                    {
-                        "rel": f"analysis:{analysis_type}",
-                        "href": f"/api/v1/simulations/{simulation_id}/analytics/{analysis_type}",
-                        "method": "GET",
-                        "title": description,
-                    }
-                )
+                links.append({
+                    "rel": f"analysis:{analysis_type}",
+                    "href": f"/api/v1/simulations/{simulation_id}/analytics/{analysis_type}",
+                    "method": "GET",
+                    "title": description
+                })
 
         # Workflow execution links
-        links.append(
-            {
-                "rel": "execute-workflow",
-                "href": f"/api/v1/simulations/{simulation_id}/analytics/workflows",
-                "method": "POST",
-                "title": "Execute analysis workflow",
-            }
-        )
+        links.append({
+            "rel": "execute-workflow",
+            "href": f"/api/v1/simulations/{simulation_id}/analytics/workflows",
+            "method": "POST",
+            "title": "Execute analysis workflow"
+        })
 
         return links
 
     @staticmethod
-    def create_workflow_links(
-        workflow_id: str, status: str = "pending"
-    ) -> List[Dict[str, Any]]:
+    def create_workflow_links(workflow_id: str, status: str = "pending") -> List[Dict[str, Any]]:
         """Create links for workflow resources."""
         links = []
 
-        links.append(
-            {
-                "rel": LinkRelation.SELF.value,
-                "href": f"/api/v1/analytics/workflows/{workflow_id}",
-                "method": "GET",
-                "title": "Workflow status",
-            }
-        )
+        links.append({
+            "rel": LinkRelation.SELF.value,
+            "href": f"/api/v1/analytics/workflows/{workflow_id}",
+            "method": "GET",
+            "title": "Workflow status"
+        })
 
         if status in ["pending", "running"]:
-            links.append(
-                {
-                    "rel": LinkRelation.CANCEL.value,
-                    "href": f"/api/v1/analytics/workflows/{workflow_id}/cancel",
-                    "method": "POST",
-                    "title": "Cancel workflow",
-                }
-            )
+            links.append({
+                "rel": LinkRelation.CANCEL.value,
+                "href": f"/api/v1/analytics/workflows/{workflow_id}/cancel",
+                "method": "POST",
+                "title": "Cancel workflow"
+            })
 
         if status == "completed":
-            links.append(
-                {
-                    "rel": LinkRelation.RESULTS.value,
-                    "href": f"/api/v1/analytics/workflows/{workflow_id}/results",
-                    "method": "GET",
-                    "title": "Workflow results",
-                }
-            )
+            links.append({
+                "rel": LinkRelation.RESULTS.value,
+                "href": f"/api/v1/analytics/workflows/{workflow_id}/results",
+                "method": "GET",
+                "title": "Workflow results"
+            })
 
         return links
 
@@ -449,43 +394,36 @@ class ReportResource(HypermediaResource):
     """Hypermedia resource for reports."""
 
     @staticmethod
-    def create_report_links(
-        simulation_id: str, report_types: List[str] = None
-    ) -> List[Dict[str, Any]]:
+    def create_report_links(simulation_id: str,
+                           report_types: List[str] = None) -> List[Dict[str, Any]]:
         """Create links for report resources."""
         links = []
         report_types = report_types or ["summary", "detailed", "executive", "technical"]
 
         # Base reports link
-        links.append(
-            {
-                "rel": LinkRelation.SELF.value,
-                "href": f"/api/v1/simulations/{simulation_id}/reports",
-                "method": "GET",
-                "title": "Available reports",
-            }
-        )
+        links.append({
+            "rel": LinkRelation.SELF.value,
+            "href": f"/api/v1/simulations/{simulation_id}/reports",
+            "method": "GET",
+            "title": "Available reports"
+        })
 
         # Specific report types
         for report_type in report_types:
-            links.append(
-                {
-                    "rel": f"report:{report_type}",
-                    "href": f"/api/v1/simulations/{simulation_id}/reports/{report_type}",
-                    "method": "GET",
-                    "title": f"Generate {report_type} report",
-                }
-            )
+            links.append({
+                "rel": f"report:{report_type}",
+                "href": f"/api/v1/simulations/{simulation_id}/reports/{report_type}",
+                "method": "GET",
+                "title": f"Generate {report_type} report"
+            })
 
         # Report generation
-        links.append(
-            {
-                "rel": "generate-report",
-                "href": f"/api/v1/simulations/{simulation_id}/reports/generate",
-                "method": "POST",
-                "title": "Generate custom report",
-            }
-        )
+        links.append({
+            "rel": "generate-report",
+            "href": f"/api/v1/simulations/{simulation_id}/reports/generate",
+            "method": "POST",
+            "title": "Generate custom report"
+        })
 
         return links
 
@@ -510,7 +448,7 @@ class AdvancedHATEOASManager:
         self.resource_factories = {
             "simulation": SimulationResource,
             "analytics": AnalyticsResource,
-            "reports": ReportResource,
+            "reports": ReportResource
         }
 
     def _load_link_templates(self):
@@ -520,14 +458,14 @@ class AdvancedHATEOASManager:
             relation=LinkRelation.SELF,
             template="/api/v1/simulations/{simulation_id}",
             parameters={"simulation_id": "string"},
-            conditions=["status != 'deleted'"],
+            conditions=["status != 'deleted'"]
         )
 
         self.templates["simulation_execute"] = LinkTemplate(
             relation=LinkRelation.EXECUTE,
             template="/api/v1/simulations/{simulation_id}/execute",
             parameters={"simulation_id": "string"},
-            conditions=["status in ['pending', 'created', 'paused']"],
+            conditions=["status in ['pending', 'created', 'paused']"]
         )
 
         # Analytics templates
@@ -535,16 +473,14 @@ class AdvancedHATEOASManager:
             relation=LinkRelation.ANALYTICS,
             template="/api/v1/simulations/{simulation_id}/analytics/workflows/{workflow_type}",
             parameters={"simulation_id": "string", "workflow_type": "string"},
-            conditions=["status == 'completed'"],
+            conditions=["status == 'completed'"]
         )
 
-    def create_resource_response(
-        self,
-        resource_type: str,
-        resource_id: Optional[str] = None,
-        data: Any = None,
-        context: Dict[str, Any] = None,
-    ) -> Dict[str, Any]:
+    def create_resource_response(self,
+                               resource_type: str,
+                               resource_id: Optional[str] = None,
+                               data: Any = None,
+                               context: Dict[str, Any] = None) -> Dict[str, Any]:
         """Create a comprehensive hypermedia response for a resource."""
         context = context or {}
 
@@ -565,13 +501,11 @@ class AdvancedHATEOASManager:
                 relation=LinkRelation(link["rel"]),
                 href=link["href"],
                 method=link.get("method", "GET"),
-                title=link.get("title"),
+                title=link.get("title")
             )
 
         # Generate actions based on context
-        actions = self._generate_context_aware_actions(
-            resource_type, resource_id, context
-        )
+        actions = self._generate_context_aware_actions(resource_type, resource_id, context)
         for action in actions:
             resource.add_action(**action)
 
@@ -580,47 +514,41 @@ class AdvancedHATEOASManager:
             "data": data,
             "_links": resource.links,
             "_embedded": resource.embedded,
-            "_actions": resource.actions,
+            "_actions": resource.actions
         }
 
         return response
 
-    def _generate_context_aware_links(
-        self, resource_type: str, resource_id: str, context: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _generate_context_aware_links(self,
+                                    resource_type: str,
+                                    resource_id: str,
+                                    context: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate links based on resource type and context."""
         links = []
 
         if resource_type == "simulation":
             status = context.get("status", "pending")
-            links.extend(
-                SimulationResource.create_simulation_links(resource_id, status)
-            )
+            links.extend(SimulationResource.create_simulation_links(resource_id, status))
 
         elif resource_type == "analytics":
             simulation_id = context.get("simulation_id", resource_id)
             available_analyses = context.get("available_analyses", [])
-            links.extend(
-                AnalyticsResource.create_analytics_links(
-                    simulation_id, available_analyses
-                )
-            )
+            links.extend(AnalyticsResource.create_analytics_links(simulation_id, available_analyses))
 
         elif resource_type == "reports":
             simulation_id = context.get("simulation_id", resource_id)
             report_types = context.get("report_types", [])
-            links.extend(
-                ReportResource.create_report_links(simulation_id, report_types)
-            )
+            links.extend(ReportResource.create_report_links(simulation_id, report_types))
 
         # Add common navigation links
         links.extend(self._generate_common_links(resource_type, resource_id, context))
 
         return links
 
-    def _generate_context_aware_actions(
-        self, resource_type: str, resource_id: str, context: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _generate_context_aware_actions(self,
+                                      resource_type: str,
+                                      resource_id: str,
+                                      context: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate actions based on resource type and context."""
         actions = []
 
@@ -628,73 +556,69 @@ class AdvancedHATEOASManager:
             status = context.get("status", "pending")
 
             if status in ["pending", "created"]:
-                actions.append(
-                    {
-                        "name": "execute_simulation",
-                        "href": f"/api/v1/simulations/{resource_id}/execute",
-                        "method": "POST",
-                        "title": "Start simulation execution",
-                        "fields": [
-                            {
-                                "name": "priority",
-                                "type": "string",
-                                "required": False,
-                                "description": "Execution priority",
-                            }
-                        ],
-                    }
-                )
+                actions.append({
+                    "name": "execute_simulation",
+                    "href": f"/api/v1/simulations/{resource_id}/execute",
+                    "method": "POST",
+                    "title": "Start simulation execution",
+                    "fields": [
+                        {
+                            "name": "priority",
+                            "type": "string",
+                            "required": False,
+                            "description": "Execution priority"
+                        }
+                    ]
+                })
 
             if status in ["running", "executing"]:
-                actions.append(
-                    {
-                        "name": "cancel_execution",
-                        "href": f"/api/v1/simulations/{resource_id}",
-                        "method": "DELETE",
-                        "title": "Cancel running simulation",
-                    }
-                )
+                actions.append({
+                    "name": "cancel_execution",
+                    "href": f"/api/v1/simulations/{resource_id}",
+                    "method": "DELETE",
+                    "title": "Cancel running simulation"
+                })
 
         return actions
 
-    def _generate_common_links(
-        self, resource_type: str, resource_id: str, context: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _generate_common_links(self,
+                             resource_type: str,
+                             resource_id: str,
+                             context: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate common navigation links."""
         links = []
 
         # Health link
-        links.append(
-            {
-                "rel": LinkRelation.HEALTH.value,
-                "href": "/health",
-                "method": "GET",
-                "title": "Service health status",
-            }
-        )
+        links.append({
+            "rel": LinkRelation.HEALTH.value,
+            "href": "/health",
+            "method": "GET",
+            "title": "Service health status"
+        })
 
         # API documentation
-        links.append(
-            {
-                "rel": "documentation",
-                "href": "/docs",
-                "method": "GET",
-                "title": "API documentation",
-            }
-        )
+        links.append({
+            "rel": "documentation",
+            "href": "/docs",
+            "method": "GET",
+            "title": "API documentation"
+        })
 
         # Root resource
-        links.append({"rel": "root", "href": "/", "method": "GET", "title": "API root"})
+        links.append({
+            "rel": "root",
+            "href": "/",
+            "method": "GET",
+            "title": "API root"
+        })
 
         return links
 
-    def create_state_machine_links(
-        self,
-        current_state: str,
-        resource_type: str,
-        resource_id: str,
-        allowed_transitions: List[str] = None,
-    ) -> List[Dict[str, Any]]:
+    def create_state_machine_links(self,
+                                 current_state: str,
+                                 resource_type: str,
+                                 resource_id: str,
+                                 allowed_transitions: List[str] = None) -> List[Dict[str, Any]]:
         """Create links based on state machine transitions."""
         links = []
 
@@ -704,85 +628,72 @@ class AdvancedHATEOASManager:
             "running": ["cancel", "pause"],
             "paused": ["execute", "cancel"],
             "completed": ["results", "analytics", "reports", "delete"],
-            "failed": ["retry", "delete"],
+            "failed": ["retry", "delete"]
         }
 
-        allowed_transitions = allowed_transitions or state_transitions.get(
-            current_state, []
-        )
+        allowed_transitions = allowed_transitions or state_transitions.get(current_state, [])
 
         for transition in allowed_transitions:
             if transition == "execute":
-                links.append(
-                    {
-                        "rel": LinkRelation.EXECUTE.value,
-                        "href": f"/api/v1/simulations/{resource_id}/execute",
-                        "method": "POST",
-                        "title": "Execute simulation",
-                    }
-                )
+                links.append({
+                    "rel": LinkRelation.EXECUTE.value,
+                    "href": f"/api/v1/simulations/{resource_id}/execute",
+                    "method": "POST",
+                    "title": "Execute simulation"
+                })
             elif transition == "cancel":
-                links.append(
-                    {
-                        "rel": LinkRelation.DELETE.value,
-                        "href": f"/api/v1/simulations/{resource_id}",
-                        "method": "DELETE",
-                        "title": "Cancel simulation",
-                    }
-                )
+                links.append({
+                    "rel": LinkRelation.DELETE.value,
+                    "href": f"/api/v1/simulations/{resource_id}",
+                    "method": "DELETE",
+                    "title": "Cancel simulation"
+                })
             elif transition == "results":
-                links.append(
-                    {
-                        "rel": LinkRelation.RESULTS.value,
-                        "href": f"/api/v1/simulations/{resource_id}/results",
-                        "method": "GET",
-                        "title": "View results",
-                    }
-                )
+                links.append({
+                    "rel": LinkRelation.RESULTS.value,
+                    "href": f"/api/v1/simulations/{resource_id}/results",
+                    "method": "GET",
+                    "title": "View results"
+                })
 
         return links
 
-    def create_conditional_links(
-        self, resource_type: str, resource_id: str, conditions: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def create_conditional_links(self,
+                               resource_type: str,
+                               resource_id: str,
+                               conditions: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Create links based on conditional logic."""
         links = []
 
         # User permission-based links
         user_permissions = conditions.get("user_permissions", [])
         if "admin" in user_permissions:
-            links.append(
-                {
-                    "rel": "admin",
-                    "href": f"/api/v1/admin/{resource_type}/{resource_id}",
-                    "method": "GET",
-                    "title": "Administrative controls",
-                }
-            )
+            links.append({
+                "rel": "admin",
+                "href": f"/api/v1/admin/{resource_type}/{resource_id}",
+                "method": "GET",
+                "title": "Administrative controls"
+            })
 
         # Feature flag-based links
         feature_flags = conditions.get("feature_flags", {})
         if feature_flags.get("advanced_analytics", False):
-            links.append(
-                {
-                    "rel": "advanced-analytics",
-                    "href": f"/api/v1/{resource_type}/{resource_id}/advanced-analytics",
-                    "method": "GET",
-                    "title": "Advanced analytics",
-                }
-            )
+            links.append({
+                "rel": "advanced-analytics",
+                "href": f"/api/v1/{resource_type}/{resource_id}/advanced-analytics",
+                "method": "GET",
+                "title": "Advanced analytics"
+            })
 
         # Time-based links
         current_hour = conditions.get("current_hour", datetime.now().hour)
         if 9 <= current_hour <= 17:  # Business hours
-            links.append(
-                {
-                    "rel": "support",
-                    "href": "/support/chat",
-                    "method": "GET",
-                    "title": "Live support",
-                }
-            )
+            links.append({
+                "rel": "support",
+                "href": "/support/chat",
+                "method": "GET",
+                "title": "Live support"
+            })
 
         return links
 
@@ -793,17 +704,16 @@ class AdvancedHATEOASManager:
             "info": {
                 "title": "Project Simulation Service API",
                 "version": "1.0.0",
-                "description": "REST API with comprehensive HATEOAS navigation",
+                "description": "REST API with comprehensive HATEOAS navigation"
             },
             "servers": [
                 {"url": "http://localhost:5075", "description": "Development server"},
-                {
-                    "url": "https://api.project-simulation.com",
-                    "description": "Production server",
-                },
+                {"url": "https://api.project-simulation.com", "description": "Production server"}
             ],
             "links": self._generate_api_root_links(),
-            "components": {"linkRelations": self._generate_link_relations_spec()},
+            "components": {
+                "linkRelations": self._generate_link_relations_spec()
+            }
         }
 
         return spec
@@ -811,36 +721,51 @@ class AdvancedHATEOASManager:
     def _generate_api_root_links(self) -> List[Dict[str, Any]]:
         """Generate links for API root."""
         return [
-            {"rel": "self", "href": "/", "title": "API Root"},
+            {
+                "rel": "self",
+                "href": "/",
+                "title": "API Root"
+            },
             {
                 "rel": "simulations",
                 "href": "/api/v1/simulations",
-                "title": "Simulations collection",
+                "title": "Simulations collection"
             },
-            {"rel": "health", "href": "/health", "title": "Service health"},
-            {"rel": "docs", "href": "/docs", "title": "API documentation"},
+            {
+                "rel": "health",
+                "href": "/health",
+                "title": "Service health"
+            },
+            {
+                "rel": "docs",
+                "href": "/docs",
+                "title": "API documentation"
+            }
         ]
 
     def _generate_link_relations_spec(self) -> Dict[str, Any]:
         """Generate specification for custom link relations."""
         return {
-            "simulate": {"description": "Execute a simulation", "methods": ["POST"]},
+            "simulate": {
+                "description": "Execute a simulation",
+                "methods": ["POST"]
+            },
             "execute": {
                 "description": "Execute or run a resource",
-                "methods": ["POST"],
+                "methods": ["POST"]
             },
             "analytics": {
                 "description": "Access analytics and insights",
-                "methods": ["GET"],
+                "methods": ["GET"]
             },
             "reports": {
                 "description": "Generate and access reports",
-                "methods": ["GET", "POST"],
+                "methods": ["GET", "POST"]
             },
             "metrics": {
                 "description": "Access performance metrics",
-                "methods": ["GET"],
-            },
+                "methods": ["GET"]
+            }
         }
 
 
@@ -857,12 +782,12 @@ def get_advanced_hateoas_manager() -> AdvancedHATEOASManager:
 
 
 __all__ = [
-    "LinkRelation",
-    "LinkTemplate",
-    "HypermediaResource",
-    "SimulationResource",
-    "AnalyticsResource",
-    "ReportResource",
-    "AdvancedHATEOASManager",
-    "get_advanced_hateoas_manager",
+    'LinkRelation',
+    'LinkTemplate',
+    'HypermediaResource',
+    'SimulationResource',
+    'AnalyticsResource',
+    'ReportResource',
+    'AdvancedHATEOASManager',
+    'get_advanced_hateoas_manager'
 ]

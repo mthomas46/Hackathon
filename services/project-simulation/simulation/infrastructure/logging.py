@@ -4,65 +4,35 @@ This module provides logging infrastructure for the project-simulation service
 by reusing the shared logging components from services/shared/.
 """
 
+from typing import Optional
+import sys
+from pathlib import Path
+
 # Import from shared infrastructure
 import sys
 from pathlib import Path
-from typing import Optional
-
-sys.path.append(
-    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
-)
+sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 try:
-    from core.logging.logger import (
-        LoggerService,
-        generate_correlation_id,
-        get_logger,
-        with_correlation_id,
-    )
+    from core.logging.logger import LoggerService, get_logger, with_correlation_id, generate_correlation_id
 except ImportError:
     # Fallback for testing - create simple implementations
     class LoggerService:
-        def __init__(
-            self,
-            name="project-simulation",
-            level="INFO",
-            enable_json=True,
-            enable_console=True,
-        ):
+        def __init__(self, name="project-simulation", level="INFO", enable_json=True, enable_console=True):
             pass
-
-        def debug(self, message, **kwargs):
-            pass
-
-        def info(self, message, **kwargs):
-            pass
-
-        def warning(self, message, **kwargs):
-            pass
-
-        def error(self, message, **kwargs):
-            pass
-
-        def critical(self, message, **kwargs):
-            pass
+        def debug(self, message, **kwargs): pass
+        def info(self, message, **kwargs): pass
+        def warning(self, message, **kwargs): pass
+        def error(self, message, **kwargs): pass
+        def critical(self, message, **kwargs): pass
 
     def get_logger(name=None):
         return LoggerService()
 
     def with_correlation_id(correlation_id=None):
-        from contextlib import contextmanager
-
-        @contextmanager
-        def _correlation_context():
-            # Simple no-op context manager to prevent crashes
-            # Correlation ID tracking can be implemented later if needed
-            yield
-
-        return _correlation_context()
+        return lambda func: func
 
     def generate_correlation_id():
         import uuid
-
         return str(uuid.uuid4())
 
 
@@ -75,7 +45,7 @@ class SimulationLogger:
             name="project-simulation",
             level="INFO",
             enable_json=True,
-            enable_console=True,
+            enable_console=True
         )
 
     def debug(self, message: str, **kwargs):
@@ -101,14 +71,16 @@ class SimulationLogger:
     def log_simulation_event(self, event_type: str, simulation_id: str, **kwargs):
         """Log simulation-specific event."""
         self._logger.log_business_event(
-            event_type=event_type, simulation_id=simulation_id, **kwargs
+            event_type=event_type,
+            simulation_id=simulation_id,
+            **kwargs
         )
 
     def log_performance(self, operation: str, duration: float, **kwargs):
         """Log performance metrics."""
         self._logger.log_performance(operation, duration, **kwargs)
 
-    def create_child_logger(self, child_name: str) -> "SimulationLogger":
+    def create_child_logger(self, child_name: str) -> 'SimulationLogger':
         """Create a child logger."""
         child_logger = SimulationLogger()
         child_logger._logger = self._logger.create_child_logger(child_name)
@@ -129,8 +101,8 @@ def get_simulation_logger() -> SimulationLogger:
 
 # Re-export shared logging utilities for convenience
 __all__ = [
-    "SimulationLogger",
-    "get_simulation_logger",
-    "with_correlation_id",
-    "generate_correlation_id",
+    'SimulationLogger',
+    'get_simulation_logger',
+    'with_correlation_id',
+    'generate_correlation_id'
 ]

@@ -9,14 +9,13 @@ including consistency checks, completeness validation, and best practice
 recommendations based on normalized architecture data.
 """
 
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
 
 
 class AnalysisType(Enum):
     """Types of architecture analysis available."""
-
     CONSISTENCY = "consistency"
     COMPLETENESS = "completeness"
     BEST_PRACTICES = "best_practices"
@@ -25,7 +24,6 @@ class AnalysisType(Enum):
 
 class IssueSeverity(Enum):
     """Severity levels for architecture issues."""
-
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -36,7 +34,6 @@ class IssueSeverity(Enum):
 @dataclass
 class ArchitectureIssue:
     """Represents an issue found in architecture analysis."""
-
     issue_type: str
     severity: IssueSeverity
     component_id: Optional[str]
@@ -59,7 +56,7 @@ class ArchitectureAnalyzer:
         self,
         components: List[Dict[str, Any]],
         connections: List[Dict[str, Any]],
-        options: Optional[Dict[str, Any]] = None,
+        options: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Analyze architectural components and connections.
@@ -94,7 +91,7 @@ class ArchitectureAnalyzer:
                 "issues": all_issues,
                 "issue_count": len(all_issues),
                 "severity_counts": self._count_severities(all_issues),
-                "results": results,
+                "results": results
             }
         else:
             # Run specific analysis
@@ -108,14 +105,14 @@ class ArchitectureAnalyzer:
                 "analysis_type": analysis_type.value,
                 "component_count": len(components),
                 "connection_count": len(connections),
-                **result,
+                **result
             }
 
     async def _analyze_consistency(
         self,
         components: List[Dict[str, Any]],
         connections: List[Dict[str, Any]],
-        options: Dict[str, Any],
+        options: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Analyze consistency of the architecture."""
         issues = []
@@ -128,57 +125,51 @@ class ArchitectureAnalyzer:
             to_id = conn.get("to_id")
 
             if from_id not in component_ids:
-                issues.append(
-                    ArchitectureIssue(
-                        issue_type="orphaned_connection",
-                        severity=IssueSeverity.CRITICAL,
-                        component_id=None,
-                        message=f"Connection references non-existent source component: {from_id}",
-                        recommendation="Remove or correct the connection",
-                        metadata={"connection": conn},
-                    )
-                )
+                issues.append(ArchitectureIssue(
+                    issue_type="orphaned_connection",
+                    severity=IssueSeverity.CRITICAL,
+                    component_id=None,
+                    message=f"Connection references non-existent source component: {from_id}",
+                    recommendation="Remove or correct the connection",
+                    metadata={"connection": conn}
+                ))
 
             if to_id not in component_ids:
-                issues.append(
-                    ArchitectureIssue(
-                        issue_type="orphaned_connection",
-                        severity=IssueSeverity.CRITICAL,
-                        component_id=None,
-                        message=f"Connection references non-existent target component: {to_id}",
-                        recommendation="Remove or correct the connection",
-                        metadata={"connection": conn},
-                    )
-                )
+                issues.append(ArchitectureIssue(
+                    issue_type="orphaned_connection",
+                    severity=IssueSeverity.CRITICAL,
+                    component_id=None,
+                    message=f"Connection references non-existent target component: {to_id}",
+                    recommendation="Remove or correct the connection",
+                    metadata={"connection": conn}
+                ))
 
         # Check for duplicate component IDs
         seen_ids = set()
         for comp in components:
             comp_id = comp.get("id")
             if comp_id in seen_ids:
-                issues.append(
-                    ArchitectureIssue(
-                        issue_type="duplicate_component",
-                        severity=IssueSeverity.HIGH,
-                        component_id=comp_id,
-                        message=f"Duplicate component ID found: {comp_id}",
-                        recommendation="Ensure all component IDs are unique",
-                        metadata={"component": comp},
-                    )
-                )
+                issues.append(ArchitectureIssue(
+                    issue_type="duplicate_component",
+                    severity=IssueSeverity.HIGH,
+                    component_id=comp_id,
+                    message=f"Duplicate component ID found: {comp_id}",
+                    recommendation="Ensure all component IDs are unique",
+                    metadata={"component": comp}
+                ))
             seen_ids.add(comp_id)
 
         return {
             "issues": issues,
             "issue_count": len(issues),
-            "severity_counts": self._count_severities(issues),
+            "severity_counts": self._count_severities(issues)
         }
 
     async def _analyze_completeness(
         self,
         components: List[Dict[str, Any]],
         connections: List[Dict[str, Any]],
-        options: Dict[str, Any],
+        options: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Analyze completeness of the architecture."""
         issues = []
@@ -186,30 +177,26 @@ class ArchitectureAnalyzer:
         # Check for components without descriptions
         for comp in components:
             if not comp.get("description") or comp.get("description").strip() == "":
-                issues.append(
-                    ArchitectureIssue(
-                        issue_type="missing_description",
-                        severity=IssueSeverity.MEDIUM,
-                        component_id=comp.get("id"),
-                        message=f"Component '{comp.get('name', comp.get('id'))}' has no description",
-                        recommendation="Add a clear description of the component's purpose and functionality",
-                        metadata={"component": comp},
-                    )
-                )
+                issues.append(ArchitectureIssue(
+                    issue_type="missing_description",
+                    severity=IssueSeverity.MEDIUM,
+                    component_id=comp.get("id"),
+                    message=f"Component '{comp.get('name', comp.get('id'))}' has no description",
+                    recommendation="Add a clear description of the component's purpose and functionality",
+                    metadata={"component": comp}
+                ))
 
         # Check for components without types
         for comp in components:
             if not comp.get("type"):
-                issues.append(
-                    ArchitectureIssue(
-                        issue_type="missing_type",
-                        severity=IssueSeverity.MEDIUM,
-                        component_id=comp.get("id"),
-                        message=f"Component '{comp.get('name', comp.get('id'))}' has no type specified",
-                        recommendation="Specify the component type (service, database, API, etc.)",
-                        metadata={"component": comp},
-                    )
-                )
+                issues.append(ArchitectureIssue(
+                    issue_type="missing_type",
+                    severity=IssueSeverity.MEDIUM,
+                    component_id=comp.get("id"),
+                    message=f"Component '{comp.get('name', comp.get('id'))}' has no type specified",
+                    recommendation="Specify the component type (service, database, API, etc.)",
+                    metadata={"component": comp}
+                ))
 
         # Check for isolated components (no connections)
         connected_component_ids = set()
@@ -220,28 +207,26 @@ class ArchitectureAnalyzer:
         for comp in components:
             comp_id = comp.get("id")
             if comp_id not in connected_component_ids:
-                issues.append(
-                    ArchitectureIssue(
-                        issue_type="isolated_component",
-                        severity=IssueSeverity.LOW,
-                        component_id=comp_id,
-                        message=f"Component '{comp.get('name', comp_id)}' has no connections",
-                        recommendation="Consider if this component should be connected to others or if it can be removed",
-                        metadata={"component": comp},
-                    )
-                )
+                issues.append(ArchitectureIssue(
+                    issue_type="isolated_component",
+                    severity=IssueSeverity.LOW,
+                    component_id=comp_id,
+                    message=f"Component '{comp.get('name', comp_id)}' has no connections",
+                    recommendation="Consider if this component should be connected to others or if it can be removed",
+                    metadata={"component": comp}
+                ))
 
         return {
             "issues": issues,
             "issue_count": len(issues),
-            "severity_counts": self._count_severities(issues),
+            "severity_counts": self._count_severities(issues)
         }
 
     async def _analyze_best_practices(
         self,
         components: List[Dict[str, Any]],
         connections: List[Dict[str, Any]],
-        options: Dict[str, Any],
+        options: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Analyze architecture against best practices."""
         issues = []
@@ -278,16 +263,14 @@ class ArchitectureAnalyzer:
         for comp_id in component_map.keys():
             if comp_id not in visited:
                 if has_cycle(comp_id):
-                    issues.append(
-                        ArchitectureIssue(
-                            issue_type="circular_dependency",
-                            severity=IssueSeverity.HIGH,
-                            component_id=None,
-                            message="Potential circular dependency detected in architecture",
-                            recommendation="Review component dependencies to eliminate circular references",
-                            metadata={"starting_component": comp_id},
-                        )
-                    )
+                    issues.append(ArchitectureIssue(
+                        issue_type="circular_dependency",
+                        severity=IssueSeverity.HIGH,
+                        component_id=None,
+                        message="Potential circular dependency detected in architecture",
+                        recommendation="Review component dependencies to eliminate circular references",
+                        metadata={"starting_component": comp_id}
+                    ))
                     break  # Only report once
 
         # Check for components with too many connections (high coupling)
@@ -295,21 +278,19 @@ class ArchitectureAnalyzer:
         for comp_id, targets in connection_map.items():
             if len(targets) > max_connections:
                 comp = component_map.get(comp_id, {})
-                issues.append(
-                    ArchitectureIssue(
-                        issue_type="high_coupling",
-                        severity=IssueSeverity.MEDIUM,
-                        component_id=comp_id,
-                        message=f"Component '{comp.get('name', comp_id)}' has {len(targets)} connections (threshold: {max_connections})",
-                        recommendation="Consider breaking down this component or introducing intermediaries",
-                        metadata={"component": comp, "connection_count": len(targets)},
-                    )
-                )
+                issues.append(ArchitectureIssue(
+                    issue_type="high_coupling",
+                    severity=IssueSeverity.MEDIUM,
+                    component_id=comp_id,
+                    message=f"Component '{comp.get('name', comp_id)}' has {len(targets)} connections (threshold: {max_connections})",
+                    recommendation="Consider breaking down this component or introducing intermediaries",
+                    metadata={"component": comp, "connection_count": len(targets)}
+                ))
 
         return {
             "issues": issues,
             "issue_count": len(issues),
-            "severity_counts": self._count_severities(issues),
+            "severity_counts": self._count_severities(issues)
         }
 
     def _count_severities(self, issues: List[ArchitectureIssue]) -> Dict[str, int]:
