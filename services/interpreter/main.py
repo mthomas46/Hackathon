@@ -6,6 +6,7 @@ and provenance features without complex import dependencies.
 
 import asyncio
 import json
+import os
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -13,6 +14,33 @@ from typing import Any, Dict, List, Optional
 import aiohttp
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
+
+# ============================================================================
+# ENVIRONMENT VARIABLE CONFIGURATION
+# ============================================================================
+def configure_service_urls():
+    """Configure default service URLs as environment variables if not set."""
+    defaults = {
+        # Core Services
+        "DOC_STORE_URL": "http://doc-store:5087",
+        "PROMPT_STORE_URL": "http://prompt-store:5110",
+        "ANALYSIS_SERVICE_URL": "http://analysis-service:5020",
+        "MEMORY_AGENT_URL": "http://memory-agent:5040",
+        "SOURCE_AGENT_URL": "http://source-agent:5000",
+        "LLM_GATEWAY_URL": "http://llm-gateway:5055",
+
+        # Interpreter Service Configuration
+        "INTERPRETER_SERVICE_HOST": "127.0.0.1",
+        "INTERPRETER_SERVICE_PORT": "5120",
+    }
+
+    # Set defaults only if not already set
+    for key, default_value in defaults.items():
+        if key not in os.environ:
+            os.environ[key] = default_value
+
+# Configure service URLs before application startup
+configure_service_urls()
 
 # ============================================================================
 # STANDARDIZED CONFIGURATION
@@ -107,7 +135,7 @@ class SimpleOutputGenerator:
     """Simplified output generator with doc_store integration."""
 
     def __init__(self):
-        self.doc_store_url = "http://doc-store:5087"
+        self.doc_store_url = os.getenv("DOC_STORE_URL", "http://doc-store:5087")
         self.supported_formats = ["json", "markdown", "csv"]
 
     async def generate_output(
@@ -597,11 +625,11 @@ async def get_ecosystem_capabilities():
         "output_formats": ["json", "markdown", "csv"],
         "integrated_services": {
             "doc_store": {
-                "url": "http://doc-store:5087",
+                "url": os.getenv("DOC_STORE_URL", "http://doc-store:5087"),
                 "capabilities": ["document_storage", "search", "metadata"],
             },
             "prompt_store": {
-                "url": "http://prompt-store:5110",
+                "url": os.getenv("PROMPT_STORE_URL", "http://prompt-store:5110"),
                 "capabilities": ["prompt_management", "versioning"],
             },
             "analysis_service": {
@@ -644,12 +672,12 @@ async def ecosystem_health():
         },
         "connected_services": {
             "doc_store": {
-                "url": "http://doc-store:5087",
+                "url": os.getenv("DOC_STORE_URL", "http://doc-store:5087"),
                 "status": "unknown",
                 "capabilities": ["document_storage", "search", "metadata"],
             },
             "prompt_store": {
-                "url": "http://prompt-store:5110",
+                "url": os.getenv("PROMPT_STORE_URL", "http://prompt-store:5110"),
                 "status": "unknown",
                 "capabilities": ["prompt_management", "versioning"],
             },
@@ -679,7 +707,7 @@ async def ecosystem_health():
             # Check doc_store
             try:
                 async with session.get(
-                    "http://doc-store:5087/health", timeout=2
+                    f"{os.getenv('DOC_STORE_URL', 'http://doc-store:5087')}/health", timeout=2
                 ) as response:
                     if response.status == 200:
                         ecosystem_health_status["connected_services"]["doc_store"][
@@ -1451,4 +1479,6 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info("🚀 Starting Enhanced Interpreter Service with Document Persistence...")
-    uvicorn.run(app, host="127.0.0.1", port=5120)
+    host = os.getenv("INTERPRETER_SERVICE_HOST", "127.0.0.1")
+    port = int(os.getenv("INTERPRETER_SERVICE_PORT", "5120"))
+    uvicorn.run(app, host=host, port=port)
