@@ -738,3 +738,34 @@ class CLICommands:
         table.add_row("Cache TTL", f"{self._cache_ttl} seconds")
 
         self.console.print(table)
+
+    def cleanup(self):
+        """Cleanup resources and connections.
+
+        This method should be called when the CLI session ends to ensure
+        all resources are properly released and prevent memory/file handle leaks.
+        """
+        try:
+            # Clear cache to free memory
+            self._cache.clear()
+
+            # Reset interrupt flag
+            self._interrupt_requested = False
+
+            # Clear any cached client connections if they exist
+            # Note: ServiceClients are designed to be stateless, so no explicit cleanup needed
+
+            self.console.print("[dim]🧹 Resources cleaned up successfully[/dim]")
+
+        except Exception as e:
+            # Log cleanup errors but don't raise - cleanup should be safe
+            self.console.print(f"[red]⚠️  Warning: Error during cleanup: {e}[/red]")
+
+    async def __aenter__(self):
+        """Async context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit with cleanup."""
+        self.cleanup()
+        return False  # Don't suppress exceptions
