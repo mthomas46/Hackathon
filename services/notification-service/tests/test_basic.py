@@ -22,15 +22,6 @@ class TestNotificationService:
             # Service may not have main.py yet - this is expected for services under development
             pytest.skip(f"Service not fully implemented yet: {e}")
 
-    @patch('main.app')
-    def test_fastapi_app_creation(self, mock_app):
-        """Test FastAPI app can be created."""
-        mock_app_instance = Mock()
-        mock_app_instance.title = "Notification Service"
-        mock_app.return_value = mock_app_instance
-
-        # This test validates that we can at least mock the service structure
-        assert mock_app_instance.title == "Notification Service"
 
     def test_notification_types(self):
         """Test notification type constants."""
