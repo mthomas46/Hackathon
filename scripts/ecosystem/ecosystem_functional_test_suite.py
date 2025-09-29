@@ -153,7 +153,7 @@ class EcosystemAuditor:
             "analysis-service": self._test_analysis_service_functionality,
             "frontend": self._test_frontend_functionality,
             "notification-service": self._test_notification_service_functionality,
-            "code-analyzer": self._test_code_analyzer_functionality,
+            "code-analyzer": self._test_code-analyzer_functionality,
             "source-agent": self._test_source_agent_functionality
         }
 
@@ -370,7 +370,7 @@ class EcosystemAuditor:
                 "error": str(e)
             }
 
-    async def _test_code_analyzer_functionality(self, config: ServiceConfig) -> Dict[str, Any]:
+    async def _test_code-analyzer_functionality(self, config: ServiceConfig) -> Dict[str, Any]:
         """Test Code Analyzer basic functionality"""
         base_url = f"http://localhost:{config.port}"
 

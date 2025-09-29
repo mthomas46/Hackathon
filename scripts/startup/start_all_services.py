@@ -38,7 +38,7 @@ class ServiceManager:
             "bedrock_proxy",
             "github_mcp",
             "interpreter",
-            "code_analyzer",
+            "code-analyzer",
             "secure_analyzer",
             "log_collector",
             "cli"
@@ -140,10 +140,10 @@ class ServiceManager:
                 "env": base_env.copy(),
                 "working_dir": str(self.project_root)
             },
-            "code_analyzer": {
+            "code-analyzer": {
                 "name": "Code Analyzer",
                 "description": "Code analysis and security scanning",
-                "command": [sys.executable, "-m", "services.code_analyzer.main"],
+                "command": [sys.executable, "-m", "services.code-analyzer.main"],
                 "health_url": "http://localhost:5085/health",
                 "port": 5085,
                 "env": base_env.copy(),

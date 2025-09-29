@@ -436,7 +436,7 @@ class AutomatedHealthMonitor:
             {"name": "memory_agent", "url": "http://localhost:5090/health", "critical": False},
             {"name": "secure_analyzer", "url": "http://localhost:5100/health", "critical": False},
             {"name": "summarizer_hub", "url": "http://localhost:5160/health", "critical": False},
-            {"name": "code_analyzer", "url": "http://localhost:5050/health", "critical": False},
+            {"name": "code-analyzer", "url": "http://localhost:5050/health", "critical": False},
             {"name": "bedrock_proxy", "url": "http://localhost:5060/health", "critical": False},
             {"name": "notification_service", "url": "http://localhost:5020/health", "critical": False},
             {"name": "log_collector", "url": "http://localhost:5040/health", "critical": False},

@@ -141,7 +141,7 @@ def generate_detailed_service_recommendations():
             "business_value": 0.85,
             "technical_complexity": "HIGH",
             "estimated_effort_days": 52,
-            "dependencies": ["memory_agent", "doc_store", "prompt_store"],
+            "dependencies": ["memory-agent", "doc_store", "prompt_store"],
             "risk_level": "MEDIUM"
         },
 
@@ -212,7 +212,7 @@ def generate_detailed_service_recommendations():
         },
 
         # DEVELOPMENT SERVICES - MEDIUM PRIORITY
-        "discovery_agent": {
+        "discovery-agent": {
             "priority_level": "MEDIUM",
             "integration_depth_target": "ADVANCED",
             "key_opportunities": [
@@ -234,7 +234,7 @@ def generate_detailed_service_recommendations():
             "risk_level": "LOW"
         },
 
-        "memory_agent": {
+        "memory-agent": {
             "priority_level": "MEDIUM",
             "integration_depth_target": "ADVANCED",
             "key_opportunities": [
@@ -301,7 +301,7 @@ def generate_detailed_service_recommendations():
             "risk_level": "MEDIUM"
         },
 
-        "code_analyzer": {
+        "code-analyzer": {
             "priority_level": "MEDIUM",
             "integration_depth_target": "ADVANCED",
             "key_opportunities": [
@@ -390,7 +390,7 @@ def generate_detailed_service_recommendations():
             "risk_level": "HIGH"
         },
 
-        "github_mcp": {
+        "github-mcp": {
             "priority_level": "LOW",
             "integration_depth_target": "INTERMEDIATE",
             "key_opportunities": [
@@ -408,7 +408,7 @@ def generate_detailed_service_recommendations():
             "business_value": 0.58,
             "technical_complexity": "MEDIUM",
             "estimated_effort_days": 48,
-            "dependencies": ["source_agent", "code_analyzer"],
+            "dependencies": ["source_agent", "code-analyzer"],
             "risk_level": "MEDIUM"
         },
 
@@ -563,7 +563,7 @@ def generate_integration_patterns_report():
         "collaboration_patterns": {
             "Real-Time Collaboration Platform": {
                 "description": "Real-time collaborative features with conflict resolution",
-                "services": ["frontend", "doc_store", "notification_service", "memory_agent"],
+                "services": ["frontend", "doc_store", "notification_service", "memory-agent"],
                 "complexity": "MEDIUM",
                 "effort_days": 16,
                 "business_value": 0.82,
@@ -578,7 +578,7 @@ def generate_integration_patterns_report():
 
             "Multi-Agent Coordination": {
                 "description": "Advanced coordination protocols for multiple agents",
-                "services": ["orchestrator", "analysis_service", "interpreter", "memory_agent"],
+                "services": ["orchestrator", "analysis_service", "interpreter", "memory-agent"],
                 "complexity": "HIGH",
                 "effort_days": 25,
                 "business_value": 0.87,
