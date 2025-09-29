@@ -171,7 +171,7 @@ def get_orchestrator_url() -> str:
     return _get_service_url("orchestrator")
 
 
-def get_summarizer-hub_url() -> str:
+def get_summarizer_hub_url() -> str:
     """Get summarizer hub service URL from config/env with fallback."""
     return _get_service_url("summarizer-hub")
 
@@ -196,7 +196,7 @@ def get_bedrock_proxy_url() -> str:
     return _get_service_url("bedrock_proxy")
 
 
-def get_code-analyzer_url() -> str:
+def get_code_analyzer_url() -> str:
     """Get code analyzer service URL from config/env with fallback."""
     return _get_service_url("code-analyzer")
 
@@ -221,17 +221,17 @@ def get_memory_agent_url() -> str:
     return _get_service_url("memory_agent")
 
 
-def get_notification-service_url() -> str:
+def get_notification_service_url() -> str:
     """Get notification service URL from config/env with fallback."""
     return _get_service_url("notification-service")
 
 
-def get_secure-analyzer_url() -> str:
+def get_secure_analyzer_url() -> str:
     """Get secure analyzer service URL from config/env with fallback."""
     return _get_service_url("secure-analyzer")
 
 
-def get_source-agent_url() -> str:
+def get_source_agent_url() -> str:
     """Get source agent service URL from config/env with fallback."""
     return _get_service_url("source-agent")
 

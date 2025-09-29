@@ -5,7 +5,7 @@ Organized by service for better maintainability and modularity.
 
 from .bedrock_proxy_handlers import BedrockProxyUIHandlers
 from .cli_handlers import CLIUIHandlers
-from .code-analyzer_handlers import CodeAnalyzerUIHandlers
+from .code_analyzer_handlers import CodeAnalyzerUIHandlers
 from .discovery_agent_handlers import DiscoveryAgentUIHandlers
 from .doc_store_handlers import DocStoreUIHandlers
 from .github_mcp_handlers import GithubMcpUIHandlers
@@ -96,8 +96,8 @@ class UIHandlers:
     def handle_prompt_store_browser(self) -> "HTMLResponse":
         return prompt_store_handlers.handle_prompt_store_browser()
 
-    def handle_code-analyzer_dashboard(self) -> "HTMLResponse":
-        return code-analyzer_handlers.handle_code-analyzer_dashboard()
+    def handle_code_analyzer_dashboard(self) -> "HTMLResponse":
+        return code-analyzer_handlers.handle_code_analyzer_dashboard()
 
     def handle_bedrock_proxy_dashboard(self) -> "HTMLResponse":
         return bedrock_proxy_handlers.handle_bedrock_proxy_dashboard()
@@ -114,14 +114,14 @@ class UIHandlers:
     def handle_memory_agent_dashboard(self) -> "HTMLResponse":
         return memory_agent_handlers.handle_memory_agent_dashboard()
 
-    def handle_notification-service_dashboard(self) -> "HTMLResponse":
-        return notification-service_handlers.handle_notification-service_dashboard()
+    def handle_notification_service_dashboard(self) -> "HTMLResponse":
+        return notification-service_handlers.handle_notification_service_dashboard()
 
-    def handle_secure-analyzer_dashboard(self) -> "HTMLResponse":
-        return secure-analyzer_handlers.handle_secure-analyzer_dashboard()
+    def handle_secure_analyzer_dashboard(self) -> "HTMLResponse":
+        return secure-analyzer_handlers.handle_secure_analyzer_dashboard()
 
-    def handle_source-agent_dashboard(self) -> "HTMLResponse":
-        return source-agent_handlers.handle_source-agent_dashboard()
+    def handle_source_agent_dashboard(self) -> "HTMLResponse":
+        return source-agent_handlers.handle_source_agent_dashboard()
 
     def handle_services_overview(self) -> "HTMLResponse":
         return services_overview_handlers.handle_services_overview()

@@ -19,7 +19,7 @@ class SecureAnalyzerUIHandlers:
     """Handles secure analyzer UI rendering."""
 
     @staticmethod
-    def handle_secure-analyzer_dashboard() -> HTMLResponse:
+    def handle_secure_analyzer_dashboard() -> HTMLResponse:
         """Render secure analyzer service monitoring dashboard."""
         try:
             get_frontend_clients()

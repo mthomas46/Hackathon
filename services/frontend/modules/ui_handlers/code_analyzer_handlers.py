@@ -17,7 +17,7 @@ class CodeAnalyzerUIHandlers:
     """Handles code analyzer UI rendering."""
 
     @staticmethod
-    def handle_code-analyzer_dashboard() -> HTMLResponse:
+    def handle_code_analyzer_dashboard() -> HTMLResponse:
         """Render code analyzer service dashboard."""
         try:
             html = """
