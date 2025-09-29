@@ -19,7 +19,7 @@ from .shared_utils import (
     get_interpreter_url,
     get_log_collector_url,
     get_memory_agent_url,
-    get_notification-service_url,
+    get_notification_service_url,
     get_orchestrator_url,
     get_prompt_store_url,
     get_secure-analyzer_url,
@@ -95,7 +95,7 @@ class ServicesOverviewMonitor:
                     "endpoint": "/health",
                 },
                 "notification-service": {
-                    "url_func": get_notification-service_url,
+                    "url_func": get_notification_service_url,
                     "endpoint": "/health",
                 },
                 "secure-analyzer": {
@@ -280,7 +280,7 @@ class ServicesOverviewMonitor:
                 "github-mcp": (get_github_mcp_url, "/health"),
                 "interpreter": (get_interpreter_url, "/health"),
                 "memory-agent": (get_memory_agent_url, "/health"),
-                "notification-service": (get_notification-service_url, "/health"),
+                "notification-service": (get_notification_service_url, "/health"),
                 "secure-analyzer": (get_secure-analyzer_url, "/health"),
                 "source-agent": (get_source-agent_url, "/health"),
             }

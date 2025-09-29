@@ -19,7 +19,7 @@ class NotificationServiceUIHandlers:
     """Handles notification service UI rendering."""
 
     @staticmethod
-    def handle_notification-service_dashboard() -> HTMLResponse:
+    def handle_notification_service_dashboard() -> HTMLResponse:
         """Render notification service monitoring dashboard."""
         try:
             get_frontend_clients()

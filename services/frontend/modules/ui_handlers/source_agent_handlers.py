@@ -19,7 +19,7 @@ class SourceAgentUIHandlers:
     """Handles source agent UI rendering."""
 
     @staticmethod
-    def handle_source-agent_dashboard() -> HTMLResponse:
+    def handle_source_agent_dashboard() -> HTMLResponse:
         """Render source agent service monitoring dashboard."""
         try:
             get_frontend_clients()

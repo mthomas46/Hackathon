@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from services.shared.infrastructure.utilities import utc_now
 
-from .shared_utils import get_frontend_clients, get_notification-service_url
+from .shared_utils import get_frontend_clients, get_notification_service_url
 
 
 class NotificationServiceMonitor:
@@ -35,7 +35,7 @@ class NotificationServiceMonitor:
 
         try:
             clients = get_frontend_clients()
-            notification_url = get_notification-service_url()
+            notification_url = get_notification_service_url()
 
             # Get health status and DLQ
             health_response = await clients.get_json(f"{notification_url}/health")
@@ -74,7 +74,7 @@ class NotificationServiceMonitor:
         """Resolve owners to their notification targets."""
         try:
             clients = get_frontend_clients()
-            notification_url = get_notification-service_url()
+            notification_url = get_notification_service_url()
 
             payload = {"owners": owners}
             response = await clients.post_json(
@@ -126,7 +126,7 @@ class NotificationServiceMonitor:
         """Send a notification through the service."""
         try:
             clients = get_frontend_clients()
-            notification_url = get_notification-service_url()
+            notification_url = get_notification_service_url()
 
             payload = {
                 "channel": channel,
@@ -171,7 +171,7 @@ class NotificationServiceMonitor:
         """Get dead letter queue entries."""
         try:
             clients = get_frontend_clients()
-            notification_url = get_notification-service_url()
+            notification_url = get_notification_service_url()
 
             dlq_response = await clients.get_json(
                 f"{notification_url}/dlq?limit={limit}"
