@@ -36,7 +36,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy service code maintaining directory structure
 COPY services/github-mcp/ ./services/github_mcp/
 COPY services/shared/ ./services/shared/
-COPY config.yml ./
+COPY config/config.yml ./config.yml/
 COPY config/ ./config/
 
 # Set Python path and environment

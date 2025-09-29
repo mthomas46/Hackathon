@@ -35,7 +35,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy service code maintaining directory structure
 COPY services/code-analyzer/ ./services/code-analyzer/
 COPY services/shared/ ./services/shared/
-COPY config.yml ./
+COPY config/config.yml ./config.yml/
 COPY config/ ./config/
 
 # Set Python path and environment
@@ -58,4 +58,4 @@ EXPOSE 5025
 USER appuser
 
 # Start command - run script directly to execute __main__ block
-CMD ["python", "services/code-analyzer/main.py"]
+CMD ["python", "-m", "services.code-analyzer.main"]

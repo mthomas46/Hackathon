@@ -39,7 +39,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy service code
 COPY services/doc_store/ ./services/doc_store/
 COPY services/shared/ ./services/shared/
-COPY config.yml ./
+COPY config/config.yml ./config.yml/
 COPY config/ ./config/
 
 # Set Python path and environment

@@ -35,7 +35,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Skip copying service code - rely on volume mounts for development
 # COPY services/discovery-agent/ ./services/discovery_agent/
 # COPY services/shared/ ./services/shared/
-# COPY config.yml ./
+# COPY config/config.yml ./config.yml/
 # COPY config/ ./config/
 
 # Set Python path and environment

@@ -31,7 +31,7 @@ docs-serve: ## Serve documentation locally
 
 timeline: ## Generate project timeline
 	@echo "$(BLUE)📊 Generating Timeline...$(NC)"
-	$(PYTHON) scripts/generate_timeline.py
+	$(PYTHON) scripts/docs/generate_timeline.py
 
 # Ecosystem Management
 ecosystem-setup: ## Set up virtual environment and dependencies
@@ -57,7 +57,7 @@ ecosystem-readiness: ## Check production readiness
 
 ecosystem-test: ## Run comprehensive ecosystem tests
 	@echo "$(BLUE)🧪 Running Ecosystem Tests...$(NC)"
-	$(PYTHON) ecosystem_functional_test_suite.py
+	$(PYTHON) scripts/hardening/ecosystem_functional_test_suite.py
 	source $(VENV)/bin/activate && python3 scripts/hardening/service_connectivity_validator.py
 
 ecosystem-clean: ## Clean ecosystem resources
@@ -71,7 +71,7 @@ ecosystem-clean: ## Clean ecosystem resources
 # Docker Management
 docker-start: ## Start all services with validation
 	@echo "$(BLUE)🚀 Starting Docker Ecosystem...$(NC)"
-	docker-compose -f docker-compose.dev.yml --profile core --profile ai_services --profile development up -d
+	docker-compose -f docker-compose.dev.yml --profile core --profile ai_services --profile development --profile utility up -d
 	@echo "$(GREEN)✅ Services starting...$(NC)"
 
 docker-stop: ## Stop all services
@@ -97,19 +97,7 @@ cli-test: ## Test environment-aware CLI
 	source $(VENV)/bin/activate && python3 scripts/safeguards/environment_aware_cli.py
 
 # Development Workflow
-dev-setup: ecosystem-setup setup-logging ecosystem-validate docker-start ## Complete development setup
-	@echo "$(GREEN)🎉 Development environment ready!$(NC)"
-	@echo "Run 'make ecosystem-health' to check service status"
-	@echo "Run 'make health-check-all' to validate all service health endpoints"
-	@echo "Run 'make logs-view' to see service log files"
-	@echo "Run 'make docs-serve' to view documentation"
-
-# CI/CD
-ci-validate: ecosystem-validate api-validate ## CI validation pipeline
-	@echo "$(GREEN)✅ CI validation passed$(NC)"
-
-ci-test: ci-validate test ecosystem-test ## CI testing pipeline
-	@echo "$(GREEN)✅ CI testing passed$(NC)"
+# (moved to integrated workflows section below)
 
 # ========================================
 # VALIDATION TARGETS (based on lessons learned)
@@ -281,8 +269,7 @@ validate-startup: ## Validate service startup configurations
 dev-validate: validate-ports validate-env validate-health-endpoints validate-logging validate-conflicts ## Quick development validation
 	@echo "$(GREEN)🎉 Development validation passed$(NC)"
 
-pre-deploy: validate-all ecosystem-health ## Pre-deployment validation
-	@echo "$(GREEN)🚀 Ready for deployment$(NC)"
+# Pre-deployment validation (moved to integrated workflows below)
 
 # ========================================
 # ERROR RECOVERY TARGETS
@@ -570,26 +557,26 @@ user-store-test: ## Run user store tests
 
 user-store-docker: ## Start user store service in Docker
 	@echo "$(BLUE)🐳 Starting User Store Service in Docker...$(NC)"
-	docker-compose --profile user-store up -d
+	docker-compose --profile utility up -d user-store
 	@echo "$(GREEN)✅ User store service started in Docker$(NC)"
-	@echo "$(YELLOW)📊 Service available at: http://localhost:8001$(NC)"
+	@echo "$(YELLOW)📊 Service available at: http://localhost:5150$(NC)"
 
 user-store-stop: ## Stop user store service
 	@echo "$(BLUE)🛑 Stopping User Store Service...$(NC)"
-	docker-compose --profile user-store down
+	docker-compose --profile utility down user-store
 	@echo "$(GREEN)✅ User store service stopped$(NC)"
 
 user-store-logs: ## View user store service logs
 	@echo "$(BLUE)📋 User Store Service Logs$(NC)"
-	docker-compose --profile user-store logs -f --tail=100
+	docker-compose --profile utility logs -f --tail=100 user-store
 
 user-store-health: ## Check user store service health
 	@echo "$(BLUE)🏥 User Store Service Health Check$(NC)"
 	@echo "$(YELLOW)Container Status:$(NC)"
-	@docker-compose --profile user-store ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+	@docker-compose --profile utility ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" user-store
 	@echo ""
 	@echo "$(YELLOW)Health Check:$(NC)"
-	@curl -s http://localhost:8001/health | jq . 2>/dev/null || curl -s http://localhost:8001/health || echo "❌ Service not responding"
+	@curl -s http://localhost:5150/health | jq . 2>/dev/null || curl -s http://localhost:5150/health || echo "❌ Service not responding"
 
 # ========================================
 # 🌐 EXTERNAL SERVICE STORE MANAGEMENT
@@ -606,26 +593,26 @@ external-service-store-test: ## Run external service store tests
 
 external-service-store-docker: ## Start external service store in Docker
 	@echo "$(BLUE)🐳 Starting External Service Store in Docker...$(NC)"
-	docker-compose --profile external-service-store up -d
+	docker-compose --profile utility up -d external-service-store
 	@echo "$(GREEN)✅ External service store started in Docker$(NC)"
-	@echo "$(YELLOW)📊 Service available at: http://localhost:8010$(NC)"
+	@echo "$(YELLOW)📊 Service available at: http://localhost:5140$(NC)"
 
 external-service-store-stop: ## Stop external service store
 	@echo "$(BLUE)🛑 Stopping External Service Store...$(NC)"
-	docker-compose --profile external-service-store down
+	docker-compose --profile utility down external-service-store
 	@echo "$(GREEN)✅ External service store stopped$(NC)"
 
 external-service-store-logs: ## View external service store logs
 	@echo "$(BLUE)📋 External Service Store Logs$(NC)"
-	docker-compose --profile external-service-store logs -f --tail=100
+	docker-compose --profile utility logs -f --tail=100 external-service-store
 
 external-service-store-health: ## Check external service store health
 	@echo "$(BLUE)🏥 External Service Store Health Check$(NC)"
 	@echo "$(YELLOW)Container Status:$(NC)"
-	@docker-compose --profile external-service-store ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+	@docker-compose --profile utility ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" external-service-store
 	@echo ""
 	@echo "$(YELLOW)Health Check:$(NC)"
-	@curl -s http://localhost:8010/health | jq . 2>/dev/null || curl -s http://localhost:8010/health || echo "❌ Service not responding"
+	@curl -s http://localhost:5140/health | jq . 2>/dev/null || curl -s http://localhost:5140/health || echo "❌ Service not responding"
 
 # ========================================
 # 🔍 AUDIT FRAMEWORK INTEGRATION
@@ -729,18 +716,16 @@ audit-enforce: ## Enforce quality standards
 # 🔄 INTEGRATED WORKFLOWS
 # ========================================
 
-# Development workflow with audit
+# Integrated workflows with audit
 dev-setup: ecosystem-setup setup-logging audit-setup ## Complete development setup with audit
 	@echo "$(GREEN)🎉 Development environment with audit ready!$(NC)"
 
-# CI/CD workflow with audit
 ci-validate: ecosystem-validate audit-ci audit-quality-gate ## CI validation with audit
 	@echo "$(GREEN)✅ CI validation with audit passed$(NC)"
 
 ci-test: ci-validate test audit-services ## CI testing with comprehensive audit
 	@echo "$(GREEN)✅ CI testing with audit passed$(NC)"
 
-# Pre-deployment with audit
 pre-deploy: validate-all ecosystem-health audit-comprehensive audit-enforce ## Pre-deployment validation with audit
 	@echo "$(GREEN)🚀 Pre-deployment validation with audit passed$(NC)"
 
