@@ -214,16 +214,16 @@ class PRConfidenceState(TypedDict):
 ### **Source Agent Integration**
 ```python
 # GitHub PR extraction
-pr_data = source_agent.extract_github_pr(pr_url)
+pr_data = source-agent.extract_github_pr(pr_url)
 
 # Jira ticket search
-jira_results = source_agent.search_jira({
+jira_results = source-agent.search_jira({
     "query": extracted_ticket_refs,
     "fields": ["description", "acceptance_criteria", "comments", "priority"]
 })
 
 # Confluence search
-confluence_results = source_agent.search_confluence({
+confluence_results = source-agent.search_confluence({
     "query": f"{pr_title} {pr_description}",
     "spaces": relevant_spaces,
     "max_results": 10
@@ -333,7 +333,7 @@ final_report = llm_gateway.generate_report({
 ### **Notification Service Integration**
 ```python
 # Step-by-step notifications
-step_notifications = notification_service.send_progress_notifications({
+step_notifications = notification-service.send_progress_notifications({
     "workflow_id": workflow_id,
     "recipient": pr_author,
     "steps": [
@@ -345,7 +345,7 @@ step_notifications = notification_service.send_progress_notifications({
 })
 
 # Final report delivery
-report_delivery = notification_service.deliver_report({
+report_delivery = notification-service.deliver_report({
     "recipient": pr_author,
     "report_url": report_url,
     "confidence_score": confidence_score,
@@ -367,14 +367,14 @@ workflow_logging = log_collector.log_workflow_execution({
             "end_time": step_end,
             "status": "completed",
             "data_processed": pr_data_size,
-            "service_calls": ["source_agent", "interpreter"]
+            "service_calls": ["source-agent", "interpreter"]
         },
         # ... log each step
     ],
     "final_result": {
         "confidence_score": confidence_score,
         "processing_time": total_time,
-        "services_used": ["source_agent", "interpreter", "doc_store", "prompt_store", "analysis_service", "llm_gateway"],
+        "services_used": ["source-agent", "interpreter", "doc_store", "prompt_store", "analysis_service", "llm_gateway"],
         "notifications_sent": notification_count
     }
 })

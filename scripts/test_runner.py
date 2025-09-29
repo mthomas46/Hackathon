@@ -87,7 +87,7 @@ class TestRunner:
             "analysis_service": ("python", "-c", "import requests; requests.get('http://localhost:5020/health', timeout=2)"),
             "orchestrator": ("python", "-c", "import requests; requests.get('http://localhost:5099/health/system', timeout=2)"),
             "prompt_store": ("python", "-c", "import requests; requests.get('http://localhost:5110/health', timeout=2)"),
-            "summarizer_hub": ("python", "-c", "import requests; requests.get('http://localhost:5060/health', timeout=2)"),
+            "summarizer-hub": ("python", "-c", "import requests; requests.get('http://localhost:5060/health', timeout=2)"),
             "interpreter": ("python", "-c", "import requests; requests.get('http://localhost:5120/health', timeout=2)")
         }
 

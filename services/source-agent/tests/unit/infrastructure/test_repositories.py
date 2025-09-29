@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import Mock, AsyncMock
 from datetime import datetime, timezone
 
-from services.source_agent.infrastructure.repositories.document_repository import DocumentRepository
+from services.source-agent.infrastructure.repositories.document_repository import DocumentRepository
 
 
 class TestDocumentRepository:
@@ -18,7 +18,7 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_save_and_retrieve_document(self, repository):
         """Test saving and retrieving a document."""
-        from services.source_agent.domain.entities import Document
+        from services.source-agent.domain.entities import Document
 
         doc = Document(
             source_type="github",
@@ -39,7 +39,7 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_find_documents_by_source(self, repository):
         """Test finding documents by source."""
-        from services.source_agent.domain.entities import Document
+        from services.source-agent.domain.entities import Document
 
         docs = [
             Document(source_type="github", source_id="org/repo1", title="Doc 1", content="Content 1"),
@@ -63,7 +63,7 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_find_documents_by_tags(self, repository):
         """Test finding documents by tags."""
-        from services.source_agent.domain.entities import Document
+        from services.source-agent.domain.entities import Document
 
         docs = [
             Document(source_type="github", source_id="test", title="Doc 1", content="Content 1", tags=["api", "docs"]),
@@ -85,7 +85,7 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_update_document(self, repository):
         """Test updating an existing document."""
-        from services.source_agent.domain.entities import Document
+        from services.source-agent.domain.entities import Document
 
         doc = Document(
             source_type="github",
@@ -109,7 +109,7 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_delete_document(self, repository):
         """Test deleting a document."""
-        from services.source_agent.domain.entities import Document
+        from services.source-agent.domain.entities import Document
 
         doc = Document(
             source_type="github",
@@ -133,7 +133,7 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_get_recent_documents(self, repository):
         """Test retrieving recent documents."""
-        from services.source_agent.domain.entities import Document
+        from services.source-agent.domain.entities import Document
         from datetime import timedelta
 
         # Create documents with different timestamps
@@ -162,7 +162,7 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_search_documents(self, repository):
         """Test searching documents by content and filters."""
-        from services.source_agent.domain.entities import Document
+        from services.source-agent.domain.entities import Document
 
         docs = [
             Document(source_type="github", source_id="test", title="API Guide", content="This guide covers API usage"),
@@ -197,7 +197,7 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_bulk_operations(self, repository):
         """Test bulk save and retrieval operations."""
-        from services.source_agent.domain.entities import Document
+        from services.source-agent.domain.entities import Document
 
         # Create multiple documents
         docs = []
@@ -249,7 +249,7 @@ class TestDocumentRepository:
     async def test_concurrent_operations(self, repository):
         """Test concurrent repository operations."""
         import asyncio
-        from services.source_agent.domain.entities import Document
+        from services.source-agent.domain.entities import Document
 
         async def create_and_save_doc(index):
             doc = Document(

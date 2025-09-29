@@ -419,7 +419,7 @@ class TestMultiServiceOrchestration:
             "mock_data_generator": ["simulation_service"],
             "analysis_service": ["mock_data_generator", "doc_store"],
             "doc_store": [],
-            "notification_service": ["analysis_service"],
+            "notification-service": ["analysis_service"],
             "reporting_service": ["analysis_service", "doc_store"],
         }
 
@@ -459,7 +459,7 @@ class TestMultiServiceOrchestration:
             },
             {
                 "pattern": "publish_subscribe",
-                "services": ["analysis_service", "notification_service"],
+                "services": ["analysis_service", "notification-service"],
                 "message_count": 50,
                 "expected_latency": "< 50ms",
             },

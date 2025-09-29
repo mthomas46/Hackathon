@@ -159,15 +159,15 @@ healthcheck:
 - **Port Range**: 6000-6999, 5087, 5099
 
 ### AI/ML Services  
-- `llm_gateway`, `ollama`, `mock_data_generator`, `summarizer_hub`
+- `llm_gateway`, `ollama`, `mock_data_generator`, `summarizer-hub`
 - **Port Range**: 5000-5199
 
 ### Analysis Services
-- `analysis_service`, `code_analyzer`, `secure_analyzer`, `log_collector`
+- `analysis_service`, `code-analyzer`, `secure-analyzer`, `log_collector`
 - **Port Range**: 5020-5099
 
 ### Agent Services
-- `memory_agent`, `discovery_agent`, `source_agent`
+- `memory_agent`, `discovery_agent`, `source-agent`
 - **Port Range**: 5040-5089
 
 ### Utility Services

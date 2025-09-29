@@ -328,13 +328,13 @@ class TestAnalysisService:
     """Unit tests for Analysis Service with mocks."""
 
     async def test_analysis_with_mocked_dependencies(
-        self, mock_doc_store, mock_source_agent, sample_analysis_request
+        self, mock_doc_store, mock_source-agent, sample_analysis_request
     ):
         """Test analysis with mocked dependencies."""
         # Arrange
         service = AnalysisService(
             doc_store=mock_doc_store,
-            source_agent=mock_source_agent
+            source-agent=mock_source-agent
         )
 
         # Act
@@ -343,7 +343,7 @@ class TestAnalysisService:
         # Assert
         assert result["status"] == "completed"
         mock_doc_store.search.assert_called_once()
-        mock_source_agent.fetch.assert_called_once()
+        mock_source-agent.fetch.assert_called_once()
 ```
 
 ## 🔧 Test Configuration

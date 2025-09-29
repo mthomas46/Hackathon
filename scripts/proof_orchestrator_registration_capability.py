@@ -287,7 +287,7 @@ class OrchestratorRegistrationProof:
                     "total_endpoints": 500,
                     "docker_network_services": [
                         "orchestrator", "doc_store", "prompt_store", "analysis_service",
-                        "cli", "memory_agent", "secure_analyzer", "log_collector"
+                        "cli", "memory_agent", "secure-analyzer", "log_collector"
                     ]
                 }
             },

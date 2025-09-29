@@ -289,11 +289,11 @@ class PromptStoreClient(EcosystemServiceClient):
 
 
 class SummarizerHubClient(EcosystemServiceClient):
-    """Client for summarizer_hub service."""
+    """Client for summarizer-hub service."""
 
     def __init__(self):
-        """Initialize summarizer_hub client."""
-        service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "summarizer_hub")
+        """Initialize summarizer-hub client."""
+        service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "summarizer-hub")
         super().__init__(service_info.name, service_info.endpoint)
 
     async def summarize_text(self, text: str, max_length: int = 200) -> Dict[str, Any]:
@@ -327,12 +327,12 @@ class InterpreterClient(EcosystemServiceClient):
 
 
 class NotificationServiceClient(EcosystemServiceClient):
-    """Client for notification_service."""
+    """Client for notification-service."""
 
     def __init__(self):
-        """Initialize notification_service client."""
+        """Initialize notification-service client."""
         service_info = next(
-            s for s in ECOSYSTEM_SERVICES if s.name == "notification_service"
+            s for s in ECOSYSTEM_SERVICES if s.name == "notification-service"
         )
         super().__init__(service_info.name, service_info.endpoint)
 
@@ -347,11 +347,11 @@ class NotificationServiceClient(EcosystemServiceClient):
 
 
 class SourceAgentClient(EcosystemServiceClient):
-    """Client for source_agent service."""
+    """Client for source-agent service."""
 
     def __init__(self):
-        """Initialize source_agent client."""
-        service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "source_agent")
+        """Initialize source-agent client."""
+        service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "source-agent")
         super().__init__(service_info.name, service_info.endpoint)
 
     async def analyze_codebase(self, repository_url: str) -> Dict[str, Any]:
@@ -360,11 +360,11 @@ class SourceAgentClient(EcosystemServiceClient):
 
 
 class CodeAnalyzerClient(EcosystemServiceClient):
-    """Client for code_analyzer service."""
+    """Client for code-analyzer service."""
 
     def __init__(self):
-        """Initialize code_analyzer client."""
-        service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "code_analyzer")
+        """Initialize code-analyzer client."""
+        service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "code-analyzer")
         super().__init__(service_info.name, service_info.endpoint)
 
     async def analyze_code(self, code: str, language: str) -> Dict[str, Any]:
@@ -389,10 +389,10 @@ class EcosystemServiceRegistry:
             "analysis_service": AnalysisServiceClient(),
             "llm_gateway": LlmGatewayClient(),
             "prompt_store": PromptStoreClient(),
-            "summarizer_hub": SummarizerHubClient(),
-            "notification_service": NotificationServiceClient(),
-            "source_agent": SourceAgentClient(),
-            "code_analyzer": CodeAnalyzerClient(),
+            "summarizer-hub": SummarizerHubClient(),
+            "notification-service": NotificationServiceClient(),
+            "source-agent": SourceAgentClient(),
+            "code-analyzer": CodeAnalyzerClient(),
         }
 
     def get_client(self, service_name: str) -> Optional[EcosystemServiceClient]:
@@ -466,9 +466,9 @@ def get_llm_gateway_client() -> LlmGatewayClient:
     return client if isinstance(client, LlmGatewayClient) else None
 
 
-def get_summarizer_hub_client() -> SummarizerHubClient:
-    """Get summarizer_hub client."""
-    client = get_ecosystem_client("summarizer_hub")
+def get_summarizer-hub_client() -> SummarizerHubClient:
+    """Get summarizer-hub client."""
+    client = get_ecosystem_client("summarizer-hub")
     return client if isinstance(client, SummarizerHubClient) else None
 
 
@@ -499,6 +499,6 @@ __all__ = [
     "get_orchestrator_client",
     "get_analysis_service_client",
     "get_llm_gateway_client",
-    "get_summarizer_hub_client",
+    "get_summarizer-hub_client",
     "get_interpreter_client",
 ]

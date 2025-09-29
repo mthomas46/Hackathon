@@ -254,7 +254,7 @@ class TestCompleteWorkflowIntegration:
             pytest.skip("Simulation service not available for testing")
 
     @pytest.mark.asyncio
-    async def test_summarizer_hub_analysis_capabilities(self, workflow_config, sample_documents, sample_timeline):
+    async def test_summarizer-hub_analysis_capabilities(self, workflow_config, sample_documents, sample_timeline):
         """Test summarizer-hub analysis capabilities."""
         try:
             async with httpx.AsyncClient(timeout=workflow_config["test_timeout"]) as client:

@@ -52,7 +52,7 @@ def generate_detailed_service_recommendations():
             "business_value": 0.95,
             "technical_complexity": "HIGH",
             "estimated_effort_days": 45,
-            "dependencies": ["doc_store", "prompt_store", "source_agent"],
+            "dependencies": ["doc_store", "prompt_store", "source-agent"],
             "risk_level": "MEDIUM"
         },
 
@@ -74,7 +74,7 @@ def generate_detailed_service_recommendations():
             "business_value": 0.92,
             "technical_complexity": "HIGH",
             "estimated_effort_days": 55,
-            "dependencies": ["analysis_service", "source_agent", "orchestrator"],
+            "dependencies": ["analysis_service", "source-agent", "orchestrator"],
             "risk_level": "MEDIUM"
         },
 
@@ -145,7 +145,7 @@ def generate_detailed_service_recommendations():
             "risk_level": "MEDIUM"
         },
 
-        "source_agent": {
+        "source-agent": {
             "priority_level": "HIGH",
             "integration_depth_target": "ENTERPRISE",
             "key_opportunities": [
@@ -167,7 +167,7 @@ def generate_detailed_service_recommendations():
             "risk_level": "MEDIUM"
         },
 
-        "summarizer_hub": {
+        "summarizer-hub": {
             "priority_level": "HIGH",
             "integration_depth_target": "ENTERPRISE",
             "key_opportunities": [
@@ -207,7 +207,7 @@ def generate_detailed_service_recommendations():
             "business_value": 0.80,
             "technical_complexity": "MEDIUM",
             "estimated_effort_days": 50,
-            "dependencies": ["orchestrator", "doc_store", "notification_service"],
+            "dependencies": ["orchestrator", "doc_store", "notification-service"],
             "risk_level": "LOW"
         },
 
@@ -256,7 +256,7 @@ def generate_detailed_service_recommendations():
             "risk_level": "LOW"
         },
 
-        "notification_service": {
+        "notification-service": {
             "priority_level": "MEDIUM",
             "integration_depth_target": "ENTERPRISE",
             "key_opportunities": [
@@ -279,7 +279,7 @@ def generate_detailed_service_recommendations():
         },
 
         # SPECIALIZED SERVICES - TARGETED INTEGRATION
-        "secure_analyzer": {
+        "secure-analyzer": {
             "priority_level": "MEDIUM",
             "integration_depth_target": "ADVANCED",
             "key_opportunities": [
@@ -297,7 +297,7 @@ def generate_detailed_service_recommendations():
             "business_value": 0.75,
             "technical_complexity": "HIGH",
             "estimated_effort_days": 44,
-            "dependencies": ["doc_store", "source_agent", "log_collector"],
+            "dependencies": ["doc_store", "source-agent", "log-collector"],
             "risk_level": "MEDIUM"
         },
 
@@ -319,11 +319,11 @@ def generate_detailed_service_recommendations():
             "business_value": 0.68,
             "technical_complexity": "HIGH",
             "estimated_effort_days": 45,
-            "dependencies": ["source_agent", "doc_store", "analysis_service"],
+            "dependencies": ["source-agent", "doc_store", "analysis_service"],
             "risk_level": "MEDIUM"
         },
 
-        "log_collector": {
+        "log-collector": {
             "priority_level": "MEDIUM",
             "integration_depth_target": "ADVANCED",
             "key_opportunities": [
@@ -408,7 +408,7 @@ def generate_detailed_service_recommendations():
             "business_value": 0.58,
             "technical_complexity": "MEDIUM",
             "estimated_effort_days": 48,
-            "dependencies": ["source_agent", "code-analyzer"],
+            "dependencies": ["source-agent", "code-analyzer"],
             "risk_level": "MEDIUM"
         },
 
@@ -499,7 +499,7 @@ def generate_integration_patterns_report():
         "event_driven_patterns": {
             "Real-time Document Analysis Pipeline": {
                 "description": "Event-driven document processing with streaming analysis",
-                "services": ["source_agent", "doc_store", "analysis_service", "summarizer_hub"],
+                "services": ["source-agent", "doc_store", "analysis_service", "summarizer-hub"],
                 "complexity": "HIGH",
                 "effort_days": 20,
                 "business_value": 0.9,
@@ -514,7 +514,7 @@ def generate_integration_patterns_report():
 
             "Cross-Service Event Correlation": {
                 "description": "Intelligent correlation of events across multiple services",
-                "services": ["orchestrator", "analysis_service", "log_collector"],
+                "services": ["orchestrator", "analysis_service", "log-collector"],
                 "complexity": "HIGH",
                 "effort_days": 18,
                 "business_value": 0.85,
@@ -563,7 +563,7 @@ def generate_integration_patterns_report():
         "collaboration_patterns": {
             "Real-Time Collaboration Platform": {
                 "description": "Real-time collaborative features with conflict resolution",
-                "services": ["frontend", "doc_store", "notification_service", "memory-agent"],
+                "services": ["frontend", "doc_store", "notification-service", "memory-agent"],
                 "complexity": "MEDIUM",
                 "effort_days": 16,
                 "business_value": 0.82,

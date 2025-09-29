@@ -226,8 +226,8 @@ class ParallelExecutor:
         params = self.resolve_parameters(step.get('parameters', {}), context)
 
         # Route to appropriate service
-        if service_name == 'code_analyzer':
-            result = await self.service_clients.call_code_analyzer(method, params)
+        if service_name == 'code-analyzer':
+            result = await self.service_clients.call_code-analyzer(method, params)
         elif service_name == 'analysis_service':
             result = await self.service_clients.call_analysis_service(method, params)
         elif service_name == 'doc_store':
@@ -267,7 +267,7 @@ CODE_REVIEW_WORKFLOW = {
             "id": "code_analysis",
             "name": "Static Code Analysis",
             "type": "service_call",
-            "service": "code_analyzer",
+            "service": "code-analyzer",
             "method": "analyze_code",
             "parameters": {
                 "code": "$code_content",
@@ -280,7 +280,7 @@ CODE_REVIEW_WORKFLOW = {
             "id": "security_scan",
             "name": "Security Vulnerability Scan",
             "type": "service_call",
-            "service": "secure_analyzer",
+            "service": "secure-analyzer",
             "method": "scan_security",
             "parameters": {
                 "content": "$code_content",
@@ -317,7 +317,7 @@ CODE_REVIEW_WORKFLOW = {
             "id": "documentation_check",
             "name": "Documentation Completeness Check",
             "type": "service_call",
-            "service": "code_analyzer",
+            "service": "code-analyzer",
             "method": "check_documentation",
             "parameters": {
                 "code": "$code_content",
@@ -329,7 +329,7 @@ CODE_REVIEW_WORKFLOW = {
             "id": "test_coverage",
             "name": "Test Coverage Analysis",
             "type": "service_call",
-            "service": "code_analyzer",
+            "service": "code-analyzer",
             "method": "analyze_test_coverage",
             "parameters": {
                 "code": "$code_content",
@@ -400,7 +400,7 @@ SECURITY_ASSESSMENT_WORKFLOW = {
             "id": "dependency_scan",
             "name": "Dependency Vulnerability Scan",
             "type": "service_call",
-            "service": "secure_analyzer",
+            "service": "secure-analyzer",
             "method": "scan_dependencies",
             "parameters": {
                 "dependencies": "$dependencies",
@@ -411,7 +411,7 @@ SECURITY_ASSESSMENT_WORKFLOW = {
             "id": "code_security_scan",
             "name": "Code Security Analysis",
             "type": "service_call",
-            "service": "secure_analyzer",
+            "service": "secure-analyzer",
             "method": "analyze_code_security",
             "parameters": {
                 "code": "$code_content",
@@ -423,7 +423,7 @@ SECURITY_ASSESSMENT_WORKFLOW = {
             "id": "data_security_scan",
             "name": "Data Handling Security Check",
             "type": "service_call",
-            "service": "secure_analyzer",
+            "service": "secure-analyzer",
             "method": "check_data_security",
             "parameters": {
                 "code": "$code_content",
@@ -435,7 +435,7 @@ SECURITY_ASSESSMENT_WORKFLOW = {
             "id": "configuration_security",
             "name": "Configuration Security Analysis",
             "type": "service_call",
-            "service": "secure_analyzer",
+            "service": "secure-analyzer",
             "method": "analyze_configuration",
             "parameters": {
                 "config_files": "$config_files",
@@ -567,7 +567,7 @@ RELEASE_MANAGEMENT_WORKFLOW = {
             "id": "code_quality_gate",
             "name": "Code Quality Gate Check",
             "type": "service_call",
-            "service": "code_analyzer",
+            "service": "code-analyzer",
             "method": "validate_quality_gate",
             "parameters": {
                 "code": "$codebase",
@@ -583,7 +583,7 @@ RELEASE_MANAGEMENT_WORKFLOW = {
             "id": "security_validation",
             "name": "Security Validation",
             "type": "service_call",
-            "service": "secure_analyzer",
+            "service": "secure-analyzer",
             "method": "validate_security_readiness",
             "parameters": {
                 "code": "$codebase",
@@ -812,7 +812,7 @@ workflow = (WorkflowDefinitionLanguage()
         "id": "code_analysis",
         "name": "Static Code Analysis",
         "type": "service_call",
-        "service": "code_analyzer",
+        "service": "code-analyzer",
         "method": "analyze_code"
     })
     .add_condition({
@@ -1029,7 +1029,7 @@ custom_workflow = (WorkflowDefinitionLanguage()
         "id": "custom_analysis",
         "name": "Custom Code Analysis",
         "type": "service_call",
-        "service": "code_analyzer",
+        "service": "code-analyzer",
         "method": "custom_analysis"
     })
     .add_condition({

@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 
 from services.shared.infrastructure.utilities import utc_now
 
-from .shared_utils import get_code_analyzer_url, get_frontend_clients
+from .shared_utils import get_code-analyzer_url, get_frontend_clients
 
 
 class CodeAnalyzerMonitor:
@@ -34,7 +34,7 @@ class CodeAnalyzerMonitor:
 
         try:
             clients = get_frontend_clients()
-            analyzer_url = get_code_analyzer_url()
+            analyzer_url = get_code-analyzer_url()
 
             # Get health status
             health_response = await clients.get_json(f"{analyzer_url}/health")
@@ -79,7 +79,7 @@ class CodeAnalyzerMonitor:
         """Analyze text content and cache the result."""
         try:
             clients = get_frontend_clients()
-            analyzer_url = get_code_analyzer_url()
+            analyzer_url = get_code-analyzer_url()
 
             payload = {"text": text, "analysis_type": analysis_type}
 
@@ -114,7 +114,7 @@ class CodeAnalyzerMonitor:
         """Analyze files and cache the result."""
         try:
             clients = get_frontend_clients()
-            analyzer_url = get_code_analyzer_url()
+            analyzer_url = get_code-analyzer_url()
 
             payload = {"files": files, "analysis_type": analysis_type}
 
@@ -148,7 +148,7 @@ class CodeAnalyzerMonitor:
         """Perform security scan and cache the result."""
         try:
             clients = get_frontend_clients()
-            analyzer_url = get_code_analyzer_url()
+            analyzer_url = get_code-analyzer_url()
 
             payload = {"code": code}
 
@@ -175,7 +175,7 @@ class CodeAnalyzerMonitor:
         """Check code style and cache the result."""
         try:
             clients = get_frontend_clients()
-            analyzer_url = get_code_analyzer_url()
+            analyzer_url = get_code-analyzer_url()
 
             payload = {"code": code, "style": style}
 
@@ -241,7 +241,7 @@ class CodeAnalyzerMonitor:
 
 
 # Global instance
-code_analyzer_monitor = CodeAnalyzerMonitor()
+code-analyzer_monitor = CodeAnalyzerMonitor()
 
 # Initialize activity cache
-code_analyzer_monitor._activity_cache = {}
+code-analyzer_monitor._activity_cache = {}

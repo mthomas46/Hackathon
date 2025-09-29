@@ -26,7 +26,7 @@ class ToolSecurityScanner:
     """Security scanner for discovered LangGraph tools using secure-analyzer service"""
     
     def __init__(self):
-        self.secure_analyzer_url = "http://localhost:5070"
+        self.secure-analyzer_url = "http://localhost:5070"
         self.security_reports = {}
         
         # Security risk categories
@@ -51,7 +51,7 @@ class ToolSecurityScanner:
             "risk_level": "low",
             "vulnerabilities": [],
             "recommendations": [],
-            "secure_analyzer_result": None
+            "secure-analyzer_result": None
         }
         
         # Analyze tool for common security risks
@@ -74,14 +74,14 @@ class ToolSecurityScanner:
         vulnerabilities.extend(file_risks)
         
         # 5. Use secure-analyzer service for advanced scanning
-        secure_analyzer_result = await self._scan_with_secure_analyzer(tool)
-        security_analysis["secure_analyzer_result"] = secure_analyzer_result
+        secure-analyzer_result = await self._scan_with_secure-analyzer(tool)
+        security_analysis["secure-analyzer_result"] = secure-analyzer_result
         
         # Combine vulnerabilities
         security_analysis["vulnerabilities"] = vulnerabilities
         
         # Determine overall risk level
-        security_analysis["risk_level"] = self._calculate_risk_level(vulnerabilities, secure_analyzer_result)
+        security_analysis["risk_level"] = self._calculate_risk_level(vulnerabilities, secure-analyzer_result)
         
         # Generate recommendations
         security_analysis["recommendations"] = self._generate_security_recommendations(vulnerabilities, tool)
@@ -224,7 +224,7 @@ class ToolSecurityScanner:
         
         return vulnerabilities
     
-    async def _scan_with_secure_analyzer(self, tool: Dict[str, Any]) -> Dict[str, Any]:
+    async def _scan_with_secure-analyzer(self, tool: Dict[str, Any]) -> Dict[str, Any]:
         """Use the secure-analyzer service for advanced security scanning"""
         
         try:
@@ -242,7 +242,7 @@ class ToolSecurityScanner:
             
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
                 # Use secure-analyzer's detect-content endpoint
-                url = f"{self.secure_analyzer_url}/detect-content"
+                url = f"{self.secure-analyzer_url}/detect-content"
                 
                 async with session.post(url, json=scan_data) as response:
                     if response.status == 200:
@@ -265,7 +265,7 @@ class ToolSecurityScanner:
                 "error": f"Failed to connect to secure-analyzer: {str(e)}"
             }
     
-    def _calculate_risk_level(self, vulnerabilities: List[Dict], secure_analyzer_result: Dict) -> str:
+    def _calculate_risk_level(self, vulnerabilities: List[Dict], secure-analyzer_result: Dict) -> str:
         """Calculate overall risk level for a tool"""
         
         # Count vulnerabilities by severity
@@ -274,8 +274,8 @@ class ToolSecurityScanner:
         low_count = len([v for v in vulnerabilities if v.get("severity") == "low"])
         
         # Factor in secure-analyzer results
-        if secure_analyzer_result.get("success"):
-            analyzer_data = secure_analyzer_result.get("analysis", {})
+        if secure-analyzer_result.get("success"):
+            analyzer_data = secure-analyzer_result.get("analysis", {})
             # This would depend on the actual secure-analyzer response format
             if analyzer_data.get("risk_level") == "high":
                 high_count += 1
@@ -341,8 +341,8 @@ class ToolSecurityScanner:
                 "high_risk": 0,
                 "medium_risk": 0,
                 "low_risk": 0,
-                "secure_analyzer_success": 0,
-                "secure_analyzer_failures": 0
+                "secure-analyzer_success": 0,
+                "secure-analyzer_failures": 0
             },
             "tool_results": [],
             "overall_assessment": "",
@@ -362,10 +362,10 @@ class ToolSecurityScanner:
             risk_level = tool_security["risk_level"]
             scan_results["security_summary"][f"{risk_level}_risk"] += 1
             
-            if tool_security["secure_analyzer_result"].get("success"):
-                scan_results["security_summary"]["secure_analyzer_success"] += 1
+            if tool_security["secure-analyzer_result"].get("success"):
+                scan_results["security_summary"]["secure-analyzer_success"] += 1
             else:
-                scan_results["security_summary"]["secure_analyzer_failures"] += 1
+                scan_results["security_summary"]["secure-analyzer_failures"] += 1
             
             # Collect critical findings
             high_vulns = [v for v in tool_security["vulnerabilities"] if v.get("severity") == "high"]
@@ -379,10 +379,10 @@ class ToolSecurityScanner:
             
             print(f"  Risk Level: {risk_level.upper()}")
             print(f"  Vulnerabilities: {len(tool_security['vulnerabilities'])}")
-            if tool_security["secure_analyzer_result"].get("success"):
+            if tool_security["secure-analyzer_result"].get("success"):
                 print(f"  Secure-Analyzer: ✅ Success")
             else:
-                print(f"  Secure-Analyzer: ❌ {tool_security['secure_analyzer_result'].get('error', 'Failed')}")
+                print(f"  Secure-Analyzer: ❌ {tool_security['secure-analyzer_result'].get('error', 'Failed')}")
         
         # Generate overall assessment
         total_tools = scan_results["tools_scanned"]
@@ -415,7 +415,7 @@ class ToolSecurityScanner:
 - **High Risk:** {summary['high_risk']} ({(summary['high_risk']/total)*100:.1f}%)
 - **Medium Risk:** {summary['medium_risk']} ({(summary['medium_risk']/total)*100:.1f}%)
 - **Low Risk:** {summary['low_risk']} ({(summary['low_risk']/total)*100:.1f}%)
-- **Secure-Analyzer Success Rate:** {summary['secure_analyzer_success']}/{total} ({(summary['secure_analyzer_success']/total)*100:.1f}%)
+- **Secure-Analyzer Success Rate:** {summary['secure-analyzer_success']}/{total} ({(summary['secure-analyzer_success']/total)*100:.1f}%)
 
 ## 🚨 Critical Findings
 
@@ -446,7 +446,7 @@ class ToolSecurityScanner:
 - **Service:** {tool_result['service']}
 - **Risk Level:** {tool_result['risk_level'].upper()}
 - **Vulnerabilities:** {len(tool_result['vulnerabilities'])}
-- **Secure-Analyzer:** {"✅" if tool_result['secure_analyzer_result'].get('success') else "❌"}
+- **Secure-Analyzer:** {"✅" if tool_result['secure-analyzer_result'].get('success') else "❌"}
 
 """
             

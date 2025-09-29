@@ -17,7 +17,7 @@ class CodeAnalyzerUIHandlers:
     """Handles code analyzer UI rendering."""
 
     @staticmethod
-    def handle_code_analyzer_dashboard() -> HTMLResponse:
+    def handle_code-analyzer_dashboard() -> HTMLResponse:
         """Render code analyzer service dashboard."""
         try:
             html = """
@@ -820,5 +820,5 @@ class CodeAnalyzerUIHandlers:
             return handle_frontend_error(
                 "render code analyzer dashboard",
                 e,
-                **build_frontend_context("render_code_analyzer_dashboard")
+                **build_frontend_context("render_code-analyzer_dashboard")
             )

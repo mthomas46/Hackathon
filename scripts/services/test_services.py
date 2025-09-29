@@ -24,20 +24,20 @@ def test_service_imports():
         'analysis-service': 'analysis-service.main',
         'doc_store': 'doc_store.main',
         'orchestrator': 'orchestrator.main',
-        'source-agent': 'source_agent.main',
+        'source-agent': 'source-agent.main',
         'frontend': 'frontend.main',
         'interpreter': 'interpreter.main',
         'prompt-store': 'prompt_store.main',
         'prompt_store': 'prompt_store.main_new',
         'cli': 'cli.main',
-        'notification-service': 'notification_service.main',
+        'notification-service': 'notification-service.main',
         'memory-agent': 'memory_agent.main',
         'discovery-agent': 'discovery_agent.main',
         'github-mcp': 'github_mcp.main',
         'bedrock-proxy': 'bedrock_proxy.main',
         'architecture-digitizer': 'architecture_digitizer.main',
-        'summarizer-hub': 'summarizer_hub.main',
-        'secure-analyzer': 'secure_analyzer.main',
+        'summarizer-hub': 'summarizer-hub.main',
+        'secure-analyzer': 'secure-analyzer.main',
         'code-analyzer': 'code-analyzer.main',
         'log-collector': 'log_collector.main',
     }
@@ -56,7 +56,7 @@ def test_service_imports():
         try:
             # Handle special cases where module path needs adjustment
             if service_name == 'source-agent':
-                module_path = 'source_agent.main'
+                module_path = 'source-agent.main'
             elif service_name == 'prompt-store':
                 # Try both possible main files
                 try:

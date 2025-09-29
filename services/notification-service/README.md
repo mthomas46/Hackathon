@@ -8,12 +8,12 @@ LLM Processing Metadata:
 - key_concepts: ["notifications", "owner_resolution", "deduplication", "dlq", "multi_channel"]
 - architecture: "reliable_notification_system"
 - processing_hints: "Enterprise notification service with owner resolution, deduplication, and reliable delivery"
-- cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../analysis-service/README.md", "../../tests/unit/notification_service/"]
+- cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../analysis-service/README.md", "../../tests/unit/notification-service/"]
 - integration_points: ["analysis_service", "doc_store", "all_services", "external_systems"]
 -->
 
 **Navigation**: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)  
-**Tests**: [tests/unit/notification_service](../../tests/unit/notification_service)
+**Tests**: [tests/unit/notification-service](../../tests/unit/notification-service)
 
 **Status**: ✅ Production Ready  
 **Port**: `5130` (External) → `5130` (Internal)  
@@ -170,7 +170,7 @@ The Notification Service employs a robust, enterprise-grade architecture designe
 ## 🧪 **Testing**
 
 ### **🔧 Test Coverage**
-- **Unit Tests**: [tests/unit/notification_service](../../tests/unit/notification_service) - Comprehensive unit test suite
+- **Unit Tests**: [tests/unit/notification-service](../../tests/unit/notification-service) - Comprehensive unit test suite
 - **Integration Tests**: External service integration and delivery validation
 - **Performance Tests**: Load testing for high-volume notification scenarios
 - **Reliability Tests**: Failure simulation and recovery mechanism validation

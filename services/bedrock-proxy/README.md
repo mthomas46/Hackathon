@@ -9,7 +9,7 @@ LLM Processing Metadata:
 - architecture: "ai_gateway_proxy"
 - processing_hints: "AWS Bedrock integration proxy with template-driven responses and development/production modes"
 - cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../summarizer-hub/README.md", "../../tests/unit/bedrock_proxy/"]
-- integration_points: ["summarizer_hub", "llm_gateway", "aws_bedrock", "ai_providers"]
+- integration_points: ["summarizer-hub", "llm_gateway", "aws_bedrock", "ai_providers"]
 -->
 
 **Navigation**: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)  

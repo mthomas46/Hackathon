@@ -82,14 +82,14 @@ ports:
   orchestrator: 5099
   doc_store: 5087
   analysis_service: 5020
-  source_agent: 5000
+  source-agent: 5000
   frontend: 3000
 
   # Agent Services
   memory_agent: 5040
   discovery_agent: 5045
   github_mcp: 5072
-  notification_service: 5095
+  notification-service: 5095
 
   # Utility Services
   prompt_store: 5110
@@ -99,9 +99,9 @@ ports:
   architecture_digitizer: 5105
 
   # Analysis & Processing
-  code_analyzer: 5085
-  secure_analyzer: 5070
-  summarizer_hub: 5060
+  code-analyzer: 5085
+  secure-analyzer: 5070
+  summarizer-hub: 5060
   log_collector: 5080
 
   # Legacy Services (for backward compatibility)
@@ -123,14 +123,14 @@ services:
   orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
   doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}
   analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
-  source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
+  source-agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
   frontend_url: ${FRONTEND_URL:-http://frontend:3000}
 
   # Agent Service URLs
   memory_agent_url: ${MEMORY_AGENT_URL:-http://memory-agent:5040}
   discovery_agent_url: ${DISCOVERY_AGENT_URL:-http://discovery-agent:5045}
   github_mcp_url: ${GITHUB_MCP_URL:-http://github-mcp:5072}
-  notification_service_url: ${NOTIFICATION_SERVICE_URL:-http://notification-service:5095}
+  notification-service_url: ${NOTIFICATION_SERVICE_URL:-http://notification-service:5095}
 
   # Utility Service URLs
   prompt_store_url: ${PROMPT_STORE_URL:-http://prompt-store:5110}
@@ -140,9 +140,9 @@ services:
   architecture_digitizer_url: ${ARCHITECTURE_DIGITIZER_URL:-http://architecture-digitizer:5105}
 
   # Analysis & Processing Service URLs
-  code_analyzer_url: ${CODE_ANALYZER_URL:-http://code-analyzer:5085}
-  secure_analyzer_url: ${SECURE_ANALYZER_URL:-http://secure-analyzer:5070}
-  summarizer_hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
+  code-analyzer_url: ${CODE_ANALYZER_URL:-http://code-analyzer:5085}
+  secure-analyzer_url: ${SECURE_ANALYZER_URL:-http://secure-analyzer:5070}
+  summarizer-hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
   log_collector_url: ${LOG_COLLECTOR_URL:-http://log-collector:5080}
 
 # ============================================================================
@@ -251,13 +251,13 @@ doc_store:
     connection_pool_size: ${DOCSTORE_CONNECTION_POOL_SIZE:-5}
 
 # Code Analyzer Configuration
-code_analyzer:
+code-analyzer:
   port: 5085
   settings:
     rate_limit_enabled: ${RATE_LIMIT_ENABLED:-false}
 
 # Secure Analyzer Configuration
-secure_analyzer:
+secure-analyzer:
   port: 5070
   circuit_breaker:
     max_failures: ${SECURE_ANALYZER_CIRCUIT_BREAKER_MAX_FAILURES:-5}
@@ -267,7 +267,7 @@ secure_analyzer:
     all_providers: ${ALL_PROVIDERS:-bedrock,ollama,openai,anthropic,grok}
 
 # Summarizer Hub Configuration
-summarizer_hub:
+summarizer-hub:
   port: 5060
 
 # Prompt Store Configuration
@@ -289,7 +289,7 @@ log_collector:
   max_log_size_mb: ${MAX_LOG_SIZE_MB:-100}
 
 # Notification Service Configuration
-notification_service:
+notification-service:
   port: 5095
   settings:
     deduplication_window: ${NOTIFICATION_DEDUPE_WINDOW:-300}
@@ -300,7 +300,7 @@ notification_service:
     file_config: ${NOTIFY_OWNER_MAP_FILE:-}
 
 # Source Agent Configuration
-source_agent:
+source-agent:
   port: 5000
   github_mcp_enabled: ${USE_GITHUB_MCP:-false}
 
@@ -606,7 +606,7 @@ ddd_architecture:
     doc_store:
       ddd_status: "migration_ready"
       migration_date: "pending"
-    source_agent:
+    source-agent:
       ddd_status: "migration_ready"
       migration_date: "pending"
 

@@ -7,7 +7,7 @@ import asyncio
 from unittest.mock import Mock, patch
 from typing import Dict, Any, List
 
-from services.summarizer_hub.modules.peer_review_enhancer import (
+from services.summarizer-hub.modules.peer_review_enhancer import (
     PeerReviewEnhancer,
     review_documentation,
     compare_document_versions,
@@ -153,7 +153,7 @@ class TestPeerReviewEnhancer:
         """Test initialization failure when dependencies are not available."""
         original_available = PEER_REVIEW_AVAILABLE
 
-        with patch('services.summarizer_hub.modules.peer_review_enhancer.PEER_REVIEW_AVAILABLE', False):
+        with patch('services.summarizer-hub.modules.peer_review_enhancer.PEER_REVIEW_AVAILABLE', False):
             enhancer = PeerReviewEnhancer()
             success = enhancer._initialize_enhancer()
             assert success is False
@@ -478,7 +478,7 @@ class TestPeerReviewIntegration:
     @pytest.mark.asyncio
     async def test_review_documentation_function(self, sample_document_content):
         """Test the convenience function for documentation peer review."""
-        with patch('services.summarizer_hub.modules.peer_review_enhancer.peer_review_enhancer') as mock_enhancer:
+        with patch('services.summarizer-hub.modules.peer_review_enhancer.peer_review_enhancer') as mock_enhancer:
             mock_enhancer.review_documentation.return_value = {
                 'document_title': 'Test API Guide',
                 'document_type': 'api_reference',
@@ -528,7 +528,7 @@ class TestPeerReviewIntegration:
     @pytest.mark.asyncio
     async def test_compare_document_versions_function(self, sample_document_content, sample_api_reference_content):
         """Test the convenience function for document version comparison."""
-        with patch('services.summarizer_hub.modules.peer_review_enhancer.peer_review_enhancer') as mock_enhancer:
+        with patch('services.summarizer-hub.modules.peer_review_enhancer.peer_review_enhancer') as mock_enhancer:
             mock_enhancer.compare_document_versions.return_value = {
                 'comparison': {
                     'old_version': {'score': 0.75, 'grade': 'C'},
@@ -566,9 +566,9 @@ class TestPeerReviewHandlers:
     @pytest.mark.asyncio
     async def test_handle_peer_review_success(self, mock_service_client, sample_document_content):
         """Test successful peer review handling."""
-        from services.summarizer_hub.modules.models import PeerReviewRequest
+        from services.summarizer-hub.modules.models import PeerReviewRequest
 
-        with patch('services.summarizer_hub.main.review_documentation') as mock_review:
+        with patch('services.summarizer-hub.main.review_documentation') as mock_review:
 
             mock_review.return_value = {
                 'document_title': 'Test API Guide',
@@ -593,20 +593,20 @@ class TestPeerReviewHandlers:
             )
 
             # Import the endpoint function directly since we're not running the full app
-            from services.summarizer_hub.main import review_document_endpoint
+            from services.summarizer-hub.main import review_document_endpoint
 
             # We can't easily test the endpoint without the full FastAPI context,
             # but we can test that the mock is called correctly
-            with patch('services.summarizer_hub.main.review_documentation', mock_review):
+            with patch('services.summarizer-hub.main.review_documentation', mock_review):
                 # This would normally be called by FastAPI, but we can verify the mock setup
                 assert mock_review.called is False  # Should be called when endpoint is invoked
 
     @pytest.mark.asyncio
     async def test_handle_document_comparison_success(self, mock_service_client, sample_document_content, sample_api_reference_content):
         """Test successful document comparison handling."""
-        from services.summarizer_hub.modules.models import DocumentComparisonRequest
+        from services.summarizer-hub.modules.models import DocumentComparisonRequest
 
-        with patch('services.summarizer_hub.main.compare_document_versions') as mock_compare:
+        with patch('services.summarizer-hub.main.compare_document_versions') as mock_compare:
 
             mock_compare.return_value = {
                 'comparison': {
@@ -627,10 +627,10 @@ class TestPeerReviewHandlers:
             )
 
             # Import the endpoint function directly
-            from services.summarizer_hub.main import compare_documents_endpoint
+            from services.summarizer-hub.main import compare_documents_endpoint
 
             # Verify mock setup
-            with patch('services.summarizer_hub.main.compare_document_versions', mock_compare):
+            with patch('services.summarizer-hub.main.compare_document_versions', mock_compare):
                 assert mock_compare.called is False
 
 

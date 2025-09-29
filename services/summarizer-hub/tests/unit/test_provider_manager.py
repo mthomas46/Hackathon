@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 
-from services.summarizer_hub.modules.provider_manager import ProviderManager
+from services.summarizer-hub.modules.provider_manager import ProviderManager
 
 
 class TestProviderManager:

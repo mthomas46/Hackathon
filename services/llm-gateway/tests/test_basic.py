@@ -87,8 +87,8 @@ class TestServiceIntegrations:
         # Test expected service endpoints
         expected_services = [
             'doc_store', 'prompt_store', 'memory_agent', 'interpreter',
-            'orchestrator', 'summarizer_hub', 'secure_analyzer',
-            'code_analyzer', 'architecture_digitizer', 'analysis_service'
+            'orchestrator', 'summarizer-hub', 'secure-analyzer',
+            'code-analyzer', 'architecture_digitizer', 'analysis_service'
         ]
 
         assert len(expected_services) == 10
@@ -127,7 +127,7 @@ class TestLLMGatewayIntegration:
         """Test coordination between multiple services."""
         # Test that the gateway can coordinate multiple services
         service_chain = [
-            'secure_analyzer',  # Security check first
+            'secure-analyzer',  # Security check first
             'prompt_store',     # Get optimized prompt
             'memory_agent',     # Get context
             'interpreter',      # Main LLM processing
@@ -135,7 +135,7 @@ class TestLLMGatewayIntegration:
         ]
 
         assert len(service_chain) >= 3
-        assert service_chain[0] == 'secure_analyzer'
+        assert service_chain[0] == 'secure-analyzer'
         assert service_chain[-1] == 'doc_store'
 
     def test_error_handling_patterns(self):
@@ -156,7 +156,7 @@ class TestLLMGatewayIntegration:
         """Test response aggregation from multiple services."""
         # Test that responses from different services can be aggregated
         service_responses = {
-            'secure_analyzer': {'status': 'safe', 'score': 0.95},
+            'secure-analyzer': {'status': 'safe', 'score': 0.95},
             'memory_agent': {'context': 'User is asking about Python', 'confidence': 0.87},
             'interpreter': {'response': 'Python is a programming language...', 'tokens': 150}
         }

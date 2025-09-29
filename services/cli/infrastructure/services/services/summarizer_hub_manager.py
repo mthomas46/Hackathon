@@ -22,7 +22,7 @@ class SummarizerHubManager(BaseManager):
     ):
         super().__init__(console, clients, cache)
 
-    async def summarizer_hub_menu(self):
+    async def summarizer-hub_menu(self):
         """Main summarizer hub management menu with enhanced interactive experience."""
         await self.run_menu_loop("Summarizer Hub Management", use_interactive=True)
 
@@ -50,7 +50,7 @@ class SummarizerHubManager(BaseManager):
         elif choice == "5":
             await self.ai_operations_analytics_menu()
         elif choice == "6":
-            await self.summarizer_hub_health_menu()
+            await self.summarizer-hub_health_menu()
         else:
             self.display.show_error("Invalid option. Please try again.")
         return True
@@ -1049,7 +1049,7 @@ class SummarizerHubManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error generating reports: {e}[/red]")
 
-    async def summarizer_hub_health_menu(self):
+    async def summarizer-hub_health_menu(self):
         """Summarizer hub health and configuration submenu."""
         while True:
             menu = create_menu_table(

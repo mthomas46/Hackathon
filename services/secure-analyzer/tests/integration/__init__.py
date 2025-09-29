@@ -1,1 +1,1 @@
-"""Tests for secure_analyzer integration layer."""
+"""Tests for secure-analyzer integration layer."""

@@ -19,8 +19,8 @@ from ..domain.exceptions.domain_exceptions import (
 class ToolSecurityScanner:
     """Security scanner for discovered LangGraph tools using secure-analyzer service"""
 
-    def __init__(self, secure_analyzer_url: str = "http://localhost:5070"):
-        self.secure_analyzer_url = secure_analyzer_url
+    def __init__(self, secure-analyzer_url: str = "http://localhost:5070"):
+        self.secure-analyzer_url = secure-analyzer_url
         self.service_client = safe_service_clients_call()
 
         # Security risk categories
@@ -45,7 +45,7 @@ class ToolSecurityScanner:
 
         Returns:
             Dict containing security scan results: risk_level, vulnerabilities,
-            recommendations, and secure_analyzer integration results
+            recommendations, and secure-analyzer integration results
         """
 
         security_analysis = {
@@ -55,7 +55,7 @@ class ToolSecurityScanner:
             "risk_level": "low",
             "vulnerabilities": [],
             "recommendations": [],
-            "secure_analyzer_result": None,
+            "secure-analyzer_result": None,
         }
 
         # Analyze tool for common security risks
@@ -66,15 +66,15 @@ class ToolSecurityScanner:
         vulnerabilities.extend(self._analyze_file_operation_risks(tool))
 
         # Use secure-analyzer service for advanced scanning
-        secure_analyzer_result = await self._scan_with_secure_analyzer(tool)
-        security_analysis["secure_analyzer_result"] = secure_analyzer_result
+        secure-analyzer_result = await self._scan_with_secure-analyzer(tool)
+        security_analysis["secure-analyzer_result"] = secure-analyzer_result
 
         # Combine vulnerabilities
         security_analysis["vulnerabilities"] = vulnerabilities
 
         # Determine overall risk level
         security_analysis["risk_level"] = self._calculate_risk_level(
-            vulnerabilities, secure_analyzer_result
+            vulnerabilities, secure-analyzer_result
         )
 
         # Generate recommendations
@@ -292,7 +292,7 @@ class ToolSecurityScanner:
 
         return vulnerabilities
 
-    async def _scan_with_secure_analyzer(self, tool: Dict[str, Any]) -> Dict[str, Any]:
+    async def _scan_with_secure-analyzer(self, tool: Dict[str, Any]) -> Dict[str, Any]:
         """Use the secure-analyzer service for advanced security scanning"""
 
         try:
@@ -310,7 +310,7 @@ class ToolSecurityScanner:
 
             async with self.service_client.session() as session:
                 # Use secure-analyzer's detect-content endpoint
-                url = f"{self.secure_analyzer_url}/detect-content"
+                url = f"{self.secure-analyzer_url}/detect-content"
 
                 async with session.post(url, json=scan_data, timeout=TIMEOUT_OPENAPI_FETCH) as response:
                     if response.status == 200:
@@ -328,12 +328,12 @@ class ToolSecurityScanner:
                         }
 
         except TimeoutError as e:
-            raise TimeoutException("secure_analyzer_scan", TIMEOUT_OPENAPI_FETCH, {"tool_name": tool_name})
+            raise TimeoutException("secure-analyzer_scan", TIMEOUT_OPENAPI_FETCH, {"tool_name": tool_name})
         except Exception as e:
             raise SecurityScanException(tool_name, f"Failed to connect to secure-analyzer: {str(e)}")
 
     def _calculate_risk_level(
-        self, vulnerabilities: List[Dict], secure_analyzer_result: Dict
+        self, vulnerabilities: List[Dict], secure-analyzer_result: Dict
     ) -> str:
         """Calculate overall risk level for a tool"""
 
@@ -345,8 +345,8 @@ class ToolSecurityScanner:
         low_count = len([v for v in vulnerabilities if v.get("severity") == "low"])
 
         # Factor in secure-analyzer results
-        if secure_analyzer_result.get("success"):
-            analyzer_data = secure_analyzer_result.get("analysis", {})
+        if secure-analyzer_result.get("success"):
+            analyzer_data = secure-analyzer_result.get("analysis", {})
             # This would depend on the actual secure-analyzer response format
             if analyzer_data.get("risk_level") == "high":
                 high_count += 1
@@ -421,8 +421,8 @@ class ToolSecurityScanner:
                 "high_risk": 0,
                 "medium_risk": 0,
                 "low_risk": 0,
-                "secure_analyzer_success": 0,
-                "secure_analyzer_failures": 0,
+                "secure-analyzer_success": 0,
+                "secure-analyzer_failures": 0,
             },
             "tool_results": [],
             "overall_assessment": "",
@@ -440,10 +440,10 @@ class ToolSecurityScanner:
             risk_level = tool_security["risk_level"]
             scan_results["security_summary"][f"{risk_level}_risk"] += 1
 
-            if tool_security["secure_analyzer_result"].get("success"):
-                scan_results["security_summary"]["secure_analyzer_success"] += 1
+            if tool_security["secure-analyzer_result"].get("success"):
+                scan_results["security_summary"]["secure-analyzer_success"] += 1
             else:
-                scan_results["security_summary"]["secure_analyzer_failures"] += 1
+                scan_results["security_summary"]["secure-analyzer_failures"] += 1
 
             # Collect critical findings
             high_vulns = [

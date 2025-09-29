@@ -152,9 +152,9 @@ class EcosystemAuditor:
             "discovery-agent": self._test_discovery_agent_functionality,
             "analysis-service": self._test_analysis_service_functionality,
             "frontend": self._test_frontend_functionality,
-            "notification-service": self._test_notification_service_functionality,
+            "notification-service": self._test_notification-service_functionality,
             "code-analyzer": self._test_code-analyzer_functionality,
-            "source-agent": self._test_source_agent_functionality
+            "source-agent": self._test_source-agent_functionality
         }
 
         if service_name in functional_tests:
@@ -178,7 +178,7 @@ class EcosystemAuditor:
         integration_tests = {
             "doc_store": self._test_doc_store_integration,
             "analysis-service": self._test_analysis_service_integration,
-            "source-agent": self._test_source_agent_integration,
+            "source-agent": self._test_source-agent_integration,
             "frontend": self._test_frontend_integration
         }
 
@@ -349,7 +349,7 @@ class EcosystemAuditor:
                 "error": str(e)
             }
 
-    async def _test_notification_service_functionality(self, config: ServiceConfig) -> Dict[str, Any]:
+    async def _test_notification-service_functionality(self, config: ServiceConfig) -> Dict[str, Any]:
         """Test Notification Service basic functionality"""
         base_url = f"http://localhost:{config.port}"
 
@@ -391,7 +391,7 @@ class EcosystemAuditor:
                 "error": str(e)
             }
 
-    async def _test_source_agent_functionality(self, config: ServiceConfig) -> Dict[str, Any]:
+    async def _test_source-agent_functionality(self, config: ServiceConfig) -> Dict[str, Any]:
         """Test Source Agent basic functionality"""
         base_url = f"http://localhost:{config.port}"
 
@@ -466,7 +466,7 @@ class EcosystemAuditor:
 
         return integration_results
 
-    async def _test_source_agent_integration(self, config: ServiceConfig) -> Dict[str, Any]:
+    async def _test_source-agent_integration(self, config: ServiceConfig) -> Dict[str, Any]:
         """Test source-agent integration with doc_store"""
         base_url = f"http://localhost:{config.port}"
 

@@ -99,7 +99,7 @@ def mock_service_client():
     client.put_json = AsyncMock()
     client.delete = AsyncMock()
     client.doc_store_url = Mock(return_value="http://localhost:8001")
-    client.source_agent_url = Mock(return_value="http://localhost:8002")
+    client.source-agent_url = Mock(return_value="http://localhost:8002")
     client.prompt_store_url = Mock(return_value="http://localhost:8003")
     return client
 

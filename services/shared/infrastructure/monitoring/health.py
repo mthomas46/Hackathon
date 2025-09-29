@@ -134,11 +134,11 @@ class HealthManager:
             "doc_store": self._check_doc_store_health,
             "analysis-service": self._check_analysis_service_health,
             "frontend": self._check_frontend_health,
-            "summarizer-hub": self._check_summarizer_hub_health,
+            "summarizer-hub": self._check_summarizer-hub_health,
             "llm-gateway": self._check_llm_gateway_health,
             "mock-data-generator": self._check_mock_data_generator_health,
-            "notification-service": self._check_notification_service_health,
-            "code-analyzer": self._check_code_analyzer_health,
+            "notification-service": self._check_notification-service_health,
+            "code-analyzer": self._check_code-analyzer_health,
         }
 
         check_func = service_checks.get(self.service_name)
@@ -176,7 +176,7 @@ class HealthManager:
         except Exception:
             health_status.api_connected = False
 
-    async def _check_summarizer_hub_health(self, health_status: HealthStatus) -> None:
+    async def _check_summarizer-hub_health(self, health_status: HealthStatus) -> None:
         """Check summarizer hub health metrics."""
         try:
             health_status.llm_connected = True
@@ -197,14 +197,14 @@ class HealthManager:
         except Exception:
             health_status.data_sources = 0
 
-    async def _check_notification_service_health(self, health_status: HealthStatus) -> None:
+    async def _check_notification-service_health(self, health_status: HealthStatus) -> None:
         """Check notification service health metrics."""
         try:
             health_status.email_configured = True
         except Exception:
             health_status.email_configured = False
 
-    async def _check_code_analyzer_health(self, health_status: HealthStatus) -> None:
+    async def _check_code-analyzer_health(self, health_status: HealthStatus) -> None:
         """Check code analyzer health metrics."""
         try:
             health_status.analysis_ready = True

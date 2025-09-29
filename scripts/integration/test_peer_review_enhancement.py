@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def test_peer_review_enhancer_import():
     """Test that the peer review enhancer module can be imported."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer, review_documentation
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer, review_documentation
         print("✅ Peer review enhancer module imported successfully")
         return True
     except ImportError as e:
@@ -24,7 +24,7 @@ def test_peer_review_enhancer_import():
 def test_peer_review_enhancer_initialization():
     """Test that the peer review enhancer can be initialized."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
         print("✅ PeerReviewEnhancer initialized successfully")
@@ -40,7 +40,7 @@ def test_peer_review_enhancer_initialization():
 def test_document_feature_extraction():
     """Test extraction of document features."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
 
@@ -91,7 +91,7 @@ def test_document_feature_extraction():
 def test_stakeholder_identification():
     """Test stakeholder group identification."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
 
@@ -138,7 +138,7 @@ def test_stakeholder_identification():
 def test_content_completeness_analysis():
     """Test content completeness analysis."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
 
@@ -182,7 +182,7 @@ def test_content_completeness_analysis():
 def test_technical_accuracy_analysis():
     """Test technical accuracy analysis."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
 
@@ -226,7 +226,7 @@ def test_technical_accuracy_analysis():
 def test_clarity_readability_analysis():
     """Test clarity and readability analysis."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
 
@@ -271,7 +271,7 @@ def test_clarity_readability_analysis():
 def test_structure_organization_analysis():
     """Test structure and organization analysis."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
 
@@ -329,7 +329,7 @@ def test_structure_organization_analysis():
 def test_overall_review_score_calculation():
     """Test overall review score calculation."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
 
@@ -371,7 +371,7 @@ def test_overall_review_score_calculation():
 def test_review_feedback_generation():
     """Test review feedback generation."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
 
@@ -419,7 +419,7 @@ def test_review_feedback_generation():
 async def test_full_peer_review_analysis():
     """Test the complete peer review analysis pipeline."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
 
@@ -510,7 +510,7 @@ async def test_full_peer_review_analysis():
 async def test_document_version_comparison():
     """Test document version comparison."""
     try:
-        from services.summarizer_hub.modules.peer_review_enhancer import PeerReviewEnhancer
+        from services.summarizer-hub.modules.peer_review_enhancer import PeerReviewEnhancer
 
         enhancer = PeerReviewEnhancer()
 
@@ -598,10 +598,10 @@ async def test_document_version_comparison():
         print(f"❌ Document version comparison failed: {e}")
         return False
 
-def test_summarizer_hub_main_import():
+def test_summarizer-hub_main_import():
     """Test that the summarizer hub main module can be imported with peer review endpoints."""
     try:
-        from services.summarizer_hub.main import app
+        from services.summarizer-hub.main import app
         routes = [route.path for route in app.routes if hasattr(route, 'path')]
         review_routes = [r for r in routes if 'review' in r]
 
@@ -633,7 +633,7 @@ def main():
         test_review_feedback_generation,
         test_full_peer_review_analysis,
         test_document_version_comparison,
-        test_summarizer_hub_main_import,
+        test_summarizer-hub_main_import,
     ]
 
     passed = 0

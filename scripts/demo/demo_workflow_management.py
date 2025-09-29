@@ -276,7 +276,7 @@ async def demo_api_usage():
                "action_type": "service_call",
                "name": "Fetch Document",
                "config": {
-                 "service": "source_agent",
+                 "service": "source-agent",
                  "endpoint": "/fetch",
                  "method": "POST",
                  "parameters": {"url": "{{document_url}}"}

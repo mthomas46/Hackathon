@@ -34,7 +34,7 @@ class WorkflowDispatcher:
         self.main_workflows = {
             "document_analysis": {
                 "description": "Comprehensive document analysis and quality assessment",
-                "services": ["doc_store", "analysis_service", "summarizer_hub"],
+                "services": ["doc_store", "analysis_service", "summarizer-hub"],
                 "capabilities": [
                     "retrieve_documents",
                     "analyze_quality",
@@ -64,10 +64,10 @@ class WorkflowDispatcher:
             "code_documentation": {
                 "description": "Automated code documentation generation and analysis",
                 "services": [
-                    "source_agent",
-                    "code_analyzer",
+                    "source-agent",
+                    "code-analyzer",
                     "doc_store",
-                    "summarizer_hub",
+                    "summarizer-hub",
                 ],
                 "capabilities": [
                     "ingest_repository",
@@ -99,10 +99,10 @@ class WorkflowDispatcher:
             "security_audit": {
                 "description": "Comprehensive security vulnerability assessment",
                 "services": [
-                    "secure_analyzer",
-                    "code_analyzer",
+                    "secure-analyzer",
+                    "code-analyzer",
                     "analysis_service",
-                    "notification_service",
+                    "notification-service",
                 ],
                 "capabilities": [
                     "scan_vulnerabilities",
@@ -132,7 +132,7 @@ class WorkflowDispatcher:
             },
             "content_processing": {
                 "description": "Advanced content processing and summarization",
-                "services": ["doc_store", "summarizer_hub", "analysis_service"],
+                "services": ["doc_store", "summarizer-hub", "analysis_service"],
                 "capabilities": [
                     "retrieve_content",
                     "summarize_content",
@@ -158,7 +158,7 @@ class WorkflowDispatcher:
             },
             "data_ingestion": {
                 "description": "Multi-source data ingestion and processing",
-                "services": ["source_agent", "github_mcp", "doc_store"],
+                "services": ["source-agent", "github_mcp", "doc_store"],
                 "capabilities": [
                     "ingest_github",
                     "ingest_confluence",
@@ -211,8 +211,8 @@ class WorkflowDispatcher:
                 "description": "Comprehensive quality assurance workflow",
                 "services": [
                     "analysis_service",
-                    "secure_analyzer",
-                    "code_analyzer",
+                    "secure-analyzer",
+                    "code-analyzer",
                     "doc_store",
                 ],
                 "capabilities": [
@@ -247,7 +247,7 @@ class WorkflowDispatcher:
                 "services": [
                     "doc_store",
                     "analysis_service",
-                    "summarizer_hub",
+                    "summarizer-hub",
                     "memory_agent",
                 ],
                 "capabilities": [

@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-def _load_code_analyzer_service():
+def _load_code-analyzer_service():
     """Load code-analyzer service dynamically."""
     try:
         spec = importlib.util.spec_from_file_location(
@@ -193,15 +193,15 @@ def _load_code_analyzer_service():
 
 
 @pytest.fixture(scope="module")
-def code_analyzer_app():
+def code-analyzer_app():
     """Load code-analyzer service."""
-    return _load_code_analyzer_service()
+    return _load_code-analyzer_service()
 
 
 @pytest.fixture
-def client(code_analyzer_app):
+def client(code-analyzer_app):
     """Create test client."""
-    return TestClient(code_analyzer_app)
+    return TestClient(code-analyzer_app)
 
 
 def _assert_http_ok(response):

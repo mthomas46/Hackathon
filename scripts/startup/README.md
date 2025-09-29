@@ -15,14 +15,14 @@ Each service has its own startup script that handles:
 - `start_docstore.py` - Start Doc Store service (port 5010)
 - `start_analysis_service.py` - Start Analysis Service (port 5020)
 - `start_orchestrator.py` - Start Orchestrator service (port 5099)
-- `start_summarizer_hub.py` - Start Summarizer Hub (port 5060)
+- `start_summarizer-hub.py` - Start Summarizer Hub (port 5060)
 - `start_architecture_digitizer.py` - Start Architecture Digitizer (port 5105)
 - `start_bedrock_proxy.py` - Start Bedrock Proxy (port 7090)
 - `start_github_mcp.py` - Start GitHub MCP (port 5072)
 - `start_interpreter.py` - Start Interpreter service (port 5120)
 - `start_prompt_store.py` - Start Prompt Store (port 5110)
-- `start_code_analyzer.py` - Start Code Analyzer (port 5085)
-- `start_secure_analyzer.py` - Start Secure Analyzer (port 5070)
+- `start_code-analyzer.py` - Start Code Analyzer (port 5085)
+- `start_secure-analyzer.py` - Start Secure Analyzer (port 5070)
 - `start_log_collector.py` - Start Log Collector (port 5080)
 
 ## Master Startup Script

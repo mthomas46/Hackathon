@@ -574,8 +574,8 @@ async def test_pr_confidence_workflow():
 ```python
 # services/orchestrator/modules/error_handler.py
 class WorkflowErrorHandler:
-    def __init__(self, notification_service, monitoring_service):
-        self.notification_service = notification_service
+    def __init__(self, notification-service, monitoring_service):
+        self.notification-service = notification-service
         self.monitoring_service = monitoring_service
         self.error_patterns = self._load_error_patterns()
         self.recovery_strategies = self._load_recovery_strategies()
@@ -718,7 +718,7 @@ class WorkflowErrorHandler:
         })
 
         # Notify stakeholders
-        await self.notification_service.send_notification({
+        await self.notification-service.send_notification({
             "type": "workflow_failure",
             "workflow_id": workflow_id,
             "error_message": error.message,

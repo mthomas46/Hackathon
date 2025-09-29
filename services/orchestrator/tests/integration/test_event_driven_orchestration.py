@@ -160,7 +160,7 @@ class TestEventDrivenOrchestrationIntegration:
                 aggregate_id=workflow_1,
                 correlation_id=base_correlation_id,
                 payload={"step": "data_ingestion", "records_processed": 1000},
-                metadata={"source": "source_agent"},
+                metadata={"source": "source-agent"},
                 user_id="user-123"
             )
         ]
@@ -476,8 +476,8 @@ class TestEventDrivenOrchestrationIntegration:
                 workflow_id=workflow_id,
                 aggregate_id=workflow_id,
                 correlation_id=correlation_id,
-                payload={"step": "data_ingestion", "service": "source_agent", "files": ["doc1.pdf", "doc2.pdf"]},
-                metadata={"source": "source_agent", "version": "1.0"},
+                payload={"step": "data_ingestion", "service": "source-agent", "files": ["doc1.pdf", "doc2.pdf"]},
+                metadata={"source": "source-agent", "version": "1.0"},
                 user_id="user-123"
             ),
             WorkflowEvent(
@@ -486,8 +486,8 @@ class TestEventDrivenOrchestrationIntegration:
                 workflow_id=workflow_id,
                 aggregate_id=workflow_id,
                 correlation_id=correlation_id,
-                payload={"step": "data_ingestion", "service": "source_agent", "records_ingested": 150},
-                metadata={"source": "source_agent", "version": "1.0"},
+                payload={"step": "data_ingestion", "service": "source-agent", "records_ingested": 150},
+                metadata={"source": "source-agent", "version": "1.0"},
                 user_id="user-123"
             )
         ]
@@ -524,8 +524,8 @@ class TestEventDrivenOrchestrationIntegration:
                 workflow_id=workflow_id,
                 aggregate_id=workflow_id,
                 correlation_id=correlation_id,
-                payload={"step": "notification", "service": "notification_service", "recipients": ["user@company.com"]},
-                metadata={"source": "notification_service", "version": "1.5"},
+                payload={"step": "notification", "service": "notification-service", "recipients": ["user@company.com"]},
+                metadata={"source": "notification-service", "version": "1.5"},
                 user_id="user-123"
             )
         ]
@@ -544,9 +544,9 @@ class TestEventDrivenOrchestrationIntegration:
         for event in correlated_events:
             services_involved.add(event.metadata["source"])
 
-        assert "source_agent" in services_involved
+        assert "source-agent" in services_involved
         assert "analysis_service" in services_involved
-        assert "notification_service" in services_involved
+        assert "notification-service" in services_involved
 
         # Test service interaction patterns
         ingestion_completed = False

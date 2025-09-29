@@ -346,7 +346,7 @@ def mock_service_responses():
             "/analyze": {"status": "success", "data": {...}},
             "/cross_reference": {"status": "success", "data": {...}}
         },
-        "summarizer_hub": {
+        "summarizer-hub": {
             "/summarize": {"status": "success", "data": {...}}
         }
     }

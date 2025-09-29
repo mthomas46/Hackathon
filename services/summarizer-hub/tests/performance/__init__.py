@@ -1,1 +1,1 @@
-"""Tests for summarizer_hub performance layer."""
+"""Tests for summarizer-hub performance layer."""

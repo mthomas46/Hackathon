@@ -93,7 +93,7 @@ def get_service_url(service_name: str, default_url: str) -> str:
     """Get service URL with environment variable support."""
     url_env_map = {
         "doc_store": EnvVars.DOC_STORE_URL_ENV,
-        "source_agent": EnvVars.SOURCE_AGENT_URL_ENV,
+        "source-agent": EnvVars.SOURCE_AGENT_URL_ENV,
         "prompt_store": EnvVars.PROMPT_STORE_URL_ENV,
         "interpreter": EnvVars.INTERPRETER_URL_ENV,
         "orchestrator": EnvVars.ORCHESTRATOR_URL_ENV,

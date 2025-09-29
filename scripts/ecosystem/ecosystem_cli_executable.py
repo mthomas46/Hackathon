@@ -189,7 +189,7 @@ class EcosystemCLI:
             "analysis-service": self.analysis_service_command,
             "orchestrator": self.orchestrator_command,
             "github-mcp": self.github_mcp_command,
-            "source-agent": self.source_agent_command,
+            "source-agent": self.source-agent_command,
             "doc_store": self.doc_store_command,
             "frontend": self.frontend_command,
             "discovery-agent": self.discovery_agent_command,
@@ -1019,7 +1019,7 @@ class EcosystemCLI:
             print("Available commands: health, config")
             print("Note: GitHub MCP adapter endpoints may require authentication")
     
-    async def source_agent_command(self, command: str, **kwargs):
+    async def source-agent_command(self, command: str, **kwargs):
         """Execute Source Agent commands"""
         base_url = self.services["source-agent"]
         
@@ -1479,7 +1479,7 @@ class EcosystemCLI:
             print("  delete --id 'prompt-uuid'")
             print("  categories")
 
-    async def notification_service_command(self, command: str, **kwargs):
+    async def notification-service_command(self, command: str, **kwargs):
         """Execute Notification Service commands"""
         base_url = self.services["notification-service"]
 
@@ -1951,7 +1951,7 @@ class EcosystemCLI:
         elif service == "github-mcp":
             await self.github_mcp_command(command, **kwargs)
         elif service == "source-agent":
-            await self.source_agent_command(command, **kwargs)
+            await self.source-agent_command(command, **kwargs)
         elif service in ["doc_store", "doc-store"]:
             await self.doc_store_command(command, **kwargs)
         elif service in ["prompt_store", "prompt-store"]:
@@ -1960,8 +1960,8 @@ class EcosystemCLI:
             await self.frontend_command(command, **kwargs)
         elif service in ["discovery-agent", "discovery_agent"]:
             await self.discovery_agent_command(command, **kwargs)
-        elif service in ["notification-service", "notification_service"]:
-            await self.notification_service_command(command, **kwargs)
+        elif service in ["notification-service", "notification-service"]:
+            await self.notification-service_command(command, **kwargs)
         elif service == "interpreter":
             await self.interpreter_command(command, **kwargs)
         else:

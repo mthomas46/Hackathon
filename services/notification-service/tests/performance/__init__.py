@@ -1,1 +1,1 @@
-"""Tests for notification_service performance layer."""
+"""Tests for notification-service performance layer."""

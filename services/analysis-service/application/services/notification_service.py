@@ -382,7 +382,7 @@ class NotificationService(ApplicationService):
 
     def __init__(self):
         """Initialize notification service."""
-        super().__init__("notification_service")
+        super().__init__("notification-service")
         self.notifier = ApplicationNotifier()
 
         # Setup default channels and rules
@@ -527,20 +527,20 @@ class NotificationService(ApplicationService):
         # Add notification-specific health info
         try:
             status = await self.get_notification_status()
-            health["notification_service"] = {
+            health["notification-service"] = {
                 "available_channels": status["channels"],
                 "notification_rules": status["rules_count"],
                 "rules": status["rules"],
             }
 
         except Exception as e:
-            health["notification_service"] = {"error": str(e)}
+            health["notification-service"] = {"error": str(e)}
 
         return health
 
 
 # Global notification service instance
-notification_service = NotificationService()
+notification-service = NotificationService()
 
 # Create application notifier instance
-app_notifier = notification_service.notifier
+app_notifier = notification-service.notifier

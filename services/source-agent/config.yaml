@@ -6,7 +6,7 @@ server:
   port: 5000
 
 # Source-agent specific settings
-source_agent:
+source-agent:
   use_github_mcp: ${USE_GITHUB_MCP:-false}
 
 # Supported source types

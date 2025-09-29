@@ -67,7 +67,7 @@ return {
 **Required State:**
 ```python
 # Should call actual summarizer-hub service
-analysis_result = await call_summarizer_hub(documents, timeline)
+analysis_result = await call_summarizer-hub(documents, timeline)
 return analysis_result
 ```
 

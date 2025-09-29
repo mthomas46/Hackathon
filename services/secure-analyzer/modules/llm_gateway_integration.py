@@ -111,7 +111,7 @@ Return your analysis as a JSON object with keys: risk_assessment, attack_vectors
 
         except Exception as e:
             fire_and_forget(
-                "secure_analyzer_llm_enhancement_error",
+                "secure-analyzer_llm_enhancement_error",
                 f"LLM security enhancement error: {str(e)}",
                 "secure-analyzer",
                 {
@@ -218,7 +218,7 @@ Return a JSON object with keys: recommended_provider, reasoning, security_score,
 
         except Exception as e:
             fire_and_forget(
-                "secure_analyzer_provider_recommendation_error",
+                "secure-analyzer_provider_recommendation_error",
                 f"Provider recommendation error: {str(e)}",
                 "secure-analyzer",
                 {
@@ -341,7 +341,7 @@ Return the policy recommendations as a JSON object with keys: content_classifica
 
         except Exception as e:
             fire_and_forget(
-                "secure_analyzer_policy_generation_error",
+                "secure-analyzer_policy_generation_error",
                 f"Security policy generation error: {str(e)}",
                 "secure-analyzer",
                 {
@@ -450,7 +450,7 @@ Return your compliance analysis as a JSON object with framework names as keys an
 
         except Exception as e:
             fire_and_forget(
-                "secure_analyzer_compliance_analysis_error",
+                "secure-analyzer_compliance_analysis_error",
                 f"Compliance analysis error: {str(e)}",
                 "secure-analyzer",
                 {

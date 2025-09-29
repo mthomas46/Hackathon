@@ -7,13 +7,13 @@ import pytest
 import importlib.util, os
 from fastapi.testclient import TestClient
 
-from .test_utils import load_source_agent_service, _assert_http_ok
+from .test_utils import load_source-agent_service, _assert_http_ok
 
 
 @pytest.fixture(scope="module")
 def client():
     """Test client fixture for source agent service."""
-    app = load_source_agent_service()
+    app = load_source-agent_service()
     from fastapi.testclient import TestClient
     return TestClient(app)
 

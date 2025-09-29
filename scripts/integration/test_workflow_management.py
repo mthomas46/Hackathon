@@ -65,7 +65,7 @@ async def test_workflow_management():
                     "name": "Fetch Document",
                     "description": "Fetch document from URL",
                     "config": {
-                        "service": "source_agent",
+                        "service": "source-agent",
                         "endpoint": "/fetch",
                         "method": "POST",
                         "parameters": {
@@ -96,7 +96,7 @@ async def test_workflow_management():
                     "name": "Generate Summary",
                     "description": "Generate analysis summary",
                     "config": {
-                        "service": "summarizer_hub",
+                        "service": "summarizer-hub",
                         "endpoint": "/summarize",
                         "method": "POST",
                         "parameters": {

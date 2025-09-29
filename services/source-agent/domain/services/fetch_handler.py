@@ -14,9 +14,9 @@ from services.shared.utilities import cached_get
 from .document_builders import build_readme_doc
 from .shared_utils import (
     build_github_url,
-    build_source_agent_context,
-    create_source_agent_success_response,
-    handle_source_agent_error,
+    build_source-agent_context,
+    create_source-agent_success_response,
+    handle_source-agent_error,
     sanitize_for_response,
 )
 
@@ -39,8 +39,8 @@ class FetchHandler:
                 f"{result.get('full_name', f'{owner}/{repo}')}"
                 content = f"Repository: {result.get('full_name', f'{owner}/{repo}')}\nStars: {result.get('stars', 0)}\nTopics: {', '.join(result.get('topics', []))}"
                 doc = build_readme_doc(owner, repo, content)
-                context = build_source_agent_context("fetch", req.source, doc.id)
-                return create_source_agent_success_response(
+                context = build_source-agent_context("fetch", req.source, doc.id)
+                return create_source-agent_success_response(
                     "retrieved",
                     {
                         "document": doc.model_dump(),
@@ -69,15 +69,15 @@ class FetchHandler:
         safe_content = sanitize_for_response(content)
         doc = build_readme_doc(safe_owner, safe_repo, safe_content)
 
-        context = build_source_agent_context("fetch", req.source, doc.id)
-        return create_source_agent_success_response(
+        context = build_source-agent_context("fetch", req.source, doc.id)
+        return create_source-agent_success_response(
             "retrieved", {"document": doc.model_dump(), "source": req.source}, **context
         )
 
     @staticmethod
     async def fetch_jira_document(req) -> Dict[str, Any]:
         """Fetch document from Jira (placeholder)."""
-        return handle_source_agent_error(
+        return handle_source-agent_error(
             "fetch from Jira",
             Exception("Jira fetch not implemented"),
             error_code="FEATURE_NOT_IMPLEMENTED",
@@ -88,7 +88,7 @@ class FetchHandler:
     @staticmethod
     async def fetch_confluence_document(req) -> Dict[str, Any]:
         """Fetch document from Confluence (placeholder)."""
-        return handle_source_agent_error(
+        return handle_source-agent_error(
             "fetch from Confluence",
             Exception("Confluence fetch not implemented"),
             error_code="FEATURE_NOT_IMPLEMENTED",

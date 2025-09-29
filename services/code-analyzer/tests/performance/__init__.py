@@ -1,1 +1,1 @@
-"""Tests for code_analyzer performance layer."""
+"""Tests for code-analyzer performance layer."""

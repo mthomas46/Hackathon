@@ -54,7 +54,7 @@ def mcp_client(mcp_app):
     return TestClient(mcp_app)
 
 
-def test_source_agent_uses_mcp(monkeypatch, source_client, mcp_client):
+def test_source-agent_uses_mcp(monkeypatch, source_client, mcp_client):
     # Enable delegation
     monkeypatch.setenv("USE_GITHUB_MCP", "1")
     # Ensure MCP runs in mock mode

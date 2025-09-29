@@ -83,7 +83,7 @@ class TestOrchestratorWorkflowManagement:
                     "name": "Generate Summary",
                     "description": "Generate summary of processed text",
                     "config": {
-                        "service": "summarizer_hub",
+                        "service": "summarizer-hub",
                         "endpoint": "/summarize",
                         "method": "POST",
                         "parameters": {
@@ -952,7 +952,7 @@ class TestOrchestratorIntegration:
                     "name": "Generate Summary",
                     "description": "Generate summary of analysis",
                     "config": {
-                        "service": "summarizer_hub",
+                        "service": "summarizer-hub",
                         "endpoint": "/summarize",
                         "method": "POST",
                         "parameters": {
@@ -1035,7 +1035,7 @@ class TestOrchestratorIntegration:
                     "name": "Fetch Repository Data",
                     "description": "Fetch data from GitHub repository",
                     "config": {
-                        "service": "source_agent",
+                        "service": "source-agent",
                         "endpoint": "/github/repo",
                         "method": "GET",
                         "parameters": {
@@ -1049,7 +1049,7 @@ class TestOrchestratorIntegration:
                     "name": "Analyze Code Quality",
                     "description": "Analyze code quality and patterns",
                     "config": {
-                        "service": "code_analyzer",
+                        "service": "code-analyzer",
                         "endpoint": "/analyze",
                         "method": "POST",
                         "parameters": {
@@ -1064,7 +1064,7 @@ class TestOrchestratorIntegration:
                     "name": "Security Analysis",
                     "description": "Check for security vulnerabilities",
                     "config": {
-                        "service": "secure_analyzer",
+                        "service": "secure-analyzer",
                         "endpoint": "/scan",
                         "method": "POST",
                         "parameters": {

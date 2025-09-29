@@ -72,13 +72,13 @@ services:
 SERVICE_ENDPOINTS = {
     "prompt_store": "http://llm-prompt-store:5110",
     "document_store": "http://llm-document-store:5140",
-    "summarizer_hub": "http://llm-summarizer-hub:5160",
-    "code_analyzer": "http://llm-code-analyzer:5150",
+    "summarizer-hub": "http://llm-summarizer-hub:5160",
+    "code-analyzer": "http://llm-code-analyzer:5150",
     "interpreter": "http://llm-interpreter:5120",
     "analysis_service": "http://llm-analysis-service:5020",
-    "notification_service": "http://llm-notification-service:5210",
-    "source_agent": "http://llm-source-agent:5000",
-    "secure_analyzer": "http://llm-secure-analyzer:5070"
+    "notification-service": "http://llm-notification-service:5210",
+    "source-agent": "http://llm-source-agent:5000",
+    "secure-analyzer": "http://llm-secure-analyzer:5070"
 }
 ```
 
@@ -139,7 +139,7 @@ This section provides a comprehensive analysis of each service's capabilities an
 ```python
 # Direct integration with all services
 SERVICE_INTEGRATIONS = {
-    "summarizer_hub": "http://llm-summarizer-hub:5160",  # For prompt effectiveness analysis
+    "summarizer-hub": "http://llm-summarizer-hub:5160",  # For prompt effectiveness analysis
     "analysis_service": "http://llm-analysis-service:5020",  # For performance correlation
     "document_store": "http://llm-document-store:5140",  # For context retrieval
     "logging_service": "http://llm-logging:5040",  # For usage analytics
@@ -225,12 +225,12 @@ def generate_prompt_from_code(code_snippet: str, task: str) -> str:
 # Comprehensive service integration for document operations
 DOCUMENT_INTEGRATIONS = {
     "analysis_service": "http://llm-analysis-service:5020",  # Real-time analysis correlation
-    "summarizer_hub": "http://llm-summarizer-hub:5160",  # Content enrichment
+    "summarizer-hub": "http://llm-summarizer-hub:5160",  # Content enrichment
     "prompt_store": "http://llm-prompt-store:5110",  # Context-aware prompt retrieval
-    "code_analyzer": "http://llm-code-analyzer:5150",  # Code-documentation linking
+    "code-analyzer": "http://llm-code-analyzer:5150",  # Code-documentation linking
     "logging_service": "http://llm-logging:5040",  # Usage tracking and analytics
     "registry_service": "http://llm-registry:8080",  # Service health for data routing
-    "notification_service": "http://llm-notification-service:5210"  # Stakeholder alerts
+    "notification-service": "http://llm-notification-service:5210"  # Stakeholder alerts
 }
 ```
 
@@ -244,13 +244,13 @@ def get_integrated_document_context(doc_id: str, requesting_service: str, workfl
     analysis_context = await analysis_service.get_document_analysis(doc_id)
 
     # Get summarization data from summarizer hub
-    summary_context = await summarizer_hub.get_document_summary(doc_id)
+    summary_context = await summarizer-hub.get_document_summary(doc_id)
 
     # Retrieve relevant prompts from prompt store
     prompt_context = await prompt_store.get_document_prompts(doc_id)
 
     # Get code analysis links from code analyzer
-    code_context = await code_analyzer.get_documentation_links(doc_id)
+    code_context = await code-analyzer.get_documentation_links(doc_id)
 
     # Aggregate cross-service context
     return await aggregate_document_context({
@@ -274,7 +274,7 @@ def synchronize_document_updates_across_services(doc_id: str, update_data: dict)
 
     # Update summarization if content changed
     if "content" in update_data:
-        await summarizer_hub.invalidate_summary_cache(doc_id)
+        await summarizer-hub.invalidate_summary_cache(doc_id)
 
     # Update prompt associations if relevant
     if "category" in update_data:
@@ -744,11 +744,11 @@ LOGGING_INTEGRATIONS = {
     "prompt_store": "http://llm-logging:5040/prompt_store",
     "document_store": "http://llm-logging:5040/document_store",
     "analysis_service": "http://llm-logging:5040/analysis",
-    "summarizer_hub": "http://llm-logging:5040/summarizer",
-    "notification_service": "http://llm-logging:5040/notifications",
-    "code_analyzer": "http://llm-logging:5040/code_analyzer",
-    "source_agent": "http://llm-logging:5040/source_agent",
-    "secure_analyzer": "http://llm-logging:5040/security",
+    "summarizer-hub": "http://llm-logging:5040/summarizer",
+    "notification-service": "http://llm-logging:5040/notifications",
+    "code-analyzer": "http://llm-logging:5040/code-analyzer",
+    "source-agent": "http://llm-logging:5040/source-agent",
+    "secure-analyzer": "http://llm-logging:5040/security",
     "interpreter": "http://llm-logging:5040/interpreter"
 }
 
@@ -815,11 +815,11 @@ async def select_optimal_service_instance(service_type: str, operation: str) -> 
 ```python
 # Event channels for maximum service integration
 EVENT_CHANNELS = {
-    "document.created": ["analysis_service", "summarizer_hub", "prompt_store"],
-    "analysis.completed": ["notification_service", "logging_service", "document_store"],
-    "prompt.optimized": ["summarizer_hub", "analysis_service", "interpreter"],
-    "workflow.started": ["logging_service", "registry_service", "notification_service"],
-    "security.alert": ["notification_service", "logging_service", "secure_analyzer"],
+    "document.created": ["analysis_service", "summarizer-hub", "prompt_store"],
+    "analysis.completed": ["notification-service", "logging_service", "document_store"],
+    "prompt.optimized": ["summarizer-hub", "analysis_service", "interpreter"],
+    "workflow.started": ["logging_service", "registry_service", "notification-service"],
+    "security.alert": ["notification-service", "logging_service", "secure-analyzer"],
     "service.health_changed": ["registry_service", "orchestrator", "logging_service"]
 }
 
@@ -987,9 +987,9 @@ def maximum_integration_documentation_qa_workflow(repo_url: str, quality_standar
 
     # Phase 0: Service Health & Registry Check
     service_health = await registry_service.check_service_health([
-        "source_agent", "secure_analyzer", "code_analyzer",
-        "summarizer_hub", "analysis_service", "prompt_store",
-        "notification_service", "logging_service"
+        "source-agent", "secure-analyzer", "code-analyzer",
+        "summarizer-hub", "analysis_service", "prompt_store",
+        "notification-service", "logging_service"
     ])
 
     # Log workflow initiation across all services
@@ -1001,7 +1001,7 @@ def maximum_integration_documentation_qa_workflow(repo_url: str, quality_standar
     })
 
     # Phase 1: Multi-Source Data Acquisition with Registry Integration
-    source_data = await source_agent.intelligent_multi_source_ingestion({
+    source_data = await source-agent.intelligent_multi_source_ingestion({
         "github": repo_url,
         "jira": f"{repo_url}/issues",
         "confluence": f"docs/{repo_url.split('/')[-1]}"
@@ -1013,26 +1013,26 @@ def maximum_integration_documentation_qa_workflow(repo_url: str, quality_standar
     })
 
     # Phase 2: Security Analysis with Cross-Service Context
-    security_analysis = await secure_analyzer.analyze_workflow_security_risk({
+    security_analysis = await secure-analyzer.analyze_workflow_security_risk({
         "workflow_type": "documentation_qa",
         "data_sources": source_data.keys(),
         "processing_steps": ["analysis", "summarization", "storage"],
         "cross_service_context": {
-            "source_agent_status": service_health["source_agent"],
+            "source-agent_status": service_health["source-agent"],
             "workflow_id": workflow_id,
             "registry_data": await registry_service.get_service_endpoints()
         }
     }, quality_standards.get("security_policies", {}))
 
     # Phase 3: Integrated Code-Documentation Analysis
-    code_analysis = await code_analyzer.analyze_codebase(repo_url, ["python", "typescript"])
-    gap_analysis = await code_analyzer.analyze_code_documentation_gap(
+    code_analysis = await code-analyzer.analyze_codebase(repo_url, ["python", "typescript"])
+    gap_analysis = await code-analyzer.analyze_code_documentation_gap(
         code_analysis["functions"],
         source_data.get("github", {}).get("readme_content", "")
     )
 
     # Phase 4: Multi-Modal Content Processing with Service Integration
-    content_processing = await summarizer_hub.intelligent_content_summarization(
+    content_processing = await summarizer-hub.intelligent_content_summarization(
         source_data["github"]["readme_content"],
         audience="technical_reviewers",
         purpose="quality_assessment",
@@ -1075,7 +1075,7 @@ def maximum_integration_documentation_qa_workflow(repo_url: str, quality_standar
     })
 
     # Phase 8: Intelligent Stakeholder Communication with Full Context
-    await notification_service.intelligent_workflow_status_notification(
+    await notification-service.intelligent_workflow_status_notification(
         workflow_id=workflow_id,
         status="completed_with_findings",
         stakeholders=["tech_writers", "developers", "product_managers"],
@@ -1119,7 +1119,7 @@ def self_learning_documentation_maintenance(codebase_changes: dict, documentatio
     """Self-learning workflow that improves documentation based on code changes"""
 
     # Phase 1: Change Impact Analysis (Code Analyzer)
-    change_impact = await code_analyzer.predict_documentation_needs_from_code_changes(
+    change_impact = await code-analyzer.predict_documentation_needs_from_code_changes(
         codebase_changes["diff"]
     )
 
@@ -1130,7 +1130,7 @@ def self_learning_documentation_maintenance(codebase_changes: dict, documentatio
     )
 
     # Phase 3: Adaptive Content Generation (Summarizer Hub + Prompt Store)
-    adaptive_content = await summarizer_hub.adapt_summary_style_based_on_workflow_context(
+    adaptive_content = await summarizer-hub.adapt_summary_style_based_on_workflow_context(
         codebase_changes["affected_files"],
         "documentation_update"
     )
@@ -1149,7 +1149,7 @@ def self_learning_documentation_maintenance(codebase_changes: dict, documentatio
 
     # Phase 6: Proactive Notification (Notification Service)
     if quality_prediction["needs_attention"]:
-        await notification_service.predict_notification_timing_and_content(
+        await notification-service.predict_notification_timing_and_content(
             [{"type": "quality_degradation", "severity": "medium"}],
             {"preferred_channels": ["slack", "email"], "quiet_hours": True}
         )
@@ -1170,21 +1170,21 @@ def multi_agent_documentation_review(document_id: str, review_requirements: dict
     """Multi-agent collaborative workflow for comprehensive documentation review"""
 
     # Agent 1: Content Analysis Agent (Summarizer Hub + Analysis Service)
-    content_analysis = await summarizer_hub.analyze_content_complexity_and_structure(
+    content_analysis = await summarizer-hub.analyze_content_complexity_and_structure(
         await document_store.get_document(document_id)["content"]
     )
 
     # Agent 2: Technical Accuracy Agent (Code Analyzer + Analysis Service)
-    technical_accuracy = await code_analyzer.validate_code_documentation_consistency(
+    technical_accuracy = await code-analyzer.validate_code_documentation_consistency(
         await document_store.get_document(document_id)["content"],
-        await code_analyzer.extract_api_patterns_from_codebase(
+        await code-analyzer.extract_api_patterns_from_codebase(
             review_requirements["codebase_url"],
             ["api_endpoints", "data_models"]
         )
     )
 
     # Agent 3: Security & Compliance Agent (Secure Analyzer)
-    security_compliance = await secure_analyzer.validate_workflow_compliance_requirements(
+    security_compliance = await secure-analyzer.validate_workflow_compliance_requirements(
         f"review_{document_id}",
         review_requirements.get("compliance_frameworks", ["GDPR", "SOX"])
     )
@@ -1238,12 +1238,12 @@ def predictive_documentation_intelligence(organization_context: dict):
     )
 
     # Phase 2: Predictive Analysis (Source Agent + Analysis Service)
-    source_predictions = await source_agent.predict_source_update_patterns(
+    source_predictions = await source-agent.predict_source_update_patterns(
         organization_context["data_sources"]
     )
 
     # Phase 3: Risk Assessment (Secure Analyzer + Analysis Service)
-    risk_assessment = await secure_analyzer.analyze_workflow_security_risk(
+    risk_assessment = await secure-analyzer.analyze_workflow_security_risk(
         {"workflow_type": "predictive_maintenance"},
         organization_context.get("security_policies", {})
     )
@@ -1257,7 +1257,7 @@ def predictive_documentation_intelligence(organization_context: dict):
 
     # Phase 5: Proactive Communication (Notification Service)
     if intelligent_recommendations["urgent_actions"]:
-        await notification_service.handle_workflow_escalation_notifications(
+        await notification-service.handle_workflow_escalation_notifications(
             "predictive_maintenance",
             {"type": "urgent_maintenance", "severity": "high"},
             {"escalation_paths": ["tech_lead", "management"]}
@@ -1296,7 +1296,7 @@ def intelligent_code_documentation(repo_url: str):
     repo_analysis = await github_mcp.analyze_github_repository(repo_url)
 
     # Step 2: Extract code patterns and functions (Code Analyzer service)
-    code_analysis = await code_analyzer.analyze_codebase(repo_url, ["python", "javascript"])
+    code_analysis = await code-analyzer.analyze_codebase(repo_url, ["python", "javascript"])
 
     # Step 3: Generate documentation prompts (Prompt Store service)
     doc_prompts = await prompt_store.generate_prompt_from_code(
@@ -1305,7 +1305,7 @@ def intelligent_code_documentation(repo_url: str):
     )
 
     # Step 4: Create documentation using optimal prompts (Summarizer Hub)
-    documentation = await summarizer_hub.summarize_document(
+    documentation = await summarizer-hub.summarize_document(
         code_analysis["code"],
         style="comprehensive"
     )
@@ -1322,7 +1322,7 @@ def intelligent_code_documentation(repo_url: str):
 
     # Step 7: Notify stakeholders if issues found (Notification Service)
     if consistency_report["issues"]:
-        await notification_service.send_notification(
+        await notification-service.send_notification(
             f"Documentation issues found in {repo_url}",
             ["slack", "email"],
             "high"
@@ -1356,8 +1356,8 @@ async def execute_code_documentation_workflow(request: CodeDocumentationRequest)
 
     # Use existing service registry for tool discovery
     tools = await orchestrator.service_registry.get_langgraph_tools([
-        "github_mcp", "code_analyzer", "summarizer_hub",
-        "doc_store", "analysis_service", "notification_service"
+        "github_mcp", "code-analyzer", "summarizer-hub",
+        "doc_store", "analysis_service", "notification-service"
     ])
 
     # Execute workflow with existing tracing and monitoring

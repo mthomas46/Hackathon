@@ -378,7 +378,7 @@ class SimpleOrchestratorIntegration:
             "security_audit": {
                 "name": "Security Audit Workflow",
                 "description": "Comprehensive security analysis and reporting",
-                "services": ["secure_analyzer", "analysis_service"],
+                "services": ["secure-analyzer", "analysis_service"],
                 "output_types": ["json", "markdown", "csv"],
             },
             "code_documentation": {

@@ -47,7 +47,7 @@ class CLIComprehensiveTester:
             "analysis_service": f"{self.clients.analysis_service_url()}/integration/health",
             "doc_store": f"{self.clients.doc_store_url()}/health",
             "prompt_store": f"{self.clients.prompt_store_url()}/health",
-            "summarizer_hub": f"{self.clients.summarizer_hub_url()}/health",
+            "summarizer-hub": f"{self.clients.summarizer-hub_url()}/health",
             "interpreter": f"{self.clients.interpreter_url()}/health",
         }
 
@@ -157,14 +157,14 @@ class CLIComprehensiveTester:
         """Test Summarizer CLI functionality."""
         print("\n🧪 Testing Summarizer CLI...")
 
-        if not self.services_status.get("summarizer_hub", False):
+        if not self.services_status.get("summarizer-hub", False):
             print("⚠️  Summarizer Hub not available, skipping tests")
             return
 
         # Import the summarizer handler
         try:
             sys.path.insert(0, str(project_root / "services" / "cli" / "modules" / "handlers" / "actions"))
-            from summarizer_hub import build_actions
+            from summarizer-hub import build_actions
         except ImportError as e:
             print(f"❌ Could not import Summarizer CLI: {e}")
             return

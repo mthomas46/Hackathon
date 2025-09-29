@@ -20,7 +20,7 @@ def build_actions(
         format_type = Prompt.ask("Format (markdown|html|text)", default="markdown")
         max_length = Prompt.ask("Max length", default="500")
 
-        url = f"{clients.summarizer_hub_url()}/summarize"
+        url = f"{clients.summarizer-hub_url()}/summarize"
         rx = await clients.post_json(
             url, {"content": text, "format": format_type, "max_length": int(max_length)}
         )
@@ -33,7 +33,7 @@ def build_actions(
         model = Prompt.ask("Model (optional)", default="")
         providers = [{"name": provider, **({"model": model} if model else {})}]
 
-        url = f"{clients.summarizer_hub_url()}/summarize/ensemble"
+        url = f"{clients.summarizer-hub_url()}/summarize/ensemble"
         rx = await clients.post_json(
             url, {"text": text, "providers": providers, "use_hub_config": True}
         )
@@ -70,7 +70,7 @@ def build_actions(
         if candidate_categories:
             payload["candidate_categories"] = candidate_categories
 
-        url = f"{clients.summarizer_hub_url()}/categorize"
+        url = f"{clients.summarizer-hub_url()}/categorize"
         rx = await clients.post_json(url, payload)
         print_kv(console, f"Categorization Result for {doc_id}", rx)
 
@@ -101,13 +101,13 @@ def build_actions(
         if candidate_categories:
             payload["candidate_categories"] = candidate_categories
 
-        url = f"{clients.summarizer_hub_url()}/categorize/batch"
+        url = f"{clients.summarizer-hub_url()}/categorize/batch"
         rx = await clients.post_json(url, payload)
         print_kv(console, "Batch Categorization Results", rx)
 
     async def list_categories():
         """List available document categories."""
-        url = f"{clients.summarizer_hub_url()}/categorize/categories"
+        url = f"{clients.summarizer-hub_url()}/categorize/categories"
         rx = await clients.get_json(url)
         print_list(console, "Available Categories", rx.get("categories", []))
 
@@ -140,7 +140,7 @@ def build_actions(
         if criteria:
             payload["criteria"] = criteria
 
-        url = f"{clients.summarizer_hub_url()}/review"
+        url = f"{clients.summarizer-hub_url()}/review"
         rx = await clients.post_json(url, payload)
         print_kv(console, f"Peer Review for {doc_id}", rx)
 
@@ -161,19 +161,19 @@ def build_actions(
             "comparison_type": comparison_type,
         }
 
-        url = f"{clients.summarizer_hub_url()}/review/compare"
+        url = f"{clients.summarizer-hub_url()}/review/compare"
         rx = await clients.post_json(url, payload)
         print_kv(console, f"Version Comparison for {doc_id}", rx)
 
     async def list_review_types():
         """List available review types."""
-        url = f"{clients.summarizer_hub_url()}/review/types"
+        url = f"{clients.summarizer-hub_url()}/review/types"
         rx = await clients.get_json(url)
         print_list(console, "Available Review Types", rx.get("review_types", []))
 
     async def list_review_criteria():
         """List available review criteria."""
-        url = f"{clients.summarizer_hub_url()}/review/criteria"
+        url = f"{clients.summarizer-hub_url()}/review/criteria"
         rx = await clients.get_json(url)
         print_list(console, "Available Review Criteria", rx.get("criteria", []))
 
@@ -183,7 +183,7 @@ def build_actions(
 
     async def test_providers():
         """Test AI provider connectivity."""
-        url = f"{clients.summarizer_hub_url()}/summarize/ensemble"
+        url = f"{clients.summarizer-hub_url()}/summarize/ensemble"
         try:
             rx = await clients.post_json(
                 url,
@@ -202,7 +202,7 @@ def build_actions(
 
     async def test_summarizer_health():
         """Test overall summarizer service health."""
-        url = f"{clients.summarizer_hub_url()}/health"
+        url = f"{clients.summarizer-hub_url()}/health"
         rx = await clients.get_json(url)
         print_kv(console, "Summarizer Hub Health", rx)
 
@@ -221,7 +221,7 @@ def build_actions(
         for i in range(iterations):
             console.print(f"Benchmarking iteration {i+1}/{iterations}...")
             try:
-                url = f"{clients.summarizer_hub_url()}/summarize"
+                url = f"{clients.summarizer-hub_url()}/summarize"
                 await clients.post_json(
                     url, {"content": test_text, "format": "text", "max_length": 100}
                 )

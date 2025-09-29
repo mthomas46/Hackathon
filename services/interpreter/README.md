@@ -90,7 +90,7 @@ curl -X POST http://localhost:5120/natural-query -H 'Content-Type: application/j
       "entities": {"document_type": ["general"]}
     },
     "ecosystem_context": {
-      "detected_services": ["document_store", "analysis_service", "summarizer_hub"],
+      "detected_services": ["document_store", "analysis_service", "summarizer-hub"],
       "detected_capabilities": ["analyze_quality", "generate_summary"],
       "available_workflows": [...]
     },

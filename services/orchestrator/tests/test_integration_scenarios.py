@@ -79,7 +79,7 @@ class TestDocumentAnalysisWorkflow:
                     "name": "Fetch Document",
                     "description": "Fetch document from provided URL",
                     "config": {
-                        "service": "source_agent",
+                        "service": "source-agent",
                         "endpoint": "/fetch",
                         "method": "POST",
                         "parameters": {
@@ -129,7 +129,7 @@ class TestDocumentAnalysisWorkflow:
                     "name": "Generate Summary",
                     "description": "Generate summary of analysis results",
                     "config": {
-                        "service": "summarizer_hub",
+                        "service": "summarizer-hub",
                         "endpoint": "/summarize",
                         "method": "POST",
                         "parameters": {
@@ -165,7 +165,7 @@ class TestDocumentAnalysisWorkflow:
                     "description": "Notify stakeholders of completion",
                     "config": {
                         "message": "Document analysis completed for {{document_url}}. Report available: {{create_report.response.report_url}}",
-                        "channels": ["log", "notification_service"],
+                        "channels": ["log", "notification-service"],
                         "priority": "normal"
                     },
                     "depends_on": ["create_report"]
@@ -248,7 +248,7 @@ class TestPRConfidenceAnalysisWorkflow:
                     "name": "Fetch PR Data",
                     "description": "Fetch pull request data from GitHub",
                     "config": {
-                        "service": "source_agent",
+                        "service": "source-agent",
                         "endpoint": "/github/pr",
                         "method": "GET",
                         "parameters": {
@@ -263,7 +263,7 @@ class TestPRConfidenceAnalysisWorkflow:
                     "name": "Fetch Jira Data",
                     "description": "Fetch Jira ticket data if provided",
                     "config": {
-                        "service": "source_agent",
+                        "service": "source-agent",
                         "endpoint": "/jira/issue",
                         "method": "GET",
                         "parameters": {
@@ -278,7 +278,7 @@ class TestPRConfidenceAnalysisWorkflow:
                     "name": "Analyze PR Changes",
                     "description": "Analyze the code changes in the PR",
                     "config": {
-                        "service": "code_analyzer",
+                        "service": "code-analyzer",
                         "endpoint": "/analyze_changes",
                         "method": "POST",
                         "parameters": {
@@ -347,7 +347,7 @@ class TestPRConfidenceAnalysisWorkflow:
                     "description": "Notify relevant stakeholders of confidence analysis",
                     "config": {
                         "message": "PR #{{pr_number}} confidence analysis complete. Score: {{calculate_confidence.response.score}}/100. Report: {{generate_confidence_report.response.report_url}}",
-                        "channels": ["notification_service", "log"],
+                        "channels": ["notification-service", "log"],
                         "priority": "high",
                         "recipients": ["pr_author", "reviewers", "product_manager"]
                     },
@@ -491,7 +491,7 @@ class TestMultiServiceOrchestration:
                     "name": "Fetch GitHub PR",
                     "description": "Fetch pull request data from GitHub",
                     "config": {
-                        "service": "source_agent",
+                        "service": "source-agent",
                         "endpoint": "/github/pr",
                         "method": "GET",
                         "parameters": {
@@ -507,7 +507,7 @@ class TestMultiServiceOrchestration:
                     "name": "Fetch Jira Ticket",
                     "description": "Fetch Jira ticket data",
                     "config": {
-                        "service": "source_agent",
+                        "service": "source-agent",
                         "endpoint": "/jira/issue",
                         "method": "GET",
                         "parameters": {
@@ -521,7 +521,7 @@ class TestMultiServiceOrchestration:
                     "name": "Fetch Documentation",
                     "description": "Fetch relevant documentation",
                     "config": {
-                        "service": "source_agent",
+                        "service": "source-agent",
                         "endpoint": "/confluence/search",
                         "method": "POST",
                         "parameters": {
@@ -537,7 +537,7 @@ class TestMultiServiceOrchestration:
                     "name": "Analyze Code Changes",
                     "description": "Analyze the code changes in the PR",
                     "config": {
-                        "service": "code_analyzer",
+                        "service": "code-analyzer",
                         "endpoint": "/analyze_pr",
                         "method": "POST",
                         "parameters": {
@@ -590,7 +590,7 @@ class TestMultiServiceOrchestration:
                     "name": "Update Jira Ticket",
                     "description": "Update Jira ticket with analysis results",
                     "config": {
-                        "service": "source_agent",
+                        "service": "source-agent",
                         "endpoint": "/jira/update",
                         "method": "PUT",
                         "parameters": {
@@ -612,7 +612,7 @@ class TestMultiServiceOrchestration:
                     "description": "Notify team of integration analysis completion",
                     "config": {
                         "message": "GitHub-Jira integration analysis completed for PR {{parse_github_url.pr_number}} and ticket {{jira_ticket_key}}. Report: {{generate_integration_report.response.report_url}}",
-                        "channels": ["slack", "email", "notification_service"],
+                        "channels": ["slack", "email", "notification-service"],
                         "priority": "normal",
                         "recipients": ["development_team", "product_owner", "qa_team"]
                     },
@@ -716,7 +716,7 @@ class TestEventDrivenWorkflows:
                     "description": "Send high-priority notifications",
                     "config": {
                         "message": "HIGH PRIORITY EVENT: {{event_type}} - {{process_event.summary}}",
-                        "channels": ["slack", "sms", "notification_service"],
+                        "channels": ["slack", "sms", "notification-service"],
                         "priority": "critical",
                         "recipients": ["on_call_engineer", "devops_team"]
                     },

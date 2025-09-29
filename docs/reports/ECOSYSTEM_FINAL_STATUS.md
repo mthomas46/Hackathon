@@ -53,7 +53,7 @@
 - **Services Fixed**: `summarizer-hub`, `discovery-agent`, `memory-agent`, `prompt-store`, `interpreter`
 
 ### **✅ Fixed Directory Naming Conflicts**
-- **Problem**: Hyphenated directory names (`summarizer-hub`) vs Python module names (`summarizer_hub`)
+- **Problem**: Hyphenated directory names (`summarizer-hub`) vs Python module names (`summarizer-hub`)
 - **Solution**: Updated Docker COPY commands to create proper Python module structure
 - **Result**: All services now import correctly
 

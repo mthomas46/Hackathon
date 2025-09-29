@@ -8,12 +8,12 @@ LLM Processing Metadata:
 - key_concepts: ["code_analysis", "endpoint_extraction", "security_scanning", "ai_enhancement"]
 - architecture: "intelligent_code_analysis_engine"
 - processing_hints: "Code analysis with API discovery, security scanning, and AI-enhanced analysis"
-- cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../doc_store/README.md", "../../tests/unit/code_analyzer/"]
+- cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../doc_store/README.md", "../../tests/unit/code-analyzer/"]
 - integration_points: ["doc_store", "github_mcp", "redis", "llm_gateway"]
 -->
 
 **Navigation**: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)  
-**Tests**: [tests/unit/code_analyzer](../../tests/unit/code_analyzer)
+**Tests**: [tests/unit/code-analyzer](../../tests/unit/code-analyzer)
 
 **Status**: ✅ Production Ready  
 **Port**: `5025` (External) → `5025` (Internal)  
@@ -164,7 +164,7 @@ All analysis endpoints return a `DocumentEnvelope` with:
 ## 🧪 **Testing**
 
 ### **🔧 Test Coverage**
-- **Unit Tests**: [tests/unit/code_analyzer](../../tests/unit/code_analyzer) - Comprehensive unit test suite
+- **Unit Tests**: [tests/unit/code-analyzer](../../tests/unit/code-analyzer) - Comprehensive unit test suite
 - **Golden Tests**: Validated endpoint extraction across multiple frameworks
 - **Integration Tests**: Cross-service communication and event publishing validation
 - **Security Testing**: Comprehensive validation of security scanning capabilities

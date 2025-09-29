@@ -165,7 +165,7 @@ async def test_authenticated_request():
       "name": "Fetch Document",
       "description": "Retrieve document from URL",
       "config": {
-        "service": "source_agent",
+        "service": "source-agent",
         "endpoint": "/fetch",
         "method": "POST",
         "parameters": {
@@ -393,7 +393,7 @@ async def test_list_workflows_with_filters():
       "action_type": "service_call",
       "name": "Fetch Document",
       "config": {
-        "service": "source_agent",
+        "service": "source-agent",
         "endpoint": "/fetch",
         "method": "POST",
         "parameters": {
@@ -729,7 +729,7 @@ HTTP/1.1 204 No Content
     "redis": "healthy",
     "external_services": {
       "analysis_service": "healthy",
-      "source_agent": "healthy"
+      "source-agent": "healthy"
     }
   },
   "metrics": {

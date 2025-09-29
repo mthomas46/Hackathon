@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-def load_summarizer_hub_service():
+def load_summarizer-hub_service():
     """Load summarizer-hub service dynamically.
 
     Provides a standardized way to load the service for testing across
@@ -69,7 +69,7 @@ def load_summarizer_hub_service():
 @pytest.fixture(scope="module")
 def client():
     """Test client fixture for summarizer hub service."""
-    app = load_summarizer_hub_service()
+    app = load_summarizer-hub_service()
     from fastapi.testclient import TestClient
     return TestClient(app)
 

@@ -311,7 +311,7 @@ for input_url, service_name, expected in test_cases:
         # Test support for known ecosystem services
         ecosystem_services = [
             "orchestrator", "doc_store", "prompt_store", "analysis_service",
-            "source_agent", "github_mcp", "cli", "memory_agent"
+            "source-agent", "github_mcp", "cli", "memory_agent"
         ]
         
         services_supported = 0

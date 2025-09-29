@@ -6,7 +6,7 @@ from .configuration_service import ApplicationConfig, ConfigurationService
 from .health_service import ApplicationHealth, HealthService
 from .logging_service import ApplicationLogger, LoggingService
 from .monitoring_service import ApplicationMetrics, MonitoringService
-from .notification_service import ApplicationNotifier, NotificationService
+from .notification-service import ApplicationNotifier, NotificationService
 from .transaction_service import TransactionManager, TransactionService
 
 __all__ = [

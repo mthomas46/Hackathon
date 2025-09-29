@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
 
 # Import available Phase 2 modules
 from services.interpreter.modules.advanced_nlp_engine import test_advanced_nlp
-from services.summarizer_hub.modules.multi_model_summarization import test_multi_model_summarization
+from services.summarizer-hub.modules.multi_model_summarization import test_multi_model_summarization
 from services.frontend.modules.realtime_interface import test_realtime_collaboration
 
 
@@ -45,10 +45,10 @@ async def run_simplified_phase2_test():
     print("-" * 50)
     try:
         await test_multi_model_summarization()
-        test_results["summarizer_hub"] = {"passed": True, "message": "Multi-Model Summarization test completed successfully"}
+        test_results["summarizer-hub"] = {"passed": True, "message": "Multi-Model Summarization test completed successfully"}
         print("✅ Summarizer Hub test completed successfully")
     except Exception as e:
-        test_results["summarizer_hub"] = {"passed": False, "message": f"Summarizer Hub test failed: {e}"}
+        test_results["summarizer-hub"] = {"passed": False, "message": f"Summarizer Hub test failed: {e}"}
         print(f"❌ Summarizer Hub test failed: {e}")
 
     print()

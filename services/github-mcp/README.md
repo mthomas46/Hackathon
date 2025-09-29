@@ -9,7 +9,7 @@ LLM Processing Metadata:
 - architecture: "model_context_protocol"
 - processing_hints: "GitHub integration service with MCP-based tool interface for repository operations and code analysis"
 - cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../source-agent/README.md", "../../tests/unit/github_mcp/"]
-- integration_points: ["source_agent", "code_analyzer", "orchestrator", "github_api"]
+- integration_points: ["source-agent", "code-analyzer", "orchestrator", "github_api"]
 -->
 
 **Navigation**: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)  

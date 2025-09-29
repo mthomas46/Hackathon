@@ -36,9 +36,9 @@ mock_data_generator.generate_mock_data({
 #### **2. Data Ingestion & Search - 100% Ready**
 ```python
 # Source Agent can search all required sources
-source_agent.search_github({"query": "authentication", "type": "pr"})
-source_agent.search_jira({"query": "PROJ-123", "fields": ["description"]})
-source_agent.search_confluence({"query": "API authentication", "spaces": ["TECH"]})
+source-agent.search_github({"query": "authentication", "type": "pr"})
+source-agent.search_jira({"query": "PROJ-123", "fields": ["description"]})
+source-agent.search_confluence({"query": "API authentication", "spaces": ["TECH"]})
 ```
 
 #### **3. Document & Prompt Management - 100% Ready**
@@ -87,7 +87,7 @@ orchestrator.execute_workflow({
 #### **6. Notification & Logging - 100% Ready**
 ```python
 # Notification Service for step-by-step alerts
-notification_service.send_progress_notifications({
+notification-service.send_progress_notifications({
     "workflow_id": workflow_id,
     "steps": [
         {"step": "jira_search", "message": "Found Jira ticket PROJ-123"},

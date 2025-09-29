@@ -481,4 +481,4 @@ class SummarizerHubLangGraphIntegration:
 
 
 # Global instance for easy access
-summarizer_hub_langgraph = SummarizerHubLangGraphIntegration()
+summarizer-hub_langgraph = SummarizerHubLangGraphIntegration()

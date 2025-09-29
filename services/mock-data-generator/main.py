@@ -884,7 +884,7 @@ class MockDataGenerator:
                     "responsibility": "Core business logic and workflows",
                     "scaling": "Database sharding, service instances",
                 },
-                "notification_service": {
+                "notification-service": {
                     "technology": "FastAPI/Python + Redis",
                     "responsibility": "Email, SMS, push notifications",
                     "scaling": "Message queue-based processing",

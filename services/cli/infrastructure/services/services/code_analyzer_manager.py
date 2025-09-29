@@ -42,7 +42,7 @@ class CodeAnalyzerManager(BaseManager):
         self.display.show_error("Feature not yet implemented")
         return True
 
-    async def code_analyzer_menu(self):
+    async def code-analyzer_menu(self):
         """Main code analyzer menu."""
         while True:
             menu = create_menu_table(
@@ -81,7 +81,7 @@ class CodeAnalyzerManager(BaseManager):
             elif choice == "6":
                 await self.analysis_history_menu()
             elif choice == "7":
-                await self.code_analyzer_health_menu()
+                await self.code-analyzer_health_menu()
             elif choice.lower() in ["b", "back"]:
                 break
             else:
@@ -1247,7 +1247,7 @@ class CodeAnalyzerManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error showing trends: {e}[/red]")
 
-    async def code_analyzer_health_menu(self):
+    async def code-analyzer_health_menu(self):
         """Code analyzer health and configuration submenu."""
         while True:
             menu = create_menu_table(

@@ -1,1 +1,1 @@
-"""Tests for summarizer_hub e2e layer."""
+"""Tests for summarizer-hub e2e layer."""

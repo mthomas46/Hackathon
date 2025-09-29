@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import Mock, AsyncMock
 
-from services.summarizer_hub.modules.response_processor import ResponseProcessor
+from services.summarizer-hub.modules.response_processor import ResponseProcessor
 
 
 class TestResponseProcessor:

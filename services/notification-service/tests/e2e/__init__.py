@@ -1,1 +1,1 @@
-"""Tests for notification_service e2e layer."""
+"""Tests for notification-service e2e layer."""

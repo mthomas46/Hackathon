@@ -8,7 +8,7 @@ LLM Processing Metadata:
 - architecture: "microservices_with_ai_orchestration"
 - processing_hints: "Use these diagrams to orient an LLM or developer on end-to-end flows and service boundaries"
 - cross_references: ["../ECOSYSTEM_ARCHITECTURE.md", "../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md"]
-- integration_points: ["orchestrator", "llm_gateway", "doc_store", "prompt_store", "analysis_service", "memory_agent", "source_agent", "secure_analyzer", "code_analyzer", "interpreter", "github_mcp", "bedrock_proxy", "summarizer_hub", "notification_service", "log_collector", "frontend", "cli", "redis", "ollama", "postgresql"]
+- integration_points: ["orchestrator", "llm_gateway", "doc_store", "prompt_store", "analysis_service", "memory_agent", "source-agent", "secure-analyzer", "code-analyzer", "interpreter", "github_mcp", "bedrock_proxy", "summarizer-hub", "notification-service", "log_collector", "frontend", "cli", "redis", "ollama", "postgresql"]
 -->
 
 **Navigation**: [Architecture Overview](./ECOSYSTEM_ARCHITECTURE.md) · [Master Living Document](../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md) · [Docs Index](../README.md)

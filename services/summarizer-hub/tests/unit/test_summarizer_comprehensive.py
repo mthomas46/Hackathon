@@ -28,7 +28,7 @@ from modules.models import SummarizationRequest, ProviderConfig, QualityMetrics
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.parallel_safe,
-    pytest.mark.summarizer_hub
+    pytest.mark.summarizer-hub
 ]
 
 

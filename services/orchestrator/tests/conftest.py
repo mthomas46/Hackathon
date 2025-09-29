@@ -130,7 +130,7 @@ def sample_workflow_data() -> Dict[str, Any]:
                 "name": "Generate Output",
                 "description": "Generate final output",
                 "config": {
-                    "service": "summarizer_hub",
+                    "service": "summarizer-hub",
                     "endpoint": "/summarize",
                     "method": "POST",
                     "parameters": {
@@ -200,7 +200,7 @@ def complex_workflow_data() -> Dict[str, Any]:
                 "name": "Fetch GitHub Data",
                 "description": "Fetch PR data from GitHub",
                 "config": {
-                    "service": "source_agent",
+                    "service": "source-agent",
                     "endpoint": "/github/pr",
                     "method": "GET",
                     "parameters": {
@@ -216,7 +216,7 @@ def complex_workflow_data() -> Dict[str, Any]:
                 "name": "Fetch Jira Data",
                 "description": "Fetch ticket data from Jira",
                 "config": {
-                    "service": "source_agent",
+                    "service": "source-agent",
                     "endpoint": "/jira/issue",
                     "method": "GET",
                     "parameters": {
@@ -230,7 +230,7 @@ def complex_workflow_data() -> Dict[str, Any]:
                 "name": "Analyze Code",
                 "description": "Analyze code changes",
                 "config": {
-                    "service": "code_analyzer",
+                    "service": "code-analyzer",
                     "endpoint": "/analyze",
                     "method": "POST",
                     "parameters": {
@@ -280,7 +280,7 @@ def complex_workflow_data() -> Dict[str, Any]:
                 "description": "Notify relevant stakeholders",
                 "config": {
                     "message": "Analysis complete: {{generate_report.response.summary}}",
-                    "channels": ["notification_service", "log"],
+                    "channels": ["notification-service", "log"],
                     "priority": "normal"
                 },
                 "depends_on": ["generate_report"]
@@ -293,7 +293,7 @@ def complex_workflow_data() -> Dict[str, Any]:
 def mock_service_responses():
     """Mock service responses for testing."""
     return {
-        "source_agent": {
+        "source-agent": {
             "/github/pr": {
                 "status": "success",
                 "data": {
@@ -331,7 +331,7 @@ def mock_service_responses():
                 }
             }
         },
-        "code_analyzer": {
+        "code-analyzer": {
             "/analyze": {
                 "status": "success",
                 "data": {
@@ -341,7 +341,7 @@ def mock_service_responses():
                 }
             }
         },
-        "summarizer_hub": {
+        "summarizer-hub": {
             "/summarize": {
                 "status": "success",
                 "data": {

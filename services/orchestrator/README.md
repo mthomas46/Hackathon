@@ -490,7 +490,7 @@ workflow_data = {
             "action_type": "service_call",
             "name": "Fetch Document",
             "config": {
-                "service": "source_agent",
+                "service": "source-agent",
                 "endpoint": "/fetch",
                 "method": "POST",
                 "parameters": {"url": "{{document_url}}"}
@@ -535,7 +535,7 @@ workflow_data = {
             "action_type": "service_call",
             "name": "Fetch PR Data",
             "config": {
-                "service": "source_agent",
+                "service": "source-agent",
                 "endpoint": "/github/pr",
                 "method": "GET",
                 "parameters": {

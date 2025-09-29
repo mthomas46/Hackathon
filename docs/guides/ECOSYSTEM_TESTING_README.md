@@ -141,7 +141,7 @@ python tests/run_llm_gateway_tests.py --metrics     # Metrics tests
 ✅ orchestrator: Healthy
 ✅ prompt_store: Healthy
 ✅ analysis_service: Healthy
-✅ summarizer_hub: Healthy
+✅ summarizer-hub: Healthy
 ✅ llm_gateway: Healthy
 ```
 

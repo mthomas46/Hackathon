@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-def load_notification_service():
+def load_notification-service():
     """Load notification-service dynamically.
 
     Provides a standardized way to load the service for testing across
@@ -76,7 +76,7 @@ def load_notification_service():
 @pytest.fixture(scope="module")
 def client():
     """Test client fixture for notification service."""
-    app = load_notification_service()
+    app = load_notification-service()
     return TestClient(app)
 
 

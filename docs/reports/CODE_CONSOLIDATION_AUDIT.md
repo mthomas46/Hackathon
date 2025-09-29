@@ -151,7 +151,7 @@ For each service:
 ### code-analyzer
 - **Status**: ✅ Consolidation Complete
 - **Files**: main.py (186 lines, reduced from 335), modules/ (5 new files)
-- **Tests**: unit/code_analyzer/ (5 test files - 76 tests total)
+- **Tests**: unit/code-analyzer/ (5 test files - 76 tests total)
 - **Key Findings**:
   - Large single file (335 lines) with multiple responsibilities
   - Complex endpoint extraction logic (33 lines) that could be extracted
@@ -277,7 +277,7 @@ For each service:
 ### notification-service
 - **Status**: ✅ Consolidation Complete
 - **Files**: main.py (96 lines, reduced from 142), modules/ (3 new files)
-- **Tests**: unit/notification_service/ (3 test files - 33 tests total)
+- **Tests**: unit/notification-service/ (3 test files - 33 tests total)
 - **Key Findings**:
   - Moderate complexity (142 lines) with multiple responsibilities
   - Global state management for caching, deduplication, and DLQ
@@ -323,7 +323,7 @@ For each service:
 ### secure-analyzer
 - **Status**: ✅ Consolidation Complete
 - **Files**: main.py (204 lines, reduced from 465), modules/ (4 new files)
-- **Tests**: unit/secure_analyzer/ (4 test files - 73 tests total)
+- **Tests**: unit/secure-analyzer/ (4 test files - 73 tests total)
 - **Key Findings**:
   - Very large single file (465 lines) with complex responsibilities
   - Global state management for circuit breaker functionality
@@ -353,7 +353,7 @@ For each service:
 ### source-agent
 - **Status**: ✅ Consolidation Complete
 - **Files**: main.py (156 lines, reduced from 418), modules/ (6 files, 4 new)
-- **Tests**: unit/source_agent/ (2 test files - 69 tests total)
+- **Tests**: unit/source-agent/ (2 test files - 69 tests total)
 - **Key Findings**:
   - Very large main.py file (418 lines) with complex multi-source document fetching and normalization
   - Mixed Pydantic model definitions, endpoint handlers, and business logic
@@ -364,7 +364,7 @@ For each service:
   - ✅ Extracted Pydantic models to `modules/models.py`
   - ✅ Extracted document fetching logic to `modules/fetch_handler.py`
   - ✅ Extracted data normalization logic to `modules/normalize_handler.py`
-  - ✅ Extracted code analysis logic to `modules/code_analyzer.py`
+  - ✅ Extracted code analysis logic to `modules/code-analyzer.py`
   - ✅ Simplified main.py to routing and orchestration only
   - ✅ Reduced main.py from 418 lines to 156 lines (63% reduction)
 - **Test Results**: Core functionality working (50/69 tests passing)
@@ -372,7 +372,7 @@ For each service:
 ### summarizer-hub
 - **Status**: ✅ Consolidation Complete
 - **Files**: main.py (86 lines, reduced from 246), modules/ (4 new files)
-- **Tests**: unit/summarizer_hub/ (2 test files - 16 tests total)
+- **Tests**: unit/summarizer-hub/ (2 test files - 16 tests total)
 - **Key Findings**:
   - Large single file (246 lines) with multiple provider implementations
   - Mixed configuration management, provider orchestration, and response processing

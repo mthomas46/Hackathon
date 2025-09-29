@@ -32,7 +32,7 @@ sa = _mod_sa.app
 
 @pytest.mark.security
 @pytest.mark.mocks
-def test_secure_analyzer_summarize_uses_policy_and_calls_hub(monkeypatch):
+def test_secure-analyzer_summarize_uses_policy_and_calls_hub(monkeypatch):
     """Test secure analyzer summarization with policy enforcement.
 
     Validates that the secure analyzer correctly applies security policies

@@ -32,7 +32,7 @@ For each service and its test suite:
 - **Performance Impact**: None (functionality preserved)
 - **Maintainability**: Significantly improved with better documentation and structure
 
-### code_analyzer
+### code-analyzer
 - **Status**: ✅ Refactoring Complete
 - **Files Improved**: main.py (263 lines), analysis_processor.py (191 lines), endpoint_extractor.py (58 lines), style_manager.py (104 lines), security_scanner.py (unmodified), persistence.py (46 lines)
 - **Test Files**: 5 test files (76 tests total)
@@ -71,7 +71,7 @@ For each service and its test suite:
 - **Performance Impact**: None (functionality preserved)
 - **Maintainability**: Significantly improved with better documentation and consolidated test utilities
 
-### notification_service
+### notification-service
 - **Status**: ✅ Refactoring Complete
 - **Files Improved**: main.py (189 lines), owner_resolver.py (168 lines), notification_sender.py (97 lines), dlq_manager.py (50 lines)
 - **Test Files**: 3 test files + 1 shared utils file (33 tests total)
@@ -93,7 +93,7 @@ For each service and its test suite:
 - **Performance Impact**: None (functionality preserved)
 - **Maintainability**: Significantly improved with better documentation, consolidated test utilities, and clearer code structure
 
-### secure_analyzer
+### secure-analyzer
 - **Status**: ✅ Refactoring Complete
 - **Files Improved**: main.py (353 lines), circuit_breaker.py (104 lines), content_detector.py (144 lines), policy_enforcer.py (65 lines), validation.py (35 lines)
 - **Test Files**: 3 test files + 1 shared utils file (70 tests total)
@@ -116,7 +116,7 @@ For each service and its test suite:
 - **Performance Impact**: None (functionality preserved)
 - **Maintainability**: Significantly improved with better documentation, consolidated test utilities, and clearer security code structure
 
-### summarizer_hub
+### summarizer-hub
 - **Status**: ✅ Refactoring Complete
 - **Files Improved**: main.py (189 lines), config_manager.py (75 lines), provider_manager.py (34 lines), response_processor.py (56 lines), provider_implementations.py (108 lines)
 - **Test Files**: 2 test files + 1 shared utils file (16 tests total)
@@ -183,9 +183,9 @@ For each service and its test suite:
 - **Performance Impact**: None (functionality preserved)
 - **Maintainability**: Significantly improved with better documentation, consolidated test utilities, and clearer memory management code structure
 
-### source_agent
+### source-agent
 - **Status**: ✅ Refactoring Complete
-- **Files Improved**: main.py (190 lines), shared_utils.py (239 lines), models.py (71 lines), document_builders.py (?? lines), fetch_handler.py (?? lines), normalize_handler.py (?? lines), code_analyzer.py (?? lines)
+- **Files Improved**: main.py (190 lines), shared_utils.py (239 lines), models.py (71 lines), document_builders.py (?? lines), fetch_handler.py (?? lines), normalize_handler.py (?? lines), code-analyzer.py (?? lines)
 - **Test Files**: 3 test files + 1 shared utils file (69 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for source operations (GitHub, Jira, Confluence)
@@ -430,7 +430,7 @@ For each service and its test suite:
 - **Maintainability**: Significantly improved with better documentation, clearer API organization, and enhanced endpoint documentation
 
 ## Metrics
-- **Services Completed**: 18/18 (bedrock_proxy, code_analyzer, log_collector, notification_service, secure_analyzer, summarizer_hub, github_mcp, memory_agent, source_agent, discovery_agent, frontend, interpreter, prompt_store, doc_store, analysis_service, cli, shared, orchestrator)
+- **Services Completed**: 18/18 (bedrock_proxy, code-analyzer, log_collector, notification-service, secure-analyzer, summarizer-hub, github_mcp, memory_agent, source-agent, discovery_agent, frontend, interpreter, prompt_store, doc_store, analysis_service, cli, shared, orchestrator)
 - **Total Files Improved**: 93+ service files + 63+ test files
 - **Total Tests**: ?? (service functionality preserved, test improvements made)
 - **Readability Score Improvement**: Significant (better naming, documentation, organization)

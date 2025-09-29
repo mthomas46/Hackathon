@@ -6,7 +6,7 @@ notification delivery monitoring, and dead letter queue management.
 
 from fastapi.responses import HTMLResponse
 
-from ..notification_service_monitor import notification_service_monitor
+from ..notification-service_monitor import notification-service_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
@@ -19,18 +19,18 @@ class NotificationServiceUIHandlers:
     """Handles notification service UI rendering."""
 
     @staticmethod
-    def handle_notification_service_dashboard() -> HTMLResponse:
+    def handle_notification-service_dashboard() -> HTMLResponse:
         """Render notification service monitoring dashboard."""
         try:
             get_frontend_clients()
 
             # Get notification service status and cached data
-            status_data = notification_service_monitor.get_notification_status()
+            status_data = notification-service_monitor.get_notification_status()
             notification_history = (
-                notification_service_monitor.get_notification_history(limit=20)
+                notification-service_monitor.get_notification_history(limit=20)
             )
             resolution_history = (
-                notification_service_monitor.get_owner_resolution_history(limit=20)
+                notification-service_monitor.get_owner_resolution_history(limit=20)
             )
 
             # Build context for template
@@ -841,5 +841,5 @@ class NotificationServiceUIHandlers:
             return handle_frontend_error(
                 "render notification service dashboard",
                 e,
-                **build_frontend_context("render_notification_service_dashboard")
+                **build_frontend_context("render_notification-service_dashboard")
             )

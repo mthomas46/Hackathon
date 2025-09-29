@@ -137,7 +137,7 @@ GET    /api/v1/search            # Search documents
 ---
 
 ### 3. 🔍 Code Analyzer Service (`services/code-analyzer/`)
-[README](./code-analyzer/README.md) · [Tests](../tests/unit/code_analyzer)
+[README](./code-analyzer/README.md) · [Tests](../tests/unit/code-analyzer)
 **Port: 5150** | **Purpose: Static code analysis for prompt generation**
 
 #### Features:
@@ -158,7 +158,7 @@ GET    /health                   # Health check
 ---
 
 ### 4. 📝 Summarizer Hub Service (`services/summarizer-hub/`)
-[README](./summarizer-hub/README.md) · [Tests](../tests/unit/summarizer_hub)
+[README](./summarizer-hub/README.md) · [Tests](../tests/unit/summarizer-hub)
 **Port: 5160** | **Purpose: Document summarization and key concept extraction**
 
 #### Features:
@@ -179,7 +179,7 @@ GET    /health                   # Health check
 ---
 
 ### 5. 📢 Notification Service (`services/notification-service/`)
-[README](./notification-service/README.md) · [Tests](../tests/unit/notification_service)
+[README](./notification-service/README.md) · [Tests](../tests/unit/notification-service)
 **Port: 5210** | **Purpose: Centralized notification management**
 
 #### Features:

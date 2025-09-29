@@ -6,13 +6,13 @@ Focused on essential notification operations following TDD principles.
 import pytest
 from fastapi.testclient import TestClient
 
-from .test_utils import load_notification_service, _assert_http_ok
+from .test_utils import load_notification-service, _assert_http_ok
 
 
 @pytest.fixture(scope="module")
 def client():
     """Test client fixture for notification service."""
-    app = load_notification_service()
+    app = load_notification-service()
     from fastapi.testclient import TestClient
     return TestClient(app)
 

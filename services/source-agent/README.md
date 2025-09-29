@@ -2,7 +2,7 @@
 
 Navigation: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)
 
-Tests: [tests/unit/source_agent](../../tests/unit/source_agent)
+Tests: [tests/unit/source-agent](../../tests/unit/source-agent)
 
 ## Overview
 
@@ -134,7 +134,7 @@ Health check endpoint.
 - Orchestrator: [../orchestrator/README.md](../orchestrator/README.md)
 
 ## Testing
-- Unit tests: [tests/unit/source_agent](../../tests/unit/source_agent)
+- Unit tests: [tests/unit/source-agent](../../tests/unit/source-agent)
 - Strategies:
   - Endpoint normalization and code analysis routes
   - Mock external APIs and validate DocumentEnvelope structure
@@ -340,7 +340,7 @@ Documents are persisted with full metadata:
    confluence_agent_url: http://confluence-agent:5050
 
    # After
-   source_agent_url: http://source-agent:5000
+   source-agent_url: http://source-agent:5000
    ```
 
 2. **Update API Calls**:
@@ -349,7 +349,7 @@ Documents are persisted with full metadata:
    await github_agent.post_json("/docs/readme", {"owner": "org", "repo": "repo"})
 
    # After
-   await source_agent.post_json("/docs/fetch", {
+   await source-agent.post_json("/docs/fetch", {
      "source": "github",
      "identifier": "org:repo"
    })

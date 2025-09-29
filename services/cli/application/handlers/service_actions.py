@@ -108,7 +108,7 @@ class ServiceActions:
                     ("orchestrator", self.clients.orchestrator_url),
                     ("doc_store", self.clients.doc_store_url),
                     ("analysis-service", self.clients.analysis_service_url),
-                    ("source-agent", self.clients.source_agent_url),
+                    ("source-agent", self.clients.source-agent_url),
                 ]
                 # Optional if available
                 for name, getter in svc_getters:
@@ -202,13 +202,13 @@ class ServiceActions:
             "analysis-service": lambda: build_analysis_actions(
                 self.clients, self.console
             ),
-            "source-agent": lambda: build_source_agent_actions(
+            "source-agent": lambda: build_source-agent_actions(
                 self.clients, self.console
             ),
             "orchestrator": lambda: build_orchestrator_actions(
                 self.clients, self.console
             ),
-            "summarizer-hub": lambda: build_summarizer_hub_actions(
+            "summarizer-hub": lambda: build_summarizer-hub_actions(
                 self.clients, self.console
             ),
             "prompt-store": lambda: build_prompt_store_actions(
@@ -323,11 +323,11 @@ class ServiceActions:
     # -------------
     # Source Agent
     # -------------
-    def _source_agent_actions(self) -> List[Tuple[str, Callable[[], Any]]]:
+    def _source-agent_actions(self) -> List[Tuple[str, Callable[[], Any]]]:
         async def fetch_doc():
             source = Prompt.ask("Source", default="github")
             ident = Prompt.ask("Identifier (e.g., owner:repo or JIRA key)")
-            url = f"{self.clients.source_agent_url()}/docs/fetch"
+            url = f"{self.clients.source-agent_url()}/docs/fetch"
             rx = await self.clients.post_json(
                 url, {"source": source, "identifier": ident}
             )
@@ -342,13 +342,13 @@ class ServiceActions:
                 data = json.loads(data_raw)
             except Exception:
                 data = {}
-            url = f"{self.clients.source_agent_url()}/normalize"
+            url = f"{self.clients.source-agent_url()}/normalize"
             rx = await self.clients.post_json(url, {"source": source, "data": data})
             _print_kv(self.console, "Result", rx)
 
         async def analyze_code():
             text = Prompt.ask("Code/Text to analyze")
-            url = f"{self.clients.source_agent_url()}/code/analyze"
+            url = f"{self.clients.source-agent_url()}/code/analyze"
             rx = await self.clients.post_json(url, {"text": text})
             _print_kv(self.console, "Result", rx)
 
@@ -359,7 +359,7 @@ class ServiceActions:
             path = Prompt.ask(
                 "Output path", default=f"./{source}_{ident.replace(':','_')}.{fmt}"
             )
-            url = f"{self.clients.source_agent_url()}/docs/fetch"
+            url = f"{self.clients.source-agent_url()}/docs/fetch"
             rx = await self.clients.post_json(
                 url, {"source": source, "identifier": ident}
             )
@@ -710,20 +710,20 @@ class ServiceActions:
     # ----------------
     # Summarizer Hub
     # ----------------
-    def _summarizer_hub_actions(self) -> List[Tuple[str, Callable[[], Any]]]:
+    def _summarizer-hub_actions(self) -> List[Tuple[str, Callable[[], Any]]]:
         async def summarize():
             text = Prompt.ask("Text to summarize")
             provider = Prompt.ask("Provider (ollama|bedrock)", default="ollama")
             model = Prompt.ask("Model (optional)", default="")
             providers = [{"name": provider, **({"model": model} if model else {})}]
-            url = f"{self.clients.summarizer_hub_url()}/summarize/ensemble"
+            url = f"{self.clients.summarizer-hub_url()}/summarize/ensemble"
             rx = await self.clients.post_json(
                 url, {"text": text, "providers": providers, "use_hub_config": True}
             )
             _print_kv(self.console, "Result", rx)
 
         async def test_providers():
-            url = f"{self.clients.summarizer_hub_url()}/summarize/ensemble"
+            url = f"{self.clients.summarizer-hub_url()}/summarize/ensemble"
             try:
                 _ = await self.clients.post_json(
                     url,

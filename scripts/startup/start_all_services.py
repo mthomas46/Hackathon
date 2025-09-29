@@ -33,13 +33,13 @@ class ServiceManager:
             "analysis_service",
             "orchestrator",
             "prompt_store",
-            "summarizer_hub",
+            "summarizer-hub",
             "architecture_digitizer",
             "bedrock_proxy",
             "github_mcp",
             "interpreter",
             "code-analyzer",
-            "secure_analyzer",
+            "secure-analyzer",
             "log_collector",
             "cli"
         ]
@@ -95,10 +95,10 @@ class ServiceManager:
                 "env": base_env.copy(),
                 "working_dir": str(self.project_root)
             },
-            "summarizer_hub": {
+            "summarizer-hub": {
                 "name": "Summarizer Hub",
                 "description": "Multi-provider AI summarization service",
-                "command": [sys.executable, "-m", "services.summarizer_hub.main"],
+                "command": [sys.executable, "-m", "services.summarizer-hub.main"],
                 "health_url": "http://localhost:5060/health",
                 "port": 5060,
                 "env": base_env.copy(),
@@ -149,10 +149,10 @@ class ServiceManager:
                 "env": base_env.copy(),
                 "working_dir": str(self.project_root)
             },
-            "secure_analyzer": {
+            "secure-analyzer": {
                 "name": "Secure Analyzer",
                 "description": "Content security and policy enforcement",
-                "command": [sys.executable, "-m", "services.secure_analyzer.main"],
+                "command": [sys.executable, "-m", "services.secure-analyzer.main"],
                 "health_url": "http://localhost:5070/health",
                 "port": 5070,
                 "env": base_env.copy(),

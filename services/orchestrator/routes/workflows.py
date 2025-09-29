@@ -235,12 +235,12 @@ async def discover_tools(req: ToolDiscoveryRequest):
             req.services = [
                 "prompt_store",
                 "document_store",
-                "code_analyzer",
-                "summarizer_hub",
+                "code-analyzer",
+                "summarizer-hub",
                 "analysis_service",
-                "notification_service",
-                "source_agent",
-                "secure_analyzer",
+                "notification-service",
+                "source-agent",
+                "secure-analyzer",
             ]
 
         results = []
@@ -252,12 +252,12 @@ async def discover_tools(req: ToolDiscoveryRequest):
                 service_url_map = {
                     "prompt_store": "http://llm-prompt-store:5110",
                     "document_store": "http://llm-document-store:5140",
-                    "code_analyzer": "http://llm-code-analyzer:5150",
-                    "summarizer_hub": "http://llm-summarizer-hub:5160",
+                    "code-analyzer": "http://llm-code-analyzer:5150",
+                    "summarizer-hub": "http://llm-summarizer-hub:5160",
                     "analysis_service": "http://llm-analysis-service:5020",
-                    "notification_service": "http://llm-notification-service:5210",
-                    "source_agent": "http://llm-source-agent:5000",
-                    "secure_analyzer": "http://llm-secure-analyzer:5070",
+                    "notification-service": "http://llm-notification-service:5210",
+                    "source-agent": "http://llm-source-agent:5000",
+                    "secure-analyzer": "http://llm-secure-analyzer:5070",
                 }
 
                 service_url = service_url_map.get(service_name)

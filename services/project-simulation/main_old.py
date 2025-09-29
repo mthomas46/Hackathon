@@ -2394,7 +2394,7 @@ async def get_interpreter_capabilities(req: Request):
                 "integrations": {
                     "doc_store": True,
                     "prompt_store": True,
-                    "summarizer_hub": True,
+                    "summarizer-hub": True,
                     "redis_pubsub": True,
                 },
             }

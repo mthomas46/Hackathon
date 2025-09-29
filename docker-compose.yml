@@ -114,21 +114,21 @@ services:
     image: python:3.11-slim
     working_dir: /app
     volumes: [".:/app"]
-    command: sh -c "pip install -q fastapi uvicorn httpx pydantic boto3 botocore && uvicorn services.summarizer_hub.main:app --host 0.0.0.0 --port 5060"
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic boto3 botocore && uvicorn services.summarizer-hub.main:app --host 0.0.0.0 --port 5060"
     ports: ["5060:5060"]
 
   secure-analyzer:
     image: python:3.11-slim
     working_dir: /app
     volumes: [".:/app"]
-    command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.secure_analyzer.main:app --host 0.0.0.0 --port 5070"
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.secure-analyzer.main:app --host 0.0.0.0 --port 5070"
     ports: ["5070:5070"]
 
   code-analyzer:
     image: python:3.11-slim
     working_dir: /app
     volumes: [".:/app"]
-    command: sh -c "pip install -q fastapi uvicorn pydantic redis httpx && uvicorn services.code_analyzer.main:app --host 0.0.0.0 --port 5085"
+    command: sh -c "pip install -q fastapi uvicorn pydantic redis httpx && uvicorn services.code-analyzer.main:app --host 0.0.0.0 --port 5085"
     ports: ["5085:5085"]
     depends_on: [redis]
 

@@ -102,7 +102,7 @@ class TestCLIPerformance:
                             content="Test content"
                         )
                     elif service == "notification-service":
-                        await self.cli.notification_service_command(command)
+                        await self.cli.notification-service_command(command)
                     elif service == "frontend":
                         await self.cli.frontend_command(command)
 
@@ -145,7 +145,7 @@ class TestCLIPerformance:
                     elif service == "prompt_store":
                         task = asyncio.create_task(self.cli.prompt_store_command("health"))
                     elif service == "notification-service":
-                        task = asyncio.create_task(self.cli.notification_service_command("health"))
+                        task = asyncio.create_task(self.cli.notification-service_command("health"))
                     else:  # frontend
                         task = asyncio.create_task(self.cli.frontend_command("health"))
                     tasks.append(task)

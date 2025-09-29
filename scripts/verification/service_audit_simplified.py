@@ -36,7 +36,7 @@ SERVICES = {
         "recommended_depth": IntegrationDepth.ENTERPRISE,
         "description": "Document analysis and consistency checking",
         "key_features": ["consistency_analysis", "quality_assessment", "cross_reference"],
-        "dependencies": ["doc_store", "prompt_store", "interpreter", "source_agent"],
+        "dependencies": ["doc_store", "prompt_store", "interpreter", "source-agent"],
         "ports": [5020],
         "current_issues": [],
         "integration_opportunities": [
@@ -53,7 +53,7 @@ SERVICES = {
         "recommended_depth": IntegrationDepth.ENTERPRISE,
         "description": "Advanced document storage and analysis",
         "key_features": ["document_storage", "search_indexing", "version_control"],
-        "dependencies": ["analysis_service", "source_agent"],
+        "dependencies": ["analysis_service", "source-agent"],
         "ports": [5010],
         "current_issues": [],
         "integration_opportunities": [
@@ -114,7 +114,7 @@ SERVICES = {
         ]
     },
 
-    "source_agent": {
+    "source-agent": {
         "name": "Source Agent",
         "maturity": ServiceMaturity.STABLE,
         "current_depth": IntegrationDepth.ADVANCED,
@@ -148,7 +148,7 @@ SERVICES = {
         ]
     },
 
-    "summarizer_hub": {
+    "summarizer-hub": {
         "name": "Summarizer Hub",
         "maturity": ServiceMaturity.STABLE,
         "current_depth": IntegrationDepth.ADVANCED,
@@ -165,14 +165,14 @@ SERVICES = {
         ]
     },
 
-    "secure_analyzer": {
+    "secure-analyzer": {
         "name": "Secure Analyzer",
         "maturity": ServiceMaturity.DEVELOPMENT,
         "current_depth": IntegrationDepth.INTERMEDIATE,
         "recommended_depth": IntegrationDepth.ADVANCED,
         "description": "Security analysis and compliance",
         "key_features": ["vulnerability_scanning", "compliance_checking"],
-        "dependencies": ["doc_store", "source_agent"],
+        "dependencies": ["doc_store", "source-agent"],
         "ports": [],
         "current_issues": ["Limited compliance frameworks"],
         "integration_opportunities": [
@@ -189,7 +189,7 @@ SERVICES = {
         "recommended_depth": IntegrationDepth.ADVANCED,
         "description": "Code quality and analysis",
         "key_features": ["code_quality", "security_scanning", "documentation_generation"],
-        "dependencies": ["source_agent", "doc_store"],
+        "dependencies": ["source-agent", "doc_store"],
         "ports": [],
         "current_issues": ["Limited language support"],
         "integration_opportunities": [
@@ -233,7 +233,7 @@ SERVICES = {
         ]
     },
 
-    "notification_service": {
+    "notification-service": {
         "name": "Notification Service",
         "maturity": ServiceMaturity.STABLE,
         "current_depth": IntegrationDepth.ADVANCED,
@@ -291,7 +291,7 @@ SERVICES = {
         "recommended_depth": IntegrationDepth.INTERMEDIATE,
         "description": "GitHub integration service",
         "key_features": ["repository_sync", "pr_management"],
-        "dependencies": ["source_agent"],
+        "dependencies": ["source-agent"],
         "ports": [],
         "current_issues": ["Basic integration", "Limited automation"],
         "integration_opportunities": [
@@ -349,7 +349,7 @@ class DeepIntegrationPlanner:
             "event_driven_pipeline": {
                 "name": "Event-Driven Data Pipeline",
                 "description": "Real-time event-driven data processing pipeline",
-                "services": ["source_agent", "doc_store", "analysis_service", "summarizer_hub"],
+                "services": ["source-agent", "doc_store", "analysis_service", "summarizer-hub"],
                 "complexity": "high",
                 "effort_days": 15,
                 "business_value": 0.9,
@@ -403,7 +403,7 @@ class DeepIntegrationPlanner:
             "real_time_collaboration": {
                 "name": "Real-Time Collaboration Platform",
                 "description": "Real-time collaborative features across services",
-                "services": ["frontend", "doc_store", "notification_service", "memory_agent"],
+                "services": ["frontend", "doc_store", "notification-service", "memory_agent"],
                 "complexity": "medium",
                 "effort_days": 12,
                 "business_value": 0.8,
@@ -457,7 +457,7 @@ class DeepIntegrationPlanner:
             "intelligent_resource_management": {
                 "name": "Intelligent Resource Management",
                 "description": "AI-powered resource allocation and optimization",
-                "services": ["orchestrator", "analysis_service", "doc_store", "source_agent"],
+                "services": ["orchestrator", "analysis_service", "doc_store", "source-agent"],
                 "complexity": "high",
                 "effort_days": 16,
                 "business_value": 0.85,
@@ -475,7 +475,7 @@ class DeepIntegrationPlanner:
             "cross_service_workflow_composition": {
                 "name": "Cross-Service Workflow Composition",
                 "description": "Dynamic workflow composition from multiple services",
-                "services": ["orchestrator", "prompt_store", "analysis_service", "summarizer_hub"],
+                "services": ["orchestrator", "prompt_store", "analysis_service", "summarizer-hub"],
                 "complexity": "high",
                 "effort_days": 22,
                 "business_value": 0.9,
@@ -527,7 +527,7 @@ class DeepIntegrationPlanner:
         if service_name in ["orchestrator", "doc_store", "memory_agent"]:
             recommendations.append(self.integration_patterns["distributed_state_management"])
 
-        if service_name in ["frontend", "doc_store", "notification_service"]:
+        if service_name in ["frontend", "doc_store", "notification-service"]:
             recommendations.append(self.integration_patterns["real_time_collaboration"])
 
         if len(service_info["dependencies"]) > 2:

@@ -9,7 +9,7 @@ LLM Processing Metadata:
 - architecture: "distributed_analysis_engine"
 - processing_hints: "Advanced document analysis with ML-powered insights and distributed processing"
 - cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../doc_store/README.md", "../../tests/unit/analysis_service/"]
-- integration_points: ["doc_store", "source_agent", "prompt_store", "redis", "llm_gateway"]
+- integration_points: ["doc_store", "source-agent", "prompt_store", "redis", "llm_gateway"]
 -->
 
 **Navigation**: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)  

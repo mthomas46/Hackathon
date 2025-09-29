@@ -7,7 +7,7 @@ import asyncio
 from unittest.mock import Mock, patch, MagicMock
 from typing import List, Dict, Any
 
-from services.summarizer_hub.modules.categorizer import (
+from services.summarizer-hub.modules.categorizer import (
     DocumentCategorizer,
     categorize_document,
     categorize_documents_batch,
@@ -93,8 +93,8 @@ class TestDocumentCategorizer:
         """Test successful initialization of the categorizer."""
         categorizer = DocumentCategorizer()
 
-        with patch('services.summarizer_hub.modules.categorizer.pipeline') as mock_pipeline, \
-             patch('services.summarizer_hub.modules.categorizer.Pipeline') as mock_ml_pipeline:
+        with patch('services.summarizer-hub.modules.categorizer.pipeline') as mock_pipeline, \
+             patch('services.summarizer-hub.modules.categorizer.Pipeline') as mock_ml_pipeline:
 
             mock_pipeline.return_value = Mock()
             mock_ml_pipeline.return_value = Mock()
@@ -108,7 +108,7 @@ class TestDocumentCategorizer:
         """Test initialization failure when dependencies are not available."""
         original_available = CATEGORIZATION_AVAILABLE
 
-        with patch('services.summarizer_hub.modules.categorizer.CATEGORIZATION_AVAILABLE', False):
+        with patch('services.summarizer-hub.modules.categorizer.CATEGORIZATION_AVAILABLE', False):
             categorizer = DocumentCategorizer()
             success = categorizer._initialize_models()
             assert success is False
@@ -306,7 +306,7 @@ class TestCategorizationIntegration:
     @pytest.mark.asyncio
     async def test_categorize_document_function(self, sample_documents):
         """Test the convenience function for single document categorization."""
-        with patch('services.summarizer_hub.modules.categorizer.document_categorizer') as mock_categorizer:
+        with patch('services.summarizer-hub.modules.categorizer.document_categorizer') as mock_categorizer:
             mock_categorizer.categorize_document.return_value = {
                 'document_id': 'doc1',
                 'category': 'api_documentation',
@@ -327,7 +327,7 @@ class TestCategorizationIntegration:
     @pytest.mark.asyncio
     async def test_categorize_documents_batch_function(self, sample_documents):
         """Test the convenience function for batch categorization."""
-        with patch('services.summarizer_hub.modules.categorizer.document_categorizer') as mock_categorizer:
+        with patch('services.summarizer-hub.modules.categorizer.document_categorizer') as mock_categorizer:
             mock_categorizer.categorize_documents_batch.return_value = {
                 'total_documents': 2,
                 'successful_categorizations': 2,

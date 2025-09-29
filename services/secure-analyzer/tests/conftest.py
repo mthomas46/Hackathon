@@ -1,4 +1,4 @@
-"""Test configuration for secure_analyzer service."""
+"""Test configuration for secure-analyzer service."""
 
 import pytest
 import sys

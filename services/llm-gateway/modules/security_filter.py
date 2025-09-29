@@ -113,12 +113,12 @@ class SecurityFilter:
         """Load security policies from configuration."""
         return {
             "sensitive_only_providers": get_config_value(
-                "SECURE_ONLY_MODELS", "ollama,bedrock", section="secure_analyzer"
+                "SECURE_ONLY_MODELS", "ollama,bedrock", section="secure-analyzer"
             ).split(","),
             "all_providers": get_config_value(
                 "ALL_PROVIDERS",
                 "bedrock,ollama,openai,anthropic,grok",
-                section="secure_analyzer",
+                section="secure-analyzer",
             ).split(","),
             "sensitivity_threshold": float(
                 get_config_value("SENSITIVITY_THRESHOLD", "0.7", section="security")

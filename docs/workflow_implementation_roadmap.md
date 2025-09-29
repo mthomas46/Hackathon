@@ -68,11 +68,11 @@ Prioritized implementation plan for standardized development workflows that will
 CODE_REVIEW_WORKFLOW = {
     "name": "code_review_workflow",
     "steps": [
-        {"service": "code_analyzer", "method": "analyze_code"},
-        {"service": "secure_analyzer", "method": "scan_security"},
+        {"service": "code-analyzer", "method": "analyze_code"},
+        {"service": "secure-analyzer", "method": "scan_security"},
         {"service": "analysis_service", "method": "assess_quality"},
         {"service": "llm_gateway", "method": "generate_review"},
-        {"service": "notification_service", "method": "notify_reviewers"}
+        {"service": "notification-service", "method": "notify_reviewers"}
     ]
 }
 ```
@@ -126,12 +126,12 @@ CODE_REVIEW_WORKFLOW = {
 SECURITY_ASSESSMENT_WORKFLOW = {
     "name": "security_assessment_workflow",
     "steps": [
-        {"service": "secure_analyzer", "method": "scan_dependencies"},
-        {"service": "secure_analyzer", "method": "analyze_code_security"},
-        {"service": "secure_analyzer", "method": "check_data_security"},
+        {"service": "secure-analyzer", "method": "scan_dependencies"},
+        {"service": "secure-analyzer", "method": "analyze_code_security"},
+        {"service": "secure-analyzer", "method": "check_data_security"},
         {"service": "analysis_service", "method": "assess_security_risks"},
         {"service": "llm_gateway", "method": "generate_security_recommendations"},
-        {"service": "notification_service", "method": "alert_security_team"}
+        {"service": "notification-service", "method": "alert_security_team"}
     ]
 }
 ```
@@ -190,7 +190,7 @@ INTEGRATION_TESTING_WORKFLOW = {
         {"service": "orchestrator", "method": "test_service_integration"},
         {"service": "analysis_service", "method": "validate_data_flow"},
         {"service": "orchestrator", "method": "execute_performance_tests"},
-        {"service": "notification_service", "method": "report_test_results"}
+        {"service": "notification-service", "method": "report_test_results"}
     ]
 }
 ```
