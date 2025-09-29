@@ -29,7 +29,17 @@ try:
 except ImportError:
     # Fallback implementations
     class DocStoreConfig:
+        """Fallback configuration class for doc_store service.
+
+        Provides default configuration when shared config is unavailable.
+        Used for local development and testing scenarios.
+        """
         def __init__(self):
+            """Initialize fallback configuration with default values.
+
+            Sets up default service configuration for doc_store when shared config is unavailable.
+            Provides reasonable defaults for development and testing environments.
+            """
             self.service_name = 'doc_store'
             self.service_description = 'Document Store Service'
             self.service_version = '1.0.0'
@@ -37,24 +47,57 @@ except ImportError:
             self.port = 5005
 
     def load_service_config(**kwargs):
+        """Load fallback service configuration for doc_store.
+
+        Returns a default configuration object when shared config is unavailable.
+        Used for development and testing environments.
+        """
         return DocStoreConfig()
 
     class ServiceException(Exception):
+        """Base exception for doc_store service errors.
+
+        Used when shared exception classes are not available.
+        """
         pass
 
     class ValidationException(Exception):
+        """Exception for validation errors in doc_store service.
+
+        Used when shared validation exception classes are not available.
+        """
         pass
 
     def setup_common_middleware(app, **kwargs):
+        """Setup common middleware for FastAPI application.
+
+        Fallback implementation when shared middleware utilities are unavailable.
+        In a real implementation, this would add logging, CORS, and monitoring middleware.
+        """
         pass
 
     def create_success_response(data):
+        """Create standardized success response.
+
+        Fallback implementation when shared response utilities are unavailable.
+        Returns a consistent success response format.
+        """
         return {"success": True, "data": data}
 
     def create_error_response(message, **kwargs):
+        """Create standardized error response.
+
+        Fallback implementation when shared response utilities are unavailable.
+        Returns a consistent error response format with optional additional data.
+        """
         return {"success": False, "message": message, **kwargs}
 
     def validate_required_fields(data, required_fields):
+        """Validate that required fields are present in data.
+
+        Fallback implementation when shared validation utilities are unavailable.
+        Always returns True for basic compatibility.
+        """
         return True
 
 try:
@@ -185,6 +228,11 @@ try:
 except ImportError:
     # Fallback for when running as script
     def init_database():
+        """Initialize database schema and connections.
+
+        Fallback implementation when database initialization utilities are unavailable.
+        In a real implementation, this would create tables, indexes, and establish connections.
+        """
         pass
 
     class MockCache:
