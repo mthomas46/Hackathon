@@ -119,6 +119,7 @@ services:
       - REDIS_HOST=redis
       - ENVIRONMENT=development
       - LOG_COLLECTOR_URL=http://log-collector:5080
+      - LOG_COLLECTOR_ENABLED=true
     ports:
       - "5087:5005"
     depends_on:
@@ -798,7 +799,7 @@ services:
       - ENVIRONMENT=development
       - LOG_COLLECTOR_ENABLED=false
       - SERVICE_HEALTH_CHECK_INTERVAL=30
-      - ENABLE_HEALTH_SAFEGUARDS=true
+      - ENABLE_HEALTH_SAFEGUARDS=false
     ports:
       - "5040:5080"
     healthcheck:
@@ -856,6 +857,33 @@ services:
     profiles:
       - core
       - utility
+
+  # Project Planning Service - Feature development planning
+  project-planning-service:
+    build:
+      context: .
+      dockerfile: services/project-planning-service/Dockerfile
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_NAME=project-planning-service
+      - SERVICE_PORT=5170
+      - ENVIRONMENT=development
+      - LOG_COLLECTOR_URL=http://log-collector:5080
+      - REDIS_HOST=redis
+    ports:
+      - "5170:5170"
+    depends_on:
+      redis:
+        condition: service_healthy
+      log-collector:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5170/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - development
 
   audit-framework:
     build:
