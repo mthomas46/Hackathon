@@ -90,6 +90,7 @@ services:
       - SERVICE_PORT=5099
       - REDIS_HOST=redis
       - ENVIRONMENT=development
+      - LOG_COLLECTOR_URL=http://log-collector:5080
     ports:
       - "5099:5099"
     depends_on:
@@ -117,6 +118,7 @@ services:
       - SERVICE_PORT=5087
       - REDIS_HOST=redis
       - ENVIRONMENT=development
+      - LOG_COLLECTOR_URL=http://log-collector:5080
     ports:
       - "5087:5005"
     depends_on:
@@ -142,6 +144,7 @@ services:
       - SERVICE_PORT=5020
       - REDIS_HOST=redis
       - ENVIRONMENT=development
+      - LOG_COLLECTOR_URL=http://log-collector:5080
       # DDD-specific environment variables
       - DDD_ARCHITECTURE=true
       - DDD_CONFIG_FILE=config/ddd_config.yaml
@@ -173,6 +176,7 @@ services:
       - SERVICE_NAME=source-agent
       - SERVICE_PORT=5085
       - ENVIRONMENT=development
+      - LOG_COLLECTOR_URL=http://log-collector:5080
       - DOC_STORE_URL=http://doc_store:5087
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5085/health"]
@@ -240,6 +244,7 @@ services:
       - SERVICE_PORT=5160
       - OLLAMA_HOST=http://host.docker.internal:11434
       - ENVIRONMENT=development
+      - LOG_COLLECTOR_URL=http://log-collector:5080
     ports:
       - "5160:5160"
     healthcheck:
@@ -791,6 +796,7 @@ services:
       - SERVICE_NAME=log-collector
       - SERVICE_PORT=5080
       - ENVIRONMENT=development
+      - LOG_COLLECTOR_ENABLED=false
     ports:
       - "5040:5080"
     healthcheck:
