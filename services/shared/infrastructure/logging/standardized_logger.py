@@ -35,6 +35,12 @@ from typing import Any, Dict, Optional
 
 import psutil
 
+try:
+    import httpx
+    HTTPX_AVAILABLE = True
+except ImportError:
+    HTTPX_AVAILABLE = False
+
 
 @dataclass
 class LogContext:
@@ -101,6 +107,13 @@ class StandardizedLogger:
         self.health_status = "healthy"
         self.last_health_check = datetime.now()
 
+        # Log collector integration
+        self.log_buffer = deque(maxlen=self.config.get("log_collector_batch_size", 10))
+        self._log_collector_thread = None
+        self._log_collector_active = False
+        if self.config.get("log_collector_enabled", False) and HTTPX_AVAILABLE:
+            self._start_log_collector()
+
         # Register cleanup
         atexit.register(self._cleanup)
 
@@ -128,6 +141,12 @@ class StandardizedLogger:
             "metrics_interval": int(os.environ.get("METRICS_INTERVAL", "30")),
             "max_log_size": int(os.environ.get("MAX_LOG_SIZE", "10485760")),  # 10MB
             "backup_count": int(os.environ.get("LOG_BACKUP_COUNT", "5")),
+            # Log collector integration
+            "log_collector_enabled": os.environ.get("LOG_COLLECTOR_ENABLED", "true").lower()
+            == "true",
+            "log_collector_url": os.environ.get("LOG_COLLECTOR_URL", "http://localhost:5080"),
+            "log_collector_batch_size": int(os.environ.get("LOG_COLLECTOR_BATCH_SIZE", "10")),
+            "log_collector_flush_interval": int(os.environ.get("LOG_COLLECTOR_FLUSH_INTERVAL", "30")),
         }
 
     def _setup_logging(self):
@@ -165,6 +184,12 @@ class StandardizedLogger:
         except (OSError, PermissionError) as e:
             # Fallback to console only if file logging fails
             self.logger.warning(f"Failed to setup file logging: {e}")
+
+        # Log collector handler
+        if self.config.get("log_collector_enabled", False):
+            collector_handler = LogCollectorHandler(self)
+            collector_handler.setLevel(level)
+            self.logger.addHandler(collector_handler)
 
         # Prevent duplicate logs
         self.logger.propagate = False
@@ -281,11 +306,14 @@ class StandardizedLogger:
         self.logger.info("📊 Performance monitoring started")
 
     def stop_monitoring(self):
-        """Stop performance monitoring"""
-        self._monitoring_active = False
-        if self._monitoring_thread:
-            self._monitoring_thread.join(timeout=5)
-        self.logger.info("📊 Performance monitoring stopped")
+        """Stop performance monitoring and log collector"""
+        if self._monitoring_active:
+            self._monitoring_active = False
+            if self._monitoring_thread and self._monitoring_thread.is_alive():
+                self._monitoring_thread.join(timeout=5.0)
+
+        self._stop_log_collector()
+        self.logger.info("🛑 Standardized Logger monitoring stopped")
 
     def _monitoring_loop(self):
         """Main monitoring loop"""
@@ -443,6 +471,128 @@ class StandardizedLogger:
 
         extra.update(kwargs)
         return extra
+
+    # Log Collector Integration Methods
+    def _start_log_collector(self):
+        """Start the log collector forwarding thread"""
+        if not HTTPX_AVAILABLE:
+            self.logger.warning("httpx not available, log collector disabled")
+            return
+
+        self._log_collector_active = True
+        self._log_collector_thread = threading.Thread(
+            target=self._log_collector_loop,
+            daemon=True,
+            name=f"{self.service_name}-log-collector"
+        )
+        self._log_collector_thread.start()
+        self.logger.info("📤 Log collector forwarding started")
+
+    def _stop_log_collector(self):
+        """Stop the log collector forwarding thread"""
+        if self._log_collector_active:
+            self._log_collector_active = False
+            if self._log_collector_thread and self._log_collector_thread.is_alive():
+                self._log_collector_thread.join(timeout=5.0)
+            self.logger.info("📤 Log collector forwarding stopped")
+
+    def _log_collector_loop(self):
+        """Main log collector forwarding loop"""
+        flush_interval = self.config.get("log_collector_flush_interval", 30)
+
+        while self._log_collector_active:
+            try:
+                time.sleep(flush_interval)
+                self._flush_log_buffer()
+            except Exception as e:
+                self.logger.error(f"Log collector error: {e}")
+
+    def _flush_log_buffer(self):
+        """Flush accumulated logs to the log collector service"""
+        if not self.log_buffer:
+            return
+
+        logs_to_send = list(self.log_buffer)
+        self.log_buffer.clear()
+
+        try:
+            log_collector_url = self.config.get("log_collector_url")
+            if not log_collector_url:
+                return
+
+            # Convert logs to log-collector format
+            log_items = []
+            for log_entry in logs_to_send:
+                log_item = {
+                    "service": self.service_name,
+                    "level": log_entry.get("level", "info"),
+                    "message": log_entry.get("message", ""),
+                    "timestamp": log_entry.get("timestamp"),
+                    "context": log_entry.get("context", {})
+                }
+                log_items.append(log_item)
+
+            # Send batch to log collector
+            async def send_logs():
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.post(
+                        f"{log_collector_url}/logs/batch",
+                        json={"items": log_items},
+                        headers={"Content-Type": "application/json"}
+                    )
+                    if response.status_code not in [200, 201]:
+                        raise Exception(f"HTTP {response.status_code}: {response.text}")
+
+            # Run async function in thread
+            import asyncio
+            asyncio.run(send_logs())
+
+        except Exception as e:
+            # If log collector fails, put logs back in buffer (up to limit)
+            self.logger.warning(f"Failed to send logs to collector: {e}")
+            # Re-queue failed logs (but don't overflow buffer)
+            for log_entry in logs_to_send[:len(self.log_buffer)]:
+                if len(self.log_buffer) < self.log_buffer.maxlen:
+                    self.log_buffer.append(log_entry)
+
+    def _buffer_log_for_collection(self, level: str, message: str, extra: Dict[str, Any]):
+        """Buffer a log entry for sending to log collector"""
+        if not self.config.get("log_collector_enabled", False):
+            return
+
+        log_entry = {
+            "level": level,
+            "message": message,
+            "timestamp": extra.get("timestamp"),
+            "context": {k: v for k, v in extra.items() if k not in ["service", "timestamp", "environment", "instance"]}
+        }
+
+        self.log_buffer.append(log_entry)
+
+
+class LogCollectorHandler(logging.Handler):
+    """Custom logging handler that buffers logs for the log collector"""
+
+    def __init__(self, logger_instance: 'StandardizedLogger'):
+        super().__init__()
+        self.logger_instance = logger_instance
+
+    def emit(self, record):
+        """Buffer log record for sending to log collector"""
+        try:
+            # Convert log record to dictionary format
+            log_entry = {
+                "level": record.levelname.lower(),
+                "message": record.getMessage(),
+                "timestamp": datetime.fromtimestamp(record.created).isoformat(),
+                "context": getattr(record, '__dict__', {}).get('extra', {})
+            }
+
+            # Add to buffer
+            self.logger_instance.log_buffer.append(log_entry)
+        except Exception:
+            # Don't let logging handler errors break the application
+            pass
 
 
 class StructuredFormatter(logging.Formatter):
