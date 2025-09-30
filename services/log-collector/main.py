@@ -502,34 +502,51 @@ async def put_logs(batch: LogBatch, request: Request, response: Response):
 
 @app.get("/logs")
 async def list_logs(request: Request, service: Optional[str] = None, level: Optional[str] = None,
-                   limit: int = 100):
-    """Retrieve logs with optional filtering by service and/or log level.
+                   limit: int = 100, message_contains: Optional[str] = None,
+                   start_time: Optional[str] = None, end_time: Optional[str] = None):
+    """Retrieve logs with advanced filtering capabilities.
 
-    Supports filtering logs by service name, log level, and limiting the number
-    of results. Returns the most recent logs matching the criteria.
+    Supports filtering by service name, log level, message content, time range,
+    and result limiting. Returns the most recent logs matching all criteria.
     """
-    start_time = time.time()
+    start_time_req = time.time()
     logger_instance = request.app.state.logger
 
     try:
-        # Get logs with filtering
-        logs = log_storage.get_logs(service=service, level=level, limit=limit)
+        # Get logs with advanced filtering
+        logs = log_storage.get_logs_advanced(
+            service=service,
+            level=level,
+            limit=limit,
+            message_contains=message_contains,
+            start_time=start_time,
+            end_time=end_time
+        )
 
         # Log successful query
-        response_time = time.time() - start_time
+        response_time = time.time() - start_time_req
         logger_instance.log_request("GET", "/logs", 200, response_time,
                                   extra={
                                       "service_filter": service,
                                       "level_filter": level,
                                       "limit": limit,
+                                      "message_filter": message_contains,
+                                      "time_range": f"{start_time} to {end_time}" if start_time or end_time else None,
                                       "results_count": len(logs)
                                   })
 
-        return {"items": logs}
+        return {"items": logs, "count": len(logs), "filters_applied": {
+            "service": service,
+            "level": level,
+            "message_contains": message_contains,
+            "start_time": start_time,
+            "end_time": end_time,
+            "limit": limit
+        }}
 
     except Exception as e:
         # Log error
-        response_time = time.time() - start_time
+        response_time = time.time() - start_time_req
         logger_instance.log_error(e, {
             "endpoint": "/logs",
             "service_filter": service,
@@ -563,11 +580,26 @@ async def stats(request: Request):
                                       "error_rate": stats_data.get("error_rate", 0)
                                   })
 
+        # Add log rotation statistics
+        rotation_stats = log_storage.get_rotation_stats()
+        stats_data["log_rotation"] = rotation_stats
+
+        # Add service health monitoring data
+        if service_health_monitor:
+            service_health_summary = service_health_monitor.get_service_health()
+            stats_data["service_health"] = {
+                "total_services": service_health_summary.get("total_services", 0),
+                "healthy": service_health_summary.get("healthy", 0),
+                "unhealthy": service_health_summary.get("unhealthy", 0),
+                "last_updated": service_health_summary.get("last_updated", 0)
+            }
+
         # Log business event for stats access
         logger_instance.log_business_event("log_stats_accessed", {
             "total_logs": stats_data.get("total_logs", 0),
             "unique_services": len(stats_data.get("by_service", {})),
-            "time_range": stats_data.get("time_range", "unknown")
+            "time_range": stats_data.get("time_range", "unknown"),
+            "rotation_enabled": rotation_stats.get("rotation_enabled", False)
         })
 
         return stats_data
