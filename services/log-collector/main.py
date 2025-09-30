@@ -86,9 +86,10 @@ class ServiceHealthMonitor:
     def _get_service_endpoints(self) -> Dict[str, str]:
         """Get all service health endpoints from environment or defaults."""
         # Core ecosystem services with their health endpoints
+        # Use correct internal ports as per service-ports.yaml
         services = {
             "orchestrator": os.environ.get("ORCHESTRATOR_URL", "http://orchestrator:5099") + "/health",
-            "doc_store": os.environ.get("DOC_STORE_URL", "http://doc_store:5005") + "/health",
+            "doc_store": os.environ.get("DOC_STORE_URL", "http://doc_store:5010") + "/health",
             "analysis-service": os.environ.get("ANALYSIS_SERVICE_URL", "http://analysis-service:5020") + "/health",
             "source-agent": os.environ.get("SOURCE_AGENT_URL", "http://source-agent:5085") + "/health",
             "summarizer-hub": os.environ.get("SUMMARIZER_HUB_URL", "http://summarizer-hub:5160") + "/health",
@@ -101,11 +102,11 @@ class ServiceHealthMonitor:
             "frontend": os.environ.get("FRONTEND_URL", "http://frontend:3000") + "/health",
             "notification-service": os.environ.get("NOTIFICATION_SERVICE_URL", "http://notification-service:5130") + "/health",
             "code-analyzer": os.environ.get("CODE_ANALYZER_URL", "http://code-analyzer:5025") + "/health",
-            "secure-analyzer": os.environ.get("SECURE_ANALYZER_URL", "http://secure-analyzer:5100") + "/health",
+            "secure-analyzer": os.environ.get("SECURE_ANALYZER_URL", "http://secure-analyzer:5070") + "/health",
             "architecture-digitizer": os.environ.get("ARCHITECTURE_DIGITIZER_URL", "http://architecture-digitizer:5105") + "/health",
             "discovery-agent": os.environ.get("DISCOVERY_AGENT_URL", "http://discovery-agent:5045") + "/health",
             "github-mcp": os.environ.get("GITHUB_MCP_URL", "http://github-mcp:5030") + "/health",
-            "bedrock-proxy": os.environ.get("BEDROCK_PROXY_URL", "http://bedrock-proxy:5060") + "/health",
+            "bedrock-proxy": os.environ.get("BEDROCK_PROXY_URL", "http://bedrock-proxy:5002") + "/health",
             "mock-data-generator": os.environ.get("MOCK_DATA_GENERATOR_URL", "http://mock-data-generator:5065") + "/health",
             "simulation-dashboard": os.environ.get("SIMULATION_DASHBOARD_URL", "http://simulation-dashboard:8501") + "/health",
             "unified-api-dashboard": os.environ.get("UNIFIED_API_DASHBOARD_URL", "http://unified-api-dashboard:8000") + "/health",
@@ -167,17 +168,45 @@ class ServiceHealthMonitor:
 
                 if response.status_code == 200:
                     health_data = response.json()
+
+                    # Handle different response formats:
+                    # 1. Direct status field (e.g., {"status": "healthy"})
+                    # 2. Success field with nested data.status (e.g., {"success": true, "data": {"status": "healthy"}})
+                    # 3. Check for common healthy indicators
                     status = health_data.get("status", "unknown")
 
-                    # Update health status
+                    # Handle memory-agent format: {"success": true, "data": {"status": "healthy"}}
+                    if status == "unknown" and health_data.get("success") is True and "data" in health_data:
+                        nested_status = health_data.get("data", {}).get("status", "unknown")
+                        if nested_status in ["healthy", "ok", "up"]:
+                            status = "healthy"
+
+                    # Handle doc_store format: {"status": "success", "data": {"status": "healthy"}}
+                    elif status == "success" and "data" in health_data:
+                        nested_status = health_data.get("data", {}).get("status", "unknown")
+                        if nested_status in ["healthy", "ok", "up"]:
+                            status = "healthy"
+
+                    # Consider service healthy if status indicates health
+                    is_healthy = status in ["healthy", "ok", "up", "success"] or health_data.get("success") is True
+
+                    # Debug logging for memory-agent
+                    if service_name == "memory-agent":
+                        self.logger.info(f"Memory-agent health check: status={status}, is_healthy={is_healthy}, data_keys={list(health_data.keys())}", extra={
+                            "service": service_name,
+                            "parsed_status": status,
+                            "is_healthy": is_healthy,
+                            "response_keys": list(health_data.keys())
+                        })
+
                     self.health_status[service_name] = {
-                        "status": "healthy" if status == "healthy" else "unhealthy",
+                        "status": "healthy" if is_healthy else "unhealthy",
                         "response_time": response_time,
                         "last_check": time.time(),
                         "details": health_data
                     }
 
-                    if status != "healthy":
+                    if not is_healthy:
                         self.logger.warning(f"Service {service_name} reported unhealthy status", extra={
                             "service": service_name,
                             "status": status,

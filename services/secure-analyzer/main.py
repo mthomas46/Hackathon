@@ -16,6 +16,8 @@ Responsibilities:
 Dependencies: shared middlewares/logging, ServiceClients, httpx for external calls.
 """
 
+print("SECURE-ANALYZER: main.py loading...")
+
 import os
 from typing import Any, Dict, List, Optional
 
@@ -422,5 +424,6 @@ if __name__ == "__main__":
     """Run the Secure Analyzer service directly."""
     import uvicorn
 
-    host = os.getenv("SECURE_ANALYZER_HOST", "0.0.0.0")
+    host = "0.0.0.0"  # Force binding to all interfaces
+    print(f"DEBUG: Starting secure-analyzer with host={host}, port={DEFAULT_PORT}")
     uvicorn.run(app, host=host, port=DEFAULT_PORT, log_level="info")

@@ -1,0 +1,673 @@
+{
+  "timestamp": "2025-09-30T16:58:45.844479",
+  "deployment_methods_analyzed": [
+    "docker_compose",
+    "docker_standalone",
+    "local_development",
+    "standardized_config"
+  ],
+  "configuration_differences": [
+    {
+      "service": "log_collector",
+      "type": "ports",
+      "deployments": "local_development vs standardized_config",
+      "difference": "Port mismatch: local_development {'external': 5040, 'internal': 5040} vs standard {'external': 5040, 'internal': 5080}",
+      "severity": "medium"
+    },
+    {
+      "service": "secure-analyzer",
+      "type": "ports",
+      "deployments": "local_development vs standardized_config",
+      "difference": "Port mismatch: local_development {'external': 5100, 'internal': 5100} vs standard {'external': 5100, 'internal': 5070}",
+      "severity": "medium"
+    },
+    {
+      "service": "analysis_service",
+      "type": "ports",
+      "deployments": "local_development vs standardized_config",
+      "difference": "Port mismatch: local_development {'external': 5080, 'internal': 5080} vs standard {'external': 5080, 'internal': 5020}",
+      "severity": "medium"
+    },
+    {
+      "service": "memory_agent",
+      "type": "ports",
+      "deployments": "local_development vs standardized_config",
+      "difference": "Port mismatch: local_development {'external': 5090, 'internal': 5090} vs standard {'external': 5090, 'internal': 5040}",
+      "severity": "medium"
+    },
+    {
+      "service": "doc_store",
+      "type": "ports",
+      "deployments": "local_development vs standardized_config",
+      "difference": "Port mismatch: local_development {'external': 5087, 'internal': 5087} vs standard {'external': 5087, 'internal': 5010}",
+      "severity": "medium"
+    },
+    {
+      "service": "redis",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "redis",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "doc_store",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "SERVICE_PORT: '5087' vs '5010'",
+      "severity": "high"
+    },
+    {
+      "service": "doc_store",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "doc_store",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "doc_store",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "orchestrator",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "orchestrator",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "orchestrator",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "llm_gateway",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "llm_gateway",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "ollama",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "ollama",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "mock_data_generator",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "mock_data_generator",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "summarizer-hub",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "summarizer-hub",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "summarizer-hub",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "bedrock_proxy",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "bedrock_proxy",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "github_mcp",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "github_mcp",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "memory_agent",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "SERVICE_PORT: '5090' vs '5040'",
+      "severity": "high"
+    },
+    {
+      "service": "memory_agent",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "memory_agent",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "discovery_agent",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "discovery_agent",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "source-agent",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "source-agent",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "source-agent",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "analysis_service",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "SERVICE_PORT: '5080' vs '5020'",
+      "severity": "high"
+    },
+    {
+      "service": "analysis_service",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "analysis_service",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "code-analyzer",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "code-analyzer",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "code-analyzer",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "secure-analyzer",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "SERVICE_PORT: '5100' vs '5070'",
+      "severity": "high"
+    },
+    {
+      "service": "secure-analyzer",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "secure-analyzer",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "secure-analyzer",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "log_collector",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "SERVICE_PORT: '5040' vs '5080'",
+      "severity": "high"
+    },
+    {
+      "service": "log_collector",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "log_collector",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "prompt_store",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "prompt_store",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "prompt_store",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "interpreter",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "interpreter",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "interpreter",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "architecture_digitizer",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "architecture_digitizer",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "notification-service",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "notification-service",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "notification-service",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "external-service-store",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "external-service-store",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "external-service-store",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "user-store",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "user-store",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "user-store",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "project-planning-service",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "project-planning-service",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "project-planning-service",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "project_simulation",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "project_simulation",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "simulation_dashboard",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "simulation_dashboard",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "frontend",
+      "type": "environment",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "frontend",
+      "type": "environment",
+      "deployments": "docker_standalone vs standardized_config",
+      "difference": "ENVIRONMENT: 'standalone' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "frontend",
+      "type": "environment",
+      "deployments": "local_development vs standardized_config",
+      "difference": "ENVIRONMENT: 'development' vs 'standardized'",
+      "severity": "medium"
+    },
+    {
+      "service": "redis",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'redis-cli', 'ping'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "doc_store",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5010/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "orchestrator",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5099/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "summarizer-hub",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5160/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "source-agent",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5085/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "code-analyzer",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5025/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "secure-analyzer",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5070/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "prompt_store",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5110/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "interpreter",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5120/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "notification-service",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5130/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "external-service-store",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5140/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "user-store",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5150/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "project-planning-service",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-f', 'http://localhost:5170/health'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    },
+    {
+      "service": "frontend",
+      "type": "health",
+      "deployments": "docker_compose vs standardized_config",
+      "difference": "Health endpoint: '{'test': ['CMD', 'curl', '-s', 'http://localhost:3000/'], 'interval': '30s', 'timeout': '10s', 'retries': 3}' vs '/health'",
+      "severity": "medium"
+    }
+  ],
+  "recommendations": [
+    "Critical: Standardize SERVICE_PORT environment variables",
+    "Standardize health check endpoints across deployments",
+    "Implement automated configuration validation in CI/CD pipeline",
+    "Create deployment-specific configuration templates",
+    "Document deployment method differences and use cases",
+    "Establish configuration drift detection for production"
+  ],
+  "deployment_summaries": {
+    "docker_compose": {
+      "services_configured": 29,
+      "ports_mapped": 27,
+      "environment_variables": 199,
+      "health_checks": 27,
+      "dependencies_defined": 18
+    },
+    "docker_standalone": {
+      "services_configured": 0,
+      "ports_mapped": 26,
+      "environment_variables": 52,
+      "health_checks": 0,
+      "dependencies_defined": 0
+    },
+    "local_development": {
+      "services_configured": 0,
+      "ports_mapped": 26,
+      "environment_variables": 78,
+      "health_checks": 0,
+      "dependencies_defined": 0
+    },
+    "standardized_config": {
+      "services_configured": 0,
+      "ports_mapped": 26,
+      "environment_variables": 52,
+      "health_checks": 26,
+      "dependencies_defined": 0
+    }
+  },
+  "consistency_score": 41.3
+}

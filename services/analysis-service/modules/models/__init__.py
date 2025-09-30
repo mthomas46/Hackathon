@@ -10,8 +10,8 @@ from .base import (
     ValidationErrorDetail, ErrorDetail
 )
 from .analysis import (
-    AnalysisRequest, ReportRequest, NotifyOwnersRequest, FindingsResponse,
-    SemanticSimilarityRequest, SemanticSimilarityResponse,
+    AnalysisRequest, ReportRequest, DocumentDumpRequest, NotifyOwnersRequest, FindingsResponse,
+    SemanticSimilarityRequest, SemanticSimilarityResponse, SimilarityPair, SimilarityMatrix,
     SentimentAnalysisRequest, SentimentAnalysisResponse,
     ToneAnalysisRequest, ToneAnalysisResponse,
     ContentQualityRequest, ContentQualityResponse,
@@ -64,8 +64,8 @@ __all__ = [
     'ValidationErrorDetail', 'ErrorDetail',
 
     # Analysis models
-    'AnalysisRequest', 'ReportRequest', 'NotifyOwnersRequest', 'FindingsResponse',
-    'SemanticSimilarityRequest', 'SemanticSimilarityResponse',
+    'AnalysisRequest', 'ReportRequest', 'DocumentDumpRequest', 'NotifyOwnersRequest', 'FindingsResponse',
+    'SemanticSimilarityRequest', 'SemanticSimilarityResponse', 'SimilarityPair', 'SimilarityMatrix',
     'SentimentAnalysisRequest', 'SentimentAnalysisResponse',
     'ToneAnalysisRequest', 'ToneAnalysisResponse',
     'ContentQualityRequest', 'ContentQualityResponse',

@@ -190,7 +190,9 @@ logger = StandardizedLogger("orchestrator", {
     "console_logging": True,
     "log_file": f"/tmp/orchestrator.log",
     "max_log_size": 10485760,
-    "backup_count": 5
+    "backup_count": 5,
+    "log_collector_enabled": True,
+    "log_collector_url": "http://log-collector:5080"
 })
 logger.start_monitoring()
 

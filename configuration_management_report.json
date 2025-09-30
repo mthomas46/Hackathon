@@ -1,0 +1,715 @@
+{
+  "timestamp": "2025-09-30T16:57:24.325984",
+  "configuration_sources": {
+    "service_ports_yaml": true,
+    "docker_compose_files": [
+      "docker-compose.yml",
+      "docker-compose.dev.yml",
+      "docker-compose.prod.yml",
+      "docker-compose.monitoring.yml",
+      "docker-compose.infrastructure.yml",
+      "docker-compose.services.yml",
+      "docker-compose.simulation.yml"
+    ],
+    "service_configs": [],
+    "dockerfiles": [
+      "interpreter",
+      "log-collector",
+      "source-agent",
+      "frontend",
+      "notification-service",
+      "redis",
+      "code-analyzer",
+      "project-simulation",
+      "prompt_store",
+      "summarizer-hub",
+      "llm-gateway",
+      "secure-analyzer",
+      "project-planning-service",
+      "cli",
+      "external-service-store",
+      "architecture-digitizer",
+      "simulation-dashboard",
+      "analysis-service",
+      "memory-agent",
+      "discovery-agent",
+      "github-mcp",
+      "user-store",
+      "mock-data-generator",
+      "ollama",
+      "doc_store",
+      "unified-api-dashboard",
+      "orchestrator",
+      "bedrock-proxy"
+    ]
+  },
+  "port_standardization": {
+    "total_services": 26,
+    "standardized_ports": [
+      {
+        "service": "redis",
+        "internal_port": 6379,
+        "external_port": 6379,
+        "description": "Redis cache and storage"
+      },
+      {
+        "service": "doc_store",
+        "internal_port": 5010,
+        "external_port": 5087,
+        "description": "Document storage service"
+      },
+      {
+        "service": "orchestrator",
+        "internal_port": 5099,
+        "external_port": 5099,
+        "description": "Service orchestration hub"
+      },
+      {
+        "service": "llm_gateway",
+        "internal_port": 5055,
+        "external_port": 5055,
+        "description": "LLM routing and management"
+      },
+      {
+        "service": "ollama",
+        "internal_port": 11434,
+        "external_port": 11434,
+        "description": "Local LLM inference engine"
+      },
+      {
+        "service": "mock_data_generator",
+        "internal_port": 5065,
+        "external_port": 5065,
+        "description": "AI-powered mock data generation"
+      },
+      {
+        "service": "summarizer-hub",
+        "internal_port": 5160,
+        "external_port": 5160,
+        "description": "Content summarization service"
+      },
+      {
+        "service": "bedrock_proxy",
+        "internal_port": 5060,
+        "external_port": 5060,
+        "description": "AWS Bedrock API proxy"
+      },
+      {
+        "service": "github_mcp",
+        "internal_port": 5030,
+        "external_port": 5030,
+        "description": "GitHub Model Context Protocol"
+      },
+      {
+        "service": "memory_agent",
+        "internal_port": 5040,
+        "external_port": 5090,
+        "description": "Memory and context management"
+      },
+      {
+        "service": "discovery_agent",
+        "internal_port": 5050,
+        "external_port": 5050,
+        "description": "Service discovery and registry"
+      },
+      {
+        "service": "source-agent",
+        "internal_port": 5085,
+        "external_port": 5085,
+        "description": "Source code analysis agent"
+      },
+      {
+        "service": "analysis_service",
+        "internal_port": 5020,
+        "external_port": 5080,
+        "description": "Document analysis and consistency"
+      },
+      {
+        "service": "code-analyzer",
+        "internal_port": 5025,
+        "external_port": 5025,
+        "description": "Code analysis and metrics"
+      },
+      {
+        "service": "secure-analyzer",
+        "internal_port": 5070,
+        "external_port": 5100,
+        "description": "Security analysis and scanning"
+      },
+      {
+        "service": "log_collector",
+        "internal_port": 5080,
+        "external_port": 5040,
+        "description": "Centralized logging service"
+      },
+      {
+        "service": "prompt_store",
+        "internal_port": 5110,
+        "external_port": 5110,
+        "description": "Centralized prompt management"
+      },
+      {
+        "service": "interpreter",
+        "internal_port": 5120,
+        "external_port": 5120,
+        "description": "Document interpretation service"
+      },
+      {
+        "service": "architecture_digitizer",
+        "internal_port": 5105,
+        "external_port": 5105,
+        "description": "Architecture diagram processing"
+      },
+      {
+        "service": "notification-service",
+        "internal_port": 5130,
+        "external_port": 5130,
+        "description": "Event notification system"
+      },
+      {
+        "service": "external-service-store",
+        "internal_port": 5140,
+        "external_port": 5140,
+        "description": "External service configuration store"
+      },
+      {
+        "service": "user-store",
+        "internal_port": 5150,
+        "external_port": 5150,
+        "description": "User management and authentication"
+      },
+      {
+        "service": "project-planning-service",
+        "internal_port": 5170,
+        "external_port": 5170,
+        "description": "Feature development roadmap planning"
+      },
+      {
+        "service": "project_simulation",
+        "internal_port": 5075,
+        "external_port": 5075,
+        "description": "AI-powered project simulation engine"
+      },
+      {
+        "service": "simulation_dashboard",
+        "internal_port": 8501,
+        "external_port": 8501,
+        "description": "Interactive simulation dashboard"
+      },
+      {
+        "service": "frontend",
+        "internal_port": 3000,
+        "external_port": 3000,
+        "description": "Web frontend interface"
+      }
+    ]
+  },
+  "service_discovery": {
+    "service_registrations": {
+      "redis": {
+        "registered": true,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "orchestrator": {
+        "registered": true,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "doc_store": {
+        "registered": true,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "analysis-service": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "source-agent": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "frontend": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "ollama": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": false
+      },
+      "summarizer-hub": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "architecture-digitizer": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "bedrock-proxy": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "llm-gateway": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "mock-data-generator": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "github-mcp": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "memory-agent": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "discovery-agent": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "notification-service": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "prompt_store": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "interpreter": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "cli": {
+        "registered": false,
+        "ports_configured": false,
+        "environment_configured": true,
+        "health_check_configured": false
+      },
+      "project-simulation": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "simulation-dashboard": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "unified-api-dashboard": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "code-analyzer": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "secure-analyzer": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "log-collector": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "external-service-store": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "user-store": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "project-planning-service": {
+        "registered": false,
+        "ports_configured": true,
+        "environment_configured": true,
+        "health_check_configured": true
+      },
+      "audit-framework": {
+        "registered": false,
+        "ports_configured": false,
+        "environment_configured": true,
+        "health_check_configured": true
+      }
+    },
+    "dependency_mappings": {},
+    "endpoint_consistency": {},
+    "environment_variables": {
+      "orchestrator": {
+        "LOG_COLLECTOR_URL": "http://log-collector:5080"
+      },
+      "doc_store": {
+        "LOG_COLLECTOR_URL": "http://log-collector:5080"
+      },
+      "analysis-service": {
+        "LOG_COLLECTOR_URL": "http://log-collector:5080"
+      },
+      "source-agent": {
+        "LOG_COLLECTOR_URL": "http://log-collector:5080",
+        "DOC_STORE_URL": "http://doc_store:5087"
+      },
+      "frontend": {
+        "FRONTEND_SERVICE_HOST": "0.0.0.0"
+      },
+      "summarizer-hub": {
+        "LOG_COLLECTOR_URL": "http://log-collector:5080"
+      },
+      "mock-data-generator": {
+        "LLM_GATEWAY_URL": "http://llm-gateway:5055",
+        "DOC_STORE_URL": "http://doc_store:5087"
+      },
+      "interpreter": {
+        "INTERPRETER_SERVICE_HOST": "0.0.0.0"
+      },
+      "project-simulation": {
+        "LLM_GATEWAY_URL": "http://llm-gateway:5055",
+        "MOCK_DATA_GENERATOR_URL": "http://mock-data-generator:5065",
+        "DOC_STORE_URL": "http://doc_store:5087",
+        "ANALYSIS_SERVICE_URL": "http://analysis-service:5080",
+        "ORCHESTRATOR_URL": "http://orchestrator:5099",
+        "NOTIFICATION_SERVICE_URL": "http://notification-service:5130",
+        "LOG_COLLECTOR_URL": "http://log-collector:5080"
+      },
+      "simulation-dashboard": {
+        "DASHBOARD_SIMULATION_SERVICE_HOST": "project-simulation",
+        "DASHBOARD_ANALYSIS_SERVICE_URL": "http://analysis-service:5080",
+        "DASHBOARD_HEALTH_SERVICE_URL": "http://notification-service:5130"
+      },
+      "unified-api-dashboard": {
+        "DISCOVERY_AGENT_URL": "http://discovery-agent:5045",
+        "DOC_STORE_URL": "http://doc_store:5087",
+        "ANALYSIS_SERVICE_URL": "http://analysis-service:5080",
+        "CODE_ANALYZER_URL": "http://code-analyzer:5025",
+        "SECURE_ANALYZER_URL": "http://secure-analyzer:5100",
+        "SUMMARIZER_HUB_URL": "http://summarizer-hub:5160",
+        "LLM_GATEWAY_URL": "http://llm-gateway:5055"
+      },
+      "project-planning-service": {
+        "LOG_COLLECTOR_URL": "http://log-collector:5080"
+      }
+    }
+  },
+  "deployment_consistency": {
+    "port_consistency": {
+      "redis": {
+        "service_ports_config": {
+          "internal": 6379,
+          "external": 6379
+        },
+        "docker_compose_config": {
+          "external": 6379,
+          "internal": 6379
+        },
+        "consistent": true
+      },
+      "doc_store": {
+        "service_ports_config": {
+          "internal": 5010,
+          "external": 5087
+        },
+        "docker_compose_config": {
+          "external": 5087,
+          "internal": 5010
+        },
+        "consistent": true
+      },
+      "orchestrator": {
+        "service_ports_config": {
+          "internal": 5099,
+          "external": 5099
+        },
+        "docker_compose_config": {
+          "external": 5099,
+          "internal": 5099
+        },
+        "consistent": true
+      },
+      "llm_gateway": {
+        "service_ports_config": {
+          "internal": 5055,
+          "external": 5055
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "ollama": {
+        "service_ports_config": {
+          "internal": 11434,
+          "external": 11434
+        },
+        "docker_compose_config": {
+          "external": 11434,
+          "internal": 11434
+        },
+        "consistent": true
+      },
+      "mock_data_generator": {
+        "service_ports_config": {
+          "internal": 5065,
+          "external": 5065
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "summarizer-hub": {
+        "service_ports_config": {
+          "internal": 5160,
+          "external": 5160
+        },
+        "docker_compose_config": {
+          "external": 5160,
+          "internal": 5160
+        },
+        "consistent": true
+      },
+      "bedrock_proxy": {
+        "service_ports_config": {
+          "internal": 5060,
+          "external": 5060
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "github_mcp": {
+        "service_ports_config": {
+          "internal": 5030,
+          "external": 5030
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "memory_agent": {
+        "service_ports_config": {
+          "internal": 5040,
+          "external": 5090
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "discovery_agent": {
+        "service_ports_config": {
+          "internal": 5050,
+          "external": 5050
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "source-agent": {
+        "service_ports_config": {
+          "internal": 5085,
+          "external": 5085
+        },
+        "docker_compose_config": {
+          "external": 5085,
+          "internal": 5085
+        },
+        "consistent": true
+      },
+      "analysis_service": {
+        "service_ports_config": {
+          "internal": 5020,
+          "external": 5080
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "code-analyzer": {
+        "service_ports_config": {
+          "internal": 5025,
+          "external": 5025
+        },
+        "docker_compose_config": {
+          "external": 5025,
+          "internal": 5025
+        },
+        "consistent": true
+      },
+      "secure-analyzer": {
+        "service_ports_config": {
+          "internal": 5070,
+          "external": 5100
+        },
+        "docker_compose_config": {
+          "external": 5100,
+          "internal": 5070
+        },
+        "consistent": true
+      },
+      "log_collector": {
+        "service_ports_config": {
+          "internal": 5080,
+          "external": 5040
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "prompt_store": {
+        "service_ports_config": {
+          "internal": 5110,
+          "external": 5110
+        },
+        "docker_compose_config": {
+          "external": 5110,
+          "internal": 5110
+        },
+        "consistent": true
+      },
+      "interpreter": {
+        "service_ports_config": {
+          "internal": 5120,
+          "external": 5120
+        },
+        "docker_compose_config": {
+          "external": 5120,
+          "internal": 5120
+        },
+        "consistent": true
+      },
+      "architecture_digitizer": {
+        "service_ports_config": {
+          "internal": 5105,
+          "external": 5105
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "notification-service": {
+        "service_ports_config": {
+          "internal": 5130,
+          "external": 5130
+        },
+        "docker_compose_config": {
+          "external": 5130,
+          "internal": 5130
+        },
+        "consistent": true
+      },
+      "external-service-store": {
+        "service_ports_config": {
+          "internal": 5140,
+          "external": 5140
+        },
+        "docker_compose_config": {
+          "external": 5140,
+          "internal": 5140
+        },
+        "consistent": true
+      },
+      "user-store": {
+        "service_ports_config": {
+          "internal": 5150,
+          "external": 5150
+        },
+        "docker_compose_config": {
+          "external": 5150,
+          "internal": 5150
+        },
+        "consistent": true
+      },
+      "project-planning-service": {
+        "service_ports_config": {
+          "internal": 5170,
+          "external": 5170
+        },
+        "docker_compose_config": {
+          "external": 5170,
+          "internal": 5170
+        },
+        "consistent": true
+      },
+      "project_simulation": {
+        "service_ports_config": {
+          "internal": 5075,
+          "external": 5075
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "simulation_dashboard": {
+        "service_ports_config": {
+          "internal": 8501,
+          "external": 8501
+        },
+        "docker_compose_config": null,
+        "consistent": true
+      },
+      "frontend": {
+        "service_ports_config": {
+          "internal": 3000,
+          "external": 3000
+        },
+        "docker_compose_config": {
+          "external": 3000,
+          "internal": 3000
+        },
+        "consistent": true
+      }
+    },
+    "environment_consistency": {},
+    "dependency_consistency": {}
+  },
+  "configuration_conflicts": [],
+  "recommendations": [
+    "Register missing services in service-ports.yaml: analysis-service, source-agent, frontend, ollama, summarizer-hub, architecture-digitizer, bedrock-proxy, llm-gateway, mock-data-generator, github-mcp, memory-agent, discovery-agent, notification-service, prompt_store, interpreter, cli, project-simulation, simulation-dashboard, unified-api-dashboard, code-analyzer, secure-analyzer, log-collector, external-service-store, user-store, project-planning-service, audit-framework",
+    "Implement centralized configuration validation in CI/CD pipeline",
+    "Document service discovery patterns and conventions",
+    "Create configuration drift detection for production deployments",
+    "Standardize health check endpoints across all services"
+  ],
+  "validation_summary": {
+    "total_conflicts": 0,
+    "critical_conflicts": 0,
+    "high_priority_conflicts": 0,
+    "services_with_configs": 0,
+    "services_with_ports": 26
+  }
+}
