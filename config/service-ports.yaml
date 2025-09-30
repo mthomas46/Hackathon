@@ -125,6 +125,11 @@ utility_services:
     external_port: 5150
     description: "User management and authentication"
 
+  project-planning-service:
+    internal_port: 5170
+    external_port: 5170
+    description: "Feature development roadmap planning"
+
 # Simulation Services
 simulation_services:
   project_simulation:
