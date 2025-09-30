@@ -1,5 +1,5 @@
 """Infrastructure layer - Delegates to existing infrastructure structure."""
 
-from infrastructure import *
+from . import *
 
 __all__ = []

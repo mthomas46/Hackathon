@@ -1,0 +1,241 @@
+{
+  "service_registry": {
+    "redis": {
+      "host": "localhost",
+      "port": 6379,
+      "internal_port": 6379,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Redis cache and storage"
+    },
+    "doc_store": {
+      "host": "localhost",
+      "port": 5087,
+      "internal_port": 5010,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Document storage service"
+    },
+    "orchestrator": {
+      "host": "localhost",
+      "port": 5099,
+      "internal_port": 5099,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Service orchestration hub"
+    },
+    "llm_gateway": {
+      "host": "localhost",
+      "port": 5055,
+      "internal_port": 5055,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "LLM routing and management"
+    },
+    "ollama": {
+      "host": "localhost",
+      "port": 11434,
+      "internal_port": 11434,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Local LLM inference engine"
+    },
+    "mock_data_generator": {
+      "host": "localhost",
+      "port": 5065,
+      "internal_port": 5065,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "AI-powered mock data generation"
+    },
+    "summarizer-hub": {
+      "host": "localhost",
+      "port": 5160,
+      "internal_port": 5160,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Content summarization service"
+    },
+    "bedrock_proxy": {
+      "host": "localhost",
+      "port": 5060,
+      "internal_port": 5060,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "AWS Bedrock API proxy"
+    },
+    "github_mcp": {
+      "host": "localhost",
+      "port": 5030,
+      "internal_port": 5030,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "GitHub Model Context Protocol"
+    },
+    "memory_agent": {
+      "host": "localhost",
+      "port": 5090,
+      "internal_port": 5040,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Memory and context management"
+    },
+    "discovery_agent": {
+      "host": "localhost",
+      "port": 5050,
+      "internal_port": 5050,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Service discovery and registry"
+    },
+    "source-agent": {
+      "host": "localhost",
+      "port": 5085,
+      "internal_port": 5085,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Source code analysis agent"
+    },
+    "analysis_service": {
+      "host": "localhost",
+      "port": 5080,
+      "internal_port": 5020,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Document analysis and consistency"
+    },
+    "code-analyzer": {
+      "host": "localhost",
+      "port": 5025,
+      "internal_port": 5025,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Code analysis and metrics"
+    },
+    "secure-analyzer": {
+      "host": "localhost",
+      "port": 5100,
+      "internal_port": 5070,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Security analysis and scanning"
+    },
+    "log_collector": {
+      "host": "localhost",
+      "port": 5040,
+      "internal_port": 5080,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Centralized logging service"
+    },
+    "prompt_store": {
+      "host": "localhost",
+      "port": 5110,
+      "internal_port": 5110,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Centralized prompt management"
+    },
+    "interpreter": {
+      "host": "localhost",
+      "port": 5120,
+      "internal_port": 5120,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Document interpretation service"
+    },
+    "architecture_digitizer": {
+      "host": "localhost",
+      "port": 5105,
+      "internal_port": 5105,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Architecture diagram processing"
+    },
+    "notification-service": {
+      "host": "localhost",
+      "port": 5130,
+      "internal_port": 5130,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Event notification system"
+    },
+    "external-service-store": {
+      "host": "localhost",
+      "port": 5140,
+      "internal_port": 5140,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "External service configuration store"
+    },
+    "user-store": {
+      "host": "localhost",
+      "port": 5150,
+      "internal_port": 5150,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "User management and authentication"
+    },
+    "project-planning-service": {
+      "host": "localhost",
+      "port": 5170,
+      "internal_port": 5170,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Feature development roadmap planning"
+    },
+    "project_simulation": {
+      "host": "localhost",
+      "port": 5075,
+      "internal_port": 5075,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "AI-powered project simulation engine"
+    },
+    "simulation_dashboard": {
+      "host": "localhost",
+      "port": 8501,
+      "internal_port": 8501,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Interactive simulation dashboard"
+    },
+    "frontend": {
+      "host": "localhost",
+      "port": 3000,
+      "internal_port": 3000,
+      "protocol": "tcp",
+      "health_endpoint": "/health",
+      "description": "Web frontend interface"
+    }
+  },
+  "service_dependencies": {},
+  "health_endpoints": {
+    "redis": "http://localhost:6379/health",
+    "doc_store": "http://localhost:5087/health",
+    "orchestrator": "http://localhost:5099/health",
+    "llm_gateway": "http://localhost:5055/health",
+    "ollama": "http://localhost:11434/health",
+    "mock_data_generator": "http://localhost:5065/health",
+    "summarizer-hub": "http://localhost:5160/health",
+    "bedrock_proxy": "http://localhost:5060/health",
+    "github_mcp": "http://localhost:5030/health",
+    "memory_agent": "http://localhost:5090/health",
+    "discovery_agent": "http://localhost:5050/health",
+    "source-agent": "http://localhost:5085/health",
+    "analysis_service": "http://localhost:5080/health",
+    "code-analyzer": "http://localhost:5025/health",
+    "secure-analyzer": "http://localhost:5100/health",
+    "log_collector": "http://localhost:5040/health",
+    "prompt_store": "http://localhost:5110/health",
+    "interpreter": "http://localhost:5120/health",
+    "architecture_digitizer": "http://localhost:5105/health",
+    "notification-service": "http://localhost:5130/health",
+    "external-service-store": "http://localhost:5140/health",
+    "user-store": "http://localhost:5150/health",
+    "project-planning-service": "http://localhost:5170/health",
+    "project_simulation": "http://localhost:5075/health",
+    "simulation_dashboard": "http://localhost:8501/health",
+    "frontend": "http://localhost:3000/health"
+  }
+}

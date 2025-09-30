@@ -4,7 +4,7 @@ This package contains all the modularized functionality for the Analysis Service
 Provides shared utilities and client instances for all analysis modules.
 """
 
-from services.shared.utilities import get_service_client
+from services.shared.infrastructure.utilities.utilities import get_service_client
 
 # Shared service client for all analysis modules - lazy initialization
 _service_client = None

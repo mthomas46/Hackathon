@@ -116,18 +116,18 @@ services:
     environment:
       - PYTHONPATH=/app
       - SERVICE_NAME=doc_store
-      - SERVICE_PORT=5087
+      - SERVICE_PORT=5010
       - REDIS_HOST=redis
       - ENVIRONMENT=development
       - LOG_COLLECTOR_URL=http://log-collector:5080
       - LOG_COLLECTOR_ENABLED=true
     ports:
-      - "5087:5005"
+      - "5087:5010"
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5005/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5010/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -288,11 +288,11 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
-      - SERVICE_PORT=5002
+      - SERVICE_PORT=5060
     ports:
-      - "5060:5002"
+      - "5060:5060"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5002/api/v1/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5060/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -437,7 +437,7 @@ services:
     environment:
       - PYTHONPATH=/app
       - SERVICE_NAME=discovery-agent
-      - SERVICE_PORT=5045
+      - SERVICE_PORT=5050
       - ENVIRONMENT=development
     ports:
       - "5045:5045"
@@ -779,13 +779,13 @@ services:
     environment:
       - PYTHONPATH=/app
       - SERVICE_NAME=secure-analyzer
-      - SERVICE_PORT=5100
+      - SERVICE_PORT=5070
       - SECURE_ANALYZER_HOST=0.0.0.0
       - ENVIRONMENT=development
     ports:
-      - "5100:5100"
+      - "5100:5070"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5100/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5070/health"]
       interval: 30s
       timeout: 10s
       retries: 3

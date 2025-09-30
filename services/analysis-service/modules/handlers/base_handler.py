@@ -6,10 +6,10 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Union, Protocol, TypeVar, Generic, Awaitable
 from datetime import datetime, timezone
 
-from services.shared.core.di.services import (
+from services.shared.infrastructure.database.di.services import (
     ILoggerService, ICacheService, IEventPublisher, IServiceClient, IMetricsService
 )
-from services.shared.core.di.registry import get_service
+from services.shared.infrastructure.database.di.registry import get_service
 
 # Type variables for generic handlers
 TRequest = TypeVar('TRequest')
@@ -36,7 +36,7 @@ except ImportError:
                 setattr(self, key, value)
 
 try:
-    from services.shared.utilities import get_service_client
+    from services.shared.infrastructure.utilities.utilities import get_service_client
 except ImportError:
     # Fallback for testing or when shared services are not available
     def get_service_client(service_name):
