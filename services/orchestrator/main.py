@@ -21,6 +21,7 @@ from services.shared.infrastructure.monitoring.health import register_health_end
 from services.shared.infrastructure.utilities.error_handling import register_exception_handlers
 from services.shared.core.constants_new import ServiceNames
 from services.shared.infrastructure.utilities.utilities import setup_common_middleware, attach_self_register
+from services.shared.infrastructure.logging.standardized_logger import StandardizedLogger
 
 # Infrastructure components
 from .infrastructure.persistence.in_memory import InMemoryWorkflowRepository, InMemoryWorkflowExecutionRepository
@@ -180,6 +181,19 @@ class OrchestratorContainer:
 # Global container instance
 container = OrchestratorContainer()
 
+# Initialize standardized logger
+logger = StandardizedLogger("orchestrator", {
+    "log_level": "INFO",
+    "structured_logging": True,
+    "monitoring_enabled": True,
+    "metrics_interval": 30,
+    "console_logging": True,
+    "log_file": f"/tmp/orchestrator.log",
+    "max_log_size": 10485760,
+    "backup_count": 5
+})
+logger.start_monitoring()
+
 # ============================================================================
 # FASTAPI APPLICATION - Focused on composition and startup
 # ============================================================================
@@ -202,13 +216,21 @@ setup_common_middleware(app, ServiceNames.ORCHESTRATOR)
 async def simple_health():
     """Simple health endpoint that avoids datetime serialization."""
     import time
-    return {
+
+    health_data = {
         "status": "healthy",
         "service": "orchestrator",
         "version": "1.0.0",
         "timestamp": time.time(),
         "uptime_seconds": 0
     }
+
+    # Log health check
+    logger.info("Health check requested", extra={
+        "uptime_seconds": health_data["uptime_seconds"]
+    })
+
+    return health_data
 
 
 @app.on_event("startup")
@@ -274,6 +296,14 @@ async def list_workflows():
 
 
 # Removed duplicate health endpoint - using the one registered earlier
+
+
+# Register cleanup function
+import atexit
+@atexit.register
+def cleanup():
+    logger.info("Shutting down Orchestrator service")
+    logger.stop_monitoring()
 
 
 if __name__ == "__main__":

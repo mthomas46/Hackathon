@@ -4,13 +4,10 @@ A comprehensive document storage and analysis service with advanced features
 for document management, search, analytics, and lifecycle operations.
 """
 
-import logging
 import sys
 from pathlib import Path
 
 from fastapi import FastAPI
-
-logger = logging.getLogger(__name__)
 
 # Add shared infrastructure to path
 project_root = Path(__file__).parent.parent.parent
@@ -26,6 +23,7 @@ try:
     from services.shared.infrastructure.utilities.middleware import setup_common_middleware
     from services.shared.infrastructure.utilities.error_handling import create_standard_success_response as create_success_response, create_standard_error_response as create_error_response
     from services.shared.infrastructure.utilities.validation_utils import validate_required_fields
+    from services.shared.infrastructure.logging.standardized_logger import StandardizedLogger
 except ImportError:
     # Fallback implementations
     class DocStoreConfig:
@@ -258,6 +256,19 @@ config = load_service_config(
     service_type="doc-store",
     config_file="./config.yaml",  # Optional config file override
 )
+
+# Initialize standardized logger
+logger = StandardizedLogger("doc_store", {
+    "log_level": "INFO",
+    "structured_logging": True,
+    "monitoring_enabled": True,
+    "metrics_interval": 30,
+    "console_logging": True,
+    "log_file": f"/tmp/doc_store.log",
+    "max_log_size": 10485760,
+    "backup_count": 5
+})
+logger.start_monitoring()
 
 # ============================================================================
 # FASTAPI APPLICATION - Clean and minimal with standardized features
@@ -550,20 +561,28 @@ async def health_check():
     except Exception:
         db_status = "error"
 
-    return create_success_response(
-        data={
-            "status": "healthy",
-            "service": config.service_name,
-            "version": config.service_version,
-            "database_status": db_status,
-            "features": {
-                "document_storage": True,
-                "search": True,
-                "analytics": True,
-                "versioning": True,
-                "tagging": True,
-            },
+    health_data = {
+        "status": "healthy",
+        "service": config.service_name,
+        "version": config.service_version,
+        "database_status": db_status,
+        "features": {
+            "document_storage": True,
+            "search": True,
+            "analytics": True,
+            "versioning": True,
+            "tagging": True,
         },
+    }
+
+    # Log health check
+    logger.info("Health check requested", extra={
+        "database_status": db_status,
+        "features_count": len(health_data["features"])
+    })
+
+    return create_success_response(
+        data=health_data,
         message="Service is healthy",
     )
 
@@ -800,5 +819,12 @@ if __name__ == "__main__":
 
     # Get port from configuration
     port = config.port
+
+    # Register cleanup function
+    import atexit
+    @atexit.register
+    def cleanup():
+        logger.info("Shutting down Doc Store service")
+        logger.stop_monitoring()
 
     uvicorn.run(app, host="0.0.0.0", port=int(port), log_level="info")
