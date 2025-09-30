@@ -797,6 +797,8 @@ services:
       - SERVICE_PORT=5080
       - ENVIRONMENT=development
       - LOG_COLLECTOR_ENABLED=false
+      - SERVICE_HEALTH_CHECK_INTERVAL=30
+      - ENABLE_HEALTH_SAFEGUARDS=true
     ports:
       - "5040:5080"
     healthcheck:
