@@ -124,6 +124,7 @@ from services.shared.infrastructure.utilities.error_handling import ServiceExcep
 from services.shared.core.constants_new import ServiceNames, ErrorCodes
 from services.shared.infrastructure.utilities.utilities import utc_now, generate_id, setup_common_middleware, attach_self_register, get_service_client
 from services.shared.infrastructure.monitoring.logging import fire_and_forget
+from services.shared.infrastructure.logging.standardized_logger import StandardizedLogger
 
 try:
     import redis.asyncio as aioredis
@@ -149,6 +150,19 @@ from .modules.models import AnalysisRequest, ReportRequest, DocumentDumpRequest,
 from .modules.analysis_handlers import analysis_handlers
 from .modules.report_handlers import report_handlers
 from .modules.integration_handlers import integration_handlers
+
+# Initialize standardized logger
+logger = StandardizedLogger("analysis-service", {
+    "log_level": "INFO",
+    "structured_logging": True,
+    "monitoring_enabled": True,
+    "metrics_interval": 30,
+    "console_logging": True,
+    "log_file": f"/tmp/analysis-service.log",
+    "max_log_size": 10485760,
+    "backup_count": 5
+})
+logger.start_monitoring()
 
 # Create FastAPI app directly using shared utilities
 app = FastAPI(
@@ -4067,7 +4081,7 @@ async def get_analysis_statistics():
 @app.get("/api/v1/analysis/status")
 async def get_analysis_status():
     """Get comprehensive status of analysis service capabilities and current state."""
-    from services.shared.infrastructure.monitoring.health import HealthManager
+    from services.shared.monitoring.health import HealthManager
 
     health_manager = HealthManager("analysis-service", "1.0.0")
 
@@ -4145,6 +4159,19 @@ async def custom_analysis_health():
     # Check if models are loaded (simplified check - analysis service doesn't have traditional ML models)
     # For analysis service, models_loaded could refer to analysis capabilities being ready
     models_loaded = True  # Analysis service is always "ready" for analysis
+
+    health_data = {
+        "service": ServiceNames.ANALYSIS_SERVICE,
+        "version": SERVICE_VERSION,
+        "uptime_seconds": uptime,
+        "models_loaded": models_loaded
+    }
+
+    # Log health check
+    logger.info("Health check requested", extra={
+        "uptime_seconds": uptime,
+        "models_loaded": models_loaded
+    })
 
     return healthy_response(
         ServiceNames.ANALYSIS_SERVICE,
@@ -4260,6 +4287,13 @@ async def test_pr_analysis_components():
         "recommendations": recommendations
     }
 
+
+# Register cleanup function
+import atexit
+@atexit.register
+def cleanup():
+    logger.info("Shutting down Analysis Service")
+    logger.stop_monitoring()
 
 if __name__ == "__main__":
     """Run the Analysis Service directly."""
