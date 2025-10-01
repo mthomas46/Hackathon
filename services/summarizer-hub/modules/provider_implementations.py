@@ -22,7 +22,7 @@ class ProviderImplementations:
         provider_config, prompt: Optional[str], text: str
     ) -> str:
         """Summarize using Ollama API."""
-        ollama_host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+        ollama_host = os.getenv("OLLAMA_API_HOST", "http://localhost:11434")
         url = (provider_config.endpoint or ollama_host).rstrip("/") + "/api/generate"
         payload = {
             "model": provider_config.model or "llama3",
@@ -78,7 +78,7 @@ class ProviderImplementations:
             client = boto3.client(
                 "bedrock-runtime",
                 region_name=region,
-                aws_access_key_id=get_secret("AWS_ACCESS_KEY_ID"),
+                aws_access_key_id=get_secret("EXTERNAL_AWS_ACCESS_KEY_ID"),
                 aws_secret_access_key=get_secret("AWS_SECRET_ACCESS_KEY"),
                 aws_session_token=get_secret("AWS_SESSION_TOKEN"),
             )

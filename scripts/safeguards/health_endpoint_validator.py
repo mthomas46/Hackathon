@@ -496,7 +496,7 @@ class HealthEndpointValidator:
             verbose: Whether to include detailed results
         """
         print("\n" + "="*70)
-        print("🏥 HEALTH ENDPOINT VALIDATION REPORT")
+        print("🏥 HEALTH ENDPOINT VALIDATION REAPI_PORT")
         print("="*70)
         print(f"📊 Total Endpoints: {report.total_endpoints}")
         print(f"✅ Successful: {report.successful_checks}")

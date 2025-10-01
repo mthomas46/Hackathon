@@ -1,40 +1,36 @@
-"""Unified Configuration System.
+"""
+Shared Configuration Infrastructure
 
-This module provides a standardized configuration management system
-for all services in the LLM Documentation Ecosystem. Consolidates
-46+ individual config files into a unified, type-safe configuration framework.
+This module provides centralized configuration management for all services
+in the LLM Documentation Ecosystem.
 """
 
-from .base_config import BaseConfig, ConfigValidationError, ConfigLoader
-from .service_config import (
-    ServiceConfig,
-    load_service_config,
-    create_service_config,
-    DocStoreConfig,
-    AnalysisServiceConfig,
-    OrchestratorConfig,
-    PromptStoreConfig,
-    DiscoveryAgentConfig,
-    FrontendConfig,
-    CLIConfig,
-    SummarizerHubConfig,
+from .configuration_manager import (
+    ConfigurationManager,
+    BaseServiceConfig,
+    ServerConfig,
+    RedisConfig,
+    LoggingConfig,
+    ServiceDependencies,
+    Environment,
+    ConfigurationError,
+    ConfigurationValidator,
+    StandardConfigurationValidator,
+    create_service_config_manager,
+    load_service_config
 )
 
 __all__ = [
-    "BaseConfig",
-    "ConfigValidationError",
-    "ConfigLoader",
-    "EnvironmentConfig",
-    "FileConfig",
-    "ServiceConfig",
-    "load_service_config",
-    "create_service_config",
-    "DocStoreConfig",
-    "AnalysisServiceConfig",
-    "OrchestratorConfig",
-    "PromptStoreConfig",
-    "DiscoveryAgentConfig",
-    "FrontendConfig",
-    "CLIConfig",
-    "SummarizerHubConfig",
+    "ConfigurationManager",
+    "BaseServiceConfig",
+    "ServerConfig",
+    "RedisConfig",
+    "LoggingConfig",
+    "ServiceDependencies",
+    "Environment",
+    "ConfigurationError",
+    "ConfigurationValidator",
+    "StandardConfigurationValidator",
+    "create_service_config_manager",
+    "load_service_config"
 ]

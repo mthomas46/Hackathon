@@ -58,7 +58,7 @@ class ServiceImportValidator:
             ]
         }
 
-        print("\n📊 IMPORT VALIDATION SUMMARY:")
+        print("\n📊 IMAPI_PORT VALIDATION SUMMARY:")
         print(f"✅ Successful: {successful_imports}/{total_modules} ({success_rate:.1f}%)")
         print(f"❌ Failed: {failed_imports}/{total_modules}")
 

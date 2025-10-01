@@ -109,6 +109,8 @@ Responsibilities:
 
 Dependencies: Document Store, Prompt Store, Interpreter, Source Agent, Orchestrator.
 """
+from services.shared.infrastructure.config import load_service_config
+
 from typing import Optional, List, Dict, Any
 import os
 import json
@@ -138,10 +140,23 @@ from services.shared.core.models import Document, Finding
 service_client = get_service_client(timeout=30)
 
 # Service configuration constants
-SERVICE_NAME = "analysis-service"
+
+# Validate configuration before loading (startup validation)
+from services.shared.infrastructure.config.startup_validator import validate_service_startup
+if not validate_service_startup("analysis-service"):
+    print("❌ Analysis Service configuration validation failed - aborting startup")
+    sys.exit(1)
+
+# Load service configuration (now with Pydantic validation by default)
+config = load_service_config("analysis-service")
+
+# Extract commonly used configuration values
+SERVICE_NAME = config.service_name
+SERVICE_VERSION = config.service_version
+DEFAULT_API_PORT = config.server.port
 SERVICE_TITLE = "Analysis Service"
 SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = 5020
+DEFAULT_API_PORT = 5020
 
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
@@ -3776,7 +3791,7 @@ async def analyze_with_prompt(
         else:
             return _create_analysis_error_response(
                 "Unsupported target type",
-                ErrorCodes.UNSUPPORTED_TARGET_TYPE,
+                ErrorCodes.UNSUPAPI_PORTED_TARGET_TYPE,
                 {"target_type": type(target).__name__, "supported_types": ["Document", "str"]}
             )  # FURTHER OPTIMIZED: Using shared error utility
 
@@ -4301,6 +4316,6 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=DEFAULT_PORT,
+        port=DEFAULT_API_PORT,
         log_level="info"
     )

@@ -1,23 +1,55 @@
-# Individual Docker Compose for GitHub MCP Service
-# This allows the github-mcp to run independently as a standalone service
-
-version: "3.9"
-
 services:
   github-mcp:
     image: python:3.12-slim
     working_dir: /app
     volumes:
-      - ../../:/app:ro
-      - ./:/app/services/github-mcp:rw
-      - ../../:/app:ro
+    - ./:/app:ro
+    - github-mcp_code:/app:rw
     environment:
-      - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/github-mcp/main.py"
+    - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx &&
+      python services/github-mcp/main.py"
     ports:
-      - "5072:5072"
+    - 5072:5072
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5072/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5072/health
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+    - hackathon_default
+
+  redis:
+    image: redis:7-alpine
+    ports:
+    - 6379:6379
+    volumes:
+    - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+    - hackathon_default
+
+volumes:
+  redis_data:
+    driver: local
+  github-mcp_code:
+    driver: local
+
+networks:
+  hackathon_default:
+    driver: bridge

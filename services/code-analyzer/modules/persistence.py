@@ -12,7 +12,7 @@ async def persist_analysis_result(result: Dict[str, Any]) -> None:
         try:
             import aioredis
 
-            host = os.environ.get("REDIS_HOST")
+            host = os.environ.get("REDIS_API_HOST")
             if host:
                 client = await aioredis.from_url(f"redis://{host}")
                 await client.publish("docs.ingested.code", str(result))

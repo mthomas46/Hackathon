@@ -174,7 +174,7 @@ class EnvironmentDetector:
 
     def _is_running_in_kubernetes(self) -> bool:
         """Check if running in a Kubernetes cluster."""
-        return ('KUBERNETES_SERVICE_HOST' in os.environ or
+        return ('KUBERNETES_SERVICE_API_HOST' in os.environ or
                 os.path.exists('/var/run/secrets/kubernetes.io'))
 
     def _gather_network_info(self) -> Dict[str, Any]:

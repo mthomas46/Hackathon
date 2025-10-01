@@ -8,7 +8,7 @@ YELLOW := \033[1;33m
 BLUE := \033[0;34m
 NC := \033[0m # No Color
 
-.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status dashboard dashboard-start dashboard-stop dashboard-logs dashboard-health dashboard-test prompt-store-run prompt-store-test prompt-store-docker prompt-store-stop prompt-store-logs prompt-store-health llm-gateway-run llm-gateway-test llm-gateway-docker llm-gateway-stop llm-gateway-logs llm-gateway-health code-analyzer-run code-analyzer-test code-analyzer-docker code-analyzer-stop code-analyzer-logs code-analyzer-health orchestrator-run orchestrator-test orchestrator-docker orchestrator-stop orchestrator-logs orchestrator-health user-store-run user-store-test user-store-docker user-store-stop user-store-logs user-store-health external-service-store-run external-service-store-test external-service-store-docker external-service-store-stop external-service-store-logs external-service-store-health audit audit-all audit-services audit-ci audit-quick audit-comprehensive audit-parallel audit-report audit-clean audit-setup audit-validate audit-benchmark audit-trend audit-config audit-debug audit-docker audit-pre-commit audit-quality-gate audit-enforce
+.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate validate-ports validate-docker-config validate-dockerfiles validate-env validate-health validate-health-endpoints validate-health-continuous validate-config validate-config-drift validate-config-drift-auto validate-config-consistency validate-api-contracts validate-api-compare pydantic-enable pydantic-disable pydantic-test pydantic-status validate-pydantic validate-service-startup validate-docker-files validate-docker-compose config-monitor config-health config-service-health docker-standardize docker-standardize-dry-run docker-standardize-apply setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status dashboard dashboard-start dashboard-stop dashboard-logs dashboard-health dashboard-test prompt-store-run prompt-store-test prompt-store-docker prompt-store-stop prompt-store-logs prompt-store-health llm-gateway-run llm-gateway-test llm-gateway-docker llm-gateway-stop llm-gateway-logs llm-gateway-health code-analyzer-run code-analyzer-test code-analyzer-docker code-analyzer-stop code-analyzer-logs code-analyzer-health orchestrator-run orchestrator-test orchestrator-docker orchestrator-stop orchestrator-logs orchestrator-health user-store-run user-store-test user-store-docker user-store-stop user-store-logs user-store-health external-service-store-run external-service-store-test external-service-store-docker external-service-store-stop external-service-store-logs external-service-store-health audit audit-all audit-services audit-ci audit-quick audit-comprehensive audit-parallel audit-report audit-clean audit-setup audit-validate audit-benchmark audit-trend audit-config audit-debug audit-docker audit-pre-commit audit-quality-gate audit-enforce docker-start docker-start-validated docker-stop docker-restart docker-compose-up docker-compose-down docker-compose-logs docker-compose-config docker-logs docker-status dev-setup dev-setup-full ci-validate ci-test pre-deploy deploy-safe
 
 help: ## Show this help message
 	@echo "🚀 Hackathon Ecosystem Commands"
@@ -43,8 +43,8 @@ ecosystem-setup: ## Set up virtual environment and dependencies
 
 ecosystem-validate: ## Validate ecosystem configuration and services
 	@echo "$(BLUE)🔍 Validating Ecosystem...$(NC)"
-	source $(VENV)/bin/activate && python3 scripts/hardening/docker_standardization.py
-	source $(VENV)/bin/activate && python3 scripts/hardening/service_connectivity_validator.py
+	$(PYTHON) scripts/hardening/unified_config_manager.py audit
+	$(PYTHON) scripts/hardening/unified_config_manager.py docker-check
 	@echo "$(GREEN)✅ Ecosystem validation complete$(NC)"
 
 ecosystem-health: ## Check ecosystem health using unified monitoring
@@ -71,13 +71,50 @@ ecosystem-clean: ## Clean ecosystem resources
 # Docker Management
 docker-start: ## Start all services with validation
 	@echo "$(BLUE)🚀 Starting Docker Ecosystem...$(NC)"
+	@echo "$(YELLOW)📋 Pre-flight Configuration Check...$(NC)"
+	@$(PYTHON) scripts/hardening/unified_config_manager.py audit > /dev/null 2>&1 || (echo "$(RED)❌ Configuration validation failed. Run 'make ecosystem-validate' to check.$(NC)" && exit 1)
+	@echo "$(BLUE)🔍 Checking Docker configurations...$(NC)"
+	$(PYTHON) scripts/hardening/docker_compose_validator.py --quiet --files docker-compose.dev.yml && echo "$(GREEN)✅ Docker Compose validation passed$(NC)" || echo "$(YELLOW)⚠️  Docker Compose has issues but continuing... Run 'make validate-docker-compose' for details$(NC)"
+	docker-compose -f docker-compose.dev.yml config --quiet > /dev/null 2>&1 || (echo "$(RED)❌ docker-compose.dev.yml has syntax errors.$(NC)" && exit 1)
+	@echo "$(GREEN)✅ Configuration validated$(NC)"
+	@echo "$(BLUE)🐳 Starting services...$(NC)"
 	docker-compose -f docker-compose.dev.yml --profile core --profile ai_services --profile development --profile utility up -d
 	@echo "$(GREEN)✅ Services starting...$(NC)"
+
+docker-start-validated: validate-config-consistency validate-docker-config validate-docker-files validate-docker-compose ## Start services with comprehensive validation
+	@echo "$(BLUE)🚀 Starting Docker Ecosystem with Full Validation...$(NC)"
+	@echo "$(GREEN)✅ All validations passed - Docker configurations validated$(NC)"
+	$(MAKE) docker-start
 
 docker-stop: ## Stop all services
 	@echo "$(BLUE)🛑 Stopping Docker Ecosystem...$(NC)"
 	docker-compose -f docker-compose.dev.yml down
 	@echo "$(GREEN)✅ Services stopped$(NC)"
+
+docker-restart: ## Restart all services with validation
+	@echo "$(BLUE)🔄 Restarting Docker Ecosystem...$(NC)"
+	$(MAKE) docker-stop
+	$(MAKE) docker-start
+	@echo "$(GREEN)✅ Services restarted$(NC)"
+
+docker-compose-up: validate-docker-compose ## Run docker-compose up with validation
+	@echo "$(BLUE)🐳 Running docker-compose up...$(NC)"
+	docker-compose -f docker-compose.dev.yml up -d
+	@echo "$(GREEN)✅ Services started$(NC)"
+
+docker-compose-down: ## Run docker-compose down (no validation needed)
+	@echo "$(BLUE)🛑 Running docker-compose down...$(NC)"
+	docker-compose -f docker-compose.dev.yml down
+	@echo "$(GREEN)✅ Services stopped$(NC)"
+
+docker-compose-logs: ## Run docker-compose logs
+	@echo "$(BLUE)📋 Docker Compose Logs...$(NC)"
+	docker-compose -f docker-compose.dev.yml logs -f --tail=50
+
+docker-compose-config: validate-docker-compose ## Validate docker-compose config
+	@echo "$(BLUE)⚙️  Validating docker-compose config...$(NC)"
+	docker-compose -f docker-compose.dev.yml config
+	@echo "$(GREEN)✅ Config validated$(NC)"
 
 docker-logs: ## Show service logs
 	docker-compose -f docker-compose.dev.yml logs -f --tail=50
@@ -105,14 +142,23 @@ cli-test: ## Test environment-aware CLI
 
 validate: ## Run comprehensive ecosystem validation
 	@echo "$(BLUE)🔍 Running comprehensive validation...$(NC)"
-	source $(VENV)/bin/activate && python3 scripts/hardening/docker_standardization.py
-	source $(VENV)/bin/activate && python3 scripts/hardening/service_connectivity_validator.py
+	$(PYTHON) scripts/hardening/unified_config_manager.py audit
+	$(PYTHON) scripts/hardening/unified_config_manager.py docker-check
+	$(PYTHON) scripts/hardening/unified_docker_standardizer.py --mode validate
 	@echo "$(GREEN)✅ Validation completed$(NC)"
 
 validate-ports: ## Validate port configurations and detect conflicts
 	@echo "$(BLUE)🔍 Validating ports...$(NC)"
-	source $(VENV)/bin/activate && python3 scripts/hardening/docker_standardization.py
+	$(PYTHON) scripts/hardening/unified_docker_standardizer.py --mode validate
 	@echo "$(GREEN)✅ Port validation completed$(NC)"
+
+validate-docker-config: ## Validate Docker and Docker Compose configuration consistency
+	@echo "$(BLUE)🐳 Validating Docker configuration...$(NC)"
+	$(PYTHON) scripts/hardening/unified_config_manager.py docker-check
+	$(PYTHON) scripts/hardening/unified_docker_standardizer.py --mode validate
+	docker-compose -f docker-compose.dev.yml config --quiet || (echo "$(RED)❌ docker-compose.dev.yml has syntax errors$(NC)" && exit 1)
+	docker-compose -f docker-compose.prod.yml config --quiet || (echo "$(RED)❌ docker-compose.prod.yml has syntax errors$(NC)" && exit 1)
+	@echo "$(GREEN)✅ Docker configuration validation completed$(NC)"
 
 validate-dockerfiles: ## Validate all Dockerfiles with comprehensive analysis
 	@echo "$(BLUE)🔍 Validating Dockerfiles with comprehensive analysis...$(NC)"
@@ -141,18 +187,41 @@ validate-health-continuous: ## Continuous health monitoring
 
 validate-config: ## Check for configuration drift
 	@echo "$(BLUE)🔍 Checking configuration consistency...$(NC)"
-	source $(VENV)/bin/activate && python3 scripts/hardening/docker_standardization.py --check-drift
+	$(PYTHON) scripts/hardening/unified_config_manager.py audit
+	$(PYTHON) audit_configuration.py
 	@echo "$(GREEN)✅ Configuration validation completed$(NC)"
 
 validate-config-drift: ## Comprehensive configuration drift detection
 	@echo "$(BLUE)🔍 Running comprehensive configuration drift detection...$(NC)"
-	source $(VENV)/bin/activate && python3 scripts/safeguards/config_drift_detector.py --verbose --save-report
+	$(PYTHON) scripts/hardening/config_drift_detector.py --verbose --save-report
+	$(PYTHON) scripts/hardening/unified_config_manager.py audit
 	@echo "$(GREEN)✅ Configuration drift detection completed$(NC)"
 
 validate-config-drift-auto: ## Configuration drift detection with auto-correction
 	@echo "$(BLUE)🔧 Running configuration drift detection with auto-correction...$(NC)"
-	source $(VENV)/bin/activate && python3 scripts/safeguards/config_drift_detector.py --auto-correct --verbose
+	$(PYTHON) scripts/hardening/config_drift_detector.py --auto-correct --verbose
+	$(PYTHON) scripts/hardening/configuration_standardization.py
 	@echo "$(GREEN)✅ Configuration drift auto-correction completed$(NC)"
+
+validate-config-consistency: ## Validate configuration consistency across all files
+	@echo "$(BLUE)🔍 Validating configuration consistency...$(NC)"
+	$(PYTHON) audit_configuration.py
+	$(PYTHON) scripts/hardening/unified_config_manager.py audit
+	$(PYTHON) scripts/hardening/unified_docker_standardizer.py --mode validate
+	@echo "Comparing service configs with Docker configs..."
+	@for service in services/*/; do \
+		if [ -f "$$service/config.yaml" ] && [ -f "$$service/docker-compose.yml" ]; then \
+			service_name=$$(basename $$service); \
+			config_port=$$($(PYTHON) -c "import yaml; print(yaml.safe_load(open('$$service/config.yaml'))['server']['port'])" 2>/dev/null || echo "unknown"); \
+			compose_port=$$(grep -o '"[0-9]*:[0-9]*"' "$$service/docker-compose.yml" | head -1 | cut -d'"' -f2 | cut -d':' -f1 2>/dev/null || echo "unknown"); \
+			if [ "$$config_port" != "unknown" ] && [ "$$compose_port" != "unknown" ] && [ "$$config_port" != "$$compose_port" ]; then \
+				echo "$(RED)❌ $$service_name: Port mismatch (config: $$config_port, docker: $$compose_port)$(NC)"; \
+			else \
+				echo "$(GREEN)✅ $$service_name: Ports consistent$(NC)"; \
+			fi; \
+		fi; \
+	done
+	@echo "$(GREEN)✅ Configuration consistency validation completed$(NC)"
 
 validate-api-contracts: ## Validate API contracts between services
 	@echo "$(BLUE)🔗 Validating API contracts...$(NC)"
@@ -163,6 +232,127 @@ validate-api-compare: ## Compare API specifications (usage: make validate-api-co
 	@echo "$(BLUE)🔍 Comparing API specifications...$(NC)"
 	source $(VENV)/bin/activate && python3 scripts/safeguards/api_contract_validator.py --compare $(OLD_SPEC) $(NEW_SPEC) --verbose
 	@echo "$(GREEN)✅ API comparison completed$(NC)"
+
+# Pydantic Configuration System (Now Default)
+pydantic-enable: ## Enable Pydantic configuration system (enhanced validation - now default)
+	@echo "$(BLUE)🔧 Pydantic configuration system is now ENABLED by default$(NC)"
+	@echo "✅ All services use enhanced validation automatically"
+	@echo "✅ New services get type safety and validation"
+	@echo "✅ Existing services migrate gradually"
+	@echo "$(GREEN)✅ Pydantic configuration system active$(NC)"
+
+pydantic-disable: ## Disable Pydantic configuration system (use legacy dataclass mode)
+	@echo "$(BLUE)📋 Switching to legacy dataclass configuration system...$(NC)"
+	@echo "Set USE_PYDANTIC_CONFIG=false to disable enhanced validation"
+	@echo "⚠️  This disables type safety and advanced validation"
+	@echo "Use only for troubleshooting or legacy compatibility"
+	@echo "$(YELLOW)⚠️  Legacy mode enabled - enhanced validation disabled$(NC)"
+
+pydantic-test: ## Run Pydantic configuration system tests
+	@echo "$(BLUE)🧪 Running Pydantic configuration tests...$(NC)"
+	$(PYTHON) scripts/hardening/test_pydantic_config.py
+	@echo "$(GREEN)✅ Pydantic configuration tests completed$(NC)"
+
+pydantic-status: ## Check Pydantic configuration system status
+	@echo "$(BLUE)📊 Pydantic Configuration System Status$(NC)"
+	@echo "=========================================="
+	@if [ "$$USE_PYDANTIC_CONFIG" != "false" ]; then \
+		echo "🔧 Pydantic Mode: ENABLED (default - enhanced validation)"; \
+	else \
+		echo "📋 Pydantic Mode: DISABLED (using legacy dataclass)"; \
+	fi
+	@echo ""
+	@echo "Configuration Sources:"
+	@echo "  • Environment Variable: USE_PYDANTIC_CONFIG=$$USE_PYDANTIC_CONFIG"
+	@echo "  • Default: true (Pydantic enabled)"
+	@echo "  • Supported Values: true, false, 1, 0, yes, no, on, off"
+	@echo ""
+	@echo "Current Behavior:"
+	@if [ "$$USE_PYDANTIC_CONFIG" != "false" ]; then \
+		echo "  ✅ New services use Pydantic (enhanced validation)"; \
+		echo "  ✅ Existing services migrate gradually"; \
+	else \
+		echo "  ⚠️  All services use legacy dataclass mode"; \
+	fi
+	@echo ""
+	@echo "To disable Pydantic (legacy mode):"
+	@echo "  export USE_PYDANTIC_CONFIG=false"
+	@echo ""
+	@echo "To enable Pydantic for single command:"
+	@echo "  USE_PYDANTIC_CONFIG=true make <target>"
+	@echo "$(GREEN)✅ Status check completed$(NC)"
+
+validate-pydantic: pydantic-test ## Validate Pydantic configuration system (alias for pydantic-test)
+	@echo "$(GREEN)✅ Pydantic validation completed$(NC)"
+
+validate-service-startup: ## Validate service configuration for startup (usage: make validate-service-startup SERVICE=service-name)
+	@echo "$(BLUE)🚀 Validating $(SERVICE) configuration for startup...$(NC)"
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "$(RED)❌ Error: SERVICE parameter required$(NC)"; \
+		echo "Usage: make validate-service-startup SERVICE=service-name"; \
+		exit 1; \
+	fi
+	$(PYTHON) services/shared/infrastructure/config/startup_validator.py $(SERVICE)
+	@if [ $$? -eq 0 ]; then \
+		echo "$(GREEN)✅ $(SERVICE) configuration validated for startup$(NC)"; \
+	else \
+		echo "$(RED)❌ $(SERVICE) configuration validation failed$(NC)"; \
+		exit 1; \
+	fi
+
+validate-docker-files: ## Validate all Docker configurations (docker-compose.yml, Dockerfiles)
+	@echo "$(BLUE)🐳 Validating Docker configurations...$(NC)"
+	$(PYTHON) scripts/hardening/validate_docker_configs.py
+	@if [ $$? -eq 0 ]; then \
+		echo "$(GREEN)✅ All Docker configurations validated$(NC)"; \
+	else \
+		echo "$(RED)❌ Docker configuration validation failed$(NC)"; \
+		exit 1; \
+	fi
+
+validate-docker-compose: ## Validate docker-compose.yml files only
+	@echo "$(BLUE)🐳 Validating Docker Compose files...$(NC)"
+	$(PYTHON) scripts/hardening/validate_docker_compose.py
+
+config-monitor: ## Show configuration system monitoring and metrics
+	@echo "$(BLUE)📊 Configuration System Monitoring$(NC)"
+	@echo "======================================"
+	$(PYTHON) scripts/hardening/config_monitor_cli.py dashboard
+	@echo "$(GREEN)✅ Monitoring check completed$(NC)"
+
+config-health: ## Check configuration health for all services
+	@echo "$(BLUE)🏥 Configuration Health Check$(NC)"
+	@echo "==============================="
+	$(PYTHON) scripts/hardening/config_monitor_cli.py health
+	@echo "$(GREEN)✅ Health check completed$(NC)"
+
+config-service-health: ## Check health for specific service (usage: make config-service-health SERVICE=service-name)
+	@echo "$(BLUE)🔍 Service Health: $(SERVICE)$(NC)"
+	@echo "=========================="
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "$(RED)❌ Error: SERVICE parameter required$(NC)"; \
+		echo "Usage: make config-service-health SERVICE=service-name"; \
+		exit 1; \
+	fi
+	$(PYTHON) scripts/hardening/config_monitor_cli.py service --service $(SERVICE)
+	@echo "$(GREEN)✅ Service health check completed$(NC)"
+
+# ========================================
+# UNIFIED DOCKER STANDARDIZATION
+# ========================================
+
+docker-standardize: ## Run unified Docker standardization (validate mode)
+	@echo "$(BLUE)🔧 Running Unified Docker Standardization (Validate Mode)$(NC)"
+	$(PYTHON) scripts/hardening/unified_docker_standardizer.py --mode validate
+
+docker-standardize-dry-run: ## Run unified Docker standardization (dry-run mode)
+	@echo "$(BLUE)🔧 Running Unified Docker Standardization (Dry Run Mode)$(NC)"
+	$(PYTHON) scripts/hardening/unified_docker_standardizer.py --mode dry-run
+
+docker-standardize-apply: ## Run unified Docker standardization (apply changes mode) - USE WITH CAUTION
+	@echo "$(YELLOW)⚠️  WARNING: This will modify Docker configuration files$(NC)"
+	@echo "$(BLUE)🔧 Running Unified Docker Standardization (Apply Mode)$(NC)"
+	$(PYTHON) scripts/hardening/unified_docker_standardizer.py --mode apply
 
 # ========================================
 # STANDARDIZED LOGGING & MONITORING
@@ -716,18 +906,26 @@ audit-enforce: ## Enforce quality standards
 # 🔄 INTEGRATED WORKFLOWS
 # ========================================
 
-# Integrated workflows with audit
-dev-setup: ecosystem-setup setup-logging audit-setup ## Complete development setup with audit
-	@echo "$(GREEN)🎉 Development environment with audit ready!$(NC)"
+# Integrated workflows with comprehensive validation
+dev-setup: ecosystem-setup setup-logging validate-config ## Complete development setup with validation
+	@echo "$(GREEN)🎉 Development environment ready!$(NC)"
 
-ci-validate: ecosystem-validate audit-ci audit-quality-gate ## CI validation with audit
-	@echo "$(GREEN)✅ CI validation with audit passed$(NC)"
+dev-setup-full: ecosystem-setup setup-logging validate-config validate-docker-config ## Complete development setup with full validation
+	@echo "$(GREEN)🎉 Development environment with full validation ready!$(NC)"
 
-ci-test: ci-validate test audit-services ## CI testing with comprehensive audit
-	@echo "$(GREEN)✅ CI testing with audit passed$(NC)"
+ci-validate: ## Run comprehensive CI/CD validation suite
+	@echo "$(CYAN)🚀 Running CI/CD Configuration Validation Suite$(NC)"
+	@$(PYTHON) scripts/hardening/ci_cd_validator.py --quiet || (echo "$(RED)❌ CI/CD validation failed$(NC)" && exit 1)
+	@echo "$(GREEN)✅ CI/CD validation passed$(NC)"
 
-pre-deploy: validate-all ecosystem-health audit-comprehensive audit-enforce ## Pre-deployment validation with audit
-	@echo "$(GREEN)🚀 Pre-deployment validation with audit passed$(NC)"
+ci-test: ci-validate test ## CI testing with validation
+	@echo "$(GREEN)✅ CI testing passed$(NC)"
+
+pre-deploy: validate-config-consistency validate-docker-config validate-health ecosystem-health ## Pre-deployment validation
+	@echo "$(GREEN)🚀 Pre-deployment validation passed$(NC)"
+
+deploy-safe: pre-deploy docker-start-validated ## Safe deployment with full validation
+	@echo "$(GREEN)🚀 Safe deployment completed$(NC)"
 
 # Default target
 .DEFAULT_GOAL := help

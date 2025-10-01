@@ -25,6 +25,8 @@ Responsibilities:
 Dependencies: shared infrastructure, LLM Gateway, Source Agent, User Store
 """
 
+from services.shared.infrastructure.config import load_service_config
+
 import os
 import sys
 from pathlib import Path
@@ -44,9 +46,15 @@ from services.shared.infrastructure.utilities.utilities import setup_common_midd
 from services.shared.infrastructure.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware
 
 # Service configuration constants
-SERVICE_NAME = "project-planning-service"
+# Load service configuration
+config = load_service_config("project-planning-service")
+
+# Extract commonly used configuration values
+SERVICE_NAME = config.service_name
+SERVICE_VERSION = config.service_version
+DEFAULT_API_PORT = config.server.port
 SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = 5170
+DEFAULT_API_PORT = 5170
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -69,7 +77,7 @@ register_exception_handlers(app)
 setup_common_middleware(app, SERVICE_NAME)
 
 # Attach service registration
-attach_self_register(app, SERVICE_NAME, DEFAULT_PORT)
+attach_self_register(app, SERVICE_NAME, DEFAULT_API_PORT)
 
 
 @app.get("/api/v1/features/plan")
@@ -99,7 +107,7 @@ if __name__ == "__main__":
     import uvicorn
     import atexit
 
-    print(f"Starting {SERVICE_NAME} v{SERVICE_VERSION} on port {DEFAULT_PORT}")
+    print(f"Starting {SERVICE_NAME} v{SERVICE_VERSION} on port {DEFAULT_API_PORT}")
 
     # Register cleanup
     @atexit.register
@@ -109,6 +117,6 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=DEFAULT_PORT,
+        port=DEFAULT_API_PORT,
         log_level="info"
     )

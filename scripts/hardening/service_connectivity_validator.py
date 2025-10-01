@@ -484,7 +484,7 @@ class ServiceConnectivityValidator:
     def print_validation_report(self, results: Dict[str, Any]):
         """Print comprehensive validation report"""
         print("\n" + "="*80)
-        print("🔗 SERVICE CONNECTIVITY VALIDATION REPORT")
+        print("🔗 SERVICE CONNECTIVITY VALIDATION REAPI_PORT")
         print("="*80)
         
         print(f"\n📊 OVERALL ASSESSMENT")
@@ -513,7 +513,7 @@ class ServiceConnectivityValidator:
         
         # Port validation
         port_results = results['port_validation']
-        print(f"\n🔌 PORT VALIDATION")
+        print(f"\n🔌 API_PORT VALIDATION")
         print(f"  Containers Checked: {port_results.get('total_containers', 0)}")
         print(f"  Port Conflicts: {port_results.get('conflicts_found', 0)}")
         

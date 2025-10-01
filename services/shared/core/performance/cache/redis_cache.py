@@ -26,8 +26,8 @@ class RedisCache(CacheBackend):
             default_ttl: Default TTL in seconds
             key_prefix: Key prefix for namespacing
         """
-        self._host = host or os.getenv(EnvVars.REDIS_HOST, "localhost")
-        self._port = port or int(os.getenv(EnvVars.REDIS_PORT, "6379"))
+        self._host = host or os.getenv(EnvVars.REDIS_API_HOST, "localhost")
+        self._port = port or int(os.getenv(EnvVars.REDIS_API_PORT, "6379"))
         self._db = db
         self._password = password
         self._default_ttl = default_ttl

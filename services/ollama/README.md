@@ -100,15 +100,15 @@ ollama:
   volumes:
     - ollama_data:/root/.ollama
   environment:
-    - OLLAMA_HOST=0.0.0.0
+    - OLLAMA_API_HOST=0.0.0.0
   restart: unless-stopped
 ```
 
 ### **🔧 Environment Variables**
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `OLLAMA_HOST` | API bind address | `0.0.0.0` | Optional |
-| `OLLAMA_PORT` | API port | `11434` | Optional |
+| `OLLAMA_API_HOST` | API bind address | `0.0.0.0` | Optional |
+| `OLLAMA_API_PORT` | API port | `11434` | Optional |
 | `OLLAMA_MAX_LOADED_MODELS` | Max loaded models | `3` | Optional |
 
 ## 📋 **Requirements**

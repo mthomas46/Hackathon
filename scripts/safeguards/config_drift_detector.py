@@ -673,7 +673,7 @@ class ConfigDriftDetector:
             verbose: Whether to include detailed issue information
         """
         print("\n" + "="*80)
-        print("📊 CONFIGURATION DRIFT DETECTION REPORT")
+        print("📊 CONFIGURATION DRIFT DETECTION REAPI_PORT")
         print("="*80)
         print(f"📁 Total Files Scanned: {report.total_files_scanned}")
         print(f"⚠️  Total Issues Found: {report.total_issues_found}")

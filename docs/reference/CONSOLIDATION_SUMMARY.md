@@ -245,8 +245,8 @@ services:
 #### 2. Update Environment Variables
 ```bash
 # Add infrastructure URLs
-REDIS_HOST=redis
-JAEGER_AGENT_HOST=jaeger
+REDIS_API_HOST=redis
+JAEGER_AGENT_API_HOST=jaeger
 PROMETHEUS_GATEWAY=prometheus:9090
 
 # Update service URLs

@@ -195,7 +195,7 @@ def build_actions(
         print_kv(console, "Distributed Stats", rx)
 
     # ============================================================================
-    # REPORTING ENDPOINTS
+    # REAPI_PORTING ENDPOINTS
     # ============================================================================
 
     async def generate_report():

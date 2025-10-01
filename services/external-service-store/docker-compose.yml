@@ -1,0 +1,79 @@
+services:
+  external-service-store:
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python
+      services/external-service-store/main.py"
+    environment:
+    - ENVIRONMENT=development
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5140/health
+      timeout: 10s
+    image: python:3.12-slim
+    ports:
+    - 8085:5140
+    volumes:
+    - ./:/app:ro
+    - external-service-store_code:/app:rw
+    working_dir: /app
+    networks:
+    - hackathon_default
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    ports:
+    - 6379:6379
+    volumes:
+    - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+    - hackathon_default
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+    - POSTGRES_DB=hackathon
+    - POSTGRES_USER=hackathon
+    - POSTGRES_PASSWORD=hackathon
+    ports:
+    - 5432:5432
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U hackathon -d hackathon
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+    - hackathon_default
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  external-service-store_code:
+    driver: local
+
+networks:
+  hackathon_default:
+    driver: bridge

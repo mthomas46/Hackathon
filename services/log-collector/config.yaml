@@ -1,12 +1,31 @@
-# Log-collector-specific configuration
-# Inherits from shared base_config.yaml
-
-# Override server port for log-collector
 server:
   port: 5080
-
-# Log collector specific settings (minimal service)
 log_collector:
-  # Default log retention settings
   retention_days: ${LOG_RETENTION_DAYS:-30}
   max_log_size_mb: ${MAX_LOG_SIZE_MB:-100}
+  health_check_interval: ${SERVICE_HEALTH_CHECK_INTERVAL:-}
+  enable_health_safeguards: ${ENABLE_HEALTH_SAFEGUARDS:-}
+services:
+  llm_gateway_url: ${LLM_GATEWAY_URL:-}
+  project_simulation_url: ${PROJECT_SIMULATION_URL:-}
+  source_agent_url: ${SOURCE_AGENT_URL:-}
+  unified_api_dashboard_url: ${UNIFIED_API_DASHBOARD_URL:-}
+  secure_analyzer_url: ${SECURE_ANALYZER_URL:-}
+  user_store_url: ${USER_STORE_URL:-}
+  analysis_service_url: ${ANALYSIS_SERVICE_URL:-}
+  bedrock_proxy_url: ${BEDROCK_PROXY_URL:-}
+  prompt_store_url: ${PROMPT_STORE_URL:-}
+  memory_agent_url: ${MEMORY_AGENT_URL:-}
+  orchestrator_url: ${ORCHESTRATOR_URL:-}
+  architecture_digitizer_url: ${ARCHITECTURE_DIGITIZER_URL:-}
+  external_service_store_url: ${EXTERNAL_SERVICE_STORE_URL:-}
+  summarizer_hub_url: ${SUMMARIZER_HUB_URL:-}
+  notification_service_url: ${NOTIFICATION_SERVICE_URL:-}
+  discovery_agent_url: ${DISCOVERY_AGENT_URL:-}
+  interpreter_url: ${INTERPRETER_URL:-}
+  doc_store_url: ${DOC_STORE_URL:-}
+  mock_data_generator_url: ${MOCK_DATA_GENERATOR_URL:-}
+  github_mcp_url: ${GITHUB_MCP_URL:-}
+  simulation_dashboard_url: ${SIMULATION_DASHBOARD_URL:-}
+  code_analyzer_url: ${CODE_ANALYZER_URL:-}
+  frontend_url: ${FRONTEND_URL:-}

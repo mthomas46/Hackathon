@@ -9,8 +9,8 @@ ERRORS=0
 WARNINGS=0
 
 # Check for port conflicts - using simple approach to avoid bash version issues
-EXTERNAL_PORTS_LIST=""
-INTERNAL_PORTS_LIST=""
+EXTERNAL_API_PORTS_LIST=""
+INTERNAL_API_PORTS_LIST=""
 
 # Function to check port assignment
 check_port() {
@@ -21,11 +21,11 @@ check_port() {
     
     printf "%-25s %s:%s " "$service" "$external" "$internal"
     
-    if [[ -n "${EXTERNAL_PORTS[$external]}" ]]; then
-        echo "❌ ERROR: External port $external conflict with ${EXTERNAL_PORTS[$external]}"
+    if [[ -n "${EXTERNAL_API_PORTS[$external]}" ]]; then
+        echo "❌ ERROR: External port $external conflict with ${EXTERNAL_API_PORTS[$external]}"
         ERRORS=$((ERRORS + 1))
     else
-        EXTERNAL_PORTS[$external]="$service"
+        EXTERNAL_API_PORTS[$external]="$service"
         
         if [[ "$external" == "$internal" ]]; then
             echo "✅ OK"
@@ -35,11 +35,11 @@ check_port() {
         fi
     fi
     
-    if [[ -n "${INTERNAL_PORTS[$internal]}" && "${INTERNAL_PORTS[$internal]}" != "$service" ]]; then
-        printf "%-25s %s:%s ⚠️  WARNING: Internal port $internal shared with ${INTERNAL_PORTS[$internal]}\n" "" "" ""
+    if [[ -n "${INTERNAL_API_PORTS[$internal]}" && "${INTERNAL_API_PORTS[$internal]}" != "$service" ]]; then
+        printf "%-25s %s:%s ⚠️  WARNING: Internal port $internal shared with ${INTERNAL_API_PORTS[$internal]}\n" "" "" ""
         WARNINGS=$((WARNINGS + 1))
     fi
-    INTERNAL_PORTS[$internal]="$service"
+    INTERNAL_API_PORTS[$internal]="$service"
 }
 
 echo "Core Infrastructure Services:"

@@ -46,7 +46,7 @@ class TestFrontendCore:
         assert "env" in info_data
 
         env_data = info_data["env"]
-        assert "REPORTING_URL" in env_data
+        assert "REAPI_PORTING_URL" in env_data
         assert "DOC_STORE_URL" in env_data
         assert "CONSISTENCY_ENGINE_URL" in env_data
 

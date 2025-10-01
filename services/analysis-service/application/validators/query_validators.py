@@ -157,7 +157,7 @@ class ListFindingsQueryValidator(BaseValidator):
             elif query.severity not in ['critical', 'high', 'medium', 'low', 'info']:
                 errors.append(self.create_error(
                     f"Invalid severity: {query.severity}",
-                    "UNSUPPORTED_SEVERITY",
+                    "UNSUPAPI_PORTED_SEVERITY",
                     "severity"
                 ))
 

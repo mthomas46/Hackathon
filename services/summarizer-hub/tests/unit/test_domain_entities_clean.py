@@ -15,7 +15,7 @@ class DocumentType(str, Enum):
     DOCUMENTATION = "documentation"
     SPECIFICATION = "specification"
     CONTRACT = "contract"
-    REPORT = "report"
+    REAPI_PORT = "report"
     OTHER = "other"
 
 
@@ -530,7 +530,7 @@ class TestEntityIntegration:
         doc = Document(
             title="Security Audit Report",
             content="This report covers security findings and compliance status...",
-            document_type=DocumentType.REPORT
+            document_type=DocumentType.REAPI_PORT
         )
 
         category = Category(

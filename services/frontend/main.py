@@ -132,7 +132,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 # ============================================================================
-# MODULE IMPORTS - With comprehensive fallbacks for local development
+# MODULE IMAPI_PORTS - With comprehensive fallbacks for local development
 # ============================================================================
 try:
     from services.frontend.modules.analysis_monitor import analysis_monitor
@@ -297,7 +297,7 @@ except ImportError:
         return os.getenv("ORCHESTRATOR_URL", "http://localhost:5007")
 
     def get_reporting_url():
-        return os.getenv("REPORTING_URL", "http://localhost:5008")
+        return os.getenv("REAPI_PORTING_URL", "http://localhost:5008")
 
     def get_summarizer_hub_url():
         return os.getenv("SUMMARIZER_HUB_URL", "http://localhost:5009")
@@ -345,7 +345,7 @@ def configure_service_urls():
         "CONSISTENCY_ENGINE_URL": "http://localhost:5001",
         "DOC_STORE_URL": "http://localhost:5005",
         "ORCHESTRATOR_URL": "http://localhost:5007",
-        "REPORTING_URL": "http://localhost:5008",
+        "REAPI_PORTING_URL": "http://localhost:5008",
         "SUMMARIZER_HUB_URL": "http://localhost:5009",
         "ANALYSIS_SERVICE_URL": "http://localhost:5020",
         "PROMPT_STORE_URL": "http://localhost:5110",
@@ -360,8 +360,8 @@ def configure_service_urls():
         "SECURE_ANALYZER_URL": "http://localhost:5070",
 
         # Frontend Service Configuration
-        "FRONTEND_SERVICE_HOST": "127.0.0.1",
-        "FRONTEND_SERVICE_PORT": "8080",
+        "FRONTEND_SERVICE_API_HOST": "127.0.0.1",
+        "FRONTEND_SERVICE_API_PORT": "8080",
     }
 
     # Set defaults only if not already set
@@ -400,7 +400,7 @@ config = load_service_config(
 SERVICE_NAME = config.service_name
 SERVICE_TITLE = config.service_description or "Frontend"
 SERVICE_VERSION = config.service_version
-DEFAULT_PORT = config.port
+DEFAULT_API_PORT = config.port
 
 # ============================================================================
 # APP INITIALIZATION - Using shared patterns for consistency
@@ -442,7 +442,7 @@ async def info():
                 "service": config.service_name,
                 "version": app.version,
                 "env": {
-                    "REPORTING_URL": get_reporting_url(),
+                    "REAPI_PORTING_URL": get_reporting_url(),
                     "DOC_STORE_URL": get_doc_store_url(),
                     "CONSISTENCY_ENGINE_URL": get_consistency_engine_url(),
                     "ORCHESTRATOR_URL": get_orchestrator_url(),
@@ -470,7 +470,7 @@ async def config_effective():
     """
     try:
         config = {
-            EnvVars.REPORTING_URL_ENV: get_reporting_url(),
+            EnvVars.REAPI_PORTING_URL_ENV: get_reporting_url(),
             EnvVars.DOC_STORE_URL_ENV: get_doc_store_url(),
             EnvVars.CONSISTENCY_ENGINE_URL_ENV: get_consistency_engine_url(),
             EnvVars.ORCHESTRATOR_URL_ENV: get_orchestrator_url(),
@@ -3463,7 +3463,7 @@ if __name__ == "__main__":
     is_dev = os.getenv("ENVIRONMENT", "production") == "development"
 
     host = "0.0.0.0"
-    port = int(os.getenv("FRONTEND_SERVICE_PORT", str(DEFAULT_PORT)))
+    port = int(os.getenv("FRONTEND_SERVICE_API_PORT", str(DEFAULT_API_PORT)))
     uvicorn.run(
         "main:app" if is_dev else app,
         host=host,

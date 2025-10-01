@@ -21,7 +21,7 @@ except ImportError:
     # Fallback implementations
     def load_service_config(**kwargs):
         import os
-        port = int(os.getenv('SERVICE_PORT', '5045'))
+        port = int(os.getenv('SERVICE_API_PORT', '5045'))
         return type('Config', (), {
             'service_name': 'discovery-agent',
             'service_description': 'Discovery Agent Service',
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     import os
 
     # Get port from config or environment
-    port = getattr(config, 'port', None) or getattr(config, 'server', {}).get('port', None) or int(os.getenv('SERVICE_PORT', '5045'))
+    port = getattr(config, 'port', None) or getattr(config, 'server', {}).get('port', None) or int(os.getenv('SERVICE_API_PORT', '5045'))
     host = getattr(config, 'server', {}).get('host', '0.0.0.0') if hasattr(config, 'server') else '0.0.0.0'
 
     uvicorn.run(app, host=host, port=port)

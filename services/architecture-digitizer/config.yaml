@@ -8,41 +8,37 @@ server:
 # Architecture-digitizer specific settings
 architecture_digitizer:
   # Supported diagram systems
-  supported_systems:
-    - miro
-    - figjam
-    - lucid
-    - confluence
+  supported_systems: ${SUPAPI_PORTED_SYSTEMS:-miro,figjam,lucid,confluence}
 
   # API timeouts and retry settings
-  api_timeout_seconds: 30
-  max_retries: 3
-  retry_backoff_seconds: 1
+  api_timeout_seconds: ${API_TIMEOUT_SECONDS:-30}
+  max_retries: ${MAX_RETRIES:-3}
+  retry_backoff_seconds: ${RETRY_BACKOFF_SECONDS:-1}
 
   # Rate limiting
-  rate_limit_requests_per_minute: 60
+  rate_limit_requests_per_minute: ${RATE_LIMIT_REQUESTS_PER_MINUTE:-60}
 
   # Default component type mappings
-  default_component_type: service
+  default_component_type: ${DEFAULT_COMPONENT_TYPE:-service}
 
   # Cache settings for API responses (to avoid repeated calls)
-  cache_enabled: true
-  cache_ttl_seconds: 300  # 5 minutes
+  cache_enabled: ${CACHE_ENABLED:-true}
+  cache_ttl_seconds: ${CACHE_TTL_SECONDS:-300}
 
 # External API configurations (tokens provided at runtime)
 external_apis:
   miro:
-    base_url: https://api.miro.com/v2
+    base_url: ${MIRO_BASE_URL:-https://api.miro.com/v2}
     token_env_var: MIRO_TOKEN
 
   figjam:
-    base_url: https://api.figma.com/v1
+    base_url: ${FIGMA_BASE_URL:-https://api.figma.com/v1}
     token_env_var: FIGMA_TOKEN
 
   lucid:
-    base_url: https://lucid.app/api
+    base_url: ${LUCID_BASE_URL:-https://lucid.app/api}
     token_env_var: LUCID_TOKEN
 
   confluence:
-    base_url_template: https://{domain}.atlassian.net/wiki/rest/api
+    base_url_template: ${CONFLUENCE_BASE_URL_TEMPLATE:-https://{domain}.atlassian.net/wiki/rest/api}
     token_env_var: CONFLUENCE_TOKEN

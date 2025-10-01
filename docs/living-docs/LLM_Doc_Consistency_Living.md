@@ -125,7 +125,7 @@ Producers emit envelopes on:
 
 ## 7) Security and Secrets
 
-- Do not bake tokens into images. Use env vars: GITHUB_TOKEN, JIRA_URL, JIRA_EMAIL, JIRA_API_TOKEN, CONFLUENCE_*.
+- Do not bake tokens into images. Use env vars: EXTERNAL_GITHUB_TOKEN, JIRA_URL, JIRA_EMAIL, JIRA_API_TOKEN, CONFLUENCE_*.
 - Least-privilege API scopes. Optional service-to-service auth via HMAC header between orchestrator and agents.
 
 ## 8) Deployment & Observability (Initial)
@@ -200,14 +200,14 @@ findings.created
 ## 13) Ollama Sidecar Strategy (Local and Secure LLM)
 
 Observations from repos:
-- Leopold: Defaults to provider "ollama" with `OLLAMA_HOST` and health checks; compose already includes an `ollama` service. Works with shared or sidecar endpoints.
-- LlamalyticsHub: Uses `OLLAMA_HOST`, `OLLAMA_MODEL`, optional `OLLAMA_API_KEY`; compose binds to `http://ollama:11434`. Ready for sidecar or shared.
-- jirassicPack: Uses `OLLAMA_HOST` and `OLLAMA_API_KEY`; CLI can boot `ollama serve`. Ideal candidate for a per-service sidecar in Docker.
+- Leopold: Defaults to provider "ollama" with `OLLAMA_API_HOST` and health checks; compose already includes an `ollama` service. Works with shared or sidecar endpoints.
+- LlamalyticsHub: Uses `OLLAMA_API_HOST`, `OLLAMA_MODEL`, optional `OLLAMA_API_KEY`; compose binds to `http://ollama:11434`. Ready for sidecar or shared.
+- jirassicPack: Uses `OLLAMA_API_HOST` and `OLLAMA_API_KEY`; CLI can boot `ollama serve`. Ideal candidate for a per-service sidecar in Docker.
 - AvettaConfluenceDownloader: Wraps Ollama via `llm_server.py` with `OLLAMA_URL`; can point to a local sidecar for strict isolation.
 - Librarian: No direct Ollama usage (today). Can defer to the Consistency Engine’s LLM calls or add optional LLM client later.
 
 Standardize environment variables:
-- `OLLAMA_HOST`: Base URL to Ollama (e.g., `http://ollama:11434` or sidecar hostname).
+- `OLLAMA_API_HOST`: Base URL to Ollama (e.g., `http://ollama:11434` or sidecar hostname).
 - `OLLAMA_MODEL`: Default model (e.g., `llama3`, `codellama:7b`).
 - `OLLAMA_API_KEY`: Only used by services that proxy/gate requests (e.g., jirassicPack HTTP API), not by Ollama itself.
 
@@ -215,13 +215,13 @@ Deployment modes:
 1) Shared Ollama (default dev mode)
    - Single `ollama` service on internal network, not publicly exposed beyond compose.
    - Pros: Simpler ops, single model cache; Cons: No per-service isolation.
-   - Set: `OLLAMA_HOST=http://ollama:11434` for Leopold, LlamalyticsHub, jirassicPack, Confluence wrapper.
+   - Set: `OLLAMA_API_HOST=http://ollama:11434` for Leopold, LlamalyticsHub, jirassicPack, Confluence wrapper.
 
 2) Per-service sidecar (hardened/prod mode)
    - Run one Ollama instance per agent for network isolation and blast-radius reduction.
    - Pattern in Docker Compose:
      - Create `ollama-<svc>` alongside `<svc>` and put both on a private network; do NOT publish Ollama’s port.
-     - Configure `<svc>` to use `OLLAMA_HOST=http://ollama-<svc>:11434`.
+     - Configure `<svc>` to use `OLLAMA_API_HOST=http://ollama-<svc>:11434`.
    - Optional: share the same models volume across sidecars if storage is a concern, or keep per-service volumes for strict isolation.
 
 Security posture:
@@ -231,14 +231,14 @@ Security posture:
 - Rate-limit heavy LLM endpoints in wrappers when available.
 
 Operational guidance per service:
-- Leopold (orchestrator): No direct LLM calls required; if needed, prefer talking to agents rather than Ollama. Keep `OLLAMA_HOST` configurable for diagnostics only.
-- LlamalyticsHub (github-agent): Default shared Ollama in dev; enable sidecar in prod as `ollama-github`. Ensure `OLLAMA_HOST` and `OLLAMA_MODEL` set via env.
-- jirassicPack (jira-agent): Use `ollama-jira` sidecar; set `OLLAMA_HOST` and `OLLAMA_API_KEY` at the agent layer if gating.
+- Leopold (orchestrator): No direct LLM calls required; if needed, prefer talking to agents rather than Ollama. Keep `OLLAMA_API_HOST` configurable for diagnostics only.
+- LlamalyticsHub (github-agent): Default shared Ollama in dev; enable sidecar in prod as `ollama-github`. Ensure `OLLAMA_API_HOST` and `OLLAMA_MODEL` set via env.
+- jirassicPack (jira-agent): Use `ollama-jira` sidecar; set `OLLAMA_API_HOST` and `OLLAMA_API_KEY` at the agent layer if gating.
 - Confluence (confluence-agent): Run `llm_server.py` and point it to `ollama-confluence` (sidecar). Do not publish Ollama; only publish the wrapper.
 - Consistency Engine: If it needs LLM calls, use shared or `ollama-consistency` sidecar depending on workload isolation needs.
 
 Compose implementation notes:
-- Current skeleton uses a shared `ollama`. To switch to sidecars, duplicate the `ollama` service per agent (no published ports), rename to `ollama-<svc>`, and update each agent’s `OLLAMA_HOST` accordingly. Consider separate private networks per pair for strict least-privilege routing.
+- Current skeleton uses a shared `ollama`. To switch to sidecars, duplicate the `ollama` service per agent (no published ports), rename to `ollama-<svc>`, and update each agent’s `OLLAMA_API_HOST` accordingly. Consider separate private networks per pair for strict least-privilege routing.
 
 ## 14) Rewrite Mode in Hackathon (no external repos in containers)
 
@@ -254,7 +254,7 @@ What’s added:
 
 Compose changes:
 - Replace single shared `ollama` with per-service sidecars: `ollama-github`, `ollama-jira`, `ollama-confluence`, `ollama-consistency` (no published ports), each on a private network with its paired agent.
-- Agents set `OLLAMA_HOST` to the corresponding sidecar hostnames.
+- Agents set `OLLAMA_API_HOST` to the corresponding sidecar hostnames.
 
 Incremental enhancement plan:
 1) Implement real client calls for GitHub/Jira/Confluence and normalize outputs to Canonical Data Model v0.
@@ -315,16 +315,16 @@ Incremental enhancement plan:
 
 | Service | HTTP dependencies (env) | Events In | Events Out | Orchestrator Integration | Logging |
 |---|---|---|---|---|---|
-| orchestrator | `REPORTING_URL`, `SECURE_ANALYZER_URL` | - | `ingestion.requested` (via Redis, when configured) | Proxies `/report/request`, `/summarization/suggest`; owns `/registry/*` | Uses `LOG_COLLECTOR_URL` |
-| github-agent | `OLLAMA_HOST` | - | `docs.ingested.github` (when Redis configured) | Registered via discovery-agent | Uses `LOG_COLLECTOR_URL` |
-| jira-agent | `OLLAMA_HOST` | - | `docs.ingested.jira` (when Redis configured) | Registered via discovery-agent | Uses `LOG_COLLECTOR_URL` |
-| confluence-agent | `OLLAMA_HOST` | - | `docs.ingested.confluence` (when Redis configured) | Registered via discovery-agent | Uses `LOG_COLLECTOR_URL` |
+| orchestrator | `REAPI_PORTING_URL`, `SECURE_ANALYZER_URL` | - | `ingestion.requested` (via Redis, when configured) | Proxies `/report/request`, `/summarization/suggest`; owns `/registry/*` | Uses `LOG_COLLECTOR_URL` |
+| github-agent | `OLLAMA_API_HOST` | - | `docs.ingested.github` (when Redis configured) | Registered via discovery-agent | Uses `LOG_COLLECTOR_URL` |
+| jira-agent | `OLLAMA_API_HOST` | - | `docs.ingested.jira` (when Redis configured) | Registered via discovery-agent | Uses `LOG_COLLECTOR_URL` |
+| confluence-agent | `OLLAMA_API_HOST` | - | `docs.ingested.confluence` (when Redis configured) | Registered via discovery-agent | Uses `LOG_COLLECTOR_URL` |
 | swagger-agent | - | - | `apis.ingested.swagger` (when Redis configured) | Registered via discovery-agent | Uses `LOG_COLLECTOR_URL` |
 | consistency-engine | `GITHUB_AGENT_URL` (optional) | `docs.ingested.*`, `apis.ingested.swagger` | `findings.created` (planned) | Listed in registry; consumed by reporting | Uses `LOG_COLLECTOR_URL` |
 | memory-agent | - | `ingestion.requested`, `docs.ingested.*`, `apis.ingested.swagger`, `findings.created` | - | Listed in registry | Uses `LOG_COLLECTOR_URL` |
 | reporting | `CONSISTENCY_ENGINE_URL`, `DOC_STORE_URL`, `LOG_COLLECTOR_URL`, `NOTIFICATION_URL` | - | - | Orchestrator proxies via `/report/request` | Uses `LOG_COLLECTOR_URL` |
-| summarizer-hub | `BEDROCK_*`, `OLLAMA_HOST` | - | - | Called by secure-analyzer and CE | Uses `LOG_COLLECTOR_URL` |
+| summarizer-hub | `BEDROCK_*`, `OLLAMA_API_HOST` | - | - | Called by secure-analyzer and CE | Uses `LOG_COLLECTOR_URL` |
 | secure-analyzer | `SUMMARIZER_HUB_URL` | - | - | Orchestrator proxies via `/summarization/suggest` | Uses `LOG_COLLECTOR_URL` |
 | discovery-agent | `ORCHESTRATOR_URL` | - | Registers to `/registry/register` | Registers services with orchestrator | Uses `LOG_COLLECTOR_URL` |
-| frontend | `REPORTING_URL`, `CONSISTENCY_ENGINE_URL` | - | - | Calls orchestrated backends | Uses `LOG_COLLECTOR_URL` |
+| frontend | `REAPI_PORTING_URL`, `CONSISTENCY_ENGINE_URL` | - | - | Calls orchestrated backends | Uses `LOG_COLLECTOR_URL` |
 | log-collector | - | - | - | Optional dependency for all services | N/A |

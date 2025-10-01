@@ -345,7 +345,7 @@ integrations:
   email:
     enabled: "${EMAIL_ENABLED:false}"
     smtp_server: "${SMTP_SERVER}"
-    smtp_port: "${SMTP_PORT:587}"
+    smtp_port: "${SMTP_API_PORT:587}"
     smtp_username: "${SMTP_USERNAME}"
     smtp_password: "${SMTP_PASSWORD}"
     from_address: "${EMAIL_FROM_ADDRESS}"

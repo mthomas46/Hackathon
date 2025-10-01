@@ -292,7 +292,7 @@ class SimulationDataFormatter(DataFormatter):
         """Format project report."""
         lines = [
             "=" * 60,
-            f"PROJECT REPORT: {data.get('name', 'Unknown')}",
+            f"PROJECT REAPI_PORT: {data.get('name', 'Unknown')}",
             "=" * 60,
             f"Type: {data.get('type', 'N/A')}",
             f"Complexity: {data.get('complexity', 'N/A')}",

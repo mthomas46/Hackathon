@@ -54,7 +54,7 @@ def load_frontend_service():
                     "service": "frontend",
                     "version": "1.0.0",
                     "env": {
-                        "REPORTING_URL": "http://test:5030",
+                        "REAPI_PORTING_URL": "http://test:5030",
                         "DOC_STORE_URL": "http://test:5010",
                         "CONSISTENCY_ENGINE_URL": "http://test:5020",
                     }
@@ -68,7 +68,7 @@ def load_frontend_service():
                 "success": True,
                 "message": "Frontend config retrieved successful",
                 "data": {
-                    "REPORTING_URL": "http://test:5030",
+                    "REAPI_PORTING_URL": "http://test:5030",
                     "DOC_STORE_URL": "http://test:5010",
                     "CONSISTENCY_ENGINE_URL": "http://test:5020",
                 },

@@ -23,7 +23,7 @@ from services.shared.core.responses import create_success_response, create_error
 SERVICE_NAME = "my-service"
 SERVICE_TITLE = "My Service"
 SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = 8000
+DEFAULT_API_PORT = 8000
 
 app = FastAPI(
     title=SERVICE_TITLE,
@@ -80,7 +80,7 @@ setup_common_middleware(app, service_name=config.service_name)
 - SERVICE_NAME = "my-service"
 - SERVICE_TITLE = "My Service"
 - SERVICE_VERSION = "1.0.0"
-- DEFAULT_PORT = 8000
+- DEFAULT_API_PORT = 8000
 
 # Add standardized config loading:
 + config = load_service_config(
@@ -91,7 +91,7 @@ setup_common_middleware(app, service_name=config.service_name)
 + # Use config values:
 + SERVICE_TITLE = config.service_description or "My Service"
 + SERVICE_VERSION = config.service_version
-+ DEFAULT_PORT = config.port
++ DEFAULT_API_PORT = config.port
 ```
 
 ### Step 3: Update FastAPI App Creation
@@ -137,7 +137,7 @@ The standardized config automatically loads from environment variables with the 
 # Set service configuration via environment
 export SERVICE_SECRET_KEY="your-secret-key"
 export SERVICE_DEBUG="true"
-export SERVICE_PORT="8080"
+export SERVICE_API_PORT="8080"
 export SERVICE_DATABASE_URL="sqlite:///./app.db"
 ```
 

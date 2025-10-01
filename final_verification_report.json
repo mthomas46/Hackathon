@@ -1,0 +1,1997 @@
+{
+  "timestamp": null,
+  "capabilities": {
+    "audit": true,
+    "standardization": true,
+    "migration": true,
+    "new_system": true
+  },
+  "audit_results": {
+    "services": {
+      "interpreter": {
+        "config_file": "services/interpreter/config.yaml",
+        "env_vars": [
+          "ANALYSIS_SERVICE_URL",
+          "INTERPRETER_SERVICE_API_PORT",
+          "INTERPRETER_SERVICE_API_HOST",
+          "DOC_STORE_URL",
+          "ORCHESTRATOR_URL",
+          "PROMPT_STORE_URL",
+          "INTERPRETER_API_PORT"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "log-collector": {
+        "config_file": "services/log-collector/config.yaml",
+        "env_vars": [
+          "MAX_LOG_SIZE_MB",
+          "FRONTEND_URL",
+          "SUMMARIZER_HUB_URL",
+          "ANALYSIS_SERVICE_URL",
+          "ARCHITECTURE_DIGITIZER_URL",
+          "CODE_ANALYZER_URL",
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "OLLAMA_URL",
+          "USER_STORE_URL",
+          "BEDROCK_PROXY_URL",
+          "MEMORY_AGENT_URL",
+          "REDIS_URL",
+          "ENABLE_HEALTH_SAFEGUARDS",
+          "UNIFIED_API_DASHBOARD_URL",
+          "LLM_GATEWAY_URL",
+          "LOG_RETENTION_DAYS",
+          "NOTIFICATION_SERVICE_URL",
+          "SIMULATION_DASHBOARD_URL",
+          "ORCHESTRATOR_URL",
+          "PROMPT_STORE_URL",
+          "EXTERNAL_SERVICE_STORE_URL",
+          "SECURE_ANALYZER_URL",
+          "DISCOVERY_AGENT_URL",
+          "GITHUB_MCP_URL",
+          "PROJECT_SIMULATION_URL",
+          "SERVICE_HEALTH_CHECK_INTERVAL",
+          "INTERPRETER_URL",
+          "MOCK_DATA_GENERATOR_URL"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "source-agent": {
+        "config_file": "services/source-agent/config.yaml",
+        "env_vars": [
+          "USE_GITHUB_MCP",
+          "SERVICE_API_PORT"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "frontend": {
+        "config_file": "services/frontend/config.yaml",
+        "env_vars": [
+          "REAPI_PORTING_URL",
+          "FRONTEND_SERVICE_API_PORT",
+          "SUMMARIZER_HUB_URL",
+          "ENVIRONMENT",
+          "DOC_STORE_URL",
+          "ORCHESTRATOR_URL",
+          "CONSISTENCY_ENGINE_URL"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "notification-service": {
+        "config_file": "services/notification-service/config.yaml",
+        "env_vars": [
+          "NOTIFICATION_CACHE_TTL",
+          "NOTIFY_OWNER_MAP_FILE",
+          "NOTIFICATION_MAX_RETRIES",
+          "SERVICE_API_PORT",
+          "SERVICE_API_HOST",
+          "NOTIFY_OWNER_MAP_JSON",
+          "NOTIFICATION_DEDUPE_WINDOW"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "_template": {
+        "config_file": "services/_template/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "REDIS_MAX_CONNECTIONS",
+          "HEALTH_CHECK_INTERVAL",
+          "FRONTEND_URL",
+          "ANALYSIS_SERVICE_URL",
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "TIMEOUT",
+          "HEALTH_ENABLED",
+          "MAX_MESSAGE_LENGTH",
+          "SERVER_WORKERS",
+          "REDIS_API_PORT",
+          "HEALTH_TIMEOUT",
+          "LOG_FORMAT",
+          "DEBUG",
+          "MAX_CONNECTIONS",
+          "LOG_STRUCTURED",
+          "ORCHESTRATOR_URL",
+          "REDIS_API_HOST",
+          "SERVER_API_HOST",
+          "REDIS_DB",
+          "LOG_CONSOLE",
+          "LOG_LEVEL",
+          "MAX_ITEMS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "redis": {
+        "config_file": "services/redis/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "REDIS_MAX_CONNECTIONS",
+          "HEALTH_CHECK_INTERVAL",
+          "FRONTEND_URL",
+          "ANALYSIS_SERVICE_URL",
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "TIMEOUT",
+          "HEALTH_ENABLED",
+          "MAX_MESSAGE_LENGTH",
+          "SERVER_WORKERS",
+          "REDIS_API_PORT",
+          "HEALTH_TIMEOUT",
+          "LOG_FORMAT",
+          "DEBUG",
+          "MAX_CONNECTIONS",
+          "LOG_STRUCTURED",
+          "ORCHESTRATOR_URL",
+          "REDIS_API_HOST",
+          "SERVER_API_HOST",
+          "REDIS_DB",
+          "LOG_CONSOLE",
+          "LOG_LEVEL",
+          "MAX_ITEMS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "code-analyzer": {
+        "config_file": "services/code-analyzer/config.yaml",
+        "env_vars": [
+          "DOC_STORE_URL",
+          "SERVICE_API_PORT",
+          "RATE_LIMIT_ENABLED"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "project-simulation": {
+        "config_file": "services/project-simulation/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "REDIS_MAX_CONNECTIONS",
+          "HEALTH_CHECK_INTERVAL",
+          "FRONTEND_URL",
+          "SUMMARIZER_HUB_URL",
+          "ANALYSIS_SERVICE_URL",
+          "ENVIRONMENT",
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "TIMEOUT",
+          "HEALTH_ENABLED",
+          "MAX_MESSAGE_LENGTH",
+          "SERVER_WORKERS",
+          "REDIS_API_PORT",
+          "HEALTH_TIMEOUT",
+          "LOG_FORMAT",
+          "DEBUG",
+          "MAX_CONNECTIONS",
+          "LOG_STRUCTURED",
+          "ORCHESTRATOR_URL",
+          "REDIS_API_HOST",
+          "SERVER_API_HOST",
+          "REDIS_DB",
+          "LOG_CONSOLE",
+          "LOG_LEVEL",
+          "MAX_ITEMS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "prompt_store": {
+        "config_file": "services/prompt_store/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "MAX_CONCURRENT_REQUESTS",
+          "HEALTH_CHECK_INTERVAL",
+          "ENABLE_AUTH",
+          "API_KEY_REQUIRED",
+          "ANALYSIS_SERVICE_URL",
+          "DOC_STORE_URL",
+          "DATABASE_PATH",
+          "HEALTH_ENABLED",
+          "ENABLE_CACHING",
+          "REQUEST_TIMEOUT",
+          "SERVER_WORKERS",
+          "ENABLE_VERSIONING",
+          "MAX_PROMPTS_PER_PAGE",
+          "MAX_BATCH_SIZE",
+          "MAX_VERSIONS_PER_PROMPT",
+          "HEALTH_TIMEOUT",
+          "DB_CONNECTION_POOL_SIZE",
+          "JWT_SECRET",
+          "DEBUG",
+          "MAX_PROMPT_LENGTH",
+          "LLM_GATEWAY_URL",
+          "CACHE_TTL_SECONDS",
+          "ORCHESTRATOR_URL",
+          "SERVER_API_HOST",
+          "DATABASE_TYPE"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "summarizer-hub": {
+        "config_file": "services/summarizer-hub/config.yaml",
+        "env_vars": [
+          "JIRA_BASE_URL",
+          "EXTERNAL_OPENAI_API_KEY",
+          "OPENAI_MODEL",
+          "LLM_GATEWAY_URL",
+          "ENVIRONMENT",
+          "EXTERNAL_ANTHROPIC_API_KEY",
+          "JIRA_USERNAME",
+          "ANTHROPIC_MODEL",
+          "BEDROCK_API_KEY",
+          "AWS_SESSION_TOKEN",
+          "OLLAMA_MODEL",
+          "EXTERNAL_AWS_ACCESS_KEY_ID",
+          "JIRA_API_TOKEN",
+          "BEDROCK_ENDPOINT",
+          "AWS_SECRET_ACCESS_KEY",
+          "JIRA_DEFAULT_PROJECT",
+          "AWS_REGION",
+          "OLLAMA_ENDPOINT",
+          "BEDROCK_REGION",
+          "BEDROCK_MODEL"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "llm-gateway": {
+        "config_file": "services/llm-gateway/config.yaml",
+        "env_vars": [
+          "PREMIUM_BURST_LIMIT",
+          "RATE_LIMIT_REQUESTS_PER_MINUTE",
+          "PROVIDER_HEALTH_CHECKS",
+          "GROK_API_KEY",
+          "GROK_COST_PER_TOKEN",
+          "ANTHROPIC_ENABLED",
+          "EXTERNAL_OPENAI_API_KEY",
+          "SSL_KEY_PATH",
+          "HEALTH_CHECK_INTERVAL",
+          "AUTO_CLASSIFY_SENSITIVE",
+          "RATE_LIMIT_REQUESTS_PER_HOUR",
+          "ENVIRONMENT",
+          "EXTERNAL_ANTHROPIC_API_KEY",
+          "GROK_ENABLED",
+          "SECURE_ONLY_MODELS",
+          "ENTERPRISE_REQUESTS_PER_MINUTE",
+          "METRICS_COST_TRACKING",
+          "REQUEST_VALIDATION",
+          "CACHE_DEFAULT_TTL",
+          "METRICS_PERFORMANCE_TRACKING",
+          "GROK_ENDPOINT",
+          "ENTERPRISE_COOLDOWN_SECONDS",
+          "METRICS_ERROR_TRACKING",
+          "METRICS_LOGGING",
+          "SSL_CERT_PATH",
+          "CACHE_REDIS_ENABLED",
+          "PREMIUM_COOLDOWN_SECONDS",
+          "OLLAMA_MODEL",
+          "FEATURE_CORS",
+          "METRICS_RETENTION_DAYS",
+          "CACHE_COMPRESSION",
+          "PREMIUM_REQUESTS_PER_MINUTE",
+          "BEDROCK_ENDPOINT",
+          "OLLAMA_ENDPOINT",
+          "ENTERPRISE_TOKENS_PER_MINUTE",
+          "SENSITIVITY_THRESHOLD",
+          "HEALTH_TIMEOUT",
+          "LOG_FORMAT",
+          "SSL_ENABLED",
+          "OPENAI_MODEL",
+          "ANTHROPIC_COST_PER_TOKEN",
+          "OPENAI_ENABLED",
+          "ALL_PROVIDERS",
+          "ENTERPRISE_BURST_LIMIT",
+          "ENTERPRISE_REQUESTS_PER_HOUR",
+          "CORS_ORIGINS",
+          "CACHE_CLEANUP_INTERVAL",
+          "RATE_LIMIT_BURST_LIMIT",
+          "CACHE_MAX_SIZE",
+          "REQUEST_LOGGING",
+          "OPENAI_ENDPOINT",
+          "DEBUG_MODE",
+          "HEALTH_RETRIES",
+          "RATE_LIMIT_TOKENS_PER_MINUTE",
+          "GROK_MODEL",
+          "MOCK_PROVIDERS",
+          "REDIS_API_HOST",
+          "ANTHROPIC_MODEL",
+          "BEDROCK_API_KEY",
+          "PREMIUM_TOKENS_PER_MINUTE",
+          "LOG_LEVEL",
+          "RESPONSE_LOGGING",
+          "BEDROCK_ENABLED",
+          "GROK_TIMEOUT",
+          "ANTHROPIC_ENDPOINT",
+          "RESPONSE_VALIDATION",
+          "OPENAI_COST_PER_TOKEN",
+          "METRICS_DETAILED_LOGGING",
+          "RATE_LIMIT_COOLDOWN_SECONDS",
+          "PREMIUM_REQUESTS_PER_HOUR",
+          "BEDROCK_MODEL",
+          "OPENAI_TIMEOUT",
+          "ANTHROPIC_TIMEOUT"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "secure-analyzer": {
+        "config_file": "services/secure-analyzer/config.yaml",
+        "env_vars": [
+          "ALL_PROVIDERS",
+          "SUMMARIZER_HUB_URL",
+          "SECURE_ONLY_MODELS",
+          "TESTING",
+          "PYTEST_CURRENT_TEST",
+          "SECURE_ANALYZER_CIRCUIT_BREAKER_MAX_FAILURES",
+          "SECURE_ANALYZER_CIRCUIT_BREAKER_TIMEOUT"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "project-planning-service": {
+        "config_file": "services/project-planning-service/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "REDIS_MAX_CONNECTIONS",
+          "HEALTH_CHECK_INTERVAL",
+          "FRONTEND_URL",
+          "ANALYSIS_SERVICE_URL",
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "TIMEOUT",
+          "HEALTH_ENABLED",
+          "MAX_MESSAGE_LENGTH",
+          "SERVER_WORKERS",
+          "REDIS_API_PORT",
+          "HEALTH_TIMEOUT",
+          "LOG_FORMAT",
+          "DEBUG",
+          "MAX_CONNECTIONS",
+          "LOG_STRUCTURED",
+          "ORCHESTRATOR_URL",
+          "REDIS_API_HOST",
+          "SERVER_API_HOST",
+          "REDIS_DB",
+          "LOG_CONSOLE",
+          "LOG_LEVEL",
+          "MAX_ITEMS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "__pycache__": {
+        "config_file": "services/__pycache__",
+        "env_vars": [],
+        "issues": [
+          "Missing 'server' configuration section",
+          "No docker-compose configuration found"
+        ],
+        "has_docker_config": false
+      },
+      "cli": {
+        "config_file": "services/cli/config.yaml",
+        "env_vars": [
+          "GITHUB_OWNER",
+          "JIRA_BASE_URL",
+          "CONFLUENCE_BASE_URL",
+          "USER",
+          "ANALYSIS_SERVICE_URL",
+          "GITHUB_API_BASE",
+          "ORCHESTRATOR_URL",
+          "JIRA_EMAIL",
+          "PROMPT_STORE_URL",
+          "CONFLUENCE_EMAIL"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "external-service-store": {
+        "config_file": "services/external-service-store/config.yaml",
+        "env_vars": [
+          "SERVER_API_HOST",
+          "SERVER_TIMEOUT",
+          "SERVICE_API_HOST",
+          "DEBUG",
+          "SERVICE_API_PORT",
+          "SERVER_WORKERS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "data-services-dashboard": {
+        "config_file": "services/data-services-dashboard/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "REDIS_MAX_CONNECTIONS",
+          "HEALTH_CHECK_INTERVAL",
+          "FRONTEND_URL",
+          "ANALYSIS_SERVICE_URL",
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "TIMEOUT",
+          "HEALTH_ENABLED",
+          "MAX_MESSAGE_LENGTH",
+          "SERVER_WORKERS",
+          "REDIS_API_PORT",
+          "HEALTH_TIMEOUT",
+          "LOG_FORMAT",
+          "DEBUG",
+          "MAX_CONNECTIONS",
+          "LOG_STRUCTURED",
+          "ORCHESTRATOR_URL",
+          "REDIS_API_HOST",
+          "SERVER_API_HOST",
+          "REDIS_DB",
+          "LOG_CONSOLE",
+          "LOG_LEVEL",
+          "MAX_ITEMS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "architecture-digitizer": {
+        "config_file": "services/architecture-digitizer/config.yaml",
+        "env_vars": [
+          "RATE_LIMIT_REQUESTS_PER_MINUTE",
+          "CACHE_TTL_SECONDS",
+          "FIGMA_BASE_URL",
+          "RETRY_BACKOFF_SECONDS",
+          "MAX_RETRIES",
+          "DEFAULT_COMPONENT_TYPE",
+          "CONFLUENCE_BASE_URL_TEMPLATE",
+          "SUPAPI_PORTED_SYSTEMS",
+          "API_TIMEOUT_SECONDS",
+          "LUCID_BASE_URL",
+          "CACHE_ENABLED",
+          "MIRO_BASE_URL"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "simulation-dashboard": {
+        "config_file": "services/simulation-dashboard/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "REDIS_MAX_CONNECTIONS",
+          "HEALTH_CHECK_INTERVAL",
+          "FRONTEND_URL",
+          "ANALYSIS_SERVICE_URL",
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "TIMEOUT",
+          "HEALTH_ENABLED",
+          "MAX_MESSAGE_LENGTH",
+          "SERVER_WORKERS",
+          "REDIS_API_PORT",
+          "HEALTH_TIMEOUT",
+          "LOG_FORMAT",
+          "DEBUG",
+          "MAX_CONNECTIONS",
+          "LOG_STRUCTURED",
+          "ORCHESTRATOR_URL",
+          "REDIS_API_HOST",
+          "SERVER_API_HOST",
+          "REDIS_DB",
+          "LOG_CONSOLE",
+          "LOG_LEVEL",
+          "MAX_ITEMS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "analysis-service": {
+        "config_file": "services/analysis-service/config.yaml",
+        "env_vars": [
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "HIGH_PRIORITY_SCORE",
+          "MAX_FINDINGS_LIMIT",
+          "DEFAULT_FINDINGS_LIMIT",
+          "MAX_MESSAGE_LENGTH",
+          "MAX_LINES_ADDED_THRESHOLD",
+          "WORKFLOW_PROCESSING_TIMEOUT",
+          "TESTING",
+          "FINDINGS_RETRIEVAL_TIMEOUT",
+          "MAX_DOCUMENT_ID_LENGTH",
+          "ANALYSIS_CONFIDENCE_THRESHOLD",
+          "ANALYSIS_PROCESSING_TIMEOUT",
+          "HEALTH_SCORE_THRESHOLD",
+          "ORCHESTRATOR_URL",
+          "PROMPT_STORE_URL",
+          "MEDIUM_PRIORITY_SCORE",
+          "SERVICE_CLIENT_TIMEOUT",
+          "DRIFT_OVERLAP_THRESHOLD",
+          "QUALITY_SCORE_WEIGHT",
+          "INTERPRETER_URL",
+          "CRITICAL_SCORE"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "memory-agent": {
+        "config_file": "services/memory-agent/config.yaml",
+        "env_vars": [
+          "ENVIRONMENT",
+          "REDIS_URL",
+          "MEMORY_TTL_SECONDS",
+          "MEMORY_AGENT_API_HOST",
+          "MEMORY_MAX_ITEMS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "discovery-agent": {
+        "config_file": "services/discovery-agent/config.yaml",
+        "env_vars": [
+          "HEALTH_CHECK_TIMEOUT",
+          "SERVICE_API_PORT",
+          "SERVICE_DISCOVERY_TIMEOUT",
+          "ENDPOINT_VALIDATION_TIMEOUT",
+          "TOOL_REGISTRATION_TIMEOUT",
+          "ORCHESTRATOR_URL",
+          "SERVER_API_HOST"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "github-mcp": {
+        "config_file": "services/github-mcp/config.yaml",
+        "env_vars": [
+          "GITHUB_DYNAMIC_TOOLSETS",
+          "GITHUB_READ_ONLY",
+          "UPSTREAM_TIMEOUT_SECONDS",
+          "USE_OFFICIAL_GH_MCP",
+          "GITHUB_API_HOST",
+          "GITHUB_MOCK",
+          "GITHUB_TOOLSETS",
+          "GITHUB_PERSONAL_ACCESS_TOKEN",
+          "OFFICIAL_GH_MCP_BASE_URL"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "user-store": {
+        "config_file": "services/user-store/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "REPOSITORY_TYPE",
+          "JWT_SECRET",
+          "DEBUG",
+          "REPOSITORY_CONNECTION_STRING",
+          "SERVICE_API_PORT",
+          "SERVER_WORKERS",
+          "JWT_TOKEN_EXPIRY_HOURS",
+          "SERVICE_API_HOST",
+          "SERVER_API_HOST"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "mock-data-generator": {
+        "config_file": "services/mock-data-generator/config.yaml",
+        "env_vars": [
+          "MAX_TOKENS",
+          "RETENTION_DAYS",
+          "SERVER_TIMEOUT",
+          "GENERATION_TIMEOUT",
+          "DEBUG",
+          "AUTO_PERSIST",
+          "LLM_GATEWAY_URL",
+          "MOCK_DATA_GENERATOR_API_HOST",
+          "SERVER_WORKERS",
+          "ENVIRONMENT",
+          "DOC_STORE_URL",
+          "DEFAULT_LLM_PROVIDER",
+          "SERVER_API_HOST"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "ollama": {
+        "config_file": "services/ollama/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "REDIS_MAX_CONNECTIONS",
+          "HEALTH_CHECK_INTERVAL",
+          "FRONTEND_URL",
+          "ANALYSIS_SERVICE_URL",
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "TIMEOUT",
+          "HEALTH_ENABLED",
+          "MAX_MESSAGE_LENGTH",
+          "SERVER_WORKERS",
+          "REDIS_API_PORT",
+          "HEALTH_TIMEOUT",
+          "LOG_FORMAT",
+          "DEBUG",
+          "MAX_CONNECTIONS",
+          "LOG_STRUCTURED",
+          "ORCHESTRATOR_URL",
+          "REDIS_API_HOST",
+          "SERVER_API_HOST",
+          "REDIS_DB",
+          "LOG_CONSOLE",
+          "LOG_LEVEL",
+          "MAX_ITEMS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "doc_store": {
+        "config_file": "services/doc_store/config.yaml",
+        "env_vars": [
+          "DOCSTORE_DB",
+          "DOCSTORE_CONNECTION_POOL_SIZE",
+          "TESTING"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "unified-api-dashboard": {
+        "config_file": "services/unified-api-dashboard/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "REDIS_MAX_CONNECTIONS",
+          "HEALTH_CHECK_INTERVAL",
+          "FRONTEND_URL",
+          "ANALYSIS_SERVICE_URL",
+          "ENVIRONMENT",
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "TIMEOUT",
+          "HEALTH_ENABLED",
+          "MAX_MESSAGE_LENGTH",
+          "SERVICE_API_PORT",
+          "SERVER_WORKERS",
+          "REDIS_API_PORT",
+          "SERVICE_API_HOST",
+          "HEALTH_TIMEOUT",
+          "LOG_FORMAT",
+          "DEBUG",
+          "MAX_CONNECTIONS",
+          "LOG_STRUCTURED",
+          "ORCHESTRATOR_URL",
+          "REDIS_API_HOST",
+          "SERVER_API_HOST",
+          "REDIS_DB",
+          "LOG_CONSOLE",
+          "LOG_LEVEL",
+          "MAX_ITEMS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "orchestrator": {
+        "config_file": "services/orchestrator/config.yaml",
+        "env_vars": [
+          "CONFLUENCE_AGENT_URL",
+          "REAPI_PORTING_URL",
+          "GITHUB_AGENT_URL",
+          "SUMMARIZER_HUB_URL",
+          "JIRA_AGENT_URL",
+          "SWAGGER_AGENT_URL",
+          "CONSISTENCY_ENGINE_URL"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      },
+      "bedrock-proxy": {
+        "config_file": "services/bedrock-proxy/config.yaml",
+        "env_vars": [
+          "SERVER_TIMEOUT",
+          "REDIS_MAX_CONNECTIONS",
+          "HEALTH_CHECK_INTERVAL",
+          "FRONTEND_URL",
+          "ANALYSIS_SERVICE_URL",
+          "SOURCE_AGENT_URL",
+          "DOC_STORE_URL",
+          "TIMEOUT",
+          "HEALTH_ENABLED",
+          "MAX_MESSAGE_LENGTH",
+          "SERVER_WORKERS",
+          "REDIS_API_PORT",
+          "HEALTH_TIMEOUT",
+          "LOG_FORMAT",
+          "DEBUG",
+          "MAX_CONNECTIONS",
+          "LOG_STRUCTURED",
+          "ORCHESTRATOR_URL",
+          "REDIS_API_HOST",
+          "SERVER_API_HOST",
+          "REDIS_DB",
+          "LOG_CONSOLE",
+          "LOG_LEVEL",
+          "MAX_ITEMS"
+        ],
+        "issues": [],
+        "has_docker_config": true
+      }
+    },
+    "patterns": {
+      "yaml_config": [
+        "interpreter",
+        "log-collector",
+        "source-agent",
+        "frontend",
+        "notification-service",
+        "_template",
+        "redis",
+        "code-analyzer",
+        "project-simulation",
+        "prompt_store",
+        "summarizer-hub",
+        "llm-gateway",
+        "secure-analyzer",
+        "project-planning-service",
+        "__pycache__",
+        "cli",
+        "external-service-store",
+        "data-services-dashboard",
+        "architecture-digitizer",
+        "simulation-dashboard",
+        "analysis-service",
+        "memory-agent",
+        "discovery-agent",
+        "github-mcp",
+        "user-store",
+        "mock-data-generator",
+        "ollama",
+        "doc_store",
+        "unified-api-dashboard",
+        "orchestrator",
+        "bedrock-proxy"
+      ],
+      "uses_env_vars": [
+        "interpreter",
+        "log-collector",
+        "source-agent",
+        "frontend",
+        "notification-service",
+        "_template",
+        "redis",
+        "code-analyzer",
+        "project-simulation",
+        "prompt_store",
+        "summarizer-hub",
+        "llm-gateway",
+        "secure-analyzer",
+        "project-planning-service",
+        "cli",
+        "external-service-store",
+        "data-services-dashboard",
+        "architecture-digitizer",
+        "simulation-dashboard",
+        "analysis-service",
+        "memory-agent",
+        "discovery-agent",
+        "github-mcp",
+        "user-store",
+        "mock-data-generator",
+        "ollama",
+        "doc_store",
+        "unified-api-dashboard",
+        "orchestrator",
+        "bedrock-proxy"
+      ],
+      "has_docker_compose": [
+        "interpreter",
+        "log-collector",
+        "source-agent",
+        "frontend",
+        "notification-service",
+        "_template",
+        "redis",
+        "code-analyzer",
+        "project-simulation",
+        "prompt_store",
+        "summarizer-hub",
+        "llm-gateway",
+        "secure-analyzer",
+        "project-planning-service",
+        "cli",
+        "external-service-store",
+        "data-services-dashboard",
+        "architecture-digitizer",
+        "simulation-dashboard",
+        "analysis-service",
+        "memory-agent",
+        "discovery-agent",
+        "github-mcp",
+        "user-store",
+        "mock-data-generator",
+        "ollama",
+        "doc_store",
+        "unified-api-dashboard",
+        "orchestrator",
+        "bedrock-proxy"
+      ],
+      "no_env_vars": [
+        "__pycache__"
+      ],
+      "no_docker_compose": [
+        "__pycache__"
+      ]
+    },
+    "inconsistencies": [
+      "Port 8080 used by multiple services: _template, redis",
+      "Port 8080 used by multiple services: _template, project-planning-service",
+      "Port 8080 used by multiple services: _template, data-services-dashboard",
+      "Port 8080 used by multiple services: _template, ollama",
+      "Multiple environment variable prefixes found: ['PREMIUM', 'REAPI_PORTING', 'ANTHROPIC', 'REPOSITORY', 'ENABLE', 'FIGMA', 'SUMMARIZER', 'MISC', 'JIRA', 'ARCHITECTURE', 'DOC', 'METRICS', 'CONFLUENCE', 'DEFAULT', 'UPSTREAM', 'NOTIFICATION', 'MAX', 'SERVER', 'REDIS', 'SERVICE', 'ENTERPRISE', 'FINDINGS', 'GITHUB', 'FRONTEND', 'CACHE', 'LOG', 'PROMPT', 'MOCK', 'SECURE', 'RESPONSE', 'MEMORY', 'DRIFT', 'BEDROCK', 'INTERPRETER', 'ENDPOINT', 'RETENTION', 'GROK', 'HEALTH', 'API', 'RATE', 'CODE', 'NOTIFY', 'OLLAMA', 'USER', 'USE', 'AWS', 'WORKFLOW', 'OFFICIAL', 'JWT', 'OPENAI', 'RETRY', 'LLM', 'ANALYSIS', 'REQUEST', 'TOOL', 'CONSISTENCY', 'DISCOVERY', 'QUALITY', 'PROVIDER', 'HIGH', 'DOCSTORE', 'SENSITIVITY', 'DB', 'UNIFIED', 'ALL', 'AUTO', 'CORS', 'ORCHESTRATOR', 'DATABASE', 'CRITICAL', 'PYTEST', 'SWAGGER', 'SSL', 'SUPAPI_PORTED', 'SOURCE', 'LUCID', 'SIMULATION', 'DEBUG', 'MIRO', 'EXTERNAL', 'MEDIUM', 'GENERATION', 'PROJECT']"
+    ],
+    "env_var_usage": {
+      "ANALYSIS_SERVICE_URL": [
+        "interpreter",
+        "log-collector",
+        "_template",
+        "redis",
+        "project-simulation",
+        "prompt_store",
+        "project-planning-service",
+        "cli",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "INTERPRETER_SERVICE_API_PORT": [
+        "interpreter"
+      ],
+      "INTERPRETER_SERVICE_API_HOST": [
+        "interpreter"
+      ],
+      "DOC_STORE_URL": [
+        "interpreter",
+        "log-collector",
+        "frontend",
+        "_template",
+        "redis",
+        "code-analyzer",
+        "project-simulation",
+        "prompt_store",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "analysis-service",
+        "mock-data-generator",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "ORCHESTRATOR_URL": [
+        "interpreter",
+        "log-collector",
+        "frontend",
+        "_template",
+        "redis",
+        "project-simulation",
+        "prompt_store",
+        "project-planning-service",
+        "cli",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "analysis-service",
+        "discovery-agent",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "PROMPT_STORE_URL": [
+        "interpreter",
+        "log-collector",
+        "cli",
+        "analysis-service"
+      ],
+      "INTERPRETER_API_PORT": [
+        "interpreter"
+      ],
+      "MAX_LOG_SIZE_MB": [
+        "log-collector"
+      ],
+      "FRONTEND_URL": [
+        "log-collector",
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "SUMMARIZER_HUB_URL": [
+        "log-collector",
+        "frontend",
+        "project-simulation",
+        "secure-analyzer",
+        "orchestrator"
+      ],
+      "ARCHITECTURE_DIGITIZER_URL": [
+        "log-collector"
+      ],
+      "CODE_ANALYZER_URL": [
+        "log-collector"
+      ],
+      "SOURCE_AGENT_URL": [
+        "log-collector",
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "analysis-service",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "OLLAMA_URL": [
+        "log-collector"
+      ],
+      "USER_STORE_URL": [
+        "log-collector"
+      ],
+      "BEDROCK_PROXY_URL": [
+        "log-collector"
+      ],
+      "MEMORY_AGENT_URL": [
+        "log-collector"
+      ],
+      "REDIS_URL": [
+        "log-collector",
+        "memory-agent"
+      ],
+      "ENABLE_HEALTH_SAFEGUARDS": [
+        "log-collector"
+      ],
+      "UNIFIED_API_DASHBOARD_URL": [
+        "log-collector"
+      ],
+      "LLM_GATEWAY_URL": [
+        "log-collector",
+        "prompt_store",
+        "summarizer-hub",
+        "mock-data-generator"
+      ],
+      "LOG_RETENTION_DAYS": [
+        "log-collector"
+      ],
+      "NOTIFICATION_SERVICE_URL": [
+        "log-collector"
+      ],
+      "SIMULATION_DASHBOARD_URL": [
+        "log-collector"
+      ],
+      "EXTERNAL_SERVICE_STORE_URL": [
+        "log-collector"
+      ],
+      "SECURE_ANALYZER_URL": [
+        "log-collector"
+      ],
+      "DISCOVERY_AGENT_URL": [
+        "log-collector"
+      ],
+      "GITHUB_MCP_URL": [
+        "log-collector"
+      ],
+      "PROJECT_SIMULATION_URL": [
+        "log-collector"
+      ],
+      "SERVICE_HEALTH_CHECK_INTERVAL": [
+        "log-collector"
+      ],
+      "INTERPRETER_URL": [
+        "log-collector",
+        "analysis-service"
+      ],
+      "MOCK_DATA_GENERATOR_URL": [
+        "log-collector"
+      ],
+      "USE_GITHUB_MCP": [
+        "source-agent"
+      ],
+      "SERVICE_API_PORT": [
+        "source-agent",
+        "notification-service",
+        "code-analyzer",
+        "external-service-store",
+        "discovery-agent",
+        "user-store",
+        "unified-api-dashboard"
+      ],
+      "REAPI_PORTING_URL": [
+        "frontend",
+        "orchestrator"
+      ],
+      "FRONTEND_SERVICE_API_PORT": [
+        "frontend"
+      ],
+      "ENVIRONMENT": [
+        "frontend",
+        "project-simulation",
+        "summarizer-hub",
+        "llm-gateway",
+        "memory-agent",
+        "mock-data-generator",
+        "unified-api-dashboard"
+      ],
+      "CONSISTENCY_ENGINE_URL": [
+        "frontend",
+        "orchestrator"
+      ],
+      "NOTIFICATION_CACHE_TTL": [
+        "notification-service"
+      ],
+      "NOTIFY_OWNER_MAP_FILE": [
+        "notification-service"
+      ],
+      "NOTIFICATION_MAX_RETRIES": [
+        "notification-service"
+      ],
+      "SERVICE_API_HOST": [
+        "notification-service",
+        "external-service-store",
+        "user-store",
+        "unified-api-dashboard"
+      ],
+      "NOTIFY_OWNER_MAP_JSON": [
+        "notification-service"
+      ],
+      "NOTIFICATION_DEDUPE_WINDOW": [
+        "notification-service"
+      ],
+      "SERVER_TIMEOUT": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "prompt_store",
+        "project-planning-service",
+        "external-service-store",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "user-store",
+        "mock-data-generator",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "REDIS_MAX_CONNECTIONS": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "HEALTH_CHECK_INTERVAL": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "prompt_store",
+        "llm-gateway",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "TIMEOUT": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "HEALTH_ENABLED": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "prompt_store",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "MAX_MESSAGE_LENGTH": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "analysis-service",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "SERVER_WORKERS": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "prompt_store",
+        "project-planning-service",
+        "external-service-store",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "user-store",
+        "mock-data-generator",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "REDIS_API_PORT": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "HEALTH_TIMEOUT": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "prompt_store",
+        "llm-gateway",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "LOG_FORMAT": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "llm-gateway",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "DEBUG": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "prompt_store",
+        "project-planning-service",
+        "external-service-store",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "user-store",
+        "mock-data-generator",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "MAX_CONNECTIONS": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "LOG_STRUCTURED": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "REDIS_API_HOST": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "llm-gateway",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "SERVER_API_HOST": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "prompt_store",
+        "project-planning-service",
+        "external-service-store",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "discovery-agent",
+        "user-store",
+        "mock-data-generator",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "REDIS_DB": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "LOG_CONSOLE": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "LOG_LEVEL": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "llm-gateway",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "MAX_ITEMS": [
+        "_template",
+        "redis",
+        "project-simulation",
+        "project-planning-service",
+        "data-services-dashboard",
+        "simulation-dashboard",
+        "ollama",
+        "unified-api-dashboard",
+        "bedrock-proxy"
+      ],
+      "RATE_LIMIT_ENABLED": [
+        "code-analyzer"
+      ],
+      "MAX_CONCURRENT_REQUESTS": [
+        "prompt_store"
+      ],
+      "ENABLE_AUTH": [
+        "prompt_store"
+      ],
+      "API_KEY_REQUIRED": [
+        "prompt_store"
+      ],
+      "DATABASE_PATH": [
+        "prompt_store"
+      ],
+      "ENABLE_CACHING": [
+        "prompt_store"
+      ],
+      "REQUEST_TIMEOUT": [
+        "prompt_store"
+      ],
+      "ENABLE_VERSIONING": [
+        "prompt_store"
+      ],
+      "MAX_PROMPTS_PER_PAGE": [
+        "prompt_store"
+      ],
+      "MAX_BATCH_SIZE": [
+        "prompt_store"
+      ],
+      "MAX_VERSIONS_PER_PROMPT": [
+        "prompt_store"
+      ],
+      "DB_CONNECTION_POOL_SIZE": [
+        "prompt_store"
+      ],
+      "JWT_SECRET": [
+        "prompt_store",
+        "user-store"
+      ],
+      "MAX_PROMPT_LENGTH": [
+        "prompt_store"
+      ],
+      "CACHE_TTL_SECONDS": [
+        "prompt_store",
+        "architecture-digitizer"
+      ],
+      "DATABASE_TYPE": [
+        "prompt_store"
+      ],
+      "JIRA_BASE_URL": [
+        "summarizer-hub",
+        "cli"
+      ],
+      "EXTERNAL_OPENAI_API_KEY": [
+        "summarizer-hub",
+        "llm-gateway"
+      ],
+      "OPENAI_MODEL": [
+        "summarizer-hub",
+        "llm-gateway"
+      ],
+      "EXTERNAL_ANTHROPIC_API_KEY": [
+        "summarizer-hub",
+        "llm-gateway"
+      ],
+      "JIRA_USERNAME": [
+        "summarizer-hub"
+      ],
+      "ANTHROPIC_MODEL": [
+        "summarizer-hub",
+        "llm-gateway"
+      ],
+      "BEDROCK_API_KEY": [
+        "summarizer-hub",
+        "llm-gateway"
+      ],
+      "AWS_SESSION_TOKEN": [
+        "summarizer-hub"
+      ],
+      "OLLAMA_MODEL": [
+        "summarizer-hub",
+        "llm-gateway"
+      ],
+      "EXTERNAL_AWS_ACCESS_KEY_ID": [
+        "summarizer-hub"
+      ],
+      "JIRA_API_TOKEN": [
+        "summarizer-hub"
+      ],
+      "BEDROCK_ENDPOINT": [
+        "summarizer-hub",
+        "llm-gateway"
+      ],
+      "AWS_SECRET_ACCESS_KEY": [
+        "summarizer-hub"
+      ],
+      "JIRA_DEFAULT_PROJECT": [
+        "summarizer-hub"
+      ],
+      "AWS_REGION": [
+        "summarizer-hub"
+      ],
+      "OLLAMA_ENDPOINT": [
+        "summarizer-hub",
+        "llm-gateway"
+      ],
+      "BEDROCK_REGION": [
+        "summarizer-hub"
+      ],
+      "BEDROCK_MODEL": [
+        "summarizer-hub",
+        "llm-gateway"
+      ],
+      "PREMIUM_BURST_LIMIT": [
+        "llm-gateway"
+      ],
+      "RATE_LIMIT_REQUESTS_PER_MINUTE": [
+        "llm-gateway",
+        "architecture-digitizer"
+      ],
+      "PROVIDER_HEALTH_CHECKS": [
+        "llm-gateway"
+      ],
+      "GROK_API_KEY": [
+        "llm-gateway"
+      ],
+      "GROK_COST_PER_TOKEN": [
+        "llm-gateway"
+      ],
+      "ANTHROPIC_ENABLED": [
+        "llm-gateway"
+      ],
+      "SSL_KEY_PATH": [
+        "llm-gateway"
+      ],
+      "AUTO_CLASSIFY_SENSITIVE": [
+        "llm-gateway"
+      ],
+      "RATE_LIMIT_REQUESTS_PER_HOUR": [
+        "llm-gateway"
+      ],
+      "GROK_ENABLED": [
+        "llm-gateway"
+      ],
+      "SECURE_ONLY_MODELS": [
+        "llm-gateway",
+        "secure-analyzer"
+      ],
+      "ENTERPRISE_REQUESTS_PER_MINUTE": [
+        "llm-gateway"
+      ],
+      "METRICS_COST_TRACKING": [
+        "llm-gateway"
+      ],
+      "REQUEST_VALIDATION": [
+        "llm-gateway"
+      ],
+      "CACHE_DEFAULT_TTL": [
+        "llm-gateway"
+      ],
+      "METRICS_PERFORMANCE_TRACKING": [
+        "llm-gateway"
+      ],
+      "GROK_ENDPOINT": [
+        "llm-gateway"
+      ],
+      "ENTERPRISE_COOLDOWN_SECONDS": [
+        "llm-gateway"
+      ],
+      "METRICS_ERROR_TRACKING": [
+        "llm-gateway"
+      ],
+      "METRICS_LOGGING": [
+        "llm-gateway"
+      ],
+      "SSL_CERT_PATH": [
+        "llm-gateway"
+      ],
+      "CACHE_REDIS_ENABLED": [
+        "llm-gateway"
+      ],
+      "PREMIUM_COOLDOWN_SECONDS": [
+        "llm-gateway"
+      ],
+      "FEATURE_CORS": [
+        "llm-gateway"
+      ],
+      "METRICS_RETENTION_DAYS": [
+        "llm-gateway"
+      ],
+      "CACHE_COMPRESSION": [
+        "llm-gateway"
+      ],
+      "PREMIUM_REQUESTS_PER_MINUTE": [
+        "llm-gateway"
+      ],
+      "ENTERPRISE_TOKENS_PER_MINUTE": [
+        "llm-gateway"
+      ],
+      "SENSITIVITY_THRESHOLD": [
+        "llm-gateway"
+      ],
+      "SSL_ENABLED": [
+        "llm-gateway"
+      ],
+      "ANTHROPIC_COST_PER_TOKEN": [
+        "llm-gateway"
+      ],
+      "OPENAI_ENABLED": [
+        "llm-gateway"
+      ],
+      "ALL_PROVIDERS": [
+        "llm-gateway",
+        "secure-analyzer"
+      ],
+      "ENTERPRISE_BURST_LIMIT": [
+        "llm-gateway"
+      ],
+      "ENTERPRISE_REQUESTS_PER_HOUR": [
+        "llm-gateway"
+      ],
+      "CORS_ORIGINS": [
+        "llm-gateway"
+      ],
+      "CACHE_CLEANUP_INTERVAL": [
+        "llm-gateway"
+      ],
+      "RATE_LIMIT_BURST_LIMIT": [
+        "llm-gateway"
+      ],
+      "CACHE_MAX_SIZE": [
+        "llm-gateway"
+      ],
+      "REQUEST_LOGGING": [
+        "llm-gateway"
+      ],
+      "OPENAI_ENDPOINT": [
+        "llm-gateway"
+      ],
+      "DEBUG_MODE": [
+        "llm-gateway"
+      ],
+      "HEALTH_RETRIES": [
+        "llm-gateway"
+      ],
+      "RATE_LIMIT_TOKENS_PER_MINUTE": [
+        "llm-gateway"
+      ],
+      "GROK_MODEL": [
+        "llm-gateway"
+      ],
+      "MOCK_PROVIDERS": [
+        "llm-gateway"
+      ],
+      "PREMIUM_TOKENS_PER_MINUTE": [
+        "llm-gateway"
+      ],
+      "RESPONSE_LOGGING": [
+        "llm-gateway"
+      ],
+      "BEDROCK_ENABLED": [
+        "llm-gateway"
+      ],
+      "GROK_TIMEOUT": [
+        "llm-gateway"
+      ],
+      "ANTHROPIC_ENDPOINT": [
+        "llm-gateway"
+      ],
+      "RESPONSE_VALIDATION": [
+        "llm-gateway"
+      ],
+      "OPENAI_COST_PER_TOKEN": [
+        "llm-gateway"
+      ],
+      "METRICS_DETAILED_LOGGING": [
+        "llm-gateway"
+      ],
+      "RATE_LIMIT_COOLDOWN_SECONDS": [
+        "llm-gateway"
+      ],
+      "PREMIUM_REQUESTS_PER_HOUR": [
+        "llm-gateway"
+      ],
+      "OPENAI_TIMEOUT": [
+        "llm-gateway"
+      ],
+      "ANTHROPIC_TIMEOUT": [
+        "llm-gateway"
+      ],
+      "TESTING": [
+        "secure-analyzer",
+        "analysis-service",
+        "doc_store"
+      ],
+      "PYTEST_CURRENT_TEST": [
+        "secure-analyzer"
+      ],
+      "SECURE_ANALYZER_CIRCUIT_BREAKER_MAX_FAILURES": [
+        "secure-analyzer"
+      ],
+      "SECURE_ANALYZER_CIRCUIT_BREAKER_TIMEOUT": [
+        "secure-analyzer"
+      ],
+      "GITHUB_OWNER": [
+        "cli"
+      ],
+      "CONFLUENCE_BASE_URL": [
+        "cli"
+      ],
+      "USER": [
+        "cli"
+      ],
+      "GITHUB_API_BASE": [
+        "cli"
+      ],
+      "JIRA_EMAIL": [
+        "cli"
+      ],
+      "CONFLUENCE_EMAIL": [
+        "cli"
+      ],
+      "FIGMA_BASE_URL": [
+        "architecture-digitizer"
+      ],
+      "RETRY_BACKOFF_SECONDS": [
+        "architecture-digitizer"
+      ],
+      "MAX_RETRIES": [
+        "architecture-digitizer"
+      ],
+      "DEFAULT_COMPONENT_TYPE": [
+        "architecture-digitizer"
+      ],
+      "CONFLUENCE_BASE_URL_TEMPLATE": [
+        "architecture-digitizer"
+      ],
+      "SUPAPI_PORTED_SYSTEMS": [
+        "architecture-digitizer"
+      ],
+      "API_TIMEOUT_SECONDS": [
+        "architecture-digitizer"
+      ],
+      "LUCID_BASE_URL": [
+        "architecture-digitizer"
+      ],
+      "CACHE_ENABLED": [
+        "architecture-digitizer"
+      ],
+      "MIRO_BASE_URL": [
+        "architecture-digitizer"
+      ],
+      "HIGH_PRIORITY_SCORE": [
+        "analysis-service"
+      ],
+      "MAX_FINDINGS_LIMIT": [
+        "analysis-service"
+      ],
+      "DEFAULT_FINDINGS_LIMIT": [
+        "analysis-service"
+      ],
+      "MAX_LINES_ADDED_THRESHOLD": [
+        "analysis-service"
+      ],
+      "WORKFLOW_PROCESSING_TIMEOUT": [
+        "analysis-service"
+      ],
+      "FINDINGS_RETRIEVAL_TIMEOUT": [
+        "analysis-service"
+      ],
+      "MAX_DOCUMENT_ID_LENGTH": [
+        "analysis-service"
+      ],
+      "ANALYSIS_CONFIDENCE_THRESHOLD": [
+        "analysis-service"
+      ],
+      "ANALYSIS_PROCESSING_TIMEOUT": [
+        "analysis-service"
+      ],
+      "HEALTH_SCORE_THRESHOLD": [
+        "analysis-service"
+      ],
+      "MEDIUM_PRIORITY_SCORE": [
+        "analysis-service"
+      ],
+      "SERVICE_CLIENT_TIMEOUT": [
+        "analysis-service"
+      ],
+      "DRIFT_OVERLAP_THRESHOLD": [
+        "analysis-service"
+      ],
+      "QUALITY_SCORE_WEIGHT": [
+        "analysis-service"
+      ],
+      "CRITICAL_SCORE": [
+        "analysis-service"
+      ],
+      "MEMORY_TTL_SECONDS": [
+        "memory-agent"
+      ],
+      "MEMORY_AGENT_API_HOST": [
+        "memory-agent"
+      ],
+      "MEMORY_MAX_ITEMS": [
+        "memory-agent"
+      ],
+      "HEALTH_CHECK_TIMEOUT": [
+        "discovery-agent"
+      ],
+      "SERVICE_DISCOVERY_TIMEOUT": [
+        "discovery-agent"
+      ],
+      "ENDPOINT_VALIDATION_TIMEOUT": [
+        "discovery-agent"
+      ],
+      "TOOL_REGISTRATION_TIMEOUT": [
+        "discovery-agent"
+      ],
+      "GITHUB_DYNAMIC_TOOLSETS": [
+        "github-mcp"
+      ],
+      "GITHUB_READ_ONLY": [
+        "github-mcp"
+      ],
+      "UPSTREAM_TIMEOUT_SECONDS": [
+        "github-mcp"
+      ],
+      "USE_OFFICIAL_GH_MCP": [
+        "github-mcp"
+      ],
+      "GITHUB_API_HOST": [
+        "github-mcp"
+      ],
+      "GITHUB_MOCK": [
+        "github-mcp"
+      ],
+      "GITHUB_TOOLSETS": [
+        "github-mcp"
+      ],
+      "GITHUB_PERSONAL_ACCESS_TOKEN": [
+        "github-mcp"
+      ],
+      "OFFICIAL_GH_MCP_BASE_URL": [
+        "github-mcp"
+      ],
+      "REPOSITORY_TYPE": [
+        "user-store"
+      ],
+      "REPOSITORY_CONNECTION_STRING": [
+        "user-store"
+      ],
+      "JWT_TOKEN_EXPIRY_HOURS": [
+        "user-store"
+      ],
+      "MAX_TOKENS": [
+        "mock-data-generator"
+      ],
+      "RETENTION_DAYS": [
+        "mock-data-generator"
+      ],
+      "GENERATION_TIMEOUT": [
+        "mock-data-generator"
+      ],
+      "AUTO_PERSIST": [
+        "mock-data-generator"
+      ],
+      "MOCK_DATA_GENERATOR_API_HOST": [
+        "mock-data-generator"
+      ],
+      "DEFAULT_LLM_PROVIDER": [
+        "mock-data-generator"
+      ],
+      "DOCSTORE_DB": [
+        "doc_store"
+      ],
+      "DOCSTORE_CONNECTION_POOL_SIZE": [
+        "doc_store"
+      ],
+      "CONFLUENCE_AGENT_URL": [
+        "orchestrator"
+      ],
+      "GITHUB_AGENT_URL": [
+        "orchestrator"
+      ],
+      "JIRA_AGENT_URL": [
+        "orchestrator"
+      ],
+      "SWAGGER_AGENT_URL": [
+        "orchestrator"
+      ]
+    },
+    "recommendations": [
+      "Implement centralized configuration management library",
+      "Standardize environment variable naming conventions",
+      "Move hardcoded values to environment variables",
+      "Create shared configuration validation",
+      "Implement configuration hot-reloading",
+      "Add configuration migration scripts"
+    ]
+  },
+  "migration_analysis": [
+    {
+      "service": "interpreter",
+      "env_vars_found": 9,
+      "migrated_vars": 2,
+      "remaining_vars": 3
+    },
+    {
+      "service": "log-collector",
+      "env_vars_found": 32,
+      "migrated_vars": 25,
+      "remaining_vars": 7
+    },
+    {
+      "service": "source-agent",
+      "env_vars_found": 2,
+      "migrated_vars": 0,
+      "remaining_vars": 2
+    },
+    {
+      "service": "frontend",
+      "env_vars_found": 9,
+      "migrated_vars": 3,
+      "remaining_vars": 6
+    },
+    {
+      "service": "notification-service",
+      "env_vars_found": 4,
+      "migrated_vars": 0,
+      "remaining_vars": 4
+    },
+    {
+      "service": "_template",
+      "env_vars_found": 0,
+      "migrated_vars": 0,
+      "remaining_vars": 0
+    },
+    {
+      "service": "redis",
+      "env_vars_found": 0,
+      "migrated_vars": 0,
+      "remaining_vars": 0
+    },
+    {
+      "service": "code-analyzer",
+      "env_vars_found": 9,
+      "migrated_vars": 2,
+      "remaining_vars": 1
+    },
+    {
+      "service": "project-simulation",
+      "env_vars_found": 85,
+      "migrated_vars": 18,
+      "remaining_vars": 44
+    },
+    {
+      "service": "prompt_store",
+      "env_vars_found": 2,
+      "migrated_vars": 0,
+      "remaining_vars": 2
+    },
+    {
+      "service": "summarizer-hub",
+      "env_vars_found": 20,
+      "migrated_vars": 2,
+      "remaining_vars": 16
+    },
+    {
+      "service": "llm-gateway",
+      "env_vars_found": 3,
+      "migrated_vars": 1,
+      "remaining_vars": 2
+    },
+    {
+      "service": "secure-analyzer",
+      "env_vars_found": 4,
+      "migrated_vars": 2,
+      "remaining_vars": 2
+    },
+    {
+      "service": "project-planning-service",
+      "env_vars_found": 0,
+      "migrated_vars": 0,
+      "remaining_vars": 0
+    },
+    {
+      "service": "cli",
+      "env_vars_found": 13,
+      "migrated_vars": 1,
+      "remaining_vars": 5
+    },
+    {
+      "service": "external-service-store",
+      "env_vars_found": 2,
+      "migrated_vars": 0,
+      "remaining_vars": 2
+    },
+    {
+      "service": "data-services-dashboard",
+      "env_vars_found": 0,
+      "migrated_vars": 0,
+      "remaining_vars": 0
+    },
+    {
+      "service": "architecture-digitizer",
+      "env_vars_found": 0,
+      "migrated_vars": 0,
+      "remaining_vars": 0
+    },
+    {
+      "service": "simulation-dashboard",
+      "env_vars_found": 1,
+      "migrated_vars": 0,
+      "remaining_vars": 1
+    },
+    {
+      "service": "analysis-service",
+      "env_vars_found": 50,
+      "migrated_vars": 7,
+      "remaining_vars": 37
+    },
+    {
+      "service": "memory-agent",
+      "env_vars_found": 5,
+      "migrated_vars": 0,
+      "remaining_vars": 5
+    },
+    {
+      "service": "discovery-agent",
+      "env_vars_found": 2,
+      "migrated_vars": 0,
+      "remaining_vars": 1
+    },
+    {
+      "service": "github-mcp",
+      "env_vars_found": 7,
+      "migrated_vars": 0,
+      "remaining_vars": 7
+    },
+    {
+      "service": "user-store",
+      "env_vars_found": 2,
+      "migrated_vars": 0,
+      "remaining_vars": 2
+    },
+    {
+      "service": "mock-data-generator",
+      "env_vars_found": 4,
+      "migrated_vars": 2,
+      "remaining_vars": 2
+    },
+    {
+      "service": "ollama",
+      "env_vars_found": 0,
+      "migrated_vars": 0,
+      "remaining_vars": 0
+    },
+    {
+      "service": "doc_store",
+      "env_vars_found": 9,
+      "migrated_vars": 0,
+      "remaining_vars": 9
+    },
+    {
+      "service": "unified-api-dashboard",
+      "env_vars_found": 12,
+      "migrated_vars": 2,
+      "remaining_vars": 4
+    },
+    {
+      "service": "orchestrator",
+      "env_vars_found": 5,
+      "migrated_vars": 1,
+      "remaining_vars": 4
+    },
+    {
+      "service": "bedrock-proxy",
+      "env_vars_found": 0,
+      "migrated_vars": 0,
+      "remaining_vars": 0
+    }
+  ],
+  "recommendations": [
+    "Run configuration audit regularly to detect drift",
+    "Apply configuration standardization to maintain consistency",
+    "Review environment variable migration reports for manual updates",
+    "Validate Docker consistency before deployments",
+    "Update service configurations when adding new environment variables"
+  ]
+}

@@ -229,7 +229,7 @@ spec:
           containerPort: 8000
           protocol: TCP
         env:
-        - name: SERVICE_PORT
+        - name: SERVICE_API_PORT
           value: "8000"
         - name: ENVIRONMENT
           value: "production"
@@ -238,9 +238,9 @@ spec:
         - name: METRICS_ENABLED
           value: "true"
         # Database Configuration
-        - name: REDIS_HOST
+        - name: REDIS_API_HOST
           value: "redis-service"
-        - name: REDIS_PORT
+        - name: REDIS_API_PORT
           value: "6379"
         - name: REDIS_PASSWORD
           valueFrom:

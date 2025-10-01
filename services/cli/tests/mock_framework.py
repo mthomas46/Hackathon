@@ -240,7 +240,7 @@ class CLIMockFramework:
             # Mock os.environ for environment detection
             os_patch = patch.dict('os.environ', {
                 'DOCKER_CONTAINER': 'true' if environment == 'docker' else '',
-                'KUBERNETES_SERVICE_HOST': 'localhost' if environment == 'kubernetes' else ''
+                'KUBERNETES_SERVICE_API_HOST': 'localhost' if environment == 'kubernetes' else ''
             })
             os_patch.start()
             patches.append(os_patch)

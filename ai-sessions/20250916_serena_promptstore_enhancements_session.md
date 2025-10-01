@@ -144,7 +144,7 @@ Prompt Store ↔ SQLite (primary storage)
 ### Configuration
 ```yaml
 PROMPT_STORE_DB: services/prompt_store/prompt_store.db
-PROMPT_STORE_PORT: 5110
+PROMPT_STORE_API_PORT: 5110
 PROMPT_STORE_ENV: production
 REDIS_URL: redis://localhost:6379
 ```

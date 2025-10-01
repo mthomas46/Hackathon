@@ -2565,7 +2565,7 @@ class ArchitectureAnalyzer(BaseAnalyzer):
             recommendations.append("🌐 PRESENTATION LAYER: Keep only HTTP concerns, delegate business logic to application layer")
 
         if scores.get('layer_separation', 0) < 80:  # STRICT threshold
-            recommendations.append("🚫 IMPORT VIOLATIONS: Fix all cross-layer import violations immediately")
+            recommendations.append("🚫 IMAPI_PORT VIOLATIONS: Fix all cross-layer import violations immediately")
             recommendations.append("🔀 DEPENDENCY INVERSION: Infrastructure should depend on domain abstractions, not concretions")
 
         # Add recommendations for new checks
@@ -2578,7 +2578,7 @@ class ArchitectureAnalyzer(BaseAnalyzer):
 
         if scores.get('docker_infrastructure', 100) < 80:
             recommendations.append("🐳 DOCKER: Ensure Dockerfile exists with FROM, EXPOSE, and HEALTHCHECK")
-            recommendations.append("🔌 PORTS: Check for port conflicts using port validation script")
+            recommendations.append("🔌 API_PORTS: Check for port conflicts using port validation script")
             recommendations.append("📋 MAKEFILE: Ensure service is integrated in CI/CD Makefile targets")
 
         # Documentation quality recommendations

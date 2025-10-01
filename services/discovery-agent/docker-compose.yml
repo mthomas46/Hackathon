@@ -1,23 +1,55 @@
-# Individual Docker Compose for Discovery Agent Service
-# This allows the discovery-agent to run independently as a standalone service
-
-version: "3.9"
-
 services:
   discovery-agent:
     image: python:3.12-slim
     working_dir: /app
     volumes:
-      - ../../:/app:ro
-      - ./:/app/services/discovery-agent:rw
-      - ../../:/app:ro
+    - ./:/app:ro
+    - discovery-agent_code:/app:rw
     environment:
-      - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/discovery-agent/main.py"
+    - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx &&
+      python services/discovery-agent/main.py"
     ports:
-      - "5045:5045"
+    - 8085:5045
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5045/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5045/health
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+    - hackathon_default
+
+  redis:
+    image: redis:7-alpine
+    ports:
+    - 6379:6379
+    volumes:
+    - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+    - hackathon_default
+
+volumes:
+  redis_data:
+    driver: local
+  discovery-agent_code:
+    driver: local
+
+networks:
+  hackathon_default:
+    driver: bridge

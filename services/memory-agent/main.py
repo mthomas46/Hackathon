@@ -213,7 +213,7 @@ config = load_service_config(
 SERVICE_NAME = config.service_name
 SERVICE_TITLE = config.service_description or "Memory Agent"
 SERVICE_VERSION = config.service_version
-DEFAULT_PORT = config.port
+DEFAULT_API_PORT = config.port
 
 # Global event task
 _event_task = None
@@ -347,5 +347,5 @@ if __name__ == "__main__":
     """Run the Memory Agent service directly."""
     import uvicorn
 
-    host = os.getenv("MEMORY_AGENT_HOST", "0.0.0.0")
-    uvicorn.run(app, host=host, port=DEFAULT_PORT, log_level="info")
+    host = os.getenv("MEMORY_AGENT_API_HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=DEFAULT_API_PORT, log_level="info")

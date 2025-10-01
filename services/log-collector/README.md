@@ -150,7 +150,7 @@ The Log Collector employs a high-performance, in-memory architecture optimized f
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `SERVICE_PORT` | Service port (internal) | `5080` | Optional |
+| `SERVICE_API_PORT` | Service port (internal) | `5080` | Optional |
 | `MAX_LOGS` | Maximum logs in ring buffer | `5000` | Optional |
 | `LOG_LEVEL` | Minimum log level to process | `DEBUG` | Optional |
 | `ENABLE_STATS` | Enable statistics calculation | `true` | Optional |

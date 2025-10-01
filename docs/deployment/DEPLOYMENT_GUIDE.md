@@ -80,13 +80,13 @@ LOG_LEVEL=INFO
 DEBUG=false
 
 # Database & Cache
-REDIS_HOST=redis
-REDIS_PORT=6379
+REDIS_API_HOST=redis
+REDIS_API_PORT=6379
 REDIS_PASSWORD=<secure-password>
 
 # AI Provider Configuration
-OPENAI_API_KEY=<your-openai-key>
-ANTHROPIC_API_KEY=<your-anthropic-key>
+EXTERNAL_OPENAI_API_KEY=<your-openai-key>
+EXTERNAL_ANTHROPIC_API_KEY=<your-anthropic-key>
 OLLAMA_ENDPOINT=http://ollama:11434
 
 # Security
@@ -193,7 +193,7 @@ spec:
         env:
         - name: ENVIRONMENT
           value: "production"
-        - name: REDIS_HOST
+        - name: REDIS_API_HOST
           value: "redis-service"
         resources:
           requests:
@@ -256,7 +256,7 @@ spec:
         env:
         - name: ENVIRONMENT
           value: "production"
-        - name: REDIS_HOST
+        - name: REDIS_API_HOST
           value: "redis-service"
         - name: DATABASE_URL
           valueFrom:
@@ -436,10 +436,10 @@ metadata:
   namespace: llm-ecosystem
 data:
   # Use ElastiCache for Redis
-  REDIS_HOST: "llm-ecosystem.cache.amazonaws.com"
+  REDIS_API_HOST: "llm-ecosystem.cache.amazonaws.com"
   
   # Use RDS for databases
-  DATABASE_HOST: "llm-ecosystem.rds.amazonaws.com"
+  DATABASE_API_HOST: "llm-ecosystem.rds.amazonaws.com"
   
   # Use S3 for file storage
   S3_BUCKET: "llm-ecosystem-storage"
@@ -664,7 +664,7 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-access-key-id: ${{ secrets.EXTERNAL_AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-west-2
     

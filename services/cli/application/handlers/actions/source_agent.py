@@ -54,11 +54,11 @@ def build_actions(
         await save_data(console, doc, fmt, path, content_key="content")
 
     async def test_github_credentials():
-        env_token = get_secret("GITHUB_TOKEN")
+        env_token = get_secret("EXTERNAL_GITHUB_TOKEN")
         token: str = ""
         if env_token:
             use_env = Prompt.ask(
-                "Use existing GITHUB_TOKEN from environment? (y/n)", default="y"
+                "Use existing EXTERNAL_GITHUB_TOKEN from environment? (y/n)", default="y"
             )
             if use_env.lower().startswith("y"):
                 token = env_token
@@ -83,11 +83,11 @@ def build_actions(
         )
 
     async def browse_github():
-        env_token = get_secret("GITHUB_TOKEN")
+        env_token = get_secret("EXTERNAL_GITHUB_TOKEN")
         token: str = ""
         if env_token:
             use_env = Prompt.ask(
-                "Use existing GITHUB_TOKEN from environment? (y/n)", default="y"
+                "Use existing EXTERNAL_GITHUB_TOKEN from environment? (y/n)", default="y"
             )
             if use_env.lower().startswith("y"):
                 token = env_token

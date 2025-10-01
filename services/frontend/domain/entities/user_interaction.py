@@ -13,7 +13,7 @@ class InteractionType(Enum):
     NAVIGATION = "navigation"
     SEARCH = "search"
     FILTER = "filter"
-    EXPORT = "export"
+    EXAPI_PORT = "export"
 
 
 @dataclass

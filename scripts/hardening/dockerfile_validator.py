@@ -383,7 +383,7 @@ class DockerfileValidator:
     def print_analysis_report(self, analyses: Dict[str, DockerfileAnalysis]):
         """Print comprehensive analysis report"""
         print("\n" + "="*80)
-        print("🐳 DOCKERFILE VALIDATION AND ANALYSIS REPORT")
+        print("🐳 DOCKERFILE VALIDATION AND ANALYSIS REAPI_PORT")
         print("="*80)
 
         if not analyses:

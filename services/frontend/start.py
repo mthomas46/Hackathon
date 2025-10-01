@@ -15,7 +15,7 @@ service_dir = Path(__file__).parent
 # Set environment variables
 os.environ.setdefault("PYTHONPATH", f"{app_root}")
 os.environ.setdefault("SERVICE_NAME", "frontend")
-os.environ.setdefault("SERVICE_PORT", "3000")
+os.environ.setdefault("SERVICE_API_PORT", "3000")
 
 # Setup Python path for proper module resolution
 sys.path.insert(0, app_root)
@@ -40,8 +40,8 @@ try:
     from main import app
 
     if __name__ == "__main__":
-        host = os.environ.get("FRONTEND_SERVICE_HOST", "0.0.0.0")
-        port = int(os.environ.get("SERVICE_PORT", 3000))
+        host = os.environ.get("FRONTEND_SERVICE_API_HOST", "0.0.0.0")
+        port = int(os.environ.get("SERVICE_API_PORT", 3000))
         logger.info(f"Starting frontend service on {host}:{port}")
         uvicorn.run(app, host=host, port=port)
 

@@ -193,7 +193,7 @@ class DeploymentConfigurationAnalyzer:
             }
 
             # Simulate environment variables for standalone containers
-            env_vars[f"{service_name}.SERVICE_PORT"] = str(service_info['internal_port'])
+            env_vars[f"{service_name}.SERVICE_API_PORT"] = str(service_info['internal_port'])
             env_vars[f"{service_name}.ENVIRONMENT"] = "standalone"
 
         return DeploymentConfiguration(
@@ -219,7 +219,7 @@ class DeploymentConfigurationAnalyzer:
             }
 
             # Local development environment variables
-            env_vars[f"{service_name}.SERVICE_PORT"] = str(service_info['port'])
+            env_vars[f"{service_name}.SERVICE_API_PORT"] = str(service_info['port'])
             env_vars[f"{service_name}.ENVIRONMENT"] = "development"
             env_vars[f"{service_name}.LOG_COLLECTOR_ENABLED"] = "true"
 
@@ -246,7 +246,7 @@ class DeploymentConfigurationAnalyzer:
             }
 
             # Standardized environment variables
-            env_vars[f"{service_name}.SERVICE_PORT"] = str(service_info['internal_port'])
+            env_vars[f"{service_name}.SERVICE_API_PORT"] = str(service_info['internal_port'])
             env_vars[f"{service_name}.ENVIRONMENT"] = "standardized"
 
             # Add health endpoint
@@ -337,7 +337,7 @@ class DeploymentConfigurationAnalyzer:
         differences = []
 
         # Compare environment variables that should be consistent
-        critical_env_vars = ['SERVICE_PORT', 'ENVIRONMENT', 'LOG_COLLECTOR_ENABLED']
+        critical_env_vars = ['SERVICE_API_PORT', 'ENVIRONMENT', 'LOG_COLLECTOR_ENABLED']
 
         for service_name in deployments['standardized_config'].environment_variables.keys():
             if '.' in service_name:
@@ -357,7 +357,7 @@ class DeploymentConfigurationAnalyzer:
                                         deployment_a=deployment_name,
                                         deployment_b='standardized_config',
                                         difference=f"{var_name}: '{dep_value}' vs '{std_value}'",
-                                        severity='high' if var_name == 'SERVICE_PORT' else 'medium'
+                                        severity='high' if var_name == 'SERVICE_API_PORT' else 'medium'
                                     ))
 
         return differences
@@ -405,7 +405,7 @@ class DeploymentConfigurationAnalyzer:
             recommendations.append("Critical: Synchronize port configurations across all deployment methods")
 
         if diff_counts['environment']['high'] > 0:
-            recommendations.append("Critical: Standardize SERVICE_PORT environment variables")
+            recommendations.append("Critical: Standardize SERVICE_API_PORT environment variables")
 
         if diff_counts['health']['medium'] > 0:
             recommendations.append("Standardize health check endpoints across deployments")
@@ -451,7 +451,7 @@ class DeploymentConfigurationAnalyzer:
     def print_deployment_analysis_report(self, analysis: Dict[str, Any]):
         """Print comprehensive deployment analysis report"""
         print("\\n" + "="*80)
-        print("🚀 DEPLOYMENT CONFIGURATION ANALYSIS REPORT")
+        print("🚀 DEPLOYMENT CONFIGURATION ANALYSIS REAPI_PORT")
         print("="*80)
 
         print(f"\\n📊 OVERALL CONSISTENCY SCORE: {analysis['consistency_score']}/100")

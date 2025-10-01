@@ -44,8 +44,8 @@ The CLI service communicates with many other services in the ecosystem. To elimi
 
 | Environment Variable | Default | Description |
 |---------------------|---------|-------------|
-| `CLI_SERVICE_HOST` | `127.0.0.1` | CLI service bind host |
-| `CLI_SERVICE_PORT` | `8000` | CLI service bind port |
+| `CLI_SERVICE_API_HOST` | `127.0.0.1` | CLI service bind host |
+| `CLI_SERVICE_API_PORT` | `8000` | CLI service bind port |
 | `CLI_DEBUG_MODE` | `false` | Enable debug mode |
 | `CLI_LOG_LEVEL` | `INFO` | Logging level |
 

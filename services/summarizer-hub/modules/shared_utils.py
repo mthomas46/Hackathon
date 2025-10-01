@@ -17,7 +17,7 @@ from services.shared.utilities.error_handling import ServiceException
 # Global configuration for summarizer hub service
 _DEFAULT_TIMEOUT = int(os.environ.get("SUMMARIZER_TIMEOUT", "60"))
 _MAX_SUMMARY_LENGTH = int(os.environ.get("MAX_SUMMARY_LENGTH", "2000"))
-_SUPPORTED_PROVIDERS = ["ollama", "openai", "anthropic", "grok", "bedrock"]
+_SUPAPI_PORTED_PROVIDERS = ["ollama", "openai", "anthropic", "grok", "bedrock"]
 
 
 def get_default_timeout() -> int:
@@ -32,7 +32,7 @@ def get_max_summary_length() -> int:
 
 def get_supported_providers() -> List[str]:
     """Get list of supported summarization providers."""
-    return _SUPPORTED_PROVIDERS.copy()
+    return _SUPAPI_PORTED_PROVIDERS.copy()
 
 
 def validate_provider_name(provider_name: str) -> str:
@@ -48,8 +48,8 @@ def validate_provider_name(provider_name: str) -> str:
         ValueError: If provider is not supported
     """
     normalized = provider_name.lower().strip()
-    if normalized not in _SUPPORTED_PROVIDERS:
-        raise ValueError(f"Unsupported provider: {provider_name}. Supported: {_SUPPORTED_PROVIDERS}")
+    if normalized not in _SUPAPI_PORTED_PROVIDERS:
+        raise ValueError(f"Unsupported provider: {provider_name}. Supported: {_SUPAPI_PORTED_PROVIDERS}")
     return normalized
 
 

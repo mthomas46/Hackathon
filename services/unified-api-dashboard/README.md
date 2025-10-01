@@ -122,8 +122,8 @@ The Unified API Dashboard employs a modular, microservices-ready architecture de
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `SERVICE_PORT` | Service port (internal) | `8000` | Optional |
-| `SERVICE_HOST` | Service host address | `127.0.0.1` | Optional |
+| `SERVICE_API_PORT` | Service port (internal) | `8000` | Optional |
+| `SERVICE_API_HOST` | Service host address | `127.0.0.1` | Optional |
 | `ENVIRONMENT` | Deployment environment | `production` | Optional |
 | `LOG_LEVEL` | Logging verbosity level | `info` | Optional |
 
@@ -192,8 +192,8 @@ kubectl get pods -l app=unified-api-dashboard
 ### **🔧 Production Configuration**
 ```yaml
 # Production environment variables
-SERVICE_PORT: 8000
-SERVICE_HOST: 0.0.0.0
+SERVICE_API_PORT: 8000
+SERVICE_API_HOST: 0.0.0.0
 ENVIRONMENT: production
 LOG_LEVEL: warning
 ```

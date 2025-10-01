@@ -317,8 +317,8 @@ def _detect_docker_environment() -> bool:
             else False
         ),
         (os.getenv("DOCKER_CONTAINER") or "").lower() in ("true", "1", "yes"),
-        os.getenv("DOCKER_HOST") is not None,
-        (os.getenv("HOSTNAME") or "").startswith("docker-"),
+        os.getenv("DOCKER_API_HOST") is not None,
+        (os.getenv("API_HOSTNAME") or "").startswith("docker-"),
     ]
     return any(docker_indicators)
 

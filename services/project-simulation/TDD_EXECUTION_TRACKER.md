@@ -160,7 +160,7 @@ This living document tracks the implementation of interpreter-orchestrator integ
 - ✅ `test_docker_environment_detection_no_docker()` - No Docker indicators
 - ✅ `test_docker_environment_detection_with_docker_env_file()` - /.dockerenv file detection
 - ✅ `test_docker_environment_detection_with_env_var()` - DOCKER_CONTAINER variable
-- ✅ `test_docker_environment_detection_with_docker_host()` - DOCKER_HOST detection
+- ✅ `test_docker_environment_detection_with_docker_host()` - DOCKER_API_HOST detection
 - ✅ `test_docker_environment_detection_with_hostname()` - Docker hostname pattern
 - ✅ `test_docker_service_url_configuration()` - Docker environment URLs
 - ✅ `test_local_service_url_configuration()` - Local development URLs
@@ -173,7 +173,7 @@ This living document tracks the implementation of interpreter-orchestrator integ
 **Docker Environment Detection Indicators**:
 - 🔍 **/.dockerenv file**: Docker-specific environment file
 - 🔍 **CGroup detection**: Container group membership (`docker` in /proc/1/cgroup)
-- 🔍 **Environment variables**: DOCKER_CONTAINER, DOCKER_HOST
+- 🔍 **Environment variables**: DOCKER_CONTAINER, DOCKER_API_HOST
 - 🔍 **Hostname patterns**: Docker-generated hostnames (docker-*)
 
 **Service URL Configuration** (Based on docker-compose.dev.yml):

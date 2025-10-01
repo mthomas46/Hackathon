@@ -1,16 +1,46 @@
-# Individual Docker Compose for CLI Service
-# This allows the cli to run independently as a standalone service
-
-version: "3.9"
-
 services:
   cli:
     build:
       context: ../../
       dockerfile: services/cli/Dockerfile
     volumes:
-      - ../../:/app:ro
-      - ./:/app/services/cli:rw
+    - ./:/app:ro
+    - cli_code:/app:rw
     environment:
-      - ENVIRONMENT=development
-    command: ["sleep", "infinity"]  # Keep container running for interactive use
+    - ENVIRONMENT=development
+    command:
+    - sleep
+    - infinity
+    networks:
+    - hackathon_default
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    ports:
+    - 6379:6379
+    volumes:
+    - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+    - hackathon_default
+
+volumes:
+  redis_data:
+    driver: local
+  cli_code:
+    driver: local
+
+networks:
+  hackathon_default:
+    driver: bridge

@@ -125,7 +125,7 @@ if __name__ == "__main__":
     import uvicorn
     import os
     
-    port = int(os.environ.get('SERVICE_PORT', 5000))
+    port = int(os.environ.get('SERVICE_API_PORT', 5000))
     uvicorn.run(app, host="0.0.0.0", port=port)
 ```
 
@@ -140,7 +140,7 @@ RUN pip install -r requirements.txt
 COPY . .
 
 EXPOSE 5000
-ENV SERVICE_PORT=5000
+ENV SERVICE_API_PORT=5000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
@@ -322,9 +322,9 @@ export ANALYSIS_SERVICE_URL=http://localhost:5080
 ```bash
 # LLM Gateway configuration
 export OLLAMA_URL=http://localhost:11434
-export OPENAI_API_KEY=your-openai-key
-export ANTHROPIC_API_KEY=your-anthropic-key
-export AWS_ACCESS_KEY_ID=your-aws-key
+export EXTERNAL_OPENAI_API_KEY=your-openai-key
+export EXTERNAL_ANTHROPIC_API_KEY=your-anthropic-key
+export EXTERNAL_AWS_ACCESS_KEY_ID=your-aws-key
 export AWS_SECRET_ACCESS_KEY=your-aws-secret
 ```
 
@@ -353,7 +353,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - SERVICE_PORT=5000
+      - SERVICE_API_PORT=5000
       - ENVIRONMENT=development
     volumes:
       - ./services/service-name:/app/services/service-name

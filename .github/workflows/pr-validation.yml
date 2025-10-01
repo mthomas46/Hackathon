@@ -85,7 +85,7 @@ jobs:
     - name: Check for environment changes
       id: env-check
       run: |
-        if git diff --name-only HEAD~1 | grep -E "\.(yml|yaml)$" | xargs grep -l "environment\|env\|SERVICE_PORT\|REDIS_HOST" 2>/dev/null | grep -q .; then
+        if git diff --name-only HEAD~1 | grep -E "\.(yml|yaml)$" | xargs grep -l "environment\|env\|SERVICE_API_PORT\|REDIS_API_HOST" 2>/dev/null | grep -q .; then
           echo "changed=true" >> $GITHUB_OUTPUT
           echo "🌍 Environment changes detected"
         else
@@ -198,7 +198,7 @@ jobs:
         time python3 -c "import scripts.hardening.docker_standardization" 2>&1 | grep real || echo "Import timing check completed"
 
   # ========================================
-  # PR COMMENTS AND REPORTING
+  # PR COMMENTS AND REAPI_PORTING
   # ========================================
   pr-feedback:
     name: PR Feedback

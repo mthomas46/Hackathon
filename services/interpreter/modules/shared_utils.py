@@ -21,7 +21,7 @@ from services.shared.utilities.error_handling import ValidationException
 
 # Global configuration for interpreter service
 _DEFAULT_TIMEOUT = 30
-_INTERPRETER_PORT = int(os.environ.get("INTERPRETER_PORT", "5120"))
+_INTERPRETER_API_PORT = int(os.environ.get("INTERPRETER_API_PORT", "5120"))
 
 
 def get_default_timeout() -> int:
@@ -31,7 +31,7 @@ def get_default_timeout() -> int:
 
 def get_interpreter_port() -> int:
     """Get interpreter service port from environment."""
-    return _INTERPRETER_PORT
+    return _INTERPRETER_API_PORT
 
 
 def get_interpreter_clients(timeout: int = _DEFAULT_TIMEOUT) -> ServiceClients:

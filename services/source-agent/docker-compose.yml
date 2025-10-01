@@ -1,46 +1,57 @@
-# Individual Docker Compose for Source Agent Service
-# This allows the source-agent to run independently with its own Redis instance
-
-version: "3.9"
-
 services:
   source-agent:
     image: python:3.12-slim
     working_dir: /app
     volumes:
-      - ../../:/app:ro
-      - ./:/app/services/source-agent:rw
-      - ../../:/app:ro
+    - ./:/app:ro
+    - source-agent_code:/app:rw
     environment:
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/source-agent/main.py"
+    - REDIS_API_HOST=redis
+    - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis
+      && python services/source-agent/main.py"
     ports:
-      - "5000:5000"
+    - 8085:5000
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5000/health
       interval: 30s
       timeout: 10s
       retries: 3
-
+    networks:
+    - hackathon_default
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+    - 6379:6379
     volumes:
-      - ../../:/app:ro
-      - ./:/app/services/source-agent:rw
-      - redis_data:/data
+    - ./:/app:ro
+    - redis_code:/app:rw
+    - redis_data:/data
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+      - CMD
+      - redis-cli
+      - ping
       interval: 30s
       timeout: 10s
       retries: 3
-
+    networks:
+    - hackathon_default
 volumes:
   redis_data:
     driver: local
+  source-agent_code:
+    driver: local
+  redis_code:
+    driver: local
+networks:
+  hackathon_default:
+    driver: bridge

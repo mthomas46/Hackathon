@@ -5,8 +5,8 @@ This script provides a command-line interface for monitoring simulation executio
 with rich terminal UI, progress bars, and real-time status updates.
 
 Usage:
-    python monitor_simulation.py <simulation_id> [--host HOST] [--port PORT] [--no-color]
-    python monitor_simulation.py --list [--host HOST] [--port PORT]
+    python monitor_simulation.py <simulation_id> [--host API_HOST] [--port API_PORT] [--no-color]
+    python monitor_simulation.py --list [--host API_HOST] [--port API_PORT]
 """
 
 import argparse
@@ -257,8 +257,8 @@ class SimulationMonitor:
         print("  python monitor_simulation.py --list [options]")
         print()
         print("OPTIONS:")
-        print("  --host HOST       API host (default: localhost)")
-        print("  --port PORT       API port (default: 5075)")
+        print("  --host API_HOST       API host (default: localhost)")
+        print("  --port API_PORT       API port (default: 5075)")
         print("  --no-color        Disable colored output")
         print("  --list           List available simulations")
         print()

@@ -54,19 +54,19 @@ class TestDocumentTypeValidation:
             "ACCEPTANCE_CRITERIA",
             "CODE_REVIEW",
             "RUNBOOK",
-            "INCIDENT_REPORT",
+            "INCIDENT_REAPI_PORT",
             "ROADMAP",
-            "STATUS_REPORT",
+            "STATUS_REAPI_PORT",
             "RETROSPECTIVE",
             "WIKI_PAGE",
             "API_DOCUMENTATION",
             "DATABASE_SCHEMA",
             "CONFIGURATION_FILE",
             "LOG_FILE",
-            "METRICS_REPORT",
-            "PERFORMANCE_REPORT",
+            "METRICS_REAPI_PORT",
+            "PERFORMANCE_REAPI_PORT",
             "SECURITY_AUDIT",
-            "COMPLIANCE_REPORT",
+            "COMPLIANCE_REAPI_PORT",
         ]
 
         # Test that all expected types exist in the enum
@@ -115,7 +115,7 @@ class TestDocumentTypeValidation:
             DocumentType.CONFLUENCE_PAGE,
             DocumentType.WIKI_PAGE,
             DocumentType.ROADMAP,
-            DocumentType.STATUS_REPORT,
+            DocumentType.STATUS_REAPI_PORT,
             DocumentType.CHANGE_LOG,
             DocumentType.TEAM_RETROSPECTIVE,
         ]

@@ -1209,7 +1209,7 @@ def _display_enhanced_audit_results(console: Console, results: AnalysisResult, v
         quality_summary = "✅ [bold green]HIGH QUALITY ACHIEVED[/bold green] ✅\n[dim]Service meets production standards with room for minor polish.[/dim]"
         next_steps = "💡 [green]Focus on preventive maintenance and continuous improvement.[/green]"
     elif results.overall_score >= 75:
-        quality_summary = "⚠️ [bold yellow]GOOD WITH OPPORTUNITIES[/bold yellow] ⚠️\n[dim]Solid foundation exists but targeted improvements will yield benefits.[/dim]"
+        quality_summary = "⚠️ [bold yellow]GOOD WITH OPAPI_PORTUNITIES[/bold yellow] ⚠️\n[dim]Solid foundation exists but targeted improvements will yield benefits.[/dim]"
         next_steps = "📈 [yellow]Address high-priority recommendations to reach excellence.[/yellow]"
     elif results.overall_score >= 65:
         quality_summary = "🟡 [bold yellow]NEEDS ATTENTION[/bold yellow] 🟡\n[dim]Quality issues present that impact maintainability and reliability.[/dim]"

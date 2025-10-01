@@ -107,8 +107,8 @@ Content-Type: application/json
 #### **Core Configuration**
 ```bash
 # Service
-DISCOVERY_AGENT_PORT=5045
-DISCOVERY_AGENT_HOST=0.0.0.0
+DISCOVERY_AGENT_API_PORT=5045
+DISCOVERY_AGENT_API_HOST=0.0.0.0
 
 # External Services
 DISCOVERY_AGENT_ORCHESTRATOR_URL=http://localhost:5099
@@ -139,7 +139,7 @@ DISCOVERY_AGENT_SCAN_INTERVAL=300
 |----------|-------------|---------|----------|
 | `ORCHESTRATOR_URL` | Orchestrator service base URL | `http://orchestrator:5099` | ✅ |
 | `LOG_COLLECTOR_URL` | Log collector endpoint for structured logging | - | Optional |
-| `SERVICE_PORT` | Service port for health checks | `5045` | Optional |
+| `SERVICE_API_PORT` | Service port for health checks | `5045` | Optional |
 | `AUTO_DISCOVER_TOOLS` | Enable automatic tool discovery on startup | `true` | Optional |
 | `DRY_RUN_STARTUP` | Test mode without actual registration | `false` | Optional |
 

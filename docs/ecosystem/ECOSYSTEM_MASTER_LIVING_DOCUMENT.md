@@ -593,9 +593,9 @@ def _get_service_definitions() -> Dict[str, Dict[str, Any]]:
 
 ```bash
 # Essential Environment Variables
-ORCHESTRATOR_PORT=5099
+ORCHESTRATOR_API_PORT=5099
 DATABASE_TYPE=postgresql  # or sqlite for development
-REDIS_HOST=redis
+REDIS_API_HOST=redis
 LANGGRAPH_ENABLED=true
 LLM_GATEWAY_URL=http://llm-gateway:5055
 ```
@@ -876,14 +876,14 @@ async def enhanced_ecosystem_query(
 
 ```bash
 # LLM Gateway Configuration
-LLM_GATEWAY_PORT=5055
+LLM_GATEWAY_API_PORT=5055
 ENABLE_PROVIDER_ROUTING=true
 DEFAULT_PROVIDER=ollama
 
 # Provider API Keys (production)
-OPENAI_API_KEY=sk-your-openai-key
-ANTHROPIC_API_KEY=your-anthropic-key
-AWS_ACCESS_KEY_ID=your-aws-key
+EXTERNAL_OPENAI_API_KEY=sk-your-openai-key
+EXTERNAL_ANTHROPIC_API_KEY=your-anthropic-key
+EXTERNAL_AWS_ACCESS_KEY_ID=your-aws-key
 AWS_SECRET_ACCESS_KEY=your-aws-secret
 
 # Security Configuration
@@ -1037,7 +1037,7 @@ def select_provider(content, requirements):
 
 ```bash
 # Discovery Agent Configuration
-DISCOVERY_AGENT_PORT=5045
+DISCOVERY_AGENT_API_PORT=5045
 ORCHESTRATOR_URL=http://orchestrator:5099
 ENABLE_LANGGRAPH_INTEGRATION=true
 ENABLE_SECURITY_SCANNING=true
@@ -1215,7 +1215,7 @@ POST /search/semantic -> Semantic similarity search
 
 ```bash
 # Doc Store Configuration
-DOCSTORE_PORT=5087
+DOCSTORE_API_PORT=5087
 DATABASE_URL=sqlite:///data/docstore.db  # or PostgreSQL for production
 REDIS_URL=redis://redis:6379/1
 

@@ -99,7 +99,7 @@ async def service_status():
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("SERVICE_PORT", "5020"))
-    host = os.getenv("SERVICE_HOST", "0.0.0.0")
+    port = int(os.getenv("SERVICE_API_PORT", "5020"))
+    host = os.getenv("SERVICE_API_HOST", "0.0.0.0")
     print(f"Starting {SERVICE_NAME} on {host}:{port}")
     uvicorn.run(app, host=host, port=port)

@@ -23,8 +23,8 @@ project:
 
 # Redis Configuration
 redis:
-  host: ${REDIS_HOST:-redis}
-  port: ${REDIS_PORT:-6379}
+  host: ${REDIS_API_HOST:-redis}
+  port: ${REDIS_API_PORT:-6379}
   url: ${REDIS_URL:-redis://redis:6379}
   # Redis persistence and memory settings
   persistence:
@@ -65,8 +65,8 @@ sqlite:
 # PostgreSQL Configuration (for production)
 postgresql:
   enabled: ${USE_POSTGRESQL:-false}
-  host: ${POSTGRES_HOST:-postgres}
-  port: ${POSTGRES_PORT:-5432}
+  host: ${POSTGRES_API_HOST:-postgres}
+  port: ${POSTGRES_API_PORT:-5432}
   database: ${POSTGRES_DB:-doc_consistency}
   user: ${POSTGRES_USER:-doc_user}
   password: ${POSTGRES_PASSWORD:-doc_password}
@@ -75,7 +75,7 @@ postgresql:
   connection_timeout: 30
 
 # ============================================================================
-# SERVICE PORT MAPPINGS
+# SERVICE API_PORT MAPPINGS
 # ============================================================================
 ports:
   # Core Services
@@ -152,7 +152,7 @@ services:
 # GitHub Integration
 github:
   api_base: ${GITHUB_API_BASE:-https://api.github.com}
-  token: ${GITHUB_TOKEN:-}
+  token: ${EXTERNAL_GITHUB_TOKEN:-}
   owner: ${GITHUB_OWNER:-}
   # MCP Settings
   mcp:
@@ -173,7 +173,7 @@ confluence:
 
 # AWS Configuration (for Bedrock)
 aws:
-  access_key_id: ${AWS_ACCESS_KEY_ID:-}
+  access_key_id: ${EXTERNAL_AWS_ACCESS_KEY_ID:-}
   secret_access_key: ${AWS_SECRET_ACCESS_KEY:-}
   session_token: ${AWS_SESSION_TOKEN:-}
   region: ${AWS_REGION:-us-east-1}
@@ -184,20 +184,20 @@ aws:
 
 # Ollama Configuration
 ollama:
-  host: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+  host: ${OLLAMA_API_HOST:-http://host.docker.internal:11434}
   model: ${OLLAMA_MODEL:-llama3}
   endpoint: ${OLLAMA_ENDPOINT:-http://ollama-consistency:11434}
   timeout: 60
 
 # OpenAI Configuration
 openai:
-  api_key: ${OPENAI_API_KEY:-}
+  api_key: ${EXTERNAL_OPENAI_API_KEY:-}
   model: ${OPENAI_MODEL:-gpt-4o}
   timeout: 30
 
 # Anthropic Configuration
 anthropic:
-  api_key: ${ANTHROPIC_API_KEY:-}
+  api_key: ${EXTERNAL_ANTHROPIC_API_KEY:-}
   model: ${ANTHROPIC_MODEL:-claude-3.5-sonnet}
   timeout: 30
 
@@ -276,7 +276,7 @@ prompt_store:
 
 # Interpreter Configuration
 interpreter:
-  port: ${INTERPRETER_PORT:-5120}
+  port: ${INTERPRETER_API_PORT:-5120}
 
 # CLI Configuration
 cli:
@@ -481,15 +481,15 @@ monitoring:
   alertmanager:
     enabled: ${ALERTMANAGER_ENABLED:-true}
     port: 9093
-    smtp_host: ${SMTP_HOST:-smtp.gmail.com}
-    smtp_port: ${SMTP_PORT:-587}
+    smtp_host: ${SMTP_API_HOST:-smtp.gmail.com}
+    smtp_port: ${SMTP_API_PORT:-587}
     smtp_user: ${SMTP_USER:-}
     smtp_password: ${SMTP_PASSWORD:-}
     alert_email: ${ALERT_EMAIL:-alerts@llm-docs.com}
 
   # Node Exporter (system metrics)
   node_exporter:
-    enabled: ${NODE_EXPORTER_ENABLED:-true}
+    enabled: ${NODE_EXAPI_PORTER_ENABLED:-true}
     port: 9100
 
   # Pushgateway (batch job metrics)
@@ -530,7 +530,7 @@ development:
 
   # Debug settings
   debug: ${DEBUG:-true}
-  debug_port: ${DEBUG_PORT:-5678}
+  debug_port: ${DEBUG_API_PORT:-5678}
 
   # Test settings
   pytest_timeout: 300
@@ -538,7 +538,7 @@ development:
 
   # Local development overrides
   local_ollama: ${LOCAL_OLLAMA:-true}
-  local_ollama_host: ${LOCAL_OLLAMA_HOST:-http://host.docker.internal:11434}
+  local_ollama_host: ${LOCAL_OLLAMA_API_HOST:-http://host.docker.internal:11434}
 
 # ============================================================================
 # PRODUCTION SETTINGS

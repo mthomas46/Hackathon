@@ -398,7 +398,7 @@
         "DOC_STORE_URL": "http://doc_store:5087"
       },
       "frontend": {
-        "FRONTEND_SERVICE_HOST": "0.0.0.0"
+        "FRONTEND_SERVICE_API_HOST": "0.0.0.0"
       },
       "summarizer-hub": {
         "LOG_COLLECTOR_URL": "http://log-collector:5080"
@@ -408,7 +408,7 @@
         "DOC_STORE_URL": "http://doc_store:5087"
       },
       "interpreter": {
-        "INTERPRETER_SERVICE_HOST": "0.0.0.0"
+        "INTERPRETER_SERVICE_API_HOST": "0.0.0.0"
       },
       "project-simulation": {
         "LLM_GATEWAY_URL": "http://llm-gateway:5055",
@@ -420,7 +420,7 @@
         "LOG_COLLECTOR_URL": "http://log-collector:5080"
       },
       "simulation-dashboard": {
-        "DASHBOARD_SIMULATION_SERVICE_HOST": "project-simulation",
+        "DASHBOARD_SIMULATION_SERVICE_API_HOST": "project-simulation",
         "DASHBOARD_ANALYSIS_SERVICE_URL": "http://analysis-service:5080",
         "DASHBOARD_HEALTH_SERVICE_URL": "http://notification-service:5130"
       },

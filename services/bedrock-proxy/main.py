@@ -93,7 +93,7 @@ config = load_service_config(
 SERVICE_NAME = config.service_name
 SERVICE_TITLE = config.service_description or "Bedrock Proxy Stub"
 SERVICE_VERSION = config.service_version
-DEFAULT_PORT = config.port
+DEFAULT_API_PORT = config.port
 
 app = FastAPI(
     title=SERVICE_TITLE,

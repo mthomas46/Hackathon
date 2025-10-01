@@ -124,7 +124,7 @@ class ReportHandlers:
             from services.shared.utilities.error_handling import ServiceException
             raise ServiceException(
                 "Report generation failed",
-                error_code="REPORT_GENERATION_FAILED",
+                error_code="REAPI_PORT_GENERATION_FAILED",
                 details={"error": str(e), "report_type": req.kind}
             )
 

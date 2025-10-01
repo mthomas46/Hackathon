@@ -63,7 +63,7 @@ class Config:
     @staticmethod
     def get_github_host() -> Optional[str]:
         """Get GitHub host from environment."""
-        return os.environ.get("GITHUB_HOST")
+        return os.environ.get("GITHUB_API_HOST")
 
     @staticmethod
     def has_github_token() -> bool:

@@ -28,7 +28,7 @@ class TestEnvironmentConfiguration:
         # Test environment variables that should be set for local development
         required_env_vars = ["ENVIRONMENT", "LOG_LEVEL", "DATABASE_URL"]
 
-        optional_env_vars = ["DEBUG", "SECRET_KEY", "API_PORT", "REDIS_URL"]
+        optional_env_vars = ["DEBUG", "SECRET_KEY", "API_API_PORT", "REDIS_URL"]
 
         # Check if required environment variables are accessible
         for env_var in required_env_vars:

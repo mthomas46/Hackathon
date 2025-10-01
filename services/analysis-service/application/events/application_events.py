@@ -15,7 +15,7 @@ class EventType(Enum):
     FINDING_CREATED = "finding_created"
     DOCUMENT_PROCESSED = "document_processed"
     WORKFLOW_TRIGGERED = "workflow_triggered"
-    REPORT_GENERATED = "report_generated"
+    REAPI_PORT_GENERATED = "report_generated"
     SYSTEM_HEALTH_CHECK = "system_health_check"
 
 
@@ -287,7 +287,7 @@ class WorkflowTriggeredEvent(ApplicationEvent):
 class ReportGeneratedEvent(ApplicationEvent):
     """Event fired when a report is generated."""
 
-    event_type: EventType = EventType.REPORT_GENERATED
+    event_type: EventType = EventType.REAPI_PORT_GENERATED
     report_id: str = ""
     report_type: str = ""
     document_ids: List[str] = field(default_factory=list)

@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Set environment variables
 os.environ.setdefault("PYTHONPATH", f"{app_root}:{Path(__file__).parent}")
 os.environ.setdefault("SERVICE_NAME", "analysis-service")
-os.environ.setdefault("SERVICE_PORT", "5020")
+os.environ.setdefault("SERVICE_API_PORT", "5020")
 
 # Import uvicorn first
 import uvicorn
@@ -33,7 +33,7 @@ try:
     from main_new import app
 
     if __name__ == "__main__":
-        port = int(os.environ.get("SERVICE_PORT", 5020))
+        port = int(os.environ.get("SERVICE_API_PORT", 5020))
         print(f"Starting analysis service on port {port}")
         uvicorn.run(app, host="127.0.0.1", port=port)
 

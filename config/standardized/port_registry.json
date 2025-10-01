@@ -1,119 +1,442 @@
 {
-  "redis": {
-    "external_port": 6379,
-    "internal_port": 6379,
-    "health_endpoint": "/",
-    "dependencies": [],
-    "environment_vars": {}
+  "1025": {
+    "description": "mailhog http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "mailhog"
   },
-  "doc_store": {
-    "external_port": 5087,
-    "internal_port": 5010,
-    "health_endpoint": "/health",
-    "dependencies": [
-      "redis"
-    ],
-    "environment_vars": {
-      "SERVICE_PORT": "5010",
-      "REDIS_URL": "redis://redis:6379"
-    }
+  "11434": {
+    "description": "ollama http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "ollama"
   },
-  "orchestrator": {
-    "external_port": 5099,
-    "internal_port": 5099,
-    "health_endpoint": "/health",
-    "dependencies": [
-      "redis"
-    ],
-    "environment_vars": {
-      "SERVICE_PORT": "5099",
-      "REDIS_URL": "redis://redis:6379"
-    }
+  "14268": {
+    "description": "jaeger http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "jaeger"
   },
-  "llm-gateway": {
-    "external_port": 5055,
-    "internal_port": 5055,
-    "health_endpoint": "/health",
-    "dependencies": [
-      "ollama"
-    ],
-    "environment_vars": {
-      "SERVICE_PORT": "5055",
-      "OLLAMA_ENDPOINT": "http://ollama:11434"
-    }
+  "16686": {
+    "description": "jaeger http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "jaeger"
   },
-  "analysis-service": {
-    "external_port": 5080,
-    "internal_port": 5020,
-    "health_endpoint": "/health",
-    "dependencies": [
-      "doc_store",
-      "llm-gateway"
-    ],
-    "environment_vars": {
-      "SERVICE_PORT": "5020",
-      "DOC_STORE_URL": "http://doc_store:5010",
-      "LLM_GATEWAY_URL": "http://llm-gateway:5055"
-    }
+  "3000": {
+    "description": "frontend http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "frontend"
   },
-  "discovery-agent": {
-    "external_port": 5045,
-    "internal_port": 5045,
-    "health_endpoint": "/health",
-    "dependencies": [
-      "orchestrator"
-    ],
-    "environment_vars": {
-      "SERVICE_PORT": "5045",
-      "ORCHESTRATOR_URL": "http://orchestrator:5099"
-    }
+  "3001": {
+    "description": "grafana monitoring port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "monitoring",
+    "reserved": false,
+    "service": "grafana"
   },
-  "notification-service": {
-    "external_port": 5130,
-    "internal_port": 5020,
-    "health_endpoint": "/health",
-    "dependencies": [],
-    "environment_vars": {
-      "SERVICE_PORT": "5020"
-    }
+  "5000": {
+    "description": "github-agent http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "github-agent"
   },
-  "code-analyzer": {
-    "external_port": 5025,
-    "internal_port": 5025,
-    "health_endpoint": "/health",
-    "dependencies": [],
-    "environment_vars": {
-      "SERVICE_PORT": "5025"
-    }
+  "5001": {
+    "description": "jira-agent http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "jira-agent"
   },
-  "source-agent": {
-    "external_port": 5085,
-    "internal_port": 5070,
-    "health_endpoint": "/health",
-    "dependencies": [
-      "doc_store"
-    ],
-    "environment_vars": {
-      "SERVICE_PORT": "5070",
-      "DOC_STORE_URL": "http://doc_store:5010"
-    }
+  "5002": {
+    "description": "bedrock-proxy load_balancer port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "load_balancer",
+    "reserved": false,
+    "service": "bedrock-proxy"
   },
-  "frontend": {
-    "external_port": 3000,
-    "internal_port": 3000,
-    "health_endpoint": "/",
-    "dependencies": [
-      "orchestrator"
-    ],
-    "environment_vars": {
-      "REACT_APP_API_URL": "http://localhost:5099"
-    }
+  "5010": {
+    "description": "swagger-agent http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "swagger-agent"
   },
-  "ollama": {
-    "external_port": 11434,
-    "internal_port": 11434,
-    "health_endpoint": "/api/tags",
-    "dependencies": [],
-    "environment_vars": {}
+  "5020": {
+    "description": "analysis-service http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "analysis-service"
+  },
+  "5025": {
+    "description": "code-analyzer http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "code-analyzer"
+  },
+  "5030": {
+    "description": "github-mcp http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "github-mcp"
+  },
+  "5040": {
+    "description": "memory-agent http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "memory-agent"
+  },
+  "5044": {
+    "description": "logstash http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "logstash"
+  },
+  "5045": {
+    "description": "discovery-agent http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "discovery-agent"
+  },
+  "5050": {
+    "description": "confluence-agent http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "confluence-agent"
+  },
+  "5055": {
+    "description": "llm-gateway http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "llm-gateway"
+  },
+  "5060": {
+    "description": "summarizer-hub http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "summarizer-hub"
+  },
+  "5065": {
+    "description": "mock-data-generator http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "mock-data-generator"
+  },
+  "5070": {
+    "description": "secure-analyzer http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "secure-analyzer"
+  },
+  "5072": {
+    "description": "github-mcp http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "github-mcp"
+  },
+  "5075": {
+    "description": "project-simulation http_api port",
+    "environment": "simulation",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "project-simulation"
+  },
+  "5076": {
+    "description": "project-simulation-dev http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "project-simulation-dev"
+  },
+  "5080": {
+    "description": "log-collector http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "log-collector"
+  },
+  "5085": {
+    "description": "source-agent http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "source-agent"
+  },
+  "5087": {
+    "description": "doc_store http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "doc_store"
+  },
+  "5090": {
+    "description": "memory-agent http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "memory-agent"
+  },
+  "5095": {
+    "description": "notification-service http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "notification-service"
+  },
+  "5099": {
+    "description": "orchestrator http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "orchestrator"
+  },
+  "5105": {
+    "description": "architecture-digitizer http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "architecture-digitizer"
+  },
+  "5110": {
+    "description": "prompt_store http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "prompt_store"
+  },
+  "5120": {
+    "description": "interpreter http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "interpreter"
+  },
+  "5130": {
+    "description": "notification-service http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "notification-service"
+  },
+  "5140": {
+    "description": "external-service-store http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "external-service-store"
+  },
+  "5150": {
+    "description": "user-store http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "user-store"
+  },
+  "5160": {
+    "description": "summarizer-hub http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "summarizer-hub"
+  },
+  "5170": {
+    "description": "project-planning-service http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "project-planning-service"
+  },
+  "5601": {
+    "description": "kibana http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "kibana"
+  },
+  "7090": {
+    "description": "bedrock-proxy load_balancer port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "load_balancer",
+    "reserved": false,
+    "service": "bedrock-proxy"
+  },
+  "8000": {
+    "description": "unified-api-dashboard http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "unified-api-dashboard"
+  },
+  "8001": {
+    "description": "project-simulation http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "project-simulation"
+  },
+  "8025": {
+    "description": "mailhog http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "mailhog"
+  },
+  "8080": {
+    "description": "traefik http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "traefik"
+  },
+  "8081": {
+    "description": "redis http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "redis"
+  },
+  "8082": {
+    "description": "project-planning-service http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "project-planning-service"
+  },
+  "8083": {
+    "description": "data-services-dashboard http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "data-services-dashboard"
+  },
+  "8084": {
+    "description": "ollama http_api port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "ollama"
+  },
+  "8501": {
+    "description": "simulation-dashboard http_api port",
+    "environment": "simulation",
+    "internal_only": false,
+    "port_type": "http_api",
+    "reserved": false,
+    "service": "simulation-dashboard"
+  },
+  "9090": {
+    "description": "prometheus health_check port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "health_check",
+    "reserved": false,
+    "service": "prometheus"
+  },
+  "9091": {
+    "description": "pushgateway health_check port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "health_check",
+    "reserved": false,
+    "service": "pushgateway"
+  },
+  "9093": {
+    "description": "alertmanager health_check port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "health_check",
+    "reserved": false,
+    "service": "alertmanager"
+  },
+  "9100": {
+    "description": "node-exporter health_check port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "health_check",
+    "reserved": false,
+    "service": "node-exporter"
+  },
+  "9200": {
+    "description": "elasticsearch health_check port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "health_check",
+    "reserved": false,
+    "service": "elasticsearch"
+  },
+  "9411": {
+    "description": "jaeger health_check port",
+    "environment": "development",
+    "internal_only": false,
+    "port_type": "health_check",
+    "reserved": false,
+    "service": "jaeger"
   }
 }

@@ -56,11 +56,11 @@ config = load_service_config(
 SERVICE_NAME = config.service_name
 SERVICE_TITLE = config.service_description or "LLM Gateway"
 SERVICE_VERSION = config.service_version
-DEFAULT_PORT = config.port
+DEFAULT_API_PORT = config.port
 
 # Environment configuration
 OLLAMA_ENDPOINT = os.getenv("OLLAMA_ENDPOINT", "http://ollama:11434")
-REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_API_HOST = os.getenv("REDIS_API_HOST", "redis")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
 
@@ -435,4 +435,4 @@ if __name__ == "__main__":
     print(f"🚀 Starting {SERVICE_TITLE} Service...")
     print(f"🔗 Ollama endpoint: {OLLAMA_ENDPOINT}")
     print(f"🌐 Environment: {ENVIRONMENT}")
-    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")
+    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_API_PORT, log_level="info")

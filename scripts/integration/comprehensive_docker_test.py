@@ -394,7 +394,7 @@ class ComprehensiveDockerTester:
     def generate_report(self):
         """Generate comprehensive test report."""
         console.print("\n" + "=" * 80)
-        console.print("📊 COMPREHENSIVE DOCKER SERVICES TEST REPORT")
+        console.print("📊 COMPREHENSIVE DOCKER SERVICES TEST REAPI_PORT")
         console.print("=" * 80)
         
         # Summary table
@@ -442,7 +442,7 @@ class ComprehensiveDockerTester:
         console.print(f"   • Review service startup dependencies")
         
         # Save detailed report
-        report_file = self.project_root / "COMPREHENSIVE_DOCKER_TEST_REPORT.json"
+        report_file = self.project_root / "COMPREHENSIVE_DOCKER_TEST_REAPI_PORT.json"
         with open(report_file, 'w') as f:
             json.dump({
                 "timestamp": time.time(),

@@ -33,8 +33,8 @@ class DatabaseConfig:
         """Create configuration from environment variables."""
         return cls(
             sqlite_path=os.getenv('ANALYSIS_DB_PATH', ':memory:'),
-            postgres_host=os.getenv('POSTGRES_HOST'),
-            postgres_port=int(os.getenv('POSTGRES_PORT', '5432')),
+            postgres_host=os.getenv('POSTGRES_API_HOST'),
+            postgres_port=int(os.getenv('POSTGRES_API_PORT', '5432')),
             postgres_database=os.getenv('POSTGRES_DB'),
             postgres_user=os.getenv('POSTGRES_USER'),
             postgres_password=os.getenv('POSTGRES_PASSWORD'),

@@ -258,7 +258,7 @@ jaeger:
 ### Common Issues
 
 1. **Metrics not appearing in Prometheus**
-   - Check service is running: `curl http://localhost:PORT/metrics`
+   - Check service is running: `curl http://localhost:API_PORT/metrics`
    - Verify Prometheus scrape configuration
    - Check network connectivity between containers
 

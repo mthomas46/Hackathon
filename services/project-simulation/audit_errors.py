@@ -719,7 +719,7 @@ except ImportError:
     def print_report(self):
         """Print the audit report."""
         print("\n" + "=" * 80)
-        print("📊 CODEBASE AUDIT REPORT")
+        print("📊 CODEBASE AUDIT REAPI_PORT")
         print("=" * 80)
 
         total_issues = sum(len(issues) for issues in self.issues.values())

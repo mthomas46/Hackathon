@@ -16,13 +16,13 @@
 | **Memory Agent** | Exited (128) | Rebuilt with full dependencies | 🔄 Starting up |
 | **Code Analyzer** | Exited (0) | Restarted with production profile | ✅ Running |
 
-### 🔧 **PORT CONFIGURATION FIXES (5)**
+### 🔧 **API_PORT CONFIGURATION FIXES (5)**
 
 | Service | Issue Found | Internal Port | External Port | Fix Applied |
 |---------|-------------|---------------|---------------|-------------|
-| **Analysis Service** | Port mismatch | 5020 | 5080 | ✅ Added SERVICE_PORT=5080 env var |
-| **Secure Analyzer** | Port mismatch | 5070 | 5100 | ✅ Added SERVICE_PORT=5100 env var |
-| **Log Collector** | Port mismatch | 5080 | 5040 | ✅ Added SERVICE_PORT=5040 env var |
+| **Analysis Service** | Port mismatch | 5020 | 5080 | ✅ Added SERVICE_API_PORT=5080 env var |
+| **Secure Analyzer** | Port mismatch | 5070 | 5100 | ✅ Added SERVICE_API_PORT=5100 env var |
+| **Log Collector** | Port mismatch | 5080 | 5040 | ✅ Added SERVICE_API_PORT=5040 env var |
 | **Bedrock Proxy** | Port mismatch | 7090 | 5060 | 🔄 Identified, fixing next |
 | **GitHub MCP** | Port mismatch | 5072 | 5030 | 🔄 Identified, fixing next |
 
@@ -32,8 +32,8 @@
 
 ### **Primary Issue: Service Port Mismatches**
 - **Problem**: Services using default ports internally vs expected external ports
-- **Root Cause**: Missing SERVICE_PORT environment variable configuration
-- **Solution**: Add SERVICE_PORT env var to match external port mapping
+- **Root Cause**: Missing SERVICE_API_PORT environment variable configuration
+- **Solution**: Add SERVICE_API_PORT env var to match external port mapping
 
 ### **Secondary Issue: Dependency Problems**
 - **Memory Agent**: Missing httpx dependency in manual attempt
@@ -83,7 +83,7 @@
 7. 🔄 **GitHub MCP health checks** - Port mismatch identified
 
 ### **Technical Improvements:**
-- ✅ Standardized SERVICE_PORT environment variable usage
+- ✅ Standardized SERVICE_API_PORT environment variable usage
 - ✅ Improved Docker compose configuration consistency
 - ✅ Enhanced service startup reliability
 - ✅ Better dependency management for Memory Agent

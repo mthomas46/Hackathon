@@ -147,8 +147,8 @@ if __name__ == "__main__":
     import uvicorn
 
     # Environment variable configuration
-    host = os.getenv("SUMMARIZER_HUB_HOST", config.server.host)
-    port = int(os.getenv("SUMMARIZER_HUB_PORT", config.server.port))
+    host = os.getenv("SUMMARIZER_HUB_API_HOST", config.server.host)
+    port = int(os.getenv("SUMMARIZER_HUB_API_PORT", config.server.port))
 
     print(f"🚀 Starting Summarizer Hub Service on {host}:{port}")
     uvicorn.run(

@@ -469,8 +469,8 @@ services:
   dashboard:
     image: unified-api-dashboard:latest
     environment:
-      - SERVICE_PORT=8000
-      - REDIS_HOST=redis
+      - SERVICE_API_PORT=8000
+      - REDIS_API_HOST=redis
     ports:
       - "8000:8000"
     depends_on:
@@ -485,7 +485,7 @@ services:
     # Your microservice
     image: user-service:latest
     environment:
-      - SERVICE_PORT=8081
+      - SERVICE_API_PORT=8081
     ports:
       - "8081:8081"
 
@@ -493,7 +493,7 @@ services:
     # Your microservice
     image: order-service:latest
     environment:
-      - SERVICE_PORT=8082
+      - SERVICE_API_PORT=8082
     ports:
       - "8082:8082"
 ```

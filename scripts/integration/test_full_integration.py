@@ -425,7 +425,7 @@ class IntegrationTestSuite:
         total_time = self.end_time - self.start_time
 
         print("\n" + "=" * 60)
-        print("📊 INTEGRATION TEST REPORT")
+        print("📊 INTEGRATION TEST REAPI_PORT")
         print("=" * 60)
 
         passed = sum(1 for test in self.test_results if test['success'])

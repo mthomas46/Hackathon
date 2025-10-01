@@ -6,7 +6,7 @@
 
 ## Container Overview
 ```
-NAMES                                STATUS                       PORTS
+NAMES                                STATUS                       API_PORTS
 hackathon-discovery-agent-1          Up 6 minutes (healthy)       0.0.0.0:5045->5045/tcp, :::5045->5045/tcp
 hackathon-notification-service-1     Up 9 minutes (unhealthy)     0.0.0.0:5020->5020/tcp, :::5020->5020/tcp
 hackathon-code-analyzer-1            Up 12 minutes (unhealthy)    0.0.0.0:5050->5050/tcp, :::5050->5050/tcp

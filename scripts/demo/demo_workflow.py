@@ -10,9 +10,9 @@ USAGE:
     python demo_workflow.py
 
 CONFIGURATION OPTIONS:
-    REPORTS_DIR=./reports          # Directory to save downloaded reports
-    DOWNLOAD_REPORTS=true          # Enable/disable report downloads
-    AUTO_DOWNLOAD_REPORTS=simulation,summarizer  # Auto-select report types
+    REAPI_PORTS_DIR=./reports          # Directory to save downloaded reports
+    DOWNLOAD_REAPI_PORTS=true          # Enable/disable report downloads
+    AUTO_DOWNLOAD_REAPI_PORTS=simulation,summarizer  # Auto-select report types
 
 REQUIREMENTS:
     - Core services running (see docker-compose.dev.yml)
@@ -21,7 +21,7 @@ REQUIREMENTS:
     - Simulation service on port 5075 (will use mock if not available)
     - Summarizer service on port 5160
 
-REPORT DOWNLOAD OPTIONS:
+REAPI_PORT DOWNLOAD OPTIONS:
     - simulation: Simulation execution reports and metrics
     - summarizer: Analysis results and capabilities
     - orchestrator: Workflow coordination reports
@@ -71,8 +71,8 @@ class WorkflowDemo:
             "analysis_url": os.getenv("ANALYSIS_URL", "http://localhost:5080"),
             "timeout": 30.0,
             "demo_mode": os.getenv("DEMO_MODE", "full"),  # full, analysis_only, simulation_only
-            "reports_dir": os.getenv("REPORTS_DIR", "./reports"),
-            "download_reports": os.getenv("DOWNLOAD_REPORTS", "true").lower() == "true"
+            "reports_dir": os.getenv("REAPI_PORTS_DIR", "./reports"),
+            "download_reports": os.getenv("DOWNLOAD_REAPI_PORTS", "true").lower() == "true"
         }
 
         # Create reports directory if it doesn't exist
@@ -631,7 +631,7 @@ class WorkflowDemo:
 
     def display_downloaded_reports(self, all_downloads: Dict[str, Dict[str, str]]):
         """Display summary of all downloaded reports."""
-        self.print_header("📊 REPORT DOWNLOAD SUMMARY")
+        self.print_header("📊 REAPI_PORT DOWNLOAD SUMMARY")
 
         total_files = 0
         for service, files in all_downloads.items():
@@ -780,7 +780,7 @@ The system successfully demonstrated enterprise-grade document analysis capabili
         if not self.config["download_reports"]:
             return []
 
-        self.print_header("📥 ADDITIONAL REPORT DOWNLOAD OPTIONS")
+        self.print_header("📥 ADDITIONAL REAPI_PORT DOWNLOAD OPTIONS")
 
         self.print_info("📋 Core reports are ALWAYS downloaded:")
         self.print_info("  ✅ Summarizer analysis results")
@@ -803,7 +803,7 @@ The system successfully demonstrated enterprise-grade document analysis capabili
         self.print_info("  • all: Download all additional reports")
 
         # Auto-select based on environment variable or prompt user
-        auto_download = os.getenv("AUTO_DOWNLOAD_REPORTS")
+        auto_download = os.getenv("AUTO_DOWNLOAD_REAPI_PORTS")
         if auto_download:
             selected = auto_download.split(",")
             self.print_info(f"Auto-downloading reports: {', '.join(selected)}")
@@ -1726,7 +1726,7 @@ The system successfully demonstrated enterprise-grade document analysis capabili
 
         # Always show core reports summary
         if analysis_result:
-            self.print_header("📋 CORE REPORTS DOWNLOADED")
+            self.print_header("📋 CORE REAPI_PORTS DOWNLOADED")
             self.print_success("✅ Summarizer analysis results")
             self.print_success("✅ Workflow summary report")
             self.print_success("✅ Document dump report")
@@ -1903,10 +1903,10 @@ if __name__ == "__main__":
         print("\nENVIRONMENT VARIABLES:")
         print("  DEMO_MODE=full                  # full, analysis_only, simulation_only")
         print("  RUN_INTEGRATION_TESTS=true      # Enable integration tests")
-        print("  REPORTS_DIR=./reports           # Directory to save downloaded reports")
-        print("  DOWNLOAD_REPORTS=true           # Enable/disable report downloads")
-        print("  AUTO_DOWNLOAD_REPORTS=simulation,summarizer  # Auto-select report types")
-        print("\nREPORT TYPES:")
+        print("  REAPI_PORTS_DIR=./reports           # Directory to save downloaded reports")
+        print("  DOWNLOAD_REAPI_PORTS=true           # Enable/disable report downloads")
+        print("  AUTO_DOWNLOAD_REAPI_PORTS=simulation,summarizer  # Auto-select report types")
+        print("\nREAPI_PORT TYPES:")
         print("  simulation   - Simulation execution reports and metrics")
         print("  summarizer   - Analysis results and capabilities")
         print("  orchestrator - Workflow coordination reports")

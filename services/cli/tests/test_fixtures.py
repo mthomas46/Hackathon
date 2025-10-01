@@ -325,7 +325,7 @@ class CLITestFixtures:
     @staticmethod
     def get_mock_container_status(service_name: str = "test-service") -> str:
         """Generate mock docker-compose ps output"""
-        return f"""NAME                                SERVICE             STATUS                      PORTS
+        return f"""NAME                                SERVICE             STATUS                      API_PORTS
 hackathon-{service_name}-1          {service_name}        Up 2 hours (healthy)         0.0.0.0:8080->8080/tcp
 hackathon-another-service-1         another-service      Up 2 hours (healthy)         0.0.0.0:8081->8081/tcp"""
 

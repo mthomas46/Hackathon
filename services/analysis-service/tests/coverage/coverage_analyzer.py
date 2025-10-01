@@ -228,7 +228,7 @@ class CoverageAnalyzer:
     def print_summary_report(self, report: Dict[str, Any]):
         """Print a summary of the coverage report."""
         print("\n" + "=" * 80)
-        print("TEST COVERAGE ANALYSIS REPORT")
+        print("TEST COVERAGE ANALYSIS REAPI_PORT")
         print("=" * 80)
 
         overall = report["overall_coverage"]

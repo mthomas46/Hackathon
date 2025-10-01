@@ -16,6 +16,8 @@ Responsibilities:
 
 Dependencies: shared middlewares for request tracking and metrics.
 """
+from services.shared.infrastructure.config import load_service_config
+
 import asyncio
 import time
 from fastapi import FastAPI, Request, Response
@@ -45,10 +47,13 @@ except ImportError:
     from modules.log_storage import log_storage
     from modules.log_stats import calculate_log_statistics
 
-# Service configuration constants
-SERVICE_NAME = "log-collector"
-SERVICE_VERSION = "0.1.0"
-DEFAULT_PORT = 5080
+# Load service configuration
+config = load_service_config("log-collector")
+
+# Extract commonly used configuration values
+SERVICE_NAME = config.service_name or "log-collector"
+SERVICE_VERSION = config.service_version or "0.1.0"
+DEFAULT_API_PORT = config.server.port or 5080
 
 # Default limits and constraints
 DEFAULT_MAX_LOGS = 5000
@@ -724,7 +729,7 @@ if __name__ == "__main__":
     import atexit
 
     # Log service startup
-    logger.info("Starting Log Collector service", port=DEFAULT_PORT, version=SERVICE_VERSION)
+    logger.info("Starting Log Collector service", port=DEFAULT_API_PORT, version=SERVICE_VERSION)
 
     # Register cleanup function
     @atexit.register
@@ -737,7 +742,7 @@ if __name__ == "__main__":
         uvicorn.run(
             app,
             host="0.0.0.0",
-            port=DEFAULT_PORT,
+            port=DEFAULT_API_PORT,
             log_level="info"
         )
     except KeyboardInterrupt:

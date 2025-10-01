@@ -66994,7 +66994,7 @@
   },
   "results": [
     {
-      "code": "236     port = int(os.getenv(\"PORT\", DEFAULT_PORT))\n237     host = os.getenv(\"HOST\", \"0.0.0.0\")\n238 \n",
+      "code": "236     port = int(os.getenv(\"API_PORT\", DEFAULT_API_PORT))\n237     host = os.getenv(\"API_HOST\", \"0.0.0.0\")\n238 \n",
       "col_offset": 29,
       "end_col_offset": 38,
       "filename": "services/analysis-service/main_new.py",
@@ -67094,7 +67094,7 @@
       "test_name": "hardcoded_tmp_directory"
     },
     {
-      "code": "1066         app,\n1067         host=\"0.0.0.0\",\n1068         port=DEFAULT_PORT,\n",
+      "code": "1066         app,\n1067         host=\"0.0.0.0\",\n1068         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/discovery-agent/main_backup.py",
@@ -67134,7 +67134,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "786         app,\n787         host=\"0.0.0.0\",\n788         port=DEFAULT_PORT,\n",
+      "code": "786         app,\n787         host=\"0.0.0.0\",\n788         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/discovery-agent/main_original.py",
@@ -67857,7 +67857,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "1141         app,\n1142         host=\"0.0.0.0\",\n1143         port=DEFAULT_PORT,\n",
+      "code": "1141         app,\n1142         host=\"0.0.0.0\",\n1143         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/interpreter/main_original_backup.py",
@@ -76439,7 +76439,7 @@
       "test_name": "hardcoded_tmp_directory"
     },
     {
-      "code": "78         'STREAMLIT_SERVER_PORT': str(port),\n79         'STREAMLIT_SERVER_ADDRESS': '0.0.0.0',\n80         'STREAMLIT_BROWSER_GATHER_USAGE_STATS': 'false',\n81         'STREAMLIT_THEME_BASE': 'light',\n82     })\n83 \n84     # Start Streamlit\n85     cmd = [\n",
+      "code": "78         'STREAMLIT_SERVER_API_PORT': str(port),\n79         'STREAMLIT_SERVER_ADDRESS': '0.0.0.0',\n80         'STREAMLIT_BROWSER_GATHER_USAGE_STATS': 'false',\n81         'STREAMLIT_THEME_BASE': 'light',\n82     })\n83 \n84     # Start Streamlit\n85     cmd = [\n",
       "col_offset": 36,
       "end_col_offset": 45,
       "filename": "services/simulation-dashboard/run_dashboard.py",

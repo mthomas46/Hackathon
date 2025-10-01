@@ -314,7 +314,7 @@ pytest --cov=services --cov-report=html
 ├── POST /remediate/preview - Remediation preview
 └── GET /remediate/history - Remediation history
 
-📈 REPORTING ENDPOINTS (/reports/*)
+📈 REAPI_PORTING ENDPOINTS (/reports/*)
 ├── POST /reports/generate - Generate report
 ├── GET /reports - List reports
 ├── GET /reports/{report_id} - Get report details

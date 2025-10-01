@@ -98,7 +98,7 @@ nav:
     - Overview: docs/reference/README.md
     - Glossary: docs/reference/Glossary.md
     - Documentation Matrix: docs/reference/DOCS_PARITY_MATRIX.md
-    - Reports: docs/reference/REPORTS_README.md
+    - Reports: docs/reference/REAPI_PORTS_README.md
   - Living Docs: docs/living-docs/README.md
   - Business: docs/business/README.md
 markdown_extensions:

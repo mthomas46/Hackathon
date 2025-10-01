@@ -21,7 +21,7 @@ For each service and its test suite:
 - **Key Improvements**:
   - Enhanced module documentation with detailed docstrings and type hints
   - Improved variable naming (fmt → output_format, text → sanitized_prompt, etc.)
-  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_PORT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_API_PORT)
   - Comprehensive input validation with descriptive error messages
   - Better error handling and sanitization throughout
   - Improved template system with clearer organization and documentation
@@ -38,7 +38,7 @@ For each service and its test suite:
 - **Test Files**: 5 test files (76 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and endpoint descriptions
-  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_PORT, RATE_LIMITS)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_API_PORT, RATE_LIMITS)
   - Improved FastAPI app configuration with description and proper versioning
   - Better request model documentation with field-level docstrings
   - Enhanced endpoint documentation explaining functionality and purpose
@@ -56,7 +56,7 @@ For each service and its test suite:
 - **Test Files**: 3 test files + 1 shared utils file (74 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and endpoint descriptions
-  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_PORT, DEFAULT_MAX_LOGS, DEFAULT_QUERY_LIMIT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_API_PORT, DEFAULT_MAX_LOGS, DEFAULT_QUERY_LIMIT)
   - Improved FastAPI app configuration with description and proper versioning
   - Better request model documentation with field-level docstrings
   - Enhanced endpoint documentation explaining functionality and data flow
@@ -77,7 +77,7 @@ For each service and its test suite:
 - **Test Files**: 3 test files + 1 shared utils file (33 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions
-  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_PORT, DEFAULT_DLQ_LIMIT, MAX_DLQ_LIMIT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_API_PORT, DEFAULT_DLQ_LIMIT, MAX_DLQ_LIMIT)
   - Improved FastAPI app configuration with description and proper versioning
   - Better request model documentation with field-level docstrings explaining each field's purpose
   - Enhanced endpoint documentation explaining functionality, data flow, and business logic
@@ -99,7 +99,7 @@ For each service and its test suite:
 - **Test Files**: 3 test files + 1 shared utils file (70 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for security-focused operations
-  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_PORT, MAX_CONTENT_SIZE_BYTES, MAX_KEYWORDS_COUNT, MAX_KEYWORD_LENGTH, MAX_PROVIDER_NAME_LENGTH, DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES, DEFAULT_CIRCUIT_BREAKER_TIMEOUT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_API_PORT, MAX_CONTENT_SIZE_BYTES, MAX_KEYWORDS_COUNT, MAX_KEYWORD_LENGTH, MAX_PROVIDER_NAME_LENGTH, DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES, DEFAULT_CIRCUIT_BREAKER_TIMEOUT)
   - Improved FastAPI app configuration with description and proper versioning for security service
   - Better request model documentation with field-level docstrings explaining security validation requirements
   - Enhanced endpoint documentation explaining security analysis, policy enforcement, and circuit breaker protection
@@ -122,7 +122,7 @@ For each service and its test suite:
 - **Test Files**: 2 test files + 1 shared utils file (16 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for multi-provider summarization operations
-  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_PORT, DEFAULT_ENSEMBLE_RATE_LIMIT_REQUESTS_PER_SECOND, DEFAULT_ENSEMBLE_RATE_LIMIT_BURST_SIZE, DEFAULT_PROVIDER_TIMEOUT_SECONDS, DEFAULT_BEDROCK_TIMEOUT_SECONDS)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_VERSION, DEFAULT_API_PORT, DEFAULT_ENSEMBLE_RATE_LIMIT_REQUESTS_PER_SECOND, DEFAULT_ENSEMBLE_RATE_LIMIT_BURST_SIZE, DEFAULT_PROVIDER_TIMEOUT_SECONDS, DEFAULT_BEDROCK_TIMEOUT_SECONDS)
   - Improved FastAPI app configuration with description for multi-provider orchestration service
   - Better request model documentation with field-level docstrings explaining provider configuration and ensemble parameters
   - Enhanced endpoint documentation explaining ensemble summarization, provider orchestration, and response processing
@@ -145,7 +145,7 @@ For each service and its test suite:
 - **Test Files**: 1 test file + 1 shared utils file (8 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for GitHub MCP operations (repos, PRs, issues, users, actions)
-  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_PORT, DEFAULT_UPSTREAM_TIMEOUT_SECONDS, DEFAULT_TOOLSETS_FALLBACK)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_API_PORT, DEFAULT_UPSTREAM_TIMEOUT_SECONDS, DEFAULT_TOOLSETS_FALLBACK)
   - Improved FastAPI app configuration with description for local GitHub Model Context Protocol server
   - Better request model documentation with field-level docstrings explaining tool invocation parameters and execution options
   - Enhanced endpoint documentation explaining tool listing with filtering, tool invocation with mock/real modes, and upstream proxying
@@ -167,7 +167,7 @@ For each service and its test suite:
 - **Test Files**: 2 test files + 1 shared utils file (17 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for memory operations and event processing
-  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_PORT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_API_PORT)
   - Improved FastAPI app configuration with description for memory agent service with lifespan management
   - Better request model documentation with field-level docstrings explaining memory item storage
   - Enhanced endpoint documentation explaining memory put/list operations with validation and error handling
@@ -189,7 +189,7 @@ For each service and its test suite:
 - **Test Files**: 3 test files + 1 shared utils file (69 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for source operations (GitHub, Jira, Confluence)
-  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_PORT, SUPPORTED_SOURCES, SOURCE_CAPABILITIES)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_API_PORT, SUPAPI_PORTED_SOURCES, SOURCE_CAPABILITIES)
   - Improved FastAPI app configuration with description for unified source agent service
   - Better request model documentation with field-level docstrings explaining document requests and analysis parameters
   - Enhanced endpoint documentation explaining document fetching, normalization, and code analysis operations
@@ -211,7 +211,7 @@ For each service and its test suite:
 - **Test Files**: 3 test files + 1 shared utils file (30 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for service discovery operations
-  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_PORT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_API_PORT)
   - Improved FastAPI app configuration with description for OpenAPI endpoint discovery and registration service
   - Better request model documentation with field-level docstrings explaining discovery parameters
   - Enhanced endpoint documentation explaining OpenAPI parsing, endpoint extraction, and orchestrator registration
@@ -233,7 +233,7 @@ For each service and its test suite:
 - **Test Files**: 3 test files + 1 shared utils file (63 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for all UI pages
-  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_PORT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_API_PORT)
   - Improved FastAPI app configuration with description for HTML UI service for documentation consistency analysis
   - Better endpoint documentation for all UI routes including navigation, reports, search, and quality analysis pages
   - Enhanced info endpoint documentation explaining service metadata and configuration retrieval
@@ -258,7 +258,7 @@ For each service and its test suite:
 - **Test Files**: 3 test files + 1 shared utils file (31 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for NLP interpretation operations
-  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_PORT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_API_PORT)
   - Improved FastAPI app configuration with description for natural language processing service for user query interpretation and workflow generation
   - Better endpoint documentation for interpret, execute, and intents endpoints with clear explanations of their NLP capabilities
   - Enhanced query interpretation endpoint documentation explaining intent recognition, entity extraction, and workflow generation
@@ -284,7 +284,7 @@ For each service and its test suite:
 - **Test Files**: 3 test files + 1 shared utils file (17 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for prompt management operations
-  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_PORT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_API_PORT)
   - Improved FastAPI app configuration with description for advanced prompt management system with versioning, A/B testing, and analytics
   - Better endpoint documentation for all prompt CRUD operations with clear explanations of versioning and templating capabilities
   - Enhanced prompt creation endpoint documentation explaining versioning, validation, and categorization support
@@ -310,7 +310,7 @@ For each service and its test suite:
 - **Test Files**: 5 test files + 1 shared utils file (82 tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for document storage and analysis operations
-  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_PORT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_API_PORT)
   - Improved FastAPI app configuration with description for document storage and analysis service for the LLM Documentation Ecosystem
   - Better endpoint documentation for all document CRUD operations with clear explanations of content hashing and deduplication
   - Enhanced document storage endpoint documentation explaining metadata handling and correlation tracking
@@ -337,7 +337,7 @@ For each service and its test suite:
 - **Test Files**: 5 test files + 1 shared utils file (?? tests total)
 - **Key Improvements**:
   - Enhanced module documentation with comprehensive docstrings and detailed endpoint descriptions for document analysis and consistency checking operations
-  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_PORT)
+  - Added service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_API_PORT)
   - Improved FastAPI app configuration with description for document analysis and consistency checking service for the LLM Documentation Ecosystem
   - Better endpoint documentation for all analysis operations with clear explanations of configurable detectors and analysis workflows
   - Enhanced document analysis endpoint documentation explaining consistency checking and issue detection capabilities
@@ -459,7 +459,7 @@ This comprehensive second-pass refactoring has successfully transformed the enti
 ### 🏗️ **Key Architectural Improvements**
 
 **Service-Level Enhancements:**
-- Standardized service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_PORT)
+- Standardized service configuration constants (SERVICE_NAME, SERVICE_TITLE, SERVICE_VERSION, DEFAULT_API_PORT)
 - Comprehensive module documentation with clear capabilities and responsibilities
 - Better API endpoint organization and documentation
 - Consistent error handling and response formatting

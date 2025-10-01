@@ -87,11 +87,11 @@ ports:
 ```yaml
 github:
   api_base: https://api.github.com
-  token: ${GITHUB_TOKEN}
+  token: ${EXTERNAL_GITHUB_TOKEN}
 
 aws:
   region: us-east-1
-  access_key_id: ${AWS_ACCESS_KEY_ID}
+  access_key_id: ${EXTERNAL_AWS_ACCESS_KEY_ID}
 ```
 
 #### AI Providers
@@ -101,7 +101,7 @@ ollama:
   model: llama3
 
 openai:
-  api_key: ${OPENAI_API_KEY}
+  api_key: ${EXTERNAL_OPENAI_API_KEY}
   model: gpt-4o
 ```
 
@@ -127,14 +127,14 @@ All configuration values can be overridden using environment variables with the 
 
 ```bash
 # Infrastructure
-REDIS_HOST=localhost
-REDIS_PORT=6379
-POSTGRES_HOST=localhost
+REDIS_API_HOST=localhost
+REDIS_API_PORT=6379
+POSTGRES_API_HOST=localhost
 POSTGRES_DB=doc_consistency
 
 # External APIs
-GITHUB_TOKEN=your_token_here
-OPENAI_API_KEY=your_key_here
+EXTERNAL_GITHUB_TOKEN=your_token_here
+EXTERNAL_OPENAI_API_KEY=your_key_here
 AWS_REGION=us-east-1
 
 # Service Configuration
@@ -173,7 +173,7 @@ Services load configuration through the shared `config.py` module:
 from services.shared.config import get_config_value
 
 # Get a simple value
-redis_host = get_config_value("REDIS_HOST", "redis")
+redis_host = get_config_value("REDIS_API_HOST", "redis")
 
 # Get from a section
 service_url = get_config_value("url", section="services", env_key="ORCHESTRATOR_URL")
@@ -322,8 +322,8 @@ The `docker-compose.infrastructure.yml` file defines advanced monitoring service
 ```bash
 # Set environment variables
 export ENVIRONMENT=development
-export REDIS_HOST=localhost
-export GITHUB_TOKEN=your_token
+export REDIS_API_HOST=localhost
+export EXTERNAL_GITHUB_TOKEN=your_token
 
 # Start services
 docker-compose --profile core up
@@ -363,7 +363,7 @@ cd services/prompt-store && docker-compose up      # + SQLite
 ```bash
 # Use production config
 export ENVIRONMENT=production
-export REDIS_HOST=redis-cluster
+export REDIS_API_HOST=redis-cluster
 export USE_POSTGRESQL=true
 
 # Deploy

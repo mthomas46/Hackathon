@@ -20,6 +20,8 @@ Dependencies:
 - Notification Service (for user notifications)
 """
 
+from services.shared.infrastructure.config import load_service_config
+
 import time
 from contextlib import asynccontextmanager
 from typing import List, Optional, Dict
@@ -54,7 +56,13 @@ from .application.dto.user_dto import (
 # SERVICE CONFIGURATION
 # ============================================================================
 
-SERVICE_NAME = "user-store"
+# Load service configuration
+config = load_service_config("user-store")
+
+# Extract commonly used configuration values
+SERVICE_NAME = config.service_name
+SERVICE_VERSION = config.service_version
+DEFAULT_API_PORT = config.server.port
 SERVICE_VERSION = "1.0.0"
 SERVICE_TITLE = "User Store Service"
 
@@ -1008,6 +1016,6 @@ attach_self_register(app, SERVICE_NAME)
 if __name__ == "__main__":
     import uvicorn
     import os
-    port = int(os.getenv("SERVICE_PORT", "5150"))
-    host = os.getenv("SERVICE_HOST", "0.0.0.0")
+    port = int(os.getenv("SERVICE_API_PORT", "5150"))
+    host = os.getenv("SERVICE_API_HOST", "0.0.0.0")
     uvicorn.run(app, host=host, port=port)

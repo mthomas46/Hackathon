@@ -733,7 +733,7 @@ class APIContractValidator:
             verbose: Whether to include detailed violation information
         """
         print("\n" + "="*80)
-        print("🔗 API CONTRACT VALIDATION REPORT")
+        print("🔗 API CONTRACT VALIDATION REAPI_PORT")
         print("="*80)
         print(f"🏗️  Services Analyzed: {report.total_services}")
         print(f"🔗 Endpoints Found: {report.total_endpoints}")

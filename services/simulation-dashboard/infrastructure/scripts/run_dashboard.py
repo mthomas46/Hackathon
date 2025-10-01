@@ -83,7 +83,7 @@ def start_dashboard(port: int = 8501):
     env = os.environ.copy()
     env.update(
         {
-            "STREAMLIT_SERVER_PORT": str(port),
+            "STREAMLIT_SERVER_API_PORT": str(port),
             "STREAMLIT_SERVER_ADDRESS": "0.0.0.0",
             "STREAMLIT_BROWSER_GATHER_USAGE_STATS": "false",
             "STREAMLIT_THEME_BASE": "light",
@@ -142,7 +142,7 @@ def main():
             return 0
 
     # Get port from environment or use default
-    port = int(os.environ.get("DASHBOARD_PORT", 8501))
+    port = int(os.environ.get("DASHBOARD_API_PORT", 8501))
 
     # Start dashboard
     success = start_dashboard(port)

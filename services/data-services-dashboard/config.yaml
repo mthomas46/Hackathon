@@ -1,0 +1,34 @@
+health:
+  check_interval: ${HEALTH_CHECK_INTERVAL:-30}
+  enabled: ${HEALTH_ENABLED:-true}
+  timeout: ${HEALTH_TIMEOUT:-10}
+limits:
+  max_connections: ${MAX_CONNECTIONS:-10}
+  max_items: ${MAX_ITEMS:-1000}
+  max_message_length: ${MAX_MESSAGE_LENGTH:-1000}
+  timeout: ${TIMEOUT:-30}
+logging:
+  console: ${LOG_CONSOLE:-true}
+  format: ${LOG_FORMAT:-json}
+  level: ${LOG_LEVEL:-INFO}
+  structured: ${LOG_STRUCTURED:-true}
+redis:
+  db: ${REDIS_DB:-0}
+  host: ${REDIS_API_HOST:-redis}
+  max_connections: ${REDIS_MAX_CONNECTIONS:-10}
+  port: ${REDIS_API_PORT:-6379}
+security:
+  cors_origins:
+  - ${CORS_ORIGINS:-*}
+server:
+  debug: ${DEBUG:-false}
+  host: ${SERVER_API_HOST:-0.0.0.0}
+  port: 8080
+  timeout: ${SERVER_TIMEOUT:-30}
+  workers: ${SERVER_WORKERS:-1}
+services:
+  analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
+  doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}
+  frontend_url: ${FRONTEND_URL:-http://frontend:3000}
+  orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
+  source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5085}

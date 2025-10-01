@@ -536,7 +536,7 @@ class UnifiedHealthMonitor:
         """Print formatted health report"""
         report = self.generate_health_report(results)
         
-        print("🏥 UNIFIED HEALTH MONITORING REPORT")
+        print("🏥 UNIFIED HEALTH MONITORING REAPI_PORT")
         print("=" * 50)
         print(f"Overall Status: {report['overall_status']}")
         print(f"Health Percentage: {report['health_percentage']:.1f}%")

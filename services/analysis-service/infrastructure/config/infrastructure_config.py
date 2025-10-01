@@ -42,7 +42,7 @@ class InfrastructureConfig:
             debug_mode=os.getenv('DEBUG', 'false').lower() == 'true',
             log_level=os.getenv('LOG_LEVEL', 'INFO'),
             enable_caching=os.getenv('ENABLE_CACHING', 'true').lower() == 'true',
-            enable_metrics=os.getenv('ENABLE_METRICS', 'true').lower() == 'true',
+            enable_metrics=os.getenv('FEATURE_METRICS', 'true').lower() == 'true',
             enable_tracing=os.getenv('ENABLE_TRACING', 'false').lower() == 'true',
             max_concurrent_requests=int(os.getenv('MAX_CONCURRENT_REQUESTS', '100')),
             request_timeout=int(os.getenv('REQUEST_TIMEOUT', '30'))

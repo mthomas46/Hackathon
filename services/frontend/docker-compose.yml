@@ -1,26 +1,41 @@
-# Individual Docker Compose for Frontend Service
-# This allows the frontend to run independently as a standalone service
-
 services:
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ../../:/app:ro
+    - ./:/app:ro
     environment:
-      - ENVIRONMENT=production
-      - PYTHONPATH=/app
+    - ENVIRONMENT=production
+    - PYTHONPATH=/app
     ports:
-      - "3000:3000"
+    - 8085:3000
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    ports:
+    - 6379:6379
+    volumes:
+    - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:
       test:
-        [
-          "CMD",
-          "python",
-          "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:3000/health')",
-        ]
+      - CMD
+      - redis-cli
+      - ping
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+    - hackathon_default
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  hackathon_default:
+    driver: bridge

@@ -22,10 +22,10 @@ providers:
     name: openai
     type: cloud
     model: ${OPENAI_MODEL:-gpt-4o}
-    api_key: ${OPENAI_API_KEY:-}
-    endpoint: https://api.openai.com/v1/chat/completions
-    timeout: 30
-    cost_per_token: 0.00003
+    api_key: ${EXTERNAL_OPENAI_API_KEY:-}
+    endpoint: ${OPENAI_ENDPOINT:-https://api.openai.com/v1/chat/completions}
+    timeout: ${OPENAI_TIMEOUT:-30}
+    cost_per_token: ${OPENAI_COST_PER_TOKEN:-0.00003}
     security_level: medium
     enabled: ${OPENAI_ENABLED:-true}
 
@@ -33,10 +33,10 @@ providers:
     name: anthropic
     type: cloud
     model: ${ANTHROPIC_MODEL:-claude-3.5-sonnet}
-    api_key: ${ANTHROPIC_API_KEY:-}
-    endpoint: https://api.anthropic.com/v1/messages
-    timeout: 30
-    cost_per_token: 0.000015
+    api_key: ${EXTERNAL_ANTHROPIC_API_KEY:-}
+    endpoint: ${ANTHROPIC_ENDPOINT:-https://api.anthropic.com/v1/messages}
+    timeout: ${ANTHROPIC_TIMEOUT:-30}
+    cost_per_token: ${ANTHROPIC_COST_PER_TOKEN:-0.000015}
     security_level: medium
     enabled: ${ANTHROPIC_ENABLED:-true}
 
@@ -56,9 +56,9 @@ providers:
     type: cloud
     model: ${GROK_MODEL:-grok-1}
     api_key: ${GROK_API_KEY:-}
-    endpoint: https://api.x.ai/v1/chat/completions
-    timeout: 30
-    cost_per_token: 0.00001
+    endpoint: ${GROK_ENDPOINT:-https://api.x.ai/v1/chat/completions}
+    timeout: ${GROK_TIMEOUT:-30}
+    cost_per_token: ${GROK_COST_PER_TOKEN:-0.00001}
     security_level: medium
     enabled: ${GROK_ENABLED:-true}
 
@@ -112,18 +112,18 @@ rate_limiting:
     cooldown_seconds: ${RATE_LIMIT_COOLDOWN_SECONDS:-60}
 
   premium:
-    requests_per_minute: 120
-    requests_per_hour: 5000
-    tokens_per_minute: 200000
-    burst_limit: 20
-    cooldown_seconds: 30
+    requests_per_minute: ${PREMIUM_REQUESTS_PER_MINUTE:-120}
+    requests_per_hour: ${PREMIUM_REQUESTS_PER_HOUR:-5000}
+    tokens_per_minute: ${PREMIUM_TOKENS_PER_MINUTE:-200000}
+    burst_limit: ${PREMIUM_BURST_LIMIT:-20}
+    cooldown_seconds: ${PREMIUM_COOLDOWN_SECONDS:-30}
 
   enterprise:
-    requests_per_minute: 300
-    requests_per_hour: 20000
-    tokens_per_minute: 1000000
-    burst_limit: 50
-    cooldown_seconds: 15
+    requests_per_minute: ${ENTERPRISE_REQUESTS_PER_MINUTE:-300}
+    requests_per_hour: ${ENTERPRISE_REQUESTS_PER_HOUR:-20000}
+    tokens_per_minute: ${ENTERPRISE_TOKENS_PER_MINUTE:-1000000}
+    burst_limit: ${ENTERPRISE_BURST_LIMIT:-50}
+    cooldown_seconds: ${ENTERPRISE_COOLDOWN_SECONDS:-15}
 
 # Metrics configuration
 metrics:
@@ -152,7 +152,7 @@ health:
 development:
   debug_mode: ${DEBUG_MODE:-false}
   mock_providers: ${MOCK_PROVIDERS:-false}
-  enable_cors: ${ENABLE_CORS:-true}
+  enable_cors: ${FEATURE_CORS:-true}
   cors_origins: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8080}
 
 # Production settings

@@ -59,7 +59,7 @@ config = load_service_config(
 SERVICE_NAME = config.service_name
 SERVICE_TITLE = config.service_description or "GitHub MCP"
 SERVICE_VERSION = config.service_version
-DEFAULT_PORT = config.port
+DEFAULT_API_PORT = config.port
 
 # Timeout and configuration defaults
 DEFAULT_UPSTREAM_TIMEOUT_SECONDS = 60
@@ -240,4 +240,4 @@ if __name__ == "__main__":
     """Run the GitHub MCP service directly."""
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_PORT, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_API_PORT, log_level="info")

@@ -33,7 +33,7 @@ class ExternalServiceConfig:
     def from_env(cls) -> 'ExternalServiceConfig':
         """Create configuration from environment variables."""
         return cls(
-            openai_api_key=os.getenv('OPENAI_API_KEY'),
+            openai_api_key=os.getenv('EXTERNAL_OPENAI_API_KEY'),
             openai_model=os.getenv('OPENAI_MODEL', 'gpt-4'),
             openai_max_tokens=int(os.getenv('OPENAI_MAX_TOKENS', '2000')),
             openai_temperature=float(os.getenv('OPENAI_TEMPERATURE', '0.7')),

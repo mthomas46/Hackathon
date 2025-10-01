@@ -135,10 +135,10 @@ All analysis endpoints return a `DocumentEnvelope` with:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `REDIS_HOST` | Redis host for event publishing | - | Optional |
+| `REDIS_API_HOST` | Redis host for event publishing | - | Optional |
 | `DOC_STORE_URL` | Doc Store base URL for style examples | - | Optional |
 | `RATE_LIMIT_ENABLED` | Enable rate limiting on heavy endpoints | `false` | Optional |
-| `SERVICE_PORT` | Service port (internal) | `5025` | Optional |
+| `SERVICE_API_PORT` | Service port (internal) | `5025` | Optional |
 
 ### **🎯 Service Dependencies**
 

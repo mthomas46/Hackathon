@@ -14,7 +14,7 @@ github:
   mock: ${GITHUB_MOCK:-true}
 
   # GitHub API configuration
-  host: ${GITHUB_HOST:-}
+  host: ${GITHUB_API_HOST:-}
   personal_access_token: ${GITHUB_PERSONAL_ACCESS_TOKEN:-}
 
   # Official MCP server configuration

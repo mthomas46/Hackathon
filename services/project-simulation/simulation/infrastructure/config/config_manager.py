@@ -238,8 +238,8 @@ class ConfigManager:
         self.config.service.name = os.getenv("SERVICE_NAME", self.config.service.name)
         self.config.service.version = os.getenv("SERVICE_VERSION", self.config.service.version)
         self.config.service.environment = os.getenv("ENVIRONMENT", self.config.service.environment)
-        self.config.service.host = os.getenv("HOST", self.config.service.host)
-        self.config.service.port = int(os.getenv("PORT", self.config.service.port))
+        self.config.service.host = os.getenv("API_HOST", self.config.service.host)
+        self.config.service.port = int(os.getenv("API_PORT", self.config.service.port))
         self.config.service.debug = os.getenv("DEBUG", "").lower() == "true"
         self.config.service.reload = os.getenv("RELOAD", "").lower() == "true"
         self.config.service.log_level = os.getenv("LOG_LEVEL", self.config.service.log_level)
@@ -267,9 +267,9 @@ class ConfigManager:
         self.config.external.ollama_model = os.getenv("OLLAMA_MODEL", self.config.external.ollama_model)
 
         # Development features
-        self.config.development.enable_swagger = os.getenv("ENABLE_SWAGGER", "true").lower() == "true"
-        self.config.development.enable_redoc = os.getenv("ENABLE_REDOC", "true").lower() == "true"
-        self.config.development.enable_cors = os.getenv("ENABLE_CORS", "true").lower() == "true"
+        self.config.development.enable_swagger = os.getenv("FEATURE_SWAGGER", "true").lower() == "true"
+        self.config.development.enable_redoc = os.getenv("FEATURE_REDOC", "true").lower() == "true"
+        self.config.development.enable_cors = os.getenv("FEATURE_CORS", "true").lower() == "true"
         cors_origins = os.getenv("CORS_ORIGINS", "")
         if cors_origins:
             self.config.development.cors_origins = [origin.strip() for origin in cors_origins.split(",")]
@@ -284,23 +284,23 @@ class ConfigManager:
         # Logging
         self.config.logging.format = os.getenv("LOG_FORMAT", self.config.logging.format)
         self.config.logging.level = os.getenv("LOG_LEVEL", self.config.logging.level)
-        self.config.logging.enable_console = os.getenv("ENABLE_CONSOLE_LOGGING", "true").lower() == "true"
-        self.config.logging.enable_file = os.getenv("ENABLE_FILE_LOGGING", "true").lower() == "true"
+        self.config.logging.enable_console = os.getenv("FEATURE_CONSOLE_LOGGING", "true").lower() == "true"
+        self.config.logging.enable_file = os.getenv("FEATURE_FILE_LOGGING", "true").lower() == "true"
         self.config.logging.log_file = os.getenv("LOG_FILE")
-        self.config.logging.enable_correlation_id = os.getenv("ENABLE_CORRELATION_ID", "true").lower() == "true"
+        self.config.logging.enable_correlation_id = os.getenv("FEATURE_CORRELATION_ID", "true").lower() == "true"
 
         # Monitoring
-        self.config.monitoring.enable_metrics = os.getenv("ENABLE_METRICS", "true").lower() == "true"
-        self.config.monitoring.metrics_port = int(os.getenv("METRICS_PORT", self.config.monitoring.metrics_port))
-        self.config.monitoring.enable_health_checks = os.getenv("ENABLE_HEALTH_CHECKS", "true").lower() == "true"
-        self.config.monitoring.enable_profiling = os.getenv("ENABLE_PROFILING", "false").lower() == "true"
+        self.config.monitoring.enable_metrics = os.getenv("FEATURE_METRICS", "true").lower() == "true"
+        self.config.monitoring.metrics_port = int(os.getenv("METRICS_API_PORT", self.config.monitoring.metrics_port))
+        self.config.monitoring.enable_health_checks = os.getenv("FEATURE_HEALTH_CHECKS", "true").lower() == "true"
+        self.config.monitoring.enable_profiling = os.getenv("FEATURE_PROFILING", "false").lower() == "true"
         self.config.monitoring.profiling_output_dir = os.getenv("PROFILING_OUTPUT_DIR", self.config.monitoring.profiling_output_dir)
 
         # Feature flags
-        self.config.features.enable_advanced_analytics = os.getenv("ENABLE_ADVANCED_ANALYTICS", "false").lower() == "true"
-        self.config.features.enable_real_time_updates = os.getenv("ENABLE_REAL_TIME_UPDATES", "false").lower() == "true"
-        self.config.features.enable_extended_logging = os.getenv("ENABLE_EXTENDED_LOGGING", "false").lower() == "true"
-        self.config.features.enable_detailed_metrics = os.getenv("ENABLE_DETAILED_METRICS", "false").lower() == "true"
+        self.config.features.enable_advanced_analytics = os.getenv("FEATURE_ADVANCED_ANALYTICS", "false").lower() == "true"
+        self.config.features.enable_real_time_updates = os.getenv("FEATURE_REAL_TIME_UPDATES", "false").lower() == "true"
+        self.config.features.enable_extended_logging = os.getenv("FEATURE_EXTENDED_LOGGING", "false").lower() == "true"
+        self.config.features.enable_detailed_metrics = os.getenv("FEATURE_DETAILED_METRICS", "false").lower() == "true"
 
         # Testing
         self.config.testing.database_url = os.getenv("TEST_DATABASE_URL", self.config.testing.database_url)

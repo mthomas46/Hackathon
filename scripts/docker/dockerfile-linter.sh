@@ -39,18 +39,18 @@ echo "🔍 Checking port consistency..."
 
 # Extract port configurations
 expose_port=$(grep "EXPOSE" "$dockerfile" | awk '{print $2}' | head -1)
-env_port=$(grep "SERVICE_PORT=" "$dockerfile" | cut -d'=' -f2 | head -1)
+env_port=$(grep "SERVICE_API_PORT=" "$dockerfile" | cut -d'=' -f2 | head -1)
 health_port=$(grep -o "localhost:[0-9]*" "$dockerfile" | cut -d':' -f2 | head -1)
 label_port=$(grep "LABEL port=" "$dockerfile" | cut -d'"' -f2 | head -1)
 
 echo "  EXPOSE port: $expose_port"
-echo "  SERVICE_PORT: $env_port"
+echo "  SERVICE_API_PORT: $env_port"
 echo "  Health check port: $health_port"
 echo "  Label port: $label_port"
 
 # Validate port consistency
 if [[ -n "$expose_port" && -n "$env_port" && "$expose_port" != "$env_port" ]]; then
-    echo "❌ ERROR: EXPOSE port ($expose_port) doesn't match SERVICE_PORT ($env_port)"
+    echo "❌ ERROR: EXPOSE port ($expose_port) doesn't match SERVICE_API_PORT ($env_port)"
     ERRORS=$((ERRORS + 1))
 fi
 
@@ -128,7 +128,7 @@ if grep -q "HEALTHCHECK" "$dockerfile"; then
 else
     echo "⚠️  WARNING: No health check configured"
     echo "  Consider adding: HEALTHCHECK --interval=30s --timeout=10s --retries=3 \\"
-    echo "    CMD curl -f http://localhost:PORT/health || exit 1"
+    echo "    CMD curl -f http://localhost:API_PORT/health || exit 1"
 fi
 
 echo ""

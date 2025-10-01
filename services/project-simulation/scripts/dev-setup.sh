@@ -136,19 +136,19 @@ setup_configuration() {
 ENVIRONMENT=development
 SERVICE_NAME=project-simulation
 SERVICE_VERSION=1.0.0-dev
-HOST=0.0.0.0
-PORT=5075
+API_HOST=0.0.0.0
+API_PORT=5075
 DEBUG=true
 RELOAD=true
 LOG_LEVEL=DEBUG
 DATABASE_URL=sqlite:///./data/project_simulation_dev.db
 REDIS_URL=redis://localhost:6379/0
-ENABLE_SWAGGER=true
-ENABLE_REDOC=true
-ENABLE_CORS=true
+FEATURE_SWAGGER=true
+FEATURE_REDOC=true
+FEATURE_CORS=true
 RATE_LIMIT_ENABLED=false
-ENABLE_METRICS=true
-ENABLE_HEALTH_CHECKS=true
+FEATURE_METRICS=true
+FEATURE_HEALTH_CHECKS=true
 EOF
         print_success "Basic .env file created"
     else

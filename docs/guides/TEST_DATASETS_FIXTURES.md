@@ -362,7 +362,7 @@ SOURCE_AGENT_URL=http://localhost:5002
 ORCHESTRATOR_URL=http://localhost:5099
 
 # External service mocks
-GITHUB_TOKEN=mock_token
+EXTERNAL_GITHUB_TOKEN=mock_token
 JIRA_API_TOKEN=mock_token
 CONFLUENCE_API_TOKEN=mock_token
 ```

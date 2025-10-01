@@ -84,8 +84,8 @@ logfile /var/log/redis/redis.log
 
 ```bash
 # Redis connection settings
-REDIS_HOST=localhost
-REDIS_PORT=6379
+REDIS_API_HOST=localhost
+REDIS_API_PORT=6379
 REDIS_URL=redis://localhost:6379
 
 # Advanced settings

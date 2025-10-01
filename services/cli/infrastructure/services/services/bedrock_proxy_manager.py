@@ -20,14 +20,14 @@ from ...shared_utils import add_menu_rows, create_menu_table, print_panel
 class BedrockProxyManager(BaseManager):
     """Manager for bedrock proxy power-user operations."""
 
-    SUPPORTED_TEMPLATES = [
+    SUPAPI_PORTED_TEMPLATES = [
         "summary",
         "risks",
         "decisions",
         "pr_confidence",
         "life_of_ticket",
     ]
-    SUPPORTED_FORMATS = ["md", "txt", "json"]
+    SUPAPI_PORTED_FORMATS = ["md", "txt", "json"]
 
     def __init__(
         self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
@@ -137,7 +137,7 @@ class BedrockProxyManager(BaseManager):
                 "life_of_ticket": "Track ticket lifecycle and timeline",
             }
 
-            for template in self.SUPPORTED_TEMPLATES:
+            for template in self.SUPAPI_PORTED_TEMPLATES:
                 template_table.add_row(
                     template, template_descriptions.get(template, "Custom template")
                 )
@@ -146,7 +146,7 @@ class BedrockProxyManager(BaseManager):
 
             template = Prompt.ask(
                 "[bold cyan]Select template[/bold cyan]",
-                choices=self.SUPPORTED_TEMPLATES,
+                choices=self.SUPAPI_PORTED_TEMPLATES,
             )
 
             # Prompt input
@@ -158,7 +158,7 @@ class BedrockProxyManager(BaseManager):
             fmt = Prompt.ask(
                 "[bold cyan]Output format[/bold cyan]",
                 default="md",
-                choices=self.SUPPORTED_FORMATS,
+                choices=self.SUPAPI_PORTED_FORMATS,
             )
             title = Prompt.ask(
                 "[bold cyan]Custom title (optional)[/bold cyan]", default=""
@@ -219,7 +219,7 @@ class BedrockProxyManager(BaseManager):
             fmt = Prompt.ask(
                 "[bold cyan]Output format[/bold cyan]",
                 default="md",
-                choices=self.SUPPORTED_FORMATS,
+                choices=self.SUPAPI_PORTED_FORMATS,
             )
             title = Prompt.ask(
                 "[bold cyan]Custom title (optional)[/bold cyan]", default=""
@@ -345,7 +345,7 @@ class BedrockProxyManager(BaseManager):
 
             format_results = {}
 
-            for fmt in self.SUPPORTED_FORMATS:
+            for fmt in self.SUPAPI_PORTED_FORMATS:
                 self.console.print(f"[yellow]Testing {fmt} format...[/yellow]")
 
                 request_data = {"prompt": prompt, "template": template, "format": fmt}
@@ -578,7 +578,7 @@ class BedrockProxyManager(BaseManager):
         try:
             template = Prompt.ask(
                 "[bold cyan]Select template to view[/bold cyan]",
-                choices=self.SUPPORTED_TEMPLATES,
+                choices=self.SUPAPI_PORTED_TEMPLATES,
             )
 
             # Get template details from test data or documentation
@@ -640,7 +640,7 @@ class BedrockProxyManager(BaseManager):
         try:
             template = Prompt.ask(
                 "[bold cyan]Select template to test[/bold cyan]",
-                choices=self.SUPPORTED_TEMPLATES,
+                choices=self.SUPAPI_PORTED_TEMPLATES,
             )
 
             # Use predefined sample prompts for each template
@@ -692,7 +692,7 @@ class BedrockProxyManager(BaseManager):
 
             template_results = {}
 
-            for template in self.SUPPORTED_TEMPLATES:
+            for template in self.SUPAPI_PORTED_TEMPLATES:
                 self.console.print(f"[yellow]Testing {template} template...[/yellow]")
 
                 request_data = {"prompt": prompt, "template": template, "format": "md"}

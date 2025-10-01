@@ -157,12 +157,12 @@ Effective configuration (redacted).
 
 ```bash
 # Service Configuration
-PORT=5000
+API_PORT=5000
 ENVIRONMENT=production
 LOG_LEVEL=INFO
 
 # GitHub Configuration
-GITHUB_TOKEN=your_github_token
+EXTERNAL_GITHUB_TOKEN=your_github_token
 GITHUB_API_BASE=https://api.github.com
 
 # Jira Configuration
@@ -220,7 +220,7 @@ rate_limiting:
 ```
 
 ## Secrets
-- Use `services/shared/credentials.get_secret("GITHUB_TOKEN")`, `get_secret("JIRA_API_TOKEN")`, `get_secret("CONFLUENCE_API_TOKEN")`.
+- Use `services/shared/credentials.get_secret("EXTERNAL_GITHUB_TOKEN")`, `get_secret("JIRA_API_TOKEN")`, `get_secret("CONFLUENCE_API_TOKEN")`.
 - Pass via env or compose/K8s secrets; do not commit.
 
 ## Usage Examples

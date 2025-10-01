@@ -1,9 +1,20 @@
+# External Service Store Configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for external-service-store
+server:
+  host: ${SERVER_API_HOST:-0.0.0.0}
+  port: 5140
+  debug: ${DEBUG:-false}
+  workers: ${SERVER_WORKERS:-1}
+  timeout: ${SERVER_TIMEOUT:-30}
+
+# Service metadata
 service:
   name: "external-service-store"
   display_name: "External Service Store"
   description: "Lightweight SQLite-based service registry and metadata store"
   version: "1.0.0"
-  port: 8010
 
 database:
   path: "data/external_service_store.db"

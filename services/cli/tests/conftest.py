@@ -103,7 +103,7 @@ def setup_test_environment():
     """Setup test environment for all tests"""
     # Ensure clean environment
     os.environ.pop('DOCKER_CONTAINER', None)
-    os.environ.pop('KUBERNETES_SERVICE_HOST', None)
+    os.environ.pop('KUBERNETES_SERVICE_API_HOST', None)
 
     # Set test environment
     os.environ['TESTING'] = 'true'
@@ -124,7 +124,7 @@ def docker_environment():
 @pytest.fixture
 def kubernetes_environment():
     """Fixture for Kubernetes environment testing"""
-    with patch.dict('os.environ', {'KUBERNETES_SERVICE_HOST': 'localhost'}):
+    with patch.dict('os.environ', {'KUBERNETES_SERVICE_API_HOST': 'localhost'}):
         yield
 
 

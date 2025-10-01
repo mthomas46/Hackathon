@@ -55,7 +55,7 @@ class TestEnvironmentDetection:
 
             mock_exists.return_value = False
             mock_getenv.side_effect = lambda key, default=None: (
-                "tcp://localhost:2376" if key == "DOCKER_HOST" else None
+                "tcp://localhost:2376" if key == "DOCKER_API_HOST" else None
             )
 
             analyzer = SimulationAnalyzer()
@@ -67,7 +67,7 @@ class TestEnvironmentDetection:
 
             mock_exists.return_value = False
             mock_getenv.side_effect = lambda key, default=None: (
-                "docker-container-123" if key == "HOSTNAME" else None
+                "docker-container-123" if key == "API_HOSTNAME" else None
             )
 
             analyzer = SimulationAnalyzer()

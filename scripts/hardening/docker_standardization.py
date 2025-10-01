@@ -77,7 +77,7 @@ class DockerStandardizationManager:
                 ),
                 dependencies=["redis"],
                 environment_vars={
-                    "SERVICE_PORT": "5010",
+                    "SERVICE_API_PORT": "5010",
                     "REDIS_URL": "redis://redis:6379"
                 },
                 health_check={
@@ -98,7 +98,7 @@ class DockerStandardizationManager:
                 ),
                 dependencies=["redis"],
                 environment_vars={
-                    "SERVICE_PORT": "5099",
+                    "SERVICE_API_PORT": "5099",
                     "REDIS_URL": "redis://redis:6379"
                 },
                 health_check={
@@ -119,7 +119,7 @@ class DockerStandardizationManager:
                 ),
                 dependencies=["ollama"],
                 environment_vars={
-                    "SERVICE_PORT": "5055",
+                    "SERVICE_API_PORT": "5055",
                     "OLLAMA_ENDPOINT": "http://ollama:11434"
                 },
                 health_check={
@@ -140,7 +140,7 @@ class DockerStandardizationManager:
                 ),
                 dependencies=["doc_store", "llm-gateway"],
                 environment_vars={
-                    "SERVICE_PORT": "5020",  # Internal port
+                    "SERVICE_API_PORT": "5020",  # Internal port
                     "DOC_STORE_URL": "http://doc_store:5010",
                     "LLM_GATEWAY_URL": "http://llm-gateway:5055"
                 },
@@ -162,7 +162,7 @@ class DockerStandardizationManager:
                 ),
                 dependencies=["orchestrator"],
                 environment_vars={
-                    "SERVICE_PORT": "5045",
+                    "SERVICE_API_PORT": "5045",
                     "ORCHESTRATOR_URL": "http://orchestrator:5099"
                 },
                 health_check={
@@ -183,7 +183,7 @@ class DockerStandardizationManager:
                 ),
                 dependencies=[],
                 environment_vars={
-                    "SERVICE_PORT": "5020"
+                    "SERVICE_API_PORT": "5020"
                 },
                 health_check={
                     "test": ["CMD", "curl", "-f", "http://localhost:5020/health"],
@@ -203,7 +203,7 @@ class DockerStandardizationManager:
                 ),
                 dependencies=[],
                 environment_vars={
-                    "SERVICE_PORT": "5025"
+                    "SERVICE_API_PORT": "5025"
                 },
                 health_check={
                     "test": ["CMD", "curl", "-f", "http://localhost:5025/health"],
@@ -223,7 +223,7 @@ class DockerStandardizationManager:
                 ),
                 dependencies=["doc_store"],
                 environment_vars={
-                    "SERVICE_PORT": "5070",
+                    "SERVICE_API_PORT": "5070",
                     "DOC_STORE_URL": "http://doc_store:5010"
                 },
                 health_check={
@@ -436,9 +436,9 @@ class DockerStandardizationManager:
             elif 'LABEL port=' in line:
                 updated_lines.append(f'LABEL port="{port_config.internal_port}"')
             
-            # Update SERVICE_PORT environment variable
-            elif 'ENV SERVICE_PORT=' in line:
-                updated_lines.append(f"ENV SERVICE_PORT={port_config.internal_port}")
+            # Update SERVICE_API_PORT environment variable
+            elif 'ENV SERVICE_API_PORT=' in line:
+                updated_lines.append(f"ENV SERVICE_API_PORT={port_config.internal_port}")
             
             # Update health check URL
             elif 'HEALTHCHECK' in line and 'curl' in line:
@@ -515,7 +515,7 @@ class DockerStandardizationManager:
         
         # Export port documentation
         port_docs = self.create_port_mapping_documentation()
-        with open(f"{output_dir}/PORT_MAPPINGS.md", "w") as f:
+        with open(f"{output_dir}/API_PORT_MAPPINGS.md", "w") as f:
             f.write(port_docs)
         
         print(f"✅ Configurations exported to: {output_dir}")
@@ -602,7 +602,7 @@ def main():
         validation = manager.validate_port_consistency()
     
     if validation["port_conflicts"]:
-        print("\n🚨 PORT CONFLICTS DETECTED:")
+        print("\n🚨 API_PORT CONFLICTS DETECTED:")
         for conflict in validation["port_conflicts"]:
             print(f"  ❌ Port {conflict['port']}: {', '.join(conflict['services'])}")
     

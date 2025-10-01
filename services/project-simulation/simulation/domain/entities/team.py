@@ -46,7 +46,7 @@ class CommunicationStyle(Enum):
     COLLABORATIVE = "collaborative"
     ANALYTICAL = "analytical"
     CREATIVE = "creative"
-    SUPPORTIVE = "supportive"
+    SUPAPI_PORTIVE = "supportive"
 
 
 class WorkStyle(Enum):
@@ -339,7 +339,7 @@ class Team:
         collaboration_score = (team_players / len(self.members)) * 100
 
         # Conflict resolution based on supportive members
-        supportive_members = sum(1 for m in self.members if m.communication_style == CommunicationStyle.SUPPORTIVE)
+        supportive_members = sum(1 for m in self.members if m.communication_style == CommunicationStyle.SUPAPI_PORTIVE)
         conflict_resolution_score = (supportive_members / len(self.members)) * 100
 
         # Trust level based on overall team health

@@ -191,9 +191,9 @@ class DocumentType(Enum):
     ACCEPTANCE_CRITERIA = "acceptance_criteria"
     CODE_REVIEW = "code_review"
     RUNBOOK = "runbook"
-    INCIDENT_REPORT = "incident_report"
+    INCIDENT_REAPI_PORT = "incident_report"
     ROADMAP = "roadmap"
-    STATUS_REPORT = "status_report"
+    STATUS_REAPI_PORT = "status_report"
     RETROSPECTIVE = "retrospective"
     WIKI_PAGE = "wiki_page"
 
@@ -202,10 +202,10 @@ class DocumentType(Enum):
     DATABASE_SCHEMA = "database_schema"
     CONFIGURATION_FILE = "configuration_file"
     LOG_FILE = "log_file"
-    METRICS_REPORT = "metrics_report"
-    PERFORMANCE_REPORT = "performance_report"
+    METRICS_REAPI_PORT = "metrics_report"
+    PERFORMANCE_REAPI_PORT = "performance_report"
     SECURITY_AUDIT = "security_audit"
-    COMPLIANCE_REPORT = "compliance_report"
+    COMPLIANCE_REAPI_PORT = "compliance_report"
 
 
 class ServiceHealth(Enum):

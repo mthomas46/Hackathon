@@ -156,9 +156,9 @@ The Summarizer Hub employs a sophisticated multi-provider architecture designed 
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `SERVICE_PORT` | Service port (internal) | `5160` | Optional |
+| `SERVICE_API_PORT` | Service port (internal) | `5160` | Optional |
 | `RATE_LIMIT_ENABLED` | Enable rate limiting middleware | `true` | Optional |
-| `OLLAMA_HOST` | Ollama service endpoint | `http://ollama:11434` | Optional |
+| `OLLAMA_API_HOST` | Ollama service endpoint | `http://ollama:11434` | Optional |
 | `BEDROCK_MODEL` | Default Bedrock model | `claude-3-sonnet` | Optional |
 | `BEDROCK_REGION` | AWS Bedrock region | `us-east-1` | Optional |
 | `BEDROCK_ENDPOINT` | Bedrock proxy endpoint | - | Optional |
@@ -258,7 +258,7 @@ uvicorn services.summarizer-hub.main:app --reload --port 5160
 ### **🌩️ AWS Integration Setup**
 ```bash
 # Configure AWS credentials
-export AWS_ACCESS_KEY_ID=your_access_key
+export EXTERNAL_AWS_ACCESS_KEY_ID=your_access_key
 export AWS_SECRET_ACCESS_KEY=your_secret_key
 export AWS_REGION=us-east-1
 
