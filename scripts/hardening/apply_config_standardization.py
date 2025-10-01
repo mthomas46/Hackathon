@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 """
-Automated Configuration Standardization Script
-Applies configuration standardization without user interaction
+LEGACY: Automated Configuration Standardization Script
+
+⚠️  DEPRECATED: This script has been superseded by the new unified configuration
+management system. Use the following instead:
+
+For standardization:
+  python scripts/hardening/unified_config_manager.py standardize --apply
+
+For dry-run preview:
+  python scripts/hardening/unified_config_manager.py standardize --dry-run
+
+Migration guide: See CONFIGURATION_STANDARDIZATION_COMPLETE.md
 """
 
 import sys

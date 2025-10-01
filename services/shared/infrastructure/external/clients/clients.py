@@ -111,10 +111,10 @@ class ServiceClients:
 
     def reporting_url(self) -> str:
         return get_config_value(
-            "REPORTING_URL",
+            "REAPI_PORTING_URL",
             "http://reporting:5030",
             section="services",
-            env_key="REPORTING_URL",
+            env_key="REAPI_PORTING_URL",
         )
 
     def consistency_engine_url(self) -> str:

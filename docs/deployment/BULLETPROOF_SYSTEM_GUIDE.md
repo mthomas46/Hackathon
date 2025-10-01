@@ -56,7 +56,7 @@ make -f Makefile.bulletproof status-detailed
 **Location**: `scripts/docker/dockerfile-linter.sh`
 
 **Validation Checks**:
-- **Port Consistency**: EXPOSE, SERVICE_PORT, health check, label ports
+- **Port Consistency**: EXPOSE, SERVICE_API_PORT, health check, label ports
 - **CMD Instruction**: Module vs script execution patterns
 - **Startup Code**: FastAPI and uvicorn.run validation
 - **Health Configuration**: Proper endpoint setup

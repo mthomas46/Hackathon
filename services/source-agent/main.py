@@ -48,10 +48,10 @@ config = load_service_config(
 SERVICE_NAME = config.service_name
 SERVICE_TITLE = config.service_description or "Source Agent"
 SERVICE_VERSION = config.service_version
-DEFAULT_PORT = int(os.environ.get("SERVICE_PORT", 5070))
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", 5070))
 
 # Supported sources and their capabilities
-SUPPORTED_SOURCES = ["github", "jira", "confluence"]
+SUPAPI_PORTED_SOURCES = ["github", "jira", "confluence"]
 SOURCE_CAPABILITIES = {
     "github": ["readme_fetch", "pr_normalization", "code_analysis"],
     "jira": ["issue_normalization"],
@@ -356,7 +356,7 @@ async def list_sources() -> Dict[str, Any]:
     """
     try:
         sources_data = {
-            "sources": SUPPORTED_SOURCES,
+            "sources": SUPAPI_PORTED_SOURCES,
             "capabilities": SOURCE_CAPABILITIES,
             "supported_operations": [
                 "document_fetching",
@@ -395,4 +395,4 @@ if __name__ == "__main__":
     """Run the Source Agent service directly."""
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_PORT, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_API_PORT, log_level="info")

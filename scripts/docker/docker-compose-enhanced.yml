@@ -1,207 +1,167 @@
-# Enhanced Docker Compose with Integrated Validation
-# This template provides bulletproof execution with built-in validation
-
-x-common-healthcheck: &common-healthcheck
+x-common-healthcheck:
   interval: 30s
   timeout: 10s
   retries: 5
   start_period: 60s
-
-x-common-restart: &common-restart
+x-common-restart:
   restart: unless-stopped
-
-x-validation-service: &validation-service
+x-validation-service:
   image: alpine:latest
-  volumes:
-    - ./scripts/docker:/scripts
-    - ./services:/services
-    - .:/workspace
+  volumes: &id001
+  - ./scripts/docker:/scripts
+  - ./services:/services
+  - .:/workspace
   working_dir: /workspace
-
 services:
-  # ==========================================================================
-  # VALIDATION SERVICES
-  # ==========================================================================
-  
   pre-flight-validator:
-    <<: *validation-service
+    image: alpine:latest
+    volumes: *id001
+    working_dir: /workspace
     container_name: pre-flight-validator
-    command: >
-      sh -c "
-        apk add --no-cache bash curl &&
-        echo '🛡️ Running Pre-Flight Validation...' &&
-        /scripts/pre-flight-check.sh &&
-        echo '✅ Pre-Flight Validation Passed'
-      "
+    command: "sh -c \"\n  apk add --no-cache bash curl &&\n  echo '\U0001F6E1\uFE0F\
+      \ Running Pre-Flight Validation...' &&\n  /scripts/pre-flight-check.sh &&\n\
+      \  echo '\u2705 Pre-Flight Validation Passed'\n\"\n"
     profiles:
-      - validation
-
+    - validation
   dockerfile-validator:
-    <<: *validation-service
+    image: alpine:latest
+    volumes: *id001
+    working_dir: /workspace
     container_name: dockerfile-validator
-    command: >
-      sh -c "
-        apk add --no-cache bash curl &&
-        echo '🔍 Running Dockerfile Validation...' &&
-        for service in /services/*/; do
-          service_name=$$(basename $$service)
-          echo 'Validating: $$service_name'
-          /scripts/dockerfile-linter.sh $$service || exit 1
-        done &&
-        echo '✅ All Dockerfiles Valid'
-      "
+    command: "sh -c \"\n  apk add --no-cache bash curl &&\n  echo '\U0001F50D Running\
+      \ Dockerfile Validation...' &&\n  for service in /services/*/; do\n    service_name=$$(basename\
+      \ $$service)\n    echo 'Validating: $$service_name'\n    /scripts/dockerfile-linter.sh\
+      \ $$service || exit 1\n  done &&\n  echo '\u2705 All Dockerfiles Valid'\n\"\n"
     profiles:
-      - validation
-
-  # ==========================================================================
-  # ENHANCED CORE SERVICES WITH VALIDATION
-  # ==========================================================================
-
+    - validation
   redis:
+    restart: unless-stopped
     image: redis:7-alpine
-    <<: *common-restart
     healthcheck:
-      <<: *common-healthcheck
-      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+      test:
+      - CMD
+      - redis-cli
+      - ping
     profiles:
-      - core
-      - development
-      - production
-
+    - core
+    - development
+    - production
   orchestrator:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: services/orchestrator/Dockerfile
-    <<: *common-restart
     environment:
-      - PYTHONPATH=/app
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - REDIS_API_HOST=redis
+    - ENVIRONMENT=development
     ports:
-      - "5099:5099"
+    - 8085:5099
     depends_on:
       redis:
         condition: service_healthy
       dockerfile-validator:
         condition: service_completed_successfully
     healthcheck:
-      <<: *common-healthcheck
-      test: ["CMD", "curl", "-f", "http://localhost:5099/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5099/health
     profiles:
-      - core
-      - development
-      - production
-
+    - core
+    - development
+    - production
   discovery-agent:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: services/discovery-agent/Dockerfile
-    <<: *common-restart
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
     ports:
-      - "5045:5045"
+    - 8085:5045
     depends_on:
       orchestrator:
         condition: service_healthy
       dockerfile-validator:
         condition: service_completed_successfully
+      redis:
+        condition: service_started
     healthcheck:
-      <<: *common-healthcheck
-      test: ["CMD", "curl", "-f", "http://localhost:5045/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5045/health
     profiles:
-      - development
-
-  # ==========================================================================
-  # MONITORING AND HEALING SERVICES
-  # ==========================================================================
-
+    - development
   health-monitor:
-    <<: *validation-service
+    image: alpine:latest
+    volumes: *id001
+    working_dir: /workspace
     container_name: health-monitor
-    command: >
-      sh -c "
-        apk add --no-cache bash curl &&
-        echo '🏥 Starting Health Monitor...' &&
-        while true; do
-          echo '📊 Running Health Check...'
-          /scripts/health-check.sh
-          sleep 300  # Check every 5 minutes
-        done
-      "
+    command: "sh -c \"\n  apk add --no-cache bash curl &&\n  echo '\U0001F3E5 Starting\
+      \ Health Monitor...' &&\n  while true; do\n    echo '\U0001F4CA Running Health\
+      \ Check...'\n    /scripts/health-check.sh\n    sleep 300  # Check every 5 minutes\n\
+      \  done\n\"\n"
     depends_on:
-      - orchestrator
-      - discovery-agent
+    - orchestrator
+    - discovery-agent
     profiles:
-      - monitoring
-
+    - monitoring
   self-healer:
-    <<: *validation-service
-    container_name: self-healer
-    command: >
-      sh -c "
-        apk add --no-cache bash curl docker-cli &&
-        echo '🔧 Self-Healer Ready...' &&
-        while true; do
-          # Check for unhealthy services
-          unhealthy_count=$$(docker ps --filter 'health=unhealthy' --filter 'name=hackathon' --format '{{.Names}}' | wc -l)
-          if [ $$unhealthy_count -gt 0 ]; then
-            echo '🚨 Unhealthy services detected, initiating healing...'
-            docker ps --filter 'health=unhealthy' --filter 'name=hackathon' --format '{{.Names}}' | while read service; do
-              echo 'Restarting: $$service'
-              docker restart $$service
-            done
-          fi
-          sleep 180  # Check every 3 minutes
-        done
-      "
+    image: alpine:latest
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace
+    container_name: self-healer
+    command: "sh -c \"\n  apk add --no-cache bash curl docker-cli &&\n  echo '\U0001F527\
+      \ Self-Healer Ready...' &&\n  while true; do\n    # Check for unhealthy services\n\
+      \    unhealthy_count=$$(docker ps --filter 'health=unhealthy' --filter 'name=hackathon'\
+      \ --format '{{.Names}}' | wc -l)\n    if [ $$unhealthy_count -gt 0 ]; then\n\
+      \      echo '\U0001F6A8 Unhealthy services detected, initiating healing...'\n\
+      \      docker ps --filter 'health=unhealthy' --filter 'name=hackathon' --format\
+      \ '{{.Names}}' | while read service; do\n        echo 'Restarting: $$service'\n\
+      \        docker restart $$service\n      done\n    fi\n    sleep 180  # Check\
+      \ every 3 minutes\n  done\n\"\n"
     profiles:
-      - healing
-
-  # ==========================================================================
-  # VALIDATION HOOKS
-  # ==========================================================================
-
+    - healing
   startup-validator:
-    <<: *validation-service
+    image: alpine:latest
+    volumes: *id001
+    working_dir: /workspace
     container_name: startup-validator
-    command: >
-      sh -c "
-        apk add --no-cache bash curl &&
-        echo '⏳ Waiting for services to stabilize...' &&
-        sleep 60 &&
-        echo '🧪 Running Post-Startup Validation...' &&
-        /scripts/health-check.sh &&
-        if [ $$? -eq 0 ]; then
-          echo '✅ Startup Validation Passed'
-        else
-          echo '❌ Startup Validation Failed'
-          exit 1
-        fi &&
-        echo '🎉 System Ready!'
-      "
+    command: "sh -c \"\n  apk add --no-cache bash curl &&\n  echo '\u23F3 Waiting\
+      \ for services to stabilize...' &&\n  sleep 60 &&\n  echo '\U0001F9EA Running\
+      \ Post-Startup Validation...' &&\n  /scripts/health-check.sh &&\n  if [ $$?\
+      \ -eq 0 ]; then\n    echo '\u2705 Startup Validation Passed'\n  else\n    echo\
+      \ '\u274C Startup Validation Failed'\n    exit 1\n  fi &&\n  echo '\U0001F389\
+      \ System Ready!'\n\"\n"
     depends_on:
-      - orchestrator
-      - discovery-agent
+    - orchestrator
+    - discovery-agent
     profiles:
-      - validation
-
-# ==========================================================================
-# NETWORKS
-# ==========================================================================
+    - validation
 networks:
-  default:
+  hackathon_default:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
-
-# ==========================================================================
-# VOLUMES
-# ==========================================================================
+      - subnet: 172.20.0.0/16
 volumes:
   redis_data:
     driver: local

@@ -106,7 +106,7 @@ if __name__ == "__main__":
     import uvicorn
     import os
     
-    port = int(os.environ.get('SERVICE_PORT', 5025))
+    port = int(os.environ.get('SERVICE_API_PORT', 5025))
     print(f"Starting Code Analyzer service on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
 ```
@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
 ## 🛠️ ADDITIONAL FIXES APPLIED
 
-### **3. PORT MAPPING CORRECTIONS**
+### **3. API_PORT MAPPING CORRECTIONS**
 - **Bedrock Proxy**: 5060:5060 → 5060:7090 ✅
 - **GitHub MCP**: 5030:5030 → 5030:5072 ✅
 

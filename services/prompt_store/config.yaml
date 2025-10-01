@@ -1,0 +1,50 @@
+# Prompt Store Service Configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for prompt-store
+server:
+  host: ${SERVER_API_HOST:-0.0.0.0}
+  port: 5110
+  debug: ${DEBUG:-false}
+  workers: ${SERVER_WORKERS:-1}
+  timeout: ${SERVER_TIMEOUT:-30}
+
+# Prompt store specific settings
+prompt_store:
+  max_prompts_per_page: ${MAX_PROMPTS_PER_PAGE:-100}
+  enable_caching: ${ENABLE_CACHING:-true}
+  cache_ttl_seconds: ${CACHE_TTL_SECONDS:-3600}
+  enable_versioning: ${ENABLE_VERSIONING:-true}
+  max_versions_per_prompt: ${MAX_VERSIONS_PER_PROMPT:-10}
+
+# Service URLs for prompt store integrations
+services:
+  orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
+  doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}
+  analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
+  llm_gateway_url: ${LLM_GATEWAY_URL:-http://llm-gateway:5055}
+
+# Database configuration
+database:
+  type: ${DATABASE_TYPE:-sqlite}
+  path: ${DATABASE_PATH:-prompt_store.db}
+  connection_pool_size: ${DB_CONNECTION_POOL_SIZE:-10}
+
+# Performance limits
+limits:
+  max_prompt_length: ${MAX_PROMPT_LENGTH:-10000}
+  max_batch_size: ${MAX_BATCH_SIZE:-50}
+  request_timeout: ${REQUEST_TIMEOUT:-30}
+  max_concurrent_requests: ${MAX_CONCURRENT_REQUESTS:-10}
+
+# Health check configuration
+health:
+  check_interval: ${HEALTH_CHECK_INTERVAL:-30}
+  timeout: ${HEALTH_TIMEOUT:-10}
+  enabled: ${HEALTH_ENABLED:-true}
+
+# Security configuration
+security:
+  enable_auth: ${ENABLE_AUTH:-false}
+  jwt_secret: ${JWT_SECRET:-change-me-in-production}
+  api_key_required: ${API_KEY_REQUIRED:-false}

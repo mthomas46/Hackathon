@@ -421,8 +421,8 @@ class SecurityFramework:
 ```yaml
 # Configuration Priority (highest to lowest)
 1. Environment Variables: # Runtime override capability
-   SERVICE_PORT: 5099
-   REDIS_HOST: redis-cluster
+   SERVICE_API_PORT: 5099
+   REDIS_API_HOST: redis-cluster
    
 2. Service-specific config.yaml: # Service customization
    port: 5099
@@ -438,7 +438,7 @@ class SecurityFramework:
      enabled: true
      
 5. Hard-coded defaults: # Fallback values
-   DEFAULT_PORT = 5099
+   DEFAULT_API_PORT = 5099
 ```
 
 ### 🐳 Deployment Strategies

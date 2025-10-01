@@ -110,7 +110,7 @@ my-new-service:
     context: .
     dockerfile: services/my-new-service/Dockerfile
   environment:
-    - SERVICE_PORT=5200  # From port registry
+    - SERVICE_API_PORT=5200  # From port registry
   ports:
     - "5200:5200"        # External:Internal
 ```
@@ -135,7 +135,7 @@ make validate-ports
 ```yaml
 # Standard variables for all services
 environment:
-  - SERVICE_PORT=${SERVICE_PORT}    # From port registry
+  - SERVICE_API_PORT=${SERVICE_API_PORT}    # From port registry
   - ENVIRONMENT=${ENVIRONMENT}      # development/staging/production
   - LOG_LEVEL=${LOG_LEVEL}         # DEBUG/INFO/WARN/ERROR
 ```
@@ -198,7 +198,7 @@ analysis_service:
 # Update docker-compose.dev.yml
 analysis-service:
   environment:
-    - SERVICE_PORT=5080  # Tell service which port to use
+    - SERVICE_API_PORT=5080  # Tell service which port to use
   ports:
     - "5080:5020"        # Map external:internal correctly
 ```
@@ -242,7 +242,7 @@ docker-compose config --quiet  # Validate compose syntax
 - Avoid common ports (80, 443, 3000, 8080)
 
 ### 2. **Environment Variables**
-- Use `SERVICE_PORT` for port configuration
+- Use `SERVICE_API_PORT` for port configuration
 - Standardize variable names across services
 - Provide sensible defaults
 - Document required vs optional variables

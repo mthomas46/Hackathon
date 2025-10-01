@@ -16,6 +16,8 @@ Features:
 - Comprehensive testing infrastructure
 """
 
+from services.shared.infrastructure.config import load_service_config
+
 import sys
 import os
 from pathlib import Path
@@ -183,29 +185,13 @@ except ImportError:
         """Fallback health endpoint registration."""
         @app.get("/health")
         async def health():
-            return {"status": "healthy", "service": service_name or SERVICE_NAME}
+# Load service configuration
+config = load_service_config("project-simulation")
 
-        @app.get("/health/detailed")
-        async def health_detailed():
-            return {
-                "status": "healthy",
-                "service": service_name or SERVICE_NAME,
-                "version": SERVICE_VERSION,
-                "timestamp": "2024-01-01T00:00:00Z"
-            }
-
-        @app.get("/health/system")
-        async def health_system():
-            return {
-                "status": "healthy",
-                "service": service_name or SERVICE_NAME,
-                "system": {
-                    "cpu_percent": 25.5,
-                    "memory_percent": 45.2,
-                    "disk_usage": 60.1
-                }
-            }
-
+# Extract commonly used configuration values
+SERVICE_NAME = config.service_name
+SERVICE_VERSION = config.service_version
+DEFAULT_API_PORT = config.server.port
 try:
     from services.shared.core.logging.correlation_middleware import CorrelationMiddleware
 except ImportError:
@@ -358,7 +344,7 @@ config = get_config()
 # Service configuration from config
 SERVICE_NAME = config.service.name
 SERVICE_VERSION = config.service.version
-DEFAULT_PORT = config.service.port
+DEFAULT_API_PORT = config.service.port
 
 # Rate limiting configuration from config
 RATE_LIMITS = {
@@ -1128,7 +1114,7 @@ async def get_simulation_prompt_content(simulation_id: str, prompt_id: str, req:
             raise HTTPException(status_code=500, detail="Failed to retrieve prompt content")
 
 # ============================================================================
-# RECOMMENDATIONS REPORT ENDPOINTS
+# RECOMMENDATIONS REAPI_PORT ENDPOINTS
 # ============================================================================
 
 @app.get("/api/v1/simulations/{simulation_id}/recommendations")
@@ -1528,7 +1514,7 @@ async def generate_comprehensive_summary_report(simulation_id: str, request: Dic
             else:
                 return create_error_response(
                     summary_result.get("error", "Failed to generate comprehensive report"),
-                    error_code="REPORT_GENERATION_FAILED"
+                    error_code="REAPI_PORT_GENERATION_FAILED"
                 )
 
         except Exception as e:

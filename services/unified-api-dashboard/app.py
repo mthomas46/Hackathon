@@ -362,8 +362,8 @@ if os.getenv("ENVIRONMENT") == "production":
     app.add_middleware(
         TrustedHostMiddleware,
         allowed_hosts=(
-            os.getenv("ALLOWED_HOSTS", "").split(",")
-            if os.getenv("ALLOWED_HOSTS")
+            os.getenv("ALLOWED_API_HOSTS", "").split(",")
+            if os.getenv("ALLOWED_API_HOSTS")
             else None
         ),
     )
@@ -818,8 +818,8 @@ async def startup_event():
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("SERVICE_PORT", "8000"))
-    host = os.getenv("SERVICE_HOST", "127.0.0.1")
+    port = int(os.getenv("SERVICE_API_PORT", "8000"))
+    host = os.getenv("SERVICE_API_HOST", "127.0.0.1")
 
     uvicorn.run(
         "app:app",

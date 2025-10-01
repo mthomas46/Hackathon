@@ -211,7 +211,7 @@ def identify_pr_completion_gaps(pr_implementation, requirements_data):
 
 ```python
 # Need to create these report templates
-PR_CONFIDENCE_REPORT_TEMPLATE = {
+PR_CONFIDENCE_REAPI_PORT_TEMPLATE = {
     "executive_summary": "...",
     "confidence_score": "...",
     "gap_analysis": "...",

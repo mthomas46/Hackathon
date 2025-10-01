@@ -241,7 +241,7 @@ class PerformAnalysisCommandValidator(BaseValidator):
         ]:
             errors.append(self.create_error(
                 f"Invalid analysis type: {command.analysis_type}",
-                "UNSUPPORTED_ANALYSIS_TYPE",
+                "UNSUPAPI_PORTED_ANALYSIS_TYPE",
                 "analysis_type"
             ))
 
@@ -334,7 +334,7 @@ class CreateFindingCommandValidator(BaseValidator):
         elif command.severity not in ['critical', 'high', 'medium', 'low', 'info']:
             errors.append(self.create_error(
                 f"Invalid severity: {command.severity}",
-                "UNSUPPORTED_SEVERITY",
+                "UNSUPAPI_PORTED_SEVERITY",
                 "severity"
             ))
 

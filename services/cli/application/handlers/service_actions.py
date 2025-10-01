@@ -684,7 +684,7 @@ class ServiceActions:
 
             import os as _cfg  # Using os.getenv instead of get_config_value
 
-            host = str(os.getenv("REDIS_HOST", "redis")).strip()
+            host = str(os.getenv("REDIS_API_HOST", "redis")).strip()
             port = 6379
             ok = False
             try:

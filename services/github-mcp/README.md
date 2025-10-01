@@ -136,7 +136,7 @@ The GitHub MCP Service implements a clean, extensible architecture based on the 
 | `GITHUB_TOOLSETS` | Comma-separated list of allowed toolsets | `repos,issues` | Optional |
 | `GITHUB_DYNAMIC_TOOLSETS` | Enable query parameter toolset control | `0` | Optional |
 | `GITHUB_READ_ONLY` | Enable read-only mode for write operations | `0` | Optional |
-| `GITHUB_TOKEN` | GitHub API token for production mode | - | Production |
+| `EXTERNAL_GITHUB_TOKEN` | GitHub API token for production mode | - | Production |
 
 ### **🎯 Service Dependencies**
 

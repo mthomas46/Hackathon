@@ -2,12 +2,12 @@
 # Individual services can override these defaults
 
 server:
-  host: ${SERVER_HOST:-0.0.0.0}
-  port: ${SERVER_PORT:-8080}  # Default port, services should override
+  host: ${SERVER_API_HOST:-0.0.0.0}
+  port: ${SERVER_API_PORT:-8080}  # Default port, services should override
 
 redis:
-  host: ${REDIS_HOST:-redis}
-  port: ${REDIS_PORT:-6379}
+  host: ${REDIS_API_HOST:-redis}
+  port: ${REDIS_API_PORT:-6379}
 
 services:
   # Common service URLs used across multiple services

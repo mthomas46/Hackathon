@@ -251,11 +251,14 @@ except ImportError:
 # CONFIGURATION - Using standardized config system
 # ============================================================================
 
-# Load configuration using standardized system
-config = load_service_config(
-    service_type="doc-store",
-    config_file="./config.yaml",  # Optional config file override
-)
+# Validate configuration before loading (startup validation)
+from services.shared.infrastructure.config.startup_validator import validate_service_startup
+if not validate_service_startup("doc_store"):
+    print("❌ Doc Store configuration validation failed - aborting startup")
+    sys.exit(1)
+
+# Load configuration using standardized system (now with Pydantic validation by default)
+config = load_service_config("doc_store")
 
 # Initialize standardized logger
 logger = StandardizedLogger("doc_store", {
@@ -811,11 +814,8 @@ if __name__ == "__main__":
     """Run the Doc Store service directly."""
     import uvicorn
 
-    # Load service configuration
-    config = load_service_config(
-        service_type="doc_store",
-        config_file="./config.yaml",  # Optional config file override
-    )
+    # Load service configuration (Pydantic validation already done at module level)
+    config = load_service_config("doc_store")
 
     # Get port from configuration
     port = config.port

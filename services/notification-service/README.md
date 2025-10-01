@@ -125,7 +125,7 @@ The Notification Service employs a robust, enterprise-grade architecture designe
 |----------|-------------|---------|----------|
 | `NOTIFY_OWNER_MAP_JSON` | Inline JSON mapping for owner resolution | - | Optional |
 | `NOTIFY_OWNER_MAP_FILE` | Path to JSON file containing owner mappings | - | Optional |
-| `SERVICE_PORT` | Service port (internal) | `5130` | Optional |
+| `SERVICE_API_PORT` | Service port (internal) | `5130` | Optional |
 | `TTL_CACHE_SECONDS` | Owner resolution cache TTL | `3600` | Optional |
 
 ### **🎯 Service Dependencies**

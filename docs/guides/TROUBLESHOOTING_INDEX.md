@@ -104,8 +104,8 @@ curl http://localhost:11434/api/tags  # Ollama
 | Provider | Common Issue | Solution |
 |----------|--------------|----------|
 | **Ollama** | Model not available | `docker exec ollama ollama pull llama3.2:1b` |
-| **OpenAI** | API key invalid | Check `OPENAI_API_KEY` environment variable |
-| **Anthropic** | Rate limiting | Check `ANTHROPIC_API_KEY` and usage limits |
+| **OpenAI** | API key invalid | Check `EXTERNAL_OPENAI_API_KEY` environment variable |
+| **Anthropic** | Rate limiting | Check `EXTERNAL_ANTHROPIC_API_KEY` and usage limits |
 | **Bedrock** | AWS credentials | Verify AWS credentials and region |
 
 #### **Problem**: Security analyzer blocking requests

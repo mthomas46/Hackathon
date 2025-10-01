@@ -36,7 +36,7 @@ class ServiceRole(Enum):
     """Service role enumeration."""
 
     CORE = "core"
-    SUPPORTING = "supporting"
+    SUPAPI_PORTING = "supporting"
     INFRASTRUCTURE = "infrastructure"
     MONITORING = "monitoring"
 

@@ -60,8 +60,8 @@ class EnvironmentValidator:
         # Required environment variables for different service types
         self.required_variables = {
             'all': ['SERVICE_NAME'],
-            'web_service': ['SERVICE_PORT'],
-            'database_service': ['REDIS_HOST'],
+            'web_service': ['SERVICE_API_PORT'],
+            'database_service': ['REDIS_API_HOST'],
             'ai_service': ['OLLAMA_ENDPOINT']
         }
 
@@ -69,9 +69,9 @@ class EnvironmentValidator:
         self.naming_patterns = {
             'valid_pattern': re.compile(r'^[A-Z][A-Z0-9_]*$'),
             'service_pattern': re.compile(r'^SERVICE_.*'),
-            'port_pattern': re.compile(r'.*_PORT$'),
+            'port_pattern': re.compile(r'.*_API_PORT$'),
             'url_pattern': re.compile(r'.*_URL$'),
-            'host_pattern': re.compile(r'.*_HOST$')
+            'host_pattern': re.compile(r'.*_API_HOST$')
         }
 
         # Security-sensitive patterns
@@ -83,8 +83,8 @@ class EnvironmentValidator:
 
         # Validation patterns for specific variables
         self.validation_patterns = {
-            'SERVICE_PORT': re.compile(r'^\d{2,5}$'),  # 2-5 digit port numbers
-            'REDIS_HOST': re.compile(r'^[a-zA-Z0-9._-]+$'),  # Valid hostname
+            'SERVICE_API_PORT': re.compile(r'^\d{2,5}$'),  # 2-5 digit port numbers
+            'REDIS_API_HOST': re.compile(r'^[a-zA-Z0-9._-]+$'),  # Valid hostname
             'OLLAMA_ENDPOINT': re.compile(r'^http://.*:\d+$'),  # Valid HTTP URL with port
         }
 
@@ -326,9 +326,9 @@ class EnvironmentValidator:
 
         if 'OLLAMA_ENDPOINT' in var_names or 'ai' in service_name.lower():
             return 'ai_service'
-        elif 'REDIS_HOST' in var_names and 'SERVICE_PORT' in var_names:
+        elif 'REDIS_API_HOST' in var_names and 'SERVICE_API_PORT' in var_names:
             return 'web_service'
-        elif 'REDIS_HOST' in var_names:
+        elif 'REDIS_API_HOST' in var_names:
             return 'database_service'
         else:
             return 'generic_service'
@@ -408,7 +408,7 @@ class EnvironmentValidator:
             base_score -= penalty
 
         # Bonus for having required variables
-        required_vars = {'SERVICE_NAME', 'SERVICE_PORT'}
+        required_vars = {'SERVICE_NAME', 'SERVICE_API_PORT'}
         var_names = {v.name for v in variables}
         if required_vars.issubset(var_names):
             base_score += 10
@@ -436,7 +436,7 @@ class EnvironmentValidator:
     def print_analysis_report(self, analyses: Dict[str, EnvironmentAnalysis]):
         """Print comprehensive environment analysis report"""
         print("\n" + "="*80)
-        print("🌍 ENVIRONMENT VARIABLE VALIDATION REPORT")
+        print("🌍 ENVIRONMENT VARIABLE VALIDATION REAPI_PORT")
         print("="*80)
 
         if not analyses:

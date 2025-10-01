@@ -481,7 +481,7 @@ The doc_store integrates with the centralized notification service for enterpris
 - **Audit Trail**: Complete notification history and delivery tracking
 
 ## Integration
-- Emits `docs.stored` DocumentEnvelope on create (if `REDIS_HOST` set).
+- Emits `docs.stored` DocumentEnvelope on create (if `REDIS_API_HOST` set).
 - Designed to be called by orchestrator/consistency-engine/reporting.
 - Analytics data supports monitoring dashboards and automated insights.
 - Advanced search powers intelligent document discovery across the ecosystem.
@@ -493,7 +493,7 @@ The doc_store integrates with the centralized notification service for enterpris
 Configuration is config-first via `services/shared/config.get_config_value`.
 
 - `DOCSTORE_DB` (or `doc_store.db_path` in `config/app.yaml`): DB path/DSN (default `services/doc_store/db.sqlite3`)
-- `REDIS_HOST` (or `redis.host` in `config/app.yaml`): optional publish of envelope events
+- `REDIS_API_HOST` (or `redis.host` in `config/app.yaml`): optional publish of envelope events
 - `DOC_STORE_URL` (or `services.DOC_STORE_URL` in `config/app.yaml`): base URL for this service
 
 See `config/app.yaml` for central defaults.
@@ -505,9 +505,9 @@ See `config/app.yaml` for central defaults.
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `DOCSTORE_DB` | Database path or connection string | `services/doc_store/db.sqlite3` | ✅ |
-| `REDIS_HOST` | Redis host for event publishing | - | Optional |
+| `REDIS_API_HOST` | Redis host for event publishing | - | Optional |
 | `DOC_STORE_URL` | Base URL for this service | - | Optional |
-| `SERVICE_PORT` | Service port (internal) | `5010` | Optional |
+| `SERVICE_API_PORT` | Service port (internal) | `5010` | Optional |
 
 ### **🔒 Security & Secrets**
 - **Credential Management**: Use `services/shared/credentials.get_secret(name)` for secure secret access

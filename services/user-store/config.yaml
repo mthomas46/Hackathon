@@ -1,9 +1,19 @@
-service_name: "user-store"
-service_description: "User Store Service"
-service_version: "1.0.0"
-port: 8001
-environment: "development"
-debug: true
+# User Store Service Configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for user-store
+server:
+  host: ${SERVER_API_HOST:-0.0.0.0}
+  port: 5150
+  debug: ${DEBUG:-false}
+  workers: ${SERVER_WORKERS:-1}
+  timeout: ${SERVER_TIMEOUT:-30}
+
+# Service metadata
+service:
+  name: "user-store"
+  description: "User Store Service"
+  version: "1.0.0"
 
 # Service dependencies
 dependencies:
@@ -12,13 +22,13 @@ dependencies:
 
 # Repository configuration
 repository:
-  type: "in_memory"  # Options: in_memory, sqlite, postgres
-  connection_string: "sqlite:///user_store.db"
+  type: ${REPOSITORY_TYPE:-in_memory}
+  connection_string: ${REPOSITORY_CONNECTION_STRING:-sqlite:///user_store.db}
 
 # Security configuration
 security:
-  jwt_secret: "your-secret-key-here"
-  token_expiry_hours: 24
+  jwt_secret: ${JWT_SECRET:-change-me-in-production}
+  token_expiry_hours: ${JWT_TOKEN_EXPIRY_HOURS:-24}
 
 # Notification configuration
 notifications:

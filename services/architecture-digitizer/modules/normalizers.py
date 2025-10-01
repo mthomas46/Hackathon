@@ -861,7 +861,7 @@ class ConfluenceFileNormalizer(BaseFileNormalizer):
 
 
 # Registry of supported normalizers
-SUPPORTED_SYSTEMS = {
+SUPAPI_PORTED_SYSTEMS = {
     "miro": MiroNormalizer,
     "figjam": FigJamNormalizer,
     "lucid": LucidNormalizer,
@@ -869,7 +869,7 @@ SUPPORTED_SYSTEMS = {
 }
 
 # Registry of supported file normalizers
-SUPPORTED_FILE_SYSTEMS = {
+SUPAPI_PORTED_FILE_SYSTEMS = {
     "miro": MiroFileNormalizer,
     "figjam": FigJamFileNormalizer,
     "lucid": LucidFileNormalizer,
@@ -895,7 +895,7 @@ def get_normalizer(system: str) -> Optional[BaseNormalizer]:
         if normalizer:
             data = await normalizer.normalize(board_id, token)
     """
-    normalizer_class = SUPPORTED_SYSTEMS.get(system.lower())
+    normalizer_class = SUPAPI_PORTED_SYSTEMS.get(system.lower())
     if normalizer_class:
         return normalizer_class()
     return None
@@ -919,7 +919,7 @@ def get_file_normalizer(system: str) -> Optional[BaseFileNormalizer]:
         if normalizer:
             data = normalizer.normalize_from_file(content, filename)
     """
-    normalizer_class = SUPPORTED_FILE_SYSTEMS.get(system.lower())
+    normalizer_class = SUPAPI_PORTED_FILE_SYSTEMS.get(system.lower())
     if normalizer_class:
         return normalizer_class()
     return None

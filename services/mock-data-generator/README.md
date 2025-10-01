@@ -105,7 +105,7 @@ The Mock Data Generator employs an AI-first architecture designed for intelligen
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `SERVICE_PORT` | Service port (internal) | `5020` | Optional |
+| `SERVICE_API_PORT` | Service port (internal) | `5020` | Optional |
 | `LLM_GATEWAY_URL` | LLM Gateway service URL | `http://llm-gateway:5055` | ✅ |
 | `GENERATION_TIMEOUT` | AI generation timeout (seconds) | `30` | Optional |
 | `MAX_BATCH_SIZE` | Maximum batch generation size | `100` | Optional |

@@ -17,7 +17,7 @@ import json
 
 class EnvironmentType(Enum):
     """Types of execution environments"""
-    HOST_MACHINE = "host_machine"  # Running on host, services in Docker
+    API_HOST_MACHINE = "host_machine"  # Running on host, services in Docker
     DOCKER_INTERNAL = "docker_internal"  # Running inside Docker network
     KUBERNETES = "kubernetes"  # Running in Kubernetes cluster
     DEVELOPMENT = "development"  # Local development setup
@@ -54,7 +54,7 @@ class EnvironmentDetector:
             
         # Check if Docker services are accessible from host
         if self._are_docker_services_accessible():
-            return EnvironmentType.HOST_MACHINE
+            return EnvironmentType.API_HOST_MACHINE
             
         # Default to development
         return EnvironmentType.DEVELOPMENT
@@ -85,7 +85,7 @@ class EnvironmentDetector:
                 return True
                 
             # Check environment variables
-            if "KUBERNETES_SERVICE_HOST" in os.environ:
+            if "KUBERNETES_SERVICE_API_HOST" in os.environ:
                 return True
                 
             return False
@@ -171,7 +171,7 @@ class EnvironmentDetector:
             
         endpoint = self.service_endpoints[service_name]
         
-        if self.environment == EnvironmentType.HOST_MACHINE:
+        if self.environment == EnvironmentType.API_HOST_MACHINE:
             return endpoint.host_url
         elif self.environment == EnvironmentType.DOCKER_INTERNAL:
             return endpoint.docker_url

@@ -168,7 +168,7 @@ def test_cli_list_prompts():
 def generate_report(results):
     """Generate test report."""
     console.print("\n" + "=" * 50)
-    console.print("📊 CLI SIMPLE TEST REPORT")
+    console.print("📊 CLI SIMPLE TEST REAPI_PORT")
     console.print("=" * 50)
 
     table = Table()

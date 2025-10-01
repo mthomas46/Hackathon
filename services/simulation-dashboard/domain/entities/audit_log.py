@@ -15,7 +15,7 @@ class AuditAction(Enum):
     DELETE = "delete"
     EXECUTE = "execute"
     VIEW = "view"
-    EXPORT = "export"
+    EXAPI_PORT = "export"
 
 
 @dataclass

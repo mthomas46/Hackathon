@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
 """
-Unified Configuration Management System for LLM Documentation Ecosystem
-Comprehensive port standardization, service discovery, and configuration validation
+LEGACY: Unified Configuration Management System for LLM Documentation Ecosystem
 
-This system provides:
+⚠️  DEPRECATED: This script has been superseded by the new centralized configuration
+management system. Use `scripts/hardening/unified_config_manager.py` instead.
+
+This legacy system provides:
 1. Centralized port configuration management across all deployment methods
 2. Service discovery and registration validation
 3. Configuration consistency validation between local, Docker, and docker-compose deployments
 4. Automated standardization of service configurations
 5. Comprehensive reporting and conflict resolution
+
+For new development, use:
+  python scripts/hardening/unified_config_manager.py
+
+Migration guide: See CONFIGURATION_STANDARDIZATION_COMPLETE.md
 """
 
 import json
@@ -36,7 +43,7 @@ class DeploymentType(Enum):
 
 class ConfigSource(Enum):
     """Sources of configuration data"""
-    SERVICE_PORTS_YAML = "service-ports.yaml"
+    SERVICE_API_PORTS_YAML = "service-ports.yaml"
     DOCKER_COMPOSE_YAML = "docker-compose.yml"
     DOCKERFILE = "Dockerfile"
     SERVICE_CONFIG_YAML = "config.yml"
@@ -51,7 +58,7 @@ class PortConfiguration:
     protocol: str = "tcp"
     description: str = ""
     deployment_type: DeploymentType = DeploymentType.DOCKER_COMPOSE
-    config_source: ConfigSource = ConfigSource.SERVICE_PORTS_YAML
+    config_source: ConfigSource = ConfigSource.SERVICE_API_PORTS_YAML
 
 @dataclass
 class ServiceConfiguration:
@@ -291,7 +298,7 @@ class UnifiedConfigurationManager:
                             internal_port=config.get('internal_port', config['external_port']),
                             external_port=config['external_port'],
                             description=config.get('description', ''),
-                            config_source=ConfigSource.SERVICE_PORTS_YAML
+                            config_source=ConfigSource.SERVICE_API_PORTS_YAML
                         )
                         standardized_ports[service_name] = port_config
 
@@ -308,7 +315,7 @@ class UnifiedConfigurationManager:
                                 service_name=service_name,
                                 conflict_type="port_mapping_mismatch",
                                 description=f"Docker Compose external port {actual_ports[0]['external']} != service-ports external port {expected_port.external_port}",
-                                affected_sources=[ConfigSource.SERVICE_PORTS_YAML, ConfigSource.DOCKER_COMPOSE_YAML],
+                                affected_sources=[ConfigSource.SERVICE_API_PORTS_YAML, ConfigSource.DOCKER_COMPOSE_YAML],
                                 severity="high",
                                 resolution_suggestion="Update docker-compose.yml to match service-ports.yaml"
                             ))
@@ -379,7 +386,7 @@ class UnifiedConfigurationManager:
                         # Check for service URL environment variables
                         service_urls = {}
                         for key, value in env_vars.items():
-                            if '_URL' in key or '_SERVICE_HOST' in key:
+                            if '_URL' in key or '_SERVICE_API_HOST' in key:
                                 service_urls[key] = value
 
                         if service_urls:
@@ -574,7 +581,7 @@ class UnifiedConfigurationManager:
                 },
                 'environment': [
                     'PYTHONPATH=/app',
-                    f'SERVICE_PORT={port_config.internal_port}',
+                    f'SERVICE_API_PORT={port_config.internal_port}',
                     'ENVIRONMENT=development'
                 ],
                 'ports': [
@@ -603,8 +610,8 @@ class UnifiedConfigurationManager:
         # Add service-specific variables
         for service_name, port_config in self.port_configurations.items():
             service_upper = service_name.upper().replace('-', '_')
-            template += f"{service_upper}_PORT={port_config.external_port}\n"
-            template += f"{service_upper}_INTERNAL_PORT={port_config.internal_port}\n"
+            template += f"{service_upper}_API_PORT={port_config.external_port}\n"
+            template += f"{service_upper}_INTERNAL_API_PORT={port_config.internal_port}\n"
             template += f"{service_upper}_URL=http://localhost:{port_config.external_port}\n\n"
 
         return template
@@ -746,7 +753,7 @@ if __name__ == "__main__":
     def print_comprehensive_report(self, report: Dict[str, Any]):
         """Print comprehensive configuration report"""
         print("\\n" + "="*80)
-        print("🔧 UNIFIED CONFIGURATION MANAGEMENT SYSTEM REPORT")
+        print("🔧 UNIFIED CONFIGURATION MANAGEMENT SYSTEM REAPI_PORT")
         print("="*80)
 
         summary = report['validation_summary']
@@ -767,7 +774,7 @@ if __name__ == "__main__":
 
         # Port Standardization
         ports = report['port_standardization']
-        print(f"\\n🔌 PORT STANDARDIZATION")
+        print(f"\\n🔌 API_PORT STANDARDIZATION")
         print(f"  Total Services: {ports['total_services']}")
 
         # Service Discovery

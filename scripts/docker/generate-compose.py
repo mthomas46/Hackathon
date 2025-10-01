@@ -51,7 +51,7 @@ class DockerComposeGenerator:
             },
             'environment': [
                 'PYTHONPATH=/app',
-                f'SERVICE_PORT={port_config["internal"]}',
+                f'SERVICE_API_PORT={port_config["internal"]}',
                 'ENVIRONMENT=development'
             ],
             'ports': [
@@ -91,8 +91,8 @@ echo "🔍 Validating Service Port Configurations..."
 ERRORS=0
 
 # Check for port conflicts
-declare -A EXTERNAL_PORTS
-declare -A INTERNAL_PORTS
+declare -A EXTERNAL_API_PORTS
+declare -A INTERNAL_API_PORTS
 
 '''
         
@@ -106,17 +106,17 @@ declare -A INTERNAL_PORTS
                 
                 validation_script += f'''
 # {service_name} - {config['description']}
-if [[ -n "${{EXTERNAL_PORTS[{external_port}]}}" ]]; then
-    echo "❌ ERROR: External port {external_port} conflict between {service_name} and ${{EXTERNAL_PORTS[{external_port}]}}"
+if [[ -n "${{EXTERNAL_API_PORTS[{external_port}]}}" ]]; then
+    echo "❌ ERROR: External port {external_port} conflict between {service_name} and ${{EXTERNAL_API_PORTS[{external_port}]}}"
     ERRORS=$((ERRORS + 1))
 else
-    EXTERNAL_PORTS[{external_port}]="{service_name}"
+    EXTERNAL_API_PORTS[{external_port}]="{service_name}"
 fi
 
-if [[ -n "${{INTERNAL_PORTS[{internal_port}]}}" ]]; then
-    echo "⚠️  WARNING: Internal port {internal_port} conflict between {service_name} and ${{INTERNAL_PORTS[{internal_port}]}}"
+if [[ -n "${{INTERNAL_API_PORTS[{internal_port}]}}" ]]; then
+    echo "⚠️  WARNING: Internal port {internal_port} conflict between {service_name} and ${{INTERNAL_API_PORTS[{internal_port}]}}"
 fi
-INTERNAL_PORTS[{internal_port}]="{service_name}"
+INTERNAL_API_PORTS[{internal_port}]="{service_name}"
 '''
 
         validation_script += '''
@@ -152,8 +152,8 @@ fi
             
             for service_name, config in services.items():
                 service_upper = service_name.upper().replace('-', '_')
-                env_template += f"{service_upper}_PORT={config['external_port']}\n"
-                env_template += f"{service_upper}_INTERNAL_PORT={config['internal_port']}\n"
+                env_template += f"{service_upper}_API_PORT={config['external_port']}\n"
+                env_template += f"{service_upper}_INTERNAL_API_PORT={config['internal_port']}\n"
                 
         return env_template
     

@@ -198,7 +198,7 @@ class TestFrontendIntegration:
 
         env_data = info_data["env"]
         # Should contain URLs for integrated services
-        service_urls = ["REPORTING_URL", "DOC_STORE_URL", "CONSISTENCY_ENGINE_URL"]
+        service_urls = ["REAPI_PORTING_URL", "DOC_STORE_URL", "CONSISTENCY_ENGINE_URL"]
         for url_key in service_urls:
             assert url_key in env_data
 

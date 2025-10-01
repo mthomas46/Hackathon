@@ -43,12 +43,12 @@ for dockerfile in services/*/Dockerfile; do
         
         # Extract ports from Dockerfile
         expose_port=$(grep "EXPOSE" "$dockerfile" | awk '{print $2}' | head -1)
-        env_port=$(grep "SERVICE_PORT=" "$dockerfile" | cut -d'=' -f2 | head -1)
+        env_port=$(grep "SERVICE_API_PORT=" "$dockerfile" | cut -d'=' -f2 | head -1)
         health_port=$(grep -o "localhost:[0-9]*" "$dockerfile" | cut -d':' -f2 | head -1)
         
         # Check port consistency
         if [[ -n "$expose_port" && -n "$env_port" && "$expose_port" != "$env_port" ]]; then
-            log_error "Port mismatch in $service_name: EXPOSE $expose_port vs SERVICE_PORT $env_port"
+            log_error "Port mismatch in $service_name: EXPOSE $expose_port vs SERVICE_API_PORT $env_port"
         fi
         
         if [[ -n "$health_port" && -n "$expose_port" && "$health_port" != "$expose_port" ]]; then
@@ -99,7 +99,7 @@ for main_file in services/*/main.py; do
 done
 
 echo ""
-echo "🔍 3. PORT REGISTRY CONSISTENCY"
+echo "🔍 3. API_PORT REGISTRY CONSISTENCY"
 echo "-------------------------------"
 
 # Check consistency with port registry

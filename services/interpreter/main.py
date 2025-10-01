@@ -30,8 +30,8 @@ def configure_service_urls():
         "LLM_GATEWAY_URL": "http://llm-gateway:5055",
 
         # Interpreter Service Configuration
-        "INTERPRETER_SERVICE_HOST": "127.0.0.1",
-        "INTERPRETER_SERVICE_PORT": "5120",
+        "INTERPRETER_SERVICE_API_HOST": "127.0.0.1",
+        "INTERPRETER_SERVICE_API_PORT": "5120",
     }
 
     # Set defaults only if not already set
@@ -1696,6 +1696,6 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info("🚀 Starting Enhanced Interpreter Service with Document Persistence...")
-    host = os.getenv("INTERPRETER_SERVICE_HOST", "127.0.0.1")
-    port = int(os.getenv("INTERPRETER_SERVICE_PORT", "5120"))
+    host = os.getenv("INTERPRETER_SERVICE_API_HOST", "127.0.0.1")
+    port = int(os.getenv("INTERPRETER_SERVICE_API_PORT", "5120"))
     uvicorn.run(app, host=host, port=port)

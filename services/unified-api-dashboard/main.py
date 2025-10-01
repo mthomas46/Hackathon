@@ -6,6 +6,8 @@ This is the main entry point for the Unified API Dashboard service.
 It imports and runs the FastAPI application.
 """
 
+from services.shared.infrastructure.config import load_service_config
+
 import os
 import sys
 
@@ -17,8 +19,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.getenv("SERVICE_PORT", "8000"))
-    host = os.getenv("SERVICE_HOST", "127.0.0.1")
+    port = int(os.getenv("SERVICE_API_PORT", "8000"))
+    host = os.getenv("SERVICE_API_HOST", "127.0.0.1")
 
     print("🚀 Starting Unified API Dashboard...")
     print(f"📍 Host: {host}")

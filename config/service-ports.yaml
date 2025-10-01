@@ -125,7 +125,7 @@ health_endpoints:
   interval: 30s
   retries: 3
 environment_standards:
-  port_variable: SERVICE_PORT
-  host_variable: SERVICE_HOST
+  port_variable: SERVICE_API_PORT
+  host_variable: SERVICE_API_HOST
   environment_variable: ENVIRONMENT
   log_level_variable: LOG_LEVEL

@@ -21,7 +21,7 @@
     "\ud83d\udea8 CRITICAL: Service requires immediate attention - score below 60",
     "\ud83d\uddc2\ufe0f CLEANUP: Remove empty directories or add necessary files",
     "\ud83d\udc33 DOCKER: Ensure Dockerfile exists with FROM, EXPOSE, and HEALTHCHECK",
-    "\ud83d\udd0c PORTS: Check for port conflicts using port validation script",
+    "\ud83d\udd0c API_PORTS: Check for port conflicts using port validation script",
     "\ud83d\udccb MAKEFILE: Ensure service is integrated in CI/CD Makefile targets"
   ],
   "metadata": {

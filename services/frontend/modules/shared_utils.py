@@ -23,9 +23,9 @@ _DEFAULT_TIMEOUT = 30
 # Service URL configurations - DRY refactoring: consolidated from 18 individual functions
 _SERVICE_URL_CONFIGS = {
     "reporting": {
-        "config_key": "REPORTING_URL",
+        "config_key": "REAPI_PORTING_URL",
         "default_url": "http://reporting:5030",
-        "env_key": EnvVars.REPORTING_URL_ENV,
+        "env_key": EnvVars.REAPI_PORTING_URL_ENV,
     },
     "doc_store": {
         "config_key": "DOC_STORE_URL",

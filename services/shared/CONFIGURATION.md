@@ -13,15 +13,15 @@ This document describes the environment variables and configuration options avai
 | `SHARED_CONTACT_URL` | `https://shared.company.com/support` | Support/contact URL |
 | `SHARED_LICENSE_NAME` | `Proprietary` | License name |
 | `SHARED_LICENSE_URL` | `https://shared.company.com/license` | License URL |
-| `SHARED_DOCS_HOST` | `localhost` | Host for documentation URLs in logs |
-| `SHARED_DOCS_PORT` | `8000` | Port for documentation URLs in logs |
+| `SHARED_DOCS_API_HOST` | `localhost` | Host for documentation URLs in logs |
+| `SHARED_DOCS_API_PORT` | `8000` | Port for documentation URLs in logs |
 
 ### Redis Configuration
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `REDIS_HOST` | `localhost` | Redis server hostname |
-| `REDIS_PORT` | `6379` | Redis server port |
+| `REDIS_API_HOST` | `localhost` | Redis server hostname |
+| `REDIS_API_PORT` | `6379` | Redis server port |
 
 ### Existing Configuration (inherited from base config)
 
@@ -44,8 +44,8 @@ SHARED_CONTACT_EMAIL=devops@yourcompany.com
 SHARED_CONTACT_URL=https://yourcompany.com/devops-support
 
 # Redis Configuration
-REDIS_HOST=redis.yourcompany.com
-REDIS_PORT=6379
+REDIS_API_HOST=redis.yourcompany.com
+REDIS_API_PORT=6379
 
 # Standard Configuration
 ENVIRONMENT=production

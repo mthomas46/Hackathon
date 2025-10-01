@@ -1,0 +1,26 @@
+services:
+  _template:
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python
+      services/_template/main.py"
+    environment:
+    - ENVIRONMENT=development
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: python:3.12-slim
+    volumes:
+    - ./:/app:ro
+    - _template_code:/app:rw
+    working_dir: /app
+    networks:
+    - hackathon_default
+version: '3.9'
+networks:
+  hackathon_default:
+    driver: bridge

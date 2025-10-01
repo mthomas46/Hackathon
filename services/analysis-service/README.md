@@ -118,8 +118,8 @@ Content-Type: application/json
 | `DOC_STORE_URL` | Doc Store service base URL | - | ✅ |
 | `SOURCE_AGENT_URL` | Source Agent service base URL | - | ✅ |
 | `ANALYSIS_SERVICE_URL` | Self base URL for internal calls | - | Optional |
-| `REDIS_HOST` | Redis host for event processing | `redis` | Optional |
-| `SERVICE_PORT` | Service port (internal) | `5020` | Optional |
+| `REDIS_API_HOST` | Redis host for event processing | `redis` | Optional |
+| `SERVICE_API_PORT` | Service port (internal) | `5020` | Optional |
 
 ### **🎯 Service Dependencies**
 

@@ -611,7 +611,7 @@ alerts:
 - **Technical Support**: support@company.com
 - **Documentation**: docs@company.com  
 - **Feature Requests**: features@company.com
-- **Emergency Support**: +1-800-SUPPORT (24/7)
+- **Emergency Support**: +1-800-SUPAPI_PORT (24/7)
 
 ### **Community Resources**
 - **GitHub Discussions**: https://github.com/company/llm-ecosystem/discussions

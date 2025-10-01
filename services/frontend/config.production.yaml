@@ -1,0 +1,15 @@
+logging:
+  console: false
+  file_path: /var/log/frontend.log
+  level: INFO
+redis:
+  max_connections: 50
+security:
+  cors_origins:
+  - https://yourdomain.com
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 100
+server:
+  debug: false
+  workers: 4

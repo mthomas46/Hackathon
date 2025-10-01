@@ -36,8 +36,8 @@ class CacheConfig:
     def from_env(cls) -> 'CacheConfig':
         """Create configuration from environment variables."""
         return cls(
-            redis_host=os.getenv('REDIS_HOST', 'localhost'),
-            redis_port=int(os.getenv('REDIS_PORT', '6379')),
+            redis_host=os.getenv('REDIS_API_HOST', 'localhost'),
+            redis_port=int(os.getenv('REDIS_API_PORT', '6379')),
             redis_db=int(os.getenv('REDIS_DB', '0')),
             redis_password=os.getenv('REDIS_PASSWORD'),
             redis_ssl=os.getenv('REDIS_SSL', 'false').lower() == 'true',

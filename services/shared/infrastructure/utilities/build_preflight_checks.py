@@ -607,7 +607,7 @@ class BuildPreflightChecker:
                     # Some variables might have defaults or be optional
                     if not any(
                         default_indicator in var
-                        for default_indicator in ["_URL", "_HOST", "_PORT"]
+                        for default_indicator in ["_URL", "_API_HOST", "_API_PORT"]
                     ):
                         required_env_vars.add(var)
                     else:
@@ -647,8 +647,8 @@ class BuildPreflightChecker:
             # Look for port configurations in environment or config
             ports_to_check = set()
 
-            # Check environment variables for SERVICE_PORT
-            service_port = os.environ.get("SERVICE_PORT")
+            # Check environment variables for SERVICE_API_PORT
+            service_port = os.environ.get("SERVICE_API_PORT")
             if service_port:
                 try:
                     ports_to_check.add(int(service_port))

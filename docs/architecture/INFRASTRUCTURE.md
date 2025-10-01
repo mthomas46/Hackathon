@@ -25,9 +25,9 @@ Central loader at `services/shared/config.py`:
 Helper: `get_config_value(key, default, section=None, env_key=None)`
 
 ### Common Environment Variables
-- Core: `REDIS_HOST`, `DOC_STORE_URL`, `ANALYSIS_SERVICE_URL`, `SOURCE_AGENT_URL`, `REPORTING_URL`, `ORCHESTRATOR_PEERS`
+- Core: `REDIS_API_HOST`, `DOC_STORE_URL`, `ANALYSIS_SERVICE_URL`, `SOURCE_AGENT_URL`, `REAPI_PORTING_URL`, `ORCHESTRATOR_PEERS`
 - HTTP client: `HTTP_CLIENT_TIMEOUT`, `HTTP_RETRY_ATTEMPTS`, `HTTP_RETRY_BASE_MS`, `HTTP_CIRCUIT_ENABLED`
-- Summarizer Hub: `RATE_LIMIT_ENABLED`, `OLLAMA_HOST`, `BEDROCK_ENDPOINT`, `BEDROCK_MODEL`, `BEDROCK_REGION`, `BEDROCK_API_KEY`
+- Summarizer Hub: `RATE_LIMIT_ENABLED`, `OLLAMA_API_HOST`, `BEDROCK_ENDPOINT`, `BEDROCK_MODEL`, `BEDROCK_REGION`, `BEDROCK_API_KEY`
 
 ### Docker secrets example (compose)
 
@@ -41,7 +41,7 @@ services:
     # Map secrets into files and export to env at runtime, then start service
     secrets:
       - github_token
-    command: bash -lc "export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
+    command: bash -lc "export EXTERNAL_GITHUB_TOKEN=$(cat /run/secrets/github_token); \
       pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/source-agent/main.py"
     ports: ["5000:5000"]
 
@@ -52,7 +52,7 @@ secrets:
 
 Notes:
 - Keep secret files out of git (e.g., `./secrets/*` in .gitignore).
-- Services resolve secrets via `services/shared/credentials.get_secret("GITHUB_TOKEN")`.
+- Services resolve secrets via `services/shared/credentials.get_secret("EXTERNAL_GITHUB_TOKEN")`.
 
 ---
 
@@ -340,18 +340,18 @@ All infrastructure management endpoints are available under `/infrastructure/`:
 
 ```bash
 # Redis Configuration
-REDIS_HOST=redis
-REDIS_PORT=6379
+REDIS_API_HOST=redis
+REDIS_API_PORT=6379
 
 # PostgreSQL Configuration
-POSTGRES_HOST=postgres
+POSTGRES_API_HOST=postgres
 POSTGRES_DB=doc_consistency
 POSTGRES_USER=doc_user
 POSTGRES_PASSWORD=doc_password
 
 # Tracing Configuration
-JAEGER_AGENT_HOST=jaeger
-JAEGER_AGENT_PORT=14268
+JAEGER_AGENT_API_HOST=jaeger
+JAEGER_AGENT_API_PORT=14268
 
 # Monitoring Configuration
 PROMETHEUS_GATEWAY=prometheus:9090

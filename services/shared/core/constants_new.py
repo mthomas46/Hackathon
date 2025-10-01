@@ -52,8 +52,8 @@ class EnvVars:
     DEBUG = "DEBUG"
     DATABASE_URL = "DATABASE_URL"
     REDIS_URL = "REDIS_URL"
-    REDIS_HOST = "REDIS_HOST"
-    REDIS_PORT = "REDIS_PORT"
+    REDIS_API_HOST = "REDIS_API_HOST"
+    REDIS_API_PORT = "REDIS_API_PORT"
     SECRET_KEY = "SECRET_KEY"
 
     # HTTP Headers
@@ -61,7 +61,7 @@ class EnvVars:
 
     # Service URLs
     LOG_COLLECTOR_URL_ENV = "LOG_COLLECTOR_URL"
-    REPORTING_URL_ENV = "REPORTING_URL"
+    REAPI_PORTING_URL_ENV = "REAPI_PORTING_URL"
     CONSISTENCY_ENGINE_URL_ENV = "CONSISTENCY_ENGINE_URL"
     ORCHESTRATOR_URL = "ORCHESTRATOR_URL"
     ORCHESTRATOR_URL_ENV = "ORCHESTRATOR_URL"
@@ -93,12 +93,12 @@ class EnvVars:
     SHARED_CONTACT_URL = "SHARED_CONTACT_URL"
     SHARED_LICENSE_NAME = "SHARED_LICENSE_NAME"
     SHARED_LICENSE_URL = "SHARED_LICENSE_URL"
-    SHARED_DOCS_HOST = "SHARED_DOCS_HOST"
-    SHARED_DOCS_PORT = "SHARED_DOCS_PORT"
+    SHARED_DOCS_API_HOST = "SHARED_DOCS_API_HOST"
+    SHARED_DOCS_API_PORT = "SHARED_DOCS_API_PORT"
 
 
 # ============================================================================
-# SERVICE NAMES AND PORTS
+# SERVICE NAMES AND API_PORTS
 # ============================================================================
 
 
@@ -190,7 +190,7 @@ class ErrorCodes:
     SERVICE_UNAVAILABLE = "service_unavailable"
     DATABASE_ERROR = "database_error"
     ANALYSIS_FAILED = "analysis_failed"
-    REPORT_GENERATION_FAILED = "report_generation_failed"
+    REAPI_PORT_GENERATION_FAILED = "report_generation_failed"
     DOCUMENT_FETCH_FAILED = "document_fetch_failed"
     CATEGORY_RETRIEVAL_FAILED = "category_retrieval_failed"
     NATURAL_LANGUAGE_ANALYSIS_FAILED = "natural_language_analysis_failed"

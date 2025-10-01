@@ -1,49 +1,85 @@
-# Individual Docker Compose for Doc Store Service
-# This allows the doc_store to run independently with its own Redis instance and SQLite database
-
-version: "3.9"
-
 services:
   doc_store:
     image: python:3.12-slim
     working_dir: /app
     volumes:
-      - ../../:/app:ro
-      - ./:/app/services/doc_store:rw
-      - ../../:/app:ro
-      - doc_store_data:/app/services/doc_store
+    - ./:/app:ro
+    - doc_store_code:/app:rw
+    - doc_store_data:/app/services/doc_store
     environment:
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/doc_store/main.py"
+    - REDIS_API_HOST=redis
+    - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis &&
+      python services/doc_store/main.py"
     ports:
-      - "5087:5087"
+    - 8085:5087
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5087/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5087/health
       interval: 30s
       timeout: 10s
       retries: 3
-
+    networks:
+    - hackathon_default
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+    - 6379:6379
     volumes:
-      - ../../:/app:ro
-      - ./:/app/services/doc_store:rw
-      - redis_data:/data
+    - ./:/app:ro
+    - redis_code:/app:rw
+    - redis_data:/data
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+      - CMD
+      - redis-cli
+      - ping
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+    - hackathon_default
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+    - POSTGRES_DB=hackathon
+    - POSTGRES_USER=hackathon
+    - POSTGRES_PASSWORD=hackathon
+    ports:
+    - 5432:5432
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U hackathon -d hackathon
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+    - hackathon_default
 
 volumes:
   redis_data:
     driver: local
+  postgres_data:
+    driver: local
   doc_store_data:
     driver: local
+  doc_store_code:
+    driver: local
+  redis_code:
+    driver: local
+networks:
+  hackathon_default:
+    driver: bridge

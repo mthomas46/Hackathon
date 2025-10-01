@@ -85,9 +85,9 @@ class TestEnvironmentSwitching:
 
         # Test environment variable overrides
         overrides = {
-            "DATABASE_HOST": "db.example.com",
-            "API_PORT": "9000",
-            "REDIS_HOST": "redis-cluster",
+            "DATABASE_API_HOST": "db.example.com",
+            "API_API_PORT": "9000",
+            "REDIS_API_HOST": "redis-cluster",
         }
 
         with patch.dict(os.environ, overrides):
@@ -212,9 +212,9 @@ class TestEnvironmentSwitching:
     def _apply_environment_overrides(self, config):
         """Mock environment variable override application."""
         overrides = {
-            "DATABASE_HOST": "database.host",
-            "API_PORT": "api.port",
-            "REDIS_HOST": "redis.host",
+            "DATABASE_API_HOST": "database.host",
+            "API_API_PORT": "api.port",
+            "REDIS_API_HOST": "redis.host",
         }
 
         result = json.loads(json.dumps(config))  # Deep copy

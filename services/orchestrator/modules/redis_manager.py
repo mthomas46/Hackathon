@@ -158,7 +158,7 @@ class RedisManager:
         if not REDIS_AVAILABLE:
             raise RuntimeError("Redis dependencies not available")
 
-        self.host = host or get_config_value("REDIS_HOST", "redis", env_key="REDIS_HOST")
+        self.host = host or get_config_value("REDIS_API_HOST", "redis", env_key="REDIS_API_HOST")
         self.port = port
         self.db = db
         self.password = password

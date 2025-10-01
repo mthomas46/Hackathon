@@ -4,6 +4,8 @@ A lightweight service for managing external service metadata, relationships,
 and technical specifications in the LLM Documentation Ecosystem.
 """
 
+from services.shared.infrastructure.config import load_service_config
+
 import time
 from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, HTTPException, Query, Depends, Form
@@ -24,7 +26,13 @@ from .domain.services.external_service_service import ExternalServiceService
 # SERVICE CONFIGURATION
 # ============================================================================
 
-SERVICE_NAME = "external-service-store"
+# Load service configuration
+config = load_service_config("external-service-store")
+
+# Extract commonly used configuration values
+SERVICE_NAME = config.service_name
+SERVICE_VERSION = config.service_version
+DEFAULT_API_PORT = config.server.port
 SERVICE_VERSION = "1.0.0"
 SERVICE_TITLE = "External Service Store"
 SERVICE_DESCRIPTION = """
@@ -1267,6 +1275,6 @@ async def get_recent_service_activity(service_id: str):
 if __name__ == "__main__":
     import uvicorn
     import os
-    port = int(os.getenv("SERVICE_PORT", "5140"))
-    host = os.getenv("SERVICE_HOST", "0.0.0.0")
+    port = int(os.getenv("SERVICE_API_PORT", "5140"))
+    host = os.getenv("SERVICE_API_HOST", "0.0.0.0")
     uvicorn.run(app, host=host, port=port)

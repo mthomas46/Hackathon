@@ -1,10 +1,9 @@
-version: '3.8'
 services:
   redis:
     container_name: hackathon-redis-1
     build: ./services/redis
     networks:
-    - hackathon
+    - hackathon_default
     ports:
     - 6379:6379
     environment: {}
@@ -30,11 +29,11 @@ services:
     container_name: hackathon-doc_store-1
     build: ./services/doc_store
     networks:
-    - hackathon
+    - hackathon_default
     ports:
-    - 5087:5010
+    - 8085:5010
     environment:
-      SERVICE_PORT: '5010'
+      SERVICE_API_PORT: '5010'
       REDIS_URL: redis://redis:6379
     healthcheck:
       test:
@@ -52,6 +51,7 @@ services:
     restart: always
     depends_on:
     - redis
+    - postgres
     logging:
       driver: json-file
       options:
@@ -61,11 +61,11 @@ services:
     container_name: hackathon-orchestrator-1
     build: ./services/orchestrator
     networks:
-    - hackathon
+    - hackathon_default
     ports:
-    - 5099:5099
+    - 8085:5099
     environment:
-      SERVICE_PORT: '5099'
+      SERVICE_API_PORT: '5099'
       REDIS_URL: redis://redis:6379
     healthcheck:
       test:
@@ -92,11 +92,11 @@ services:
     container_name: hackathon-llm-gateway-1
     build: ./services/llm-gateway
     networks:
-    - hackathon
+    - hackathon_default
     ports:
-    - 5055:5055
+    - 8085:5055
     environment:
-      SERVICE_PORT: '5055'
+      SERVICE_API_PORT: '5055'
       OLLAMA_ENDPOINT: http://ollama:11434
     healthcheck:
       test:
@@ -114,6 +114,7 @@ services:
     restart: always
     depends_on:
     - ollama
+    - redis
     logging:
       driver: json-file
       options:
@@ -123,11 +124,11 @@ services:
     container_name: hackathon-analysis-service-1
     build: ./services/analysis-service
     networks:
-    - hackathon
+    - hackathon_default
     ports:
-    - 5080:5020
+    - 8085:5020
     environment:
-      SERVICE_PORT: '5020'
+      SERVICE_API_PORT: '5020'
       DOC_STORE_URL: http://doc_store:5010
       LLM_GATEWAY_URL: http://llm-gateway:5055
     healthcheck:
@@ -147,6 +148,7 @@ services:
     depends_on:
     - doc_store
     - llm-gateway
+    - redis
     logging:
       driver: json-file
       options:
@@ -156,11 +158,11 @@ services:
     container_name: hackathon-discovery-agent-1
     build: ./services/discovery-agent
     networks:
-    - hackathon
+    - hackathon_default
     ports:
-    - 5045:5045
+    - 8085:5045
     environment:
-      SERVICE_PORT: '5045'
+      SERVICE_API_PORT: '5045'
       ORCHESTRATOR_URL: http://orchestrator:5099
     healthcheck:
       test:
@@ -178,6 +180,7 @@ services:
     restart: always
     depends_on:
     - orchestrator
+    - redis
     logging:
       driver: json-file
       options:
@@ -187,11 +190,11 @@ services:
     container_name: hackathon-notification-service-1
     build: ./services/notification-service
     networks:
-    - hackathon
+    - hackathon_default
     ports:
-    - 5130:5020
+    - 8085:5020
     environment:
-      SERVICE_PORT: '5020'
+      SERVICE_API_PORT: '5020'
     healthcheck:
       test:
       - CMD
@@ -211,13 +214,15 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    depends_on:
+    - redis
   frontend:
     container_name: hackathon-frontend-1
     build: ./services/frontend
     networks:
-    - hackathon
+    - hackathon_default
     ports:
-    - 3000:3000
+    - 8085:3000
     environment:
       REACT_APP_API_URL: http://localhost:5099
     healthcheck:
@@ -235,6 +240,7 @@ services:
     restart: always
     depends_on:
     - orchestrator
+    - unified-api-dashboard
     logging:
       driver: json-file
       options:
@@ -244,9 +250,9 @@ services:
     container_name: hackathon-ollama-1
     build: ./services/ollama
     networks:
-    - hackathon
+    - hackathon_default
     ports:
-    - 11434:11434
+    - 8085:11434
     environment: {}
     healthcheck:
       test:
@@ -267,7 +273,9 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    depends_on:
+    - redis
 networks:
-  hackathon:
+  hackathon_default:
     driver: bridge
 profiles: {}

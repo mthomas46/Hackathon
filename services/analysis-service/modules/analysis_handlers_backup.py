@@ -51,7 +51,7 @@ class AnalysisHandlers:
             # Publish findings event
             if aioredis and findings:
                 from services.shared.core.config.config import get_config_value
-                redis_host = get_config_value("REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST")
+                redis_host = get_config_value("REDIS_API_HOST", "redis", section="redis", env_key="REDIS_API_HOST")
                 client = aioredis.from_url(f"redis://{redis_host}")
                 try:
                     await client.publish("findings.created", {

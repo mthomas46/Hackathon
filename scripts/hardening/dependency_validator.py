@@ -415,7 +415,7 @@ class DependencyValidator:
     def print_analysis_report(self, graph: DependencyGraph):
         """Print comprehensive dependency analysis report"""
         print("\n" + "="*80)
-        print("🔗 SERVICE DEPENDENCY ANALYSIS REPORT")
+        print("🔗 SERVICE DEPENDENCY ANALYSIS REAPI_PORT")
         print("="*80)
 
         print(f"\n📊 SUMMARY")

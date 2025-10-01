@@ -60,7 +60,7 @@
       "service": "doc_store",
       "type": "environment",
       "deployments": "local_development vs standardized_config",
-      "difference": "SERVICE_PORT: '5087' vs '5010'",
+      "difference": "SERVICE_API_PORT: '5087' vs '5010'",
       "severity": "high"
     },
     {
@@ -200,7 +200,7 @@
       "service": "memory_agent",
       "type": "environment",
       "deployments": "local_development vs standardized_config",
-      "difference": "SERVICE_PORT: '5090' vs '5040'",
+      "difference": "SERVICE_API_PORT: '5090' vs '5040'",
       "severity": "high"
     },
     {
@@ -256,7 +256,7 @@
       "service": "analysis_service",
       "type": "environment",
       "deployments": "local_development vs standardized_config",
-      "difference": "SERVICE_PORT: '5080' vs '5020'",
+      "difference": "SERVICE_API_PORT: '5080' vs '5020'",
       "severity": "high"
     },
     {
@@ -298,7 +298,7 @@
       "service": "secure-analyzer",
       "type": "environment",
       "deployments": "local_development vs standardized_config",
-      "difference": "SERVICE_PORT: '5100' vs '5070'",
+      "difference": "SERVICE_API_PORT: '5100' vs '5070'",
       "severity": "high"
     },
     {
@@ -326,7 +326,7 @@
       "service": "log_collector",
       "type": "environment",
       "deployments": "local_development vs standardized_config",
-      "difference": "SERVICE_PORT: '5040' vs '5080'",
+      "difference": "SERVICE_API_PORT: '5040' vs '5080'",
       "severity": "high"
     },
     {
@@ -632,7 +632,7 @@
     }
   ],
   "recommendations": [
-    "Critical: Standardize SERVICE_PORT environment variables",
+    "Critical: Standardize SERVICE_API_PORT environment variables",
     "Standardize health check endpoints across deployments",
     "Implement automated configuration validation in CI/CD pipeline",
     "Create deployment-specific configuration templates",

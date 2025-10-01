@@ -453,7 +453,7 @@ class ConsolidatedEcosystemManager:
     def generate_audit_report(self, gaps: Dict[str, Any]) -> None:
         """Generate comprehensive audit report"""
         print("\n" + "=" * 80)
-        print("📋 ECOSYSTEM API vs CLI AUDIT REPORT")
+        print("📋 ECOSYSTEM API vs CLI AUDIT REAPI_PORT")
         print("=" * 80)
         
         # Overall statistics

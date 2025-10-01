@@ -58,7 +58,7 @@ class EnvironmentDetector:
             os.getenv("USER", "").startswith(("dev", "user")),
 
             # Development ports
-            os.getenv("PORT", "").startswith(("3000", "5000", "8000", "8080"))
+            os.getenv("API_PORT", "").startswith(("3000", "5000", "8000", "8080"))
         ]
 
         return any(indicators)
@@ -260,7 +260,7 @@ class EnvironmentConfig:
             overrides.setdefault("service", {})["debug"] = True
             overrides.setdefault("development", {})["debug_mode"] = True
 
-        if os.getenv("ENABLE_PROFILING", "").lower() == "true":
+        if os.getenv("FEATURE_PROFILING", "").lower() == "true":
             overrides.setdefault("monitoring", {})["enable_profiling"] = True
 
         if os.getenv("DISABLE_RATE_LIMITS", "").lower() == "true":

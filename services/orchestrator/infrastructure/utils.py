@@ -13,7 +13,7 @@ from services.shared.core.constants_new import EnvVars
 def get_service_url(service_name: str, default_url: str) -> str:
     """Get service URL with environment variable support."""
     url_env_map = {
-        "reporting": EnvVars.REPORTING_URL_ENV,
+        "reporting": EnvVars.REAPI_PORTING_URL_ENV,
         "secure_analyzer": EnvVars.SECURE_ANALYZER_URL_ENV,
         "prompt_store": EnvVars.PROMPT_STORE_URL_ENV,
         "interpreter": EnvVars.INTERPRETER_URL_ENV,

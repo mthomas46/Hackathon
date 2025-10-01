@@ -105,7 +105,7 @@ The Memory Agent subscribes to critical ecosystem events:
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `LOG_COLLECTOR_URL` | Log collector endpoint for structured logging | - | Optional |
-| `SERVICE_PORT` | Service port (internal) | `5040` | Optional |
+| `SERVICE_API_PORT` | Service port (internal) | `5040` | Optional |
 | `TTL_DEFAULT` | Default TTL for memory items (seconds) | `3600` | Optional |
 | `MAX_ITEMS` | Maximum items in memory ring buffer | `1000` | Optional |
 

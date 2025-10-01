@@ -350,7 +350,7 @@ class PortConflictDetector:
     def print_report(self, report: Dict[str, Any]):
         """Print comprehensive analysis report"""
         print("\n" + "="*80)
-        print("🔍 PORT CONFLICT DETECTION AND VALIDATION REPORT")
+        print("🔍 API_PORT CONFLICT DETECTION AND VALIDATION REAPI_PORT")
         print("="*80)
 
         summary = report["summary"]
@@ -363,7 +363,7 @@ class PortConflictDetector:
         print(f"  Recommendations: {summary['recommendations']}")
 
         if report["conflicts"]:
-            print(f"\n🚨 PORT CONFLICTS")
+            print(f"\n🚨 API_PORT CONFLICTS")
             for conflict in report["conflicts"]:
                 severity_icon = "🔴" if conflict["severity"] == "critical" else "🟠"
                 print(f"  {severity_icon} Port {conflict['port']}: {', '.join(conflict['services'])}")
@@ -379,7 +379,7 @@ class PortConflictDetector:
             for rec in report["recommendations"]:
                 print(f"  • {rec}")
 
-        print(f"\n📋 SERVICE PORT MAPPINGS")
+        print(f"\n📋 SERVICE API_PORT MAPPINGS")
         for service, ports in report["service_ports"].items():
             print(f"  {service}: {ports['external']} → {ports['internal']} ({ports['protocol']})")
 

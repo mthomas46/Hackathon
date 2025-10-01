@@ -405,7 +405,7 @@ docker-compose -f docker-compose.dev.yml up -d --force-recreate
 docker ps | grep service-name
 
 # Check if port is available
-netstat -an | grep PORT_NUMBER
+netstat -an | grep API_PORT_NUMBER
 
 # Restart specific service
 docker-compose -f docker-compose.dev.yml restart service-name

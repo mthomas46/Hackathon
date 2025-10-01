@@ -89,11 +89,11 @@ simulation-dashboard/
 # Dashboard Configuration
 DASHBOARD_ENVIRONMENT=development|production
 DASHBOARD_DEBUG=true|false
-DASHBOARD_PORT=8501
+DASHBOARD_API_PORT=8501
 
 # Simulation Service Connection
-DASHBOARD_SIMULATION_SERVICE_HOST=localhost
-DASHBOARD_SIMULATION_SERVICE_PORT=5075
+DASHBOARD_SIMULATION_SERVICE_API_HOST=localhost
+DASHBOARD_SIMULATION_SERVICE_API_PORT=5075
 
 # Optional Services
 DASHBOARD_ANALYSIS_SERVICE_URL=http://localhost:5080
@@ -108,8 +108,8 @@ DASHBOARD_WEBSOCKET_RECONNECT_ATTEMPTS=5
 Create a `.env` file in the project root:
 ```env
 DASHBOARD_ENVIRONMENT=development
-DASHBOARD_SIMULATION_SERVICE_HOST=localhost
-DASHBOARD_SIMULATION_SERVICE_PORT=5075
+DASHBOARD_SIMULATION_SERVICE_API_HOST=localhost
+DASHBOARD_SIMULATION_SERVICE_API_PORT=5075
 ```
 
 ## 📊 Dashboard Pages
@@ -281,8 +281,8 @@ docker build -t simulation-dashboard .
 
 # Run with simulation service
 docker run -p 8501:8501 \
-  -e DASHBOARD_SIMULATION_SERVICE_HOST=host.docker.internal \
-  -e DASHBOARD_SIMULATION_SERVICE_PORT=5075 \
+  -e DASHBOARD_SIMULATION_SERVICE_API_HOST=host.docker.internal \
+  -e DASHBOARD_SIMULATION_SERVICE_API_PORT=5075 \
   simulation-dashboard
 ```
 
@@ -295,8 +295,8 @@ services:
     ports:
       - "8501:8501"
     environment:
-      - DASHBOARD_SIMULATION_SERVICE_HOST=project-simulation
-      - DASHBOARD_SIMULATION_SERVICE_PORT=5075
+      - DASHBOARD_SIMULATION_SERVICE_API_HOST=project-simulation
+      - DASHBOARD_SIMULATION_SERVICE_API_PORT=5075
       - DASHBOARD_ENVIRONMENT=production
     depends_on:
       - project-simulation
@@ -312,11 +312,11 @@ services:
 # Core Configuration
 DASHBOARD_ENVIRONMENT=development|production
 DASHBOARD_DEBUG=true|false
-DASHBOARD_PORT=8501
+DASHBOARD_API_PORT=8501
 
 # Simulation Service
-DASHBOARD_SIMULATION_SERVICE_HOST=localhost
-DASHBOARD_SIMULATION_SERVICE_PORT=5075
+DASHBOARD_SIMULATION_SERVICE_API_HOST=localhost
+DASHBOARD_SIMULATION_SERVICE_API_PORT=5075
 
 # Optional Ecosystem Services
 DASHBOARD_ANALYSIS_SERVICE_URL=http://localhost:5080
@@ -532,7 +532,7 @@ ls -la services/simulation-dashboard/
 Enable detailed logging for troubleshooting:
 ```bash
 export DASHBOARD_DEBUG=true
-export DASHBOARD_LOGGING_LEVEL=DEBUG
+export DASHBOARD_LOG_LEVEL=DEBUG
 python run_dashboard.py
 ```
 
@@ -678,7 +678,7 @@ export DASHBOARD_PERFORMANCE_MAX_CONCURRENT_REQUESTS=20
 Enable debug logging for detailed information:
 ```bash
 export DASHBOARD_DEBUG=true
-export DASHBOARD_LOGGING_LEVEL=DEBUG
+export DASHBOARD_LOG_LEVEL=DEBUG
 ```
 
 ## 📄 License

@@ -46,7 +46,7 @@ Natural language interpretation and workflow generation.
 ## Environment
 | Name | Description | Default |
 |------|-------------|---------|
-| INTERPRETER_PORT | Service port | 5120 |
+| INTERPRETER_API_PORT | Service port | 5120 |
 
 ## Quickstart
 ```bash

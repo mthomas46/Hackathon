@@ -33,7 +33,7 @@ __description__ = (
 SERVICE_NAME = "llm-gateway"
 SERVICE_TITLE = "LLM Gateway"
 SERVICE_DESCRIPTION = "Unified access to all LLM providers with intelligent routing, security, and optimization"
-DEFAULT_PORT = 5055
+DEFAULT_API_PORT = 5055
 
 __all__ = [
     "__version__",
@@ -42,5 +42,5 @@ __all__ = [
     "SERVICE_NAME",
     "SERVICE_TITLE",
     "SERVICE_DESCRIPTION",
-    "DEFAULT_PORT",
+    "DEFAULT_API_PORT",
 ]

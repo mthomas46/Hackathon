@@ -168,7 +168,7 @@ config = load_service_config(
 SERVICE_NAME = config.service_name
 SERVICE_TITLE = config.service_description or "Architecture Digitizer"
 SERVICE_VERSION = config.service_version
-DEFAULT_PORT = config.port
+DEFAULT_API_PORT = config.port
 
 # Initialize metrics
 metrics = get_service_metrics(SERVICE_NAME)
@@ -883,10 +883,10 @@ async def normalize_file_upload(
 @app.get("/supported-systems", response_model=SupportedSystemsResponse)
 async def get_supported_systems():
     """Get list of supported diagram systems and their capabilities."""
-    from .modules.normalizers import SUPPORTED_SYSTEMS
+    from .modules.normalizers import SUPAPI_PORTED_SYSTEMS
 
     systems_info = []
-    for system_name, normalizer_class in SUPPORTED_SYSTEMS.items():
+    for system_name, normalizer_class in SUPAPI_PORTED_SYSTEMS.items():
         systems_info.append(
             {
                 "name": system_name,
@@ -928,4 +928,4 @@ if __name__ == "__main__":
     """Run the Architecture Digitizer service directly."""
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_PORT, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_API_PORT, log_level="info")

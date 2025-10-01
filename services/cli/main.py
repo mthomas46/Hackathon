@@ -4,6 +4,8 @@ A FastAPI-based CLI service that provides command execution and session manageme
 using Domain-Driven Design principles.
 """
 
+from services.shared.infrastructure.config import load_service_config
+
 import os
 import uvicorn
 import logging
@@ -58,8 +60,8 @@ def configure_service_urls():
         "DATABASE_URL": "sqlite:///./cli.db",
 
         # CLI Service Configuration
-        "CLI_SERVICE_HOST": "127.0.0.1",
-        "CLI_SERVICE_PORT": "8000",
+        "CLI_SERVICE_API_HOST": "127.0.0.1",
+        "CLI_SERVICE_API_PORT": "8000",
         "CLI_DEBUG_MODE": "false",
         "CLI_LOG_LEVEL": "INFO",
     }

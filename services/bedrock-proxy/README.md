@@ -168,8 +168,8 @@ The Bedrock Proxy employs a sophisticated gateway architecture designed for both
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `SERVICE_PORT` | Service port (internal) | `7090` | Optional |
-| `AWS_ACCESS_KEY_ID` | AWS access key for Bedrock | - | Production |
+| `SERVICE_API_PORT` | Service port (internal) | `7090` | Optional |
+| `EXTERNAL_AWS_ACCESS_KEY_ID` | AWS access key for Bedrock | - | Production |
 | `AWS_SECRET_ACCESS_KEY` | AWS secret key for Bedrock | - | Production |
 | `AWS_REGION` | AWS region for Bedrock services | `us-east-1` | Optional |
 | `BEDROCK_MOCK_MODE` | Enable mock responses | `true` | Optional |

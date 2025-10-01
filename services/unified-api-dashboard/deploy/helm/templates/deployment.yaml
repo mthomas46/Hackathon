@@ -51,7 +51,7 @@ spec:
             # Application Configuration
             - name: SERVICE_NAME
               value: {{ .Values.config.service.name | quote }}
-            - name: SERVICE_PORT
+            - name: SERVICE_API_PORT
               value: {{ .Values.config.service.port | quote }}
             - name: ENVIRONMENT
               value: {{ .Values.config.environment | quote }}
@@ -61,9 +61,9 @@ spec:
               value: {{ .Values.config.metricsEnabled | quote }}
 
             # Database Configuration
-            - name: REDIS_HOST
+            - name: REDIS_API_HOST
               value: {{ .Values.config.redis.host | quote }}
-            - name: REDIS_PORT
+            - name: REDIS_API_PORT
               value: {{ .Values.config.redis.port | quote }}
             - name: REDIS_DB
               value: {{ .Values.config.redis.db | quote }}

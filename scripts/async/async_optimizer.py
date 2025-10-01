@@ -43,8 +43,8 @@ class AsyncProcessingOptimizer:
         self.scripts_dir = Path("scripts/async")
         self.config_dir = Path("config/async")
         self.redis_config = {
-            "host": os.getenv("REDIS_HOST", "localhost"),
-            "port": int(os.getenv("REDIS_PORT", "6379")),
+            "host": os.getenv("REDIS_API_HOST", "localhost"),
+            "port": int(os.getenv("REDIS_API_PORT", "6379")),
             "db": int(os.getenv("REDIS_DB", "1")),  # Use different DB for async processing
             "password": os.getenv("REDIS_PASSWORD"),
             "decode_responses": True

@@ -40,7 +40,7 @@ def build_actions(
         print_kv(console, "Config", rx)
 
     async def redis_connectivity():
-        host = str(os.getenv("REDIS_HOST", "redis")).strip()
+        host = str(os.getenv("REDIS_API_HOST", "redis")).strip()
         port = 6379
         ok = False
         try:

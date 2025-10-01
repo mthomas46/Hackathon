@@ -3613,7 +3613,7 @@
       "test_name": "try_except_pass"
     },
     {
-      "code": "4268         app,\n4269         host=\"0.0.0.0\",\n4270         port=DEFAULT_PORT,\n",
+      "code": "4268         app,\n4269         host=\"0.0.0.0\",\n4270         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/analysis-service/main.py",
@@ -3633,7 +3633,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "236     port = int(os.getenv(\"PORT\", DEFAULT_PORT))\n237     host = os.getenv(\"HOST\", \"0.0.0.0\")\n238 \n",
+      "code": "236     port = int(os.getenv(\"API_PORT\", DEFAULT_API_PORT))\n237     host = os.getenv(\"API_HOST\", \"0.0.0.0\")\n238 \n",
       "col_offset": 29,
       "end_col_offset": 38,
       "filename": "services/analysis-service/main_new.py",

@@ -24,9 +24,9 @@ def setup_environment():
         os.environ['PROMPT_STORE_DB'] = '../../data/prompt_store.db'
 
     # Set port from config or default
-    if 'PROMPT_STORE_PORT' not in os.environ:
-        port = get_config_value("port", 5110, section="server", env_key="PROMPT_STORE_PORT")
-        os.environ['PROMPT_STORE_PORT'] = str(port)
+    if 'PROMPT_STORE_API_PORT' not in os.environ:
+        port = get_config_value("port", 5110, section="server", env_key="PROMPT_STORE_API_PORT")
+        os.environ['PROMPT_STORE_API_PORT'] = str(port)
 
     # Set other common environment variables
     env_vars = {
@@ -44,7 +44,7 @@ def run_service():
     """Run the Prompt Store service."""
     print("🚀 Starting Prompt Store Service...")
     print(f"   📁 Database: {os.environ.get('PROMPT_STORE_DB')}")
-    print(f"   🔌 Port: {os.environ.get('PROMPT_STORE_PORT')}")
+    print(f"   🔌 Port: {os.environ.get('PROMPT_STORE_API_PORT')}")
     print(f"   🌍 Environment: {os.environ.get('PROMPT_STORE_ENV')}")
 
     # Run as module from project root to avoid relative import issues
@@ -71,9 +71,9 @@ def run_with_reload():
 
     print("🔄 Starting Prompt Store Service with auto-reload...")
     print(f"   📁 Database: {os.environ.get('PROMPT_STORE_DB')}")
-    print(f"   🔌 Port: {os.environ.get('PROMPT_STORE_PORT')}")
+    print(f"   🔌 Port: {os.environ.get('PROMPT_STORE_API_PORT')}")
 
-    port = int(os.environ.get('PROMPT_STORE_PORT', 5110))
+    port = int(os.environ.get('PROMPT_STORE_API_PORT', 5110))
 
     uvicorn.run(
         "services.prompt_store.main:app",
@@ -99,7 +99,7 @@ OPTIONS:
 
 ENVIRONMENT VARIABLES:
     PROMPT_STORE_DB         SQLite database path (default: ../../data/prompt_store.db)
-    PROMPT_STORE_PORT       Service port (default: 5110)
+    PROMPT_STORE_API_PORT       Service port (default: 5110)
     PROMPT_STORE_ENV        Environment (default: development)
 
 EXAMPLES:
@@ -110,7 +110,7 @@ EXAMPLES:
     python run_promptstore.py --reload
 
     # Run on custom port
-    PROMPT_STORE_PORT=5120 python run_promptstore.py
+    PROMPT_STORE_API_PORT=5120 python run_promptstore.py
 
 DATABASE SETUP:
     # Initialize database schema

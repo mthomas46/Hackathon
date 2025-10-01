@@ -3,6 +3,8 @@
 Advanced document summarization and categorization service for the LLM Documentation Ecosystem.
 """
 
+from services.shared.infrastructure.config import load_service_config
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
 from typing import Dict, Any, List, Optional
@@ -16,10 +18,16 @@ import re
 from datetime import datetime, timedelta
 
 # Service configuration
-SERVICE_NAME = "summarizer-hub"
+# Load service configuration
+config = load_service_config("summarizer-hub")
+
+# Extract commonly used configuration values
+SERVICE_NAME = config.service_name
+SERVICE_VERSION = config.service_version
+DEFAULT_API_PORT = config.server.port
 SERVICE_TITLE = "Summarizer Hub"
 SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = 5160
+DEFAULT_API_PORT = 5160
 
 # Environment configuration
 LLM_GATEWAY_URL = os.getenv("LLM_GATEWAY_URL", "http://llm-gateway:5055")
@@ -2870,6 +2878,6 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=DEFAULT_PORT,
+        port=DEFAULT_API_PORT,
         log_level="info"
     )

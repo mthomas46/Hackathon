@@ -399,7 +399,7 @@ The service exposes Prometheus metrics:
 ### Adding New Systems
 
 1. Create a new normalizer class in `modules/normalizers.py`
-2. Add it to `SUPPORTED_SYSTEMS` dict
+2. Add it to `SUPAPI_PORTED_SYSTEMS` dict
 3. Update configuration in `config.yaml`
 4. Add API documentation
 

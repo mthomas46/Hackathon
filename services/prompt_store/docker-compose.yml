@@ -1,0 +1,30 @@
+services:
+  prompt-store:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+    - ./:/app:ro
+    - prompt-store_code:/app:rw
+    environment:
+    - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx &&
+      python services/prompt-store/main.py"
+    ports:
+    - 8085:5110
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5110/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+    - hackathon_default
+networks:
+  hackathon_default:
+    driver: bridge
+volumes:
+  prompt-store_code:
+    driver: local

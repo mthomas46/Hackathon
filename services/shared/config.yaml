@@ -8,14 +8,14 @@
 
 # Redis configuration (global)
 redis:
-  host: ${REDIS_HOST:-redis}
-  port: ${REDIS_PORT:-6379}
+  host: ${REDIS_API_HOST:-redis}
+  port: ${REDIS_API_PORT:-6379}
   url: ${REDIS_URL:-redis://redis:6379}
 
 # PostgreSQL configuration (for production deployments)
 postgres:
-  host: ${POSTGRES_HOST:-postgres}
-  port: ${POSTGRES_PORT:-5432}
+  host: ${POSTGRES_API_HOST:-postgres}
+  port: ${POSTGRES_API_PORT:-5432}
   db: ${POSTGRES_DB:-doc_consistency}
   user: ${POSTGRES_USER:-doc_user}
   password: ${POSTGRES_PASSWORD:-doc_password}
@@ -50,7 +50,7 @@ services:
   confluence_agent_url: ${CONFLUENCE_AGENT_URL:-http://confluence-agent:5050}
   swagger_agent_url: ${SWAGGER_AGENT_URL:-http://swagger-agent:5010}
   consistency_engine_url: ${CONSISTENCY_ENGINE_URL:-http://consistency-engine:5020}
-  reporting_url: ${REPORTING_URL:-http://reporting:5030}
+  reporting_url: ${REAPI_PORTING_URL:-http://reporting:5030}
   summarizer-hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
   secure-analyzer_url: ${SECURE_ANALYZER_URL:-http://secure-analyzer:5070}
   code-analyzer_url: ${CODE_ANALYZER_URL:-http://code-analyzer:5085}
@@ -64,7 +64,7 @@ external:
   # GitHub API settings
   github:
     api_base: ${GITHUB_API_BASE:-https://api.github.com}
-    token: ${GITHUB_TOKEN:-}
+    token: ${EXTERNAL_GITHUB_TOKEN:-}
     owner: ${GITHUB_OWNER:-}
 
   # Jira API settings
@@ -81,7 +81,7 @@ external:
 
   # AWS settings (for Bedrock)
   aws:
-    access_key_id: ${AWS_ACCESS_KEY_ID:-}
+    access_key_id: ${EXTERNAL_AWS_ACCESS_KEY_ID:-}
     secret_access_key: ${AWS_SECRET_ACCESS_KEY:-}
     session_token: ${AWS_SESSION_TOKEN:-}
     region: ${AWS_REGION:-us-east-1}
@@ -117,19 +117,19 @@ health:
 providers:
   # Ollama settings
   ollama:
-    host: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+    host: ${OLLAMA_API_HOST:-http://host.docker.internal:11434}
     model: ${OLLAMA_MODEL:-llama3}
     endpoint: ${OLLAMA_ENDPOINT:-http://ollama-consistency:11434}
 
   # OpenAI settings
   openai:
     model: ${OPENAI_MODEL:-gpt-4o}
-    api_key: ${OPENAI_API_KEY:-}
+    api_key: ${EXTERNAL_OPENAI_API_KEY:-}
 
   # Anthropic settings
   anthropic:
     model: ${ANTHROPIC_MODEL:-claude-3.5-sonnet}
-    api_key: ${ANTHROPIC_API_KEY:-}
+    api_key: ${EXTERNAL_ANTHROPIC_API_KEY:-}
 
   # AWS Bedrock settings
   bedrock:

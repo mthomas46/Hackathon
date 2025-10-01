@@ -26,8 +26,8 @@ services:
       - "8000:8000"
     environment:
       - SERVICE_NAME=unified-api-dashboard
-      - SERVICE_PORT=8000
-      - REDIS_HOST=redis
+      - SERVICE_API_PORT=8000
+      - REDIS_API_HOST=redis
       - ENVIRONMENT=development
     depends_on:
       - redis
@@ -70,8 +70,8 @@ services:
       - "8000:8000"
     environment:
       - SERVICE_NAME=unified-api-dashboard
-      - SERVICE_PORT=8000
-      - REDIS_HOST=redis
+      - SERVICE_API_PORT=8000
+      - REDIS_API_HOST=redis
       - ENVIRONMENT=production
       - LOG_LEVEL=INFO
       - METRICS_ENABLED=true
@@ -249,8 +249,8 @@ services:
       - "8000:8000"
     environment:
       - SERVICE_NAME=unified-api-dashboard
-      - SERVICE_PORT=8000
-      - REDIS_HOST=redis
+      - SERVICE_API_PORT=8000
+      - REDIS_API_HOST=redis
       - ENVIRONMENT=production
       - DISCOVERY_AGENT_URL=http://discovery-agent:8080
     depends_on:
@@ -267,8 +267,8 @@ services:
   discovery-agent:
     image: your-registry/discovery-agent:latest
     environment:
-      - SERVICE_PORT=8080
-      - REDIS_HOST=redis
+      - SERVICE_API_PORT=8080
+      - REDIS_API_HOST=redis
     ports:
       - "8080:8080"
     depends_on:
@@ -299,8 +299,8 @@ services:
   user-service:
     image: your-registry/user-service:latest
     environment:
-      - SERVICE_PORT=8081
-      - REDIS_HOST=redis
+      - SERVICE_API_PORT=8081
+      - REDIS_API_HOST=redis
     ports:
       - "8081:8081"
     depends_on:
@@ -315,8 +315,8 @@ services:
   order-service:
     image: your-registry/order-service:latest
     environment:
-      - SERVICE_PORT=8082
-      - REDIS_HOST=redis
+      - SERVICE_API_PORT=8082
+      - REDIS_API_HOST=redis
     ports:
       - "8082:8082"
     depends_on:
@@ -490,9 +490,9 @@ spec:
         - containerPort: 8000
           name: http
         env:
-        - name: SERVICE_PORT
+        - name: SERVICE_API_PORT
           value: "8000"
-        - name: REDIS_HOST
+        - name: REDIS_API_HOST
           value: "redis-service"
         - name: ENVIRONMENT
           value: "production"

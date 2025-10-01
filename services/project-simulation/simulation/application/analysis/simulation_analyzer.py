@@ -34,9 +34,9 @@ class SimulationAnalyzer:
             # Check environment variables
             (os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes'),
             # Check for Docker host
-            os.getenv('DOCKER_HOST') is not None,
+            os.getenv('DOCKER_API_HOST') is not None,
             # Check hostname pattern (common in Docker)
-            (os.getenv('HOSTNAME') or '').startswith('docker-')
+            (os.getenv('API_HOSTNAME') or '').startswith('docker-')
         ]
 
         return any(docker_indicators)
@@ -87,13 +87,13 @@ class SimulationAnalyzer:
             "is_docker_environment": self._is_docker_environment,
             "environment_type": "docker" if self._is_docker_environment else "local",
             "service_urls": self.service_urls,
-            "hostname": os.getenv('HOSTNAME', 'unknown'),
+            "hostname": os.getenv('API_HOSTNAME', 'unknown'),
             "docker_indicators": {
                 "dockerenv_file": os.path.exists('/.dockerenv'),
                 "docker_cgroup": os.path.exists('/proc/1/cgroup') and 'docker' in open('/proc/1/cgroup').read() if os.path.exists('/proc/1/cgroup') else False,
                 "docker_env_var": os.getenv('DOCKER_CONTAINER', '').lower() in ('true', '1', 'yes'),
-                "docker_host": os.getenv('DOCKER_HOST') is not None,
-                "docker_hostname": os.getenv('HOSTNAME', '').startswith('docker-') if os.getenv('HOSTNAME') else False
+                "docker_host": os.getenv('DOCKER_API_HOST') is not None,
+                "docker_hostname": os.getenv('API_HOSTNAME', '').startswith('docker-') if os.getenv('API_HOSTNAME') else False
             }
         }
 
@@ -394,7 +394,7 @@ class SimulationAnalyzer:
         return results
 
     # ============================================================================
-    # RECOMMENDATIONS REPORT MANAGEMENT
+    # RECOMMENDATIONS REAPI_PORT MANAGEMENT
     # ============================================================================
 
     async def _get_recommendations_report_from_summarizer_hub(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
@@ -1075,7 +1075,7 @@ class SimulationAnalyzer:
         return recommendations
 
     # ============================================================================
-    # COMPREHENSIVE SUMMARY REPORT GENERATION
+    # COMPREHENSIVE SUMMARY REAPI_PORT GENERATION
     # ============================================================================
 
     async def generate_comprehensive_summary_report(self, simulation_id: str, documents: List[Dict[str, Any]], timeline: Dict[str, Any] = None) -> Dict[str, Any]:

@@ -27,7 +27,7 @@ class IntegrationHandlers:
             else:
                 return _create_analysis_error_response(
                     "Unsupported target type",
-                    "UNSUPPORTED_TARGET_TYPE",
+                    "UNSUPAPI_PORTED_TARGET_TYPE",
                     {"target_type": type(target_id).__name__, "supported_types": ["Document", "str"]}
                 )
 

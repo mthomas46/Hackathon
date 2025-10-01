@@ -17,12 +17,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5120",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -51,12 +51,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5040",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -85,12 +85,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5070",
         "source": "port-registry"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -124,12 +124,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "3000",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -163,7 +163,7 @@
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -173,7 +173,7 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5020",
         "source": "port-registry"
       }
@@ -211,12 +211,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5025",
         "source": "port-registry"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -250,7 +250,7 @@
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "docker-compose"
       },
@@ -260,7 +260,7 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5075",
         "source": "docker-compose"
       },
@@ -329,12 +329,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5110",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "docker-compose"
       },
@@ -363,12 +363,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5160",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -378,7 +378,7 @@
         "source": "docker-compose"
       },
       {
-        "name": "OLLAMA_HOST",
+        "name": "OLLAMA_API_HOST",
         "value": "http://host.docker.internal:11434",
         "source": "docker-compose"
       }
@@ -422,12 +422,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5055",
         "source": "port-registry"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "docker-compose"
       },
@@ -442,13 +442,13 @@
         "source": "port-registry"
       },
       {
-        "name": "OPENAI_API_KEY",
-        "value": "${OPENAI_API_KEY:-}",
+        "name": "EXTERNAL_OPENAI_API_KEY",
+        "value": "${EXTERNAL_OPENAI_API_KEY:-}",
         "source": "docker-compose"
       },
       {
-        "name": "ANTHROPIC_API_KEY",
-        "value": "${ANTHROPIC_API_KEY:-}",
+        "name": "EXTERNAL_ANTHROPIC_API_KEY",
+        "value": "${EXTERNAL_ANTHROPIC_API_KEY:-}",
         "source": "docker-compose"
       },
       {
@@ -541,12 +541,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5100",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -599,12 +599,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5105",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -653,22 +653,22 @@
         "source": "docker-compose"
       },
       {
-        "name": "DASHBOARD_PORT",
+        "name": "DASHBOARD_API_PORT",
         "value": "8501",
         "source": "docker-compose"
       },
       {
-        "name": "DASHBOARD_HOST",
+        "name": "DASHBOARD_API_HOST",
         "value": "0.0.0.0",
         "source": "docker-compose"
       },
       {
-        "name": "DASHBOARD_SIMULATION_SERVICE_HOST",
+        "name": "DASHBOARD_SIMULATION_SERVICE_API_HOST",
         "value": "project-simulation",
         "source": "docker-compose"
       },
       {
-        "name": "DASHBOARD_SIMULATION_SERVICE_PORT",
+        "name": "DASHBOARD_SIMULATION_SERVICE_API_PORT",
         "value": "5075",
         "source": "docker-compose"
       },
@@ -727,12 +727,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5020",
         "source": "port-registry"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "docker-compose"
       },
@@ -781,12 +781,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5090",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "docker-compose"
       },
@@ -815,12 +815,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5045",
         "source": "port-registry"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -854,12 +854,12 @@
         "source": "dockerfile"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5030",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },
@@ -893,12 +893,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5065",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "docker-compose"
       },
@@ -927,7 +927,7 @@
     "issues": [],
     "variables": [
       {
-        "name": "OLLAMA_HOST",
+        "name": "OLLAMA_API_HOST",
         "value": "0.0.0.0",
         "source": "docker-compose"
       },
@@ -956,12 +956,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5010",
         "source": "port-registry"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "docker-compose"
       },
@@ -971,7 +971,7 @@
         "source": "docker-compose"
       },
       {
-        "name": "DOCSTORE_PORT",
+        "name": "DOCSTORE_API_PORT",
         "value": "5010",
         "source": "dockerfile"
       },
@@ -1005,7 +1005,7 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "8000",
         "source": "docker-compose"
       },
@@ -1025,12 +1025,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_PORT",
+        "name": "REDIS_API_PORT",
         "value": "6379",
         "source": "docker-compose"
       },
@@ -1124,12 +1124,12 @@
         "source": "docker-compose"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5099",
         "source": "port-registry"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "docker-compose"
       },
@@ -1163,12 +1163,12 @@
         "source": "dockerfile"
       },
       {
-        "name": "SERVICE_PORT",
+        "name": "SERVICE_API_PORT",
         "value": "5060",
         "source": "docker-compose"
       },
       {
-        "name": "REDIS_HOST",
+        "name": "REDIS_API_HOST",
         "value": "redis",
         "source": "dockerfile"
       },

@@ -1,22 +1,54 @@
-# Individual Docker Compose for Interpreter Service
-# This allows the interpreter to run independently as a standalone service
-
-version: "3.9"
-
 services:
   interpreter:
     build:
       context: ../../
       dockerfile: services/interpreter/Dockerfile
     volumes:
-      - ../../:/app:ro
-      - ./:/app/services/interpreter:rw
+    - ./:/app:ro
+    - interpreter_code:/app:rw
     environment:
-      - ENVIRONMENT=development
+    - ENVIRONMENT=development
     ports:
-      - "5120:5120"
+    - 8085:5120
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5120/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5120/health
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+    - hackathon_default
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    ports:
+    - 6379:6379
+    volumes:
+    - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+    - hackathon_default
+
+volumes:
+  redis_data:
+    driver: local
+  interpreter_code:
+    driver: local
+
+networks:
+  hackathon_default:
+    driver: bridge

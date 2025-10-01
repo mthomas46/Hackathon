@@ -51,7 +51,7 @@ config = load_service_config(
 # Service configuration from standardized config
 SERVICE_NAME = config.service_name
 SERVICE_VERSION = config.service_version
-DEFAULT_PORT = config.port
+DEFAULT_API_PORT = config.port
 
 # Content validation limits
 MAX_CONTENT_SIZE_BYTES = 1000000  # 1MB
@@ -425,5 +425,5 @@ if __name__ == "__main__":
     import uvicorn
 
     host = "0.0.0.0"  # Force binding to all interfaces
-    print(f"DEBUG: Starting secure-analyzer with host={host}, port={DEFAULT_PORT}")
-    uvicorn.run(app, host=host, port=DEFAULT_PORT, log_level="info")
+    print(f"DEBUG: Starting secure-analyzer with host={host}, port={DEFAULT_API_PORT}")
+    uvicorn.run(app, host=host, port=DEFAULT_API_PORT, log_level="info")

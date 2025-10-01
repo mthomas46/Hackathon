@@ -364,8 +364,8 @@ async def lifespan(app: FastAPI):
     logger.info(f"📊 Service: {config.service_name}")
     logger.info(f"🏷️  Version: {config.service_version}")
     logger.info(f"🌐 Port: {config.port}")
-    docs_host = os.getenv(EnvVars.SHARED_DOCS_HOST, "localhost")
-    docs_port = os.getenv(EnvVars.SHARED_DOCS_PORT, "8000")
+    docs_host = os.getenv(EnvVars.SHARED_DOCS_API_HOST, "localhost")
+    docs_port = os.getenv(EnvVars.SHARED_DOCS_API_PORT, "8000")
     logger.info(f"📚 Documentation: http://{docs_host}:{docs_port}/docs")
     yield
 
@@ -385,8 +385,8 @@ if __name__ == "__main__":
 
     logger.info("🏗️  Starting Shared Infrastructure Service...")
     logger.info("This service demonstrates proper usage of shared ecosystem utilities.")
-    docs_host = os.getenv(EnvVars.SHARED_DOCS_HOST, "localhost")
-    docs_port = os.getenv(EnvVars.SHARED_DOCS_PORT, "8000")
+    docs_host = os.getenv(EnvVars.SHARED_DOCS_API_HOST, "localhost")
+    docs_port = os.getenv(EnvVars.SHARED_DOCS_API_PORT, "8000")
     logger.info(f"Visit http://{docs_host}:{docs_port}/docs for interactive API documentation.")
 
     uvicorn.run(

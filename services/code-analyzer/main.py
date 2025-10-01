@@ -268,6 +268,6 @@ if __name__ == "__main__":
 
     import uvicorn
 
-    port = int(os.environ.get("SERVICE_PORT", 5025))
+    port = int(os.environ.get("SERVICE_API_PORT", 5025))
     print(f"Starting Code Analyzer service on port {port}")
     uvicorn.run(app, host="127.0.0.1", port=port)

@@ -451,7 +451,7 @@ class InterServiceCommunicationTester:
     def generate_report(self):
         """Generate comprehensive test report."""
         console.print("\n" + "=" * 80)
-        console.print("📊 INTER-SERVICE COMMUNICATION TEST REPORT")
+        console.print("📊 INTER-SERVICE COMMUNICATION TEST REAPI_PORT")
         console.print("=" * 80)
 
         # Overall summary

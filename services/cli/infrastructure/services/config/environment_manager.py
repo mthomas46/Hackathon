@@ -189,8 +189,8 @@ class EnvironmentManager(BaseManager):
         """Get relevant environment variables with their sources."""
         relevant_patterns = [
             r"^[A-Z_]+_URL$",  # Service URLs
-            r"^[A-Z_]+_HOST$",  # Host settings
-            r"^[A-Z_]+_PORT$",  # Port settings
+            r"^[A-Z_]+_API_HOST$",  # Host settings
+            r"^[A-Z_]+_API_PORT$",  # Port settings
             r"^ENVIRONMENT$",  # Environment setting
             r"^DEBUG$",  # Debug settings
             r"^LOG_",  # Logging settings
@@ -285,9 +285,9 @@ class EnvironmentManager(BaseManager):
                     "warning",
                     "URL should start with http:// or https://",
                 )
-            elif var_name.endswith("_PORT") and not value.isdigit():
+            elif var_name.endswith("_API_PORT") and not value.isdigit():
                 validation_results[var_name] = ("invalid", "Port must be a number")
-            elif var_name.endswith("_HOST") and not value:
+            elif var_name.endswith("_API_HOST") and not value:
                 validation_results[var_name] = ("warning", "Host should not be empty")
             else:
                 validation_results[var_name] = ("valid", "OK")

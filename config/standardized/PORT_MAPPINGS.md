@@ -31,34 +31,34 @@ This document defines the standardized port mappings for all ecosystem services.
 ## Environment Variables
 
 ### doc_store
-- `SERVICE_PORT`: 5010
+- `SERVICE_API_PORT`: 5010
 - `REDIS_URL`: redis://redis:6379
 
 ### orchestrator
-- `SERVICE_PORT`: 5099
+- `SERVICE_API_PORT`: 5099
 - `REDIS_URL`: redis://redis:6379
 
 ### llm-gateway
-- `SERVICE_PORT`: 5055
+- `SERVICE_API_PORT`: 5055
 - `OLLAMA_ENDPOINT`: http://ollama:11434
 
 ### analysis-service
-- `SERVICE_PORT`: 5020
+- `SERVICE_API_PORT`: 5020
 - `DOC_STORE_URL`: http://doc_store:5010
 - `LLM_GATEWAY_URL`: http://llm-gateway:5055
 
 ### discovery-agent
-- `SERVICE_PORT`: 5045
+- `SERVICE_API_PORT`: 5045
 - `ORCHESTRATOR_URL`: http://orchestrator:5099
 
 ### notification-service
-- `SERVICE_PORT`: 5020
+- `SERVICE_API_PORT`: 5020
 
 ### code-analyzer
-- `SERVICE_PORT`: 5025
+- `SERVICE_API_PORT`: 5025
 
 ### source-agent
-- `SERVICE_PORT`: 5070
+- `SERVICE_API_PORT`: 5070
 - `DOC_STORE_URL`: http://doc_store:5010
 
 ### frontend

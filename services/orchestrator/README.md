@@ -567,8 +567,8 @@ workflow_data = {
 #### Core Configuration
 ```bash
 # Service
-ORCHESTRATOR_PORT=5099
-ORCHESTRATOR_HOST=0.0.0.0
+ORCHESTRATOR_API_PORT=5099
+ORCHESTRATOR_API_HOST=0.0.0.0
 
 # Database
 ORCHESTRATOR_DB_URL=postgresql://user:pass@localhost:5432/orchestrator
@@ -595,8 +595,8 @@ ORCHESTRATOR_NOTIFICATION_SERVICE_URL=http://localhost:5010
 ORCHESTRATOR_DB_PATH=../../data/orchestrator_workflows.db
 
 # Service Discovery
-ORCHESTRATOR_SERVICE_HOST=localhost
-ORCHESTRATOR_SERVICE_PORT=5080
+ORCHESTRATOR_SERVICE_API_HOST=localhost
+ORCHESTRATOR_SERVICE_API_PORT=5080
 
 # Enterprise Features
 ORCHESTRATOR_ENABLE_TLS=true
@@ -612,8 +612,8 @@ ORCHESTRATOR_JWT_SECRET=your-secret-key
 ORCHESTRATOR_API_KEY=your-api-key
 
 # Legacy Environment Variables
-REDIS_HOST=redis
-REPORTING_URL=http://reporting:5030
+REDIS_API_HOST=redis
+REAPI_PORTING_URL=http://reporting:5030
 ORCHESTRATOR_PEERS=
 DOC_STORE_URL=
 NOTIFICATION_URL=http://notification-service:5095
@@ -804,9 +804,9 @@ Welcome to the Orchestrator service! 🚀
 ## Configuration
 Configuration is config-first via `services/shared/config.get_config_value` with precedence: env > `config/app.yaml` > defaults.
 
-- `PORT`: Service port (default 5099).
-- `REPORTING_URL`: Base URL for reporting (default `http://reporting:5030`).
-- `REDIS_HOST`: Redis hostname for events (optional).
+- `API_PORT`: Service port (default 5099).
+- `REAPI_PORTING_URL`: Base URL for reporting (default `http://reporting:5030`).
+- `REDIS_API_HOST`: Redis hostname for events (optional).
 - `ORCHESTRATOR_PEERS`: Comma-separated peer base URLs (also supported under `orchestrator.ORCHESTRATOR_PEERS` in `config/app.yaml`).
 - `LOG_COLLECTOR_URL`: If set, emits structured logs to log-collector.
 

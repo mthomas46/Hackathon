@@ -16,7 +16,7 @@ redis:
   ddd_event_channel: "ddd:events"
 
 # ============================================================================
-# SERVICE CONFIGURATIONS - UPDATED PORTS FOR DDD
+# SERVICE CONFIGURATIONS - UPDATED API_PORTS FOR DDD
 # ============================================================================
 
 doc_store:
@@ -45,14 +45,14 @@ analysis_service:
     load_balancing_strategy: "round_robin"
 
 # ============================================================================
-# SERVICE URL MAPPINGS - UPDATED FOR DDD PORTS
+# SERVICE URL MAPPINGS - UPDATED FOR DDD API_PORTS
 # ============================================================================
 
 services:
   ORCHESTRATOR_URL: http://orchestrator:5099          # Updated to correct port
   DOC_STORE_URL: http://doc_store:5087                # Updated to correct port
   ANALYSIS_SERVICE_URL: http://analysis-service:5020  # DDD Analysis Service
-  REPORTING_URL: http://reporting:5030
+  REAPI_PORTING_URL: http://reporting:5030
   SOURCE_AGENT_URL: http://source-agent:5000
   NOTIFICATION_URL: http://notification-service:5095
   SUMMARIZER_HUB_URL: http://summarizer-hub:5060

@@ -2,11 +2,19 @@
 """
 Configuration Drift Detector for Hackathon Ecosystem
 
+⚠️  PARTIALLY DEPRECATED: This script provides Docker-specific drift detection
+that complements the new unified configuration system.
+
+For comprehensive configuration management, use:
+  python scripts/hardening/unified_config_manager.py
+
 This script detects configuration inconsistencies across the ecosystem:
 - Environment variable mismatches
 - Docker Compose vs service configuration drift
 - Port mapping inconsistencies
 - Service dependency mismatches
+
+Note: For general configuration auditing, use the unified manager instead.
 """
 
 import os
@@ -83,7 +91,7 @@ def check_environment_variables(docker_config: Dict) -> List[str]:
 
         # Only check for required environment variables on Python services
         if service_name in python_services:
-            required_vars = ['SERVICE_NAME', 'SERVICE_PORT', 'ENVIRONMENT']
+            required_vars = ['SERVICE_NAME', 'SERVICE_API_PORT', 'ENVIRONMENT']
             for var in required_vars:
                 if var not in env_vars:
                     issues.append(f"Service '{service_name}' missing required env var: {var}")
@@ -93,9 +101,9 @@ def check_environment_variables(docker_config: Dict) -> List[str]:
                 issues.append(f"Service '{service_name}' has SERVICE_NAME='{env_vars['SERVICE_NAME']}' (should match service name)")
 
             # Check port consistency
-            if 'ports' in service_config and 'SERVICE_PORT' in env_vars:
+            if 'ports' in service_config and 'SERVICE_API_PORT' in env_vars:
                 ports = service_config['ports']
-                service_port = env_vars['SERVICE_PORT']
+                service_port = env_vars['SERVICE_API_PORT']
 
                 # Extract external port from port mappings
                 external_ports = []
@@ -109,7 +117,7 @@ def check_environment_variables(docker_config: Dict) -> List[str]:
                         external_ports.append(external_port)
 
                 if service_port not in external_ports:
-                    issues.append(f"Service '{service_name}' SERVICE_PORT='{service_port}' not found in external port mappings {external_ports}")
+                    issues.append(f"Service '{service_name}' SERVICE_API_PORT='{service_port}' not found in external port mappings {external_ports}")
 
         # Special handling for services with complex port mappings
         # (This section can be removed now that we check external ports above)

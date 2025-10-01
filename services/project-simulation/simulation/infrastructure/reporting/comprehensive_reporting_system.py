@@ -25,11 +25,11 @@ from simulation.infrastructure.utilities.simulation_utilities import get_simulat
 class ReportType(str, Enum):
     """Types of reports that can be generated."""
     EXECUTIVE_SUMMARY = "executive_summary"
-    TECHNICAL_REPORT = "technical_report"
+    TECHNICAL_REAPI_PORT = "technical_report"
     WORKFLOW_ANALYSIS = "workflow_analysis"
-    FINANCIAL_REPORT = "financial_report"
-    QUALITY_REPORT = "quality_report"
-    PERFORMANCE_REPORT = "performance_report"
+    FINANCIAL_REAPI_PORT = "financial_report"
+    QUALITY_REAPI_PORT = "quality_report"
+    PERFORMANCE_REAPI_PORT = "performance_report"
     COMPREHENSIVE_ANALYSIS = "comprehensive_analysis"
 
 
@@ -115,10 +115,10 @@ class ComprehensiveReportingSystem:
         if report_types is None:
             report_types = [
                 ReportType.EXECUTIVE_SUMMARY,
-                ReportType.TECHNICAL_REPORT,
+                ReportType.TECHNICAL_REAPI_PORT,
                 ReportType.WORKFLOW_ANALYSIS,
-                ReportType.QUALITY_REPORT,
-                ReportType.PERFORMANCE_REPORT
+                ReportType.QUALITY_REAPI_PORT,
+                ReportType.PERFORMANCE_REAPI_PORT
             ]
 
         try:
@@ -480,9 +480,9 @@ class ComprehensiveReportingSystem:
             return await self.generate_executive_summary(metrics)
         elif report_type == ReportType.WORKFLOW_ANALYSIS:
             return await self.generate_workflow_analysis_report(workflow_analysis, metrics)
-        elif report_type == ReportType.QUALITY_REPORT:
+        elif report_type == ReportType.QUALITY_REAPI_PORT:
             return await self.generate_quality_assessment_report(document_analysis, metrics)
-        elif report_type == ReportType.FINANCIAL_REPORT:
+        elif report_type == ReportType.FINANCIAL_REAPI_PORT:
             return await self.generate_business_value_report(business_value, metrics)
         else:
             return {

@@ -140,7 +140,7 @@ class AnalysisBusinessValidator(BaseValidator):
         if analysis.analysis_type not in supported_types:
             errors.append(self.create_error(
                 f"Analysis type '{analysis.analysis_type}' is not supported",
-                "UNSUPPORTED_ANALYSIS_TYPE"
+                "UNSUPAPI_PORTED_ANALYSIS_TYPE"
             ))
 
         # Validate configuration

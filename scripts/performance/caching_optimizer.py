@@ -39,8 +39,8 @@ class CachingOptimizer:
         self.config_dir = Path("config")
         self.cache_config_dir = Path("config/cache")
         self.redis_config = {
-            "host": os.getenv("REDIS_HOST", "localhost"),
-            "port": int(os.getenv("REDIS_PORT", "6379")),
+            "host": os.getenv("REDIS_API_HOST", "localhost"),
+            "port": int(os.getenv("REDIS_API_PORT", "6379")),
             "db": int(os.getenv("REDIS_DB", "0")),
             "password": os.getenv("REDIS_PASSWORD"),
             "decode_responses": True

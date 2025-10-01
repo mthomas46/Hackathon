@@ -350,7 +350,7 @@ class PowerUserCLITester:
     def generate_power_user_report(self) -> None:
         """Generate comprehensive power user capability report"""
         print("\n" + "=" * 70)
-        print("📊 POWER USER CLI CAPABILITIES REPORT")
+        print("📊 POWER USER CLI CAPABILITIES REAPI_PORT")
         print("=" * 70)
         
         # Calculate overall statistics

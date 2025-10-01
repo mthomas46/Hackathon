@@ -5,6 +5,8 @@ Central control plane for the LLM Documentation Ecosystem following DDD principl
 Organized into bounded contexts with clear separation of concerns.
 """
 
+from services.shared.infrastructure.config import load_service_config
+
 import os
 import sys
 from pathlib import Path
@@ -75,8 +77,21 @@ from .application.query_processing.use_cases import (
 
 # Service configuration
 SERVICE_TITLE = "Orchestrator"
-SERVICE_VERSION = "0.1.0"
-DEFAULT_PORT = 5099
+
+# Validate configuration before loading (startup validation)
+from services.shared.infrastructure.config.startup_validator import validate_service_startup
+if not validate_service_startup("orchestrator"):
+    print("❌ Orchestrator configuration validation failed - aborting startup")
+    sys.exit(1)
+
+# Load service configuration (now with Pydantic validation by default)
+config = load_service_config("orchestrator")
+
+# Extract commonly used configuration values
+SERVICE_NAME = config.service_name
+SERVICE_VERSION = config.service_version
+DEFAULT_API_PORT = config.server.port
+DEFAULT_API_PORT = 5099
 
 # ============================================================================
 # APPLICATION COMPOSITION - Dependency Injection Container
@@ -315,6 +330,6 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=DEFAULT_PORT,
+        port=DEFAULT_API_PORT,
         log_level="info"
     )

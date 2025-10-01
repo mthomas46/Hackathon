@@ -54,8 +54,8 @@ class ServiceConfig:
         self.log_level = self._get_env_var("LOG_LEVEL", "INFO")
 
         # Service networking
-        self.host = self._get_env_var("HOST", "0.0.0.0")
-        self.port = validate_port_number(self._get_env_var("PORT", "8000"))
+        self.host = self._get_env_var("API_HOST", "0.0.0.0")
+        self.port = validate_port_number(self._get_env_var("API_PORT", "8000"))
 
         # Database configuration
         self.database_url = self._get_env_var("DATABASE_URL")

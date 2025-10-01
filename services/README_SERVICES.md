@@ -367,8 +367,8 @@ docker-compose -f docker-compose.services.yml up interpreter -d
 # Pass secrets safely (examples)
 # 1) Use env file (never commit!)
 cat > .env.local <<'EOF'
-GITHUB_TOKEN=ghp_xxx
-AWS_ACCESS_KEY_ID=...
+EXTERNAL_GITHUB_TOKEN=ghp_xxx
+EXTERNAL_AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 AWS_SESSION_TOKEN=...
 BEDROCK_API_KEY=...
@@ -376,7 +376,7 @@ EOF
 docker compose --env-file .env.local -f docker-compose.dev.yml up -d summarizer-hub source-agent
 
 # 2) Inline env for one-off local runs
-GITHUB_TOKEN=ghp_xxx docker compose -f docker-compose.dev.yml up -d source-agent
+EXTERNAL_GITHUB_TOKEN=ghp_xxx docker compose -f docker-compose.dev.yml up -d source-agent
 
 # 3) Docker secrets (compose v3+; stub)
 #   Define `secrets:` in compose and mount into the container; map them to envs in entrypoint.
@@ -418,10 +418,10 @@ curl -X POST http://localhost:5120/execute \
 ```bash
 # Prompt Store
 PROMPT_STORE_DB=/app/data/prompt_store.db
-PROMPT_STORE_PORT=5110
+PROMPT_STORE_API_PORT=5110
 
 # Interpreter
-INTERPRETER_PORT=5120
+INTERPRETER_API_PORT=5120
 
 # CLI
 CLI_VERBOSE=true

@@ -43,7 +43,7 @@ Owner notes:
 1) Endpoints Inventory (from api/*): `/`, `/health`, `/tools`, `/execute`, `/workflow`, `/agentic/*`, `/ecosystem/*`, `/workflows/execute`, `/integrations`, `/metrics`.
 2) Workflow Semantics: Templates for security testing, data analysis, chaos testing; extend to doc-consistency: ingest → analyze → report.
 3) Plugin Surface: Hotline, LogBlanc, SpeedForce, DrBones, etc.; define lightweight shims to our Hackathon agents.
-4) Config & Providers: LLM provider defaults to Ollama; ensure `OLLAMA_HOST` is optional in orchestrator (use agents for LLM work).
+4) Config & Providers: LLM provider defaults to Ollama; ensure `OLLAMA_API_HOST` is optional in orchestrator (use agents for LLM work).
 5) Health/Telemetry: Prometheus metrics endpoint; aggregate per-agent status via health routers; expose ecosystem roll-up.
 6) Error Handling: Standardized success/error responses; reuse patterns in orchestrator service.
 7) Security: CORS, auth middleware hooks; add service-to-service HMAC.

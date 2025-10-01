@@ -9,7 +9,7 @@ from typing import Dict, List
 from .utils import bullets_from_text
 
 # Supported template types for response generation
-SUPPORTED_TEMPLATES = [
+SUPAPI_PORTED_TEMPLATES = [
     "summary",  # General summary with key points
     "risks",  # Risk assessment with mitigations
     "decisions",  # Decision documentation
@@ -18,7 +18,7 @@ SUPPORTED_TEMPLATES = [
 ]
 
 # Supported output formats
-SUPPORTED_FORMATS = ["md", "txt", "json"]
+SUPAPI_PORTED_FORMATS = ["md", "txt", "json"]
 
 
 # Template builder functions to reduce duplication
@@ -108,7 +108,7 @@ for template_name, builder_func in TEMPLATE_BUILDERS.items():
 
 # Extract valid values for validation (maintaining backward compatibility)
 VALID_TEMPLATES = list(TEMPLATES.keys())
-VALID_FORMATS = SUPPORTED_FORMATS
+VALID_FORMATS = SUPAPI_PORTED_FORMATS
 
 
 def detect_template_from_prompt(prompt: str) -> str:

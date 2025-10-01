@@ -15,12 +15,12 @@ Shared modules:
 ## Environments and Common Variables
 
 - Core
-  - `REDIS_HOST` (optional): host:port for Redis pub/sub.
+  - `REDIS_API_HOST` (optional): host:port for Redis pub/sub.
   - `LOG_COLLECTOR_URL` (optional): base URL for centralized logs.
   - `ORCHESTRATOR_PEERS` (optional): comma-separated peer orchestrator base URLs for registry replication.
 
 - LLM
-  - `OLLAMA_HOST`: URL for Ollama (shared or sidecar), e.g. `http://ollama:11434`.
+  - `OLLAMA_API_HOST`: URL for Ollama (shared or sidecar), e.g. `http://ollama:11434`.
   - `OLLAMA_MODEL`: default model (e.g., `llama3`).
   - `RATE_LIMIT_ENABLED`: enable RateLimitMiddleware when `true|1|yes` (defaults off for tests).
 
@@ -64,7 +64,7 @@ Each service exposes `GET /health`.
   - Check `content_hash` and debouncing; repeated identical inputs are intentionally skipped.
 
 - LLM requests slow or failing
-  - Confirm `OLLAMA_HOST` and model availability; warm up models.
+  - Confirm `OLLAMA_API_HOST` and model availability; warm up models.
   - Reduce concurrency or use per-service sidecars to isolate load.
 
 - Missing documents in reports

@@ -120,7 +120,7 @@ response = await ollama.generate(
 
 ---
 
-## 📋 **COMPREHENSIVE REPORTING**
+## 📋 **COMPREHENSIVE REAPI_PORTING**
 
 ### **HTML Report Features**
 - 🎨 **Professional styling** with color-coded confidence levels

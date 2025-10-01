@@ -94,10 +94,10 @@ The Frontend Service employs a lightweight, server-rendered architecture optimiz
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `REPORTING_URL` | Analysis Service URL for report generation | - | ✅ |
+| `REAPI_PORTING_URL` | Analysis Service URL for report generation | - | ✅ |
 | `CONSISTENCY_ENGINE_URL` | Consistency engine integration URL | - | ✅ |
 | `LOG_COLLECTOR_URL` | Log collector endpoint for monitoring | - | Optional |
-| `SERVICE_PORT` | Service port (internal) | `3000` | Optional |
+| `SERVICE_API_PORT` | Service port (internal) | `3000` | Optional |
 
 ### **🎯 Service Dependencies**
 

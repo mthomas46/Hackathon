@@ -50,7 +50,7 @@ class LogContext:
     service_version: str = "1.0.0"
     environment: str = "development"
     instance_id: str = field(
-        default_factory=lambda: os.environ.get("HOSTNAME", "unknown")
+        default_factory=lambda: os.environ.get("API_HOSTNAME", "unknown")
     )
     request_id: Optional[str] = None
     user_id: Optional[str] = None

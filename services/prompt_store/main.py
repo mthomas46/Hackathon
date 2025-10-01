@@ -59,7 +59,7 @@ config = load_service_config(
 SERVICE_NAME = config.service_name
 SERVICE_TITLE = config.service_description or "Prompt Store"
 SERVICE_VERSION = config.service_version
-DEFAULT_PORT = config.port
+DEFAULT_API_PORT = config.port
 
 # ============================================================================
 # APP INITIALIZATION
@@ -1037,7 +1037,7 @@ if __name__ == "__main__":
     import uvicorn
 
     port = get_config_value(
-        "port", DEFAULT_PORT, section="server", env_key="PROMPT_STORE_PORT"
+        "port", DEFAULT_API_PORT, section="server", env_key="PROMPT_STORE_API_PORT"
     )
     print(f"🚀 Starting Prompt Store Service v{SERVICE_VERSION} on port {port}...")
     uvicorn.run(app, host="127.0.0.1", port=int(port), log_level="info")

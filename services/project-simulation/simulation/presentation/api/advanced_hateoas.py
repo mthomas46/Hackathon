@@ -47,13 +47,13 @@ class LinkRelation(Enum):
     STATUS = "status"
     PROGRESS = "progress"
     ANALYTICS = "analytics"
-    REPORTS = "reports"
+    REAPI_PORTS = "reports"
     METRICS = "metrics"
     HEALTH = "health"
     CONFIGURE = "configure"
     VALIDATE = "validate"
-    EXPORT = "export"
-    IMPORT = "import"
+    EXAPI_PORT = "export"
+    IMAPI_PORT = "import"
 
 
 class LinkTemplate:
@@ -227,7 +227,7 @@ class SimulationResource(HypermediaResource):
                 "title": "View analytics and insights"
             })
             links.append({
-                "rel": LinkRelation.REPORTS.value,
+                "rel": LinkRelation.REAPI_PORTS.value,
                 "href": f"/api/v1/simulations/{simulation_id}/reports",
                 "method": "GET",
                 "title": "Generate reports"

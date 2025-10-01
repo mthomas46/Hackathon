@@ -96,7 +96,7 @@ class ProviderRouter:
             "openai": {
                 "name": "openai",
                 "type": "cloud",
-                "api_key": get_config_value("OPENAI_API_KEY", "", section="openai"),
+                "api_key": get_config_value("EXTERNAL_OPENAI_API_KEY", "", section="openai"),
                 "model": get_config_value("OPENAI_MODEL", "gpt-4o", section="openai"),
                 "endpoint": "https://api.openai.com/v1/chat/completions",
                 "timeout": 30,
@@ -108,7 +108,7 @@ class ProviderRouter:
                 "name": "anthropic",
                 "type": "cloud",
                 "api_key": get_config_value(
-                    "ANTHROPIC_API_KEY", "", section="anthropic"
+                    "EXTERNAL_ANTHROPIC_API_KEY", "", section="anthropic"
                 ),
                 "model": get_config_value(
                     "ANTHROPIC_MODEL", "claude-3.5-sonnet", section="anthropic"

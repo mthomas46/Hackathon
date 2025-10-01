@@ -65,7 +65,7 @@ netstat -ano | findstr :8000
 services:
   dashboard:
     environment:
-      - SERVICE_PORT=8001
+      - SERVICE_API_PORT=8001
     ports:
       - "8001:8001"
 ```
@@ -112,8 +112,8 @@ services:
 4. **Fix environment variables:**
 ```yaml
 environment:
-  - REDIS_HOST=redis
-  - REDIS_PORT=6379
+  - REDIS_API_HOST=redis
+  - REDIS_API_PORT=6379
   - REDIS_PASSWORD=${REDIS_PASSWORD}
 ```
 

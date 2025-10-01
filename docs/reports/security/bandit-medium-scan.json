@@ -66994,7 +66994,7 @@
   },
   "results": [
     {
-      "code": "4268         app,\n4269         host=\"0.0.0.0\",\n4270         port=DEFAULT_PORT,\n",
+      "code": "4268         app,\n4269         host=\"0.0.0.0\",\n4270         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/analysis-service/main.py",
@@ -67014,7 +67014,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "236     port = int(os.getenv(\"PORT\", DEFAULT_PORT))\n237     host = os.getenv(\"HOST\", \"0.0.0.0\")\n238 \n",
+      "code": "236     port = int(os.getenv(\"API_PORT\", DEFAULT_API_PORT))\n237     host = os.getenv(\"API_HOST\", \"0.0.0.0\")\n238 \n",
       "col_offset": 29,
       "end_col_offset": 38,
       "filename": "services/analysis-service/main_new.py",
@@ -67094,7 +67094,7 @@
       "test_name": "request_without_timeout"
     },
     {
-      "code": "403         app,\n404         host=\"0.0.0.0\",\n405         port=DEFAULT_PORT,\n",
+      "code": "403         app,\n404         host=\"0.0.0.0\",\n405         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/architecture-digitizer/main.py",
@@ -67114,7 +67114,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "159         app,\n160         host=\"0.0.0.0\",\n161         port=DEFAULT_PORT,\n",
+      "code": "159         app,\n160         host=\"0.0.0.0\",\n161         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/bedrock-proxy/main.py",
@@ -67214,7 +67214,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "1066         app,\n1067         host=\"0.0.0.0\",\n1068         port=DEFAULT_PORT,\n",
+      "code": "1066         app,\n1067         host=\"0.0.0.0\",\n1068         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/discovery-agent/main_backup.py",
@@ -67254,7 +67254,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "786         app,\n787         host=\"0.0.0.0\",\n788         port=DEFAULT_PORT,\n",
+      "code": "786         app,\n787         host=\"0.0.0.0\",\n788         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/discovery-agent/main_original.py",
@@ -67997,7 +67997,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "2799         \"main:app\" if is_dev else app,\n2800         host=\"0.0.0.0\",\n2801         port=DEFAULT_PORT,\n",
+      "code": "2799         \"main:app\" if is_dev else app,\n2800         host=\"0.0.0.0\",\n2801         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/frontend/main.py",
@@ -68037,7 +68037,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "210         app,\n211         host=\"0.0.0.0\",\n212         port=DEFAULT_PORT,\n",
+      "code": "210         app,\n211         host=\"0.0.0.0\",\n212         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/github-mcp/main.py",
@@ -68077,7 +68077,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "1141         app,\n1142         host=\"0.0.0.0\",\n1143         port=DEFAULT_PORT,\n",
+      "code": "1141         app,\n1142         host=\"0.0.0.0\",\n1143         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/interpreter/main_original_backup.py",
@@ -68137,7 +68137,7 @@
       "test_name": "hardcoded_tmp_directory"
     },
     {
-      "code": "359         app,\n360         host=\"0.0.0.0\",\n361         port=DEFAULT_PORT,\n",
+      "code": "359         app,\n360         host=\"0.0.0.0\",\n361         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/llm-gateway/main.py",
@@ -68197,7 +68197,7 @@
       "test_name": "hardcoded_tmp_directory"
     },
     {
-      "code": "338             app,\n339             host=\"0.0.0.0\",\n340             port=DEFAULT_PORT,\n",
+      "code": "338             app,\n339             host=\"0.0.0.0\",\n340             port=DEFAULT_API_PORT,\n",
       "col_offset": 17,
       "end_col_offset": 26,
       "filename": "services/log-collector/main.py",
@@ -68217,7 +68217,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "217         app,\n218         host=\"0.0.0.0\",\n219         port=DEFAULT_PORT,\n",
+      "code": "217         app,\n218         host=\"0.0.0.0\",\n219         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/memory-agent/main.py",
@@ -68237,7 +68237,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "2315         app,\n2316         host=\"0.0.0.0\",\n2317         port=DEFAULT_PORT,\n",
+      "code": "2315         app,\n2316         host=\"0.0.0.0\",\n2317         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/mock-data-generator/main.py",
@@ -68257,7 +68257,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "185         app,\n186         host=\"0.0.0.0\",\n187         port=DEFAULT_PORT,\n",
+      "code": "185         app,\n186         host=\"0.0.0.0\",\n187         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/notification-service/main.py",
@@ -68297,7 +68297,7 @@
       "test_name": "blacklist"
     },
     {
-      "code": "284         app,\n285         host=\"0.0.0.0\",\n286         port=DEFAULT_PORT,\n",
+      "code": "284         app,\n285         host=\"0.0.0.0\",\n286         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/orchestrator/main.py",
@@ -76616,7 +76616,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "358         app,\n359         host=\"0.0.0.0\",\n360         port=DEFAULT_PORT,\n",
+      "code": "358         app,\n359         host=\"0.0.0.0\",\n360         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/secure-analyzer/main.py",
@@ -76819,7 +76819,7 @@
       "test_name": "hardcoded_tmp_directory"
     },
     {
-      "code": "78         'STREAMLIT_SERVER_PORT': str(port),\n79         'STREAMLIT_SERVER_ADDRESS': '0.0.0.0',\n80         'STREAMLIT_BROWSER_GATHER_USAGE_STATS': 'false',\n81         'STREAMLIT_THEME_BASE': 'light',\n82     })\n83 \n84     # Start Streamlit\n85     cmd = [\n",
+      "code": "78         'STREAMLIT_SERVER_API_PORT': str(port),\n79         'STREAMLIT_SERVER_ADDRESS': '0.0.0.0',\n80         'STREAMLIT_BROWSER_GATHER_USAGE_STATS': 'false',\n81         'STREAMLIT_THEME_BASE': 'light',\n82     })\n83 \n84     # Start Streamlit\n85     cmd = [\n",
       "col_offset": 36,
       "end_col_offset": 45,
       "filename": "services/simulation-dashboard/run_dashboard.py",
@@ -76869,7 +76869,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "212         app,\n213         host=\"0.0.0.0\",\n214         port=DEFAULT_PORT,\n",
+      "code": "212         app,\n213         host=\"0.0.0.0\",\n214         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/source-agent/main.py",
@@ -76889,7 +76889,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "2871         app,\n2872         host=\"0.0.0.0\",\n2873         port=DEFAULT_PORT,\n",
+      "code": "2871         app,\n2872         host=\"0.0.0.0\",\n2873         port=DEFAULT_API_PORT,\n",
       "col_offset": 13,
       "end_col_offset": 22,
       "filename": "services/summarizer-hub/main.py",
@@ -76929,7 +76929,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "384     port = int(os.getenv(\"SERVICE_PORT\", \"8000\"))\n385     host = os.getenv(\"SERVICE_HOST\", \"0.0.0.0\")\n386 \n",
+      "code": "384     port = int(os.getenv(\"SERVICE_API_PORT\", \"8000\"))\n385     host = os.getenv(\"SERVICE_API_HOST\", \"0.0.0.0\")\n386 \n",
       "col_offset": 37,
       "end_col_offset": 46,
       "filename": "services/unified-api-dashboard/app.py",
@@ -76949,7 +76949,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "21     port = int(os.getenv(\"SERVICE_PORT\", \"8000\"))\n22     host = os.getenv(\"SERVICE_HOST\", \"0.0.0.0\")\n23 \n",
+      "code": "21     port = int(os.getenv(\"SERVICE_API_PORT\", \"8000\"))\n22     host = os.getenv(\"SERVICE_API_HOST\", \"0.0.0.0\")\n23 \n",
       "col_offset": 37,
       "end_col_offset": 46,
       "filename": "services/unified-api-dashboard/main.py",

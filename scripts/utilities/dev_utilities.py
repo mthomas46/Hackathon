@@ -180,7 +180,7 @@ class DevelopmentUtilities:
                         # Create standardized version
                         standardized_content = template.replace('SERVICE_NAME', item)
                         standardized_content = standardized_content.replace('SERVICE_DESCRIPTION', f"{item.replace('-', ' ').title()} service")
-                        standardized_content = standardized_content.replace('SERVICE_PORT', '5000')  # Default, will be updated
+                        standardized_content = standardized_content.replace('SERVICE_API_PORT', '5000')  # Default, will be updated
                         standardized_content = standardized_content.replace('SERVICE_PROFILE', 'core')
 
                         with open(dockerfile_path, 'w') as f:

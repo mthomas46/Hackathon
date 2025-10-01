@@ -62,12 +62,12 @@ The **LLM Gateway** is the **centralized AI orchestration hub** that provides se
 ### Environment Variables
 ```bash
 # Core Configuration
-LLM_GATEWAY_PORT=5055
-LLM_GATEWAY_HOST=0.0.0.0
+LLM_GATEWAY_API_PORT=5055
+LLM_GATEWAY_API_HOST=0.0.0.0
 
 # Provider API Keys
-OPENAI_API_KEY=your_openai_key
-ANTHROPIC_API_KEY=your_anthropic_key
+EXTERNAL_OPENAI_API_KEY=your_openai_key
+EXTERNAL_ANTHROPIC_API_KEY=your_anthropic_key
 AWS_BEDROCK_REGION=us-east-1
 
 # Security & Routing
@@ -105,8 +105,8 @@ services:
     ports:
       - "5055:5055"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - EXTERNAL_OPENAI_API_KEY=${EXTERNAL_OPENAI_API_KEY}
+      - EXTERNAL_ANTHROPIC_API_KEY=${EXTERNAL_ANTHROPIC_API_KEY}
     depends_on:
       - redis
       - postgres
@@ -125,11 +125,11 @@ service:
 providers:
   openai:
     enabled: true
-    api_key: ${OPENAI_API_KEY}
+    api_key: ${EXTERNAL_OPENAI_API_KEY}
     models: ["gpt-4", "gpt-3.5-turbo"]
   anthropic:
     enabled: true
-    api_key: ${ANTHROPIC_API_KEY}
+    api_key: ${EXTERNAL_ANTHROPIC_API_KEY}
     models: ["claude-3-opus", "claude-3-sonnet"]
   bedrock:
     enabled: true
@@ -336,12 +336,12 @@ server:
 providers:
   openai:
     enabled: true
-    api_key: ${OPENAI_API_KEY}
+    api_key: ${EXTERNAL_OPENAI_API_KEY}
     models: ["gpt-4", "gpt-3.5-turbo"]
 
   anthropic:
     enabled: true
-    api_key: ${ANTHROPIC_API_KEY}
+    api_key: ${EXTERNAL_ANTHROPIC_API_KEY}
     models: ["claude-3-sonnet", "claude-3-haiku"]
 
   bedrock:
@@ -380,8 +380,8 @@ services:
     ports:
       - "5055:5055"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - EXTERNAL_OPENAI_API_KEY=${EXTERNAL_OPENAI_API_KEY}
+      - EXTERNAL_ANTHROPIC_API_KEY=${EXTERNAL_ANTHROPIC_API_KEY}
       - AWS_BEDROCK_REGION=${AWS_BEDROCK_REGION}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
       - REDIS_URL=${REDIS_URL}
@@ -585,13 +585,13 @@ Detailed health check including provider status.
 #### Core Configuration
 ```bash
 # Service
-LLM_GATEWAY_PORT=5055
-LLM_GATEWAY_HOST=0.0.0.0
+LLM_GATEWAY_API_PORT=5055
+LLM_GATEWAY_API_HOST=0.0.0.0
 
 # Provider Endpoints
 OLLAMA_ENDPOINT=http://ollama-consistency:11434
-OPENAI_API_KEY=sk-your-key-here
-ANTHROPIC_API_KEY=sk-ant-your-key-here
+EXTERNAL_OPENAI_API_KEY=sk-your-key-here
+EXTERNAL_ANTHROPIC_API_KEY=sk-ant-your-key-here
 BEDROCK_ENDPOINT=http://bedrock-proxy:7090/invoke
 GROK_API_KEY=grok-your-key-here
 
@@ -635,14 +635,14 @@ providers:
 
   openai:
     model: gpt-4o
-    api_key: ${OPENAI_API_KEY}
+    api_key: ${EXTERNAL_OPENAI_API_KEY}
     timeout: 30
     cost_per_token: 0.00003
     security_level: medium
 
   anthropic:
     model: claude-3.5-sonnet
-    api_key: ${ANTHROPIC_API_KEY}
+    api_key: ${EXTERNAL_ANTHROPIC_API_KEY}
     timeout: 30
     cost_per_token: 0.000015
     security_level: medium
@@ -1062,9 +1062,9 @@ services:
     ports:
       - "5055:5055"
     environment:
-      - REDIS_HOST=redis
+      - REDIS_API_HOST=redis
       - OLLAMA_ENDPOINT=http://ollama:11434
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - EXTERNAL_OPENAI_API_KEY=${EXTERNAL_OPENAI_API_KEY}
     depends_on:
       - redis
       - ollama
@@ -1102,7 +1102,7 @@ spec:
         ports:
         - containerPort: 5055
         env:
-        - name: REDIS_HOST
+        - name: REDIS_API_HOST
           value: "redis-service"
         - name: OLLAMA_ENDPOINT
           value: "http://ollama-service:11434"

@@ -157,7 +157,7 @@ def main():
 
     # Save detailed results to file
     with open(project_root / 'service_test_results.txt', 'w') as f:
-        f.write("SERVICE IMPORT TEST RESULTS\n")
+        f.write("SERVICE IMAPI_PORT TEST RESULTS\n")
         f.write("="*40 + "\n\n")
 
         f.write(f"PASSED ({len(results['passed'])}):\n")

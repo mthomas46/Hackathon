@@ -434,7 +434,7 @@
   },
   "results": [
     {
-      "code": "384     port = int(os.getenv(\"SERVICE_PORT\", \"8000\"))\n385     host = os.getenv(\"SERVICE_HOST\", \"0.0.0.0\")\n386 \n",
+      "code": "384     port = int(os.getenv(\"SERVICE_API_PORT\", \"8000\"))\n385     host = os.getenv(\"SERVICE_API_HOST\", \"0.0.0.0\")\n386 \n",
       "col_offset": 37,
       "end_col_offset": 46,
       "filename": "services/unified-api-dashboard/app.py",
@@ -454,7 +454,7 @@
       "test_name": "hardcoded_bind_all_interfaces"
     },
     {
-      "code": "21     port = int(os.getenv(\"SERVICE_PORT\", \"8000\"))\n22     host = os.getenv(\"SERVICE_HOST\", \"0.0.0.0\")\n23 \n",
+      "code": "21     port = int(os.getenv(\"SERVICE_API_PORT\", \"8000\"))\n22     host = os.getenv(\"SERVICE_API_HOST\", \"0.0.0.0\")\n23 \n",
       "col_offset": 37,
       "end_col_offset": 46,
       "filename": "services/unified-api-dashboard/main.py",

@@ -34,7 +34,7 @@ config = load_service_config(
 SERVICE_NAME = config.service_name
 SERVICE_TITLE = config.service_description or "Enhanced Mock Data Generator"
 SERVICE_VERSION = config.service_version
-DEFAULT_PORT = config.port
+DEFAULT_API_PORT = config.port
 
 # Environment configuration
 LLM_GATEWAY_URL = os.getenv("LLM_GATEWAY_URL", "http://llm-gateway:5055")
@@ -55,7 +55,7 @@ class MockDataType(str, Enum):
     WORKFLOW_DATA = "workflow_data"
     # New ecosystem-specific types
     LLM_PROMPT = "llm_prompt"
-    ANALYSIS_REPORT = "analysis_report"
+    ANALYSIS_REAPI_PORT = "analysis_report"
     SOURCE_CODE = "source_code"
     DOCUMENT_COLLECTION = "document_collection"
     USER_PROFILE = "user_profile"
@@ -341,7 +341,7 @@ class MockDataGenerator:
                 "tags": ["code", "analysis", "security"],
                 "model_preference": "gpt-4",
             },
-            MockDataType.ANALYSIS_REPORT: {
+            MockDataType.ANALYSIS_REAPI_PORT: {
                 "title": "Code Quality Analysis Report",
                 "summary": "Comprehensive analysis of codebase quality metrics and recommendations",
                 "issues_found": 15,
@@ -1545,7 +1545,7 @@ class MockDataGenerator:
                     "DATABASE_URL": "postgresql://user:password@localhost:5432/dbname",
                     "SECRET_KEY": "your-secret-key-here",
                     "DEBUG": "false",
-                    "ALLOWED_HOSTS": "yourdomain.com,api.yourdomain.com",
+                    "ALLOWED_API_HOSTS": "yourdomain.com,api.yourdomain.com",
                 },
                 "configuration_files": [
                     ".env - Environment variables",
@@ -2727,12 +2727,12 @@ if __name__ == "__main__":
     )
     print("")
     print("🌐 Service Endpoints:")
-    print(f"  📡 Health: http://localhost:{DEFAULT_PORT}/health")
-    print(f"  🏗️  Collections: http://localhost:{DEFAULT_PORT}/collections/generate")
-    print(f"  🎭 Scenarios: http://localhost:{DEFAULT_PORT}/scenarios/generate")
-    print(f"  📊 Overview: http://localhost:{DEFAULT_PORT}/data/ecosystem-overview")
+    print(f"  📡 Health: http://localhost:{DEFAULT_API_PORT}/health")
+    print(f"  🏗️  Collections: http://localhost:{DEFAULT_API_PORT}/collections/generate")
+    print(f"  🎭 Scenarios: http://localhost:{DEFAULT_API_PORT}/scenarios/generate")
+    print(f"  📊 Overview: http://localhost:{DEFAULT_API_PORT}/data/ecosystem-overview")
     print("")
-    print(f"📖 API Documentation: http://localhost:{DEFAULT_PORT}/docs")
+    print(f"📖 API Documentation: http://localhost:{DEFAULT_API_PORT}/docs")
     print("")
-    host = os.getenv("MOCK_DATA_GENERATOR_HOST", "0.0.0.0")
-    uvicorn.run(app, host=host, port=DEFAULT_PORT, log_level="info")
+    host = os.getenv("MOCK_DATA_GENERATOR_API_HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=DEFAULT_API_PORT, log_level="info")

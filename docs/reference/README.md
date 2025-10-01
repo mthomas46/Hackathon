@@ -7,7 +7,7 @@ This section contains reference materials, specifications, and supporting docume
 
 ## Documentation
 - **[Documentation Parity Matrix](DOCS_PARITY_MATRIX.md)** - Tracking completeness of service documentation
-- **[Reports README](REPORTS_README.md)** - Guide to generated reports and analytics
+- **[Reports README](REAPI_PORTS_README.md)** - Guide to generated reports and analytics
 
 ## Configuration
 - **[Environment Configuration](env.example)** - Example environment variables and configuration

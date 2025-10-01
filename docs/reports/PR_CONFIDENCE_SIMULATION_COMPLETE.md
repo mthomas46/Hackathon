@@ -141,7 +141,7 @@ python test_pr_confidence_workflow.py
 🔄 calculate_confidence: Calculating overall PR confidence score
 📢 NOTIFICATION (normal): Confidence score calculated: 72.6%
 
-📋 GENERATING FINAL REPORT
+📋 GENERATING FINAL REAPI_PORT
 🔄 generate_report: Generating final PR confidence report
 📢 NOTIFICATION (high): PR Confidence Analysis Complete: 72.6% confidence. Recommendation: Review Required
 
