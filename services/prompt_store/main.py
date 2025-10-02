@@ -1037,4 +1037,4 @@ if __name__ == "__main__":
 
     port = DEFAULT_API_PORT
     print(f"🚀 Starting Prompt Store Service v{SERVICE_VERSION} on port {port}...")
-    uvicorn.run(app, host="127.0.0.1", port=int(port), log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=int(port), log_level="info")

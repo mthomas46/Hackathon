@@ -108,7 +108,7 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:5020/health
+      - http://localhost:5087/health
       interval: 30s
       timeout: 10s
       retries: 3
