@@ -1,9 +1,0 @@
-services:
-  redis:
-    image: redis:alpine
-    profiles:
-    - all
-  test-service:
-    image: nginx:alpine
-    profiles:
-    - all
