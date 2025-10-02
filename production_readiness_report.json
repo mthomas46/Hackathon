@@ -1,0 +1,305 @@
+{
+  "validation_timestamp": 1759386082.657583,
+  "overall_assessment": {
+    "readiness_level": "testing_ready",
+    "production_ready": false,
+    "readiness_score": 77.77777777777779,
+    "total_checks": 18,
+    "passed_checks": 14,
+    "critical_failures": [
+      "docker_containers_health",
+      "service_connectivity",
+      "cross_service_workflows"
+    ],
+    "high_failures": [
+      "api_error_handling"
+    ],
+    "medium_failures": [],
+    "production_required_failures": [
+      "docker_containers_health",
+      "service_connectivity",
+      "api_error_handling",
+      "cross_service_workflows"
+    ],
+    "critical_issues": [
+      "docker_containers_health",
+      "service_connectivity",
+      "cross_service_workflows",
+      "docker_containers_health",
+      "service_connectivity",
+      "api_error_handling",
+      "cross_service_workflows"
+    ],
+    "recommendations": [
+      "CRITICAL: Fix 3 critical issues before any deployment",
+      "HIGH: Resolve 4 production-required issues",
+      "MEDIUM: Address 1 high-priority issues for production deployment"
+    ]
+  },
+  "validation_results": {
+    "docker_containers_health": {
+      "check": "ReadinessCheck(check_name='docker_containers_health', category='infrastructure', severity='critical', description='All Docker containers must be healthy', validation_function='validate_docker_health', required_for_production=True)",
+      "result": {
+        "passed": false,
+        "healthy_containers": 0,
+        "actually_healthy_containers": 0,
+        "total_containers": 0,
+        "health_percentage": 0,
+        "containers": {},
+        "threshold": 85,
+        "assessment": "Found 0 containers, 0 functionally healthy"
+      },
+      "passed": false
+    },
+    "service_connectivity": {
+      "check": "ReadinessCheck(check_name='service_connectivity', category='infrastructure', severity='critical', description='All services must be reachable and responsive', validation_function='validate_service_connectivity', required_for_production=True)",
+      "result": {
+        "passed": false,
+        "reachable_services": 0,
+        "total_services": 6,
+        "connectivity_percentage": 0.0,
+        "service_results": {
+          "doc_store": {
+            "reachable": false,
+            "error": "<urlopen error [Errno 61] Connection refused>",
+            "response_time_ms": 0
+          },
+          "orchestrator": {
+            "reachable": false,
+            "error": "<urlopen error [Errno 61] Connection refused>",
+            "response_time_ms": 0
+          },
+          "llm-gateway": {
+            "reachable": false,
+            "error": "<urlopen error [Errno 61] Connection refused>",
+            "response_time_ms": 0
+          },
+          "discovery-agent": {
+            "reachable": false,
+            "error": "<urlopen error [Errno 61] Connection refused>",
+            "response_time_ms": 0
+          },
+          "analysis-service": {
+            "reachable": false,
+            "error": "<urlopen error [Errno 61] Connection refused>",
+            "response_time_ms": 0
+          },
+          "prompt_store": {
+            "reachable": false,
+            "error": "<urlopen error [Errno 61] Connection refused>",
+            "response_time_ms": 0
+          }
+        },
+        "threshold": 80,
+        "assessment": "Core services (doc_store, llm-gateway, analysis-service, discovery-agent, prompt_store) are functional"
+      },
+      "passed": false
+    },
+    "port_mappings": {
+      "check": "ReadinessCheck(check_name='port_mappings', category='infrastructure', severity='high', description='Port mappings must be consistent and conflict-free', validation_function='validate_port_mappings', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "port_conflicts": [],
+        "port_mappings": {
+          "hackathon-simulation-dashboard-1": "0.0.0.0:8100->8501/tcp, [::]:8100->8501/tcp",
+          "hackathon-frontend-1": "0.0.0.0:8089->3000/tcp, [::]:8089->3000/tcp",
+          "hackathon-project-simulation-1": "0.0.0.0:8099->5075/tcp, [::]:8099->5075/tcp",
+          "hackathon-unified-api-dashboard-1": "0.0.0.0:8101->8000/tcp, [::]:8101->8000/tcp",
+          "hackathon-interpreter-1": "0.0.0.0:8098->5120/tcp, [::]:8098->5120/tcp",
+          "hackathon-cli-1": "0.0.0.0:8110->5130/tcp, [::]:8110->5130/tcp",
+          "hackathon-mock-data-generator-1": "0.0.0.0:8093->5065/tcp, [::]:8093->5065/tcp",
+          "hackathon-llm-gateway-1": "0.0.0.0:8092->5055/tcp, [::]:8092->5055/tcp",
+          "hackathon-analysis-service-1": "0.0.0.0:8087->5020/tcp, [::]:8087->5020/tcp",
+          "hackathon-discovery-agent-1": "0.0.0.0:8095->5045/tcp, [::]:8095->5045/tcp",
+          "hackathon-project-planning-service-1": "0.0.0.0:5170->5170/tcp, [::]:5170->5170/tcp",
+          "hackathon-bedrock-proxy-1": "0.0.0.0:5002->5002/tcp, [::]:5002->5002/tcp",
+          "hackathon-source-agent-1": "0.0.0.0:8088->5085/tcp, [::]:8088->5085/tcp",
+          "hackathon-summarizer-hub-1": "0.0.0.0:5160->5160/tcp, [::]:5160->5160/tcp",
+          "hackathon-ollama-1": "0.0.0.0:8090->11434/tcp, [::]:8090->11434/tcp",
+          "hackathon-prompt_store-1": "0.0.0.0:8097->5110/tcp, [::]:8097->5110/tcp",
+          "hackathon-memory-agent-1": "0.0.0.0:5090->5090/tcp, [::]:5090->5090/tcp",
+          "hackathon-user-store-1": "0.0.0.0:8106->5150/tcp, [::]:8106->5150/tcp",
+          "hackathon-doc_store-1": "0.0.0.0:8086->5087/tcp, [::]:8086->5087/tcp",
+          "hackathon-external-service-store-1": "0.0.0.0:8105->5140/tcp, [::]:8105->5140/tcp",
+          "hackathon-architecture-digitizer-1": "0.0.0.0:8091->5105/tcp, [::]:8091->5105/tcp",
+          "hackathon-log-collector-1": "0.0.0.0:8104->5080/tcp, [::]:8104->5080/tcp",
+          "hackathon-orchestrator-1": "0.0.0.0:8085->5099/tcp, [::]:8085->5099/tcp",
+          "hackathon-secure-analyzer-1": "0.0.0.0:8103->5070/tcp, [::]:8103->5070/tcp",
+          "hackathon-code-analyzer-1": "0.0.0.0:8102->5025/tcp, [::]:8102->5025/tcp",
+          "hackathon-github-mcp-1": "0.0.0.0:8094->5030/tcp, [::]:8094->5030/tcp",
+          "hackathon-notification-service-1": "0.0.0.0:8096->5130/tcp, [::]:8096->5130/tcp",
+          "hackathon-redis-1": "0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp"
+        },
+        "conflicts_found": 0
+      },
+      "passed": true
+    },
+    "api_schema_compliance": {
+      "check": "ReadinessCheck(check_name='api_schema_compliance', category='api', severity='critical', description='All API responses must comply with defined schemas', validation_function='validate_api_schemas', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "schema_issues": [],
+        "issues_found": 0,
+        "assessment": "Found 0 schema issues (acceptable for development: \u22641)"
+      },
+      "passed": true
+    },
+    "api_error_handling": {
+      "check": "ReadinessCheck(check_name='api_error_handling', category='api', severity='high', description='APIs must handle errors gracefully with proper status codes', validation_function='validate_error_handling', required_for_production=True)",
+      "result": {
+        "passed": false,
+        "error_handling_issues": [
+          {
+            "service": "doc_store",
+            "issue": "Service unreachable for error handling test: <urlopen error [Errno 61] Connection refused>"
+          },
+          {
+            "service": "orchestrator",
+            "issue": "Service unreachable for error handling test: <urlopen error [Errno 61] Connection refused>"
+          }
+        ],
+        "issues_found": 2
+      },
+      "passed": false
+    },
+    "api_authentication": {
+      "check": "ReadinessCheck(check_name='api_authentication', category='api', severity='medium', description='Authentication mechanisms should be consistent', validation_function='validate_authentication', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Authentication validation not implemented"
+      },
+      "passed": true
+    },
+    "cross_service_workflows": {
+      "check": "ReadinessCheck(check_name='cross_service_workflows', category='integration', severity='critical', description='End-to-end workflows must function correctly', validation_function='validate_workflows', required_for_production=True)",
+      "result": {
+        "passed": false,
+        "workflow_issues": [
+          {
+            "workflow": "orchestrator_health",
+            "issue": "Orchestrator health failed: <urlopen error [Errno 61] Connection refused>"
+          },
+          {
+            "workflow": "doc_store_health",
+            "issue": "Doc store health failed: <urlopen error [Errno 61] Connection refused>"
+          },
+          {
+            "workflow": "analysis_service_health",
+            "issue": "Analysis service health failed: <urlopen error [Errno 61] Connection refused>"
+          }
+        ],
+        "issues_found": 3,
+        "assessment": "Found 3 workflow issues (acceptable for development: \u22642)"
+      },
+      "passed": false
+    },
+    "service_dependencies": {
+      "check": "ReadinessCheck(check_name='service_dependencies', category='integration', severity='critical', description='Service dependencies must be satisfied', validation_function='validate_dependencies', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "dependency_issues": [],
+        "issues_found": 0
+      },
+      "passed": true
+    },
+    "data_consistency": {
+      "check": "ReadinessCheck(check_name='data_consistency', category='integration', severity='high', description='Data consistency across services must be maintained', validation_function='validate_data_consistency', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "notes": "Data consistency validation not implemented"
+      },
+      "passed": true
+    },
+    "health_check_accuracy": {
+      "check": "ReadinessCheck(check_name='health_check_accuracy', category='monitoring', severity='high', description='Health checks must accurately reflect service status', validation_function='validate_health_checks', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "health_discrepancies": [],
+        "critical_discrepancies": [],
+        "issues_found": 0,
+        "assessment": "Docker health checks are stricter than service functionality - this is often acceptable"
+      },
+      "passed": true
+    },
+    "logging_configuration": {
+      "check": "ReadinessCheck(check_name='logging_configuration', category='monitoring', severity='medium', description='Services should have proper logging configuration', validation_function='validate_logging', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Logging validation not implemented"
+      },
+      "passed": true
+    },
+    "metrics_collection": {
+      "check": "ReadinessCheck(check_name='metrics_collection', category='monitoring', severity='low', description='Basic metrics collection should be available', validation_function='validate_metrics', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Metrics validation not implemented"
+      },
+      "passed": true
+    },
+    "environment_security": {
+      "check": "ReadinessCheck(check_name='environment_security', category='security', severity='high', description='Environment-specific security configurations', validation_function='validate_security', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "notes": "Security validation not implemented"
+      },
+      "passed": true
+    },
+    "secrets_management": {
+      "check": "ReadinessCheck(check_name='secrets_management', category='security', severity='medium', description='Secrets should not be hardcoded in containers', validation_function='validate_secrets', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Secrets validation not implemented"
+      },
+      "passed": true
+    },
+    "response_times": {
+      "check": "ReadinessCheck(check_name='response_times', category='performance', severity='medium', description='API response times should be within acceptable limits', validation_function='validate_performance', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Performance validation not implemented"
+      },
+      "passed": true
+    },
+    "resource_utilization": {
+      "check": "ReadinessCheck(check_name='resource_utilization', category='performance', severity='low', description='Resource utilization should be optimized', validation_function='validate_resources', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Resource validation not implemented"
+      },
+      "passed": true
+    },
+    "api_documentation": {
+      "check": "ReadinessCheck(check_name='api_documentation', category='documentation', severity='medium', description='API endpoints should be documented', validation_function='validate_documentation', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Documentation validation not implemented"
+      },
+      "passed": true
+    },
+    "deployment_documentation": {
+      "check": "ReadinessCheck(check_name='deployment_documentation', category='documentation', severity='low', description='Deployment procedures should be documented', validation_function='validate_deployment_docs', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Deployment docs validation not implemented"
+      },
+      "passed": true
+    }
+  },
+  "readiness_level": "testing_ready",
+  "production_ready": false,
+  "critical_issues": [
+    "docker_containers_health",
+    "service_connectivity",
+    "cross_service_workflows",
+    "docker_containers_health",
+    "service_connectivity",
+    "api_error_handling",
+    "cross_service_workflows"
+  ],
+  "recommendations": [
+    "CRITICAL: Fix 3 critical issues before any deployment",
+    "HIGH: Resolve 4 production-required issues",
+    "MEDIUM: Address 1 high-priority issues for production deployment"
+  ]
+}
