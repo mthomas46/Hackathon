@@ -14,7 +14,7 @@ NC='\033[0m'
 # Configuration
 VALIDATION_TIMEOUT=300
 MIN_HEALTHY_PERCENTAGE=85
-CRITICAL_SERVICES=("redis" "orchestrator" "llm-gateway" "doc_store" "discovery-agent" "unified-api-dashboard")
+CRITICAL_SERVICES=("redis" "orchestrator" "doc_store" "analysis-service" "llm-gateway" "discovery-agent")
 
 log_info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
 log_success() { echo -e "${GREEN}✅ $1${NC}"; }
@@ -69,10 +69,15 @@ validate_network_connectivity() {
     log_info "Validating network connectivity..."
 
     # Test key service endpoints - focus on services that should be responding
-    # Many services are still implementing health endpoints
+    # Based on current docker-compose.dev.yml port mappings
     local endpoints=(
-        "localhost:6379|redis"  # Redis ping (not HTTP)
-        "localhost:8085/health|orchestrator"  # External port 8085 -> internal 5099
+        "localhost:6379|redis"              # Redis ping (not HTTP)
+        "localhost:8085/health|orchestrator"    # External port 8085 -> internal 5099
+        "localhost:8086/health|doc_store"       # External port 8086 -> internal 5087
+        "localhost:8087/health|analysis-service" # External port 8087 -> internal 5020
+        "localhost:8092/health|llm-gateway"      # External port 8092 -> internal 5055
+        "localhost:8095/health|discovery-agent"  # External port 8095 -> internal 5045
+        "localhost:8097/health|prompt_store"     # External port 8097 -> internal 5110
     )
 
     local failed_endpoints=()
