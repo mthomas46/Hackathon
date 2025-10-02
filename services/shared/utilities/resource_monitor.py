@@ -48,8 +48,8 @@ class ResourceMonitor:
             disk_usage_percent=disk.percent,
             disk_free_mb=disk.free / 1024 / 1024,
             network_connections=len(psutil.net_connections()),
-            open_files=process_metrics.get(open_files, 0),
-            threads_count=process_metrics.get(threads, 0),
+            open_files=process_metrics.get("open_files", 0),
+            threads_count=process_metrics.get("threads", 0),
             timestamp=datetime.now(timezone.utc)
         )
 
@@ -59,10 +59,10 @@ class ResourceMonitor:
             # Try to get current process metrics
             process = psutil.Process()
             return {
-                open_files: len(process.open_files()),
-                threads: process.num_threads(),
-                cpu_times: process.cpu_times(),
-                memory_info: process.memory_info()
+                "open_files": len(process.open_files()),
+                "threads": process.num_threads(),
+                "cpu_times": process.cpu_times(),
+                "memory_info": process.memory_info()
             }
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return {}
@@ -73,24 +73,24 @@ class ResourceMonitor:
         uptime_seconds = time.time() - self.start_time
         
         return {
-            service_name: self.service_name,
-            uptime_seconds: uptime_seconds,
-            current_metrics: {
-                cpu_percent: current.cpu_percent,
-                memory_percent: current.memory_percent,
-                memory_used_mb: current.memory_used_mb,
-                disk_usage_percent: current.disk_usage_percent,
-                network_connections: current.network_connections,
-                threads_count: current.threads_count
+            "service_name": self.service_name,
+            "uptime_seconds": uptime_seconds,
+            "current_metrics": {
+                "cpu_percent": current.cpu_percent,
+                "memory_percent": current.memory_percent,
+                "memory_used_mb": current.memory_used_mb,
+                "disk_usage_percent": current.disk_usage_percent,
+                "network_connections": current.network_connections,
+                "threads_count": current.threads_count
             },
-            system_info: {
-                cpu_count: psutil.cpu_count(),
-                cpu_count_logical: psutil.cpu_count(logical=True),
-                total_memory_mb: psutil.virtual_memory().total / 1024 / 1024,
-                total_disk_mb: psutil.disk_usage('/').total / 1024 / 1024
+            "system_info": {
+                "cpu_count": psutil.cpu_count(),
+                "cpu_count_logical": psutil.cpu_count(logical=True),
+                "total_memory_mb": psutil.virtual_memory().total / 1024 / 1024,
+                "total_disk_mb": psutil.disk_usage('/').total / 1024 / 1024
             },
-            health_status: self._assess_health_status(current),
-            timestamp: current.timestamp.isoformat()
+            "health_status": self._assess_health_status(current),
+            "timestamp": current.timestamp.isoformat()
         }
 
     def _assess_health_status(self, metrics: ResourceMetrics) -> str:

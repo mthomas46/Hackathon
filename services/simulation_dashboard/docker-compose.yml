@@ -1,0 +1,82 @@
+services:
+  simulation-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: simulation-dashboard
+    ports:
+    - 8085:8501
+    environment:
+    - DASHBOARD_ENVIRONMENT=production
+    - DASHBOARD_DEBUG=false
+    - DASHBOARD_API_PORT=8501
+    - DASHBOARD_API_HOST=0.0.0.0
+    - DASHBOARD_SIMULATION_SERVICE_API_HOST=project-simulation
+    - DASHBOARD_SIMULATION_SERVICE_API_PORT=5075
+    - DASHBOARD_ANALYSIS_SERVICE_URL=http://analysis-service:5080
+    - DASHBOARD_HEALTH_SERVICE_URL=http://health-monitoring:5090
+    - DASHBOARD_WEBSOCKET_ENABLED=true
+    - DASHBOARD_WEBSOCKET_RECONNECT_ATTEMPTS=5
+    - DASHBOARD_WEBSOCKET_HEARTBEAT_INTERVAL=30.0
+    - DASHBOARD_PERFORMANCE_ENABLE_COMPRESSION=true
+    - DASHBOARD_PERFORMANCE_MAX_CONCURRENT_REQUESTS=10
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8501/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    networks:
+    - hackathon_simulation
+
+  redis:
+    image: redis:7-alpine
+    ports:
+    - 6379:6379
+    volumes:
+    - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+    - hackathon_simulation
+    - hackathon_default
+networks:
+  hackathon_simulation:
+    external: true
+    name: simulation-network
+  hackathon_default:
+    driver: bridge
+volumes:
+  dashboard-data:
+    driver: local
+  redis_data:
+    driver: local

@@ -116,7 +116,7 @@ app.add_middleware(
 
 # Add custom middleware
 app.add_middleware(RequestIdMiddleware)
-app.add_middleware(MetricsMiddleware)
+app.add_middleware(RequestMetricsMiddleware)
 app.add_middleware(RateLimitMiddleware)
 
 # Make handlers available to routes via app state (DDD pattern)
@@ -172,7 +172,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         content=create_error_response(
             error_code="INTERNAL_ERROR",
             message="An unexpected error occurred",
-            details=str(exc) if config.get('debug', False) else None
+            details=str(exc) if config.server.debug else None
         )
     )
 
@@ -183,7 +183,7 @@ async def startup_event():
     logger.info("Simulation Dashboard starting up...")
 
     # Start resource monitoring
-    monitor_resources()
+    monitor_resources(config.service_name)
 
     logger.info("Simulation Dashboard startup complete")
 
@@ -199,8 +199,8 @@ async def shutdown_event():
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host=config.get('host', '0.0.0.0'),
-        port=config.get('port', 8000),
-        reload=config.get('debug', False),
-        log_level=config.get('log_level', 'info')
+        host=config.server.host,
+        port=config.server.port,
+        reload=config.server.debug,
+        log_level=config.logging.level.lower()
     )
