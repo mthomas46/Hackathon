@@ -16,10 +16,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
-    - core
-    - development
-    - ai_services
-    - production
+    - all
   orchestrator:
     build:
       context: .
@@ -46,12 +43,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    profiles:
-    - core
     working_dir: /app
     volumes:
     - ./:/app:ro
     - ./services/orchestrator:/app/services/orchestrator:rw
+    profiles:
+    - all
   doc_store:
     build:
       context: .
@@ -68,12 +65,10 @@ services:
     - LOG_COLLECTOR_URL=http://log-collector:5080
     - LOG_COLLECTOR_ENABLED=true
     ports:
-    - 8085:5087
+    - 8086:5087
     depends_on:
       redis:
         condition: service_healthy
-      postgres:
-        condition: service_started
     healthcheck:
       test:
       - CMD
@@ -84,6 +79,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - core
     working_dir: /app
   analysis-service:
@@ -101,7 +97,7 @@ services:
     - DDD_ARCHITECTURE=true
     - DDD_CONFIG_FILE=config/ddd_config.yaml
     ports:
-    - 8085:5020
+    - 8087:5020
     depends_on:
       redis:
         condition: service_healthy
@@ -117,10 +113,10 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - core
     working_dir: /app
     volumes:
-    - ./:/app:ro
     - ./services/analysis-service:/app/services/analysis-service:rw
   source-agent:
     container_name: hackathon-source-agent-1
@@ -128,7 +124,7 @@ services:
       context: .
       dockerfile: services/source-agent/Dockerfile
     ports:
-    - 8085:5085
+    - 8088:5085
     environment:
     - SERVICE_NAME=source-agent
     - SERVICE_API_PORT=5085
@@ -148,6 +144,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - core
     restart: unless-stopped
     working_dir: /app
@@ -167,7 +164,7 @@ services:
     - FRONTEND_SERVICE_API_HOST=0.0.0.0
     - ENVIRONMENT=development
     ports:
-    - 8085:3000
+    - 8089:3000
     depends_on:
       redis:
         condition: service_healthy
@@ -187,6 +184,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - core
     working_dir: /app
     volumes:
@@ -195,7 +193,7 @@ services:
   ollama:
     build: ./services/ollama
     ports:
-    - 8085:11434
+    - 8090:11434
     volumes:
     - ./:/app:ro
     - ./services/ollama:/app/services/ollama:rw
@@ -204,6 +202,7 @@ services:
     - SERVICE_NAME=ollama
     - PYTHONPATH=/app
     profiles:
+    - all
     - ai_services
     restart: unless-stopped
     working_dir: /app
@@ -232,12 +231,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
+    - all
     - ai_services
     working_dir: /app
     volumes:
-    - ./:/app:ro
     - ./services/summarizer-hub:/app/services/summarizer-hub:rw
+    - ./services/shared:/app/services/shared:rw
     depends_on:
     - redis
   architecture-digitizer:
@@ -250,7 +251,7 @@ services:
     - SERVICE_API_PORT=5105
     - ENVIRONMENT=development
     ports:
-    - 8085:5105
+    - 8091:5105
     healthcheck:
       test:
       - CMD
@@ -261,10 +262,10 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - ai_services
     working_dir: /app
     volumes:
-    - ./:/app:ro
     - ./services/architecture-digitizer:/app/services/architecture-digitizer:rw
     depends_on:
     - redis
@@ -284,11 +285,12 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:5060/api/v1/health
+      - http://localhost:5002/health
       interval: 30s
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - ai_services
     working_dir: /app
     volumes:
@@ -312,7 +314,7 @@ services:
     - OLLAMA_ENDPOINT=http://ollama:11434
     - EXTERNAL_OPENAI_API_KEY=${EXTERNAL_OPENAI_API_KEY:-}
     - EXTERNAL_ANTHROPIC_API_KEY=${EXTERNAL_ANTHROPIC_API_KEY:-}
-    - BEDROCK_ENDPOINT=http://bedrock-proxy:5060/invoke
+    - BEDROCK_ENDPOINT=http://bedrock-proxy:5002/invoke
     - GROK_API_KEY=${GROK_API_KEY:-}
     - SENSITIVE_KEYWORDS=password,secret,token,key,credential,confidential,internal
     - SENSITIVITY_THRESHOLD=0.7
@@ -327,7 +329,7 @@ services:
     - RATE_LIMIT_BURST_LIMIT=10
     - RATE_LIMIT_COOLDOWN_SECONDS=60
     ports:
-    - 8085:5055
+    - 8092:5055
     depends_on:
       redis:
         condition: service_healthy
@@ -345,6 +347,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - ai_services
     working_dir: /app
   mock-data-generator:
@@ -361,7 +364,7 @@ services:
     - LLM_GATEWAY_URL=http://llm-gateway:5055
     - DOC_STORE_URL=http://doc_store:5087
     ports:
-    - 8085:5065
+    - 8093:5065
     depends_on:
       llm-gateway:
         condition: service_healthy
@@ -379,10 +382,10 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - ai_services
     working_dir: /app
     volumes:
-    - ./:/app:ro
     - ./services/mock-data-generator:/app/services/mock-data-generator:rw
   github-mcp:
     build:
@@ -394,21 +397,21 @@ services:
     - SERVICE_API_PORT=5030
     - SERVICE_NAME=github-mcp
     ports:
-    - 8085:5030
+    - 8094:5030
     healthcheck:
       test:
       - CMD
       - curl
       - -f
-      - http://localhost:5072/health
+      - http://localhost:5030/health
       interval: 30s
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - ai_services
     working_dir: /app
     volumes:
-    - ./:/app:ro
     - ./services/github-mcp:/app/services/github-mcp:rw
     depends_on:
     - redis
@@ -438,10 +441,10 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - development
     working_dir: /app
     volumes:
-    - ./:/app:ro
     - ./services/memory-agent:/app/services/memory-agent:rw
   discovery-agent:
     build:
@@ -453,9 +456,8 @@ services:
     - SERVICE_API_PORT=5045
     - ENVIRONMENT=development
     ports:
-    - 8085:5045
+    - 8095:5045
     volumes:
-    - ./:/app:ro
     - ./services/discovery-agent:/app/services/discovery-agent:rw
     depends_on:
       orchestrator:
@@ -472,6 +474,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - development
     working_dir: /app
   notification-service:
@@ -484,7 +487,7 @@ services:
     - SERVICE_API_PORT=5130
     - ENVIRONMENT=development
     ports:
-    - 8085:5130
+    - 8096:5130
     healthcheck:
       test:
       - CMD
@@ -495,6 +498,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - development
     restart: unless-stopped
     working_dir: /app
@@ -517,12 +521,10 @@ services:
     - REDIS_API_HOST=redis
     - ENVIRONMENT=development
     ports:
-    - 8085:5110
+    - 8097:5110
     depends_on:
       redis:
         condition: service_healthy
-      postgres:
-        condition: service_started
     healthcheck:
       test:
       - CMD
@@ -533,6 +535,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - ai_services
     working_dir: /app
   interpreter:
@@ -540,7 +543,6 @@ services:
       context: .
       dockerfile: services/interpreter/Dockerfile
     volumes:
-    - ./:/app:ro
     - ./services/interpreter:/app/services/interpreter:rw
     environment:
     - PYTHONPATH=/app
@@ -549,7 +551,7 @@ services:
     - INTERPRETER_SERVICE_API_HOST=0.0.0.0
     - ENVIRONMENT=development
     ports:
-    - 8085:5120
+    - 8098:5120
     depends_on:
       prompt_store:
         condition: service_started
@@ -569,6 +571,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - ai_services
     working_dir: /app
   cli:
@@ -592,14 +595,12 @@ services:
         condition: service_started
       redis:
         condition: service_started
-    command:
-    - sleep
-    - infinity
     profiles:
+    - all
     - tooling
     working_dir: /app
     ports:
-    - 8085:5130
+    - 8110:5130
     healthcheck:
       test:
       - CMD
@@ -614,10 +615,10 @@ services:
       context: .
       dockerfile: services/project-simulation/Dockerfile
     volumes:
-    - ./:/app:ro
     - ./services/project-simulation:/app/services/project-simulation:rw
+    - ./services/shared:/app/services/shared:rw
     environment:
-    - PYTHONPATH=/app
+    - PYTHONPATH=/app:/app/services/project-simulation
     - SERVICE_NAME=project-simulation
     - REDIS_API_HOST=redis
     - ENVIRONMENT=development
@@ -633,7 +634,7 @@ services:
     - DDD_ARCHITECTURE=true
     - DDD_CONFIG_FILE=config/ddd_config.yaml
     ports:
-    - 8085:5075
+    - 8099:5075
     depends_on:
       redis:
         condition: service_healthy
@@ -660,6 +661,7 @@ services:
       retries: 3
       start_period: 60s
     profiles:
+    - all
     - simulation
     - development
     - production
@@ -670,8 +672,7 @@ services:
       context: .
       dockerfile: services/simulation-dashboard/Dockerfile
     volumes:
-    - ./:/app:ro
-    - ./services/simulation-dashboard:/app/services/simulation-dashboard:rw
+    - ./services/shared:/app/services/shared:rw
     environment:
     - PYTHONPATH=/app
     - SERVICE_NAME=simulation-dashboard
@@ -691,10 +692,10 @@ services:
     - SERVICE_API_PORT=8501
     - ENVIRONMENT=development
     ports:
-    - 8085:8501
+    - 8100:8501
     depends_on:
       project-simulation:
-        condition: service_healthy
+        condition: service_started
       analysis-service:
         condition: service_started
       notification-service:
@@ -712,6 +713,7 @@ services:
       retries: 3
       start_period: 90s
     profiles:
+    - all
     - simulation
     - development
     - production
@@ -746,10 +748,10 @@ services:
     - AUDIT_SECRET_KEY=${AUDIT_SECRET_KEY:-dev-audit-secret-key-change-in-production}
     - CORS_ORIGINS=http://localhost:3000,http://localhost:8501,http://localhost:8000
     ports:
-    - 8085:8000
+    - 8101:8000
     volumes:
-    - ./:/app:ro
     - ./services/unified-api-dashboard:/app/services/unified-api-dashboard:rw
+    - ./services/shared:/app/services/shared:rw
     depends_on:
       redis:
         condition: service_healthy
@@ -768,6 +770,7 @@ services:
       retries: 3
       start_period: 60s
     profiles:
+    - all
     - core
     - development
     - production
@@ -783,7 +786,7 @@ services:
     - ENVIRONMENT=development
     - REDIS_API_HOST=redis
     ports:
-    - 8085:5025
+    - 8102:5025
     depends_on:
       redis:
         condition: service_healthy
@@ -797,6 +800,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - production
     working_dir: /app
     volumes:
@@ -813,7 +817,7 @@ services:
     - SECURE_ANALYZER_API_HOST=0.0.0.0
     - ENVIRONMENT=development
     ports:
-    - 8085:5070
+    - 8103:5070
     healthcheck:
       test:
       - CMD
@@ -824,6 +828,7 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - production
     working_dir: /app
     volumes:
@@ -844,22 +849,11 @@ services:
     - SERVICE_HEALTH_CHECK_INTERVAL=30
     - ENABLE_HEALTH_SAFEGUARDS=false
     ports:
-    - 8085:5080
-    healthcheck:
-      test:
-      - CMD
-      - curl
-      - -f
-      - http://localhost:5080/health
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    - 8104:5080
     profiles:
+    - all
     - development
     working_dir: /app
-    volumes:
-    - ./:/app:ro
-    - ./services/log-collector:/app/services/log-collector:rw
     depends_on:
     - redis
   external-service-store:
@@ -873,12 +867,10 @@ services:
     - REDIS_API_HOST=redis
     - ENVIRONMENT=development
     ports:
-    - 8085:5140
+    - 8105:5140
     depends_on:
       redis:
         condition: service_healthy
-      postgres:
-        condition: service_started
     healthcheck:
       test:
       - CMD
@@ -889,11 +881,11 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - core
     - utility
     working_dir: /app
     volumes:
-    - ./:/app:ro
     - ./services/external-service-store:/app/services/external-service-store:rw
   user-store:
     build:
@@ -906,12 +898,10 @@ services:
     - REDIS_API_HOST=redis
     - ENVIRONMENT=development
     ports:
-    - 8085:5150
+    - 8106:5150
     depends_on:
       redis:
         condition: service_healthy
-      postgres:
-        condition: service_started
     healthcheck:
       test:
       - CMD
@@ -922,12 +912,13 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - core
     - utility
     working_dir: /app
     volumes:
-    - ./:/app:ro
     - ./services/user-store:/app/services/user-store:rw
+    - ./services/shared:/app/services/shared:rw
   project-planning-service:
     build:
       context: .
@@ -957,10 +948,10 @@ services:
       timeout: 10s
       retries: 3
     profiles:
+    - all
     - development
     working_dir: /app
     volumes:
-    - ./:/app:ro
     - ./services/project-planning-service:/app/services/project-planning-service:rw
   audit-framework:
     build:
@@ -976,6 +967,7 @@ services:
     - REAPI_PORTS_DIR=/app/audit-reports
     - CI=${CI:-false}
     profiles:
+    - all
     - audit
     - development
     - ci
