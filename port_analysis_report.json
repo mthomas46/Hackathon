@@ -1,0 +1,412 @@
+{
+  "summary": {
+    "total_services_analyzed": 28,
+    "total_conflicts": 28,
+    "critical_conflicts": 0,
+    "high_conflicts": 28,
+    "warnings": 1,
+    "recommendations": 1
+  },
+  "conflicts": [
+    {
+      "port": 6379,
+      "severity": "high",
+      "services": [
+        "redis",
+        "docker_container"
+      ],
+      "suggestion": "Port 6379 is used by another container. Use: [6369, 6370, 6371]"
+    },
+    {
+      "port": 8085,
+      "severity": "high",
+      "services": [
+        "orchestrator",
+        "docker_container"
+      ],
+      "suggestion": "Port 8085 is used by another container. Use: [8075, 8076, 8077]"
+    },
+    {
+      "port": 8086,
+      "severity": "high",
+      "services": [
+        "doc_store",
+        "docker_container"
+      ],
+      "suggestion": "Port 8086 is used by another container. Use: [8076, 8077, 8078]"
+    },
+    {
+      "port": 8087,
+      "severity": "high",
+      "services": [
+        "analysis-service",
+        "docker_container"
+      ],
+      "suggestion": "Port 8087 is used by another container. Use: [8077, 8078, 8079]"
+    },
+    {
+      "port": 8088,
+      "severity": "high",
+      "services": [
+        "source-agent",
+        "docker_container"
+      ],
+      "suggestion": "Port 8088 is used by another container. Use: [8078, 8079, 8080]"
+    },
+    {
+      "port": 8089,
+      "severity": "high",
+      "services": [
+        "frontend",
+        "docker_container"
+      ],
+      "suggestion": "Port 8089 is used by another container. Use: [8079, 8080, 8081]"
+    },
+    {
+      "port": 8090,
+      "severity": "high",
+      "services": [
+        "ollama",
+        "docker_container"
+      ],
+      "suggestion": "Port 8090 is used by another container. Use: [8080, 8081, 8082]"
+    },
+    {
+      "port": 5160,
+      "severity": "high",
+      "services": [
+        "summarizer-hub",
+        "docker_container"
+      ],
+      "suggestion": "Port 5160 is used by another container. Use: [5150, 5151, 5152]"
+    },
+    {
+      "port": 8091,
+      "severity": "high",
+      "services": [
+        "architecture-digitizer",
+        "docker_container"
+      ],
+      "suggestion": "Port 8091 is used by another container. Use: [8081, 8082, 8083]"
+    },
+    {
+      "port": 5002,
+      "severity": "high",
+      "services": [
+        "bedrock-proxy",
+        "docker_container"
+      ],
+      "suggestion": "Port 5002 is used by another container. Use: [4992, 4993, 4994]"
+    },
+    {
+      "port": 8092,
+      "severity": "high",
+      "services": [
+        "llm-gateway",
+        "docker_container"
+      ],
+      "suggestion": "Port 8092 is used by another container. Use: [8082, 8083, 8084]"
+    },
+    {
+      "port": 8093,
+      "severity": "high",
+      "services": [
+        "mock-data-generator",
+        "docker_container"
+      ],
+      "suggestion": "Port 8093 is used by another container. Use: [8083, 8084]"
+    },
+    {
+      "port": 8094,
+      "severity": "high",
+      "services": [
+        "github-mcp",
+        "docker_container"
+      ],
+      "suggestion": "Port 8094 is used by another container. Use: [8084]"
+    },
+    {
+      "port": 5090,
+      "severity": "high",
+      "services": [
+        "memory-agent",
+        "docker_container"
+      ],
+      "suggestion": "Port 5090 is used by another container. Use: [5080, 5081, 5082]"
+    },
+    {
+      "port": 8095,
+      "severity": "high",
+      "services": [
+        "discovery-agent",
+        "docker_container"
+      ],
+      "suggestion": "Port 8095 is used by another container. Use: [8105, 8115, 8125]"
+    },
+    {
+      "port": 8096,
+      "severity": "high",
+      "services": [
+        "notification-service",
+        "docker_container"
+      ],
+      "suggestion": "Port 8096 is used by another container. Use: [8106, 8116, 8126]"
+    },
+    {
+      "port": 8097,
+      "severity": "high",
+      "services": [
+        "prompt_store",
+        "docker_container"
+      ],
+      "suggestion": "Port 8097 is used by another container. Use: [8107]"
+    },
+    {
+      "port": 8098,
+      "severity": "high",
+      "services": [
+        "interpreter",
+        "docker_container"
+      ],
+      "suggestion": "Port 8098 is used by another container. Use: [8107, 8108]"
+    },
+    {
+      "port": 8110,
+      "severity": "high",
+      "services": [
+        "cli",
+        "docker_container"
+      ],
+      "suggestion": "Port 8110 is used by another container. Use: [8107, 8108, 8109]"
+    },
+    {
+      "port": 8099,
+      "severity": "high",
+      "services": [
+        "project-simulation",
+        "docker_container"
+      ],
+      "suggestion": "Port 8099 is used by another container. Use: [8107, 8108, 8109]"
+    },
+    {
+      "port": 8100,
+      "severity": "high",
+      "services": [
+        "simulation-dashboard",
+        "docker_container"
+      ],
+      "suggestion": "Port 8100 is used by another container. Use: [8107, 8108, 8109]"
+    },
+    {
+      "port": 8101,
+      "severity": "high",
+      "services": [
+        "unified-api-dashboard",
+        "docker_container"
+      ],
+      "suggestion": "Port 8101 is used by another container. Use: [8107, 8108, 8109]"
+    },
+    {
+      "port": 8102,
+      "severity": "high",
+      "services": [
+        "code-analyzer",
+        "docker_container"
+      ],
+      "suggestion": "Port 8102 is used by another container. Use: [8107, 8108, 8109]"
+    },
+    {
+      "port": 8103,
+      "severity": "high",
+      "services": [
+        "secure-analyzer",
+        "docker_container"
+      ],
+      "suggestion": "Port 8103 is used by another container. Use: [8107, 8108, 8109]"
+    },
+    {
+      "port": 8104,
+      "severity": "high",
+      "services": [
+        "log-collector",
+        "docker_container"
+      ],
+      "suggestion": "Port 8104 is used by another container. Use: [8107, 8108, 8109]"
+    },
+    {
+      "port": 8105,
+      "severity": "high",
+      "services": [
+        "external-service-store",
+        "docker_container"
+      ],
+      "suggestion": "Port 8105 is used by another container. Use: [8107, 8108, 8109]"
+    },
+    {
+      "port": 8106,
+      "severity": "high",
+      "services": [
+        "user-store",
+        "docker_container"
+      ],
+      "suggestion": "Port 8106 is used by another container. Use: [8107, 8108, 8109]"
+    },
+    {
+      "port": 5170,
+      "severity": "high",
+      "services": [
+        "project-planning-service",
+        "docker_container"
+      ],
+      "suggestion": "Port 5170 is used by another container. Use: [5161, 5162, 5163]"
+    }
+  ],
+  "warnings": [
+    "Port registry not found - cannot validate consistency"
+  ],
+  "recommendations": [
+    "Large port range detected (5002-8110). Consider consolidating to a smaller range for easier management"
+  ],
+  "service_ports": {
+    "redis": {
+      "external": 6379,
+      "internal": 6379,
+      "protocol": "tcp"
+    },
+    "orchestrator": {
+      "external": 8085,
+      "internal": 5099,
+      "protocol": "tcp"
+    },
+    "doc_store": {
+      "external": 8086,
+      "internal": 5087,
+      "protocol": "tcp"
+    },
+    "analysis-service": {
+      "external": 8087,
+      "internal": 5020,
+      "protocol": "tcp"
+    },
+    "source-agent": {
+      "external": 8088,
+      "internal": 5085,
+      "protocol": "tcp"
+    },
+    "frontend": {
+      "external": 8089,
+      "internal": 3000,
+      "protocol": "tcp"
+    },
+    "ollama": {
+      "external": 8090,
+      "internal": 11434,
+      "protocol": "tcp"
+    },
+    "summarizer-hub": {
+      "external": 5160,
+      "internal": 5160,
+      "protocol": "tcp"
+    },
+    "architecture-digitizer": {
+      "external": 8091,
+      "internal": 5105,
+      "protocol": "tcp"
+    },
+    "bedrock-proxy": {
+      "external": 5002,
+      "internal": 5002,
+      "protocol": "tcp"
+    },
+    "llm-gateway": {
+      "external": 8092,
+      "internal": 5055,
+      "protocol": "tcp"
+    },
+    "mock-data-generator": {
+      "external": 8093,
+      "internal": 5065,
+      "protocol": "tcp"
+    },
+    "github-mcp": {
+      "external": 8094,
+      "internal": 5030,
+      "protocol": "tcp"
+    },
+    "memory-agent": {
+      "external": 5090,
+      "internal": 5090,
+      "protocol": "tcp"
+    },
+    "discovery-agent": {
+      "external": 8095,
+      "internal": 5045,
+      "protocol": "tcp"
+    },
+    "notification-service": {
+      "external": 8096,
+      "internal": 5130,
+      "protocol": "tcp"
+    },
+    "prompt_store": {
+      "external": 8097,
+      "internal": 5110,
+      "protocol": "tcp"
+    },
+    "interpreter": {
+      "external": 8098,
+      "internal": 5120,
+      "protocol": "tcp"
+    },
+    "cli": {
+      "external": 8110,
+      "internal": 5130,
+      "protocol": "tcp"
+    },
+    "project-simulation": {
+      "external": 8099,
+      "internal": 5075,
+      "protocol": "tcp"
+    },
+    "simulation-dashboard": {
+      "external": 8100,
+      "internal": 8501,
+      "protocol": "tcp"
+    },
+    "unified-api-dashboard": {
+      "external": 8101,
+      "internal": 8000,
+      "protocol": "tcp"
+    },
+    "code-analyzer": {
+      "external": 8102,
+      "internal": 5025,
+      "protocol": "tcp"
+    },
+    "secure-analyzer": {
+      "external": 8103,
+      "internal": 5070,
+      "protocol": "tcp"
+    },
+    "log-collector": {
+      "external": 8104,
+      "internal": 5080,
+      "protocol": "tcp"
+    },
+    "external-service-store": {
+      "external": 8105,
+      "internal": 5140,
+      "protocol": "tcp"
+    },
+    "user-store": {
+      "external": 8106,
+      "internal": 5150,
+      "protocol": "tcp"
+    },
+    "project-planning-service": {
+      "external": 5170,
+      "internal": 5170,
+      "protocol": "tcp"
+    }
+  }
+}

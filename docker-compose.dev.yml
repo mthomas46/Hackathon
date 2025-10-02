@@ -2,6 +2,7 @@ services:
   redis:
     build: ./services/redis
     ports:
+      - "8080:3000"
     - 6379:6379
     volumes:
     - redis_data:/data
@@ -30,6 +31,7 @@ services:
     - LOG_COLLECTOR_URL=http://log-collector:5080
     - LOG_COLLECTOR_ENABLED=true
     ports:
+      - "8080:3000"
     - 8085:5099
     depends_on:
       redis:
@@ -65,6 +67,7 @@ services:
     - LOG_COLLECTOR_URL=http://log-collector:5080
     - LOG_COLLECTOR_ENABLED=true
     ports:
+      - "8080:3000"
     - 8086:5087
     depends_on:
       redis:
@@ -97,6 +100,7 @@ services:
     - DDD_ARCHITECTURE=true
     - DDD_CONFIG_FILE=config/ddd_config.yaml
     ports:
+      - "8080:3000"
     - 8087:5020
     depends_on:
       redis:
@@ -124,6 +128,7 @@ services:
       context: .
       dockerfile: services/source-agent/Dockerfile
     ports:
+      - "8080:3000"
     - 8088:5085
     environment:
     - SERVICE_NAME=source-agent
@@ -164,6 +169,7 @@ services:
     - FRONTEND_SERVICE_API_HOST=0.0.0.0
     - ENVIRONMENT=development
     ports:
+      - "8080:3000"
     - 8089:3000
     depends_on:
       redis:
@@ -193,6 +199,7 @@ services:
   ollama:
     build: ./services/ollama
     ports:
+      - "8080:3000"
     - 8090:11434
     volumes:
     - ./:/app:ro
@@ -221,6 +228,7 @@ services:
     - LOG_COLLECTOR_URL=http://log-collector:5080
     - LOG_COLLECTOR_ENABLED=true
     ports:
+      - "8080:3000"
     - 5160:5160
     healthcheck:
       test:
@@ -251,6 +259,7 @@ services:
     - SERVICE_API_PORT=5105
     - ENVIRONMENT=development
     ports:
+      - "8080:3000"
     - 8091:5105
     healthcheck:
       test:
@@ -279,6 +288,7 @@ services:
     - SERVICE_API_PORT=5002
     - SERVICE_NAME=bedrock-proxy
     ports:
+      - "8080:3000"
     - 5002:5002
     healthcheck:
       test:
@@ -329,6 +339,7 @@ services:
     - RATE_LIMIT_BURST_LIMIT=10
     - RATE_LIMIT_COOLDOWN_SECONDS=60
     ports:
+      - "8080:3000"
     - 8092:5055
     depends_on:
       redis:
@@ -364,6 +375,7 @@ services:
     - LLM_GATEWAY_URL=http://llm-gateway:5055
     - DOC_STORE_URL=http://doc_store:5087
     ports:
+      - "8080:3000"
     - 8093:5065
     depends_on:
       llm-gateway:
@@ -397,6 +409,7 @@ services:
     - SERVICE_API_PORT=5030
     - SERVICE_NAME=github-mcp
     ports:
+      - "8080:3000"
     - 8094:5030
     healthcheck:
       test:
@@ -427,6 +440,7 @@ services:
     - REDIS_API_HOST=redis
     - ENVIRONMENT=development
     ports:
+      - "8080:3000"
     - 5090:5090
     depends_on:
       redis:
@@ -456,6 +470,7 @@ services:
     - SERVICE_API_PORT=5045
     - ENVIRONMENT=development
     ports:
+      - "8080:3000"
     - 8095:5045
     volumes:
     - ./services/discovery-agent:/app/services/discovery-agent:rw
@@ -487,6 +502,7 @@ services:
     - SERVICE_API_PORT=5130
     - ENVIRONMENT=development
     ports:
+      - "8080:3000"
     - 8096:5130
     healthcheck:
       test:
@@ -521,6 +537,7 @@ services:
     - REDIS_API_HOST=redis
     - ENVIRONMENT=development
     ports:
+      - "8080:3000"
     - 8097:5110
     depends_on:
       redis:
@@ -551,6 +568,7 @@ services:
     - INTERPRETER_SERVICE_API_HOST=0.0.0.0
     - ENVIRONMENT=development
     ports:
+      - "8080:3000"
     - 8098:5120
     depends_on:
       prompt_store:
@@ -600,6 +618,7 @@ services:
     - tooling
     working_dir: /app
     ports:
+      - "8080:3000"
     - 8110:5130
     healthcheck:
       test:
@@ -634,6 +653,7 @@ services:
     - DDD_ARCHITECTURE=true
     - DDD_CONFIG_FILE=config/ddd_config.yaml
     ports:
+      - "8080:3000"
     - 8099:5075
     depends_on:
       redis:
@@ -692,6 +712,7 @@ services:
     - SERVICE_API_PORT=8501
     - ENVIRONMENT=development
     ports:
+      - "8080:3000"
     - 8100:8501
     depends_on:
       project-simulation:
@@ -749,6 +770,7 @@ services:
     - AUDIT_SECRET_KEY=${AUDIT_SECRET_KEY:-dev-audit-secret-key-change-in-production}
     - CORS_ORIGINS=http://localhost:3000,http://localhost:8501,http://localhost:8000
     ports:
+      - "8080:3000"
     - 8101:8000
     volumes:
     - ./services/unified-api-dashboard:/app/services/unified-api-dashboard:rw
@@ -788,6 +810,7 @@ services:
     - ENVIRONMENT=development
     - REDIS_API_HOST=redis
     ports:
+      - "8080:3000"
     - 8102:5025
     depends_on:
       redis:
@@ -819,6 +842,7 @@ services:
     - SECURE_ANALYZER_API_HOST=0.0.0.0
     - ENVIRONMENT=development
     ports:
+      - "8080:3000"
     - 8103:5070
     healthcheck:
       test:
@@ -851,6 +875,7 @@ services:
     - SERVICE_HEALTH_CHECK_INTERVAL=30
     - ENABLE_HEALTH_SAFEGUARDS=false
     ports:
+      - "8080:3000"
     - 8104:5080
     profiles:
     - all
@@ -869,6 +894,7 @@ services:
     - REDIS_API_HOST=redis
     - ENVIRONMENT=development
     ports:
+      - "8080:3000"
     - 8105:5140
     depends_on:
       redis:
@@ -899,7 +925,12 @@ services:
     - SERVICE_API_PORT=5150
     - REDIS_API_HOST=redis
     - ENVIRONMENT=development
+    - TEST_CONFIG_MODIFIED=true
+    - META_ORCHESTRATOR_TEST=success
+    - MONITORING_DEMO=true
+    - LIVE_TEST_CONFIG=demo_success
     ports:
+      - "8080:3000"
     - 8106:5150
     depends_on:
       redis:
@@ -934,6 +965,7 @@ services:
     - LOG_COLLECTOR_ENABLED=true
     - REDIS_API_HOST=redis
     ports:
+      - "8080:3000"
     - 5170:5170
     depends_on:
       redis:
@@ -990,6 +1022,48 @@ services:
       retries: 3
       start_period: 10s
     working_dir: /app
+  meta-orchestrator:
+    build:
+      context: .
+      dockerfile: services/meta-orchestrator/Dockerfile
+    container_name: hackathon-meta-orchestrator
+    ports:
+      - "8080:3000"
+    - 8080:8080
+    environment:
+    - PYTHONPATH=/app
+    - SERVICE_NAME=meta-orchestrator
+    - SERVICE_API_PORT=8080
+    - ENVIRONMENT=development
+    - WORKSPACE_PATH=/app
+    - COMPOSE_FILE=docker-compose.dev.yml
+    - DOCKER_HOST=unix:///var/run/docker.sock
+    - DOCKER_TLS_VERIFY=false
+    - DEBUG=false
+    - LOG_LEVEL=INFO
+    - ENABLE_AUTH=false
+    - API_KEY=dev-key-12345
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./:/app:ro
+    - ./services/meta-orchestrator:/app/services/meta-orchestrator:rw
+    - ./config:/app/config:rw
+    networks:
+    - hackathon_default
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    profiles:
+    - all
+    - development
+    - management
 volumes:
   redis_data:
     driver: local
@@ -1010,6 +1084,7 @@ volumes:
   dashboard_logs:
     driver: local
   audit-reports:
+      - "8080:3000"
     driver: local
 networks:
   hackathon_default:

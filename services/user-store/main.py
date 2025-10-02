@@ -23,6 +23,7 @@ Dependencies:
 from services.shared.infrastructure.config import load_service_config
 
 import time
+import os
 from contextlib import asynccontextmanager
 from typing import List, Optional, Dict
 
@@ -156,6 +157,63 @@ async def health_check():
         "version": SERVICE_VERSION,
         "uptime_seconds": time.time() - getattr(app, '_start_time', time.time())
     }
+
+
+@app.get("/config")
+async def get_service_config():
+    """Get current service configuration and sources."""
+    try:
+        # Get current environment variables
+        env_vars = dict(os.environ)
+
+        # Get service configuration from loaded config
+        service_config = getattr(app, '_service_config', {})
+
+        # Determine configuration sources
+        config_sources = {}
+
+        # Check for Docker environment variables
+        docker_env_vars = {k: v for k, v in env_vars.items() if k.startswith(('SERVICE_', 'DB_', 'REDIS_', 'LOG_'))}
+
+        # Check for YAML config files
+        yaml_config = {}
+        if hasattr(app, '_service_config') and isinstance(app._service_config, dict):
+            yaml_config = app._service_config
+
+        # Check for .env file variables
+        dotenv_vars = {k: v for k, v in env_vars.items() if not k.startswith(('SERVICE_', 'DB_', 'REDIS_', 'LOG_')) and k in ['ENVIRONMENT', 'DEBUG', 'TESTING']}
+
+        # Compile configuration sources
+        if docker_env_vars:
+            config_sources['docker'] = docker_env_vars
+        if yaml_config:
+            config_sources['yaml'] = yaml_config
+        if dotenv_vars:
+            config_sources['dotenv'] = dotenv_vars
+
+        # Get runtime configuration
+        runtime_config = {
+            'service_name': SERVICE_NAME,
+            'version': SERVICE_VERSION,
+            'port': getattr(app, '_port', 'unknown'),
+            'host': getattr(app, '_host', 'unknown'),
+            'environment': os.getenv('ENVIRONMENT', 'development'),
+            'debug': os.getenv('DEBUG', 'false').lower() == 'true',
+            'database_url': os.getenv('DB_URL', 'sqlite:///user_store.db'),
+            'redis_url': os.getenv('REDIS_URL', 'redis://localhost:6379'),
+            'log_level': os.getenv('LOG_LEVEL', 'INFO')
+        }
+
+        return {
+            'config': runtime_config,
+            'sources': config_sources,
+            'version': SERVICE_VERSION,
+            'timestamp': time.time()
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to get service config: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve configuration: {e}")
 
 
 @app.post(

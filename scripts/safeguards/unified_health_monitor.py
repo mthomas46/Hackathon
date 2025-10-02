@@ -90,13 +90,14 @@ class UnifiedHealthMonitor:
                 host_port=5087,
                 docker_port=5010,
                 container_name="hackathon-doc_store-1",
-                expected_response_keys=["status", "service", "version"]
+                expected_response_keys=["status", "service", "version"]  # Will check nested in "data" field
             ),
             "orchestrator": HealthCheckConfig(
                 service_name="orchestrator",
                 primary_method=HealthCheckMethod.HTTP_ENDPOINT,
                 fallback_methods=[HealthCheckMethod.DOCKER_HEALTH],
-                host_port=5099,
+                host_port=8085,  # External port (maps to 5099 internal)
+                docker_port=5099,
                 container_name="hackathon-orchestrator-1",
                 expected_response_keys=["status", "service"]
             ),
@@ -104,14 +105,15 @@ class UnifiedHealthMonitor:
                 service_name="llm-gateway",
                 primary_method=HealthCheckMethod.HTTP_ENDPOINT,
                 fallback_methods=[HealthCheckMethod.DOCKER_HEALTH],
-                host_port=5055,
+                host_port=8092,  # External port (maps to 5055 internal)
+                docker_port=5055,
                 container_name="hackathon-llm-gateway-1"
             ),
             "analysis-service": HealthCheckConfig(
                 service_name="analysis-service",
                 primary_method=HealthCheckMethod.HTTP_ENDPOINT,
                 fallback_methods=[HealthCheckMethod.DOCKER_HEALTH],
-                host_port=5080,
+                host_port=8087,  # External port (maps to 5020 internal)
                 docker_port=5020,
                 container_name="hackathon-analysis-service-1"
             ),
@@ -119,16 +121,18 @@ class UnifiedHealthMonitor:
                 service_name="discovery-agent",
                 primary_method=HealthCheckMethod.HTTP_ENDPOINT,
                 fallback_methods=[HealthCheckMethod.DOCKER_HEALTH],
-                host_port=5045,
+                host_port=8095,  # External port (maps to 5045 internal)
+                docker_port=5045,
                 container_name="hackathon-discovery-agent-1"
             ),
             "frontend": HealthCheckConfig(
                 service_name="frontend",
-                primary_method=HealthCheckMethod.DOCKER_HEALTH,
-                fallback_methods=[HealthCheckMethod.TCP_CONNECTION],
-                host_port=3000,
+                primary_method=HealthCheckMethod.HTTP_ENDPOINT,  # Changed to HTTP for /health endpoint
+                fallback_methods=[HealthCheckMethod.DOCKER_HEALTH],
+                host_port=8089,  # External port (maps to 3000 internal)
+                docker_port=3000,
                 container_name="hackathon-frontend-1",
-                health_endpoint="/"
+                health_endpoint="/health"
             ),
             "ollama": HealthCheckConfig(
                 service_name="ollama",
@@ -156,7 +160,8 @@ class UnifiedHealthMonitor:
                 service_name="source-agent",
                 primary_method=HealthCheckMethod.HTTP_ENDPOINT,
                 fallback_methods=[HealthCheckMethod.DOCKER_HEALTH],
-                host_port=5085,
+                host_port=8088,  # External port (maps to 5085 internal)
+                docker_port=5085,
                 container_name="hackathon-source-agent-1"
             )
         }
@@ -243,18 +248,41 @@ class UnifiedHealthMonitor:
                         details["response_data"] = json_data
                         
                         if config.expected_response_keys:
-                            missing_keys = [key for key in config.expected_response_keys 
-                                          if key not in json_data]
+                            # Check both top-level and nested keys (e.g., in "data" field)
+                            missing_keys = []
+                            for expected_key in config.expected_response_keys:
+                                if expected_key not in json_data:
+                                    # Check if key exists in nested "data" field
+                                    if "data" in json_data and isinstance(json_data["data"], dict):
+                                        if expected_key not in json_data["data"]:
+                                            missing_keys.append(expected_key)
+                                    else:
+                                        missing_keys.append(expected_key)
+
                             if missing_keys:
                                 details["missing_keys"] = missing_keys
-                                return HealthResult(
-                                    service_name=config.service_name,
-                                    status=HealthStatus.DEGRADED,
-                                    method_used=HealthCheckMethod.HTTP_ENDPOINT,
-                                    response_time_ms=response_time,
-                                    details=details,
-                                    error_message=f"Missing expected keys: {missing_keys}"
-                                )
+                                # For development environments, treat missing keys as warnings (degraded status)
+                                # Only fail completely if critical keys are missing
+                                critical_missing = [key for key in missing_keys if key in ["status", "service"]]
+                                if critical_missing:
+                                    return HealthResult(
+                                        service_name=config.service_name,
+                                        status=HealthStatus.UNHEALTHY,
+                                        method_used=HealthCheckMethod.HTTP_ENDPOINT,
+                                        response_time_ms=response_time,
+                                        details=details,
+                                        error_message=f"Missing critical keys: {critical_missing}"
+                                    )
+                                else:
+                                    # Non-critical keys missing - treat as degraded for development
+                                    return HealthResult(
+                                        service_name=config.service_name,
+                                        status=HealthStatus.DEGRADED,
+                                        method_used=HealthCheckMethod.HTTP_ENDPOINT,
+                                        response_time_ms=response_time,
+                                        details=details,
+                                        error_message=f"Missing optional keys (development): {missing_keys}"
+                                    )
                     except json.JSONDecodeError:
                         details["response_type"] = "non_json"
                     

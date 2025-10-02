@@ -19,6 +19,7 @@ aioredis>=2.0.0
 # Configuration and utilities
 pyyaml>=6.0.0
 python-dotenv>=1.0.0
+jsonschema>=4.0.0
 
 # Docker integration
 docker>=7.0.0
