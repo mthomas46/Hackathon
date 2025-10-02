@@ -45,7 +45,23 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Load configuration
-config = load_service_config(service_name="simulation-dashboard")
+try:
+    config = load_service_config(service_name="simulation-dashboard")
+    print("DEBUG: Config loaded successfully")
+except Exception as e:
+    print(f"DEBUG: Config loading failed: {e}")
+    import sys
+    sys.exit(1)
+
+# Override config with environment variables if they exist
+import os
+if os.getenv('SERVER__PORT'):
+    config.server.port = int(os.getenv('SERVER__PORT'))
+if os.getenv('SERVER__HOST'):
+    config.server.host = os.getenv('SERVER__HOST')
+
+print(f"DEBUG: Final config server.port = {config.server.port}")
+print(f"DEBUG: Final config server.host = {config.server.host}")
 
 # Initialize dependencies (DDD pattern)
 simulation_repository = SimulationRepository()

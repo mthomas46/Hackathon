@@ -33,7 +33,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r shared_requirements.txt
 
 # Copy service code maintaining directory structure
-COPY services/simulation_dashboard/ ./services/simulation_dashboard/
+COPY services/simulation-dashboard/ ./services/simulation-dashboard/
 COPY services/shared/ ./services/shared/
 COPY config/config.yml ./config.yml/
 COPY config/ ./config/
@@ -58,4 +58,4 @@ EXPOSE 8501
 USER appuser
 
 # Start command - using module path for proper imports
-CMD ["python", "services/simulation_dashboard/main.py", "--force"]
+CMD ["python", "services/simulation-dashboard/main.py", "--force"]

@@ -45,7 +45,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Load configuration
-config = load_service_config(service_name="simulation-dashboard")
+try:
+    config = load_service_config(service_name="simulation-dashboard")
+    print("DEBUG: Config loaded successfully")
+except Exception as e:
+    print(f"DEBUG: Config loading failed: {e}")
+    import sys
+    sys.exit(1)
+
+# Debug: Print actual config values and environment
+import os
+print(f"DEBUG: Environment SERVER_PORT = {os.getenv('SERVER_PORT')}")
+print(f"DEBUG: Environment SERVER_HOST = {os.getenv('SERVER_HOST')}")
+print(f"DEBUG: Config server.port = {config.server.port}")
+print(f"DEBUG: Config server.host = {config.server.host}")
+print(f"DEBUG: Config server.debug = {config.server.debug}")
+print(f"DEBUG: Config logging.level = {config.logging.level}")
 
 # Initialize dependencies (DDD pattern)
 simulation_repository = SimulationRepository()
@@ -172,7 +187,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         content=create_error_response(
             error_code="INTERNAL_ERROR",
             message="An unexpected error occurred",
-            details=str(exc) if config.get('debug', False) else None
+            details=str(exc) if config.server.debug else None
         )
     )
 
@@ -199,8 +214,8 @@ async def shutdown_event():
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host=config.get('host', '0.0.0.0'),
-        port=config.get('port', 8000),
-        reload=config.get('debug', False),
-        log_level=config.get('log_level', 'info')
+        host=config.server.host,
+        port=config.server.port,
+        reload=config.server.debug,
+        log_level=config.logging.level.lower()
     )
