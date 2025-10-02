@@ -1,8 +1,9 @@
 # CLI-specific configuration
 # Inherits from shared base_config.yaml
 
-# CLI doesn't expose a port but connects to other services
-# server section omitted as CLI is not a web service
+# Override server port for cli
+server:
+  port: 5130
 
 # CLI-specific settings
 cli:

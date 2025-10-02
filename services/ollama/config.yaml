@@ -23,7 +23,7 @@ security:
 server:
   debug: ${DEBUG:-false}
   host: ${SERVER_API_HOST:-0.0.0.0}
-  port: 8080
+  port: 11434
   timeout: ${SERVER_TIMEOUT:-30}
   workers: ${SERVER_WORKERS:-1}
 services:

@@ -3,7 +3,7 @@
 
 # Override server port for source-agent
 server:
-  port: 5000
+  port: 5085
 
 # Source-agent specific settings
 source-agent:

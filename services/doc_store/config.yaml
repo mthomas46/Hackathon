@@ -3,7 +3,7 @@
 
 # Override server port for doc_store
 server:
-  port: 5010
+  port: 5087
 
 # Doc-store specific database settings
 database:

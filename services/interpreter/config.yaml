@@ -3,7 +3,7 @@
 
 # Override server port for interpreter
 server:
-  port: ${INTERPRETER_API_PORT:-5120}
+  port: 5120
 
 # Service URLs that interpreter connects to
 services:

@@ -3,7 +3,7 @@
 
 # Override server port for summarizer-hub
 server:
-  port: 5060
+  port: 5160
 
 # Summarizer-hub specific provider configurations
 providers:
