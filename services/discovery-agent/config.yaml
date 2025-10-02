@@ -4,7 +4,7 @@
 # Override server port for discovery-agent
 server:
   port: 5045
-  host: ${SERVER_API_HOST:-127.0.0.1}
+  host: ${SERVER_API_HOST:-0.0.0.0}
 
 # Discovery-agent specific settings
 orchestrator:
