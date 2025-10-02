@@ -5,36 +5,98 @@ This directory contains comprehensive testing scripts for validating CLI functio
 ## Scripts
 
 ### CLI Testing Scripts
-- `enhanced_cli_test.py` - **Advanced CLI Testing Suite**
-  - Comprehensive CLI command validation
-  - Interactive feature testing
-  - Error handling and edge case scenarios
-  - Performance benchmarking for CLI operations
 
-- `power_user_cli_test.py` - **Power User CLI Validation**
-  - Advanced CLI functionality testing
-  - Complex command chain validation
-  - User workflow simulation
-  - Performance testing for power user scenarios
+#### `enhanced_cli_test.py`
+**Advanced CLI Testing Suite** - Comprehensive validation of CLI functionality with interactive testing and performance benchmarking.
 
-- `simple_expanded_cli_test.py` - **CLI Expansion Testing**
-  - Basic CLI functionality validation
-  - Command expansion and auto-completion testing
-  - User interface element validation
-  - Accessibility and usability testing
+**Features:**
+- Complete CLI command validation across all modules
+- Interactive feature testing and user experience validation
+- Error handling and edge case scenario coverage
+- Performance benchmarking for CLI operations
+- Memory usage and resource consumption monitoring
+- Automated regression testing for CLI changes
+
+**Use Cases:**
+- CLI development and feature validation
+- User experience testing and optimization
+- Performance bottleneck identification
+- Automated testing in CI/CD pipelines
+- Regression testing after CLI updates
+
+#### `power_user_cli_test.py`
+**Power User CLI Validation Framework** - Advanced testing for complex CLI workflows and power user scenarios.
+
+**Features:**
+- Complex command chain validation and sequencing
+- Power user workflow simulation and testing
+- Advanced CLI feature utilization testing
+- Multi-command operation validation
+- Resource-intensive operation testing
+- Expert user experience validation
+
+**Use Cases:**
+- Advanced user workflow validation
+- Complex operation testing scenarios
+- Power user experience optimization
+- Performance testing for heavy CLI usage
+- Enterprise user requirement validation
+
+#### `simple_expanded_cli_test.py`
+**CLI Expansion Testing Framework** - Basic to intermediate CLI functionality validation with expansion testing.
+
+**Features:**
+- Basic CLI functionality validation
+- Command expansion and auto-completion testing
+- User interface element validation
+- Accessibility and usability testing
+- Command help and documentation validation
+- Input validation and error messaging
+
+**Use Cases:**
+- Basic CLI functionality verification
+- User interface and experience testing
+- Accessibility compliance validation
+- Command discovery and help system testing
+- Initial CLI development validation
 
 ### Document Store Testing Scripts
-- `test_doc_store_functionality.py` - **Document Store Operations Testing**
-  - CRUD operations validation
-  - Search and retrieval functionality
-  - Document versioning and history
-  - Performance testing for document operations
 
-- `test_doc_store_refactor.py` - **Document Store Refactoring Validation**
-  - Backward compatibility testing after refactoring
-  - Data migration validation
-  - API contract compliance verification
-  - Integration testing with dependent services
+#### `test_doc_store_functionality.py`
+**Document Store Operations Testing Suite** - Comprehensive validation of document store CRUD operations and functionality.
+
+**Features:**
+- Complete CRUD operations validation (Create, Read, Update, Delete)
+- Advanced search and retrieval functionality testing
+- Document versioning and history management validation
+- Performance testing for document operations under load
+- Data integrity and consistency validation
+- Concurrent access and locking mechanism testing
+
+**Use Cases:**
+- Document store feature development validation
+- Performance optimization and bottleneck identification
+- Data integrity assurance testing
+- Concurrent user scenario validation
+- Search functionality optimization
+
+#### `test_doc_store_refactor.py`
+**Document Store Refactoring Validation** - Ensures backward compatibility and data integrity after refactoring changes.
+
+**Features:**
+- Backward compatibility testing after code changes
+- Data migration validation and integrity checking
+- API contract compliance verification
+- Integration testing with dependent services
+- Regression testing for existing functionality
+- Data transformation validation during refactoring
+
+**Use Cases:**
+- Code refactoring safety validation
+- Database schema migration testing
+- API compatibility assurance
+- Service integration testing after changes
+- Regression prevention during development
 
 ## Purpose
 
