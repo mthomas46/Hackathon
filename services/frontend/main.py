@@ -125,6 +125,7 @@ Dependencies: Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collec
 """
 
 import os
+from datetime import datetime
 from typing import Optional
 
 from fastapi import FastAPI
@@ -423,6 +424,21 @@ register_health_endpoints(app, config.service_name, config.service_version)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+
+@app.get("/health")
+async def health():
+    """Basic health check endpoint for the frontend service.
+
+    Returns health status indicating the service is operational.
+    """
+    return {
+        "status": "healthy",
+        "service": "frontend",
+        "version": "1.0.0",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "environment": "development"
+    }
 
 
 @app.get("/info")

@@ -670,16 +670,16 @@ services:
   simulation-dashboard:
     build:
       context: .
-      dockerfile: services/simulation-dashboard/Dockerfile
+      dockerfile: services/simulation_dashboard/Dockerfile
     volumes:
     - ./services/shared:/app/services/shared:rw
     environment:
     - PYTHONPATH=/app
-    - SERVICE_NAME=simulation-dashboard
+    - SERVICE_NAME=simulation_dashboard
     - DASHBOARD_ENVIRONMENT=development
     - DASHBOARD_DEBUG=false
-    - DASHBOARD_API_PORT=8501
-    - DASHBOARD_API_HOST=0.0.0.0
+    - SERVER__PORT=8501
+    - SERVER__HOST=0.0.0.0
     - DASHBOARD_SIMULATION_SERVICE_API_HOST=project-simulation
     - DASHBOARD_SIMULATION_SERVICE_API_PORT=5075
     - DASHBOARD_ANALYSIS_SERVICE_URL=http://analysis-service:5080
@@ -728,6 +728,7 @@ services:
     - PYTHONPATH=/app/services/unified-api-dashboard
     - SERVICE_NAME=unified-api-dashboard
     - SERVICE_API_PORT=8000
+    - SERVICE_API_HOST=0.0.0.0
     - ENVIRONMENT=development
     - LOG_LEVEL=INFO
     - METRICS_ENABLED=true
@@ -782,6 +783,7 @@ services:
     environment:
     - SERVICE_NAME=code-analyzer
     - SERVICE_API_PORT=5025
+    - SERVICE_API_HOST=0.0.0.0
     - PYTHONPATH=/app
     - ENVIRONMENT=development
     - REDIS_API_HOST=redis
