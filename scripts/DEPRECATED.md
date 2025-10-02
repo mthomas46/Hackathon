@@ -38,8 +38,8 @@ This document lists scripts that have been marked as deprecated and are no longe
 - System has been successfully migrated
 
 ### Phase-Specific Scripts (Root Level)
-**Status**: DEPRECATED  
-**Reason**: Development phase or proof-of-concept scripts  
+**Status**: DEPRECATED
+**Reason**: Development phase or proof-of-concept scripts
 **Files**:
 - `phase2_comprehensive_discovery.py`
 - `phase4_security_scanning.py`
@@ -48,6 +48,18 @@ This document lists scripts that have been marked as deprecated and are no longe
 - `final_document_persistence_proof.py`
 - `discovery_agent_test_current_functionality.py`
 - `orchestrator_discovery_integration_demo.py`
+
+### Individual Deprecated Scripts in Subdirectories
+**Status**: DEPRECATED
+**Reason**: Various reasons - duplicates, superseded, phase-specific
+**Files**:
+- `scripts/cli/test_cli_simple.py` - Duplicate of `test_cli_consolidated.py`
+- `scripts/ecosystem/ecosystem_api_audit.py` - Duplicate of `ecosystem_manager.py`
+- `scripts/startup/start_all_services.py` - Duplicate of `service_manager.py`
+- `scripts/hardening/pydantic_integration_demo.py` - Pydantic integration demo from migration phase
+- `scripts/performance/caching_optimizer.py` - Unused performance optimization script
+- `scripts/test/test_cli_analysis_service.py` - Superseded by consolidated CLI tests
+- `scripts/testing/` (entire directory) - Individual testing scripts superseded by consolidated test suites
 
 ### Potentially Superseded CLI Scripts
 **Status**: REVIEW NEEDED  
