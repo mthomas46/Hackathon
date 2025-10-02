@@ -7,6 +7,7 @@ Provides comprehensive configuration standardization and consistency validation.
 """
 
 import os
+import sys
 import yaml
 import json
 from pathlib import Path
@@ -76,7 +77,7 @@ class ConfigurationStandardizer:
     """
 
     def __init__(self, workspace_path: Optional[Path] = None):
-        self.workspace_path = workspace_path or Path.cwd()
+        self.workspace_path = Path(workspace_path) if workspace_path else Path.cwd()
         self.services_dir = self.workspace_path / "services"
 
         # Standardized port mappings

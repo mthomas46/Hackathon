@@ -10,32 +10,36 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
-import structlog
 
 from api.routes import router
 from core.orchestrator import MetaOrchestrator
 from config.settings import Settings
 
-# Configure structured logging
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
+# Initialize standardized logger with log-collector integration
+try:
+    from services.shared.infrastructure.logging.standardized_logger import StandardizedLogger
 
-logger = structlog.get_logger()
+    logger = StandardizedLogger(
+        "meta-orchestrator",
+        {
+            "log_level": "INFO",
+            "structured_logging": True,
+            "monitoring_enabled": True,
+            "metrics_interval": 30,
+            "console_logging": True,
+            "log_file": "/tmp/meta-orchestrator.log",
+            "max_log_size": 10485760,  # 10MB
+            "backup_count": 5
+        }
+    )
+    logger.start_monitoring()
+except ImportError:
+    # Fallback to basic logging if standardized logger not available
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    logger = logging.getLogger("meta-orchestrator")
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -131,23 +135,49 @@ async def startup_event():
         api.routes.monitoring_service = monitoring_service
 
         print("✅ Meta-Orchestrator and Monitoring Service initialization completed")
-        logger.info("✅ Meta-Orchestrator and Monitoring Service initialization completed")
+        logger.info("✅ Meta-Orchestrator and Monitoring Service initialization completed", extra={
+            "service": "meta-orchestrator",
+            "event": "startup_completed"
+        })
     except Exception as e:
         print(f"❌ Service initialization failed: {e}")
-        logger.error(f"❌ Service initialization failed: {e}")
+        logger.error(f"❌ Service initialization failed: {e}", extra={
+            "service": "meta-orchestrator",
+            "event": "startup_failed",
+            "error": str(e)
+        })
         import traceback
         print(f"Traceback: {traceback.format_exc()}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
+        logger.error(f"Traceback: {traceback.format_exc()}", extra={
+            "service": "meta-orchestrator",
+            "event": "startup_traceback"
+        })
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown"""
     global monitoring_service
-    logger.info("🛑 Shutting down Meta-Orchestration Service")
+    logger.info("🛑 Shutting down Meta-Orchestration Service", extra={
+        "service": "meta-orchestrator",
+        "event": "shutdown_started"
+    })
 
     if monitoring_service:
         await monitoring_service.stop_monitoring()
-    await meta_orchestrator.cleanup()
+
+    if meta_orchestrator:
+        await meta_orchestrator.cleanup()
+
+    # Stop logger monitoring
+    try:
+        logger.stop_monitoring()
+        logger.info("🛑 Logger monitoring stopped", extra={
+            "service": "meta-orchestrator",
+            "event": "shutdown_completed"
+        })
+    except AttributeError:
+        # Basic logger doesn't have stop_monitoring method
+        pass
 
 @app.get("/health")
 async def health_check():

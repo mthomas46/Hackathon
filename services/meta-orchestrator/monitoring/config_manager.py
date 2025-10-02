@@ -12,7 +12,14 @@ from monitoring.database.models import ConfigurationSnapshot
 from monitoring.database.manager import DatabaseManager
 from core.orchestrator import MetaOrchestrator
 
-logger = logging.getLogger(__name__)
+# Initialize standardized logger for config reporting
+try:
+    from services.shared.infrastructure.logging.standardized_logger import StandardizedLogger
+    logger = StandardizedLogger("meta-orchestrator-config-manager")  # Use default config
+except ImportError:
+    # Fallback to basic logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
 
 
 @dataclass
@@ -172,7 +179,23 @@ class ServiceConfigManager:
 
     def get_service_config_history(self, service_name: str, limit: int = 10) -> List[ConfigurationSnapshot]:
         """Get configuration history for a service"""
-        return self.db_manager.get_configuration_snapshots(service_name, limit)
+        logger.info("📚 Retrieving configuration history", extra={
+            "operation": "config_history_retrieval",
+            "service": service_name,
+            "limit": limit
+        })
+
+        snapshots = self.db_manager.get_configuration_snapshots(service_name, limit)
+
+        logger.info("📚 Configuration history retrieved", extra={
+            "operation": "config_history_retrieved",
+            "service": service_name,
+            "limit": limit,
+            "snapshots_found": len(snapshots),
+            "date_range": f"{snapshots[0].timestamp.isoformat() if snapshots else 'none'} to {snapshots[-1].timestamp.isoformat() if snapshots else 'none'}"
+        })
+
+        return snapshots
 
     def get_latest_service_config(self, service_name: str) -> Optional[ConfigurationSnapshot]:
         """Get the latest configuration for a service"""
@@ -209,27 +232,84 @@ class ServiceConfigManager:
         import os
         from pathlib import Path
 
+        logger.info("📊 Starting bulk configuration export", extra={
+            "operation": "config_export_all",
+            "format": format,
+            "output_dir": output_dir,
+            "total_services": len(self.orchestrator.services),
+            "service_names": list(self.orchestrator.services.keys())
+        })
+
         exports = {}
         output_path = Path(output_dir)
         output_path.mkdir(exist_ok=True)
+        successful_exports = 0
+        failed_exports = 0
 
         for service_name in self.orchestrator.services.keys():
-            config_content = self.export_service_config(service_name, format)
-            if config_content:
-                filename = f"{service_name}_config.{format.lower()}"
-                filepath = output_path / filename
+            logger.info("🔄 Processing configuration export", extra={
+                "operation": "config_export_service",
+                "service": service_name,
+                "format": format
+            })
 
-                try:
-                    with open(filepath, 'w') as f:
-                        f.write(config_content)
+            try:
+                config_content = self.export_service_config(service_name, format)
+                if config_content:
+                    filename = f"{service_name}_config.{format.lower()}"
+                    filepath = output_path / filename
 
-                    exports[service_name] = str(filepath)
-                    logger.info(f"📄 Exported config for {service_name} to {filepath}")
+                    try:
+                        with open(filepath, 'w') as f:
+                            f.write(config_content)
 
-                except Exception as e:
-                    logger.error(f"❌ Failed to write config file for {service_name}: {e}")
+                        exports[service_name] = str(filepath)
+                        successful_exports += 1
 
-        logger.info(f"✅ Exported configurations for {len(exports)} services to {output_dir}")
+                        logger.info("✅ Configuration export successful", extra={
+                            "operation": "config_export_success",
+                            "service": service_name,
+                            "format": format,
+                            "filepath": str(filepath),
+                            "content_length": len(config_content)
+                        })
+
+                    except Exception as e:
+                        failed_exports += 1
+                        logger.error("❌ Configuration export write failed", extra={
+                            "operation": "config_export_write_error",
+                            "service": service_name,
+                            "format": format,
+                            "filepath": str(filepath),
+                            "error": str(e)
+                        })
+
+                else:
+                    failed_exports += 1
+                    logger.warning("⚠️ No configuration content to export", extra={
+                        "operation": "config_export_no_content",
+                        "service": service_name,
+                        "format": format
+                    })
+
+            except Exception as e:
+                failed_exports += 1
+                logger.error("❌ Configuration export processing failed", extra={
+                    "operation": "config_export_processing_error",
+                    "service": service_name,
+                    "format": format,
+                    "error": str(e)
+                })
+
+        logger.info("📊 Bulk configuration export completed", extra={
+            "operation": "config_export_all_completed",
+            "format": format,
+            "output_dir": output_dir,
+            "successful_exports": successful_exports,
+            "failed_exports": failed_exports,
+            "total_exports": len(exports)
+        })
+
         return exports
 
     async def sync_all_service_configs(self) -> Dict[str, Any]:
@@ -287,27 +367,62 @@ class ServiceConfigManager:
 
     def compare_service_configs(self, service_name: str) -> Dict[str, Any]:
         """Compare a service's current config with stored versions"""
+        logger.info("🔍 Starting configuration comparison", extra={
+            "operation": "config_comparison_start",
+            "service": service_name
+        })
+
         try:
             latest_config = self.get_latest_service_config(service_name)
             if not latest_config:
+                logger.warning("⚠️ No stored configuration found for comparison", extra={
+                    "operation": "config_comparison_no_stored_config",
+                    "service": service_name
+                })
                 return {"status": "no_stored_config"}
+
+            logger.info("📄 Retrieved latest configuration for comparison", extra={
+                "operation": "config_comparison_latest_retrieved",
+                "service": service_name,
+                "config_timestamp": latest_config.timestamp.isoformat(),
+                "config_hash": latest_config.config_hash
+            })
 
             # Get previous configs for comparison
             history = self.get_service_config_history(service_name, limit=5)
 
             if len(history) < 2:
+                logger.warning("⚠️ Insufficient configuration history for comparison", extra={
+                    "operation": "config_comparison_insufficient_history",
+                    "service": service_name,
+                    "history_count": len(history)
+                })
                 return {
                     "status": "insufficient_history",
                     "latest_config": latest_config.config_data
                 }
 
+            logger.info("📚 Retrieved configuration history for comparison", extra={
+                "operation": "config_comparison_history_retrieved",
+                "service": service_name,
+                "history_count": len(history),
+                "comparison_versions": len(history) - 1
+            })
+
             # Compare with previous version
             current_config = latest_config.config_data
             previous_config = history[1].config_data  # Second most recent
 
+            logger.info("🔄 Performing configuration comparison", extra={
+                "operation": "config_comparison_executing",
+                "service": service_name,
+                "current_version": current_config.get('version', 'unknown'),
+                "previous_version": previous_config.get('version', 'unknown')
+            })
+
             changes = self._compare_configs(previous_config, current_config)
 
-            return {
+            result = {
                 "status": "compared",
                 "changes_detected": len(changes) > 0,
                 "change_count": len(changes),
@@ -315,6 +430,16 @@ class ServiceConfigManager:
                 "current_version": current_config.get('version', 'unknown'),
                 "previous_version": previous_config.get('version', 'unknown')
             }
+
+            logger.info("✅ Configuration comparison completed", extra={
+                "operation": "config_comparison_completed",
+                "service": service_name,
+                "changes_detected": len(changes) > 0,
+                "change_count": len(changes),
+                "comparison_summary": f"{len(changes)} changes detected between versions"
+            })
+
+            return result
 
         except Exception as e:
             logger.error(f"❌ Failed to compare configs for {service_name}: {e}")
