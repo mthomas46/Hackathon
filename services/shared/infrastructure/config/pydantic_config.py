@@ -203,6 +203,12 @@ class ServiceDependencies(BaseModel):
     simulation_dashboard_url: str = Field(default="http://simulation-dashboard:8501", description="Simulation dashboard service URL")
     unified_api_dashboard_url: str = Field(default="http://unified-api-dashboard:8000", description="Unified API dashboard service URL")
 
+    # Infrastructure and external services
+    redis_url: str = Field(default="redis:6379", description="Redis service connection URL")
+    ollama_url: str = Field(default="http://ollama:11434", description="Ollama AI model service URL")
+    log_collector_url: str = Field(default="http://log-collector:5080", description="Log collector service URL")
+    project_planning_service_url: str = Field(default="http://project-planning-service:5170", description="Project planning service URL")
+
     # Orchestrator-specific service URLs
     github_agent_url: Optional[str] = Field(default=None, description="GitHub agent service URL")
     jira_agent_url: Optional[str] = Field(default=None, description="JIRA agent service URL")
