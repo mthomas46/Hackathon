@@ -66,14 +66,23 @@ def validate_docker_compose_for_startup(compose_file: str = "docker-compose.dev.
                                     used_ports.add(host_port_int)
                             except ValueError:
                                 warnings.append(f"Service '{service_name}' has non-numeric port: {host_port}")
+                    elif isinstance(port_mapping, dict):
+                        # Handle dictionary format: {"target": port, "published": port, "protocol": "tcp"}
+                        if 'published' in port_mapping:
+                            try:
+                                host_port_int = int(port_mapping['published'])
+                                if host_port_int in used_ports:
+                                    port_conflicts.append(f"Service '{service_name}' port {host_port_int} conflicts with another service")
+                                else:
+                                    used_ports.add(host_port_int)
+                            except (ValueError, TypeError):
+                                warnings.append(f"Service '{service_name}' has invalid published port: {port_mapping.get('published')}")
 
         # Check for missing shared volume mounts - critical for service imports
+        # Services that actually import from services.shared and need this volume mount
         services_needing_shared = [
-            'orchestrator', 'doc_store', 'analysis-service', 'source-agent',
-            'frontend', 'llm-gateway', 'mock-data-generator', 'github-mcp',
-            'memory-agent', 'discovery-agent', 'notification-service', 'prompt_store',
-            'interpreter', 'code-analyzer', 'secure-analyzer', 'log-collector',
-            'external-service-store', 'user-store', 'project-planning-service'
+            'summarizer-hub', 'project-simulation', 'simulation-dashboard',
+            'unified-api-dashboard', 'user-store'
         ]
 
         for service_name, service in config.services.items():
@@ -104,8 +113,12 @@ def validate_docker_compose_for_startup(compose_file: str = "docker-compose.dev.
             if service.healthcheck:
                 # Check for health checks that start immediately (no start_period)
                 if hasattr(service.healthcheck, 'start_period') and service.healthcheck.start_period:
-                    if service.healthcheck.start_period < 10:
-                        warnings.append(f"Service '{service_name}' has very short health check start_period ({service.healthcheck.start_period}s)")
+                    try:
+                        start_period = int(service.healthcheck.start_period)
+                        if start_period < 10:
+                            warnings.append(f"Service '{service_name}' has very short health check start_period ({start_period}s)")
+                    except (ValueError, TypeError):
+                        warnings.append(f"Service '{service_name}' has invalid start_period value: {service.healthcheck.start_period}")
                 elif not hasattr(service.healthcheck, 'start_period'):
                     warnings.append(f"Service '{service_name}' missing start_period in health check")
 
@@ -113,7 +126,15 @@ def validate_docker_compose_for_startup(compose_file: str = "docker-compose.dev.
         dependency_graph = {}
         for service_name, service in config.services.items():
             if service.depends_on:
-                deps = service.depends_on if isinstance(service.depends_on, list) else [service.depends_on]
+                if isinstance(service.depends_on, dict):
+                    # New format: {'service': {'condition': 'service_started'}}
+                    deps = list(service.depends_on.keys())
+                elif isinstance(service.depends_on, list):
+                    # Old format: ['service1', 'service2']
+                    deps = service.depends_on
+                else:
+                    # String format: 'service'
+                    deps = [service.depends_on]
                 dependency_graph[service_name] = deps
 
         # Simple cycle detection

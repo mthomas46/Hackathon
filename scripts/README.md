@@ -12,19 +12,32 @@ scripts/
 ├── ecosystem/       # Unified ecosystem management
 ├── integration/     # Cross-service integration test scripts
 ├── validation/      # Compliance and validation scripts
-├── demo/            # Consolidated demonstration scripts
 ├── docs/            # Documentation generation scripts
-├── migration/       # Database migration scripts
 ├── utilities/       # Consolidated development utilities
-├── async/           # Asynchronous processing utilities
 ├── docker/          # Docker management scripts
 ├── hardening/       # Security and production hardening
 ├── monitoring/      # System monitoring scripts
 ├── performance/     # Performance optimization scripts
 ├── safeguards/      # Operational safeguards
 ├── testing/         # Testing framework utilities
-└── verification/    # System verification scripts
+├── verification/    # System verification scripts
+├── audit-framework/ # Comprehensive audit and quality analysis
+├── cicd/           # CI/CD integration scripts
+└── DEPRECATED.md   # Deprecated scripts documentation
 ```
+
+## Script Maintenance
+
+### 📋 Deprecated Scripts
+Some scripts have been deprecated as the system evolved. See [`DEPRECATED.md`](DEPRECATED.md) for a comprehensive list of deprecated scripts and their replacement recommendations.
+
+### 🧹 Recent Cleanup (October 2024)
+- Removed outdated demo scripts from development phases
+- Removed unused async processing utilities
+- Removed completed migration scripts
+- Removed phase-specific proof-of-concept scripts
+- Consolidated duplicate CLI testing scripts
+- Cleaned up __pycache__ directories
 
 ## Consolidated Script Categories
 
