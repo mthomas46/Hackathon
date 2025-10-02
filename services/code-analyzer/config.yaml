@@ -3,7 +3,7 @@
 
 # Override server port for code-analyzer
 server:
-  port: 5085
+  port: 5025
 
 # Code-analyzer specific settings
 code-analyzer:

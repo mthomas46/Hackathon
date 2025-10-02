@@ -20,12 +20,8 @@ redis:
 security:
   cors_origins:
   - ${CORS_ORIGINS:-*}
-server:
-  debug: ${DEBUG:-false}
-  host: ${SERVER_API_HOST:-0.0.0.0}
-  port: 8080
-  timeout: ${SERVER_TIMEOUT:-30}
-  workers: ${SERVER_WORKERS:-1}
+# Redis is an infrastructure service and doesn't expose a web server
+# server section omitted
 services:
   analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
   doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}

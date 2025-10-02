@@ -3,7 +3,7 @@
 
 # Override server port for github-mcp
 server:
-  port: 5072
+  port: 5030
 
 # GitHub MCP specific settings
 github:
