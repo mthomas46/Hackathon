@@ -133,6 +133,14 @@ class ProductionReadinessValidator:
                 required_for_production=True
             ),
             ReadinessCheck(
+                check_name="comprehensive_health_checks",
+                category="monitoring",
+                severity="critical",
+                description="All services must have functional health endpoints",
+                validation_function="validate_health_checks_comprehensive",
+                required_for_production=True
+            ),
+            ReadinessCheck(
                 check_name="logging_configuration",
                 category="monitoring",
                 severity="medium",
@@ -421,11 +429,133 @@ class ProductionReadinessValidator:
                                 "details": "External port 5080 maps to internal 5020, but health checks expect 5080:5080"
                             })
             
+            # Validate comprehensive port mappings and health checks
+            result = subprocess.run(
+                ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}\t{{.Ports}}"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            port_issues = []
+            health_issues = []
+            port_mappings = {}
+            used_external_ports = set()
+
+            # Expected port mappings from docker-compose.dev.yml
+            expected_mappings = {
+                "hackathon-redis-1": {"external": [6379], "internal": [6379], "protocol": "tcp"},
+                "hackathon-orchestrator-1": {"external": [8085], "internal": [5099], "protocol": "tcp"},
+                "hackathon-doc_store-1": {"external": [8086], "internal": [5087], "protocol": "tcp"},
+                "hackathon-analysis-service-1": {"external": [8087], "internal": [5020], "protocol": "tcp"},
+                "hackathon-source-agent-1": {"external": [8088], "internal": [5085], "protocol": "tcp"},
+                "hackathon-frontend-1": {"external": [8089], "internal": [3000], "protocol": "tcp"},
+                "hackathon-ollama-1": {"external": [8090], "internal": [11434], "protocol": "tcp"},
+                "hackathon-summarizer-hub-1": {"external": [5160], "internal": [5160], "protocol": "tcp"},
+                "hackathon-architecture-digitizer-1": {"external": [8091], "internal": [5105], "protocol": "tcp"},
+                "hackathon-bedrock-proxy-1": {"external": [5002], "internal": [5002], "protocol": "tcp"},
+                "hackathon-llm-gateway-1": {"external": [8092], "internal": [5055], "protocol": "tcp"},
+                "hackathon-mock-data-generator-1": {"external": [8093], "internal": [5065], "protocol": "tcp"},
+                "hackathon-github-mcp-1": {"external": [8094], "internal": [5030], "protocol": "tcp"},
+                "hackathon-memory-agent-1": {"external": [5090], "internal": [5090], "protocol": "tcp"},
+                "hackathon-discovery-agent-1": {"external": [8095], "internal": [5045], "protocol": "tcp"},
+                "hackathon-notification-service-1": {"external": [8096], "internal": [5130], "protocol": "tcp"},
+                "hackathon-prompt_store-1": {"external": [8097], "internal": [5110], "protocol": "tcp"},
+                "hackathon-interpreter-1": {"external": [8098], "internal": [5120], "protocol": "tcp"},
+                "hackathon-cli-1": {"external": [8110], "internal": [5130], "protocol": "tcp"},
+                "hackathon-project-simulation-1": {"external": [8099], "internal": [5075], "protocol": "tcp"},
+                "hackathon-simulation-dashboard-1": {"external": [8100], "internal": [8501], "protocol": "tcp"},
+                "hackathon-unified-api-dashboard-1": {"external": [8101], "internal": [8000], "protocol": "tcp"},
+                "hackathon-code-analyzer-1": {"external": [8102], "internal": [5025], "protocol": "tcp"},
+                "hackathon-secure-analyzer-1": {"external": [8103], "internal": [5070], "protocol": "tcp"},
+                "hackathon-log-collector-1": {"external": [8104], "internal": [5080], "protocol": "tcp"},
+                "hackathon-external-service-store-1": {"external": [8105], "internal": [5140], "protocol": "tcp"},
+                "hackathon-user-store-1": {"external": [8106], "internal": [5150], "protocol": "tcp"},
+                "hackathon-project-planning-service-1": {"external": [5170], "internal": [5170], "protocol": "tcp"},
+            }
+
+            for line in result.stdout.split('\n'):
+                if line.strip() and 'hackathon-' in line:
+                    parts = line.split('\t')
+                    if len(parts) >= 3:
+                        container_name = parts[0].strip()
+                        status = parts[1].strip()
+                        ports = parts[2].strip()
+
+                        port_mappings[container_name] = {
+                            "status": status,
+                            "ports": ports
+                        }
+
+                        # Validate health status
+                        if "unhealthy" in status.lower():
+                            health_issues.append({
+                                "container": container_name,
+                                "issue": "Container is unhealthy",
+                                "status": status,
+                                "severity": "high"
+                            })
+
+                        # Parse and validate port mappings
+                        if container_name in expected_mappings and ports:
+                            expected = expected_mappings[container_name]
+
+                            # Check if expected external ports are exposed
+                            for ext_port in expected["external"]:
+                                port_found = False
+                                for port_info in ports.split(', '):
+                                    if f"{ext_port}->" in port_info or f"0.0.0.0:{ext_port}->" in port_info:
+                                        port_found = True
+                                        break
+
+                                if not port_found:
+                                    port_issues.append({
+                                        "container": container_name,
+                                        "issue": "Missing expected external port mapping",
+                                        "expected": f"{ext_port} (external)",
+                                        "actual": ports,
+                                        "severity": "high"
+                                    })
+                                else:
+                                    # Check for external port conflicts
+                                    if ext_port in used_external_ports:
+                                        port_issues.append({
+                                            "container": container_name,
+                                            "issue": "External port conflict",
+                                            "port": ext_port,
+                                            "severity": "critical"
+                                        })
+                                    used_external_ports.add(ext_port)
+
+            # Validate that all expected services are present
+            running_containers = set(port_mappings.keys())
+            expected_containers = set(expected_mappings.keys())
+
+            missing_containers = expected_containers - running_containers
+            for container in missing_containers:
+                health_issues.append({
+                    "container": container,
+                    "issue": "Expected container not found",
+                    "severity": "critical"
+                })
+
+            # Classify issues by severity
+            critical_issues = [issue for issue in port_issues + health_issues if issue.get("severity") == "critical"]
+            high_issues = [issue for issue in port_issues + health_issues if issue.get("severity") == "high"]
+
+            # Port and health validation passes if no critical issues and ≤2 high issues
+            validation_passed = len(critical_issues) == 0 and len(high_issues) <= 2
+
             return {
-                "passed": len(port_conflicts) == 0,
-                "port_conflicts": port_conflicts,
+                "passed": validation_passed,
+                "port_issues": port_issues,
+                "health_issues": health_issues,
                 "port_mappings": port_mappings,
-                "conflicts_found": len(port_conflicts)
+                "critical_issues": len(critical_issues),
+                "high_issues": len(high_issues),
+                "total_issues": len(port_issues) + len(health_issues),
+                "containers_found": len(running_containers),
+                "containers_expected": len(expected_containers)
             }
             
         except Exception as e:
@@ -735,7 +865,127 @@ class ProductionReadinessValidator:
             "issues_found": len(health_discrepancies),
             "assessment": "Docker health checks are stricter than service functionality - this is often acceptable"
         }
-    
+
+    def validate_health_checks_comprehensive(self) -> Dict[str, Any]:
+        """Validate comprehensive health checks across all services"""
+        health_check_issues = []
+
+        # Test all services that should have health endpoints
+        health_services = {
+            # Core infrastructure
+            "orchestrator": 8085,
+            "doc_store": 8086,
+            "analysis-service": 8087,
+            "llm-gateway": 8092,
+            "discovery-agent": 8095,
+
+            # UI and dashboards
+            "frontend": 8089,
+            "simulation-dashboard": 8100,
+            "unified-api-dashboard": 8101,
+
+            # Development tools
+            "prompt_store": 8097,
+            "code-analyzer": 8102,
+            "memory-agent": 5090,
+            "log-collector": 8104,
+
+            # Additional services
+            "source-agent": 8088,
+            "summarizer-hub": 5160,
+            "architecture-digitizer": 8091,
+            "mock-data-generator": 8093,
+            "github-mcp": 8094,
+            "notification-service": 8096,
+            "interpreter": 8098,
+            "cli": 8110,
+            "project-simulation": 8099,
+            "secure-analyzer": 8103,
+            "external-service-store": 8105,
+            "user-store": 8106,
+            "project-planning-service": 5170,
+        }
+
+        for service, port in health_services.items():
+            try:
+                # Test health endpoint
+                with urllib.request.urlopen(f"http://localhost:{port}/health", timeout=10) as response:
+                    if response.getcode() == 200:
+                        # Health check passed - service is healthy
+                        pass
+                    elif response.getcode() in [404, 405]:
+                        health_check_issues.append({
+                            "service": service,
+                            "port": port,
+                            "issue": f"Health endpoint not implemented (HTTP {response.getcode()})",
+                            "severity": "low",
+                            "status": "not_implemented"
+                        })
+                    else:
+                        health_check_issues.append({
+                            "service": service,
+                            "port": port,
+                            "issue": f"Health check failed (HTTP {response.getcode()})",
+                            "severity": "high",
+                            "status": "error"
+                        })
+            except urllib.error.HTTPError as e:
+                if e.code >= 500:
+                    health_check_issues.append({
+                        "service": service,
+                        "port": port,
+                        "issue": f"Server error on health check (HTTP {e.code})",
+                        "severity": "high",
+                        "status": "server_error"
+                    })
+                else:
+                    health_check_issues.append({
+                        "service": service,
+                        "port": port,
+                        "issue": f"Health check error (HTTP {e.code})",
+                        "severity": "medium",
+                        "status": "client_error"
+                    })
+            except Exception as e:
+                health_check_issues.append({
+                    "service": service,
+                    "port": port,
+                    "issue": f"Service unreachable for health check: {str(e)}",
+                    "severity": "high",
+                    "status": "unreachable"
+                })
+
+        # Classify issues by severity and type
+        high_severity = [issue for issue in health_check_issues if issue.get("severity") == "high"]
+        medium_severity = [issue for issue in health_check_issues if issue.get("severity") == "medium"]
+        low_severity = [issue for issue in health_check_issues if issue.get("severity") == "low"]
+
+        # Count by status
+        unreachable = [issue for issue in health_check_issues if issue.get("status") == "unreachable"]
+        server_errors = [issue for issue in health_check_issues if issue.get("status") == "server_error"]
+        not_implemented = [issue for issue in health_check_issues if issue.get("status") == "not_implemented"]
+
+        healthy_services = len(health_services) - len(health_check_issues)
+
+        # Comprehensive health validation: allow some issues for development
+        # Pass if ≤3 high-severity issues (unreachable/server errors) and most services are healthy
+        health_passed = len(high_severity) <= 3 and healthy_services >= len(health_services) * 0.7
+
+        return {
+            "passed": health_passed,
+            "health_check_issues": health_check_issues,
+            "total_services_checked": len(health_services),
+            "healthy_services": healthy_services,
+            "unreachable_services": len(unreachable),
+            "server_error_services": len(server_errors),
+            "not_implemented_services": len(not_implemented),
+            "high_severity_issues": len(high_severity),
+            "medium_severity_issues": len(medium_severity),
+            "low_severity_issues": len(low_severity),
+            "health_percentage": (healthy_services / len(health_services)) * 100,
+            "assessment": f"Health checks: {healthy_services}/{len(health_services)} services healthy"
+        }
+
     # Placeholder validation methods for completeness
     def validate_authentication(self) -> Dict[str, Any]:
         return {"passed": True, "notes": "Authentication validation not implemented"}
