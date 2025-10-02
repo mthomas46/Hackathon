@@ -13,7 +13,7 @@ The audit framework is fully integrated into the CI/CD pipeline, providing autom
 
 ### 2. **Build System Integration**
 - `Makefile` - Main targets with audit integration
-- `Makefile.audit` - Dedicated audit framework targets
+- `makefiles/Makefile.audit` - Dedicated audit framework targets
 - `Dockerfile.audit` - Audit framework container
 
 ### 3. **Docker Integration**
@@ -350,7 +350,7 @@ python scripts/cicd/ecosystem-ci-runner.py --level standard --verbose
 
 ### Makefile Integration
 - **Main targets**: `audit*` targets in main Makefile
-- **Dedicated file**: `Makefile.audit` for comprehensive audit operations
+- **Dedicated file**: `makefiles/Makefile.audit` for comprehensive audit operations
 - **CI integration**: `ci-*` targets include audit validation
 
 This integration provides comprehensive quality assurance throughout the development lifecycle, from local commits to production deployments.

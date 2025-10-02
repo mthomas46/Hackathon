@@ -815,96 +815,96 @@ external-service-store-health: ## Check external service store health
 
 audit: ## Run quick service audit
 	@echo "$(BLUE)🔍 Running Quick Service Audit...$(NC)"
-	$(MAKE) -f Makefile.audit audit-quick
+	$(MAKE) -f makefiles/Makefile.audit audit-quick
 	@echo "$(GREEN)✅ Quick audit completed$(NC)"
 
 audit-all: ## Run comprehensive audit of all services
 	@echo "$(BLUE)🔬 Running Comprehensive Service Audit...$(NC)"
-	$(MAKE) -f Makefile.audit audit-all
+	$(MAKE) -f makefiles/Makefile.audit audit-all
 	@echo "$(GREEN)✅ Comprehensive audit completed$(NC)"
 
 audit-services: ## Audit all services individually
 	@echo "$(BLUE)🔍 Auditing All Services...$(NC)"
-	$(MAKE) -f Makefile.audit audit-services
+	$(MAKE) -f makefiles/Makefile.audit audit-services
 	@echo "$(GREEN)✅ All services audited$(NC)"
 
 audit-ci: ## CI-optimized audit pipeline
 	@echo "$(BLUE)⚡ Running CI Audit Pipeline...$(NC)"
-	$(MAKE) -f Makefile.audit ci-audit
+	$(MAKE) -f makefiles/Makefile.audit ci-audit
 	@echo "$(GREEN)✅ CI audit pipeline completed$(NC)"
 
 audit-quick: ## Quick audit for development
 	@echo "$(BLUE)⚡ Running Quick Development Audit...$(NC)"
-	$(MAKE) -f Makefile.audit audit-quick
+	$(MAKE) -f makefiles/Makefile.audit audit-quick
 	@echo "$(GREEN)✅ Quick audit completed$(NC)"
 
 audit-comprehensive: ## Comprehensive audit for releases
 	@echo "$(BLUE)🔬 Running Comprehensive Release Audit...$(NC)"
-	$(MAKE) -f Makefile.audit audit-comprehensive
+	$(MAKE) -f makefiles/Makefile.audit audit-comprehensive
 	@echo "$(GREEN)✅ Comprehensive audit completed$(NC)"
 
 audit-parallel: ## Run audits in parallel
 	@echo "$(BLUE)🔬 Running Parallel Audits...$(NC)"
-	$(MAKE) -f Makefile.audit audit-parallel
+	$(MAKE) -f makefiles/Makefile.audit audit-parallel
 	@echo "$(GREEN)✅ Parallel audits completed$(NC)"
 
 audit-report: ## Generate audit reports
 	@echo "$(BLUE)📊 Generating Audit Reports...$(NC)"
-	$(MAKE) -f Makefile.audit audit-report
+	$(MAKE) -f makefiles/Makefile.audit audit-report
 	@echo "$(GREEN)✅ Audit reports generated$(NC)"
 
 audit-clean: ## Clean audit artifacts
 	@echo "$(BLUE)🧹 Cleaning Audit Artifacts...$(NC)"
-	$(MAKE) -f Makefile.audit audit-clean
+	$(MAKE) -f makefiles/Makefile.audit audit-clean
 	@echo "$(GREEN)✅ Audit cleanup completed$(NC)"
 
 audit-setup: ## Set up audit framework environment
 	@echo "$(BLUE)🔧 Setting up Audit Environment...$(NC)"
-	$(MAKE) -f Makefile.audit audit-setup
+	$(MAKE) -f makefiles/Makefile.audit audit-setup
 	@echo "$(GREEN)✅ Audit environment ready$(NC)"
 
 audit-validate: ## Validate audit framework
 	@echo "$(BLUE)🔍 Validating Audit Framework...$(NC)"
-	$(MAKE) -f Makefile.audit audit-validate
+	$(MAKE) -f makefiles/Makefile.audit audit-validate
 	@echo "$(GREEN)✅ Audit validation completed$(NC)"
 
 audit-benchmark: ## Run audit performance benchmark
 	@echo "$(BLUE)📈 Running Audit Benchmark...$(NC)"
-	$(MAKE) -f Makefile.audit audit-benchmark
+	$(MAKE) -f makefiles/Makefile.audit audit-benchmark
 	@echo "$(GREEN)✅ Audit benchmark completed$(NC)"
 
 audit-trend: ## Analyze audit trends
 	@echo "$(BLUE)📈 Analyzing Audit Trends...$(NC)"
-	$(MAKE) -f Makefile.audit audit-trend
+	$(MAKE) -f makefiles/Makefile.audit audit-trend
 	@echo "$(GREEN)✅ Trend analysis completed$(NC)"
 
 audit-config: ## Show audit configuration
 	@echo "$(BLUE)⚙️ Audit Configuration$(NC)"
-	$(MAKE) -f Makefile.audit audit-config
+	$(MAKE) -f makefiles/Makefile.audit audit-config
 
 audit-debug: ## Debug audit framework
 	@echo "$(BLUE)🐛 Debug Audit Framework...$(NC)"
-	$(MAKE) -f Makefile.audit audit-debug
+	$(MAKE) -f makefiles/Makefile.audit audit-debug
 	@echo "$(GREEN)✅ Debug completed$(NC)"
 
 audit-docker: ## Run audit in Docker
 	@echo "$(BLUE)🐳 Running Audit in Docker...$(NC)"
-	$(MAKE) -f Makefile.audit audit-docker
+	$(MAKE) -f makefiles/Makefile.audit audit-docker
 	@echo "$(GREEN)✅ Docker audit completed$(NC)"
 
 audit-pre-commit: ## Run audit as pre-commit hook
 	@echo "$(BLUE)🔒 Running Pre-commit Audit...$(NC)"
-	$(MAKE) -f Makefile.audit audit-pre-commit
+	$(MAKE) -f makefiles/Makefile.audit audit-pre-commit
 	@echo "$(GREEN)✅ Pre-commit audit completed$(NC)"
 
 audit-quality-gate: ## Check quality gates
 	@echo "$(BLUE)🚨 Checking Quality Gates...$(NC)"
-	$(MAKE) -f Makefile.audit audit-quality-gate
+	$(MAKE) -f makefiles/Makefile.audit audit-quality-gate
 	@echo "$(GREEN)✅ Quality gate check completed$(NC)"
 
 audit-enforce: ## Enforce quality standards
 	@echo "$(BLUE)🚫 Enforcing Quality Standards...$(NC)"
-	$(MAKE) -f Makefile.audit audit-enforce
+	$(MAKE) -f makefiles/Makefile.audit audit-enforce
 	@echo "$(GREEN)✅ Quality standards enforced$(NC)"
 
 # ========================================

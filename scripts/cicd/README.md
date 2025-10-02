@@ -33,7 +33,7 @@ python scripts/cicd/ecosystem-ci-runner.py --service orchestrator --deploy
 ```
 
 **Integration Points:**
-- Referenced in `Makefile.cicd`
+- Referenced in `makefiles/Makefile.cicd`
 - Used by GitHub Actions workflows
 - Integrated with deployment pipelines
 

@@ -115,9 +115,9 @@ The LLM Documentation Ecosystem is a **sophisticated AI-powered platform** featu
 │   ├── final_verification_report.json
 │   └── [other analysis results]/
 ├── 📁 makefiles/                   # 🔨 Build Configurations
-│   ├── Makefile.audit             # Audit-specific builds
-│   ├── Makefile.cicd              # CI/CD optimizations
-│   ├── Makefile.docker            # Docker operations
+│   ├── makefiles/Makefile.audit             # Audit-specific builds
+│   ├── makefiles/Makefile.cicd              # CI/CD optimizations
+│   ├── makefiles/Makefile.docker            # Docker operations
 │   └── [specialized Makefiles]/
 ├── 📁 status/                      # 📈 Runtime Status
 │   ├── running_services.txt       # Current service status

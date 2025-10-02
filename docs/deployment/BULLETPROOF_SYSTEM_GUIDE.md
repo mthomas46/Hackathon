@@ -11,22 +11,22 @@ The Bulletproof System provides **comprehensive protection** for the entire ecos
 ### **One-Command Bulletproof Startup**
 ```bash
 # Bulletproof startup with full protection
-make -f Makefile.bulletproof start-bulletproof
+make -f makefiles/Makefile.bulletproof start-bulletproof
 
 # Enhanced startup with monitoring
-make -f Makefile.bulletproof start-enhanced
+make -f makefiles/Makefile.bulletproof start-enhanced
 
 # Standard startup with validation
-make -f Makefile.bulletproof start
+make -f makefiles/Makefile.bulletproof start
 ```
 
 ### **Health & Status Commands**
 ```bash
 # Quick status check
-make -f Makefile.bulletproof status
+make -f makefiles/Makefile.bulletproof status
 
 # Detailed health assessment
-make -f Makefile.bulletproof status-detailed
+make -f makefiles/Makefile.bulletproof status-detailed
 
 # Deployment validation
 ./scripts/docker/validate-deployment.sh
@@ -67,7 +67,7 @@ make -f Makefile.bulletproof status-detailed
 ./scripts/docker/dockerfile-linter.sh services/discovery-agent
 
 # Lint all services
-make -f Makefile.bulletproof lint-all
+make -f makefiles/Makefile.bulletproof lint-all
 ```
 
 ### **3. Bulletproof Startup System**
@@ -136,11 +136,11 @@ make -f Makefile.bulletproof lint-all
 **Usage**:
 ```bash
 # Start with enhanced compose
-make -f Makefile.bulletproof start-enhanced
+make -f makefiles/Makefile.bulletproof start-enhanced
 ```
 
 ### **Bulletproof Makefile**
-**Location**: `Makefile.bulletproof`
+**Location**: `makefiles/Makefile.bulletproof`
 
 **Available Commands**:
 ```bash
@@ -199,28 +199,28 @@ emergency-restart   # Emergency restart with validation
 ### **Quick Problem Resolution**
 ```bash
 # Service not starting?
-make -f Makefile.bulletproof restart-service SERVICE=discovery-agent
+make -f makefiles/Makefile.bulletproof restart-service SERVICE=discovery-agent
 
 # Need to rebuild?
-make -f Makefile.bulletproof rebuild-service SERVICE=code-analyzer
+make -f makefiles/Makefile.bulletproof rebuild-service SERVICE=code-analyzer
 
 # System not responding?
-make -f Makefile.bulletproof emergency-restart
+make -f makefiles/Makefile.bulletproof emergency-restart
 
 # Complete cleanup needed?
-make -f Makefile.bulletproof clean-hard
+make -f makefiles/Makefile.bulletproof clean-hard
 ```
 
 ### **Diagnostic Commands**
 ```bash
 # Check logs for errors
-make -f Makefile.bulletproof logs-errors
+make -f makefiles/Makefile.bulletproof logs-errors
 
 # Monitor in real-time
-make -f Makefile.bulletproof monitor
+make -f makefiles/Makefile.bulletproof monitor
 
 # Show configuration
-make -f Makefile.bulletproof show-config
+make -f makefiles/Makefile.bulletproof show-config
 ```
 
 ---
@@ -230,7 +230,7 @@ make -f Makefile.bulletproof show-config
 ### **Continuous Monitoring**
 ```bash
 # Start live monitoring
-make -f Makefile.bulletproof monitor
+make -f makefiles/Makefile.bulletproof monitor
 
 # Check resource usage
 ./scripts/docker/validate-deployment.sh resources
@@ -294,10 +294,10 @@ steps:
     run: ./scripts/docker/pre-flight-check.sh
     
   - name: Lint All Services
-    run: make -f Makefile.bulletproof lint-all
+    run: make -f makefiles/Makefile.bulletproof lint-all
     
   - name: Bulletproof Deployment
-    run: make -f Makefile.bulletproof start-bulletproof
+    run: make -f makefiles/Makefile.bulletproof start-bulletproof
     
   - name: Deployment Validation
     run: ./scripts/docker/validate-deployment.sh
@@ -332,9 +332,9 @@ steps:
 ## 📚 **Best Practices**
 
 ### **Development Workflow**
-1. **Always validate before deployment**: `make -f Makefile.bulletproof validate`
-2. **Use bulletproof startup for production**: `make -f Makefile.bulletproof start-bulletproof`
-3. **Monitor continuously**: `make -f Makefile.bulletproof monitor`
+1. **Always validate before deployment**: `make -f makefiles/Makefile.bulletproof validate`
+2. **Use bulletproof startup for production**: `make -f makefiles/Makefile.bulletproof start-bulletproof`
+3. **Monitor continuously**: `make -f makefiles/Makefile.bulletproof monitor`
 4. **Lint service changes**: `./scripts/docker/dockerfile-linter.sh services/<service>`
 
 ### **Troubleshooting Guidelines**
