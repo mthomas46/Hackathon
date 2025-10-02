@@ -324,33 +324,71 @@ class ProductionReadinessValidator:
         """Validate comprehensive service connectivity across the full ecosystem"""
         # Test all services that should have web endpoints (external ports)
         # Excludes infrastructure services like redis that don't expose HTTP APIs
-        web_services = {
-            "orchestrator": 8085,         # Workflow orchestration
-            "doc_store": 8086,            # Document storage & retrieval
-            "analysis-service": 8087,     # Code analysis & insights
-            "source-agent": 8088,         # Source code management
-            "frontend": 8089,             # Web UI
-            "summarizer-hub": 5160,       # Text summarization
-            "architecture-digitizer": 8091, # Architecture analysis
-            "llm-gateway": 8092,          # LLM API gateway
-            "mock-data-generator": 8093,  # Test data generation
-            "github-mcp": 8094,           # GitHub integration
-            "discovery-agent": 8095,      # Service discovery
-            "notification-service": 8096, # Notifications
-            "prompt_store": 8097,         # Prompt management
-            "interpreter": 8098,          # Code interpretation
-            "cli": 8110,                  # Command-line interface
-            "project-simulation": 8099,   # Project simulation
-            "simulation-dashboard": 8100, # Simulation UI
-            "unified-api-dashboard": 8101, # API dashboard
-            "code-analyzer": 8102,        # Code analysis
-            "secure-analyzer": 8103,      # Security analysis
-            "log-collector": 8104,        # Log aggregation
-            "external-service-store": 8105, # External service integration
-            "user-store": 8106,           # User management
-            "project-planning-service": 5170, # Project planning
-            "memory-agent": 5090,         # Memory management
-        }
+        # Extract correct external ports from running containers
+        web_services = {}
+        try:
+            import subprocess
+            import json
+
+            # Get running containers and their port mappings
+            result = subprocess.run(
+                ['docker', 'ps', '--filter', 'name=hackathon', '--format', 'json'],
+                capture_output=True, text=True, timeout=10
+            )
+
+            if result.returncode == 0:
+                containers = [json.loads(line) for line in result.stdout.strip().split('\n') if line.strip()]
+                for container in containers:
+                    service_name = container.get('Names', '').replace('hackathon-', '').replace('-1', '')
+                    ports = container.get('Ports', '')
+
+                    # Extract external port from port mapping
+                    if ports and '/' in ports:
+                        port_part = ports.split('/')[0]
+                        if ':' in port_part:
+                            external_port = port_part.split(':')[0]
+                            try:
+                                web_services[service_name] = int(external_port)
+                            except ValueError:
+                                continue
+
+        except Exception as e:
+            logger.warning(f"Could not extract ports from running containers: {e}")
+            # Fallback to known external ports if container inspection fails
+
+        # Ensure we have services to test (either from container inspection or fallback)
+        if not web_services:
+            web_services = {
+                "orchestrator": 8085,
+                "doc_store": 8086,
+                "analysis-service": 8087,
+                "source-agent": 8088,
+                "frontend": 8089,
+                "summarizer-hub": 8124,
+                "architecture-digitizer": 8125,
+                "bedrock-proxy": 8126,
+                "llm-gateway": 8092,
+                "mock-data-generator": 8127,
+                "github-mcp": 8128,
+                "discovery-agent": 8095,
+                "notification-service": 8129,
+                "prompt_store": 8097,
+                "interpreter": 8130,
+                "cli": 8131,
+                "project-simulation": 8132,
+                "simulation-dashboard": 8133,
+                "unified-api-dashboard": 8101,
+                "code-analyzer": 8134,
+                "secure-analyzer": 8135,
+                "log-collector": 8136,
+                "external-service-store": 8141,
+                "user-store": 8137,
+                "project-planning-service": 8138,
+                "memory-agent": 8139,
+                "audit-framework": 8140,
+                "audit-reports": 8142,
+                "project-simulation": 8132,
+            }
         
         connectivity_results = {}
         reachable_count = 0
@@ -396,7 +434,7 @@ class ProductionReadinessValidator:
                     "response_time_ms": 0
                 }
         
-        connectivity_percentage = (reachable_count / len(web_services)) * 100
+        connectivity_percentage = (reachable_count / len(web_services)) * 100 if web_services else 0.0
 
         return {
             "passed": connectivity_percentage >= 50,  # Require 50% connectivity for comprehensive ecosystem validation

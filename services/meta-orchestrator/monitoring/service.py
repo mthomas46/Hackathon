@@ -62,10 +62,18 @@ class MonitoringService:
         """Configure health checks for all services"""
         logger.info("🏥 Configuring health checks for services")
 
+        # Services that don't have HTTP health endpoints (infrastructure services)
+        non_http_services = {'redis', 'ollama'}
+
         # Get all services from orchestrator
         services = await self.orchestrator.get_service_status()
 
         for service in services:
+            # Skip infrastructure services that don't have HTTP health endpoints
+            if service.name in non_http_services:
+                logger.info(f"⏭️ Skipping health check for {service.name} (infrastructure service)")
+                continue
+
             # Extract health endpoint from service config
             health_endpoint = self._extract_health_endpoint(service)
 

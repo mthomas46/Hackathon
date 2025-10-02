@@ -44,7 +44,7 @@ providers:
     name: bedrock
     type: cloud
     model: ${BEDROCK_MODEL:-anthropic.claude-3-sonnet-20240229-v1:0}
-    endpoint: ${BEDROCK_ENDPOINT:-http://bedrock-proxy:7090/invoke}
+    endpoint: ${BEDROCK_ENDPOINT:-http://bedrock-proxy:5002/invoke}
     api_key: ${BEDROCK_API_KEY:-}
     timeout: 60
     cost_per_token: 0.000015

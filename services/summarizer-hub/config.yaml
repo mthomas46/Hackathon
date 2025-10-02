@@ -10,7 +10,7 @@ providers:
   # Example provider config; real clients will use these
   - name: ollama
     model: ${OLLAMA_MODEL:-llama3}
-    endpoint: ${OLLAMA_ENDPOINT:-http://ollama-consistency:11434}
+    endpoint: ${OLLAMA_ENDPOINT:-http://ollama:11434}
   - name: openai
     model: ${OPENAI_MODEL:-gpt-4o}
     api_key: ${EXTERNAL_OPENAI_API_KEY:-}

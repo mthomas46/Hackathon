@@ -29,32 +29,33 @@ services:
   orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
   doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}
   analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
-  source-agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
+  source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5085}
   frontend_url: ${FRONTEND_URL:-http://frontend:3000}
 
   # Agent services
-  memory_agent_url: ${MEMORY_AGENT_URL:-http://memory-agent:5040}
+  memory_agent_url: ${MEMORY_AGENT_URL:-http://memory-agent:5090}
   discovery_agent_url: ${DISCOVERY_AGENT_URL:-http://discovery-agent:5045}
-  github_mcp_url: ${GITHUB_MCP_URL:-http://github-mcp:5072}
-  notification-service_url: ${NOTIFICATION_SERVICE_URL:-http://notification-service:5095}
+  github_mcp_url: ${GITHUB_MCP_URL:-http://github-mcp:5030}
+  notification_service_url: ${NOTIFICATION_SERVICE_URL:-http://notification-service:5130}
 
   # Utility services
-  prompt_store_url: ${PROMPT_STORE_URL:-http://prompt-store:5110}
+  prompt_store_url: ${PROMPT_STORE_URL:-http://prompt_store:5110}
   interpreter_url: ${INTERPRETER_URL:-http://interpreter:5120}
   cli_service_url: ${CLI_SERVICE_URL:-http://cli:5130}
-  bedrock_proxy_url: ${BEDROCK_PROXY_URL:-http://bedrock-proxy:7090}
+  user_store_url: ${USER_STORE_URL:-http://user-store:5150}
+  bedrock_proxy_url: ${BEDROCK_PROXY_URL:-http://bedrock-proxy:5002}
 
-  # Legacy service URLs (for backward compatibility)
-  github_agent_url: ${GITHUB_AGENT_URL:-http://github-agent:5000}
-  jira_agent_url: ${JIRA_AGENT_URL:-http://jira-agent:5001}
-  confluence_agent_url: ${CONFLUENCE_AGENT_URL:-http://confluence-agent:5050}
-  swagger_agent_url: ${SWAGGER_AGENT_URL:-http://swagger-agent:5010}
-  consistency_engine_url: ${CONSISTENCY_ENGINE_URL:-http://consistency-engine:5020}
-  reporting_url: ${REAPI_PORTING_URL:-http://reporting:5030}
-  summarizer-hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
-  secure-analyzer_url: ${SECURE_ANALYZER_URL:-http://secure-analyzer:5070}
-  code-analyzer_url: ${CODE_ANALYZER_URL:-http://code-analyzer:5085}
+  # Additional service URLs
+  summarizer_hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5160}
+  secure_analyzer_url: ${SECURE_ANALYZER_URL:-http://secure-analyzer:5070}
+  code_analyzer_url: ${CODE_ANALYZER_URL:-http://code-analyzer:5025}
   log_collector_url: ${LOG_COLLECTOR_URL:-http://log-collector:5080}
+  llm_gateway_url: ${LLM_GATEWAY_URL:-http://llm-gateway:5055}
+  external_service_store_url: ${EXTERNAL_SERVICE_STORE_URL:-http://external-service-store:5140}
+  project_planning_service_url: ${PROJECT_PLANNING_SERVICE_URL:-http://project-planning-service:5170}
+  project_simulation_url: ${PROJECT_SIMULATION_URL:-http://project-simulation:5075}
+  simulation_dashboard_url: ${SIMULATION_DASHBOARD_URL:-http://simulation-dashboard:8501}
+  unified_api_dashboard_url: ${UNIFIED_API_DASHBOARD_URL:-http://unified-api-dashboard:8000}
 
 # ============================================================================
 # EXTERNAL API CONFIGURATION
@@ -117,9 +118,9 @@ health:
 providers:
   # Ollama settings
   ollama:
-    host: ${OLLAMA_API_HOST:-http://host.docker.internal:11434}
+    host: ${OLLAMA_API_HOST:-http://ollama:11434}
     model: ${OLLAMA_MODEL:-llama3}
-    endpoint: ${OLLAMA_ENDPOINT:-http://ollama-consistency:11434}
+    endpoint: ${OLLAMA_ENDPOINT:-http://ollama:11434}
 
   # OpenAI settings
   openai:

@@ -7,5 +7,6 @@ server:
 
 # Service URLs that frontend connects to
 services:
-  reporting_url: ${REAPI_PORTING_URL:-http://analysis-service:5020}
-  consistency_engine_url: ${CONSISTENCY_ENGINE_URL:-http://orchestrator:5099}
+  api_dashboard_url: ${API_DASHBOARD_URL:-http://unified-api-dashboard:8000}
+  orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
+  analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
