@@ -500,6 +500,86 @@ curl http://localhost:8080/metrics
 
 ---
 
+## 📋 **Scripts Overview**
+
+### `automated_health_monitoring.py`
+**Enterprise Health Monitoring Engine** - Core automated monitoring system providing 24/7 health surveillance across all services.
+
+**Features:**
+- Continuous health checking every 30 seconds across all 29 services
+- Real-time alerting via multiple channels (Email, Slack, Webhooks)
+- Comprehensive performance metrics and uptime tracking
+- SQLite database for historical data with configurable retention
+- Self-healing capabilities with optional automatic service restarts
+- JSON API for integration with external monitoring systems
+- Detailed health reporting with trend analysis
+
+**Use Cases:**
+- Production environment monitoring and alerting
+- Service availability and performance tracking
+- Incident detection and automated response
+- Capacity planning and resource optimization
+- Compliance reporting and audit trails
+- Business continuity monitoring
+
+### `ecosystem_health_dashboard.py`
+**Interactive Health Dashboard** - Web-based dashboard for real-time health visualization and ecosystem monitoring.
+
+**Features:**
+- Live health status visualization for all services
+- Historical trend charts and performance graphs
+- Service dependency mapping and impact analysis
+- Alert management interface with acknowledgment system
+- Customizable dashboards with configurable widgets
+- RESTful API for external system integration
+- Export capabilities for reporting and analysis
+
+**Use Cases:**
+- Real-time operational monitoring and oversight
+- Executive dashboards for business stakeholders
+- Development team monitoring during deployments
+- Customer support troubleshooting assistance
+- Performance analysis and optimization reviews
+- Compliance and audit reporting
+
+### `setup-monitoring-dashboard.py`
+**Monitoring Infrastructure Setup** - Automated setup and configuration script for deploying the monitoring system.
+
+**Features:**
+- Automated installation and configuration of monitoring components
+- Database initialization and schema setup
+- Systemd service configuration for production deployment
+- Configuration file generation with environment-specific settings
+- Security hardening and permission setup
+- Dependency validation and prerequisite checking
+
+**Use Cases:**
+- New environment setup and deployment
+- Automated infrastructure provisioning
+- Configuration management and standardization
+- Production deployment automation
+- Development environment replication
+- Disaster recovery and system restoration
+
+### `health-monitor.service`
+**Systemd Service Configuration** - Production-ready service definition for running the health monitor as a system service.
+
+**Features:**
+- Systemd service configuration for reliable operation
+- Resource limits and security constraints
+- Automatic restart on failure with exponential backoff
+- Log rotation and management
+- User isolation and privilege management
+
+**Use Cases:**
+- Production deployment and service management
+- Automated startup and shutdown procedures
+- Resource usage control and optimization
+- Security policy enforcement
+- Operational reliability and uptime guarantees
+
+---
+
 ## 📞 **Support and Maintenance**
 
 ### **Monitoring the Monitor**

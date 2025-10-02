@@ -61,6 +61,157 @@ python unified_config_manager.py report --output config_report.json
 | `environment_validator.py` | Environment validation | ✅ Active |
 | `validate_service_configs.py` | Service config validation (legacy) | ⚠️ Deprecated |
 
+## 📋 **Detailed Script Descriptions**
+
+### Primary Scripts
+
+#### `unified_config_manager.py`
+**Unified Configuration Management System** - The primary interface for all configuration management operations across the ecosystem.
+
+**Features:**
+- Centralized configuration management for all 29 services
+- Automated configuration standardization and validation
+- Environment variable migration and conflict resolution
+- Docker Compose configuration validation and optimization
+- Comprehensive auditing and reporting capabilities
+- Interactive command-line interface with help system
+- Dry-run capabilities for safe configuration changes
+
+**Use Cases:**
+- Enterprise-wide configuration standardization
+- Automated deployment preparation and validation
+- Configuration drift detection and remediation
+- Multi-environment configuration management
+- Compliance auditing and reporting
+- Development workflow automation
+
+#### `configuration_standardization.py`
+**Automated Configuration Standardizer** - Intelligent configuration standardization across all services and environments.
+
+**Features:**
+- Automated detection and fixing of configuration inconsistencies
+- Schema validation against standardized configuration formats
+- Environment variable standardization and migration
+- Docker configuration optimization and validation
+- Batch processing capabilities for large-scale changes
+- Rollback capabilities for failed standardization attempts
+
+**Use Cases:**
+- Configuration consistency enforcement across teams
+- Automated remediation of configuration drift
+- Standardization during service onboarding
+- Compliance with organizational configuration policies
+- Preparation for production deployments
+
+#### `migrate_env_vars.py`
+**Environment Variable Migration Engine** - Comprehensive environment variable migration and conflict resolution.
+
+**Features:**
+- Automated detection of environment variable conflicts
+- Intelligent migration planning and conflict resolution
+- Batch migration capabilities for multiple services
+- Validation of migration results and rollback options
+- Integration with configuration management systems
+- Comprehensive reporting and audit trails
+
+**Use Cases:**
+- Environment variable standardization across services
+- Conflict resolution in multi-service deployments
+- Migration planning for configuration changes
+- Compliance with environment variable naming standards
+- Development to production environment transitions
+
+### Supporting Scripts
+
+#### `analyze_deployment_configurations.py`
+**Deployment Configuration Analyzer** - Advanced analysis and optimization of deployment configurations.
+
+**Features:**
+- Comprehensive deployment configuration analysis
+- Performance optimization recommendations
+- Security vulnerability assessment
+- Resource utilization analysis
+- Dependency mapping and optimization
+- Automated optimization suggestions
+
+**Use Cases:**
+- Pre-deployment configuration validation
+- Performance optimization planning
+- Security assessment of deployment configurations
+- Resource capacity planning
+- Deployment troubleshooting and optimization
+
+#### `environment_detector.py`
+**Environment Detection Utilities** - Intelligent environment detection and configuration adaptation.
+
+**Features:**
+- Automatic environment detection (development/staging/production)
+- Dynamic configuration loading based on environment
+- Environment-specific validation rules
+- Configuration override management
+- Environment consistency validation
+
+**Use Cases:**
+- Automated environment-specific configuration
+- Development workflow optimization
+- Deployment environment validation
+- Configuration testing across environments
+- Environment-specific feature toggling
+
+#### `environment_validator.py`
+**Environment Validation Framework** - Comprehensive environment validation and compliance checking.
+
+**Features:**
+- Multi-environment configuration validation
+- Compliance checking against organizational standards
+- Environment-specific requirement validation
+- Automated validation reporting
+- Integration with CI/CD pipelines
+- Custom validation rule support
+
+**Use Cases:**
+- Environment compliance auditing
+- Pre-deployment validation
+- Configuration consistency checking
+- Regulatory compliance validation
+- Automated testing integration
+
+#### `docker_compose_validator.py`
+**Docker Compose Configuration Validator** - Specialized validation for Docker Compose configurations.
+
+**Features:**
+- Comprehensive Docker Compose file validation
+- Port conflict detection and resolution
+- Volume mount validation and optimization
+- Network configuration validation
+- Service dependency analysis
+- Performance optimization recommendations
+
+**Use Cases:**
+- Docker deployment validation
+- Port conflict resolution
+- Network configuration optimization
+- Service dependency management
+- Performance troubleshooting
+
+#### `production_readiness_validator.py`
+**Production Readiness Assessment** - Enterprise-grade production readiness validation.
+
+**Features:**
+- Comprehensive production readiness checklist
+- Security assessment and compliance validation
+- Performance benchmarking and threshold validation
+- Scalability and high availability validation
+- Disaster recovery capability assessment
+- Regulatory compliance verification
+
+**Use Cases:**
+- Pre-production deployment validation
+- Enterprise software certification
+- Regulatory compliance assessment
+- Risk assessment and mitigation planning
+- Production deployment decision support
+
 ## 🔧 Configuration Management Workflow
 
 ### 1. Initial Setup

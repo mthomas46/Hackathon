@@ -2,23 +2,34 @@
 
 This directory contains unified utility scripts for comprehensive development, maintenance, and operational tasks.
 
-## Main Script
+## Scripts
 
 ### `dev_utilities.py`
-**Unified Development Utilities** - Comprehensive development toolkit combining all utility functionality:
+**Unified Development Utilities Suite** - Comprehensive development toolkit combining all utility functionality into a single, powerful command-line interface.
 
-**Features:**
-- **Code Quality Tools**: Import fixing, bare except handling, code standardization
-- **Data Management**: Prompt store browsing, document store route updates, data standardization
-- **Infrastructure Tools**: Dockerfile optimization, environment fixes, port conflict resolution
-- **Development Helpers**: Code analysis, configuration management, deployment preparation
+#### Features
+- **Code Quality Tools**: Automated import fixing, bare except handling, code standardization
+- **Data Management**: Prompt store browsing, document store route updates, data standardization and migration
+- **Infrastructure Tools**: Dockerfile optimization, environment configuration fixes, port conflict resolution
+- **Development Helpers**: Code analysis, configuration management, deployment preparation automation
+- **Quality Assurance**: Comprehensive validation, consistency checking, and automated fixes
+- **Workflow Automation**: Streamlined development processes with single-command operations
 
-**Capabilities:**
-- Automated code refactoring and standardization
-- Data store management and optimization
-- Infrastructure configuration and optimization
-- Development workflow automation
-- Quality assurance and consistency checking
+#### Capabilities
+- Automated code refactoring and standardization across the entire codebase
+- Intelligent data store management and optimization with conflict resolution
+- Infrastructure configuration validation and optimization
+- Development workflow automation with error recovery
+- Quality assurance through comprehensive validation and fixing
+- Productivity enhancement through unified command interface
+
+#### Use Cases
+- **Code Quality Assurance**: Automated fixing of import statements, bare except clauses, and code formatting
+- **Data Store Management**: Browsing, optimizing, and standardizing prompt stores and document stores
+- **Infrastructure Optimization**: Dockerfile improvements, environment variable conflict resolution, port management
+- **Development Workflow**: Automated code analysis, configuration management, and deployment preparation
+- **Quality Control**: Comprehensive validation and consistency checking across all project components
+- **Maintenance Automation**: Routine maintenance tasks like data cleanup, route optimization, and configuration updates
 
 ## What Was Consolidated
 

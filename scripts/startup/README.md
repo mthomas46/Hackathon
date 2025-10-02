@@ -2,27 +2,37 @@
 
 This directory contains unified service management for the entire LLM Documentation Ecosystem.
 
-## Main Script
+## Scripts
 
 ### `service_manager.py`
-**Consolidated Service Startup Manager** - Unified service management combining all individual startup scripts:
+**Enterprise Service Orchestration Platform** - Comprehensive service management and orchestration system for the entire LLM Documentation Ecosystem.
 
-**Capabilities:**
-- **Individual Service Startup**: Start any single service with proper configuration
-- **Bulk Service Management**: Start all services in dependency order
-- **Docker Integration**: Support for both local development and Docker environments
-- **Health Monitoring**: Real-time service health checking and status reporting
-- **Graceful Shutdown**: Proper cleanup and shutdown handling
-- **Interactive CLI**: Rich console interface for service management
-- **Dependency Resolution**: Automatic startup order based on service dependencies
+#### Features
+- **Individual Service Control**: Precise startup, shutdown, and restart of any single service
+- **Bulk Service Orchestration**: Intelligent startup of all 29 services in optimal dependency order
+- **Multi-Environment Support**: Seamless operation in Docker, Kubernetes, and local development environments
+- **Real-time Health Monitoring**: Continuous service health checking with automated recovery
+- **Graceful Lifecycle Management**: Proper startup sequencing, shutdown cleanup, and resource management
+- **Interactive Management Console**: Rich CLI interface with progress indicators and status visualization
+- **Dependency-Aware Scheduling**: Automatic resolution of service dependencies and startup ordering
+- **Resource Management**: CPU, memory, and disk usage monitoring with optimization recommendations
 
-**Features:**
-- Environment-aware configuration (local vs Docker)
-- Comprehensive error handling and logging
-- Progress indicators and status updates
-- Service restart and rebuild capabilities
-- Resource usage monitoring
-- Background service management
+#### Capabilities
+- Environment-aware configuration with automatic adaptation (development/staging/production)
+- Comprehensive error handling with intelligent retry mechanisms and failure recovery
+- Detailed logging and audit trails for all service operations
+- Background service management with process monitoring and automatic restart
+- Service grouping and selective startup (core services, processing services, integrations)
+- Performance monitoring with resource usage alerts and optimization suggestions
+- Integration with monitoring systems and alerting platforms
+
+#### Use Cases
+- **Development Environment Setup**: Quick local development environment configuration
+- **Production Deployment**: Reliable, sequenced startup of enterprise-scale service ecosystems
+- **Service Maintenance**: Individual service updates, restarts, and troubleshooting
+- **Disaster Recovery**: Automated service recovery and dependency-aware restart procedures
+- **Capacity Management**: Resource monitoring and scaling decision support
+- **CI/CD Integration**: Automated service lifecycle management in deployment pipelines
 
 ## What Was Consolidated
 

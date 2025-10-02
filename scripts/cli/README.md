@@ -2,15 +2,44 @@
 
 This directory contains consolidated test scripts for validating CLI functionality and user interface components.
 
-## Consolidated Test Suite
+## Scripts
 
 ### `test_cli_consolidated.py`
-**Comprehensive CLI Testing** - Combines all previous CLI test functionality:
-- Basic CLI command validation (help, commands, basic functionality)
-- CLI ecosystem testing with service integration
-- Interactive CLI testing scenarios
-- Error handling and edge case testing
-- Live service integration testing
+**Comprehensive CLI Testing Suite** - Unified testing framework for validating all CLI functionality and user interface components.
+
+**Features:**
+- Complete CLI command validation across all modules
+- Interactive CLI testing scenarios with automated workflows
+- Error handling and edge case validation
+- Live service integration testing capabilities
+- Performance benchmarking for CLI operations
+- Automated regression testing for CLI changes
+- Comprehensive test reporting with detailed metrics
+
+**Use Cases:**
+- CLI development and feature validation
+- User experience testing and optimization
+- Performance bottleneck identification
+- Automated testing in CI/CD pipelines
+- Regression testing after CLI updates
+- Quality assurance for CLI releases
+
+### `run_cli.py`
+**CLI Runner and Launcher** - Simple script for launching the main CLI application with proper environment setup.
+
+**Features:**
+- Environment variable configuration
+- Python path setup for proper imports
+- Error handling for CLI startup issues
+- Logging configuration for debugging
+- Development environment optimization
+
+**Use Cases:**
+- Quick CLI testing during development
+- Automated CLI execution in scripts
+- Environment setup validation
+- Debugging CLI startup issues
+- Development workflow integration
 
 ## Test Scope
 
