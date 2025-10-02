@@ -577,10 +577,10 @@ class ProductionReadinessValidator:
 
         for service in test_services:
             port_map = {
-                "doc_store": 5087,
-                "llm-gateway": 5055,
-                "analysis-service": 5080,
-                "discovery-agent": 5045
+                "doc_store": 5087,        # Internal port (external: 8086)
+                "llm-gateway": 5055,      # Internal port (external: 8092)
+                "analysis-service": 5020, # Internal port (external: 8087)
+                "discovery-agent": 5045   # Internal port (external: 8095)
             }
 
             port = port_map.get(service)
