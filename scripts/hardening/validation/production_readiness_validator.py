@@ -133,6 +133,14 @@ class ProductionReadinessValidator:
                 required_for_production=True
             ),
             ReadinessCheck(
+                check_name="schema_validation",
+                category="configuration",
+                severity="low",
+                description="Configuration files must comply with JSON schemas",
+                validation_function="validate_schema_compliance",
+                required_for_production=False
+            ),
+            ReadinessCheck(
                 check_name="comprehensive_health_checks",
                 category="monitoring",
                 severity="critical",
@@ -985,6 +993,65 @@ class ProductionReadinessValidator:
             "health_percentage": (healthy_services / len(health_services)) * 100,
             "assessment": f"Health checks: {healthy_services}/{len(health_services)} services healthy"
         }
+
+    def validate_schema_compliance(self) -> Dict[str, Any]:
+        """Validate configuration files against JSON schemas"""
+        try:
+            # Import the drift detector which contains schema validation
+            from scripts.safeguards.config_drift_detector import ConfigDriftDetector
+
+            detector = ConfigDriftDetector()
+            config_files = detector.scan_configurations()
+
+            if not config_files:
+                return {
+                    "passed": False,
+                    "error": "No configuration files found to validate",
+                    "files_scanned": 0,
+                    "schema_issues": []
+                }
+
+            # Run schema validation
+            schema_issues = detector._validate_against_schemas()
+
+            # Classify issues by severity
+            critical_issues = [issue for issue in schema_issues if issue.severity == "critical"]
+            high_issues = [issue for issue in schema_issues if issue.severity == "high"]
+            medium_issues = [issue for issue in schema_issues if issue.severity == "medium"]
+
+            # Schema validation passes if no critical issues and ≤2 high issues
+            schema_passed = len(critical_issues) == 0 and len(high_issues) <= 2
+
+            return {
+                "passed": schema_passed,
+                "files_scanned": len(config_files),
+                "schema_issues": len(schema_issues),
+                "critical_issues": len(critical_issues),
+                "high_issues": len(high_issues),
+                "medium_issues": len(medium_issues),
+                "issues_details": [
+                    {
+                        "file": str(issue.source_a.path) if hasattr(issue.source_a, 'path') else str(issue.source_a),
+                        "severity": issue.severity,
+                        "description": issue.description,
+                        "suggestion": issue.suggestion
+                    } for issue in schema_issues
+                ],
+                "assessment": f"Schema validation: {len(config_files)} files scanned, {len(schema_issues)} issues found"
+            }
+
+        except ImportError:
+            return {
+                "passed": False,
+                "error": "Schema validation not available - missing dependencies",
+                "assessment": "Install jsonschema package for schema validation"
+            }
+        except Exception as e:
+            return {
+                "passed": False,
+                "error": f"Schema validation failed: {str(e)}",
+                "assessment": "Schema validation encountered an error"
+            }
 
     # Placeholder validation methods for completeness
     def validate_authentication(self) -> Dict[str, Any]:

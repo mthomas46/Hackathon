@@ -1,10 +1,10 @@
 {
-  "validation_timestamp": 1759389136.903069,
+  "validation_timestamp": 1759390158.902792,
   "overall_assessment": {
     "readiness_level": "production_ready",
     "production_ready": true,
-    "readiness_score": 100.0,
-    "total_checks": 19,
+    "readiness_score": 95.0,
+    "total_checks": 20,
     "passed_checks": 19,
     "critical_failures": [],
     "high_failures": [],
@@ -29,14 +29,14 @@
           "hackathon-architecture-digitizer-1": "Up 3 hours (healthy)",
           "hackathon-bedrock-proxy-1": "Up 3 hours (healthy)",
           "hackathon-cli-1": "Up 3 hours (healthy)",
-          "hackathon-code-analyzer-1": "Up 5 minutes (healthy)",
-          "hackathon-discovery-agent-1": "Up 30 minutes (healthy)",
-          "hackathon-doc_store-1": "Up 30 minutes (unhealthy)",
+          "hackathon-code-analyzer-1": "Up 22 minutes (healthy)",
+          "hackathon-discovery-agent-1": "Up 47 minutes (healthy)",
+          "hackathon-doc_store-1": "Up 47 minutes (unhealthy)",
           "hackathon-external-service-store-1": "Up 3 hours (healthy)",
-          "hackathon-frontend-1": "Up 23 seconds (healthy)",
+          "hackathon-frontend-1": "Up 17 minutes (healthy)",
           "hackathon-github-mcp-1": "Up 3 hours (healthy)",
           "hackathon-interpreter-1": "Up 3 hours (healthy)",
-          "hackathon-llm-gateway-1": "Up 30 minutes (healthy)",
+          "hackathon-llm-gateway-1": "Up 47 minutes (healthy)",
           "hackathon-log-collector-1": "Up 3 hours (healthy)",
           "hackathon-memory-agent-1": "Up 3 hours (healthy)",
           "hackathon-mock-data-generator-1": "Up 3 hours (healthy)",
@@ -45,13 +45,13 @@
           "hackathon-orchestrator-1": "Up 3 hours (healthy)",
           "hackathon-project-planning-service-1": "Up 3 hours (healthy)",
           "hackathon-project-simulation-1": "Up 3 hours (healthy)",
-          "hackathon-prompt_store-1": "Up 30 minutes (healthy)",
+          "hackathon-prompt_store-1": "Up 47 minutes (healthy)",
           "hackathon-redis-1": "Up 3 hours (healthy)",
           "hackathon-secure-analyzer-1": "Up 3 hours (healthy)",
-          "hackathon-simulation-dashboard-1": "Up 7 minutes (healthy)",
+          "hackathon-simulation-dashboard-1": "Up 24 minutes (healthy)",
           "hackathon-source-agent-1": "Up 3 hours (healthy)",
           "hackathon-summarizer-hub-1": "Up 3 hours (healthy)",
-          "hackathon-unified-api-dashboard-1": "Up 6 minutes (healthy)",
+          "hackathon-unified-api-dashboard-1": "Up 23 minutes (healthy)",
           "hackathon-user-store-1": "Up 3 hours (healthy)"
         },
         "threshold": 85,
@@ -69,127 +69,127 @@
         "service_results": {
           "orchestrator": {
             "reachable": true,
-            "response_time_ms": 12.455940246582031,
+            "response_time_ms": 7.930994033813477,
             "status_code": 200
           },
           "doc_store": {
             "reachable": true,
-            "response_time_ms": 2.8352737426757812,
+            "response_time_ms": 3.7620067596435547,
             "status_code": 200
           },
           "analysis-service": {
             "reachable": true,
-            "response_time_ms": 1.9140243530273438,
+            "response_time_ms": 2.187013626098633,
             "status_code": 200
           },
           "source-agent": {
             "reachable": true,
-            "response_time_ms": 1.928091049194336,
+            "response_time_ms": 1.7390251159667969,
             "status_code": 200
           },
           "frontend": {
             "reachable": true,
-            "response_time_ms": 2.0051002502441406,
+            "response_time_ms": 1.9991397857666016,
             "status_code": 200
           },
           "summarizer-hub": {
             "reachable": true,
-            "response_time_ms": 1.4960765838623047,
+            "response_time_ms": 1.4491081237792969,
             "status_code": 200
           },
           "architecture-digitizer": {
             "reachable": true,
-            "response_time_ms": 1.9502639770507812,
+            "response_time_ms": 1.9199848175048828,
             "status_code": 200
           },
           "llm-gateway": {
             "reachable": true,
-            "response_time_ms": 8.510112762451172,
+            "response_time_ms": 7.604837417602539,
             "status_code": 200
           },
           "mock-data-generator": {
             "reachable": true,
-            "response_time_ms": 2.0987987518310547,
+            "response_time_ms": 2.135038375854492,
             "status_code": 200
           },
           "github-mcp": {
             "reachable": true,
-            "response_time_ms": 1.7349720001220703,
+            "response_time_ms": 1.5969276428222656,
             "status_code": 200
           },
           "discovery-agent": {
             "reachable": true,
-            "response_time_ms": 1.9032955169677734,
+            "response_time_ms": 1.8968582153320312,
             "status_code": 200
           },
           "notification-service": {
             "reachable": true,
-            "response_time_ms": 1.7178058624267578,
+            "response_time_ms": 1.4390945434570312,
             "status_code": 200
           },
           "prompt_store": {
             "reachable": true,
-            "response_time_ms": 1.9793510437011719,
+            "response_time_ms": 1.978158950805664,
             "status_code": 200
           },
           "interpreter": {
             "reachable": true,
-            "response_time_ms": 2.033710479736328,
+            "response_time_ms": 2.0253658294677734,
             "status_code": 200
           },
           "cli": {
             "reachable": true,
-            "response_time_ms": 1.615762710571289,
+            "response_time_ms": 1.363992691040039,
             "status_code": 200
           },
           "project-simulation": {
             "reachable": true,
-            "response_time_ms": 1.7538070678710938,
+            "response_time_ms": 1.814126968383789,
             "status_code": 200
           },
           "simulation-dashboard": {
             "reachable": true,
-            "response_time_ms": 2.1240711212158203,
+            "response_time_ms": 1.7578601837158203,
             "status_code": 200
           },
           "unified-api-dashboard": {
             "reachable": true,
-            "response_time_ms": 1.3048648834228516,
+            "response_time_ms": 1.5082359313964844,
             "status_code": 200
           },
           "code-analyzer": {
             "reachable": true,
-            "response_time_ms": 1.9431114196777344,
+            "response_time_ms": 1.9001960754394531,
             "status_code": 200
           },
           "secure-analyzer": {
             "reachable": true,
-            "response_time_ms": 1.7008781433105469,
+            "response_time_ms": 1.711130142211914,
             "status_code": 200
           },
           "log-collector": {
             "reachable": true,
-            "response_time_ms": 1.996755599975586,
+            "response_time_ms": 1.8820762634277344,
             "status_code": 200
           },
           "external-service-store": {
             "reachable": true,
-            "response_time_ms": 1.7080307006835938,
+            "response_time_ms": 1.519918441772461,
             "status_code": 200
           },
           "user-store": {
             "reachable": true,
-            "response_time_ms": 1.560211181640625,
+            "response_time_ms": 1.5857219696044922,
             "status_code": 200
           },
           "project-planning-service": {
             "reachable": true,
-            "response_time_ms": 2.03704833984375,
+            "response_time_ms": 1.810312271118164,
             "status_code": 200
           },
           "memory-agent": {
             "reachable": true,
-            "response_time_ms": 1.538991928100586,
+            "response_time_ms": 1.682281494140625,
             "status_code": 200
           }
         },
@@ -207,25 +207,25 @@
           {
             "container": "hackathon-doc_store-1",
             "issue": "Container is unhealthy",
-            "status": "Up 30 minutes (unhealthy)",
+            "status": "Up 47 minutes (unhealthy)",
             "severity": "high"
           }
         ],
         "port_mappings": {
           "hackathon-frontend-1": {
-            "status": "Up 23 seconds (healthy)",
+            "status": "Up 17 minutes (healthy)",
             "ports": "0.0.0.0:8089->3000/tcp, [::]:8089->3000/tcp"
           },
           "hackathon-code-analyzer-1": {
-            "status": "Up 5 minutes (healthy)",
+            "status": "Up 22 minutes (healthy)",
             "ports": "0.0.0.0:8102->5025/tcp, [::]:8102->5025/tcp"
           },
           "hackathon-unified-api-dashboard-1": {
-            "status": "Up 6 minutes (healthy)",
+            "status": "Up 23 minutes (healthy)",
             "ports": "0.0.0.0:8101->8000/tcp, [::]:8101->8000/tcp"
           },
           "hackathon-simulation-dashboard-1": {
-            "status": "Up 7 minutes (healthy)",
+            "status": "Up 24 minutes (healthy)",
             "ports": "0.0.0.0:8100->8501/tcp, [::]:8100->8501/tcp"
           },
           "hackathon-project-simulation-1": {
@@ -245,7 +245,7 @@
             "ports": "0.0.0.0:8093->5065/tcp, [::]:8093->5065/tcp"
           },
           "hackathon-llm-gateway-1": {
-            "status": "Up 30 minutes (healthy)",
+            "status": "Up 47 minutes (healthy)",
             "ports": "0.0.0.0:8092->5055/tcp, [::]:8092->5055/tcp"
           },
           "hackathon-analysis-service-1": {
@@ -253,7 +253,7 @@
             "ports": "0.0.0.0:8087->5020/tcp, [::]:8087->5020/tcp"
           },
           "hackathon-discovery-agent-1": {
-            "status": "Up 30 minutes (healthy)",
+            "status": "Up 47 minutes (healthy)",
             "ports": "0.0.0.0:8095->5045/tcp, [::]:8095->5045/tcp"
           },
           "hackathon-project-planning-service-1": {
@@ -277,7 +277,7 @@
             "ports": "0.0.0.0:8090->11434/tcp, [::]:8090->11434/tcp"
           },
           "hackathon-prompt_store-1": {
-            "status": "Up 30 minutes (healthy)",
+            "status": "Up 47 minutes (healthy)",
             "ports": "0.0.0.0:8097->5110/tcp, [::]:8097->5110/tcp"
           },
           "hackathon-memory-agent-1": {
@@ -289,7 +289,7 @@
             "ports": "0.0.0.0:8106->5150/tcp, [::]:8106->5150/tcp"
           },
           "hackathon-doc_store-1": {
-            "status": "Up 30 minutes (unhealthy)",
+            "status": "Up 47 minutes (unhealthy)",
             "ports": "0.0.0.0:8086->5087/tcp, [::]:8086->5087/tcp"
           },
           "hackathon-external-service-store-1": {
@@ -408,6 +408,15 @@
         "assessment": "Docker health checks are stricter than service functionality - this is often acceptable"
       },
       "passed": true
+    },
+    "schema_validation": {
+      "check": "ReadinessCheck(check_name='schema_validation', category='configuration', severity='low', description='Configuration files must comply with JSON schemas', validation_function='validate_schema_compliance', required_for_production=False)",
+      "result": {
+        "passed": false,
+        "error": "Schema validation not available - missing dependencies",
+        "assessment": "Install jsonschema package for schema validation"
+      },
+      "passed": false
     },
     "comprehensive_health_checks": {
       "check": "ReadinessCheck(check_name='comprehensive_health_checks', category='monitoring', severity='critical', description='All services must have functional health endpoints', validation_function='validate_health_checks_comprehensive', required_for_production=True)",

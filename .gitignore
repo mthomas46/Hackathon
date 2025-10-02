@@ -236,6 +236,10 @@ debug.log
 services/*/logs/
 services/*/*.log
 
+# Generated reports
+reports/config_drift/
+reports/health_validation/
+
 ## Temporary Files
 tmp/
 temp/

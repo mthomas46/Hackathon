@@ -8,7 +8,7 @@ YELLOW := \033[1;33m
 BLUE := \033[0;34m
 NC := \033[0m # No Color
 
-.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate validate-ports validate-docker-config validate-dockerfiles validate-env validate-health validate-health-endpoints validate-health-continuous validate-config validate-config-drift validate-config-drift-auto validate-config-consistency validate-api-contracts validate-api-compare pydantic-enable pydantic-disable pydantic-test pydantic-status validate-pydantic validate-service-startup validate-docker-files validate-docker-compose config-monitor config-health config-service-health docker-standardize docker-standardize-dry-run docker-standardize-apply setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status dashboard dashboard-start dashboard-stop dashboard-logs dashboard-health dashboard-test prompt-store-run prompt-store-test prompt-store-docker prompt-store-stop prompt-store-logs prompt-store-health llm-gateway-run llm-gateway-test llm-gateway-docker llm-gateway-stop llm-gateway-logs llm-gateway-health code-analyzer-run code-analyzer-test code-analyzer-docker code-analyzer-stop code-analyzer-logs code-analyzer-health orchestrator-run orchestrator-test orchestrator-docker orchestrator-stop orchestrator-logs orchestrator-health user-store-run user-store-test user-store-docker user-store-stop user-store-logs user-store-health external-service-store-run external-service-store-test external-service-store-docker external-service-store-stop external-service-store-logs external-service-store-health audit audit-all audit-services audit-ci audit-quick audit-comprehensive audit-parallel audit-report audit-clean audit-setup audit-validate audit-benchmark audit-trend audit-config audit-debug audit-docker audit-pre-commit audit-quality-gate audit-enforce docker-start docker-start-validated docker-stop docker-restart docker-compose-up docker-compose-down docker-compose-logs docker-compose-config docker-logs docker-status dev-setup dev-setup-full ci-validate ci-test pre-deploy deploy-safe
+.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate validate-ports validate-docker-config validate-dockerfiles validate-env validate-health validate-health-endpoints validate-health-continuous validate-config validate-config-drift validate-config-drift-auto validate-config-consistency validate-api-contracts validate-api-compare validate-drift validate-drift-docker validate-drift-pydantic validate-schema validate-production-ready validate-ecosystem-health validate-all-configs validate-network validate-baselines create-baseline generate-baselines validate-environments validate-dependencies auto-correct-config dry-run-corrections rollback-corrections list-correction-backups meta-orchestrator-build meta-orchestrator-run meta-orchestrator-stop meta-orchestrator-logs meta-orchestrator-health ci-validate-config ci-validate-deployment ci-gate-check monitor-config monitor-health alert-config-drift dev-full-validate dev-quick-check config-backup config-version pydantic-enable pydantic-disable pydantic-test pydantic-status validate-pydantic validate-service-startup validate-docker-files validate-docker-compose config-monitor config-health config-service-health docker-standardize docker-standardize-dry-run docker-standardize-apply setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status dashboard dashboard-start dashboard-stop dashboard-logs dashboard-health dashboard-test prompt-store-run prompt-store-test prompt-store-docker prompt-store-stop prompt-store-logs prompt-store-health llm-gateway-run llm-gateway-test llm-gateway-docker llm-gateway-stop llm-gateway-logs llm-gateway-health code-analyzer-run code-analyzer-test code-analyzer-docker code-analyzer-stop code-analyzer-logs code-analyzer-health orchestrator-run orchestrator-test orchestrator-docker orchestrator-stop orchestrator-logs orchestrator-health user-store-run user-store-test user-store-docker user-store-stop user-store-logs user-store-health external-service-store-run external-service-store-test external-service-store-docker external-service-stop external-service-logs external-service-health audit audit-all audit-services audit-ci audit-quick audit-comprehensive audit-parallel audit-report audit-clean audit-setup audit-validate audit-benchmark audit-trend audit-config audit-debug audit-docker audit-pre-commit audit-quality-gate audit-enforce docker-start docker-start-validated docker-stop docker-restart docker-compose-up docker-compose-down docker-compose-logs docker-compose-config docker-logs docker-status dev-setup dev-setup-full ci-validate ci-test pre-deploy deploy-safe
 
 help: ## Show this help message
 	@echo "🚀 Hackathon Ecosystem Commands"
@@ -149,7 +149,7 @@ validate: ## Run comprehensive ecosystem validation
 
 validate-ports: ## Validate port configurations and detect conflicts
 	@echo "$(BLUE)🔍 Validating ports...$(NC)"
-	$(PYTHON) scripts/hardening/unified_docker_standardizer.py --mode validate
+	$(PYTHON) scripts/hardening/ports/port_conflict_detector.py
 	@echo "$(GREEN)✅ Port validation completed$(NC)"
 
 validate-docker-config: ## Validate Docker and Docker Compose configuration consistency
@@ -444,6 +444,226 @@ validate-comprehensive: ## Run comprehensive validation (ports, dockerfiles, env
 	@echo "$(BLUE)Step 7: Conflict detection$(NC)"
 	@make validate-conflicts --silent
 	@echo "$(GREEN)✅ Comprehensive validation completed$(NC)"
+
+# ========================================
+# ADVANCED CONFIGURATION VALIDATION
+# ========================================
+
+validate-drift: ## Comprehensive configuration drift detection (Docker + YAML + Pydantic + Network + Baselines)
+	@echo "$(BLUE)🔍 Running comprehensive configuration drift detection...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --full-drift --dev-only
+	@echo "$(GREEN)✅ Drift detection completed$(NC)"
+
+validate-baselines: ## Check configuration compliance against baselines
+	@echo "$(BLUE)📋 Running baseline compliance validation...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --baseline-only
+	@echo "$(GREEN)✅ Baseline validation completed$(NC)"
+
+create-baseline: ## Create baseline for a specific service (usage: make create-baseline ENV=development SERVICE=orchestrator TYPE=yaml)
+	@echo "$(BLUE)📋 Creating baseline for $(ENV)/$(SERVICE)/$(TYPE)...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --create-baseline $(ENV) $(SERVICE) $(TYPE)
+	@echo "$(GREEN)✅ Baseline creation completed$(NC)"
+
+generate-baselines: ## Auto-generate baselines for all current configurations
+	@echo "$(BLUE)📋 Auto-generating baselines for all configurations...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --generate-baselines
+	@echo "$(GREEN)✅ Baseline generation completed$(NC)"
+
+validate-environments: ## Compare configurations across different environments for consistency
+	@echo "$(BLUE)🌍 Comparing configurations across environments...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --env-compare-only
+	@echo "$(GREEN)✅ Environment comparison completed$(NC)"
+
+validate-dependencies: ## Analyze service dependencies and detect cascading effects
+	@echo "$(BLUE)🔗 Analyzing service dependencies and cascading effects...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --dependency-only
+	@echo "$(GREEN)✅ Dependency analysis completed$(NC)"
+
+auto-correct-config: ## Automatically correct configuration issues with backups
+	@echo "$(BLUE)🔧 Applying automated configuration corrections...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --auto-correct
+	@echo "$(GREEN)✅ Automated correction completed$(NC)"
+
+dry-run-corrections: ## Show what corrections would be applied without making changes
+	@echo "$(BLUE)👀 Performing dry run of automated corrections...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --dry-run-corrections
+	@echo "$(GREEN)✅ Dry run completed$(NC)"
+
+rollback-corrections: ## Rollback automated corrections (use TIMESTAMP env var)
+	@echo "$(BLUE)🔄 Rolling back corrections made after $(TIMESTAMP)...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --rollback-corrections "$(TIMESTAMP)"
+	@echo "$(GREEN)✅ Rollback completed$(NC)"
+
+list-correction-backups: ## List all available correction backups
+	@echo "$(BLUE)📦 Listing correction backups...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --list-backups
+	@echo "$(GREEN)✅ Backup listing completed$(NC)"
+
+# ========================================
+# META-ORCHESTRATION SERVICE
+# ========================================
+
+meta-orchestrator-build: ## Build the meta-orchestration service
+	@echo "$(BLUE)🏗️ Building meta-orchestration service...$(NC)"
+	docker build -f services/meta-orchestrator/Dockerfile -t hackathon-meta-orchestrator .
+	@echo "$(GREEN)✅ Meta-orchestrator built$(NC)"
+
+meta-orchestrator-run: ## Run the meta-orchestration service
+	@echo "$(BLUE)🚀 Starting meta-orchestration service...$(NC)"
+	docker run -d \
+		--name meta-orchestrator \
+		--network hackathon-network \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v $(PWD):/app \
+		-e DOCKER_HOST=unix:///var/run/docker.sock \
+		-p 8080:8080 \
+		hackathon-meta-orchestrator
+	@echo "$(GREEN)✅ Meta-orchestrator running on port 8080$(NC)"
+
+meta-orchestrator-stop: ## Stop the meta-orchestration service
+	@echo "$(BLUE)🛑 Stopping meta-orchestration service...$(NC)"
+	docker stop meta-orchestrator || true
+	docker rm meta-orchestrator || true
+	@echo "$(GREEN)✅ Meta-orchestrator stopped$(NC)"
+
+meta-orchestrator-logs: ## View meta-orchestrator logs
+	@echo "$(BLUE)📋 Meta-orchestrator logs...$(NC)"
+	docker logs -f meta-orchestrator
+
+meta-orchestrator-health: ## Check meta-orchestrator health
+	@echo "$(BLUE)🏥 Checking meta-orchestrator health...$(NC)"
+	curl -f http://localhost:8080/health || echo "$(RED)❌ Meta-orchestrator unhealthy$(NC)"
+	@echo "$(GREEN)✅ Meta-orchestrator healthy$(NC)"
+
+validate-network: ## Network configuration and port conflict validation
+	@echo "$(BLUE)🌐 Running network configuration validation...$(NC)"
+	@echo "$(BLUE)Step 1: Port conflict detection$(NC)"
+	@make validate-ports --silent || echo "$(YELLOW)⚠️  Port validation failed but continuing...$(NC)"
+	@echo "$(BLUE)Step 2: Network drift detection$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --network-only
+	@echo "$(GREEN)✅ Network validation completed$(NC)"
+
+validate-drift-docker: ## Docker-specific drift detection
+	@echo "$(BLUE)🐳 Running Docker drift detection...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --docker-only
+	@echo "$(GREEN)✅ Docker drift detection completed$(NC)"
+
+validate-drift-pydantic: ## Pydantic configuration drift detection
+	@echo "$(BLUE)🔧 Running Pydantic drift detection...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --pydantic-only
+	@echo "$(GREEN)✅ Pydantic drift detection completed$(NC)"
+
+validate-schema: ## Validate all configurations against JSON schemas
+	@echo "$(BLUE)📋 Running schema validation...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --schema-only
+	@echo "$(GREEN)✅ Schema validation completed$(NC)"
+
+validate-production-ready: ## Full production readiness validation
+	@echo "$(BLUE)🚀 Running production readiness validation...$(NC)"
+	$(PYTHON) scripts/hardening/validation/production_readiness_validator.py
+	@echo "$(GREEN)✅ Production readiness validation completed$(NC)"
+
+validate-ecosystem-health: ## Comprehensive ecosystem health check
+	@echo "$(BLUE)🏥 Running ecosystem health validation...$(NC)"
+	$(PYTHON) scripts/safeguards/unified_health_monitor.py --comprehensive
+	@echo "$(GREEN)✅ Ecosystem health validation completed$(NC)"
+
+validate-all-configs: ## Validate all configuration aspects
+	@echo "$(BLUE)🔍 Running complete configuration validation suite...$(NC)"
+	@echo "$(BLUE)Step 1: Schema validation$(NC)"
+	@make validate-schema --silent || echo "$(YELLOW)⚠️  Schema validation failed but continuing...$(NC)"
+	@echo "$(BLUE)Step 2: Network validation$(NC)"
+	@make validate-network --silent || echo "$(YELLOW)⚠️  Network validation failed but continuing...$(NC)"
+	@echo "$(BLUE)Step 3: Baseline compliance$(NC)"
+	@make validate-baselines --silent || echo "$(YELLOW)⚠️  Baseline validation failed but continuing...$(NC)"
+	@echo "$(BLUE)Step 4: Environment consistency$(NC)"
+	@make validate-environments --silent || echo "$(YELLOW)⚠️  Environment comparison failed but continuing...$(NC)"
+	@echo "$(BLUE)Step 5: Service dependencies$(NC)"
+	@make validate-dependencies --silent || echo "$(YELLOW)⚠️  Dependency analysis failed but continuing...$(NC)"
+	@echo "$(BLUE)Step 6: Configuration drift$(NC)"
+	@make validate-drift --silent
+	@echo "$(BLUE)Step 7: Production readiness$(NC)"
+	@make validate-production-ready --silent
+	@echo "$(BLUE)Step 8: Ecosystem health$(NC)"
+	@make validate-ecosystem-health --silent
+	@echo "$(GREEN)✅ Complete configuration validation completed$(NC)"
+
+# ========================================
+# CI/CD INTEGRATION TARGETS
+# ========================================
+
+ci-validate-config: ## CI/CD configuration validation (fast, non-blocking)
+	@echo "$(BLUE)🔄 Running CI configuration validation...$(NC)"
+	@echo "$(BLUE)Step 1: Quick schema check$(NC)"
+	@make validate-schema --silent 2>/dev/null || echo "$(YELLOW)⚠️  Schema issues found$(NC)"
+	@echo "$(BLUE)Step 2: Basic drift detection$(NC)"
+	@make validate-drift --silent 2>/dev/null || echo "$(YELLOW)⚠️  Drift detected$(NC)"
+	@echo "$(BLUE)Step 3: Health endpoints$(NC)"
+	@make validate-health-endpoints --silent 2>/dev/null || echo "$(YELLOW)⚠️  Health issues found$(NC)"
+	@echo "$(GREEN)✅ CI configuration validation completed$(NC)"
+
+ci-validate-deployment: ## CI/CD pre-deployment validation
+	@echo "$(BLUE)🚀 Running CI deployment validation...$(NC)"
+	@make validate-production-ready --silent
+	@make validate-ecosystem-health --silent
+	@echo "$(GREEN)✅ CI deployment validation completed$(NC)"
+
+ci-gate-check: ## CI quality gate - fails if critical issues found
+	@echo "$(BLUE)🚪 Running CI quality gate...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --ci-gate || (echo "$(RED)❌ Quality gate failed - critical issues found$(NC)" && exit 1)
+	@echo "$(GREEN)✅ Quality gate passed$(NC)"
+
+# ========================================
+# MONITORING & ALERTING TARGETS
+# ========================================
+
+monitor-config: ## Start configuration monitoring service
+	@echo "$(BLUE)👀 Starting configuration monitoring...$(NC)"
+	$(PYTHON) scripts/safeguards/config_monitor_service.py --start
+	@echo "$(GREEN)✅ Configuration monitoring started$(NC)"
+
+monitor-health: ## Continuous health monitoring
+	@echo "$(BLUE)🏥 Starting continuous health monitoring...$(NC)"
+	$(PYTHON) scripts/safeguards/unified_health_monitor.py --monitor
+	@echo "$(GREEN)✅ Health monitoring started$(NC)"
+
+alert-config-drift: ## Check for configuration drift and alert if found
+	@echo "$(BLUE)🚨 Checking for configuration drift...$(NC)"
+	$(PYTHON) scripts/safeguards/config_drift_detector.py --alert-on-drift
+	@echo "$(GREEN)✅ Drift check completed$(NC)"
+
+# ========================================
+# DEVELOPMENT WORKFLOW TARGETS
+# ========================================
+
+dev-full-validate: ## Complete development validation (comprehensive but slow)
+	@echo "$(BLUE)🔍 Running full development validation...$(NC)"
+	@make validate-all-configs --silent
+	@make validate-comprehensive --silent
+	@echo "$(GREEN)🎉 Full development validation completed$(NC)"
+
+dev-quick-check: ## Quick development validation (fast feedback)
+	@echo "$(BLUE)⚡ Running quick development check...$(NC)"
+	@make validate-health-endpoints --silent
+	@make validate-ports --silent
+	@make ci-validate-config --silent
+	@echo "$(GREEN)✅ Quick development check completed$(NC)"
+
+# ========================================
+# CONFIGURATION MANAGEMENT TARGETS
+# ========================================
+
+config-backup: ## Create configuration backup
+	@echo "$(BLUE)💾 Creating configuration backup...$(NC)"
+	@mkdir -p backups/config/$(shell date +%Y%m%d_%H%M%S)
+	@cp -r docker-compose*.yml backups/config/$(shell date +%Y%m%d_%H%M%S)/
+	@find services -name "config.yaml" -o -name "config.yml" | xargs -I {} cp {} backups/config/$(shell date +%Y%m%d_%H%M%S)/
+	@echo "$(GREEN)✅ Configuration backup created$(NC)"
+
+config-version: ## Show configuration versions
+	@echo "$(BLUE)📋 Configuration versions:$(NC)"
+	@find . -name "docker-compose*.yml" -exec echo "  {}: $(shell git log -1 --format="%h %s" {})" \;
+	@find services -name "config.yaml" -o -name "config.yml" | while read file; do echo "  $$file: $(shell git log -1 --format="%h %s" "$$file" 2>/dev/null || echo "not committed")"; done
 
 validate-startup: ## Validate service startup configurations
 	@echo "$(BLUE)🔍 Validating startup configurations...$(NC)"
