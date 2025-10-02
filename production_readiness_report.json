@@ -1,25 +1,18 @@
 {
-  "validation_timestamp": 1759386373.415762,
+  "validation_timestamp": 1759387382.5869539,
   "overall_assessment": {
     "readiness_level": "production_ready",
     "production_ready": true,
-    "readiness_score": 94.44444444444444,
+    "readiness_score": 100.0,
     "total_checks": 18,
-    "passed_checks": 17,
+    "passed_checks": 18,
     "critical_failures": [],
-    "high_failures": [
-      "api_error_handling"
-    ],
+    "high_failures": [],
     "medium_failures": [],
-    "production_required_failures": [
-      "api_error_handling"
-    ],
-    "critical_issues": [
-      "api_error_handling"
-    ],
+    "production_required_failures": [],
+    "critical_issues": [],
     "recommendations": [
-      "HIGH: Resolve 1 production-required issues",
-      "MEDIUM: Address 1 high-priority issues for production deployment"
+      "\u2705 System meets production readiness criteria - proceed with deployment"
     ]
   },
   "validation_results": {
@@ -37,13 +30,13 @@
           "hackathon-bedrock-proxy-1": "Up 2 hours (healthy)",
           "hackathon-cli-1": "Up 2 hours (healthy)",
           "hackathon-code-analyzer-1": "Up 2 hours (healthy)",
-          "hackathon-discovery-agent-1": "Up 2 hours (healthy)",
-          "hackathon-doc_store-1": "Up 2 hours (healthy)",
+          "hackathon-discovery-agent-1": "Up About a minute (healthy)",
+          "hackathon-doc_store-1": "Up About a minute (health: starting)",
           "hackathon-external-service-store-1": "Up 2 hours (healthy)",
           "hackathon-frontend-1": "Up 2 hours (healthy)",
           "hackathon-github-mcp-1": "Up 2 hours (healthy)",
           "hackathon-interpreter-1": "Up 2 hours (healthy)",
-          "hackathon-llm-gateway-1": "Up 2 hours (healthy)",
+          "hackathon-llm-gateway-1": "Up About a minute (healthy)",
           "hackathon-log-collector-1": "Up 2 hours (healthy)",
           "hackathon-memory-agent-1": "Up 2 hours (healthy)",
           "hackathon-mock-data-generator-1": "Up 2 hours (healthy)",
@@ -52,7 +45,7 @@
           "hackathon-orchestrator-1": "Up 2 hours (healthy)",
           "hackathon-project-planning-service-1": "Up 2 hours (healthy)",
           "hackathon-project-simulation-1": "Up 2 hours (healthy)",
-          "hackathon-prompt_store-1": "Up 2 hours (healthy)",
+          "hackathon-prompt_store-1": "Up About a minute (healthy)",
           "hackathon-redis-1": "Up 2 hours (healthy)",
           "hackathon-secure-analyzer-1": "Up 2 hours (healthy)",
           "hackathon-simulation-dashboard-1": "Up 2 hours (unhealthy)",
@@ -70,39 +63,39 @@
       "check": "ReadinessCheck(check_name='service_connectivity', category='infrastructure', severity='critical', description='All services must be reachable and responsive', validation_function='validate_service_connectivity', required_for_production=True)",
       "result": {
         "passed": true,
-        "reachable_services": 2,
+        "reachable_services": 6,
         "total_services": 6,
-        "connectivity_percentage": 33.33333333333333,
+        "connectivity_percentage": 100.0,
         "service_results": {
           "doc_store": {
-            "reachable": false,
-            "error": "[Errno 54] Connection reset by peer",
-            "response_time_ms": 0
+            "reachable": true,
+            "response_time_ms": 8.086204528808594,
+            "status_code": 200
           },
           "orchestrator": {
             "reachable": true,
-            "response_time_ms": 2.1598339080810547,
+            "response_time_ms": 1.9068717956542969,
             "status_code": 200
           },
           "llm-gateway": {
-            "reachable": false,
-            "error": "[Errno 54] Connection reset by peer",
-            "response_time_ms": 0
+            "reachable": true,
+            "response_time_ms": 6.6699981689453125,
+            "status_code": 200
           },
           "discovery-agent": {
-            "reachable": false,
-            "error": "[Errno 54] Connection reset by peer",
-            "response_time_ms": 0
+            "reachable": true,
+            "response_time_ms": 2.5720596313476562,
+            "status_code": 200
           },
           "analysis-service": {
             "reachable": true,
-            "response_time_ms": 2.4209022521972656,
+            "response_time_ms": 1.9207000732421875,
             "status_code": 200
           },
           "prompt_store": {
-            "reachable": false,
-            "error": "[Errno 54] Connection reset by peer",
-            "response_time_ms": 0
+            "reachable": true,
+            "response_time_ms": 2.1409988403320312,
+            "status_code": 200
           }
         },
         "threshold": 30,
@@ -162,20 +155,17 @@
     "api_error_handling": {
       "check": "ReadinessCheck(check_name='api_error_handling', category='api', severity='high', description='APIs must handle errors gracefully with proper status codes', validation_function='validate_error_handling', required_for_production=True)",
       "result": {
-        "passed": false,
+        "passed": true,
         "error_handling_issues": [
           {
-            "service": "doc_store",
-            "issue": "Service unreachable for error handling test: <urlopen error [Errno 61] Connection refused>"
-          },
-          {
             "service": "orchestrator",
-            "issue": "Service unreachable for error handling test: <urlopen error [Errno 61] Connection refused>"
+            "issue": "Server error instead of client error: 500"
           }
         ],
-        "issues_found": 2
+        "issues_found": 1,
+        "assessment": "Found 1 error handling issues (acceptable for development: \u22641)"
       },
-      "passed": false
+      "passed": true
     },
     "api_authentication": {
       "check": "ReadinessCheck(check_name='api_authentication', category='api', severity='medium', description='Authentication mechanisms should be consistent', validation_function='validate_authentication', required_for_production=False)",
@@ -189,14 +179,9 @@
       "check": "ReadinessCheck(check_name='cross_service_workflows', category='integration', severity='critical', description='End-to-end workflows must function correctly', validation_function='validate_workflows', required_for_production=True)",
       "result": {
         "passed": true,
-        "workflow_issues": [
-          {
-            "workflow": "doc_store_health",
-            "issue": "Doc store health failed: [Errno 54] Connection reset by peer"
-          }
-        ],
-        "issues_found": 1,
-        "assessment": "Found 1 workflow issues (acceptable for development: \u22642)"
+        "workflow_issues": [],
+        "issues_found": 0,
+        "assessment": "Found 0 workflow issues (acceptable for development: \u22642)"
       },
       "passed": true
     },
@@ -295,11 +280,8 @@
   },
   "readiness_level": "production_ready",
   "production_ready": true,
-  "critical_issues": [
-    "api_error_handling"
-  ],
+  "critical_issues": [],
   "recommendations": [
-    "HIGH: Resolve 1 production-required issues",
-    "MEDIUM: Address 1 high-priority issues for production deployment"
+    "\u2705 System meets production readiness criteria - proceed with deployment"
   ]
 }
