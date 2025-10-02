@@ -5,15 +5,15 @@
 server:
   port: 5099
 
-# Orchestrator-specific service URLs (legacy services)
+# Orchestrator-specific service URLs
 services:
-  github_agent_url: ${GITHUB_AGENT_URL:-http://github-agent:5000}
-  jira_agent_url: ${JIRA_AGENT_URL:-http://jira-agent:5001}
-  confluence_agent_url: ${CONFLUENCE_AGENT_URL:-http://confluence-agent:5050}
-  swagger_agent_url: ${SWAGGER_AGENT_URL:-http://swagger-agent:5010}
-  consistency_engine_url: ${CONSISTENCY_ENGINE_URL:-http://consistency-engine:5020}
-  reporting_url: ${REAPI_PORTING_URL:-http://reporting:5030}
-  summarizer-hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
+  summarizer_hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5160}
+  analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
+  doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}
+  discovery_agent_url: ${DISCOVERY_AGENT_URL:-http://discovery-agent:5045}
+  llm_gateway_url: ${LLM_GATEWAY_URL:-http://llm-gateway:5055}
+  prompt_store_url: ${PROMPT_STORE_URL:-http://prompt_store:5095}
+  source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5085}
 
 # Orchestrator-specific settings
 registry:
