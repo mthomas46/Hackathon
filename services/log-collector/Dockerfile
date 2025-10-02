@@ -57,5 +57,5 @@ EXPOSE 5080
 
 USER appuser
 
-# Start command - using module path for proper imports
-CMD ["python", "-m", "services.log_collector.main"]
+# Start command - run main.py directly
+CMD ["python", "services/log_collector/main.py"]

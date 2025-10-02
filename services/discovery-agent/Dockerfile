@@ -32,11 +32,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.base.txt && \
     pip install --no-cache-dir -r shared_requirements.txt
 
-# Skip copying service code - rely on volume mounts for development
-# COPY services/discovery-agent/ ./services/discovery_agent/
-# COPY services/shared/ ./services/shared/
-# COPY config/config.yml ./config.yml/
-# COPY config/ ./config/
+# Copy service code maintaining directory structure
+COPY services/discovery-agent/ ./services/discovery_agent/
+COPY services/shared/ ./services/shared/
+COPY config/config.yml ./config.yml/
+COPY config/ ./config/
 
 # Set Python path and environment
 ENV PYTHONPATH=/app
@@ -57,5 +57,5 @@ EXPOSE 5045
 
 USER appuser
 
-# Start command - using module path for proper imports
+# Start command - run main.py directly
 CMD ["python", "-m", "services.discovery_agent.main"]

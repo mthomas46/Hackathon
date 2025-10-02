@@ -13,7 +13,7 @@ from services.prompt_store.core.models import (
     PromptLifecycleUpdate,
 )
 from services.prompt_store.domain.lifecycle.service import LifecycleService
-from services.shared.presentation.responses import create_success_response
+from services.shared.presentation.api.responses import create_success_response
 
 
 class LifecycleHandlers(BaseHandler):

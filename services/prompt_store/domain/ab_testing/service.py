@@ -7,14 +7,15 @@ import asyncio
 from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import ABTest, ABTestResult
-from services.shared.utilities import BaseService
+from services.shared.domain.services.base_service import BaseService
 from services.prompt_store.domain.ab_testing.repository import (
     ABTestRepository,
     ABTestResultRepository,
 )
 from services.prompt_store.domain.prompts.service import PromptService
 from services.prompt_store.infrastructure.cache import prompt_store_cache
-from services.shared.utilities import generate_id, utc_now
+from services.shared.infrastructure.utilities.utilities import generate_id
+from services.shared.infrastructure.utilities.utilities import utc_now
 
 
 class ABTestService(BaseService[ABTest]):

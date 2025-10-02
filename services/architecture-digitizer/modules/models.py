@@ -6,7 +6,7 @@ from pydantic import BaseModel, field_validator
 
 # Using standardized response system from shared.presentation.responses
 try:
-    from services.shared.presentation.responses import APIResponse
+    from services.shared.presentation.api.responses import APIResponse
 except ImportError:
     # Fallback for testing or when shared services are not available
     from pydantic import BaseModel, Field

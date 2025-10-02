@@ -3,7 +3,8 @@
 import json
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import SqlRepository, validate_sql_identifier
+from services.shared.domain.repositories.base_repository import SqlRepository
+from services.shared.infrastructure.utilities.utilities import validate_sql_identifier
 from .entities import PromptPerformanceMetrics
 
 

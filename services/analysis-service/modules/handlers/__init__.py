@@ -10,7 +10,7 @@ from .quality_handler import QualityAnalysisHandler
 from .trend_handler import TrendAnalysisHandler
 from .risk_handler import RiskAnalysisHandler
 from .maintenance_handler import MaintenanceAnalysisHandler
-from .impact_handler import ChangeImpactAnalysisHandler
+from .impact_handler import ImpactAnalysisHandler
 from .remediation_handler import RemediationHandler
 from .workflow_handler import WorkflowAnalysisHandler
 from .distributed_handler import DistributedAnalysisHandler

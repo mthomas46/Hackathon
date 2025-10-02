@@ -7,10 +7,11 @@ import asyncio
 from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import BulkOperation
-from services.shared.utilities import BaseService
+from services.shared.domain.services.base_service import BaseService
 from services.prompt_store.domain.bulk.repository import BulkOperationRepository
 from services.prompt_store.domain.prompts.service import PromptService
-from services.shared.utilities import generate_id, utc_now
+from services.shared.infrastructure.utilities.utilities import generate_id
+from services.shared.infrastructure.utilities.utilities import utc_now
 
 
 class BulkOperationService(BaseService[BulkOperation]):

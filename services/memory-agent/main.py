@@ -204,16 +204,13 @@ except ImportError:
 
 
 # Load standardized configuration
-config = load_service_config(
-    service_type="memory-agent",
-    config_file="./config.yaml",  # Optional config file override
-)
+config = load_service_config("memory-agent")
 
 # Service configuration from standardized config
 SERVICE_NAME = config.service_name
-SERVICE_TITLE = config.service_description or "Memory Agent"
+SERVICE_TITLE = "Memory Agent"
 SERVICE_VERSION = config.service_version
-DEFAULT_API_PORT = config.port
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5160"))
 
 # Global event task
 _event_task = None

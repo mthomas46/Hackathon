@@ -49,13 +49,13 @@ ENV ENVIRONMENT=development
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=45s --timeout=30s --start-period=120s --retries=3 \
+    CMD curl -f http://localhost:5075/health || exit 1
 
 # Expose port
-EXPOSE 5000
+EXPOSE 5075
 
 USER appuser
 
 # Start command - using module path for proper imports
-CMD ["python", "-m", "services.project-simulation.main"]
+CMD ["python", "services/project-simulation/main.py"]

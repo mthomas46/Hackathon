@@ -19,9 +19,9 @@ from pydantic import BaseModel
 # ============================================================================
 try:
     from services.shared.infrastructure.config import load_service_config
-from services.shared.utilities.resource_monitor import monitor_resources
+    from services.shared.utilities.resource_monitor import monitor_resources
     from services.shared.utilities import setup_common_middleware
-    from services.shared.presentation.responses import create_error_response, create_success_response
+    from services.shared.presentation.api.responses import create_error_response, create_success_response
     from services.shared.monitoring.health import register_health_endpoints
 except ImportError:
     # Fallback implementations

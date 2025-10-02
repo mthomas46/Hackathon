@@ -9,7 +9,7 @@ from fastapi import HTTPException
 
 from services.prompt_store.core.models import WebhookCreate
 from services.prompt_store.domain.notifications.service import NotificationsService
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )

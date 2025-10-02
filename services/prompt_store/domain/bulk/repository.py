@@ -6,7 +6,8 @@ Handles database operations for bulk operations and their results.
 from typing import Any, Dict
 
 from services.prompt_store.core.entities import BulkOperation
-from services.shared.utilities import SqlRepository, validate_sql_identifier
+from services.shared.domain.repositories.base_repository import SqlRepository
+from services.shared.infrastructure.utilities.utilities import validate_sql_identifier
 
 
 class BulkOperationRepository(SqlRepository[BulkOperation]):

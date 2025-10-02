@@ -20,7 +20,7 @@ mutmut>=2.4.0         # Mutation testing for test quality - OPTIONAL
 # Performance & System Monitoring (PRIMARY)
 psutil>=5.9.0         # Real-time system resource monitoring - CRITICAL
 memory_profiler>=0.61.0  # Memory usage analysis - OPTIONAL
-line_profiler>=4.1.0  # Line-by-line performance profiling - OPTIONAL
+# line_profiler>=4.1.0  # Line-by-line performance profiling - OPTIONAL (requires g++ compiler)
 
 # =============================================================================
 # 🏗️ MEDIUM IMPACT - Architecture & Dependencies

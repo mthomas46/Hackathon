@@ -4,6 +4,7 @@ A comprehensive service discovery and tool registration service built with Domai
 This main file orchestrates the modular components for clean separation of concerns.
 """
 
+import os
 import sys
 from pathlib import Path
 from fastapi import FastAPI
@@ -13,6 +14,12 @@ project_root = Path(__file__).parent.parent.parent
 shared_path = project_root / "services" / "shared"
 sys.path.insert(0, str(shared_path))
 
+# Service configuration - hardcoded for now due to config issues
+SERVICE_NAME = "discovery-agent"
+SERVICE_TITLE = "Discovery Agent Service"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_API_PORT = int(os.environ.get('SERVICE_API_PORT', '5045'))
+
 try:
     from services.shared.infrastructure.config import load_service_config
     from services.shared.infrastructure.monitoring.health import register_health_endpoints
@@ -20,14 +27,10 @@ try:
 except ImportError:
     # Fallback implementations
     def load_service_config(**kwargs):
-        import os
-        port = int(os.getenv('SERVICE_API_PORT', '5045'))
         return type('Config', (), {
-            'service_name': 'discovery-agent',
-            'service_description': 'Discovery Agent Service',
-            'service_version': '1.0.0',
-            'server': type('Server', (), {'host': '0.0.0.0', 'port': port})(),
-            'port': port,
+            'service_name': SERVICE_NAME,
+            'service_description': SERVICE_TITLE,
+            'service_version': SERVICE_VERSION,
         })()
 
     def register_health_endpoints(app, *args, **kwargs):
@@ -72,8 +75,7 @@ except ImportError:
 
 # Load configuration using standardized system
 config = load_service_config(
-    service_type="discovery-agent",
-    config_file="./config.yaml",  # Optional config file override
+    service_name=SERVICE_NAME
 )
 
 # ============================================================================
@@ -81,7 +83,7 @@ config = load_service_config(
 # ============================================================================
 
 app = FastAPI(
-    title=config.service_description or "Discovery Agent Service",
+    title=config.service_name or "Discovery Agent Service",
     description="""
     A comprehensive service discovery and tool registration service built with Domain-Driven Design principles.
 
@@ -147,7 +149,7 @@ if __name__ == "__main__":
     import os
 
     # Get port from config or environment
-    port = getattr(config, 'port', None) or getattr(config, 'server', {}).get('port', None) or int(os.getenv('SERVICE_API_PORT', '5045'))
-    host = getattr(config, 'server', {}).get('host', '0.0.0.0') if hasattr(config, 'server') else '0.0.0.0'
+    port = getattr(config.server, 'port', None) or int(os.getenv('SERVICE_API_PORT', '5045'))
+    host = getattr(config.server, 'host', '0.0.0.0')
 
     uvicorn.run(app, host=host, port=port)

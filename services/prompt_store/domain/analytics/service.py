@@ -2,10 +2,10 @@
 
 from typing import Any, Dict
 
-from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.utilities import generate_id
+from services.shared.infrastructure.external.clients.clients import ServiceClients
+from services.shared.infrastructure.utilities.utilities import generate_id
 
-from services.shared.utilities import BaseService
+from services.shared.domain.services.base_service import BaseService
 from ...infrastructure.cache import prompt_store_cache
 from .entities import PromptPerformanceMetrics, UserSatisfactionScore
 from .repository import AnalyticsRepository

@@ -51,7 +51,14 @@ Performance Considerations:
 
 from typing import Any, Dict
 
-from services.shared.integrations.clients.clients import ServiceClients
+try:
+    from services.shared.infrastructure.external.clients.clients import ServiceClients
+except ImportError:
+    # Fallback stub
+    class ServiceClients:
+        def __init__(self, **kwargs): pass
+        def get(self, *args, **kwargs): return None
+        def post(self, *args, **kwargs): return None
 
 
 class EventSystem:

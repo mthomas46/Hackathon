@@ -24,7 +24,7 @@ sys.path.insert(0, str(project_root))
 
 # Import shared utilities
 try:
-    from services.shared.presentation.responses import create_error_response
+    from services.shared.presentation.api.responses import create_error_response
     from services.shared.infrastructure.config import load_service_config
     from services.shared.infrastructure.utilities.middleware import setup_common_middleware
     from services.shared.monitoring.health import register_health_endpoints

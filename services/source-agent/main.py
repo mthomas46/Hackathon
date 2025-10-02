@@ -39,16 +39,13 @@ except Exception:
 # from services.shared.integrations.clients.clients import ServiceClients  # type: ignore - commented out as this module may not exist
 
 # Load standardized configuration
-config = load_service_config(
-    service_type="source-agent",
-    config_file="./config.yaml",  # Optional config file override
-)
+config = load_service_config("source-agent")
 
 # Service configuration from standardized config
 SERVICE_NAME = config.service_name
-SERVICE_TITLE = config.service_description or "Source Agent"
+SERVICE_TITLE = "Source Agent"
 SERVICE_VERSION = config.service_version
-DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", 5070))
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5085"))
 
 # Supported sources and their capabilities
 SUPAPI_PORTED_SOURCES = ["github", "jira", "confluence"]

@@ -43,15 +43,12 @@ except ImportError:
     from modules.policy_enforcer import policy_enforcer
 
 # Load standardized configuration
-config = load_service_config(
-    service_type="secure-analyzer",
-    config_file="./config.yaml",  # Optional config file override
-)
+config = load_service_config("secure-analyzer")
 
 # Service configuration from standardized config
 SERVICE_NAME = config.service_name
 SERVICE_VERSION = config.service_version
-DEFAULT_API_PORT = config.port
+DEFAULT_API_PORT = config.server.port
 
 # Content validation limits
 MAX_CONTENT_SIZE_BYTES = 1000000  # 1MB

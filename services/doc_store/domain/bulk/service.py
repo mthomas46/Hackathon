@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import BulkDocumentItem, BulkOperation
-from services.shared.utilities import BaseService
+from services.shared.domain.services.base_service import BaseService
 from .repository import BulkOperationsRepository
 
 

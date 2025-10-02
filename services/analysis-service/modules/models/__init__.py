@@ -15,8 +15,11 @@ from .analysis import (
     SentimentAnalysisRequest, SentimentAnalysisResponse,
     ToneAnalysisRequest, ToneAnalysisResponse,
     ContentQualityRequest, ContentQualityResponse,
+    QualityBreakdown, Recommendation, ImprovementSuggestion,
     TrendAnalysisRequest, TrendAnalysisResponse,
-    PortfolioTrendAnalysisRequest, PortfolioTrendAnalysisResponse
+    PortfolioTrendAnalysisRequest, PortfolioTrendAnalysisResponse,
+    SentimentScores, DetailedAnalysis, TrendData, ForecastData,
+    ArchitectureAnalysisRequest, ArchitectureAnalysisResponse
 )
 from .risk import (
     RiskAssessmentRequest, RiskAssessmentResponse,
@@ -69,8 +72,11 @@ __all__ = [
     'SentimentAnalysisRequest', 'SentimentAnalysisResponse',
     'ToneAnalysisRequest', 'ToneAnalysisResponse',
     'ContentQualityRequest', 'ContentQualityResponse',
+    'QualityBreakdown', 'Recommendation', 'ImprovementSuggestion',
     'TrendAnalysisRequest', 'TrendAnalysisResponse',
     'PortfolioTrendAnalysisRequest', 'PortfolioTrendAnalysisResponse',
+    'SentimentScores', 'DetailedAnalysis', 'TrendData', 'ForecastData',
+    'ArchitectureAnalysisRequest', 'ArchitectureAnalysisResponse',
 
     # Risk models
     'RiskAssessmentRequest', 'RiskAssessmentResponse',

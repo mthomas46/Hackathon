@@ -6,7 +6,8 @@ Handles database operations for A/B testing entities.
 from typing import Any, Dict, Optional
 
 from services.prompt_store.core.entities import ABTest, ABTestResult
-from services.shared.utilities import SqlRepository, validate_sql_identifier
+from services.shared.domain.repositories.base_repository import SqlRepository
+from services.shared.infrastructure.utilities.utilities import validate_sql_identifier
 
 
 class ABTestRepository(SqlRepository[ABTest]):

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, field_validator
 
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )
@@ -224,7 +224,7 @@ async def discover_tools(req: ToolDiscoveryRequest):
     - auto_register: Automatically register discovered tools
     """
     try:
-        from services.shared.presentation.responses import create_success_response
+        from services.shared.presentation.api.responses import create_success_response
         from services.shared.integrations.clients.clients import ServiceClients
 
         client = ServiceClients()

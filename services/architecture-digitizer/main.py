@@ -14,6 +14,7 @@ Responsibilities:
 Dependencies: None (standalone service with external API calls)
 """
 
+import os
 import time
 from typing import Any, Dict, Optional
 
@@ -159,16 +160,13 @@ async def store_architecture_in_docstore(
 
 
 # Load standardized configuration
-config = load_service_config(
-    service_type="architecture-digitizer",
-    config_file="./config.yaml",  # Optional config file override
-)
+config = load_service_config("architecture-digitizer")
 
 # Service configuration from standardized config
 SERVICE_NAME = config.service_name
-SERVICE_TITLE = config.service_description or "Architecture Digitizer"
+SERVICE_TITLE = "Architecture Digitizer"
 SERVICE_VERSION = config.service_version
-DEFAULT_API_PORT = config.port
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5105"))
 
 # Initialize metrics
 metrics = get_service_metrics(SERVICE_NAME)

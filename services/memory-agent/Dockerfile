@@ -57,5 +57,5 @@ EXPOSE 5160
 
 USER appuser
 
-# Start command - using module path for proper imports
+# Start command - run main.py directly with absolute path
 CMD ["python", "-m", "services.memory_agent.main"]

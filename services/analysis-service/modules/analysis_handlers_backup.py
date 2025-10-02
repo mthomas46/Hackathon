@@ -101,7 +101,7 @@ class AnalysisHandlers:
                     type_counts={"drift": 1}
                 )
 
-            from services.shared.utilities.error_handling import ServiceException
+            from services.shared.infrastructure.utilities.error_handling import ServiceException
             raise ServiceException(
                 "Analysis failed",
                 error_code="ANALYSIS_FAILED",
@@ -176,7 +176,7 @@ class AnalysisHandlers:
             )
 
         except Exception as e:
-            from services.shared.utilities.error_handling import ServiceException
+            from services.shared.infrastructure.utilities.error_handling import ServiceException
             raise ServiceException(
                 "Failed to retrieve findings",
                 error_code="FINDINGS_RETRIEVAL_FAILED",

@@ -14,19 +14,16 @@ from pydantic import BaseModel
 # ============================================================================
 from services.shared.infrastructure.config import load_service_config
 from services.shared.utilities.resource_monitor import monitor_resources
-from services.shared.utilities import setup_common_middleware
-from services.shared.presentation.responses import create_error_response, create_success_response
-from services.shared.monitoring.health import register_health_endpoints
+from services.shared.infrastructure.utilities.middleware import setup_common_middleware
+from services.shared.presentation.api.responses import create_error_response, create_success_response
+from services.shared.infrastructure.monitoring.health import register_health_endpoints
 
 # Load standardized configuration
-config = load_service_config(
-    service_type="code-analyzer",
-    config_file="./config.yaml"  # Optional config file override
-)
+config = load_service_config("code-analyzer")
 
 # Service configuration from standardized config
 SERVICE_NAME = config.service_name
-SERVICE_TITLE = config.service_description or "Code Analyzer Service"
+SERVICE_TITLE = "Code Analyzer Service"
 SERVICE_VERSION = config.service_version
 
 app = FastAPI(

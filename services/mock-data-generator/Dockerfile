@@ -57,5 +57,5 @@ EXPOSE 5000
 
 USER appuser
 
-# Start command - using module path for proper imports
-CMD ["python", "-m", "services.mock-data-generator.main"]
+# Start command - run main.py directly
+CMD ["python", "services/mock-data-generator/main.py"]

@@ -8,7 +8,7 @@ from .base_handler import BaseAnalysisHandler, AnalysisResult
 from ..models import (
     SentimentAnalysisRequest, SentimentAnalysisResponse,
     ToneAnalysisRequest, ToneAnalysisResponse,
-    SentimentScores, DetailedAnalysis, SentenceSentiment
+    SentimentScores, DetailedAnalysis
 )
 
 logger = logging.getLogger(__name__)

@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from services.shared.constants_new import ServiceNames
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )
@@ -21,7 +21,7 @@ from services.shared.presentation.responses import (
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import utc_now
-from services.shared.utilities.error_handling import (
+from services.shared.infrastructure.utilities.error_handling import (
     ServiceException,
     ValidationException,
 )
@@ -92,7 +92,7 @@ def handle_discovery_error(
 
     Logs the error and returns a standardized error response.
     """
-    from services.shared.utilities.error_handling import ValidationException
+    from services.shared.infrastructure.utilities.error_handling import ValidationException
 
     # Remove 'operation' from context to avoid conflict
     safe_context = {k: v for k, v in context.items() if k != "operation"}

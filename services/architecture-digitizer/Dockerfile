@@ -58,5 +58,5 @@ EXPOSE 5022
 
 USER appuser
 
-# Start command - using module path for proper imports
+# Start command - run main.py directly with absolute path
 CMD ["python", "-m", "services.architecture_digitizer.main"]

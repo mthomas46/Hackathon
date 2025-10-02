@@ -97,7 +97,7 @@ class DiscoveryHandler:
         except Exception as e:
             from fastapi import HTTPException
 
-            from services.shared.utilities.error_handling import ValidationException
+            from services.shared.infrastructure.utilities.error_handling import ValidationException
 
             # Handle validation errors with proper HTTP status codes
             if isinstance(e, ValidationException):

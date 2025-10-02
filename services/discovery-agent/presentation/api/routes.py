@@ -11,7 +11,7 @@ from fastapi import APIRouter
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
 from services.shared.infrastructure.config import load_service_config
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )

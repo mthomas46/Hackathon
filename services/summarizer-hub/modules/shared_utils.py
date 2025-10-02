@@ -7,12 +7,12 @@ to eliminate code duplication and ensure consistency.
 import os
 from typing import Any, Dict, List, Optional
 
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities.error_handling import ServiceException
+from services.shared.infrastructure.utilities.error_handling import ServiceException
 
 # Global configuration for summarizer hub service
 _DEFAULT_TIMEOUT = int(os.environ.get("SUMMARIZER_TIMEOUT", "60"))

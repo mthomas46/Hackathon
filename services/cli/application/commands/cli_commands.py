@@ -71,7 +71,7 @@ class CLICommands:
         )
         self.analysis_manager = AnalysisManager(self.console, self.clients, self._cache)
         self.docstore_manager = DocStoreManager(self.console, self.clients, self._cache)
-        self.source-agent_manager = SourceAgentManager(
+        self.source_agent_manager = SourceAgentManager(
             self.console, self.clients, self._cache
         )
         self.infrastructure_manager = InfrastructureManager(
@@ -89,16 +89,16 @@ class CLICommands:
         self.memory_agent_manager = MemoryAgentManager(
             self.console, self.clients, self._cache
         )
-        self.secure-analyzer_manager = SecureAnalyzerManager(
+        self.secure_analyzer_manager = SecureAnalyzerManager(
             self.console, self.clients, self._cache
         )
-        self.summarizer-hub_manager = SummarizerHubManager(
+        self.summarizer_hub_manager = SummarizerHubManager(
             self.console, self.clients, self._cache
         )
-        self.code-analyzer_manager = CodeAnalyzerManager(
+        self.code_analyzer_manager = CodeAnalyzerManager(
             self.console, self.clients, self._cache
         )
-        self.notification-service_manager = NotificationServiceManager(
+        self.notification_service_manager = NotificationServiceManager(
             self.console, self.clients, self._cache
         )
         self.log_collector_manager = LogCollectorManager(
@@ -462,18 +462,18 @@ class CLICommands:
             # Numbered menu options
             "1": self._handle_docstore_management,
             "2": self._handle_analysis_reports,
-            "3": self._handle_source-agent,
+            "3": self._handle_source_agent,
             "4": self._handle_architecture_digitizer,
             "5": self._handle_workflow_orchestration,
             "6": self._handle_interpreter_management,
-            "7": self._handle_summarizer-hub,
+            "7": self._handle_summarizer_hub,
             "8": self._handle_bedrock_proxy,
-            "9": self._handle_secure-analyzer,
-            "10": self._handle_code-analyzer,
+            "9": self._handle_secure_analyzer,
+            "10": self._handle_code_analyzer,
             "11": self._handle_health_status,
             "12": self._handle_orchestrator_management,
             "13": self._handle_infrastructure,
-            "14": self._handle_notification-service,
+            "14": self._handle_notification_service,
             "15": self._handle_log_collector,
             "16": self._handle_bulk_operations,
             "17": self._handle_discovery_agent,
@@ -513,9 +513,9 @@ class CLICommands:
         """Handle analysis reports menu."""
         await self.analysis_manager.analysis_reports_menu()
 
-    async def _handle_source-agent(self):
+    async def _handle_source_agent(self):
         """Handle source agent menu."""
-        await self.source-agent_manager.source-agent_menu()
+        await self.source_agent_manager.source_agent_menu()
 
     async def _handle_architecture_digitizer(self):
         """Handle architecture digitizer menu."""
@@ -530,21 +530,21 @@ class CLICommands:
         """Handle interpreter management menu."""
         await self.interpreter_manager.interpreter_management_menu()
 
-    async def _handle_summarizer-hub(self):
+    async def _handle_summarizer_hub(self):
         """Handle summarizer hub menu."""
-        await self.summarizer-hub_manager.summarizer-hub_menu()
+        await self.summarizer_hub_manager.summarizer_hub_menu()
 
     async def _handle_bedrock_proxy(self):
         """Handle bedrock proxy menu."""
         await self.bedrock_proxy_manager.bedrock_proxy_menu()
 
-    async def _handle_secure-analyzer(self):
+    async def _handle_secure_analyzer(self):
         """Handle secure analyzer menu."""
-        await self.secure-analyzer_manager.secure-analyzer_menu()
+        await self.secure_analyzer_manager.secure_analyzer_menu()
 
-    async def _handle_code-analyzer(self):
+    async def _handle_code_analyzer(self):
         """Handle code analyzer menu."""
-        await self.code-analyzer_manager.code-analyzer_menu()
+        await self.code_analyzer_manager.code_analyzer_menu()
 
     async def _handle_health_status(self):
         """Handle health status display."""
@@ -558,9 +558,9 @@ class CLICommands:
         """Handle infrastructure menu."""
         await self.infrastructure_manager.infrastructure_menu()
 
-    async def _handle_notification-service(self):
+    async def _handle_notification_service(self):
         """Handle notification service menu."""
-        await self.notification-service_manager.notification-service_menu()
+        await self.notification_service_manager.notification_service_menu()
 
     async def _handle_log_collector(self):
         """Handle log collector menu."""

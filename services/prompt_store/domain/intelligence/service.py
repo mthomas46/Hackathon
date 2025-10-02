@@ -3,8 +3,8 @@
 import re
 from typing import Any, Dict, List
 
-from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.utilities import generate_id
+from services.shared.infrastructure.external.clients.clients import ServiceClients
+from services.shared.infrastructure.utilities.utilities import generate_id
 
 
 class IntelligenceService:

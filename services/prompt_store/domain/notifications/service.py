@@ -16,8 +16,8 @@ from services.prompt_store.domain.notifications.repository import (
     WebhookEntity,
 )
 from services.prompt_store.infrastructure.cache import prompt_store_cache
-from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.external.clients.clients import ServiceClients
+from services.shared.infrastructure.utilities.utilities import utc_now
 
 
 class NotificationsService:

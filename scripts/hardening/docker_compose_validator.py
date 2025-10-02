@@ -23,6 +23,7 @@ from services.shared.infrastructure.config.docker_pydantic import (
 def validate_docker_compose_for_startup(compose_file: str = "docker-compose.dev.yml") -> bool:
     """
     Validate Docker Compose file specifically for startup operations.
+    Based on lessons learned from getting all services running together.
 
     Args:
         compose_file: Path to docker-compose file to validate
@@ -42,8 +43,50 @@ def validate_docker_compose_for_startup(compose_file: str = "docker-compose.dev.
     try:
         config = validate_docker_compose_file(compose_path)
 
-        # Additional startup-specific validations
+        # Additional startup-specific validations based on real-world issues
         issues = []
+        warnings = []
+
+        # Check for port conflicts - critical for multi-service startup
+        used_ports = set()
+        port_conflicts = []
+
+        for service_name, service in config.services.items():
+            if service.ports:
+                for port_mapping in service.ports:
+                    if isinstance(port_mapping, str):
+                        # Parse "host:container" or "host:container/protocol"
+                        if ':' in port_mapping:
+                            host_port = port_mapping.split(':')[0]
+                            try:
+                                host_port_int = int(host_port)
+                                if host_port_int in used_ports:
+                                    port_conflicts.append(f"Service '{service_name}' port {host_port_int} conflicts with another service")
+                                else:
+                                    used_ports.add(host_port_int)
+                            except ValueError:
+                                warnings.append(f"Service '{service_name}' has non-numeric port: {host_port}")
+
+        # Check for missing shared volume mounts - critical for service imports
+        services_needing_shared = [
+            'orchestrator', 'doc_store', 'analysis-service', 'source-agent',
+            'frontend', 'llm-gateway', 'mock-data-generator', 'github-mcp',
+            'memory-agent', 'discovery-agent', 'notification-service', 'prompt_store',
+            'interpreter', 'code-analyzer', 'secure-analyzer', 'log-collector',
+            'external-service-store', 'user-store', 'project-planning-service'
+        ]
+
+        for service_name, service in config.services.items():
+            if service_name in services_needing_shared:
+                has_shared_volume = False
+                if service.volumes:
+                    for volume in service.volumes:
+                        if isinstance(volume, str) and 'services/shared' in volume:
+                            has_shared_volume = True
+                            break
+
+                if not has_shared_volume:
+                    issues.append(f"Service '{service_name}' missing required shared volume mount")
 
         # Check for services with build but no context
         for service_name, service in config.services.items():
@@ -51,21 +94,58 @@ def validate_docker_compose_for_startup(compose_file: str = "docker-compose.dev.
                 if 'context' not in service.build:
                     issues.append(f"Service '{service_name}' has build section but no context")
 
-        # Check for circular dependencies (already handled by Pydantic model)
-        # But we can add more specific checks here
-
         # Check for services with depends_on as strings instead of lists
         for service_name, service in config.services.items():
             if isinstance(service.depends_on, str):
                 issues.append(f"Service '{service_name}' depends_on should be a list, not a string")
 
+        # Check for health checks that might be too aggressive
+        for service_name, service in config.services.items():
+            if service.healthcheck:
+                # Check for health checks that start immediately (no start_period)
+                if hasattr(service.healthcheck, 'start_period') and service.healthcheck.start_period:
+                    if service.healthcheck.start_period < 10:
+                        warnings.append(f"Service '{service_name}' has very short health check start_period ({service.healthcheck.start_period}s)")
+                elif not hasattr(service.healthcheck, 'start_period'):
+                    warnings.append(f"Service '{service_name}' missing start_period in health check")
+
+        # Check for services that might have circular dependencies
+        dependency_graph = {}
+        for service_name, service in config.services.items():
+            if service.depends_on:
+                deps = service.depends_on if isinstance(service.depends_on, list) else [service.depends_on]
+                dependency_graph[service_name] = deps
+
+        # Simple cycle detection
+        for service, deps in dependency_graph.items():
+            for dep in deps:
+                if dep in dependency_graph and service in dependency_graph.get(dep, []):
+                    issues.append(f"Circular dependency detected between '{service}' and '{dep}'")
+
+        # Report issues
         if issues:
-            print("❌ Docker Compose validation issues:")
+            print("❌ Docker Compose startup validation issues:")
             for issue in issues:
                 print(f"  • {issue}")
             return False
 
-        print(f"✅ Docker Compose file validated: {len(config.services)} services, {len(config.networks)} networks, {len(config.volumes)} volumes")
+        # Report warnings
+        if warnings:
+            print("⚠️  Docker Compose startup validation warnings:")
+            for warning in warnings:
+                print(f"  • {warning}")
+
+        if port_conflicts:
+            print("❌ Port conflicts detected:")
+            for conflict in port_conflicts:
+                print(f"  • {conflict}")
+            return False
+
+        print(f"✅ Docker Compose file validated for startup: {len(config.services)} services")
+        print(f"   • Port conflicts: {len(port_conflicts)}")
+        print(f"   • Configuration issues: {len(issues)}")
+        print(f"   • Configuration warnings: {len(warnings)}")
+
         return True
 
     except Exception as e:

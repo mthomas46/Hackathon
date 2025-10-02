@@ -9,7 +9,7 @@ import os
 from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )
@@ -17,7 +17,7 @@ from services.shared.monitoring.logging import fire_and_forget
 
 # Import shared utilities
 from services.shared.utilities import generate_id, utc_now
-from services.shared.utilities.error_handling import ServiceException
+from services.shared.infrastructure.utilities.error_handling import ServiceException
 
 # Global configuration for memory agent
 _MEMORY_MAX_ITEMS = int(os.environ.get("MEMORY_MAX_ITEMS", "1000"))

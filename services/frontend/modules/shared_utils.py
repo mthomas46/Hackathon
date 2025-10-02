@@ -334,7 +334,7 @@ def create_frontend_success_response(
 
     Returns a consistent success response format.
     """
-    from services.shared.presentation.responses import create_success_response
+    from services.shared.presentation.api.responses import create_success_response
 
     return create_success_response(f"Frontend {operation} successful", data, **context)
 

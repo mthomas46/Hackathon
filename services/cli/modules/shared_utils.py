@@ -11,7 +11,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )
@@ -19,7 +19,7 @@ from services.shared.presentation.responses import (
 # Import shared utilities
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities.error_handling import ValidationException
+from services.shared.infrastructure.utilities.error_handling import ValidationException
 
 # Import new base classes and utilities
 from .utils import handle_cli_error
@@ -377,7 +377,7 @@ def handle_graceful_error(
     console: Console, error: Exception, operation: str, show_details: bool = False
 ):
     """Handle errors gracefully with user-friendly messages."""
-    from services.shared.utilities.error_handling import (
+    from services.shared.infrastructure.utilities.error_handling import (
         ServiceException,
         ValidationException,
     )

@@ -77,12 +77,31 @@ class BaseAnalysisHandler(ABC):
                  metrics: Optional[IMetricsService] = None) -> None:
         self.handler_name: str = handler_name
 
-        # Use injected services or get from registry
-        self._logger = logger or get_service(ILoggerService)
-        self._cache = cache or get_service(ICacheService)
-        self._event_publisher = event_publisher or get_service(IEventPublisher)
-        self._service_client = service_client or get_service(IServiceClient)
-        self._metrics = metrics or get_service(IMetricsService)
+        # Use injected services or get from registry with fallbacks
+        try:
+            self._logger = logger or get_service(ILoggerService)
+        except:
+            self._logger = None
+
+        try:
+            self._cache = cache or get_service(ICacheService)
+        except:
+            self._cache = None
+
+        try:
+            self._event_publisher = event_publisher or get_service(IEventPublisher)
+        except:
+            self._event_publisher = None
+
+        try:
+            self._service_client = service_client or get_service(IServiceClient)
+        except:
+            self._service_client = None
+
+        try:
+            self._metrics = metrics or get_service(IMetricsService)
+        except:
+            self._metrics = None
 
         # Fallback logger for when services aren't available
         self.logger: logging.Logger = logging.getLogger(f"{__name__}.{handler_name}")

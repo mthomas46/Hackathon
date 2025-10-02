@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 from services.prompt_store.core.handler import BaseHandler
 from services.prompt_store.core.models import ABTestCreate
 from services.prompt_store.domain.ab_testing.service import ABTestService
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )

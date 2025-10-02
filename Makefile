@@ -203,6 +203,11 @@ validate-config-drift-auto: ## Configuration drift detection with auto-correctio
 	$(PYTHON) scripts/hardening/configuration_standardization.py
 	@echo "$(GREEN)✅ Configuration drift auto-correction completed$(NC)"
 
+validate-startup-readiness: ## Validate service startup readiness based on real-world issues
+	@echo "$(BLUE)🚀 Validating service startup readiness...$(NC)"
+	$(PYTHON) scripts/hardening/unified_config_manager.py startup-check
+	@echo "$(GREEN)✅ Startup readiness validation completed$(NC)"
+
 validate-config-consistency: ## Validate configuration consistency across all files
 	@echo "$(BLUE)🔍 Validating configuration consistency...$(NC)"
 	$(PYTHON) audit_configuration.py

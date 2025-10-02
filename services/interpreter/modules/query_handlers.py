@@ -183,7 +183,7 @@ class QueryHandlers:
                 )
 
         # Default: return success for unknown services/actions
-        from services.shared.presentation.responses import create_success_response
+        from services.shared.presentation.api.responses import create_success_response
 
         return create_success_response(
             "Workflow step executed successfully",
