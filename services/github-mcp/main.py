@@ -17,19 +17,62 @@ Responsibilities:
 Dependencies: shared middlewares, httpx for HTTP requests, GitHub API credentials.
 """
 
+import os
+import sys
 from typing import Any, Dict, List, Optional, Set
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from services.shared.infrastructure.config import load_service_config
-from services.shared.utilities.resource_monitor import monitor_resources
-from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.utilities import attach_self_register, setup_common_middleware
-from services.shared.utilities.middleware import (
-    RequestIdMiddleware,
-    RequestMetricsMiddleware,
-)
+# Add shared infrastructure to path
+project_root = Path(__file__).parent.parent.parent
+shared_path = project_root / "services" / "shared"
+sys.path.insert(0, str(shared_path))
+
+# Service configuration - hardcoded for now due to config issues
+SERVICE_NAME = "github-mcp"
+SERVICE_TITLE = "GitHub MCP Service"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_API_PORT = int(os.environ.get('SERVICE_API_PORT', '5030'))
+
+try:
+    from services.shared.infrastructure.config import load_service_config
+    from services.shared.utilities.resource_monitor import monitor_resources
+    from services.shared.infrastructure.external.clients.clients import ServiceClients
+    from services.shared.infrastructure.utilities.utilities import attach_self_register, setup_common_middleware
+    from services.shared.infrastructure.utilities.middleware import (
+        RequestIdMiddleware,
+        RequestMetricsMiddleware,
+    )
+except ImportError:
+    # Fallback implementations
+    def load_service_config(service_name=None, **kwargs):
+        return type('Config', (), {
+            'service_name': SERVICE_NAME,
+            'service_description': SERVICE_TITLE,
+            'service_version': SERVICE_VERSION,
+        })()
+
+    def monitor_resources(**kwargs):
+        pass
+
+    class ServiceClients:
+        def __init__(self): pass
+
+    def attach_self_register(app=None, service_name=None, **kwargs):
+        pass
+
+    def setup_common_middleware(app=None, service_name=None, **kwargs):
+        pass
+
+    class RequestIdMiddleware:
+        def __init__(self, app): pass
+        def __call__(self, scope, receive, send): pass
+
+    class RequestMetricsMiddleware:
+        def __init__(self, app): pass
+        def __call__(self, scope, receive, send): pass
 
 try:
     from .modules.config import config
@@ -50,16 +93,13 @@ except ImportError:
     from modules.tool_registry import ToolDescription, tool_registry
 
 # Load standardized configuration
-config = load_service_config(
-    service_type="github-mcp",
-    config_file="./config.yaml",  # Optional config file override
-)
+config = load_service_config("github-mcp")
 
 # Service configuration from standardized config
 SERVICE_NAME = config.service_name
-SERVICE_TITLE = config.service_description or "GitHub MCP"
+SERVICE_TITLE = "GitHub MCP"
 SERVICE_VERSION = config.service_version
-DEFAULT_API_PORT = config.port
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5030"))
 
 # Timeout and configuration defaults
 DEFAULT_UPSTREAM_TIMEOUT_SECONDS = 60

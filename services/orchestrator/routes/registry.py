@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Request
 # Config now handled by standardized config system in main.py
 import os
 from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )

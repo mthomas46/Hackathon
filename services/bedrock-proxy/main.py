@@ -52,7 +52,7 @@ except ImportError:
 try:
     from services.shared.infrastructure.config import load_service_config
     from services.shared.utilities import setup_common_middleware
-    from services.shared.presentation.responses import create_error_response, create_success_response
+    from services.shared.presentation.api.responses import create_error_response, create_success_response
     from services.shared.presentation.api.responses import APIResponse
     from services.shared.monitoring.health import register_health_endpoints
 except ImportError:
@@ -83,17 +83,11 @@ except ImportError:
     def register_health_endpoints(app, *args, **kwargs):
         pass
 
-# Load standardized configuration
-config = load_service_config(
-    service_type="bedrock-proxy",
-    config_file="./config.yaml"  # Optional config file override
-)
-
-# Service configuration from standardized config
-SERVICE_NAME = config.service_name
-SERVICE_TITLE = config.service_description or "Bedrock Proxy Stub"
-SERVICE_VERSION = config.service_version
-DEFAULT_API_PORT = config.port
+# Service configuration - hardcoded for now due to config issues
+SERVICE_NAME = "bedrock-proxy"
+SERVICE_TITLE = "Bedrock Proxy Stub"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5002"))
 
 app = FastAPI(
     title=SERVICE_TITLE,
@@ -117,6 +111,12 @@ except ImportError:
     # Fallback: include routes directly if presentation layer not available
     from .presentation.api.routes import router as api_router
     app.include_router(api_router)
+
+# Add simple health endpoint for Docker health checks
+@app.get("/health")
+async def health_check():
+    """Simple health check endpoint for Docker health checks."""
+    return {"status": "healthy", "service": "bedrock-proxy", "version": "1.0.0"}
 
     region: Optional[str] = None
     """AWS region for model deployment (e.g., 'us-east-1')."""
@@ -233,4 +233,4 @@ if __name__ == "__main__":
     """Run the Bedrock Proxy service directly."""
     import uvicorn
 
-    uvicorn.run(app, host=config.server.host, port=config.server.port)
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_API_PORT)

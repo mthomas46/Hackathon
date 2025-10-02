@@ -4,7 +4,7 @@ import asyncio
 from typing import Any, Dict
 
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities.error_handling import (
+from services.shared.infrastructure.utilities.error_handling import (
     ServiceException,
     ValidationException,
 )

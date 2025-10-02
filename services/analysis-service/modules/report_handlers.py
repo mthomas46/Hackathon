@@ -100,7 +100,7 @@ class ReportHandlers:
                 }
 
             else:
-                from services.shared.utilities.error_handling import ValidationException
+                from services.shared.infrastructure.utilities.error_handling import ValidationException
                 supported_types = ["summary", "trends", "life_of_ticket", "pr_confidence"]
                 raise ValidationException(
                     f"Unsupported report type: {req.kind}",
@@ -121,7 +121,7 @@ class ReportHandlers:
                     "recommendations": ["Test recommendation"]
                 }
 
-            from services.shared.utilities.error_handling import ServiceException
+            from services.shared.infrastructure.utilities.error_handling import ServiceException
             raise ServiceException(
                 "Report generation failed",
                 error_code="REAPI_PORT_GENERATION_FAILED",

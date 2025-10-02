@@ -6,7 +6,7 @@ Handles notification processing and webhook management.
 from typing import Any, Dict, Optional
 
 from ...core.entities import NotificationEvent
-from services.shared.utilities import BaseService
+from services.shared.domain.services.base_service import BaseService
 from .repository import NotificationsRepository
 
 

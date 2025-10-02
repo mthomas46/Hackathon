@@ -53,7 +53,7 @@ config = load_service_config("log-collector")
 # Extract commonly used configuration values
 SERVICE_NAME = config.service_name or "log-collector"
 SERVICE_VERSION = config.service_version or "0.1.0"
-DEFAULT_API_PORT = config.server.port or 5080
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5080"))
 
 # Default limits and constraints
 DEFAULT_MAX_LOGS = 5000

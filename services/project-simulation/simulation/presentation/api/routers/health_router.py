@@ -6,7 +6,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Request
 
 try:
-    from services.shared.presentation.responses import create_success_response
+    from services.shared.presentation.api.responses import create_success_response
 except ImportError:
     def create_success_response(data):
         return {"success": True, "data": data}

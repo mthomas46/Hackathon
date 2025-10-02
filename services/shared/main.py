@@ -11,16 +11,20 @@ The shared service itself doesn't provide business functionality but
 serves as a foundation and example for proper service architecture.
 """
 
+import logging
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
 # Import shared infrastructure
-from .infrastructure.config import load_service_config
-from .core.constants_new import EnvVars
-from .infrastructure.utilities.middleware import setup_common_middleware, get_request_id
-from .infrastructure.utilities.error_handling import (
+from services.shared.infrastructure.config import load_service_config
+from services.shared.core.constants_new import EnvVars
+from services.shared.infrastructure.utilities.middleware import setup_common_middleware, get_request_id
+from services.shared.infrastructure.utilities.error_handling import (
     register_exception_handlers,
     ServiceException,
     ValidationException,
@@ -28,11 +32,11 @@ from .infrastructure.utilities.error_handling import (
     AuthenticationException,
     AuthorizationException,
 )
-from .infrastructure.monitoring.health import register_health_endpoints
-from .presentation.responses import create_success_response, create_error_response
+from services.shared.infrastructure.monitoring.health import register_health_endpoints
+from services.shared.presentation.api.responses import create_success_response, create_error_response
 
 # Load configuration
-config = load_service_config(service_type="shared")
+config = load_service_config(service_name="shared")
 
 # Create FastAPI application
 app = FastAPI(
@@ -121,8 +125,6 @@ async def http_exception_handler(request, exc):
 async def generic_exception_handler(request, exc):
     """Handle any unhandled exceptions with proper logging."""
     # Log the error
-    import logging
-    logger = logging.getLogger(__name__)
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
 
     return create_error_response(
@@ -363,7 +365,7 @@ async def lifespan(app: FastAPI):
     logger.info("✅ Shared infrastructure service started successfully")
     logger.info(f"📊 Service: {config.service_name}")
     logger.info(f"🏷️  Version: {config.service_version}")
-    logger.info(f"🌐 Port: {config.port}")
+    logger.info(f"🌐 Port: {config.server.port}")
     docs_host = os.getenv(EnvVars.SHARED_DOCS_API_HOST, "localhost")
     docs_port = os.getenv(EnvVars.SHARED_DOCS_API_PORT, "8000")
     logger.info(f"📚 Documentation: http://{docs_host}:{docs_port}/docs")

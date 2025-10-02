@@ -161,8 +161,8 @@ DEFAULT_API_PORT = 5020
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
-from .modules.models import AnalysisRequest, ReportRequest, DocumentDumpRequest, NotifyOwnersRequest, FindingsResponse, SemanticSimilarityRequest, SentimentAnalysisRequest, ToneAnalysisRequest, ContentQualityRequest, TrendAnalysisRequest, PortfolioTrendAnalysisRequest, RiskAssessmentRequest, PortfolioRiskAssessmentRequest, MaintenanceForecastRequest, PortfolioMaintenanceForecastRequest, QualityDegradationDetectionRequest, PortfolioQualityDegradationRequest, ChangeImpactAnalysisRequest, PortfolioChangeImpactRequest, AutomatedRemediationRequest, RemediationPreviewRequest, WorkflowEventRequest, WorkflowStatusRequest, WebhookConfigRequest, CrossRepositoryAnalysisRequest, RepositoryConnectivityRequest, RepositoryConnectorConfigRequest, DistributedTaskRequest, BatchTasksRequest, TaskStatusRequest, CancelTaskRequest, ScaleWorkersRequest, LoadBalancingStrategyRequest, LoadBalancingConfigRequest
-from .modules.analysis_handlers import analysis_handlers
+from .modules.models import AnalysisRequest, ReportRequest, DocumentDumpRequest, NotifyOwnersRequest, FindingsResponse, SemanticSimilarityRequest, SentimentAnalysisRequest, ToneAnalysisRequest, ContentQualityRequest, TrendAnalysisRequest, PortfolioTrendAnalysisRequest, RiskAssessmentRequest, PortfolioRiskAssessmentRequest, MaintenanceForecastRequest, PortfolioMaintenanceForecastRequest, QualityDegradationDetectionRequest, PortfolioQualityDegradationRequest, ChangeImpactAnalysisRequest, PortfolioChangeImpactRequest, AutomatedRemediationRequest, RemediationPreviewRequest, WorkflowEventRequest, WorkflowStatusRequest, WebhookConfigRequest, CrossRepositoryAnalysisRequest, RepositoryConnectivityRequest, RepositoryConnectorConfigRequest, DistributedTaskRequest, BatchTasksRequest, TaskStatusRequest, CancelTaskRequest, ScaleWorkersRequest, LoadBalancingStrategyRequest, LoadBalancingConfigRequest, ArchitectureAnalysisRequest
+from .modules.analysis_handlers import AnalysisHandlers
 from .modules.report_handlers import report_handlers
 from .modules.integration_handlers import integration_handlers
 
@@ -4310,8 +4310,8 @@ def cleanup():
     logger.info("Shutting down Analysis Service")
     logger.stop_monitoring()
 
-if __name__ == "__main__":
-    """Run the Analysis Service directly."""
+# Start the server when the module is imported (for Docker)
+try:
     import uvicorn
     uvicorn.run(
         app,
@@ -4319,3 +4319,8 @@ if __name__ == "__main__":
         port=DEFAULT_API_PORT,
         log_level="info"
     )
+except KeyboardInterrupt:
+    logger.info("Service interrupted by user")
+except Exception as e:
+    logger.error(f"Service failed to start: {e}")
+    raise

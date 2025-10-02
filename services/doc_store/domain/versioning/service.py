@@ -6,7 +6,7 @@ Handles document versioning and history management.
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import DocumentVersion
-from services.shared.utilities import BaseService
+from services.shared.domain.services.base_service import BaseService
 from .repository import VersioningRepository
 
 

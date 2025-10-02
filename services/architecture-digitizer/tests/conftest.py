@@ -10,7 +10,7 @@ if str(project_root) not in sys.path:
 
 # Mock the shared services import if not available
 try:
-    from services.shared.presentation.responses import APIResponse
+    from services.shared.presentation.api.responses import APIResponse
 except ImportError:
     # Create a simple mock APIResponse for testing
     from pydantic import BaseModel, Field

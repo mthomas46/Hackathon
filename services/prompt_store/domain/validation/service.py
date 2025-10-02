@@ -3,10 +3,11 @@
 import re
 from typing import Any, Dict, List
 
-from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.utilities import generate_id, utc_now
+from services.shared.infrastructure.external.clients.clients import ServiceClients
+from services.shared.infrastructure.utilities.utilities import generate_id
+from services.shared.infrastructure.utilities.utilities import utc_now
 
-from services.shared.utilities import BaseService
+from services.shared.domain.services.base_service import BaseService
 from .entities import BiasDetectionResult, PromptTestingResult
 
 

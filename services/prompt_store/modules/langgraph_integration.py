@@ -13,8 +13,8 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
 
 # Service name now handled by standardized config system
-from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities import get_service_client
+from services.shared.infrastructure.monitoring.logging import fire_and_forget
+from services.shared.infrastructure.utilities.utilities import get_service_client
 
 
 class PromptStoreLangGraphIntegration:

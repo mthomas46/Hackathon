@@ -88,6 +88,7 @@ class RedisConfig:
     password: Optional[str] = None
     ssl: bool = False
     max_connections: int = 10
+    url: Optional[str] = None
 
     def __post_init__(self):
         if isinstance(self.port, str):
@@ -125,6 +126,12 @@ class ServiceDependencies:
     llm_gateway_url: str = "http://llm-gateway:5055"
     summarizer_hub_url: str = "http://summarizer-hub:5160"
     github_mcp_url: str = "http://github-mcp:5030"
+    github_agent_url: str = "http://github-agent:5000"
+    jira_agent_url: str = "http://jira-agent:5001"
+    confluence_agent_url: str = "http://confluence-agent:5050"
+    swagger_agent_url: str = "http://swagger-agent:5010"
+    consistency_engine_url: str = "http://consistency-engine:5020"
+    reporting_url: str = "http://reporting:5030"
     bedrock_proxy_url: str = "http://bedrock-proxy:5002"
     secure_analyzer_url: str = "http://secure-analyzer:5070"
     code_analyzer_url: str = "http://code-analyzer:5025"
@@ -456,9 +463,45 @@ class ConfigurationManager:
         if 'logging' in config_dict and isinstance(config_dict['logging'], dict):
             config_dict['logging'] = LoggingConfig(**config_dict['logging'])
         if 'services' in config_dict and isinstance(config_dict['services'], dict):
-            config_dict['services'] = ServiceDependencies(**config_dict['services'])
+            # Transform hyphen-separated keys to underscore-separated keys
+            services_dict = {}
+            for key, value in config_dict['services'].items():
+                services_dict[key.replace('-', '_')] = value
+            # Only pass fields that ServiceDependencies actually accepts
+            service_deps_fields = {field.name for field in ServiceDependencies.__dataclass_fields__.values()}
+            filtered_services_dict = {k: v for k, v in services_dict.items() if k in service_deps_fields}
+            config_dict['services'] = ServiceDependencies(**filtered_services_dict)
 
-        return self.config_class(**config_dict)
+        # Handle service metadata section
+        if 'service' in config_dict and isinstance(config_dict['service'], dict):
+            service_meta = config_dict.pop('service')
+            # Map service section fields to top-level fields
+            field_mapping = {
+                'name': 'service_name',
+                'version': 'service_version'
+            }
+            for yaml_key, config_key in field_mapping.items():
+                if yaml_key in service_meta:
+                    config_dict[config_key] = service_meta[yaml_key]
+
+        # Remove service-specific sections that don't belong in global config
+        config_dict.pop('dependencies', None)
+        config_dict.pop('repository', None)
+        config_dict.pop('security', None)
+        config_dict.pop('notifications', None)
+        config_dict.pop('cache', None)
+        config_dict.pop('postgres', None)
+        config_dict.pop('monitoring', None)
+        config_dict.pop('migration', None)
+        config_dict.pop('networks', None)
+        config_dict.pop('profiles', None)
+        config_dict.pop('ai_services', None)
+
+        # Only pass fields that the config class actually accepts
+        config_class_fields = {field.name for field in self.config_class.__dataclass_fields__.values()}
+        filtered_config_dict = {k: v for k, v in config_dict.items() if k in config_class_fields}
+
+        return self.config_class(**filtered_config_dict)
 
     def _validate_config(self, config: BaseServiceConfig):
         """Validate configuration using all validators."""

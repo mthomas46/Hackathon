@@ -391,16 +391,13 @@ except ImportError:
         pass
 
 # Load standardized configuration
-config = load_service_config(
-    service_type="frontend",
-    config_file="./config.yaml",  # Optional config file override
-)
+config = load_service_config("frontend")
 
 # Service configuration from standardized config
 SERVICE_NAME = config.service_name
-SERVICE_TITLE = config.service_description or "Frontend"
+SERVICE_TITLE = "Frontend"
 SERVICE_VERSION = config.service_version
-DEFAULT_API_PORT = config.port
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "3000"))
 
 # ============================================================================
 # APP INITIALIZATION - Using shared patterns for consistency

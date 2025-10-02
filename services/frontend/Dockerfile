@@ -58,4 +58,4 @@ EXPOSE 3000
 USER appuser
 
 # Start command - using module path for proper imports
-CMD ["python", "-m", "services.frontend.start"]
+CMD ["python", "services/frontend/start.py"]

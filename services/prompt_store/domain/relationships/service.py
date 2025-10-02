@@ -10,7 +10,7 @@ from services.prompt_store.domain.relationships.repository import (
     RelationshipsRepository,
 )
 from services.prompt_store.infrastructure.cache import prompt_store_cache
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities.utilities import utc_now
 
 
 class RelationshipsService:

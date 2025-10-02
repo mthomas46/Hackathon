@@ -4,6 +4,7 @@ Main service entry point using the new domain-driven architecture.
 """
 
 from typing import Any, Dict, List, Optional
+import os
 
 from fastapi import FastAPI
 
@@ -33,7 +34,7 @@ from services.prompt_store.domain.relationships.handlers import RelationshipsHan
 from services.prompt_store.domain.validation.handlers import ValidationHandlers
 from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.shared.infrastructure.config import load_service_config
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )
@@ -41,25 +42,23 @@ from services.shared.presentation.responses import (
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation
 # ============================================================================
-from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities import attach_self_register, setup_common_middleware
-from services.shared.utilities.error_handling import install_error_handlers
+from services.shared.infrastructure.monitoring.health import register_health_endpoints
+from services.shared.infrastructure.utilities.utilities import attach_self_register
+from services.shared.infrastructure.utilities.utilities import setup_common_middleware
+from services.shared.infrastructure.utilities.error_handling import install_error_handlers
 
 # ============================================================================
 # SERVICE CONFIGURATION
 # ============================================================================
 
 # Load standardized configuration
-config = load_service_config(
-    service_type="prompt-store",
-    config_file="./config.yaml",  # Optional config file override
-)
+config = load_service_config("prompt-store")
 
 # Service configuration from standardized config
 SERVICE_NAME = config.service_name
-SERVICE_TITLE = config.service_description or "Prompt Store"
+SERVICE_TITLE = "Prompt Store"
 SERVICE_VERSION = config.service_version
-DEFAULT_API_PORT = config.port
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5110"))
 
 # ============================================================================
 # APP INITIALIZATION
@@ -1036,8 +1035,6 @@ if __name__ == "__main__":
     """Run the Prompt Store service directly."""
     import uvicorn
 
-    port = get_config_value(
-        "port", DEFAULT_API_PORT, section="server", env_key="PROMPT_STORE_API_PORT"
-    )
+    port = DEFAULT_API_PORT
     print(f"🚀 Starting Prompt Store Service v{SERVICE_VERSION} on port {port}...")
     uvicorn.run(app, host="127.0.0.1", port=int(port), log_level="info")

@@ -51,15 +51,12 @@ from services.shared.presentation.api.responses import create_error_response, cr
 from services.shared.infrastructure.monitoring.health import register_health_endpoints
 
 # Load standardized configuration
-config = load_service_config(
-    service_type="interpreter",
-    config_file="./config.yaml"  # Optional config file override
-)
+config = load_service_config("interpreter")
 
 # Service configuration from standardized config
-SERVICE_NAME = config.service_name
-SERVICE_TITLE = config.service_description or "Interpreter Service"
-SERVICE_VERSION = config.service_version
+SERVICE_NAME = "interpreter"
+SERVICE_TITLE = "Interpreter Service"
+SERVICE_VERSION = "1.0.0"
 
 # Fallback logging function if shared modules aren't available
 def fire_and_forget(event_type, message, service, metadata=None):

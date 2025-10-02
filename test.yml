@@ -1,0 +1,53 @@
+services:
+  redis:
+    build: ./services/redis
+    ports:
+    - 6379:6379
+    volumes:
+    - redis_data:/data
+    environment:
+      SERVICE_NAME: redis
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - all
+  orchestrator:
+    build:
+      context: .
+      dockerfile: services/orchestrator/Dockerfile
+    environment:
+    - PYTHONPATH=/app
+  test-service:
+    build:
+      context: .
+      dockerfile: services/test-service/Dockerfile
+    environment:
+    - PYTHONPATH=/app
+    - SERVICE_NAME=test-service
+    - SERVICE_API_PORT=5099
+    - REDIS_API_HOST=redis
+    - ENVIRONMENT=development
+    - LOG_COLLECTOR_URL=http://log-collector:5080
+    - LOG_COLLECTOR_ENABLED=true
+    ports:
+    - 8085:5099
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5099/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - all

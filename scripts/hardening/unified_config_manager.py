@@ -79,7 +79,8 @@ class UnifiedConfigManager:
             'audit': AUDIT_AVAILABLE,
             'standardization': STANDARDIZATION_AVAILABLE,
             'migration': MIGRATION_AVAILABLE,
-            'new_system': NEW_CONFIG_SYSTEM_AVAILABLE
+            'new_system': NEW_CONFIG_SYSTEM_AVAILABLE,
+            'startup_validation': True  # Always available (uses basic YAML parsing)
         }
 
     def show_status(self) -> None:
@@ -94,6 +95,151 @@ class UnifiedConfigManager:
         print(f"\n📁 Project root: {self.project_root}")
         print(f"📁 Services directory: {self.services_dir}")
         print(f"📁 Scripts directory: {self.scripts_dir}")
+
+    def validate_service_startup_readiness(self, compose_file: str = "docker-compose.dev.yml") -> Dict[str, Any]:
+        """
+        Validate that services are ready for startup based on real-world issues encountered.
+        This checks for common problems that prevent services from starting together.
+
+        Returns:
+            Dictionary with validation results
+        """
+        results = {
+            "compose_file": compose_file,
+            "valid": True,
+            "issues": [],
+            "warnings": [],
+            "recommendations": []
+        }
+
+        try:
+            # Check if docker-compose file exists
+            compose_path = self.project_root / compose_file
+            if not compose_path.exists():
+                results["issues"].append(f"Docker Compose file not found: {compose_file}")
+                results["valid"] = False
+                return results
+
+            # Parse docker-compose file (simplified)
+            import yaml
+            with open(compose_path, 'r') as f:
+                compose_config = yaml.safe_load(f)
+
+            services = compose_config.get('services', {})
+
+            # Check for port conflicts
+            used_ports = set()
+            for service_name, service_config in services.items():
+                ports = service_config.get('ports', [])
+                for port_mapping in ports:
+                    if isinstance(port_mapping, str) and ':' in port_mapping:
+                        host_port = port_mapping.split(':')[0]
+                        try:
+                            port_int = int(host_port)
+                            if port_int in used_ports:
+                                results["issues"].append(f"Port conflict: {service_name} uses port {port_int} which is already used")
+                                results["valid"] = False
+                            else:
+                                used_ports.add(port_int)
+                        except ValueError:
+                            results["warnings"].append(f"Non-numeric port in {service_name}: {host_port}")
+
+            # Check for required shared volume mounts
+            services_needing_shared = [
+                'orchestrator', 'doc_store', 'analysis-service', 'source-agent',
+                'frontend', 'llm-gateway', 'mock-data-generator', 'github-mcp',
+                'memory-agent', 'discovery-agent', 'notification-service', 'prompt_store',
+                'interpreter', 'code-analyzer', 'secure-analyzer', 'log-collector',
+                'external-service-store', 'user-store', 'project-planning-service'
+            ]
+
+            for service_name in services_needing_shared:
+                if service_name in services:
+                    service_config = services[service_name]
+                    volumes = service_config.get('volumes', [])
+                    has_shared = any('services/shared' in str(volume) for volume in volumes)
+
+                    if not has_shared:
+                        results["issues"].append(f"Service '{service_name}' missing required shared volume mount")
+                        results["recommendations"].append(f"Add './services/shared:/app/services/shared:ro' to {service_name} volumes")
+                        results["valid"] = False
+
+            # Check for health check configurations
+            for service_name, service_config in services.items():
+                healthcheck = service_config.get('healthcheck', {})
+                if healthcheck:
+                    if 'start_period' not in healthcheck:
+                        results["warnings"].append(f"Service '{service_name}' missing start_period in healthcheck")
+                        results["recommendations"].append(f"Add start_period to {service_name} healthcheck (recommended: 30s)")
+
+            # Check for dependency cycles (simplified)
+            dependency_graph = {}
+            for service_name, service_config in services.items():
+                depends_on = service_config.get('depends_on', [])
+                if isinstance(depends_on, str):
+                    depends_on = [depends_on]
+                elif isinstance(depends_on, dict):
+                    depends_on = list(depends_on.keys())
+
+                dependency_graph[service_name] = depends_on
+
+            # Simple cycle detection
+            for service, deps in dependency_graph.items():
+                for dep in deps:
+                    if dep in dependency_graph and service in dependency_graph.get(dep, []):
+                        results["issues"].append(f"Circular dependency detected: {service} <-> {dep}")
+                        results["valid"] = False
+
+            # Check for import path issues in service code
+            self._check_import_paths(results, services)
+
+        except Exception as e:
+            results["issues"].append(f"Failed to validate startup readiness: {e}")
+            results["valid"] = False
+
+        return results
+
+    def _check_import_paths(self, results: Dict[str, Any], services: Dict[str, Any]) -> None:
+        """
+        Check for common import path issues in service code that cause ModuleNotFoundError.
+        """
+        import os
+        import re
+        from pathlib import Path
+
+        # Common incorrect import patterns and their corrections
+        import_fixes = {
+            r'from services\.shared\.presentation\.responses import': 'from services.shared.presentation.api.responses import',
+            r'from services\.shared\.utilities\.error_handling import': 'from services.shared.infrastructure.utilities.error_handling import',
+            r'from services\.shared\.utilities import BaseService': 'from services.shared.domain.services.base_service import BaseService',
+        }
+
+        for service_name in services.keys():
+            service_dir = self.project_root / "services" / service_name
+            if not service_dir.exists():
+                continue
+
+            # Find all Python files in the service
+            for py_file in service_dir.rglob("*.py"):
+                try:
+                    with open(py_file, 'r', encoding='utf-8') as f:
+                        content = f.read()
+
+                    for wrong_import, correct_import in import_fixes.items():
+                        if re.search(wrong_import, content):
+                            relative_path = py_file.relative_to(self.project_root)
+                            results["issues"].append(
+                                f"Service '{service_name}' has incorrect import in {relative_path}: "
+                                f"Found '{wrong_import.strip()}' should be '{correct_import}'"
+                            )
+                            results["recommendations"].append(
+                                f"Fix import in {relative_path}: change '{wrong_import.strip()}' to '{correct_import}'"
+                            )
+                            results["valid"] = False
+                            break  # Only report one issue per file
+
+                except Exception as e:
+                    results["warnings"].append(f"Could not check imports in {service_name}/{py_file.name}: {e}")
 
     def audit_configuration(self, output_format: str = 'text', output_file: Optional[str] = None) -> int:
         """Perform comprehensive configuration audit."""
@@ -432,6 +578,7 @@ def main():
 Examples:
   %(prog)s status                                    # Show system status
   %(prog)s audit                                     # Run configuration audit
+  %(prog)s startup-check                              # Validate service startup readiness
   %(prog)s standardize --dry-run                     # Preview standardization
   %(prog)s standardize --apply                       # Apply standardization
   %(prog)s migrate --service log-collector           # Migrate env vars for service
@@ -442,7 +589,7 @@ Examples:
     )
 
     parser.add_argument('command', choices=[
-        'status', 'audit', 'standardize', 'migrate', 'docker-check', 'report'
+        'status', 'audit', 'standardize', 'migrate', 'docker-check', 'report', 'startup-check'
     ], help='Configuration management command to run')
 
     # Audit options
@@ -500,6 +647,32 @@ Examples:
         elif args.command == 'report':
             output_file = args.output or 'comprehensive_config_report.json'
             return manager.generate_comprehensive_report(output_file)
+
+        elif args.command == 'startup-check':
+            compose_file = args.service or 'docker-compose.dev.yml'
+            results = manager.validate_service_startup_readiness(compose_file)
+
+            print("🚀 Service Startup Readiness Validation")
+            print("=" * 50)
+            print(f"Compose File: {results['compose_file']}")
+            print(f"Overall Status: {'✅ VALID' if results['valid'] else '❌ INVALID'}")
+
+            if results['issues']:
+                print(f"\n❌ Critical Issues ({len(results['issues'])}):")
+                for issue in results['issues']:
+                    print(f"  • {issue}")
+
+            if results['warnings']:
+                print(f"\n⚠️  Warnings ({len(results['warnings'])}):")
+                for warning in results['warnings']:
+                    print(f"  • {warning}")
+
+            if results['recommendations']:
+                print(f"\n💡 Recommendations ({len(results['recommendations'])}):")
+                for rec in results['recommendations']:
+                    print(f"  • {rec}")
+
+            return 0 if results['valid'] else 1
 
     except KeyboardInterrupt:
         print("\n⚠️  Operation cancelled by user")

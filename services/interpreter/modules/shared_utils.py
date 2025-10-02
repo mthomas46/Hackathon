@@ -8,7 +8,7 @@ import os
 import re
 from typing import Any, Dict, List, Optional
 
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )
@@ -17,7 +17,7 @@ from services.shared.presentation.responses import (
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import generate_id, utc_now
-from services.shared.utilities.error_handling import ValidationException
+from services.shared.infrastructure.utilities.error_handling import ValidationException
 
 # Global configuration for interpreter service
 _DEFAULT_TIMEOUT = 30

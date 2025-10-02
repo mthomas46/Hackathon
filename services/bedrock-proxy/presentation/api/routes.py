@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/v1", tags=["bedrock-proxy"])
 
 # Import shared response models
 try:
-    from services.shared.presentation.responses import (
+    from services.shared.presentation.api.responses import (
         create_success_response,
         create_error_response,
         APIResponse,

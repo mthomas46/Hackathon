@@ -32,10 +32,14 @@ COPY scripts/audit-framework/requirements-audit.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir -r scripts/audit-framework/requirements-audit.txt
+    pip install --no-cache-dir -r requirements-audit.txt
 
-# Copy application code
-COPY . .
+# Copy only necessary application code
+COPY scripts/audit-framework/ scripts/audit-framework/
+COPY scripts/audit-framework/audit_cli.py scripts/audit-framework/
+COPY config/ config/
+COPY audit_results/ audit_results/
+COPY data/ data/
 
 # Create directories for audit artifacts
 RUN mkdir -p audit-reports ci_reports

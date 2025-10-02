@@ -6,7 +6,7 @@ Following domain-driven design principles with generic handler implementation.
 from abc import ABC
 from typing import Any, Callable, Dict
 
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )
@@ -16,7 +16,7 @@ from services.shared.infrastructure.utilities.logging_utils import (
     log_operation_success,
     log_operation_error,
 )
-from services.shared.utilities.error_handling import ServiceException
+from services.shared.infrastructure.utilities.error_handling import ServiceException
 
 
 class BaseHandler(ABC):

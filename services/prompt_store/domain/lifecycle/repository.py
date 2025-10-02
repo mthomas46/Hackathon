@@ -7,7 +7,8 @@ from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import Prompt
 from services.prompt_store.db.queries import execute_query
-from services.shared.utilities import utc_now, validate_sql_identifier
+from services.shared.infrastructure.utilities.utilities import utc_now
+from services.shared.infrastructure.utilities.utilities import validate_sql_identifier
 
 
 class LifecycleRepository:

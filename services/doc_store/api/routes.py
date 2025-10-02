@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 # Using standardized response system
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_success_response,
     create_error_response,
     create_paginated_response,

@@ -24,17 +24,11 @@ from services.shared.infrastructure.utilities.middleware import setup_common_mid
 from services.shared.presentation.api.responses import create_error_response, create_success_response
 from services.shared.infrastructure.monitoring.health import register_health_endpoints
 
-# Load standardized configuration
-config = load_service_config(
-    service_type="mock-data-generator",
-    config_file="./config.yaml"  # Optional config file override
-)
-
-# Service configuration from standardized config
-SERVICE_NAME = config.service_name
-SERVICE_TITLE = config.service_description or "Enhanced Mock Data Generator"
-SERVICE_VERSION = config.service_version
-DEFAULT_API_PORT = config.port
+# Service configuration - hardcoded for now due to config issues
+SERVICE_NAME = "mock-data-generator"
+SERVICE_TITLE = "Enhanced Mock Data Generator"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5065"))
 
 # Environment configuration
 LLM_GATEWAY_URL = os.getenv("LLM_GATEWAY_URL", "http://llm-gateway:5055")

@@ -9,11 +9,11 @@ services:
     - ./infrastructure/ssl:/etc/nginx/ssl:ro
     depends_on:
       orchestrator:
-        condition: service_started
+        condition: service_healthy
       doc_store:
-        condition: service_started
+        condition: service_healthy
       frontend:
-        condition: service_started
+        condition: service_healthy
     networks:
     - hackathon_backend
     restart: unless-stopped
@@ -49,10 +49,13 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
+      PYTHONPATH: /svc
       POSTGRES_DB: doc_consistency
       POSTGRES_USER: doc_user
       POSTGRES_PASSWORD: doc_password
-      POSTGRES_INITDB_ARGS: --encoding=UTF-8 --lc-collate=C --lc-ctype=C
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+
+
     volumes:
     - postgres_data:/var/lib/postgresql/data
     - ./infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -74,11 +77,12 @@ services:
     working_dir: /svc
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis && uvicorn main:app --host 0.0.0.0 --port 5099"
     environment:
-    - REDIS_API_HOST=redis
-    - POSTGRES_API_HOST=postgres
-    - POSTGRES_DB=doc_consistency
-    - POSTGRES_USER=doc_user
-    - POSTGRES_PASSWORD=doc_password
+      PYTHONPATH: /svc
+      REDIS_API_HOST: redis
+      POSTGRES_API_HOST: postgres
+      POSTGRES_DB: doc_consistency
+      POSTGRES_USER: doc_user
+      POSTGRES_PASSWORD: doc_password
     volumes:
     - ./services/orchestrator:/svc
     - ./services/shared:/svc/shared
@@ -107,16 +111,23 @@ services:
     working_dir: /svc
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis psycopg2-binary && uvicorn main:app --host 0.0.0.0 --port 5040"
     environment:
-    - REDIS_API_HOST=redis
-    - POSTGRES_API_HOST=postgres
-    - POSTGRES_DB=doc_consistency
-    - POSTGRES_USER=doc_user
-    - POSTGRES_PASSWORD=doc_password
+      PYTHONPATH: /svc
+      POSTGRES_DB: doc_consistency
+      POSTGRES_USER: doc_user
+      POSTGRES_PASSWORD: doc_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+
+
+      REDIS_API_HOST: redis
+      POSTGRES_API_HOST: postgres
+      POSTGRES_DB: doc_consistency
+      POSTGRES_USER: doc_user
+      POSTGRES_PASSWORD: doc_password
     volumes:
     - ./services/doc_store:/svc
     - ./services/shared:/svc/shared
     ports:
-    - 8085:5040
+    - 8086:5040
     networks:
     - hackathon_backend
     depends_on:
@@ -140,19 +151,26 @@ services:
     working_dir: /svc
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/frontend/main.py"
     environment:
-    - REDIS_API_HOST=redis
+      PYTHONPATH: /svc
+      POSTGRES_DB: doc_consistency
+      POSTGRES_USER: doc_user
+      POSTGRES_PASSWORD: doc_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+
+
+      REDIS_API_HOST: redis
     volumes:
     - ./services/frontend:/svc
     - ./services/shared:/svc/shared
     ports:
-    - 8085:8000
+    - 8087:8000
     networks:
     - hackathon_backend
     depends_on:
       redis:
         condition: service_healthy
       orchestrator:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

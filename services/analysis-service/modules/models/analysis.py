@@ -344,3 +344,28 @@ class PortfolioTrendAnalysisResponse(BaseModel):
     forecast_accuracy: float = Field(..., ge=0.0, le=1.0, description="Forecast accuracy score")
     execution_time_seconds: float = Field(..., description="Time taken to complete analysis")
     error_message: Optional[str] = Field(None, description="Error message if analysis failed")
+
+
+class ArchitectureAnalysisRequest(BaseModel):
+    """Request for architecture analysis."""
+    diagram_id: str = Field(..., description="Architecture diagram ID to analyze")
+    analysis_scope: str = Field("comprehensive", description="Scope of analysis (basic, comprehensive, detailed)")
+    include_diagram_data: bool = Field(True, description="Whether to include normalized diagram data in response")
+    check_best_practices: bool = Field(True, description="Check against architectural best practices")
+    validate_consistency: bool = Field(True, description="Validate diagram consistency")
+    options: Optional[Dict[str, Any]] = Field(None, description="Additional analysis options")
+
+
+class ArchitectureAnalysisResponse(BaseModel):
+    """Response for architecture analysis."""
+    analysis_id: str = Field(..., description="Unique analysis identifier")
+    diagram_id: str = Field(..., description="Architecture diagram that was analyzed")
+    analysis_scope: str = Field(..., description="Scope of analysis performed")
+    overall_score: float = Field(..., ge=0.0, le=1.0, description="Overall architecture quality score")
+    issues_found: List[Dict[str, Any]] = Field(default_factory=list, description="Issues identified in the architecture")
+    best_practice_compliance: Dict[str, Any] = Field(default_factory=dict, description="Best practice compliance results")
+    consistency_check: Dict[str, Any] = Field(default_factory=dict, description="Consistency validation results")
+    recommendations: List[str] = Field(default_factory=list, description="Architecture improvement recommendations")
+    diagram_data: Optional[Dict[str, Any]] = Field(None, description="Normalized diagram data (if requested)")
+    execution_time_seconds: float = Field(..., description="Time taken to complete analysis")
+    error_message: Optional[str] = Field(None, description="Error message if analysis failed")

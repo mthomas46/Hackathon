@@ -6,7 +6,8 @@ Handles data access operations for prompt relationships and semantic connections
 from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import PromptRelationship
-from services.shared.utilities import SqlRepository, validate_sql_identifier
+from services.shared.domain.repositories.base_repository import SqlRepository
+from services.shared.infrastructure.utilities.utilities import validate_sql_identifier
 
 
 class RelationshipsRepository(SqlRepository[PromptRelationship]):

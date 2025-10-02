@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.models import BulkOperationCreate
 from services.prompt_store.domain.bulk.service import BulkOperationService
-from services.shared.presentation.responses import (
+from services.shared.presentation.api.responses import (
     create_error_response,
     create_success_response,
 )

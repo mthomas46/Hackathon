@@ -57,5 +57,5 @@ EXPOSE 5120
 
 USER appuser
 
-# Start command - using module path for proper imports
-CMD ["python", "-m", "services.interpreter.main"]
+# Start command - run main.py directly
+CMD ["python", "services/interpreter/main.py"]

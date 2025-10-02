@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import LifecyclePolicy
-from services.shared.utilities import BaseService
+from services.shared.domain.services.base_service import BaseService
 from .repository import LifecycleRepository
 
 

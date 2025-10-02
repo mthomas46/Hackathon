@@ -4,7 +4,7 @@ from typing import Dict, Any, Type, Optional, List
 from .base_handler import BaseAnalysisHandler
 from .semantic_handler import SemanticAnalysisHandler
 from .sentiment_handler import SentimentAnalysisHandler
-from .impact_handler import ChangeImpactAnalysisHandler
+from .impact_handler import ImpactAnalysisHandler
 from .risk_handler import RiskAnalysisHandler
 from .maintenance_handler import MaintenanceAnalysisHandler
 from .remediation_handler import RemediationHandler
@@ -14,10 +14,10 @@ from .cross_repository_handler import CrossRepositoryAnalysisHandler
 from .quality_handler import QualityAnalysisHandler
 from .trend_handler import TrendAnalysisHandler
 
-from services.shared.core.di.services import (
+from services.shared.infrastructure.database.di.services import (
     ILoggerService, ICacheService, IEventPublisher, IServiceClient, IMetricsService
 )
-from services.shared.core.di.registry import get_service
+from services.shared.infrastructure.database.di.registry import get_service
 
 
 class HandlerFactory:
