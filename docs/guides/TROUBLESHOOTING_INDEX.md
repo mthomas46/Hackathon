@@ -350,7 +350,7 @@ docker logs secure-analyzer-container | grep -i "blocked\|policy"
 ./scripts/docker/health-check.sh
 
 # Bulletproof system status
-make -f Makefile.bulletproof status
+make -f makefiles/Makefile.bulletproof status
 
 # Service-specific health
 curl http://localhost:[port]/health | jq '.'
@@ -425,7 +425,7 @@ docker-compose restart [service-name]
 docker-compose down && docker-compose up -d
 
 # Bulletproof recovery
-make -f Makefile.bulletproof heal
+make -f makefiles/Makefile.bulletproof heal
 ```
 
 #### **Database Recovery**

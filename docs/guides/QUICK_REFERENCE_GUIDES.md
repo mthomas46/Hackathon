@@ -52,13 +52,13 @@ docker logs [container-name] --tail 50 -f
 #### **3. Bulletproof System Management**
 ```bash
 # Start with bulletproof protections
-make -f Makefile.bulletproof start-bulletproof
+make -f makefiles/Makefile.bulletproof start-bulletproof
 
 # Health check all services
-make -f Makefile.bulletproof health
+make -f makefiles/Makefile.bulletproof health
 
 # System healing
-make -f Makefile.bulletproof heal
+make -f makefiles/Makefile.bulletproof heal
 ```
 
 ### **🔍 Health Monitoring Quick Commands**
@@ -68,7 +68,7 @@ make -f Makefile.bulletproof heal
 | `./scripts/docker/health-check.sh` | Complete ecosystem health | Service status summary |
 | `curl http://localhost:[port]/health` | Individual service health | JSON health response |
 | `docker ps --format "table {{.Names}}\t{{.Status}}"` | Container status | Running containers |
-| `make -f Makefile.bulletproof status` | Bulletproof system status | Enhanced system overview |
+| `make -f makefiles/Makefile.bulletproof status` | Bulletproof system status | Enhanced system overview |
 
 ### **📊 Port Quick Reference**
 

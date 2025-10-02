@@ -172,7 +172,7 @@ This directory contains scripts for Docker container management, validation, and
 
 ## Integration Points
 
-- Referenced in `Makefile.docker`
+- Referenced in `makefiles/Makefile.docker`
 - Used by deployment automation scripts
 - Integrated with CI/CD validation pipelines
 - Called by `docker_compose_validator.py` for comprehensive validation
