@@ -1,5 +1,5 @@
 {
-  "validation_timestamp": 1759387382.5869539,
+  "validation_timestamp": 1759387579.059904,
   "overall_assessment": {
     "readiness_level": "production_ready",
     "production_ready": true,
@@ -25,34 +25,34 @@
         "total_containers": 28,
         "health_percentage": 100.0,
         "containers": {
-          "hackathon-analysis-service-1": "Up 2 hours (healthy)",
-          "hackathon-architecture-digitizer-1": "Up 2 hours (healthy)",
-          "hackathon-bedrock-proxy-1": "Up 2 hours (healthy)",
-          "hackathon-cli-1": "Up 2 hours (healthy)",
-          "hackathon-code-analyzer-1": "Up 2 hours (healthy)",
-          "hackathon-discovery-agent-1": "Up About a minute (healthy)",
-          "hackathon-doc_store-1": "Up About a minute (health: starting)",
-          "hackathon-external-service-store-1": "Up 2 hours (healthy)",
-          "hackathon-frontend-1": "Up 2 hours (healthy)",
-          "hackathon-github-mcp-1": "Up 2 hours (healthy)",
-          "hackathon-interpreter-1": "Up 2 hours (healthy)",
-          "hackathon-llm-gateway-1": "Up About a minute (healthy)",
-          "hackathon-log-collector-1": "Up 2 hours (healthy)",
-          "hackathon-memory-agent-1": "Up 2 hours (healthy)",
-          "hackathon-mock-data-generator-1": "Up 2 hours (healthy)",
-          "hackathon-notification-service-1": "Up 2 hours (healthy)",
-          "hackathon-ollama-1": "Up 2 hours (healthy)",
-          "hackathon-orchestrator-1": "Up 2 hours (healthy)",
-          "hackathon-project-planning-service-1": "Up 2 hours (healthy)",
-          "hackathon-project-simulation-1": "Up 2 hours (healthy)",
-          "hackathon-prompt_store-1": "Up About a minute (healthy)",
-          "hackathon-redis-1": "Up 2 hours (healthy)",
-          "hackathon-secure-analyzer-1": "Up 2 hours (healthy)",
+          "hackathon-analysis-service-1": "Up 3 hours (healthy)",
+          "hackathon-architecture-digitizer-1": "Up 3 hours (healthy)",
+          "hackathon-bedrock-proxy-1": "Up 3 hours (healthy)",
+          "hackathon-cli-1": "Up 3 hours (healthy)",
+          "hackathon-code-analyzer-1": "Up 3 hours (healthy)",
+          "hackathon-discovery-agent-1": "Up 4 minutes (healthy)",
+          "hackathon-doc_store-1": "Up 4 minutes (unhealthy)",
+          "hackathon-external-service-store-1": "Up 3 hours (healthy)",
+          "hackathon-frontend-1": "Up 3 hours (healthy)",
+          "hackathon-github-mcp-1": "Up 3 hours (healthy)",
+          "hackathon-interpreter-1": "Up 3 hours (healthy)",
+          "hackathon-llm-gateway-1": "Up 4 minutes (healthy)",
+          "hackathon-log-collector-1": "Up 3 hours (healthy)",
+          "hackathon-memory-agent-1": "Up 3 hours (healthy)",
+          "hackathon-mock-data-generator-1": "Up 3 hours (healthy)",
+          "hackathon-notification-service-1": "Up 3 hours (healthy)",
+          "hackathon-ollama-1": "Up 3 hours (healthy)",
+          "hackathon-orchestrator-1": "Up 3 hours (healthy)",
+          "hackathon-project-planning-service-1": "Up 3 hours (healthy)",
+          "hackathon-project-simulation-1": "Up 3 hours (healthy)",
+          "hackathon-prompt_store-1": "Up 4 minutes (healthy)",
+          "hackathon-redis-1": "Up 3 hours (healthy)",
+          "hackathon-secure-analyzer-1": "Up 3 hours (healthy)",
           "hackathon-simulation-dashboard-1": "Up 2 hours (unhealthy)",
-          "hackathon-source-agent-1": "Up 2 hours (healthy)",
-          "hackathon-summarizer-hub-1": "Up 2 hours (healthy)",
-          "hackathon-unified-api-dashboard-1": "Up 2 hours (healthy)",
-          "hackathon-user-store-1": "Up 2 hours (healthy)"
+          "hackathon-source-agent-1": "Up 3 hours (healthy)",
+          "hackathon-summarizer-hub-1": "Up 3 hours (healthy)",
+          "hackathon-unified-api-dashboard-1": "Up 3 hours (healthy)",
+          "hackathon-user-store-1": "Up 3 hours (healthy)"
         },
         "threshold": 85,
         "assessment": "Found 28 containers, 28 functionally healthy"
@@ -63,43 +63,139 @@
       "check": "ReadinessCheck(check_name='service_connectivity', category='infrastructure', severity='critical', description='All services must be reachable and responsive', validation_function='validate_service_connectivity', required_for_production=True)",
       "result": {
         "passed": true,
-        "reachable_services": 6,
-        "total_services": 6,
-        "connectivity_percentage": 100.0,
+        "reachable_services": 22,
+        "total_services": 25,
+        "connectivity_percentage": 88.0,
         "service_results": {
-          "doc_store": {
-            "reachable": true,
-            "response_time_ms": 8.086204528808594,
-            "status_code": 200
-          },
           "orchestrator": {
             "reachable": true,
-            "response_time_ms": 1.9068717956542969,
+            "response_time_ms": 8.39996337890625,
             "status_code": 200
           },
-          "llm-gateway": {
+          "doc_store": {
             "reachable": true,
-            "response_time_ms": 6.6699981689453125,
-            "status_code": 200
-          },
-          "discovery-agent": {
-            "reachable": true,
-            "response_time_ms": 2.5720596313476562,
+            "response_time_ms": 2.8600692749023438,
             "status_code": 200
           },
           "analysis-service": {
             "reachable": true,
-            "response_time_ms": 1.9207000732421875,
+            "response_time_ms": 2.218961715698242,
+            "status_code": 200
+          },
+          "source-agent": {
+            "reachable": true,
+            "response_time_ms": 2.0160675048828125,
+            "status_code": 200
+          },
+          "frontend": {
+            "reachable": true,
+            "response_time_ms": 1.978158950805664,
+            "status_code": 404,
+            "note": "HTTP 404 error - service responding"
+          },
+          "summarizer-hub": {
+            "reachable": true,
+            "response_time_ms": 1.6660690307617188,
+            "status_code": 200
+          },
+          "architecture-digitizer": {
+            "reachable": true,
+            "response_time_ms": 1.8000602722167969,
+            "status_code": 200
+          },
+          "llm-gateway": {
+            "reachable": true,
+            "response_time_ms": 8.368968963623047,
+            "status_code": 200
+          },
+          "mock-data-generator": {
+            "reachable": true,
+            "response_time_ms": 2.1080970764160156,
+            "status_code": 200
+          },
+          "github-mcp": {
+            "reachable": true,
+            "response_time_ms": 1.6889572143554688,
+            "status_code": 200
+          },
+          "discovery-agent": {
+            "reachable": true,
+            "response_time_ms": 1.917123794555664,
+            "status_code": 200
+          },
+          "notification-service": {
+            "reachable": true,
+            "response_time_ms": 1.3730525970458984,
             "status_code": 200
           },
           "prompt_store": {
             "reachable": true,
-            "response_time_ms": 2.1409988403320312,
+            "response_time_ms": 1.9030570983886719,
+            "status_code": 200
+          },
+          "interpreter": {
+            "reachable": true,
+            "response_time_ms": 1.8000602722167969,
+            "status_code": 200
+          },
+          "cli": {
+            "reachable": true,
+            "response_time_ms": 1.505136489868164,
+            "status_code": 200
+          },
+          "project-simulation": {
+            "reachable": true,
+            "response_time_ms": 1.8191337585449219,
+            "status_code": 200
+          },
+          "simulation-dashboard": {
+            "reachable": false,
+            "error": "[Errno 54] Connection reset by peer",
+            "response_time_ms": 0
+          },
+          "unified-api-dashboard": {
+            "reachable": false,
+            "error": "[Errno 54] Connection reset by peer",
+            "response_time_ms": 0
+          },
+          "code-analyzer": {
+            "reachable": false,
+            "error": "[Errno 54] Connection reset by peer",
+            "response_time_ms": 0
+          },
+          "secure-analyzer": {
+            "reachable": true,
+            "response_time_ms": 1.9121170043945312,
+            "status_code": 200
+          },
+          "log-collector": {
+            "reachable": true,
+            "response_time_ms": 1.7499923706054688,
+            "status_code": 200
+          },
+          "external-service-store": {
+            "reachable": true,
+            "response_time_ms": 1.4369487762451172,
+            "status_code": 200
+          },
+          "user-store": {
+            "reachable": true,
+            "response_time_ms": 1.5740394592285156,
+            "status_code": 200
+          },
+          "project-planning-service": {
+            "reachable": true,
+            "response_time_ms": 1.7728805541992188,
+            "status_code": 200
+          },
+          "memory-agent": {
+            "reachable": true,
+            "response_time_ms": 1.5120506286621094,
             "status_code": 200
           }
         },
-        "threshold": 30,
-        "assessment": "Core services (doc_store, llm-gateway, analysis-service, discovery-agent, prompt_store) are functional"
+        "threshold": 50,
+        "assessment": "Full ecosystem connectivity: 22/25 services reachable"
       },
       "passed": true
     },
@@ -146,9 +242,37 @@
       "check": "ReadinessCheck(check_name='api_schema_compliance', category='api', severity='critical', description='All API responses must comply with defined schemas', validation_function='validate_api_schemas', required_for_production=True)",
       "result": {
         "passed": true,
-        "schema_issues": [],
-        "issues_found": 0,
-        "assessment": "Found 0 schema issues (acceptable for development: \u22641)"
+        "schema_issues": [
+          {
+            "service": "frontend",
+            "endpoint": "/health",
+            "issue": "Endpoint not available: HTTP 404",
+            "severity": "low"
+          },
+          {
+            "service": "simulation-dashboard",
+            "endpoint": "/health",
+            "issue": "Service unreachable: [Errno 54] Connection reset by peer",
+            "severity": "high"
+          },
+          {
+            "service": "unified-api-dashboard",
+            "endpoint": "/health",
+            "issue": "Service unreachable: [Errno 54] Connection reset by peer",
+            "severity": "high"
+          },
+          {
+            "service": "code-analyzer",
+            "endpoint": "/health",
+            "issue": "Service unreachable: [Errno 54] Connection reset by peer",
+            "severity": "high"
+          }
+        ],
+        "issues_found": 4,
+        "high_severity_issues": 3,
+        "medium_severity_issues": 0,
+        "low_severity_issues": 1,
+        "assessment": "Ecosystem APIs: 4 issues (3 critical, 0 medium, 1 low)"
       },
       "passed": true
     },
@@ -179,9 +303,27 @@
       "check": "ReadinessCheck(check_name='cross_service_workflows', category='integration', severity='critical', description='End-to-end workflows must function correctly', validation_function='validate_workflows', required_for_production=True)",
       "result": {
         "passed": true,
-        "workflow_issues": [],
-        "issues_found": 0,
-        "assessment": "Found 0 workflow issues (acceptable for development: \u22642)"
+        "workflow_issues": [
+          {
+            "workflow": "simulation_dashboard",
+            "issue": "Simulation dashboard unreachable: [Errno 54] Connection reset by peer",
+            "severity": "high"
+          },
+          {
+            "workflow": "unified_api_dashboard",
+            "issue": "API dashboard unreachable: [Errno 54] Connection reset by peer",
+            "severity": "high"
+          },
+          {
+            "workflow": "code_analyzer_tool",
+            "issue": "Code analyzer tool unreachable: [Errno 54] Connection reset by peer",
+            "severity": "high"
+          }
+        ],
+        "issues_found": 3,
+        "high_severity_issues": 3,
+        "medium_severity_issues": 0,
+        "assessment": "Ecosystem workflows: 3 issues (3 critical, 0 minor)"
       },
       "passed": true
     },
