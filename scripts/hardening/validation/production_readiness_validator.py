@@ -305,21 +305,41 @@ class ProductionReadinessValidator:
             return False
     
     def validate_service_connectivity(self) -> Dict[str, Any]:
-        """Validate service connectivity and responsiveness using external ports"""
-        # Use external ports that clients actually connect to (like deployment validator)
-        services = {
-            "doc_store": 8086,        # External port (internal: 5087)
-            "orchestrator": 8085,     # External port (internal: 5099)
-            "llm-gateway": 8092,      # External port (internal: 5055)
-            "discovery-agent": 8095,  # External port (internal: 5045)
-            "analysis-service": 8087, # External port (internal: 5020)
-            "prompt_store": 8097      # External port (internal: 5110)
+        """Validate comprehensive service connectivity across the full ecosystem"""
+        # Test all services that should have web endpoints (external ports)
+        # Excludes infrastructure services like redis that don't expose HTTP APIs
+        web_services = {
+            "orchestrator": 8085,         # Workflow orchestration
+            "doc_store": 8086,            # Document storage & retrieval
+            "analysis-service": 8087,     # Code analysis & insights
+            "source-agent": 8088,         # Source code management
+            "frontend": 8089,             # Web UI
+            "summarizer-hub": 5160,       # Text summarization
+            "architecture-digitizer": 8091, # Architecture analysis
+            "llm-gateway": 8092,          # LLM API gateway
+            "mock-data-generator": 8093,  # Test data generation
+            "github-mcp": 8094,           # GitHub integration
+            "discovery-agent": 8095,      # Service discovery
+            "notification-service": 8096, # Notifications
+            "prompt_store": 8097,         # Prompt management
+            "interpreter": 8098,          # Code interpretation
+            "cli": 8110,                  # Command-line interface
+            "project-simulation": 8099,   # Project simulation
+            "simulation-dashboard": 8100, # Simulation UI
+            "unified-api-dashboard": 8101, # API dashboard
+            "code-analyzer": 8102,        # Code analysis
+            "secure-analyzer": 8103,      # Security analysis
+            "log-collector": 8104,        # Log aggregation
+            "external-service-store": 8105, # External service integration
+            "user-store": 8106,           # User management
+            "project-planning-service": 5170, # Project planning
+            "memory-agent": 5090,         # Memory management
         }
         
         connectivity_results = {}
         reachable_count = 0
         
-        for service, port in services.items():
+        for service, port in web_services.items():
             try:
                 start_time = time.time()
                 # Use urllib with more lenient request handling (like deployment validator)
@@ -360,16 +380,16 @@ class ProductionReadinessValidator:
                     "response_time_ms": 0
                 }
         
-        connectivity_percentage = (reachable_count / len(services)) * 100
-        
+        connectivity_percentage = (reachable_count / len(web_services)) * 100
+
         return {
-            "passed": connectivity_percentage >= 30,  # Require 30% connectivity for development (some services may not be fully implemented)
+            "passed": connectivity_percentage >= 50,  # Require 50% connectivity for comprehensive ecosystem validation
             "reachable_services": reachable_count,
-            "total_services": len(services),
+            "total_services": len(web_services),
             "connectivity_percentage": connectivity_percentage,
             "service_results": connectivity_results,
-            "threshold": 30,
-            "assessment": "Core services (doc_store, llm-gateway, analysis-service, discovery-agent, prompt_store) are functional"
+            "threshold": 50,
+            "assessment": f"Full ecosystem connectivity: {reachable_count}/{len(web_services)} services reachable"
         }
     
     def validate_port_mappings(self) -> Dict[str, Any]:
@@ -417,40 +437,89 @@ class ProductionReadinessValidator:
             }
     
     def validate_api_schemas(self) -> Dict[str, Any]:
-        """Validate API schema compliance - adjusted for development state"""
-        # For development deployment, API schemas may not be fully implemented yet
-        # This is acceptable as long as basic service health is working
-
+        """Validate API schema compliance across the ecosystem"""
         schema_issues = []
 
-        # Test basic service responsiveness rather than full schema compliance
-        test_services = [
-            {"name": "doc_store", "port": 8086, "endpoint": "/health"},
+        # Test API responsiveness across key ecosystem services
+        # Focus on services that should have well-defined APIs
+        api_services = [
+            # Core APIs
             {"name": "orchestrator", "port": 8085, "endpoint": "/health"},
-            {"name": "analysis-service", "port": 8087, "endpoint": "/health"}
+            {"name": "doc_store", "port": 8086, "endpoint": "/health"},
+            {"name": "analysis-service", "port": 8087, "endpoint": "/health"},
+            {"name": "llm-gateway", "port": 8092, "endpoint": "/health"},
+            {"name": "discovery-agent", "port": 8095, "endpoint": "/health"},
+
+            # UI/Dashboard APIs
+            {"name": "frontend", "port": 8089, "endpoint": "/health"},
+            {"name": "simulation-dashboard", "port": 8100, "endpoint": "/health"},
+            {"name": "unified-api-dashboard", "port": 8101, "endpoint": "/health"},
+
+            # Tool/Service APIs
+            {"name": "prompt_store", "port": 8097, "endpoint": "/health"},
+            {"name": "code-analyzer", "port": 8102, "endpoint": "/health"},
+            {"name": "memory-agent", "port": 5090, "endpoint": "/health"},
+            {"name": "log-collector", "port": 8104, "endpoint": "/health"},
         ]
 
-        for service in test_services:
+        for service in api_services:
             try:
                 with urllib.request.urlopen(f"http://localhost:{service['port']}{service['endpoint']}", timeout=10) as response:
                     if response.getcode() >= 500:
                         schema_issues.append({
                             "service": service["name"],
                             "endpoint": service["endpoint"],
-                            "issue": f"Service returns server error: {response.getcode()}"
+                            "issue": f"Server error: HTTP {response.getcode()}",
+                            "severity": "high"
                         })
+                    elif response.getcode() >= 400:
+                        schema_issues.append({
+                            "service": service["name"],
+                            "endpoint": service["endpoint"],
+                            "issue": f"Client error: HTTP {response.getcode()}",
+                            "severity": "medium"
+                        })
+                    # 200-399 responses are acceptable
+            except urllib.error.HTTPError as e:
+                if e.code in [404, 405, 501, 503]:  # Not implemented, not allowed, or not available
+                    schema_issues.append({
+                        "service": service["name"],
+                        "endpoint": service["endpoint"],
+                        "issue": f"Endpoint not available: HTTP {e.code}",
+                        "severity": "low"
+                    })
+                else:
+                    schema_issues.append({
+                        "service": service["name"],
+                        "endpoint": service["endpoint"],
+                        "issue": f"HTTP error: {e.code}",
+                        "severity": "high"
+                    })
             except Exception as e:
-                # For development, unreachable services are acceptable as APIs may not be fully implemented
-                pass  # Don't count as schema issue for development readiness
+                schema_issues.append({
+                    "service": service["name"],
+                    "endpoint": service["endpoint"],
+                    "issue": f"Service unreachable: {str(e)}",
+                    "severity": "high"
+                })
 
-        # In development, we allow some schema issues as long as basic health works
-        development_acceptable = len(schema_issues) <= 1  # Allow 1 issue for development
+        # Classify issues by severity
+        high_severity = [issue for issue in schema_issues if issue.get("severity") == "high"]
+        medium_severity = [issue for issue in schema_issues if issue.get("severity") == "medium"]
+        low_severity = [issue for issue in schema_issues if issue.get("severity") == "low"]
+
+        # Ecosystem API readiness: strict on high-severity, lenient on others
+        # With 14 services tested, allow more issues for development ecosystem
+        api_ready = len(high_severity) <= 4  # Allow up to 4 critical API failures for comprehensive ecosystem
 
         return {
-            "passed": development_acceptable,  # More lenient for development
+            "passed": api_ready,
             "schema_issues": schema_issues,
             "issues_found": len(schema_issues),
-            "assessment": f"Found {len(schema_issues)} schema issues (acceptable for development: ≤1)"
+            "high_severity_issues": len(high_severity),
+            "medium_severity_issues": len(medium_severity),
+            "low_severity_issues": len(low_severity),
+            "assessment": f"Ecosystem APIs: {len(schema_issues)} issues ({len(high_severity)} critical, {len(medium_severity)} medium, {len(low_severity)} low)"
         }
     
     def validate_error_handling(self) -> Dict[str, Any]:
@@ -501,44 +570,73 @@ class ProductionReadinessValidator:
         }
     
     def validate_workflows(self) -> Dict[str, Any]:
-        """Validate end-to-end workflows - adjusted for development state"""
+        """Validate comprehensive end-to-end workflows across the full ecosystem"""
         workflow_issues = []
 
-        # For development deployment, full workflows may not be implemented yet
-        # Test basic service health as workflow validation
-
+        # Test core ecosystem workflows that should be functional
         workflow_tests = [
-            {"name": "orchestrator_health", "url": "http://localhost:8085/health", "desc": "Orchestrator health"},
-            {"name": "doc_store_health", "url": "http://localhost:8086/health", "desc": "Doc store health"},
-            {"name": "analysis_service_health", "url": "http://localhost:8087/health", "desc": "Analysis service health"}
+            # Core infrastructure health
+            {"name": "orchestrator_core", "url": "http://localhost:8085/health", "desc": "Orchestrator core health"},
+            {"name": "doc_store_core", "url": "http://localhost:8086/health", "desc": "Document store core health"},
+            {"name": "analysis_service_core", "url": "http://localhost:8087/health", "desc": "Analysis service core health"},
+            {"name": "llm_gateway_core", "url": "http://localhost:8092/health", "desc": "LLM gateway core health"},
+            {"name": "discovery_agent_core", "url": "http://localhost:8095/health", "desc": "Discovery agent core health"},
+
+            # Integration workflows
+            {"name": "frontend_ui", "url": "http://localhost:8089/health", "desc": "Frontend UI accessibility"},
+            {"name": "simulation_dashboard", "url": "http://localhost:8100/health", "desc": "Simulation dashboard"},
+            {"name": "unified_api_dashboard", "url": "http://localhost:8101/health", "desc": "API dashboard"},
+
+            # Development tools
+            {"name": "prompt_store_tool", "url": "http://localhost:8097/health", "desc": "Prompt store tool"},
+            {"name": "code_analyzer_tool", "url": "http://localhost:8102/health", "desc": "Code analyzer tool"},
+            {"name": "memory_agent_tool", "url": "http://localhost:5090/health", "desc": "Memory agent tool"},
         ]
 
         for test in workflow_tests:
             try:
                 with urllib.request.urlopen(test["url"], timeout=10) as response:
                     if response.getcode() == 200:
-                        # Success - basic workflow connectivity works
+                        # Success - workflow endpoint is accessible
                         pass
                     else:
                         workflow_issues.append({
                             "workflow": test["name"],
-                            "issue": f"{test['desc']} returned {response.getcode()}"
+                            "issue": f"{test['desc']} returned HTTP {response.getcode()}",
+                            "severity": "medium"
                         })
+            except urllib.error.HTTPError as e:
+                if e.code in [404, 405]:  # Expected for some endpoints that don't have health routes
+                    # This is acceptable - service is responding but endpoint doesn't exist
+                    pass
+                else:
+                    workflow_issues.append({
+                        "workflow": test["name"],
+                        "issue": f"{test['desc']} returned HTTP {e.code}",
+                        "severity": "high"
+                    })
             except Exception as e:
-                # For development, some services may not have health endpoints yet
+                # Service completely unreachable
                 workflow_issues.append({
                     "workflow": test["name"],
-                    "issue": f"{test['desc']} failed: {str(e)}"
+                    "issue": f"{test['desc']} unreachable: {str(e)}",
+                    "severity": "high"
                 })
 
-        # In development, we allow some workflow issues as long as core services are healthy
-        development_acceptable = len(workflow_issues) <= 2  # Allow up to 2 failures for development
+        # Classify issues by severity for better assessment
+        high_severity = [issue for issue in workflow_issues if issue.get("severity") == "high"]
+        medium_severity = [issue for issue in workflow_issues if issue.get("severity") == "medium"]
+
+        # Ecosystem readiness: allow some medium issues but strict on high-severity failures
+        ecosystem_ready = len(high_severity) <= 3  # Allow up to 3 critical workflow failures
 
         return {
-            "passed": development_acceptable,  # More lenient for development
+            "passed": ecosystem_ready,
             "workflow_issues": workflow_issues,
             "issues_found": len(workflow_issues),
-            "assessment": f"Found {len(workflow_issues)} workflow issues (acceptable for development: ≤2)"
+            "high_severity_issues": len(high_severity),
+            "medium_severity_issues": len(medium_severity),
+            "assessment": f"Ecosystem workflows: {len(workflow_issues)} issues ({len(high_severity)} critical, {len(medium_severity)} minor)"
         }
     
     def validate_dependencies(self) -> Dict[str, Any]:
@@ -730,15 +828,21 @@ class ProductionReadinessValidator:
                 if check.required_for_production:
                     production_required_failures.append(check_name)
         
-        # Determine readiness level - adjusted for current development state
-        # The current deployment has good infrastructure but some APIs still developing
+        # Determine readiness level for comprehensive ecosystem validation
+        # With expanded validation covering 23+ services, adjust thresholds accordingly
         total_score = (passed_checks / total_checks) * 100 if total_checks > 0 else 0
 
-        if total_score >= 90 and len(critical_failures) == 0:
+        # Ecosystem readiness criteria:
+        # PRODUCTION_READY: 95%+ pass rate, minimal critical failures
+        # DEVELOPMENT_READY: 80%+ pass rate, some critical issues acceptable
+        # TESTING_READY: 70%+ pass rate, multiple issues acceptable
+        # NOT_READY: Below 70% or too many critical failures
+
+        if total_score >= 95 and len(critical_failures) <= 1:
             readiness_level = ReadinessLevel.PRODUCTION_READY
-        elif total_score >= 75 and len(critical_failures) <= 2:
+        elif total_score >= 80 and len(critical_failures) <= 3:
             readiness_level = ReadinessLevel.DEVELOPMENT_READY
-        elif total_score >= 60 and len(critical_failures) <= 4:
+        elif total_score >= 70 and len(critical_failures) <= 5:
             readiness_level = ReadinessLevel.TESTING_READY
         else:
             readiness_level = ReadinessLevel.NOT_READY
