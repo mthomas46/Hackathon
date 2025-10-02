@@ -80,6 +80,87 @@ The LLM Documentation Ecosystem is a **sophisticated AI-powered platform** featu
 - ✅ **Performance optimized**: 100% memory efficiency, advanced indexing, load balancing
 - ✅ **Fully tested**: 35/40 tasks completed with comprehensive validation suite
 
+## 📁 **Project Structure & Organization**
+
+### 🏗️ **Directory Layout**
+
+```
+📦 LLM Documentation Ecosystem
+├── 📁 services/                    # 🏢 23+ Microservices (DDD Architecture)
+│   ├── analysis-service/          # Core analysis engine (DDD)
+│   ├── orchestrator/              # Workflow orchestration
+│   ├── doc_store/                 # Document management
+│   ├── prompt_store/              # AI prompt management
+│   └── [21 other services]/       # Specialized microservices
+├── 📁 scripts/                     # 🛠️  Management & Testing Scripts
+│   ├── hardening/                 # Configuration & security hardening
+│   ├── integration/               # Cross-service integration tests
+│   ├── validation/                # API & performance validation
+│   ├── monitoring/                # Health monitoring & alerting
+│   ├── utilities/                 # Development utilities
+│   └── [other categories]/        # Specialized script collections
+├── 📁 docs/                        # 📚 Project Documentation
+│   ├── CONFIGURATION_*.md         # Configuration guides
+│   ├── FEATURE_*.md               # Feature documentation
+│   ├── *_ROADMAP.md               # Planning documents
+│   └── README.md                  # Documentation index
+├── 📁 config/                      # ⚙️ Configuration Files
+│   ├── app.yaml                   # Application configuration
+│   ├── mkdocs.yml                 # Documentation config
+│   ├── pytest.ini                 # Testing configuration
+│   └── service-*.yaml             # Service configurations
+├── 📁 reports/                     # 📊 Generated Reports
+│   ├── configuration_audit_results.json
+│   ├── unified_health_report.json
+│   ├── final_verification_report.json
+│   └── [other analysis results]/
+├── 📁 makefiles/                   # 🔨 Build Configurations
+│   ├── Makefile.audit             # Audit-specific builds
+│   ├── Makefile.cicd              # CI/CD optimizations
+│   ├── Makefile.docker            # Docker operations
+│   └── [specialized Makefiles]/
+├── 📁 status/                      # 📈 Runtime Status
+│   ├── running_services.txt       # Current service status
+│   └── all_running_services.txt   # Complete service inventory
+├── 📁 docker/                      # 🐳 Docker Configurations
+│   ├── Dockerfile.audit           # Audit container config
+│   └── docker-requirements.txt    # Container dependencies
+├── 🗂️ docker-compose.dev.yml        # 🚀 Main Docker Compose
+├── 🛠️ Makefile                      # Build automation
+└── 📖 README.md                     # This file
+```
+
+### 🎯 **Key Areas Overview**
+
+#### **🏢 Services Directory** (`services/`)
+- **23+ Microservices** built with Domain-Driven Design
+- Each service follows Clean Architecture principles
+- CQRS pattern implementation for data operations
+- Comprehensive API documentation and health endpoints
+
+#### **🛠️ Scripts Directory** (`scripts/`)
+- **Hardening Scripts**: Configuration management and security
+- **Integration Tests**: Cross-service communication validation
+- **Validation Scripts**: API compliance and performance testing
+- **Monitoring Tools**: Health checks and alerting systems
+- **Utility Scripts**: Development and maintenance tools
+
+#### **📚 Documentation** (`docs/`)
+- **Architecture Guides**: DDD implementation and design patterns
+- **Configuration Docs**: Setup and deployment instructions
+- **Feature Documentation**: Capability overviews and usage guides
+- **Migration Reports**: System evolution and improvements
+
+#### **⚙️ Configuration** (`config/`)
+- **Service Configs**: YAML-based service configurations
+- **Test Settings**: pytest and testing framework configs
+- **Documentation Config**: MkDocs and documentation settings
+
+#### **📊 Reports** (`reports/`)
+- **Audit Results**: Configuration and security audit findings
+- **Health Reports**: System status and performance metrics
+- **Validation Results**: Test outcomes and compliance reports
+
 ## 🚀 Quick Start (3 minutes)
 
 ```bash
