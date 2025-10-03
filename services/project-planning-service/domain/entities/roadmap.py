@@ -28,6 +28,44 @@ class ReleaseStatus(Enum):
     CANCELLED = "cancelled"
 
 
+class SprintStatus(Enum):
+    """Sprint status."""
+    PLANNED = "planned"
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+@dataclass
+class Sprint:
+    """Sprint within a roadmap."""
+    
+    # Required fields
+    id: str
+    name: str
+    start_date: datetime
+    end_date: datetime
+    capacity: float  # Story points capacity
+    
+    # Optional fields with defaults
+    status: SprintStatus = SprintStatus.PLANNED
+    allocated: float = 0.0  # Story points allocated
+    feature_ids: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def remaining_capacity(self) -> float:
+        """Calculate remaining capacity."""
+        return max(0.0, self.capacity - self.allocated)
+    
+    def is_full(self) -> bool:
+        """Check if sprint is at capacity."""
+        return self.allocated >= self.capacity
+    
+    def duration_days(self) -> int:
+        """Calculate sprint duration in days."""
+        return (self.end_date - self.start_date).days + 1
+
+
 @dataclass
 class Release:
     """Release milestone within a roadmap."""
@@ -90,8 +128,12 @@ class Roadmap:
     planning, resource allocation, and progress tracking.
     """
 
+    # Required fields
     id: str
     name: str
+    created_by: str
+    
+    # Optional fields
     description: Optional[str] = None
 
     # Status and timeline
@@ -114,7 +156,6 @@ class Roadmap:
     # Metadata
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
-    created_by: str
 
     # AI analysis
     ai_insights: Dict[str, Any] = field(default_factory=dict)

@@ -42,10 +42,13 @@ class Task:
     to feature completion. They have clear deliverables and assignments.
     """
 
+    # Required fields
     id: str
     title: str
     description: str
     task_type: TaskType
+    feature_id: str  # Parent feature
+    created_by: str
 
     # Status and assignment
     status: TaskStatus = TaskStatus.TODO
@@ -55,6 +58,9 @@ class Task:
     # Estimation and tracking
     estimated_hours: Optional[float] = None
     actual_hours: Optional[float] = None
+    
+    # Dependencies
+    dependencies: List[str] = field(default_factory=list)  # Task IDs this task depends on
     story_points: Optional[float] = None
 
     # Scheduling
@@ -64,14 +70,12 @@ class Task:
     actual_end: Optional[datetime] = None
 
     # Relationships
-    feature_id: str  # Parent feature
     depends_on: List[str] = field(default_factory=list)  # Task IDs
     blocks: List[str] = field(default_factory=list)  # Task IDs
 
     # Metadata
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
-    created_by: str
 
     # Additional context
     tags: List[str] = field(default_factory=list)
