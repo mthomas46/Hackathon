@@ -62,6 +62,7 @@ class TestAccuracyEnhancementEngine:
         return [
             ComplianceValidationResult(
                 service_id="firebase-fcm",
+                service_name="Firebase FCM",
                 api_compliant=False,
                 security_compliant=True,
                 version_compatible=True,
@@ -90,6 +91,7 @@ class TestAccuracyEnhancementEngine:
         validation_results = [
             ComplianceValidationResult(
                 service_id="test",
+                service_name="Test Service",
                 api_compliant=True,
                 security_compliant=True,
                 version_compatible=True,
@@ -118,6 +120,7 @@ class TestAccuracyEnhancementEngine:
         validation_results = [
             ComplianceValidationResult(
                 service_id="test",
+                service_name="Test Service",
                 api_compliant=False,
                 security_compliant=True,
                 version_compatible=True,
@@ -145,6 +148,7 @@ class TestAccuracyEnhancementEngine:
         blindspot_analyses = [
             BlindspotAnalysis(
                 service_id="test",
+                service_name="Test Service",
                 blindspots=[
                     DevelopmentBlindspot(
                         blindspot_type="hidden_dependency",

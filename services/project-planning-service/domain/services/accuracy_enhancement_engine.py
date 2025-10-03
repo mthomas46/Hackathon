@@ -113,6 +113,7 @@ class AccuracyEnhancementEngine:
         # Create comprehensive validation result (pick first one for now, or aggregate)
         primary_validation = validation_results[0] if validation_results else ComplianceValidationResult(
             service_id="none",
+            service_name="None",
             api_compliant=True,
             security_compliant=True,
             version_compatible=True,
@@ -126,6 +127,7 @@ class AccuracyEnhancementEngine:
         # Create comprehensive gap analysis (pick first or aggregate)
         primary_gap = gap_analyses[0] if gap_analyses else KnowledgeGapAnalysis(
             service_id="none",
+            service_name="None",
             documentation_gaps=[],
             skills_gaps=[],
             configuration_gaps=[],
@@ -137,6 +139,7 @@ class AccuracyEnhancementEngine:
         # Create comprehensive blindspot analysis (pick first or aggregate)
         primary_blindspot = blindspot_analyses[0] if blindspot_analyses else BlindspotAnalysis(
             service_id="none",
+            service_name="None",
             blindspots=[],
             severity_distribution={},
             total_story_points_missed=0,

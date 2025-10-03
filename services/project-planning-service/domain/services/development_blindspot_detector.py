@@ -96,6 +96,7 @@ class DevelopmentBlindspotDetector:
             
             analysis = BlindspotAnalysis(
                 service_id=service.service_id,
+                service_name=service.name,
                 blindspots=blindspots,
                 severity_distribution=severity_dist,
                 total_story_points_missed=total_sp,

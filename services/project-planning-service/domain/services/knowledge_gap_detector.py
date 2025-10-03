@@ -76,6 +76,7 @@ class KnowledgeGapDetector:
             
             analysis = KnowledgeGapAnalysis(
                 service_id=service.service_id,
+                service_name=service.name,
                 documentation_gaps=doc_gaps,
                 skills_gaps=skills_gaps,
                 configuration_gaps=config_gaps,
