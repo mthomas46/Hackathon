@@ -81,6 +81,7 @@ class ValidationIssue:
 class ComplianceValidationResult:
     """Results of compliance validation for a service."""
     service_id: str
+    service_name: str  # Human-readable service name
     api_compliant: bool
     security_compliant: bool
     version_compatible: bool
@@ -109,6 +110,7 @@ class KnowledgeGap:
 class KnowledgeGapAnalysis:
     """Complete knowledge gap analysis for a service."""
     service_id: str
+    service_name: str  # Human-readable service name
     documentation_gaps: List[KnowledgeGap]
     skills_gaps: List[KnowledgeGap]
     configuration_gaps: List[KnowledgeGap]
@@ -137,6 +139,7 @@ class DevelopmentBlindspot:
 class BlindspotAnalysis:
     """Complete blindspot analysis results."""
     service_id: str
+    service_name: str  # Human-readable service name
     blindspots: List[DevelopmentBlindspot]
     severity_distribution: Dict[str, int]  # Count by severity
     total_story_points_missed: int

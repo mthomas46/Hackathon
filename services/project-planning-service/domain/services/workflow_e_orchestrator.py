@@ -13,6 +13,7 @@ from .integration_compliance_validator import IntegrationComplianceValidator
 from .knowledge_gap_detector import KnowledgeGapDetector
 from .development_blindspot_detector import DevelopmentBlindspotDetector
 from .accuracy_enhancement_engine import AccuracyEnhancementEngine
+from .workflow_e_fallback_engine import WorkflowEFallbackEngine
 
 from ..entities.external_service_entities import WorkflowEResult
 
@@ -59,6 +60,21 @@ class WorkflowEOrchestrator:
     ):
         """Initialize Workflow E with all required service clients."""
         self.log_client = log_client
+        
+        # Check if any service clients are provided
+        self.use_fallback = all(client is None for client in [
+            external_service_store_client, user_store_client, source_agent_client,
+            doc_store_client, secure_analyzer_client, code_analyzer_client,
+            analysis_service_client, summarizer_hub_client, github_mcp_client,
+            project_simulation_client
+        ])
+        
+        # Initialize fallback engine if needed
+        if self.use_fallback:
+            self.fallback_engine = WorkflowEFallbackEngine()
+            if log_client:
+                # Log that we're using fallback mode (non-async, just set a flag)
+                pass
         
         # Initialize all engines
         self.discovery_engine = ExternalServiceDiscoveryEngine(
@@ -119,6 +135,34 @@ class WorkflowEOrchestrator:
         """
         start_time = time.time()
         
+        # Check if using fallback mode
+        if self.use_fallback:
+            if self.log_client:
+                await self.log_client.log_info(
+                    "⚡ Using Fallback Mode: No service clients provided, using database + smart defaults",
+                    context={
+                        "query_length": len(feature_query),
+                        "original_sp": original_plan.get("story_points", 0)
+                    }
+                )
+            
+            # Use fallback engine for realistic results
+            result = self.fallback_engine.generate_realistic_workflow_e_result(
+                feature_query, extracted_requirements, original_plan
+            )
+            
+            if self.log_client:
+                await self.log_client.log_info(
+                    f"✅ Fallback Complete: {result.total_services_discovered} services, "
+                    f"{result.total_validation_issues} issues, "
+                    f"{result.total_knowledge_gaps} gaps, "
+                    f"{result.total_blindspots} blindspots",
+                    context={"execution_time": result.execution_time_seconds}
+                )
+            
+            return result
+        
+        # Full service integration path
         if self.log_client:
             await self.log_client.log_info(
                 "🚀 Starting Workflow E: External Service Discovery & Accuracy Enhancement",

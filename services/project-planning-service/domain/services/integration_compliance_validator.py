@@ -86,6 +86,7 @@ class IntegrationComplianceValidator:
             # Create result
             result = ComplianceValidationResult(
                 service_id=service.service_id,
+                service_name=service.name,
                 api_compliant=not any(i.category == "api_contract" for i in issues),
                 security_compliant=not any(i.category == "security" for i in issues),
                 version_compatible=not any(i.category == "version" for i in issues),

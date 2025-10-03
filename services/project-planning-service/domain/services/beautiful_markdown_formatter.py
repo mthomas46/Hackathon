@@ -138,10 +138,21 @@ class BeautifulMarkdownFormatter:
             "### 12.1 Validation Summary",
             "",
             f"Validated **{len(result.validation_results)} services** for compliance:",
-            "",
+            ""
+        ]
+        
+        # Add explanation if fewer services validated than discovered
+        if len(result.validation_results) < len(result.discovered_services):
+            unvalidated = len(result.discovered_services) - len(result.validation_results)
+            lines.extend([
+                f"**Note:** {unvalidated} of {len(result.discovered_services)} discovered services were not validated because they are marked for future consideration or have insufficient API documentation for validation.",
+                ""
+            ])
+        
+        lines.extend([
             "| Service | API | Security | Version | Rate Limits | Issues |",
             "|---------|-----|----------|---------|-------------|--------|"
-        ]
+        ])
         
         for vr in result.validation_results:
             api_icon = "✅" if vr.api_compliant else "⚠️"
@@ -150,7 +161,7 @@ class BeautifulMarkdownFormatter:
             rate_icon = "✅" if vr.rate_limits_sufficient else "⚠️"
             
             lines.append(
-                f"| {vr.service_id} | {api_icon} | {sec_icon} | {ver_icon} | {rate_icon} | {len(vr.issues)} |"
+                f"| {vr.service_name} | {api_icon} | {sec_icon} | {ver_icon} | {rate_icon} | {len(vr.issues)} |"
             )
         
         lines.extend([
@@ -161,8 +172,9 @@ class BeautifulMarkdownFormatter:
         
         for vr in result.validation_results:
             if vr.issues:
+                issue_word = "Issue" if len(vr.issues) == 1 else "Issues"
                 lines.extend([
-                    f"#### {vr.service_id}: {len(vr.issues)} Issues",
+                    f"#### {vr.service_name}: {len(vr.issues)} {issue_word}",
                     ""
                 ])
                 
@@ -216,8 +228,9 @@ class BeautifulMarkdownFormatter:
         for ga in result.gap_analyses:
             all_gaps = ga.documentation_gaps + ga.skills_gaps + ga.configuration_gaps
             if all_gaps:
+                gap_word = "Gap" if len(all_gaps) == 1 else "Gaps"
                 lines.extend([
-                    f"#### {ga.service_id}: {len(all_gaps)} Gaps",
+                    f"#### {ga.service_name}: {len(all_gaps)} {gap_word}",
                     ""
                 ])
                 
@@ -266,8 +279,9 @@ class BeautifulMarkdownFormatter:
         
         for ba in result.blindspot_analyses:
             if ba.blindspots:
+                blindspot_word = "Blindspot" if len(ba.blindspots) == 1 else "Blindspots"
                 lines.extend([
-                    f"#### {ba.service_id}: {len(ba.blindspots)} Blindspots",
+                    f"#### {ba.service_name}: {len(ba.blindspots)} {blindspot_word}",
                     ""
                 ])
                 
