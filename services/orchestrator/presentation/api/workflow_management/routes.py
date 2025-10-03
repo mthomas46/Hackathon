@@ -2,12 +2,29 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional
+from datetime import datetime
+import uuid
+import os
 
 from .dtos import (
     CreateWorkflowRequest, ExecuteWorkflowRequest, GetWorkflowRequest,
     ListWorkflowsRequest, WorkflowResponse, WorkflowExecutionResponse,
     WorkflowListResponse, ExecutionListResponse
 )
+
+# Import WorkflowLogger for comprehensive logging
+try:
+    from services.shared.infrastructure.logging.workflow_logger import WorkflowLogger
+    
+    workflow_logger = WorkflowLogger(
+        service_name="orchestrator",
+        log_collector_url=os.getenv("LOG_COLLECTOR_URL", "http://log-collector:5040"),
+        fail_silently=True,
+        enable_performance_metrics=True
+    )
+except Exception as e:
+    print(f"Warning: WorkflowLogger initialization failed: {e}")
+    workflow_logger = None
 
 # Import domain/application services (will be injected via dependency injection)
 # These will be available through the container in main.py
@@ -27,7 +44,27 @@ async def create_workflow(
     request: CreateWorkflowRequest,
     container = Depends(get_workflow_container)
 ):
-    """Create a new workflow."""
+    """Create a new workflow with full logging support."""
+    # Generate workflow tracking ID
+    workflow_id_tracking = f"wf-create-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8]}"
+    start_time = datetime.utcnow()
+    
+    # Log workflow creation start
+    if workflow_logger:
+        try:
+            await workflow_logger.log_workflow_start(
+                workflow_id=workflow_id_tracking,
+                operation="workflow_creation",
+                context={
+                    "workflow_name": request.name,
+                    "workflow_type": request.workflow_type,
+                    "actions_count": len(request.actions) if request.actions else 0,
+                    "parameters_count": len(request.parameters) if request.parameters else 0
+                }
+            )
+        except Exception as e:
+            print(f"Logging failed: {e}")
+    
     try:
         # Create command
         from ....application.workflow_management.commands import CreateWorkflowCommand
@@ -41,14 +78,43 @@ async def create_workflow(
             tags=request.tags
         )
 
+        # Log command creation
+        if workflow_logger:
+            await workflow_logger.log_workflow_step(
+                workflow_id=workflow_id_tracking,
+                step_name="create_workflow_command",
+                step_data={
+                    "workflow_name": request.name,
+                    "workflow_type": request.workflow_type
+                }
+            )
+
         # Execute use case
         result = await container.create_workflow_use_case.execute(command)
 
         if not result.success:
+            # Log failure
+            if workflow_logger:
+                await workflow_logger.log_error(
+                    workflow_id=workflow_id_tracking,
+                    error=Exception(result.error_message),
+                    context={"stage": "workflow_creation", "use_case": "CreateWorkflowUseCase"}
+                )
             raise HTTPException(status_code=400, detail=result.error_message)
 
+        # Log successful creation
+        if workflow_logger:
+            await workflow_logger.log_workflow_step(
+                workflow_id=workflow_id_tracking,
+                step_name="workflow_created",
+                step_data={
+                    "created_workflow_id": str(result.workflow.workflow_id),
+                    "workflow_status": str(result.workflow.status)
+                }
+            )
+
         # Convert to response
-        return WorkflowResponse(
+        response = WorkflowResponse(
             workflow_id=result.workflow.workflow_id,
             name=result.workflow.name,
             description=result.workflow.description,
@@ -60,8 +126,32 @@ async def create_workflow(
             created_at=result.workflow.created_at,
             updated_at=result.workflow.updated_at
         )
+        
+        # Log completion
+        duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
+        if workflow_logger:
+            await workflow_logger.log_workflow_complete(
+                workflow_id=workflow_id_tracking,
+                duration_ms=duration_ms,
+                success=True,
+                metrics={
+                    "workflow_id": str(result.workflow.workflow_id),
+                    "actions_count": len(result.workflow.actions) if result.workflow.actions else 0
+                }
+            )
+        
+        return response
 
+    except HTTPException:
+        raise
     except Exception as e:
+        # Log error
+        if workflow_logger:
+            await workflow_logger.log_error(
+                workflow_id=workflow_id_tracking,
+                error=e,
+                context={"endpoint": "/workflows", "operation": "create"}
+            )
         raise HTTPException(status_code=500, detail=f"Failed to create workflow: {str(e)}")
 
 
@@ -71,10 +161,37 @@ async def execute_workflow(
     request: ExecuteWorkflowRequest,
     container = Depends(get_workflow_container)
 ):
-    """Execute a workflow."""
+    """Execute a workflow with comprehensive logging and tracking."""
+    # Use correlation_id as workflow_id if provided, otherwise generate new one
+    workflow_id_tracking = request.correlation_id if request.correlation_id else f"wf-exec-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8]}"
+    start_time = datetime.utcnow()
+    
+    # Log workflow execution start
+    if workflow_logger:
+        try:
+            await workflow_logger.log_workflow_start(
+                workflow_id=workflow_id_tracking,
+                operation="workflow_execution",
+                context={
+                    "workflow_id": workflow_id,
+                    "user_id": request.user_id,
+                    "parameters_count": len(request.parameters) if request.parameters else 0,
+                    "priority": request.priority
+                },
+                user_id=request.user_id
+            )
+        except Exception as e:
+            print(f"Logging failed: {e}")
+    
     try:
         # Validate workflow_id matches
         if request.workflow_id != workflow_id:
+            if workflow_logger:
+                await workflow_logger.log_error(
+                    workflow_id=workflow_id_tracking,
+                    error=ValueError("Workflow ID mismatch"),
+                    context={"expected": workflow_id, "received": request.workflow_id}
+                )
             raise HTTPException(status_code=400, detail="Workflow ID mismatch")
 
         # Create command
@@ -88,14 +205,51 @@ async def execute_workflow(
             priority=request.priority
         )
 
+        # Log command creation
+        if workflow_logger:
+            await workflow_logger.log_workflow_step(
+                workflow_id=workflow_id_tracking,
+                step_name="create_execution_command",
+                step_data={
+                    "workflow_id": workflow_id,
+                    "correlation_id": request.correlation_id
+                }
+            )
+
         # Execute use case
+        if workflow_logger:
+            await workflow_logger.log_workflow_step(
+                workflow_id=workflow_id_tracking,
+                step_name="execute_workflow_use_case_start",
+                step_data={"workflow_id": workflow_id}
+            )
+        
         result = await container.execute_workflow_use_case.execute(command)
 
         if not result.success:
+            # Log failure
+            if workflow_logger:
+                await workflow_logger.log_error(
+                    workflow_id=workflow_id_tracking,
+                    error=Exception(result.error_message),
+                    context={"stage": "workflow_execution", "use_case": "ExecuteWorkflowUseCase"}
+                )
             raise HTTPException(status_code=400, detail=result.error_message)
 
+        # Log successful execution
+        if workflow_logger:
+            await workflow_logger.log_workflow_step(
+                workflow_id=workflow_id_tracking,
+                step_name="workflow_executed",
+                step_data={
+                    "execution_id": str(result.execution.execution_id),
+                    "status": result.execution.status.value,
+                    "has_results": bool(result.execution.results)
+                }
+            )
+
         # Convert to response
-        return WorkflowExecutionResponse(
+        response = WorkflowExecutionResponse(
             execution_id=result.execution.execution_id,
             workflow_id=result.execution.workflow_id,
             status=result.execution.status.value,
@@ -106,8 +260,46 @@ async def execute_workflow(
             duration_seconds=result.execution.duration_seconds,
             error_message=result.execution.error_message
         )
+        
+        # Log completion with performance metrics
+        duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
+        if workflow_logger:
+            await workflow_logger.log_workflow_complete(
+                workflow_id=workflow_id_tracking,
+                duration_ms=duration_ms,
+                success=True,
+                metrics={
+                    "execution_id": str(result.execution.execution_id),
+                    "execution_duration_seconds": result.execution.duration_seconds,
+                    "status": result.execution.status.value,
+                    "results_count": len(result.execution.results) if result.execution.results else 0
+                }
+            )
+            
+            # Also log as performance metric
+            await workflow_logger.log_performance_metric(
+                workflow_id=workflow_id_tracking,
+                metric_name="workflow_execution_time",
+                metric_value=duration_ms,
+                unit="ms",
+                context={
+                    "workflow_id": workflow_id,
+                    "execution_id": str(result.execution.execution_id)
+                }
+            )
+        
+        return response
 
+    except HTTPException:
+        raise
     except Exception as e:
+        # Log error
+        if workflow_logger:
+            await workflow_logger.log_error(
+                workflow_id=workflow_id_tracking,
+                error=e,
+                context={"endpoint": f"/workflows/{workflow_id}/execute", "operation": "execute"}
+            )
         raise HTTPException(status_code=500, detail=f"Failed to execute workflow: {str(e)}")
 
 
