@@ -27,15 +27,15 @@ class PromptHandlers(BaseHandler):
             response = create_success_response(
                 message="Prompt created successfully", data=prompt.to_dict()
             )
-            return response.model_dump()
+            return response
         except ValueError as e:
             error_response = create_error_response(str(e), "VALIDATION_ERROR")
-            return error_response.model_dump()
+            return error_response
         except Exception as e:
             error_response = create_error_response(
                 f"Failed to create prompt: {str(e)}", "INTERNAL_ERROR"
             )
-            return error_response.model_dump()
+            return error_response
 
     async def handle_get_prompt(self, prompt_id: str) -> Dict[str, Any]:
         """Get a single prompt by ID."""

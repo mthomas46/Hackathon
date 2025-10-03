@@ -622,7 +622,7 @@ async def startup_event():
     """Initialize database and services on startup."""
     try:
         # Initialize database schema
-        from .db.schema import init_database
+        from services.doc_store.db.schema import init_database
 
         init_database()
         print("✅ Database initialized successfully")
