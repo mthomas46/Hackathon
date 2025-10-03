@@ -9,11 +9,18 @@ from contextlib import contextmanager
 
 
 def _validate_db_path(db_path: str) -> str:
-    """Validate database path to prevent directory traversal attacks."""
-    if any(
-        char in db_path for char in ["..", "/", "\\", ":", "*", "?", '"', "<", ">", "|"]
-    ):
-        return "services/doc_store/db.sqlite3"
+    """Validate and resolve database path."""
+    # If it's a relative path, make it absolute from project root
+    if not os.path.isabs(db_path):
+        # Get project root (3 levels up from this file)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
+        db_path = os.path.join(project_root, db_path)
+    
+    # Ensure directory exists
+    db_dir = os.path.dirname(db_path)
+    os.makedirs(db_dir, exist_ok=True)
+    
     return db_path
 
 
@@ -29,7 +36,7 @@ def _validate_connection_pool_size(size_str: str) -> int:
 
 
 _DB_PATH = _validate_db_path(
-    os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
+    os.environ.get("DOCSTORE_DB", "services/doc_store/data/doc_store.db")
 )
 _CONNECTION_POOL_SIZE = _validate_connection_pool_size(
     os.environ.get("DOCSTORE_CONNECTION_POOL_SIZE", "5")

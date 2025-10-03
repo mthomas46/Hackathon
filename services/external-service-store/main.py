@@ -12,7 +12,7 @@ from fastapi import FastAPI, HTTPException, Query, Depends, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from .infrastructure.repositories.sqlite_external_service_repository import (
+from services.external_service_store.infrastructure.repositories.sqlite_external_service_repository import (
     SQLiteExternalServiceRepository,
     SQLiteServiceEndpointRepository,
     SQLiteServiceDependencyRepository,
@@ -20,7 +20,7 @@ from .infrastructure.repositories.sqlite_external_service_repository import (
     SQLiteServiceUserRepository,
     SQLiteServiceTopicRepository
 )
-from .domain.services.external_service_service import ExternalServiceService
+from services.external_service_store.domain.services.external_service_service import ExternalServiceService
 
 # ============================================================================
 # SERVICE CONFIGURATION
