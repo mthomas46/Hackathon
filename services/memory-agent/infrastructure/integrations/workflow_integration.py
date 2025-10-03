@@ -6,14 +6,26 @@ Integrates Memory Agent with all 4 workflows for automatic result storage and ar
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
-from services.memory_agent.domain.entities.memory_context import (
-    MemoryContext,
-    WorkflowResult,
-    ArtifactLink,
-    WorkflowType
-)
-from services.memory_agent.domain.services.context_manager import ContextManager
-from services.memory_agent.domain.services.artifact_linker import ArtifactLinker
+try:
+    # Try relative imports first (when used within package)
+    from ...domain.entities.memory_context import (
+        MemoryContext,
+        WorkflowResult,
+        ArtifactLink,
+        WorkflowType
+    )
+    from ...domain.services.context_manager import ContextManager
+    from ...domain.services.artifact_linker import ArtifactLinker
+except ImportError:
+    # Fall back to absolute imports (when used from outside package)
+    from domain.entities.memory_context import (
+        MemoryContext,
+        WorkflowResult,
+        ArtifactLink,
+        WorkflowType
+    )
+    from domain.services.context_manager import ContextManager
+    from domain.services.artifact_linker import ArtifactLinker
 
 
 class WorkflowIntegrationHelper:
