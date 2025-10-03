@@ -217,6 +217,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ============================================================================
+# DATASTORE OPERATION LOGGING - Track all operations to log-collector
+# ============================================================================
+try:
+    from services.shared.infrastructure.logging.datastore_operation_logger import add_datastore_logging
+    
+    add_datastore_logging(
+        app,
+        service_name="external-service-store",
+        log_collector_url="http://localhost:8104",
+        timeout_seconds=1.0
+    )
+    print("✅ DataStore operation logging enabled for external-service-store → log-collector")
+except Exception as e:
+    print(f"⚠️  Could not enable datastore logging: {e}")
+
 # Store start time for uptime calculation
 app._start_time = time.time()
 

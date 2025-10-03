@@ -98,24 +98,107 @@ except ImportError:
         """
         return True
 
+# Initialize workflow logger for debugging (synchronous logging)
+import httpx
+import uuid
+import json
+import os
+import sys
+from datetime import datetime
+
+startup_workflow_id = f"doc_store_startup_{uuid.uuid4().hex[:8]}"
+
+def send_startup_log(level: str, message: str, context: dict):
+    """Send synchronous log to log-collector during startup."""
+    try:
+        log_data = {
+            "service": "doc_store",
+            "workflow_id": startup_workflow_id,
+            "level": level,
+            "message": message,
+            "context": context,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        httpx.post(
+            "http://localhost:8104/api/v1/logs",
+            json=log_data,
+            timeout=2.0
+        )
+    except:
+        pass  # Fail silently during startup
+
+# Log startup initiation
+send_startup_log("INFO", "Router import starting", {
+    "pythonpath": os.getenv("PYTHONPATH", "not_set"),
+    "phase": "startup"
+})
+
 try:
+    print(f"🔍 [STARTUP] Attempting relative import of router...")
+    send_startup_log("INFO", "Attempting relative import", {
+        "import_path": ".presentation.api.routes",
+        "phase": "import_attempt"
+    })
+    
     from .presentation.api.routes import router as api_router
     from .infrastructure.resource_monitor import DocStoreResourceMonitor
-except ImportError:
+    
+    route_count = len(api_router.routes)
+    print(f"✅ SUCCESS: Loaded router with {route_count} routes (relative import)")
+    send_startup_log("INFO", "Relative import SUCCESS", {
+        "route_count": route_count,
+        "import_type": "relative",
+        "phase": "import_success"
+    })
+except ImportError as e:
+    print(f"⚠️  Relative import failed: {e}")
+    send_startup_log("ERROR", f"Relative import failed: {str(e)}", {
+        "import_type": "relative",
+        "import_path": ".presentation.api.routes",
+        "error": str(e),
+        "phase": "import_error"
+    })
+    
     # Fallback for when running as script
-    import os
-    import sys
-
     # Add current directory to path for relative imports
     sys.path.insert(0, os.path.dirname(__file__))
 
     try:
+        print(f"🔍 [STARTUP] Attempting absolute import of router...")
+        send_startup_log("INFO", "Attempting absolute import", {
+            "import_path": "presentation.api.routes",
+            "phase": "import_attempt_fallback"
+        })
+        
         from presentation.api.routes import router as api_router
         from infrastructure.resource_monitor import DocStoreResourceMonitor
-    except ImportError:
+        
+        route_count = len(api_router.routes)
+        print(f"✅ SUCCESS: Loaded router with {route_count} routes (absolute import)")
+        send_startup_log("INFO", "Absolute import SUCCESS", {
+            "route_count": route_count,
+            "import_type": "absolute",
+            "phase": "import_success"
+        })
+    except ImportError as e2:
+        print(f"❌ FAILED: Both imports failed. Using empty router. Error: {e2}")
+        send_startup_log("CRITICAL", f"Both imports FAILED: {str(e2)}", {
+            "import_type": "absolute",
+            "import_path": "presentation.api.routes",
+            "error": str(e2),
+            "fatal": True,
+            "phase": "import_failure_fatal"
+        })
+        
         # Mock implementations for local testing
         from fastapi import APIRouter
         api_router = APIRouter()
+        
+        send_startup_log("WARNING", "Using empty router fallback", {
+            "route_count": 0,
+            "fallback": True,
+            "phase": "fallback_active"
+        })
 
         class DocStoreResourceMonitor:
             async def start_monitoring(self):
@@ -641,6 +724,22 @@ async def shutdown_event():
 # API ROUTES - Include consolidated domain-driven routes
 # ============================================================================
 app.include_router(api_router)
+
+# ============================================================================
+# DATASTORE OPERATION LOGGING - Track all operations to log-collector
+# ============================================================================
+try:
+    from services.shared.infrastructure.logging.datastore_operation_logger import add_datastore_logging
+    
+    add_datastore_logging(
+        app,
+        service_name="doc_store",
+        log_collector_url="http://localhost:8104",
+        timeout_seconds=1.0
+    )
+    print("✅ DataStore operation logging enabled for doc_store → log-collector")
+except Exception as e:
+    print(f"⚠️  Could not enable datastore logging: {e}")
 
 # Monkey patch the shared health system's healthy_response function
 try:
