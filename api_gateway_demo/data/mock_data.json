@@ -1,0 +1,254 @@
+{
+  "jira_tickets": [
+    {
+      "ticket_id": "NOTIF-001",
+      "title": "Implement push notifications with FCM",
+      "type": "Story",
+      "status": "DONE",
+      "story_points": 13,
+      "actual_hours": 52,
+      "assignee": "Team Member 1",
+      "sprint": "Sprint 20",
+      "completed_date": "2025-07-05",
+      "description": "Implementation of implement push notifications with fcm",
+      "labels": [
+        "mobile",
+        "firebase",
+        "notifications"
+      ],
+      "comments": 3,
+      "complexity": "High",
+      "accuracy_score": 0.95
+    },
+    {
+      "ticket_id": "MOBILE-002",
+      "title": "Firebase integration for analytics",
+      "type": "Story",
+      "status": "DONE",
+      "story_points": 8,
+      "actual_hours": 34,
+      "assignee": "Team Member 2",
+      "sprint": "Sprint 21",
+      "completed_date": "2025-08-04",
+      "description": "Implementation of firebase integration for analytics",
+      "labels": [
+        "mobile",
+        "firebase",
+        "analytics"
+      ],
+      "comments": 4,
+      "complexity": "Medium",
+      "accuracy_score": 0.98
+    },
+    {
+      "ticket_id": "EMAIL-003",
+      "title": "SendGrid email templating",
+      "type": "Story",
+      "status": "DONE",
+      "story_points": 5,
+      "actual_hours": 21,
+      "assignee": "Team Member 3",
+      "sprint": "Sprint 22",
+      "completed_date": "2025-09-03",
+      "description": "Implementation of sendgrid email templating",
+      "labels": [
+        "email",
+        "sendgrid",
+        "templates"
+      ],
+      "comments": 5,
+      "complexity": "Low",
+      "accuracy_score": 1.0
+    }
+  ],
+  "confluence_docs": [
+    {
+      "doc_id": "CONF-001",
+      "title": "Best Practices for Go",
+      "space": "Engineering",
+      "author": "Sarah Chen",
+      "created": "2024-09-01",
+      "last_updated": "2024-09-25",
+      "word_count": 2500,
+      "sections": [
+        "Setup",
+        "Guidelines",
+        "Troubleshooting"
+      ],
+      "tags": [
+        "Go",
+        "Kubernetes",
+        "Redis"
+      ],
+      "views": 142,
+      "likes": 23
+    }
+  ],
+  "github_prs": [
+    {
+      "pr_id": "PR-456",
+      "title": "feat: Implement Go functionality",
+      "author": "Marcus Johnson",
+      "status": "merged",
+      "created": "2024-09-18",
+      "merged": "2024-09-20",
+      "files_changed": 15,
+      "additions": 523,
+      "deletions": 87,
+      "commits": 8,
+      "reviewers": [
+        "Sarah Chen"
+      ],
+      "labels": [
+        "feature",
+        "Go",
+        "Kubernetes"
+      ],
+      "comments": 12
+    }
+  ],
+  "team_members": [
+    {
+      "user_id": "user_001",
+      "name": "Sarah Chen",
+      "role": "Senior Backend Engineer",
+      "skills": [
+        {
+          "skill": "Python",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        },
+        {
+          "skill": "APIs",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        }
+      ],
+      "current_workload": 0.6,
+      "availability": "Full-time",
+      "recent_velocity": 14
+    },
+    {
+      "user_id": "user_002",
+      "name": "Marcus Johnson",
+      "role": "Senior iOS Engineer",
+      "skills": [
+        {
+          "skill": "iOS (Swift)",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        },
+        {
+          "skill": "Mobile",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        }
+      ],
+      "current_workload": 0.65,
+      "availability": "Full-time",
+      "recent_velocity": 15
+    },
+    {
+      "user_id": "user_003",
+      "name": "Priya Patel",
+      "role": "Senior Android Engineer",
+      "skills": [
+        {
+          "skill": "Android (Kotlin)",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        },
+        {
+          "skill": "Mobile",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        }
+      ],
+      "current_workload": 0.7,
+      "availability": "Full-time",
+      "recent_velocity": 16
+    },
+    {
+      "user_id": "user_004",
+      "name": "Emily Wu",
+      "role": "Full Stack Engineer",
+      "skills": [
+        {
+          "skill": "React",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        },
+        {
+          "skill": "Node.js",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        }
+      ],
+      "current_workload": 0.75,
+      "availability": "Full-time",
+      "recent_velocity": 17
+    }
+  ],
+  "external_services": [
+    {
+      "service_id": "firebase-fcm",
+      "name": "Firebase Cloud Messaging",
+      "category": "Push Notifications",
+      "vendor": "Google",
+      "pricing": "Free up to 1M messages/month",
+      "api_version": "v1",
+      "rate_limits": {
+        "messages_per_minute": 60,
+        "messages_per_day": 1000000
+      },
+      "payload_limit": "4KB",
+      "platforms": [
+        "iOS",
+        "Android",
+        "Web"
+      ],
+      "team_experience": "High",
+      "documentation_quality": 0.92,
+      "reliability_sla": "99.9%"
+    },
+    {
+      "service_id": "sendgrid-api",
+      "name": "SendGrid Email API",
+      "category": "Email",
+      "vendor": "Twilio",
+      "pricing": "Free up to 100 emails/day",
+      "api_version": "v3",
+      "rate_limits": {
+        "emails_per_second": 10,
+        "emails_per_day": 100000
+      },
+      "payload_limit": "30MB",
+      "features": [
+        "Templates",
+        "Analytics",
+        "SMTP"
+      ],
+      "team_experience": "Medium",
+      "documentation_quality": 0.9,
+      "reliability_sla": "99.95%"
+    }
+  ],
+  "parameters": {
+    "num_tickets": 3,
+    "num_team_members": 4,
+    "tech_stack": [
+      "Go",
+      "Kubernetes",
+      "Redis"
+    ]
+  },
+  "generated_at": "2025-10-03T19:56:30.911545"
+}
