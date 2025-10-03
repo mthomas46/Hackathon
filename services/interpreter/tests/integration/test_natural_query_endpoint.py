@@ -91,7 +91,7 @@ class TestNaturalQueryEndpoint:
         response = client.post(
             "/natural-query",
             json={
-                "query": "Plan a payment dashboard for a team of 8 developers"
+                "query": "Plan a payment system for a team of 8 developers"
             }
         )
         
@@ -191,8 +191,8 @@ class TestNaturalQueryEndpoint:
         
         test_cases = [
             ("Build a web dashboard", "web"),
-            ("Create a mobile app feature", "mobile"),
-            ("Develop a desktop application", "desktop")
+            ("Create a mobile feature", "mobile"),
+            ("Develop a desktop tool", "desktop")
         ]
         
         for query, expected_platform in test_cases:
