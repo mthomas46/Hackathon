@@ -809,42 +809,99 @@ async def natural_query_v2(query_data: UserQuery):
             intent_type = "general_query"
             confidence = 0.70
         
-        # Extract entities (Enhanced v2.0)
-        entities = {}
+        # Extract entities (Enhanced v2.0 - Basic extraction)
+        basic_entities = {}
         
         # Feature type extraction
         if "authentication" in query_lower or "auth" in query_lower:
-            entities["feature_type"] = "authentication"
+            basic_entities["feature_type"] = "authentication"
         elif "dashboard" in query_lower:
-            entities["feature_type"] = "dashboard"
+            basic_entities["feature_type"] = "dashboard"
         elif "payment" in query_lower:
-            entities["feature_type"] = "payment"
+            basic_entities["feature_type"] = "payment"
         else:
-            entities["feature_type"] = "general"
+            basic_entities["feature_type"] = "general"
         
         # Platform extraction
         if "mobile" in query_lower or "app" in query_lower:
-            entities["platform"] = "mobile"
+            basic_entities["platform"] = "mobile"
         elif "web" in query_lower:
-            entities["platform"] = "web"
+            basic_entities["platform"] = "web"
         elif "desktop" in query_lower:
-            entities["platform"] = "desktop"
+            basic_entities["platform"] = "desktop"
         
         # Team size extraction
         import re
         team_match = re.search(r'team.*?(\d+)', query_lower)
         if team_match:
-            entities["team_size"] = int(team_match.group(1))
+            basic_entities["team_size"] = int(team_match.group(1))
         
-        # Log intent extraction
+        # Log basic extraction
         if workflow_logger:
             await workflow_logger.log_workflow_step(
                 workflow_id=workflow_id,
-                step_name="intent_extraction",
+                step_name="basic_entity_extraction",
                 step_data={
                     "intent": intent_type,
                     "confidence": confidence,
-                    "entities_count": len(entities)
+                    "entities_count": len(basic_entities)
+                }
+            )
+        
+        # 🆕 Phase 2 Enhancement: LLM-powered entity enrichment
+        enriched_entities = basic_entities
+        try:
+            if workflow_logger:
+                await workflow_logger.log_workflow_step(
+                    workflow_id=workflow_id,
+                    step_name="llm_enrichment_start",
+                    step_data={"llm_gateway": "invoking"}
+                )
+            
+            enriched_entities = await llm_client.enrich_entities(query_data.query, basic_entities)
+            
+            if workflow_logger:
+                await workflow_logger.log_workflow_step(
+                    workflow_id=workflow_id,
+                    step_name="llm_enrichment_complete",
+                    step_data={
+                        "enriched_count": len(enriched_entities),
+                        "new_fields": list(set(enriched_entities.keys()) - set(basic_entities.keys()))
+                    }
+                )
+        except Exception as e:
+            # Fallback to basic entities if LLM enrichment fails
+            if workflow_logger:
+                await workflow_logger.log_error(
+                    workflow_id=workflow_id,
+                    error=e,
+                    context={"stage": "llm_enrichment", "fallback": "basic_entities"}
+                )
+            enriched_entities = basic_entities
+        
+        # Use enriched entities for final response
+        entities = enriched_entities
+        
+        # Update confidence if complexity was determined by LLM
+        if "complexity" in entities:
+            complexity_confidence_map = {
+                "simple": 0.85,
+                "moderate": 0.90,
+                "complex": 0.95
+            }
+            llm_confidence = complexity_confidence_map.get(entities.get("complexity"), confidence)
+            confidence = max(confidence, llm_confidence)
+        
+        # Log final intent extraction
+        if workflow_logger:
+            await workflow_logger.log_workflow_step(
+                workflow_id=workflow_id,
+                step_name="intent_extraction_final",
+                step_data={
+                    "intent": intent_type,
+                    "confidence": confidence,
+                    "entities_count": len(entities),
+                    "llm_enriched": len(entities) > len(basic_entities)
                 }
             )
         
