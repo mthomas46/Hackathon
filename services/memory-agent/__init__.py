@@ -1,2 +1,1 @@
-# Memory Agent Service
-# Context management and memory persistence
+"""Memory Agent Service - Phase 3."""
