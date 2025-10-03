@@ -809,6 +809,20 @@ async def natural_query_v2(query_data: UserQuery):
             intent_type = "general_query"
             confidence = 0.70
         
+        # 🆕 Phase 2 Day 1: Query Complexity Classification
+        query_complexity = classify_query_complexity(query_data.query, query_lower)
+        
+        if workflow_logger:
+            await workflow_logger.log_workflow_step(
+                workflow_id=workflow_id,
+                step_name="query_classification",
+                step_data={
+                    "complexity": query_complexity,
+                    "query_length": len(query_data.query),
+                    "word_count": len(query_data.query.split())
+                }
+            )
+        
         # Extract entities (Enhanced v2.0 - Basic extraction)
         basic_entities = {}
         
@@ -935,15 +949,17 @@ async def natural_query_v2(query_data: UserQuery):
                 }
             )
         
-        # Build response
+        # Build response (Enhanced Phase 2)
         response = {
             "workflow_id": workflow_id,
             "interpreted_intent": interpreted_intent,
             "entities": entities,
             "confidence": confidence,
+            "complexity": query_complexity,  # 🆕 Phase 2 Day 1
             "processing_time_ms": round(duration_ms, 2),
             "next_step": "orchestrator",
             "logged": workflow_logger is not None,
+            "llm_enriched": len(entities) > len(basic_entities),  # 🆕 Phase 2 Day 1
             "timestamp": datetime.utcnow().isoformat()
         }
         
