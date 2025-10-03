@@ -210,7 +210,7 @@ config = load_service_config("memory-agent")
 SERVICE_NAME = config.service_name
 SERVICE_TITLE = "Memory Agent"
 SERVICE_VERSION = config.service_version
-DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5160"))
+DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5090"))
 
 # Global event task
 _event_task = None
