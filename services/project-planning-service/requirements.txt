@@ -1,32 +1,21 @@
-# Base requirements shared across all services
+# FastAPI and Web Framework
 fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
 pydantic>=2.8.0
+python-multipart>=0.0.9
+
+# HTTP Client
 httpx>=0.25.2
-redis>=5.0.1
-aioredis>=2.0.1
 
-# HTTP client and async support
-aiohttp>=3.12.0
-aiofiles>=23.0.0
-requests>=2.32.0
+# Database
+sqlalchemy>=2.0.23
+alembic>=1.13.0
 
-# Configuration and utilities
-pyyaml>=6.0.0
-python-dotenv>=1.0.0
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
 
-# Monitoring and health
-prometheus-client>=0.20.0
-psutil>=5.9.0
-
-# Data processing and validation
-pandas>=2.0.0
-numpy>=1.24.0
-
-# Project planning specific
-python-dateutil>=2.8.2
-
-# Testing framework (essential for all services)
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
-pytest-mock>=3.12.0
+# Development Tools
+black>=24.0.0
+ruff>=0.3.0

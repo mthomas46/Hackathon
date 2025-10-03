@@ -119,10 +119,16 @@ class Feature:
     @property
     def is_ready_for_planning(self) -> bool:
         """Check if feature is ready for detailed planning."""
+        # Feature is ready if it has description and either:
+        # 1. Has explicit acceptance criteria, OR
+        # 2. Has been analyzed (implies criteria can be derived from AI analysis)
+        has_criteria = len(self.acceptance_criteria) > 0
+        is_analyzed = self.status == FeatureStatus.ANALYZED and bool(self.ai_analysis)
+        
         return (
             self.status in [FeatureStatus.DRAFT, FeatureStatus.ANALYZED] and
-            self.description and
-            self.acceptance_criteria
+            bool(self.description) and
+            (has_criteria or is_analyzed)
         )
 
     @property

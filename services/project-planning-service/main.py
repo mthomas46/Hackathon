@@ -7,11 +7,11 @@ providing AI-powered roadmap creation, team capacity management, and
 enterprise tool integration.
 
 Endpoints:
-- POST /api/v1/features/plan: Create comprehensive feature development plan
-- GET /api/v1/features/{id}: Retrieve feature planning details
-- POST /api/v1/roadmaps/create: Generate development roadmap
-- GET /api/v1/teams/capacity: Get team capacity and availability
-- POST /api/v1/integrations/sync: Sync with external PM tools
+- POST /api/v1/planning/analyze: Analyze feature description with AI
+- POST /api/v1/planning/decompose: Decompose feature into tasks
+- GET /api/v1/planning/features: List features with filtering
+- GET /api/v1/planning/features/{id}: Get feature details
+- GET /api/v1/planning/tasks: List tasks with filtering
 - GET /health: Service health check
 
 Responsibilities:
@@ -22,7 +22,7 @@ Responsibilities:
 - Real-time roadmap planning and optimization
 - Stakeholder communication and reporting
 
-Dependencies: shared infrastructure, LLM Gateway, Source Agent, User Store
+Dependencies: shared infrastructure, LLM Gateway, Source Agent, User Store, Interpreter
 """
 
 import os
@@ -30,6 +30,7 @@ import sys
 from pathlib import Path
 from fastapi import FastAPI
 from typing import Optional
+from contextlib import asynccontextmanager
 
 # Add parent directory to path for proper imports
 parent_dir = str(Path(__file__).parent.parent.parent)
@@ -40,19 +41,75 @@ if parent_dir not in sys.path:
 from services.shared.infrastructure.monitoring.health import register_health_endpoints
 from services.shared.infrastructure.utilities.error_handling import register_exception_handlers
 from services.shared.core.constants_new import ServiceNames
-from services.shared.infrastructure.utilities.utilities import setup_common_middleware, attach_self_register
+from services.shared.infrastructure.utilities.utilities import setup_common_middleware
 from services.shared.infrastructure.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware
 
-# Service configuration constants - hardcoded to avoid config loading issues
+# Import database initialization
+from services.project_planning_service.infrastructure.database import init_database
+
+# Import API routes
+from services.project_planning_service.presentation.api.routes import planning
+from services.project_planning_service.api import roadmap_routes
+
+# Import log client
+from services.project_planning_service.infrastructure.integrations.log_collector_client import get_log_client
+
+# Service configuration constants
 SERVICE_NAME = "project-planning-service"
 SERVICE_VERSION = "1.0.0"
 DEFAULT_API_PORT = int(os.environ.get("SERVICE_API_PORT", "5170"))
+
+
+# ============================================================================
+# APPLICATION LIFECYCLE
+# ============================================================================
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler for startup and shutdown events."""
+    # Startup
+    log_client = get_log_client()
+    
+    try:
+        # Initialize database
+        init_database()
+        print(f"✅ Database initialized successfully")
+        
+        await log_client.log_info(
+            f"{SERVICE_NAME} starting up",
+            context={"version": SERVICE_VERSION, "port": DEFAULT_API_PORT}
+        )
+        
+        print(f"✅ {SERVICE_NAME} v{SERVICE_VERSION} started successfully")
+        
+    except Exception as e:
+        print(f"❌ Startup failed: {e}")
+        await log_client.log_error(
+            f"Service startup failed: {str(e)}",
+            context={"service": SERVICE_NAME, "error": str(e)}
+        )
+        raise
+    
+    yield
+    
+    # Shutdown
+    await log_client.log_info(
+        f"{SERVICE_NAME} shutting down",
+        context={"version": SERVICE_VERSION}
+    )
+    print(f"✅ {SERVICE_NAME} shutdown complete")
+
+
+# ============================================================================
+# APPLICATION SETUP
+# ============================================================================
 
 # Initialize FastAPI app
 app = FastAPI(
     title="Project Planning Service",
     version=SERVICE_VERSION,
-    description="AI-powered feature development roadmap planning and team orchestration"
+    description="AI-powered feature development roadmap planning and team orchestration",
+    lifespan=lifespan
 )
 
 # Setup middleware
@@ -68,24 +125,31 @@ register_exception_handlers(app)
 # Setup common middleware
 setup_common_middleware(app, SERVICE_NAME)
 
-# Attach service registration - commented out due to argument mismatch
-# attach_self_register(app, SERVICE_NAME, DEFAULT_API_PORT)
+# Include API routers
+app.include_router(planning.router)
+app.include_router(roadmap_routes.router, prefix="/api/v1")
 
 
-@app.get("/api/v1/features/plan")
-async def plan_feature():
-    """Placeholder for feature planning endpoint."""
+# ============================================================================
+# ROOT ENDPOINTS
+# ============================================================================
+
+@app.get("/")
+async def root():
+    """Root endpoint with service information."""
     return {
-        "status": "development",
-        "message": "Project Planning Service is under development",
         "service": SERVICE_NAME,
-        "version": SERVICE_VERSION
+        "version": SERVICE_VERSION,
+        "status": "operational",
+        "description": "AI-powered feature development roadmap planning",
+        "documentation": "/docs",
+        "health": "/health"
     }
 
 
-@app.get("/health")
-async def health():
-    """Health check endpoint."""
+@app.get("/api/v1/info")
+async def service_info():
+    """Service information endpoint."""
     return {
         "status": "healthy",
         "service": SERVICE_NAME,

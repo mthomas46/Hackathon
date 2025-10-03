@@ -1,0 +1,66 @@
+Traceback (most recent call last):
+  File "/Users/mykalthomas/Documents/work/Hackathon/services/project-planning-service/demo_roadmap.py", line 356, in run_complete_demo
+    estimate = self.demo_timeline_estimation(features)
+  File "/Users/mykalthomas/Documents/work/Hackathon/services/project-planning-service/demo_roadmap.py", line 222, in demo_timeline_estimation
+    print(f"    📊 Total Story Points: {estimate.total_story_points}")
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'TimelineEstimate' object has no attribute 'total_story_points'
+🎭 Feature Development Roadmap - Complete Demo
+======================================================================
+
+📝 Step 1: Creating Mock Features
+----------------------------------------------------------------------
+  ✅ User Authentication System
+     Priority: high, Effort: 13.0 SP
+     Dependencies: None
+  ✅ User Dashboard
+     Priority: high, Effort: 21.0 SP
+     Dependencies: feat-001
+  ✅ Notification System
+     Priority: medium, Effort: 8.0 SP
+     Dependencies: feat-001
+  ✅ Admin Panel
+     Priority: medium, Effort: 13.0 SP
+     Dependencies: feat-001, feat-002
+  ✅ Reporting Engine
+     Priority: low, Effort: 13.0 SP
+     Dependencies: feat-002
+  ✅ API Documentation
+     Priority: high, Effort: 5.0 SP
+     Dependencies: None
+
+  📊 Total: 6 features, 73.0 story points
+
+🔗 Step 2: Dependency Analysis & Resolution
+----------------------------------------------------------------------
+  Analysis Result:
+    ✅ Valid Graph: True
+    🔄 Circular Dependencies: None ✅
+    📊 Nodes: 6, Edges: 5
+
+  📋 Recommended Implementation Order:
+    1. User Authentication System
+    2. API Documentation
+    3. User Dashboard
+    4. Notification System
+    5. Admin Panel
+    6. Reporting Engine
+
+  🎯 Critical Path (Duration: 47.0 SP):
+    → User Authentication System
+    → User Dashboard
+    → Admin Panel
+
+  ⚠️  Bottlenecks Detected:
+    • User Authentication System (3 features depend on it)
+    • User Dashboard (2 features depend on it)
+
+⏰ Step 3: Timeline Estimation with Historical Velocity
+----------------------------------------------------------------------
+  Timeline Estimation:
+
+❌ Error during demo: 'TimelineEstimate' object has no attribute 'total_story_points'
+
+======================================================================
+  ❌ DEMO FAILED - SEE ERRORS ABOVE
+======================================================================
