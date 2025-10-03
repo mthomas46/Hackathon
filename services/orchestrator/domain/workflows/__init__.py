@@ -10,10 +10,19 @@ from .feature_decomposition_workflow import (
     FeatureBreakdown
 )
 
+from .historical_context_workflow import (
+    HistoricalContextWorkflow,
+    ContextSource,
+    HistoricalContext
+)
+
 __all__ = [
     "FeatureDecompositionWorkflow",
     "UserStory",
     "TechnicalTask",
-    "FeatureBreakdown"
+    "FeatureBreakdown",
+    "HistoricalContextWorkflow",
+    "ContextSource",
+    "HistoricalContext"
 ]
 
