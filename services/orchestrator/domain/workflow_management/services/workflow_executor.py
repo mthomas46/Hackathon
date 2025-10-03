@@ -3,15 +3,30 @@
 import asyncio
 from typing import Dict, Any, List, Optional, Callable
 from datetime import datetime
+import os
 
 from ..entities.workflow import Workflow
 from ..entities.workflow_execution import WorkflowExecution
 from ..entities.workflow_action import WorkflowAction
 from ..value_objects.action_result import ActionResult, ActionStatus
 
+# Import WorkflowLogger for parallel execution tracking
+try:
+    from services.shared.infrastructure.logging.workflow_logger import WorkflowLogger
+    
+    executor_logger = WorkflowLogger(
+        service_name="orchestrator-executor",
+        log_collector_url=os.getenv("LOG_COLLECTOR_URL", "http://log-collector:5040"),
+        fail_silently=True,
+        enable_performance_metrics=True
+    )
+except Exception as e:
+    print(f"Warning: WorkflowLogger initialization failed in executor: {e}")
+    executor_logger = None
+
 
 class WorkflowExecutor:
-    """Domain service for executing workflows."""
+    """Domain service for executing workflows with comprehensive logging."""
 
     def __init__(self, action_executor_factory: Callable = None):
         """Initialize with optional action executor factory."""
@@ -67,27 +82,91 @@ class WorkflowExecutor:
                     results[action_id] = ActionResult.skipped(action_id)
                 break
 
+            # Log parallel execution start
+            if executor_logger and hasattr(execution, 'execution_id'):
+                try:
+                    await executor_logger.log_workflow_step(
+                        workflow_id=str(execution.execution_id),
+                        step_name="parallel_execution_batch",
+                        step_data={
+                            "action_count": len(executable_actions),
+                            "action_ids": [a.action_id for a in executable_actions]
+                        }
+                    )
+                except Exception:
+                    pass
+
             # Execute actions concurrently
             execution_tasks = []
             for action in executable_actions:
+                # Log individual action start
+                if executor_logger and hasattr(execution, 'execution_id'):
+                    try:
+                        await executor_logger.log_workflow_step(
+                            workflow_id=str(execution.execution_id),
+                            step_name=f"action_start_{action.action_id}",
+                            step_data={
+                                "action_type": str(action.action_type),
+                                "dependencies_count": len(action.depends_on)
+                            }
+                        )
+                    except Exception:
+                        pass
+                
                 task = asyncio.create_task(
                     self._execute_action(action, parameters, results, external_services)
                 )
                 execution_tasks.append((action.action_id, task))
 
             # Wait for all to complete
+            success_count = 0
+            failure_count = 0
             for action_id, task in execution_tasks:
                 try:
                     result = await task
                     results[action_id] = result
+                    if result.is_successful:
+                        success_count += 1
+                    else:
+                        failure_count += 1
+                    
+                    # Log action completion
+                    if executor_logger and hasattr(execution, 'execution_id'):
+                        try:
+                            await executor_logger.log_workflow_step(
+                                workflow_id=str(execution.execution_id),
+                                step_name=f"action_complete_{action_id}",
+                                step_data={
+                                    "status": "success" if result.is_successful else "failed",
+                                    "execution_time_ms": result.execution_time_ms
+                                }
+                            )
+                        except Exception:
+                            pass
                 except Exception as e:
                     results[action_id] = ActionResult.failure(
                         action_id,
                         f"Execution failed: {str(e)}",
                         0
                     )
+                    failure_count += 1
                 finally:
                     del pending_actions[action_id]
+            
+            # Log batch completion
+            if executor_logger and hasattr(execution, 'execution_id'):
+                try:
+                    await executor_logger.log_workflow_step(
+                        workflow_id=str(execution.execution_id),
+                        step_name="parallel_execution_batch_complete",
+                        step_data={
+                            "successful": success_count,
+                            "failed": failure_count,
+                            "total": success_count + failure_count
+                        }
+                    )
+                except Exception:
+                    pass
 
         return results
 
