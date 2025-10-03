@@ -16,13 +16,41 @@ from .historical_context_workflow import (
     HistoricalContext
 )
 
+from .timeline_analysis_workflow import (
+    TimelineAnalysisWorkflow,
+    TimelineEstimate,
+    HistoricalTrend,
+    TimelineAnalysisResult
+)
+
+from .skills_matching_workflow import (
+    SkillsMatchingWorkflow,
+    TeamMember,
+    SkillGap,
+    ResourceAllocation,
+    SkillsMatchingResult
+)
+
 __all__ = [
+    # Workflow A
     "FeatureDecompositionWorkflow",
     "UserStory",
     "TechnicalTask",
     "FeatureBreakdown",
+    # Workflow B
     "HistoricalContextWorkflow",
     "ContextSource",
-    "HistoricalContext"
+    "HistoricalContext",
+    # Workflow C
+    "TimelineAnalysisWorkflow",
+    "TimelineEstimate",
+    "HistoricalTrend",
+    "TimelineAnalysisResult",
+    # Workflow D
+    "SkillsMatchingWorkflow",
+    "TeamMember",
+    "SkillGap",
+    "ResourceAllocation",
+    "SkillsMatchingResult"
 ]
 
