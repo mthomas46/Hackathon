@@ -23,7 +23,7 @@ class PromptHandlers(BaseHandler):
     async def handle_create_prompt(self, prompt_data: PromptCreate) -> Dict[str, Any]:
         """Create a new prompt."""
         try:
-            prompt = self.service.create_entity(prompt_data.model_dump())
+            prompt = await self.service.create(prompt_data.model_dump())
             response = create_success_response(
                 message="Prompt created successfully", data=prompt.to_dict()
             )

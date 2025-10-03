@@ -99,11 +99,10 @@ class DocumentHandlers(AbstractDocumentHandlers):
             metadata = request.metadata if isinstance(request.metadata, dict) else {}
 
             # Create document
-            document = self.service.create_document(
-                content=request.content,
-                metadata=metadata,
+            document = await self.service.create_document(
                 document_id=request.id,
-                correlation_id=request.correlation_id,
+                content=request.content,
+                metadata=metadata
             )
 
             # Return direct DocumentResponse without wrapper
