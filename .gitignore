@@ -423,3 +423,15 @@ Session.vim
 # Emacs lock files
 .#*
 #*#
+
+## Demo and Test Outputs
+# Scala/Elm CRUD demo directories (various iterations)
+scala_elm_crud_CONNECTIVITY_TEST/
+scala_elm_crud_demo/
+scala_elm_crud_demo_PROOF_OF_PERSISTENCE/
+scala_elm_crud_demo_v2/
+scala_elm_crud_demo_v3/
+scala_elm_crud_demo_v4/
+scala_elm_crud_demo_v5/
+scala_elm_crud_demo_v6/
+scala_elm_crud_demo_v7/
