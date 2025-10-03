@@ -251,6 +251,21 @@ setup_common_middleware(app, service_name=config.service_name)
 # Auto-register with orchestrator using standardized service name
 attach_self_register(app, config.service_name)
 
+# ============================================================================
+# DATASTORE OPERATION LOGGING - Track all operations to log-collector
+# ============================================================================
+try:
+    from services.shared.infrastructure.logging.datastore_operation_logger import add_datastore_logging
+    
+    add_datastore_logging(
+        app,
+        service_name="memory-agent",
+        log_collector_url="http://localhost:8104",
+        timeout_seconds=1.0
+    )
+    print("✅ DataStore operation logging enabled for memory-agent → log-collector")
+except Exception as e:
+    print(f"⚠️  Could not enable datastore logging: {e}")
 
 # Custom memory-specific health endpoint
 @app.get("/health", summary="Memory Agent Health Check", description="Returns service health status including memory statistics and operational metrics.", tags=["health"], responses={200: {"description": "Service is healthy with memory statistics"}, 500: {"description": "Service health check failed"}})

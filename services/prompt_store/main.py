@@ -77,6 +77,21 @@ install_error_handlers(app)
 register_health_endpoints(app, config.service_name, config.service_version)
 attach_self_register(app, config.service_name)
 
+# ============================================================================
+# DATASTORE OPERATION LOGGING - Track all operations to log-collector
+# ============================================================================
+try:
+    from services.shared.infrastructure.logging.datastore_operation_logger import add_datastore_logging
+    
+    add_datastore_logging(
+        app,
+        service_name="prompt_store",
+        log_collector_url="http://localhost:8104",
+        timeout_seconds=1.0
+    )
+    print("✅ DataStore operation logging enabled for prompt_store → log-collector")
+except Exception as e:
+    print(f"⚠️  Could not enable datastore logging: {e}")
 
 # Initialize cache
 @app.on_event("startup")
