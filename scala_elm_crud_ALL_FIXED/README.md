@@ -1,6 +1,6 @@
 # Hyper-Realistic Demo Output
 
-**Generated:** 2025-10-04 00:49:20 UTC  
+**Generated:** 2025-10-04 01:30:34 UTC  
 **Demo Version:** Phase 9 - Hyper-Realistic Parameterized Demo v2.0
 
 ---
@@ -19,7 +19,7 @@ This folder contains the output of a hyper-realistic planning system demo, inclu
 ## 📁 Folder Structure
 
 ```
-scala_elm_crud_FINAL_WORKING/
+scala_elm_crud_ALL_FIXED/
 ├── README.md                             (This file)
 ├── data/
 │   └── mock_data.json                    (Generated mock data)
@@ -197,12 +197,12 @@ This demo was run with the following parameters:
 
 | Parameter | Value |
 |-----------|-------|
-| **Feature** | Build a real-time notification system with push notifications for iOS and Androi... |
+| **Feature** | Build a message queue system with RabbitMQ... |
 | **Total Historical Documents** | 3 (30% Jira, 30% Confluence, 40% GitHub) |
 | **Tangential Service Docs** | 1 |
 | **Team Members** | 2 |
-| **Tech Stack** | Python, iOS, Android, React, Firebase |
-| **Output Folder** | `scala_elm_crud_FINAL_WORKING/` |
+| **Tech Stack** | Python, RabbitMQ, Docker |
+| **Output Folder** | `scala_elm_crud_ALL_FIXED/` |
 
 ---
 
@@ -262,4 +262,4 @@ Simply delete this folder and run the demo script again with your desired parame
 
 **Demo System:** LLM Documentation Ecosystem - Phase 9  
 **Version:** Hyper-Realistic Parameterized Demo v2.0  
-**Generated:** 2025-10-04 00:49:20 UTC
+**Generated:** 2025-10-04 01:30:34 UTC

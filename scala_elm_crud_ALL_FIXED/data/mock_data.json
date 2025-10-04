@@ -38,8 +38,8 @@
       ],
       "tags": [
         "Python",
-        "React",
-        "PostgreSQL"
+        "RabbitMQ",
+        "Docker"
       ],
       "views": 100,
       "likes": 15,
@@ -68,7 +68,7 @@
       "labels": [
         "feature",
         "Python",
-        "React"
+        "RabbitMQ"
       ],
       "comments": 8,
       "review_comments": 3,
@@ -230,9 +230,9 @@
     "num_team_members": 2,
     "tech_stack": [
       "Python",
-      "React",
-      "PostgreSQL"
+      "RabbitMQ",
+      "Docker"
     ]
   },
-  "generated_at": "2025-10-04T01:19:33.553026"
+  "generated_at": "2025-10-04T01:30:33.780507"
 }

@@ -1,6 +1,6 @@
 # 🗄️ Data Architecture & Store Relationships Report
 
-**Generated:** 2025-10-04 00:51:34 UTC  
+**Generated:** 2025-10-04 01:30:34 UTC  
 **Report Type:** Data Architecture & Ecosystem Integration Analysis  
 **Related Reports:**  
 - [Planning Service Report](./Planning_Service_Report.md) - Production planning output  
@@ -14,8 +14,8 @@
 
 This report provides an in-depth analysis of how data flows through the ecosystem's multiple data stores, including:
 - **4 Primary Data Stores** (doc_store, prompt_store, external-service-store, memory-agent)
-- **7 Services** discovered from 5 historical documents
-- **15 Document-Service Linkings** created
+- **7 Services** discovered from 4 historical documents
+- **10 Document-Service Linkings** created
 - Complete data architecture visualizations and schemas
 
 ---
@@ -230,8 +230,8 @@ CREATE INDEX idx_service_doc_links ON service_document_links(service_id, documen
 
 **Current Data:**
 - **Services Discovered:** 7 services
-- **Services Stored:** 0 services
-- **Document Links:** 15 linkings
+- **Services Stored:** 7 services
+- **Document Links:** 10 linkings
 
 **Top Discovered Services:**
 
@@ -242,40 +242,40 @@ CREATE INDEX idx_service_doc_links ON service_document_links(service_id, documen
    - Source Types: confluence
    - Linked Documents: 4
 
-2. **iOS**
-   - Mentions: 2
-   - Confidence: 0.95
-   - Source Types: confluence
-   - Linked Documents: 2
-
-3. **Datadog**
-   - Mentions: 2
-   - Confidence: 1.00
-   - Source Types: tangential
-   - Linked Documents: 2
-
-4. **Auth0**
-   - Mentions: 2
-   - Confidence: 1.00
-   - Source Types: tangential
-   - Linked Documents: 2
-
-5. **Redis**
-   - Mentions: 2
-   - Confidence: 0.70
-   - Source Types: tangential
-   - Linked Documents: 2
-
-6. **Swagger**
-   - Mentions: 2
-   - Confidence: 0.70
-   - Source Types: tangential
-   - Linked Documents: 2
-
-7. **Android**
+2. **RabbitMQ**
    - Mentions: 1
    - Confidence: 0.90
    - Source Types: confluence
+   - Linked Documents: 1
+
+3. **Docker**
+   - Mentions: 1
+   - Confidence: 0.90
+   - Source Types: confluence
+   - Linked Documents: 1
+
+4. **Datadog**
+   - Mentions: 1
+   - Confidence: 1.00
+   - Source Types: tangential
+   - Linked Documents: 1
+
+5. **Auth0**
+   - Mentions: 1
+   - Confidence: 0.70
+   - Source Types: tangential
+   - Linked Documents: 1
+
+6. **Redis**
+   - Mentions: 1
+   - Confidence: 0.70
+   - Source Types: tangential
+   - Linked Documents: 1
+
+7. **Swagger**
+   - Mentions: 1
+   - Confidence: 0.70
+   - Source Types: tangential
    - Linked Documents: 1
 
 
@@ -320,7 +320,7 @@ workflow:<workflow_type>:<workflow_id>
 - `workflow_e` - External Service Validation contexts
 
 **Current Data:**
-- **Workflow Contexts:** 0 workflows executed
+- **Workflow Contexts:** 5 workflows executed
 - **Total Execution Time:** 0.00s
 - **Storage TTL:** 7 days
 
@@ -355,8 +355,8 @@ CREATE INDEX idx_skill_proficiency ON skills(proficiency_level);
 ```
 
 **Current Data:**
-- **Team Members:** 3 members
-- **Total Skills:** 7 skill entries
+- **Team Members:** 2 members
+- **Total Skills:** 5 skill entries
 - **Skills Coverage:** 96.0%
 
 ---
@@ -391,7 +391,7 @@ Documents in `doc_store` are automatically linked to services in `external-servi
 - **Jira → Services:** 0 linkings
 - **Confluence → Services:** 4 linkings
 - **GitHub → Services:** 1 linkings
-- **Total Links:** 15 linkings
+- **Total Links:** 10 linkings
 
 ### 3.2 Service → Document Reverse Index
 
@@ -605,9 +605,9 @@ prompts = await get_prompts_by_workflow_type(workflows[0].workflow_type)
 |-------|-----------|-------|--------|
 | **doc_store** | Historical Documents | 3 | ✅ |
 | **prompt_store** | Workflow Prompts | 8 | ✅ |
-| **external-service-store** | Discovered Services | 0 | ⚠️ |
-| **memory-agent** | Workflow Contexts | 0 | ⚠️ |
-| **user-store** | Team Members | 3 | ✅ |
+| **external-service-store** | Discovered Services | 7 | ✅ |
+| **memory-agent** | Workflow Contexts | 5 | ✅ |
+| **user-store** | Team Members | 2 | ✅ |
 
 **Status Legend:**
 - ✅ = Data successfully persisted
@@ -636,11 +636,11 @@ cd services/memory-agent && python main.py
 
 ### 6.2 Service Discovery Metrics
 
-- **Documents Analyzed:** 5
+- **Documents Analyzed:** 4
 - **Services Discovered:** 7
-- **Services Stored:** 0
-- **Document-Service Links:** 15
-- **Discovery Confidence:** 0.89
+- **Services Stored:** 7
+- **Document-Service Links:** 10
+- **Discovery Confidence:** 0.84
 
 ### 6.3 Data Growth Over Time
 
@@ -654,8 +654,8 @@ Initial State (Before Demo):
 After Demo Run:
   doc_store: 3 documents (+3)
   prompt_store: 8 prompts (+8)
-  external-service-store: 0 services (+0)
-  memory-agent: 0 contexts (+0)
+  external-service-store: 7 services (+7)
+  memory-agent: 5 contexts (+5)
   
 → Knowledge base grows with each demo run
 → Historical context becomes richer
@@ -816,10 +816,10 @@ Historical Documents (doc_store)
 
 ### 9.2 Service Discovery Success
 
-- **7 services** discovered from 5 documents
-- **15 total mentions** across all documents
+- **7 services** discovered from 4 documents
+- **10 total mentions** across all documents
 - **7 unique services** cataloged
-- **15 document-service linkings** established
+- **10 document-service linkings** established
 
 ### 9.3 Integration Achievements
 
@@ -836,5 +836,5 @@ Historical Documents (doc_store)
 **System:** LLM Documentation Ecosystem - Phase 9  
 **Stores Analyzed:** 5 data stores  
 **Services Discovered:** 7  
-**Linkings Created:** 15  
-**Generated:** 2025-10-04 00:51:34 UTC
+**Linkings Created:** 10  
+**Generated:** 2025-10-04 01:30:34 UTC
