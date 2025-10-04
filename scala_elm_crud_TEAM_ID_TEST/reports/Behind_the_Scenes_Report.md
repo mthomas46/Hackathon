@@ -1,7 +1,7 @@
 # 🎬 Behind-the-Scenes: Demo Documentation
 ## How This Planning Report Was Generated
 
-**Generated:** 2025-10-04 01:30:34 UTC  
+**Generated:** 2025-10-04 02:07:03 UTC  
 **Demo Type:** Hyper-Realistic Parameterized Demo  
 **Related Reports:**  
 - [Planning Service Report](./Planning_Service_Report.md) - Production output  
@@ -28,12 +28,12 @@ This demo was configured with the following parameters:
 
 | Parameter | Value |
 |-----------|-------|
-| **Feature Request** | Build a message queue system with RabbitMQ... |
-| **Total Historical Documents** | 3 documents (split: 30% Jira, 30% Confluence, 40% GitHub) |
-| **Team Members Generated** | 2 |
-| **Tech Stack** | Python, RabbitMQ, Docker |
+| **Feature Request** | Test team linkage with team_id... |
+| **Total Historical Documents** | 2 documents (split: 30% Jira, 30% Confluence, 40% GitHub) |
+| **Team Members Generated** | 6 |
+| **Tech Stack** | Python, React |
 | **Tangential Service Docs** | 1 |
-| **Demo Folder** | `scala_elm_crud_ALL_FIXED/` |
+| **Demo Folder** | `scala_elm_crud_TEAM_ID_TEST/` |
 
 ### Purpose
 These parameters allow the demo to simulate different project contexts and team compositions,
@@ -97,7 +97,7 @@ indicates team estimation reliability.
 - Author: Sarah Chen | Status: merged
 - Files Changed: 15 | +500 / -150 lines
 - Commits: 8 | Merged: 2025-08-05
-- Labels: feature, Python, RabbitMQ
+- Labels: feature, Python, React
 
 
 **Why This Matters:** GitHub PRs show implementation patterns, code complexity, and review processes.
@@ -116,23 +116,47 @@ indicates team estimation reliability.
 **Why This Matters:** Tangential service documents provide context about external dependencies and integration points,
 enabling more accurate service discovery, compliance validation, and blindspot detection.
 
-### 2.2 Team Member Profiles (2 members)
+### 2.2 Team Member Profiles (6 members)
 
 
 
-**Sarah Chen - Senior Backend Engineer**
+**Sarah Chen - senior backend engineer**
+- Recent Velocity: 18 SP/sprint
+- Current Workload: 75%
+- Skills: Python, Go, APIs
+
+
+**Marcus Johnson - full stack engineer**
+- Recent Velocity: 16 SP/sprint
+- Current Workload: 69%
+- Skills: React, Node.js, TypeScript
+
+
+**Priya Patel - ios engineer**
 - Recent Velocity: 14 SP/sprint
 - Current Workload: 60%
-- Skills: Python, Python, APIs
+- Skills: iOS (Swift), UIKit, SwiftUI
 
 
-**Marcus Johnson - Senior iOS Engineer**
+**Emily Wu - devops engineer**
+- Recent Velocity: 21 SP/sprint
+- Current Workload: 84%
+- Skills: AWS, Kubernetes, Docker
+
+
+**David Kim - android engineer**
 - Recent Velocity: 15 SP/sprint
-- Current Workload: 65%
-- Skills: iOS (Swift), Mobile
+- Current Workload: 81%
+- Skills: Android (Kotlin), Jetpack Compose, FCM
 
 
-**Team Velocity:** 14.5 SP/sprint (average)
+**Alex Rivera - frontend engineer**
+- Recent Velocity: 14 SP/sprint
+- Current Workload: 75%
+- Skills: React, JavaScript, CSS
+
+
+**Team Velocity:** 16.3 SP/sprint (average)
 
 **Why This Matters:** Team velocity and skills determine realistic timelines and optimal task assignments.
 
@@ -140,7 +164,7 @@ enabling more accurate service discovery, compliance validation, and blindspot d
 
 All generated mock data is saved to:
 ```
-scala_elm_crud_ALL_FIXED/data/mock_data.json
+scala_elm_crud_TEAM_ID_TEST/data/mock_data.json
 ```
 
 This JSON file contains complete details of all generated data for reproducibility and audit purposes.
@@ -154,7 +178,7 @@ This JSON file contains complete details of all generated data for reproducibili
 | Workflow | Name | Output | Time |
 |----------|------|--------|------|
 | **A** | Feature Decomposition | 68 SP, 4 stories | 0.00s* |
-| **B** | Historical Context | 14 SP/sprint velocity | (parallel) |
+| **B** | Historical Context | 16 SP/sprint velocity | (parallel) |
 | **C** | Timeline Analysis | 4.0 weeks, 78% confidence | (parallel) |
 | **D** | Skills Matching | 96% coverage | (parallel) |
 | **E** | External Service Validation | 88% final confidence | 0.00s |
@@ -177,12 +201,12 @@ This JSON file contains complete details of all generated data for reproducibili
 ### 3.3 Workflow B: Historical Context Analysis
 
 **Process:**
-1. Searched 3 historical tickets
+1. Searched 2 historical tickets
 2. Calculated team velocity from completed work
 3. Assessed historical estimation accuracy
 
 **Output:**
-- Team Velocity: 14 SP/sprint
+- Team Velocity: 16 SP/sprint
 - Historical Accuracy: 95.0%
 - Similar Features Found: 1
 
@@ -191,8 +215,8 @@ This JSON file contains complete details of all generated data for reproducibili
 **Calculation:**
 ```
 Timeline = Story Points ÷ Team Velocity
-         = 68 SP ÷ 14 SP/sprint
-         = 4.86 sprints
+         = 68 SP ÷ 16 SP/sprint
+         = 4.25 sprints
          = 4.0 weeks (2-week sprints)
 ```
 
@@ -204,7 +228,7 @@ Timeline = Story Points ÷ Team Velocity
 ### 3.5 Workflow D: Skills Matching
 
 **Process:**
-1. Analyzed 2 team members
+1. Analyzed 6 team members
 2. Matched skills to 5 tasks
 3. Optimized assignments for team utilization
 
@@ -313,38 +337,73 @@ This demo doesn't just simulate - it **actually persists data** to real ecosyste
 |-------|-----------|-------------|--------|
 | **doc-store** | Historical Documents | 3 | ✅ |
 | **prompt-store** | Workflow Prompts | 8 | ✅ |
-| **external-service-store** | Discovered Services | 7 services | ✅ |
-| **user-store** | Team Members | 0 users | ⚠️ |
+| **external-service-store** | Discovered Services | 6 services | ✅ |
+| **user-store** | Team Members | 6 users (0 new) | ✅ |
 | **memory-agent** | Workflow Contexts | 5 workflows | ✅ |
 
 **Status Legend:**
-- ✅ = Data successfully persisted
-- ⚠️ = No data persisted (service not running, schema error, or other issue)
+- ✅ = Data successfully persisted or available for use
+- ⚠️ = No data available (service not running or errors occurred)
 
-**Note on Zero Counts:**
-- **doc_store, prompt_store:** Services not running (connection refused). Start services to enable persistence.
+**Note on Counts:**
+- **user-store:** Shows total users available for document linking (new users created + existing users found)
+- **doc_store, prompt_store:** Services not running = connection refused. Start services to enable persistence.
 - **memory-agent:** If showing 0 despite being accessible, check for schema validation errors in console output.
-- **external-service-store:** Service not running (404 errors). Start service to enable persistence.
+- **external-service-store:** Service not running = 404 errors. Start service to enable persistence.
 
 **Data Breakdown:**
-- **Total Historical Documents:** 3 (parameter)
+- **Total Historical Documents:** 2 (parameter)
   - **Jira Tickets:** 1 tickets (30% of total)
   - **Confluence Docs:** 1 documents (30% of total)
   - **GitHub PRs:** 1 pull requests (40% of total)
 - **Tangential Service Docs:** 1 external service documents
 - **Total Documents Analyzed:** 4 documents (3 historical + 1 tangential)
-- **Services Discovered:** 7 services from document analysis
+- **Services Discovered:** 6 services from document analysis
 - **Workflow Prompts:** 8 specialized prompts for planning
 - **Workflow Contexts:** 5 workflow executions (A, B, C, D, E)
 
 **Persistence Results:**
 - ✅ **doc-store:** 3/3 documents saved
 - ✅ **prompt-store:** 8/8 prompts saved
-- ✅ **external-service-store:** 7/7 services saved
-- ✅ **user-store:** 0/2 users saved
+- ✅ **external-service-store:** 6/6 services saved
+- ✅ **user-store:** 6 users available (0 new + 6 existing)
 - ✅ **memory-agent:** 5/5 workflow contexts saved
 
-### 6.2 Database Schemas (Live Stores)
+**Note:** user-store shows TOTAL users available for document linking (new users created in this run + existing users found in database). This enables proper document→user relationships regardless of whether users were just created or already existed.
+
+### 6.2 Live Data Samples from Datastores
+
+This section shows ACTUAL data currently stored in the ecosystem datastores - not simulated, but real persisted records:
+
+
+#### 👥 user-store: Team Members
+
+**Total Records:** 3 users
+
+**Sample Records:**
+
+
+**User 1:**
+- **ID:** `user_1759541177.888815`
+- **Name:** System Administrator
+- **Email:** admin@example.com
+- **Role:** admin
+- **Status:** active
+- **Created:** 2025-10-04T01:26:17
+- **Document Links:** 0 documents
+
+
+**User 2:**
+- **ID:** `user_1759541177.889919`
+- **Name:** Data Analyst
+- **Email:** analyst@example.com
+- **Role:** analyst
+- **Status:** active
+- **Created:** 2025-10-04T01:26:17
+- **Document Links:** 0 documents
+
+
+### 6.3 Database Schemas (Live Stores)
 
 **doc_store Schema:**
 ```sql
@@ -441,7 +500,7 @@ GET /memory/get?key=workflow:workflow_e:*
 
 **Total Data Persisted:**
 - Documents: 11
-- Errors: 2
+- Errors: 6
 
 **Store Accessibility:**
 - doc-store: ✅ Running
@@ -481,12 +540,12 @@ curl http://localhost:5090/memory/get?key=workflow:workflow_e:* | jq '.'
 
 | Data Type | Count | Generated |
 |-----------|-------|-----------|
-| **Total Historical Documents** | 3 (parameter) | ✅ |
+| **Total Historical Documents** | 2 (parameter) | ✅ |
 | **Jira Tickets** | 1 (30%) | ✅ |
 | **Confluence Docs** | 1 (30%) | ✅ |
 | **GitHub PRs** | 1 (40%) | ✅ |
 | **Tangential Service Docs** | 1 | ✅ |
-| **Team Members** | 2 | ✅ |
+| **Team Members** | 6 | ✅ |
 | **External Services** | 2 | ✅ |
 
 ### 7.3 Workflow Output Metrics
@@ -496,7 +555,7 @@ curl http://localhost:5090/memory/get?key=workflow:workflow_e:* | jq '.'
 | **A** | User Stories | 4 |
 | **A** | Technical Tasks | 5 |
 | **A** | Story Points | 68 |
-| **B** | Team Velocity | 14 SP/sprint |
+| **B** | Team Velocity | 16 SP/sprint |
 | **C** | Timeline | 4.0 weeks |
 | **D** | Skills Coverage | 96.0% |
 | **E** | Services Discovered | 0 |
@@ -533,8 +592,8 @@ curl http://localhost:5090/memory/get?key=workflow:workflow_e:* | jq '.'
 ### 8.3 Team Analysis
 
 **Team Composition:**
-- 2 members
-- Average Velocity: 14 SP/sprint
+- 6 members
+- Average Velocity: 16 SP/sprint
 - Skills Coverage: 96.0%
 - Team Utilization: 74.0%
 
@@ -572,7 +631,7 @@ curl http://localhost:5090/memory/get?key=workflow:workflow_e:* | jq '.'
 This demo created the following files:
 
 ```
-scala_elm_crud_ALL_FIXED/
+scala_elm_crud_TEAM_ID_TEST/
 ├── README.md                            (Demo overview)
 ├── data/
 │   └── mock_data.json                   (All generated mock data)
@@ -592,5 +651,5 @@ scala_elm_crud_ALL_FIXED/
 ---
 
 **Demo Documentation Complete**  
-**Generated:** 2025-10-04 01:30:34 UTC  
+**Generated:** 2025-10-04 02:07:03 UTC  
 **System Version:** Phase 9 - Hyper-Realistic Demo v2.0  

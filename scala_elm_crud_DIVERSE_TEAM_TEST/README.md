@@ -1,6 +1,6 @@
 # Hyper-Realistic Demo Output
 
-**Generated:** 2025-10-04 01:30:34 UTC  
+**Generated:** 2025-10-04 02:00:35 UTC  
 **Demo Version:** Phase 9 - Hyper-Realistic Parameterized Demo v2.0
 
 ---
@@ -19,7 +19,7 @@ This folder contains the output of a hyper-realistic planning system demo, inclu
 ## 📁 Folder Structure
 
 ```
-scala_elm_crud_ALL_FIXED/
+scala_elm_crud_DIVERSE_TEAM_TEST/
 ├── README.md                             (This file)
 ├── data/
 │   └── mock_data.json                    (Generated mock data)
@@ -105,7 +105,7 @@ This JSON file contains all the realistic mock data generated for this demo:
 - **Total:** 3 documents
 
 **Team & Services:**
-- Team members: 2 members
+- Team members: 6 members
 - External services: 2 services
 
 **Use Case:** Data inspection, reproducibility, audit trail
@@ -137,7 +137,7 @@ python demo_hyper_realistic_parameterized.py --help
 |-----------|-------|------|---------|-------------|
 | `--feature` | `-f` | str | (notification system) | Natural language feature request |
 | `--tickets` | `-t` | int | 5 | Number of historical Jira tickets |
-| `--team` | `-m` | int | 5 | Number of team members |
+| `--team` | `-m` | int | 6 | Number of team members |
 | `--tech` | `-s` | list | Python iOS Android React Firebase | Technology stack (space-separated) |
 | `--output` | `-o` | str | demo_output | Output folder name |
 
@@ -197,12 +197,12 @@ This demo was run with the following parameters:
 
 | Parameter | Value |
 |-----------|-------|
-| **Feature** | Build a message queue system with RabbitMQ... |
+| **Feature** | Build a real-time collaboration platform with WebSockets... |
 | **Total Historical Documents** | 3 (30% Jira, 30% Confluence, 40% GitHub) |
 | **Tangential Service Docs** | 1 |
-| **Team Members** | 2 |
-| **Tech Stack** | Python, RabbitMQ, Docker |
-| **Output Folder** | `scala_elm_crud_ALL_FIXED/` |
+| **Team Members** | 6 |
+| **Tech Stack** | Python, React, WebSockets, Redis |
+| **Output Folder** | `scala_elm_crud_DIVERSE_TEAM_TEST/` |
 
 ---
 
@@ -262,4 +262,4 @@ Simply delete this folder and run the demo script again with your desired parame
 
 **Demo System:** LLM Documentation Ecosystem - Phase 9  
 **Version:** Hyper-Realistic Parameterized Demo v2.0  
-**Generated:** 2025-10-04 01:30:34 UTC
+**Generated:** 2025-10-04 02:00:35 UTC

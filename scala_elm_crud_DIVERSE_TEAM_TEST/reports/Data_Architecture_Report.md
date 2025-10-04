@@ -1,6 +1,6 @@
 # 🗄️ Data Architecture & Store Relationships Report
 
-**Generated:** 2025-10-04 01:30:34 UTC  
+**Generated:** 2025-10-04 02:00:35 UTC  
 **Report Type:** Data Architecture & Ecosystem Integration Analysis  
 **Related Reports:**  
 - [Planning Service Report](./Planning_Service_Report.md) - Production planning output  
@@ -91,9 +91,43 @@ Historical Documents (doc_store)
 
 ---
 
-## 2. Data Store Schemas
+## 2. Live Data Store Contents
 
-### 2.1 doc_store (Historical Documents)
+**This section shows ACTUAL data currently persisted in the ecosystem datastores - real records with IDs, timestamps, and relationships:**
+
+
+#### 👥 user-store: Team Members
+
+**Total Records:** 3 users
+
+**Sample Records:**
+
+
+**User 1:**
+- **ID:** `user_1759541177.888815`
+- **Name:** System Administrator
+- **Email:** admin@example.com
+- **Role:** admin
+- **Status:** active
+- **Created:** 2025-10-04T01:26:17
+- **Document Links:** 0 documents
+
+
+**User 2:**
+- **ID:** `user_1759541177.889919`
+- **Name:** Data Analyst
+- **Email:** analyst@example.com
+- **Role:** analyst
+- **Status:** active
+- **Created:** 2025-10-04T01:26:17
+- **Document Links:** 0 documents
+
+
+---
+
+## 3. Data Store Schemas
+
+### 3.1 doc_store (Historical Documents)
 
 **Purpose:** Stores all historical project documents (Jira tickets, Confluence docs, GitHub PRs)
 
@@ -136,7 +170,7 @@ CREATE INDEX idx_doc_type ON documents((metadata->>'doc_type'));
 - **GitHub PRs:** 1 documents
 - **Total:** 3 documents
 
-### 2.2 prompt_store (Workflow Prompts)
+### 3.2 prompt_store (Workflow Prompts)
 
 **Purpose:** Stores all prompts used by AI-powered workflows
 
@@ -182,7 +216,7 @@ CREATE INDEX idx_prompt_active ON prompts(is_active);
   - knowledge_gap_detection_prompt
   - blindspot_detection_prompt
 
-### 2.3 external-service-store (Discovered Services)
+### 3.3 external-service-store (Discovered Services)
 
 **Purpose:** Catalog of all external services discovered from documents and user input
 
@@ -242,13 +276,13 @@ CREATE INDEX idx_service_doc_links ON service_document_links(service_id, documen
    - Source Types: confluence
    - Linked Documents: 4
 
-2. **RabbitMQ**
+2. **React**
    - Mentions: 1
    - Confidence: 0.90
    - Source Types: confluence
    - Linked Documents: 1
 
-3. **Docker**
+3. **WebSockets**
    - Mentions: 1
    - Confidence: 0.90
    - Source Types: confluence
@@ -279,7 +313,7 @@ CREATE INDEX idx_service_doc_links ON service_document_links(service_id, documen
    - Linked Documents: 1
 
 
-### 2.4 memory-agent (Workflow Execution Contexts)
+### 3.4 memory-agent (Workflow Execution Contexts)
 
 **Purpose:** Stores execution history and context for all workflows
 
@@ -324,7 +358,7 @@ workflow:<workflow_type>:<workflow_id>
 - **Total Execution Time:** 0.00s
 - **Storage TTL:** 7 days
 
-### 2.5 user-store (Team & Skills Data)
+### 3.5 user-store (Team & Skills Data)
 
 **Purpose:** Stores team member profiles, skills, and capacity data
 
@@ -355,13 +389,13 @@ CREATE INDEX idx_skill_proficiency ON skills(proficiency_level);
 ```
 
 **Current Data:**
-- **Team Members:** 2 members
-- **Total Skills:** 5 skill entries
+- **Team Members:** 6 members
+- **Total Skills:** 18 skill entries
 - **Skills Coverage:** 96.0%
 
 ---
 
-## 3. Data Relationships & Linkings
+## 4. Data Relationships & Linkings
 
 ### 3.1 Document → Service Linkings
 
@@ -476,7 +510,7 @@ memory-agent
 
 ---
 
-## 4. Data Architecture Patterns
+## 5. Data Architecture Patterns
 
 ### 4.1 Source-of-Truth Pattern
 
@@ -545,7 +579,7 @@ Third Run:
 
 ---
 
-## 5. Query Examples
+## 6. Query Examples
 
 ### 5.1 Find All Documents Mentioning a Service
 
@@ -596,7 +630,7 @@ prompts = await get_prompts_by_workflow_type(workflows[0].workflow_type)
 
 ---
 
-## 6. Data Persistence Statistics
+## 7. Data Persistence Statistics
 
 ### 6.1 Current Demo Data
 
@@ -607,7 +641,7 @@ prompts = await get_prompts_by_workflow_type(workflows[0].workflow_type)
 | **prompt_store** | Workflow Prompts | 8 | ✅ |
 | **external-service-store** | Discovered Services | 7 | ✅ |
 | **memory-agent** | Workflow Contexts | 5 | ✅ |
-| **user-store** | Team Members | 2 | ✅ |
+| **user-store** | Team Members | 6 | ✅ |
 
 **Status Legend:**
 - ✅ = Data successfully persisted
@@ -664,7 +698,7 @@ After Demo Run:
 
 ---
 
-## 7. Visual Architecture Diagram
+## 8. Visual Architecture Diagram
 
 ### 7.1 Complete Ecosystem Data Flow
 
@@ -783,7 +817,7 @@ Historical Documents (doc_store)
 
 ---
 
-## 8. Related Reports & Documentation
+## 9. Related Reports & Documentation
 
 **Navigate to other reports for complete picture:**
 
@@ -804,7 +838,7 @@ Historical Documents (doc_store)
 
 ---
 
-## 9. Key Insights
+## 10. Key Insights
 
 ### 9.1 Data Architecture Highlights
 
@@ -837,4 +871,4 @@ Historical Documents (doc_store)
 **Stores Analyzed:** 5 data stores  
 **Services Discovered:** 7  
 **Linkings Created:** 10  
-**Generated:** 2025-10-04 01:30:34 UTC
+**Generated:** 2025-10-04 02:00:35 UTC

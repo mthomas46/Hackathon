@@ -38,8 +38,8 @@
       ],
       "tags": [
         "Python",
-        "RabbitMQ",
-        "Docker"
+        "React",
+        "WebSockets"
       ],
       "views": 100,
       "likes": 15,
@@ -68,7 +68,7 @@
       "labels": [
         "feature",
         "Python",
-        "RabbitMQ"
+        "React"
       ],
       "comments": 8,
       "review_comments": 3,
@@ -129,35 +129,74 @@
     {
       "user_id": "user_001",
       "name": "Sarah Chen",
-      "role": "Senior Backend Engineer",
+      "role": "senior backend engineer",
       "skills": [
         {
           "skill": "Python",
-          "level": "Intermediate",
-          "years": 3,
-          "projects": 6
+          "level": "Expert",
+          "years": 8,
+          "projects": 16
         },
         {
-          "skill": "Python",
-          "level": "Intermediate",
-          "years": 3,
-          "projects": 6
+          "skill": "Go",
+          "level": "Expert",
+          "years": 8,
+          "projects": 16
         },
         {
           "skill": "APIs",
-          "level": "Intermediate",
-          "years": 3,
-          "projects": 6
+          "level": "Expert",
+          "years": 9,
+          "projects": 18
         }
       ],
-      "current_workload": 0.6,
+      "experience_level": "Expert",
+      "services_worked_on": [
+        "Payment Service",
+        "User Service"
+      ],
+      "current_workload": 0.75,
       "availability": "Full-time",
-      "recent_velocity": 14
+      "recent_velocity": 18
     },
     {
       "user_id": "user_002",
       "name": "Marcus Johnson",
-      "role": "Senior iOS Engineer",
+      "role": "full stack engineer",
+      "skills": [
+        {
+          "skill": "React",
+          "level": "Advanced",
+          "years": 5,
+          "projects": 10
+        },
+        {
+          "skill": "Node.js",
+          "level": "Advanced",
+          "years": 5,
+          "projects": 10
+        },
+        {
+          "skill": "TypeScript",
+          "level": "Advanced",
+          "years": 5,
+          "projects": 10
+        }
+      ],
+      "experience_level": "Advanced",
+      "services_worked_on": [
+        "Admin Dashboard",
+        "User Portal",
+        "Analytics Dashboard"
+      ],
+      "current_workload": 0.6900000000000001,
+      "availability": "Full-time",
+      "recent_velocity": 16
+    },
+    {
+      "user_id": "user_003",
+      "name": "Priya Patel",
+      "role": "ios engineer",
       "skills": [
         {
           "skill": "iOS (Swift)",
@@ -166,15 +205,126 @@
           "projects": 6
         },
         {
-          "skill": "Mobile",
+          "skill": "UIKit",
           "level": "Intermediate",
           "years": 3,
           "projects": 6
+        },
+        {
+          "skill": "SwiftUI",
+          "level": "Intermediate",
+          "years": 2,
+          "projects": 4
         }
       ],
-      "current_workload": 0.65,
+      "experience_level": "Intermediate",
+      "services_worked_on": [
+        "Mobile App",
+        "Push Notifications"
+      ],
+      "current_workload": 0.6,
+      "availability": "Full-time",
+      "recent_velocity": 14
+    },
+    {
+      "user_id": "user_004",
+      "name": "Emily Wu",
+      "role": "devops engineer",
+      "skills": [
+        {
+          "skill": "AWS",
+          "level": "Expert",
+          "years": 10,
+          "projects": 20
+        },
+        {
+          "skill": "Kubernetes",
+          "level": "Expert",
+          "years": 10,
+          "projects": 20
+        },
+        {
+          "skill": "Docker",
+          "level": "Expert",
+          "years": 8,
+          "projects": 16
+        }
+      ],
+      "experience_level": "Expert",
+      "services_worked_on": [
+        "Infrastructure",
+        "Deployment Pipeline"
+      ],
+      "current_workload": 0.84,
+      "availability": "Full-time",
+      "recent_velocity": 21
+    },
+    {
+      "user_id": "user_005",
+      "name": "David Kim",
+      "role": "android engineer",
+      "skills": [
+        {
+          "skill": "Android (Kotlin)",
+          "level": "Advanced",
+          "years": 4,
+          "projects": 8
+        },
+        {
+          "skill": "Jetpack Compose",
+          "level": "Advanced",
+          "years": 4,
+          "projects": 8
+        },
+        {
+          "skill": "FCM",
+          "level": "Advanced",
+          "years": 4,
+          "projects": 8
+        }
+      ],
+      "experience_level": "Advanced",
+      "services_worked_on": [
+        "Android App",
+        "Offline Sync",
+        "Push Notifications"
+      ],
+      "current_workload": 0.81,
       "availability": "Full-time",
       "recent_velocity": 15
+    },
+    {
+      "user_id": "user_006",
+      "name": "Alex Rivera",
+      "role": "frontend engineer",
+      "skills": [
+        {
+          "skill": "React",
+          "level": "Intermediate",
+          "years": 2,
+          "projects": 4
+        },
+        {
+          "skill": "JavaScript",
+          "level": "Intermediate",
+          "years": 2,
+          "projects": 4
+        },
+        {
+          "skill": "CSS",
+          "level": "Intermediate",
+          "years": 2,
+          "projects": 4
+        }
+      ],
+      "experience_level": "Intermediate",
+      "services_worked_on": [
+        "Landing Page",
+        "User Dashboard"
+      ],
+      "current_workload": 0.75,
+      "availability": "Full-time",
+      "recent_velocity": 14
     }
   ],
   "external_services": [
@@ -227,12 +377,13 @@
     "num_confluence_docs": 1,
     "num_github_prs": 1,
     "num_tangential_docs": 1,
-    "num_team_members": 2,
+    "num_team_members": 6,
     "tech_stack": [
       "Python",
-      "RabbitMQ",
-      "Docker"
+      "React",
+      "WebSockets",
+      "Redis"
     ]
   },
-  "generated_at": "2025-10-04T01:30:33.780507"
+  "generated_at": "2025-10-04T02:00:34.899162"
 }
