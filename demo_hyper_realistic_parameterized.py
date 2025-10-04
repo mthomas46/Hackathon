@@ -28,6 +28,7 @@ sys.path.insert(0, str(project_root / "services" / "project-planning-service"))
 
 from domain.services.workflow_e_orchestrator import WorkflowEOrchestrator
 from domain.services.beautiful_markdown_formatter import BeautifulMarkdownFormatter
+from domain.services.workflow_f_user_intelligence import UserIntelligenceWorkflow, WorkflowFResult
 from demo_data_persistence_client import DemoPersistenceClient, save_demo_data_to_stores
 from intelligent_service_discovery import IntelligentServiceDiscovery, discover_and_store_services
 
@@ -214,6 +215,7 @@ class ParameterizedHyperRealisticDemo:
         self.execution_metrics = {}
         self.persistence_stats = {}
         self.service_discovery_results = {}
+        self.workflow_f_result = None  # User intelligence workflow results
         
         print(f"\n✅ Demo initialized with parameters:")
         print(f"   Feature: {feature_summary[:60]}...")
@@ -3482,6 +3484,84 @@ Simply delete this folder and run the demo script again with your desired parame
         
         return str(readme_file)
     
+    async def execute_workflow_f(self) -> WorkflowFResult:
+        """
+        Execute Workflow F: User Intelligence & Expert Discovery.
+        
+        Extracts users from historical documents, saves them to user-store,
+        builds collaboration graphs, and identifies subject matter experts.
+        """
+        print("📖 Extracting user intelligence from historical documents...")
+        
+        # Initialize Workflow F
+        workflow_f = UserIntelligenceWorkflow()
+        
+        # Execute user extraction
+        result = workflow_f.execute(
+            jira_tickets=self.mock_data.get('jira_tickets', []),
+            confluence_docs=self.mock_data.get('confluence_docs', []),
+            github_prs=self.mock_data.get('github_prs', []),
+            team_members=[m['name'] for m in self.mock_data.get('team_members', [])]
+        )
+        
+        print(f"   ✅ Extracted {result.total_users_extracted} unique users")
+        print(f"   📊 Analyzed {result.total_documents_analyzed} documents")
+        print(f"   👥 Identified {len(result.subject_matter_experts)} subject matter experts")
+        print(f"   🤝 Built collaboration graph with {len(result.collaboration_graph)} nodes")
+        print(f"   📚 Created expertise map with {len(result.expertise_map)} topics")
+        print(f"   ⏱️  Execution time: {result.execution_time:.2f}s")
+        
+        # Save extracted users to user-store
+        print("\n💾 Saving extracted users to user-store...")
+        saved_count = await self._save_extracted_users_to_store(result.extracted_users)
+        print(f"   ✅ Saved/updated {saved_count} users in user-store")
+        
+        return result
+    
+    async def _save_extracted_users_to_store(self, extracted_users: Dict[str, Any]) -> int:
+        """Save extracted users to user-store with proper linking."""
+        import httpx
+        
+        saved_count = 0
+        user_store_url = "http://localhost:5150"
+        
+        async with httpx.AsyncClient() as client:
+            for username, extraction in extracted_users.items():
+                try:
+                    # Prepare user data
+                    user_data = {
+                        "username": extraction.username,
+                        "display_name": extraction.display_name,
+                        "email": f"{extraction.username}@example.com",
+                        "role": "developer",  # Default role
+                        "topic_interests": extraction.topics[:10] if extraction.topics else [],
+                        "service_subscriptions": extraction.services[:10] if extraction.services else [],
+                        "team_id": self.team_id,
+                        "tags": extraction.skills[:5] if extraction.skills else []
+                    }
+                    
+                    # Try to create user (may already exist from team generation)
+                    response = await client.post(
+                        f"{user_store_url}/users",
+                        json=user_data,
+                        timeout=5.0
+                    )
+                    
+                    if response.status_code in [200, 201]:
+                        saved_count += 1
+                    elif response.status_code == 409:  # User already exists
+                        # User was already created during team generation - that's OK
+                        pass
+                    
+                except (httpx.ConnectError, httpx.TimeoutException) as e:
+                    print(f"   ⚠️  Could not connect to user-store: {e}")
+                    break
+                except Exception as e:
+                    print(f"   ⚠️  Error saving user {username}: {e}")
+                    continue
+        
+        return saved_count
+    
     async def run_demo(self):
         """Execute complete parameterized demo."""
         print("\n" + "="*100)
@@ -3519,6 +3599,12 @@ Simply delete this folder and run the demo script again with your desired parame
             github_prs=self.mock_data.get('github_prs', []),
             tangential_docs=self.mock_data.get('tangential_docs', [])
         )
+        
+        # 👥 NEW: Workflow F - User Intelligence & Expert Discovery
+        print("\n" + "="*100)
+        print(" "*20 + "👥 WORKFLOW F: USER INTELLIGENCE & EXPERT DISCOVERY")
+        print("="*100)
+        self.workflow_f_result = await self.execute_workflow_f()
         
         # Execute workflows
         self.execute_workflows()
@@ -3559,6 +3645,13 @@ Simply delete this folder and run the demo script again with your desired parame
         print(f"      {self.demo_folder.absolute() / 'data' / 'mock_data.json'}")
         print(f"\n✨ All files are cross-linked for easy navigation!")
         print(f"✨ {self.service_discovery_results.get('stats', {}).get('services_discovered', 0)} services discovered from historical documents!")
+        
+        # Show Workflow F results
+        if self.workflow_f_result:
+            print(f"✨ {self.workflow_f_result.total_users_extracted} users extracted from documents!")
+            print(f"✨ {len(self.workflow_f_result.subject_matter_experts)} subject matter experts identified!")
+            print(f"✨ {len(self.workflow_f_result.collaboration_graph)} collaboration relationships mapped!")
+        
         print("="*100 + "\n")
 
 
