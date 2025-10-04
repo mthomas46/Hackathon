@@ -1073,6 +1073,202 @@ async def get_user_contacts(user_id: str):
 
 
 # ============================================================================
+# EXPERT FINDER ENDPOINTS (Tightly Coupled with User Store)
+# ============================================================================
+
+from application.services.expert_finder_service import ExpertFinderService, ExpertMatch
+from pydantic import Field
+
+# Initialize expert finder service with shared repository
+expert_finder_service = ExpertFinderService(user_repository)
+
+
+class ExpertQuery(BaseModel):
+    """Query for finding experts."""
+    query: str = Field(..., description="Natural language query")
+    max_results: int = Field(5, ge=1, le=20, description="Maximum results")
+    team_id: Optional[str] = Field(None, description="Filter by team")
+    exclude_team: bool = Field(False, description="Exclude team members if team_id provided")
+
+
+class ExpertResponse(BaseModel):
+    """Expert finder response."""
+    user_id: str
+    display_name: str
+    username: str
+    relevance_score: float
+    explanation: str
+    evidence: List[str]
+    metadata: Dict[str, Any]
+
+
+@app.post("/experts/find", response_model=Dict[str, Any], tags=["expert-finder"])
+async def find_experts(query_request: ExpertQuery):
+    """
+    Find experts using natural language query.
+    
+    Examples:
+    - "Who knows Python backend development?"
+    - "Find experts in React and TypeScript"
+    - "Who worked on authentication services?"
+    - "Show me iOS developers"
+    """
+    try:
+        result = await expert_finder_service.find_experts(
+            query=query_request.query,
+            max_results=query_request.max_results,
+            team_id=query_request.team_id,
+            exclude_team=query_request.exclude_team
+        )
+        
+        # Format matches
+        matches = []
+        for match in result.matches:
+            matches.append({
+                "user_id": match.user.id,
+                "display_name": match.user.display_name,
+                "username": match.user.username,
+                "relevance_score": match.relevance_score,
+                "explanation": match.explanation,
+                "evidence": match.evidence,
+                "metadata": match.metadata
+            })
+        
+        return {
+            "query": result.query,
+            "experts": matches,
+            "total_candidates": result.total_candidates,
+            "execution_time_ms": result.execution_time_ms
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error finding experts: {str(e)}")
+
+
+@app.get("/experts/by-topic/{topic}", tags=["expert-finder"])
+async def find_experts_by_topic(
+    topic: str,
+    max_results: int = Query(5, ge=1, le=20)
+):
+    """Find experts for a specific topic."""
+    try:
+        matches = await expert_finder_service.find_experts_by_topic(topic, max_results)
+        
+        return {
+            "topic": topic,
+            "experts": [
+                {
+                    "user_id": m.user.id,
+                    "display_name": m.user.display_name,
+                    "relevance_score": m.relevance_score,
+                    "evidence": m.evidence,
+                    "metadata": m.metadata
+                }
+                for m in matches
+            ],
+            "count": len(matches)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/experts/by-service/{service}", tags=["expert-finder"])
+async def find_experts_by_service(
+    service: str,
+    max_results: int = Query(5, ge=1, le=20)
+):
+    """Find experts who worked on a specific service."""
+    try:
+        matches = await expert_finder_service.find_experts_by_service(service, max_results)
+        
+        return {
+            "service": service,
+            "experts": [
+                {
+                    "user_id": m.user.id,
+                    "display_name": m.user.display_name,
+                    "relevance_score": m.relevance_score,
+                    "evidence": m.evidence
+                }
+                for m in matches
+            ],
+            "count": len(matches)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/experts/sme/{area}", tags=["expert-finder"])
+async def find_subject_matter_experts(
+    area: str,
+    min_documents: int = Query(3, ge=1, description="Minimum document count"),
+    max_results: int = Query(5, ge=1, le=20)
+):
+    """Find subject matter experts in a specific area."""
+    try:
+        smes = await expert_finder_service.find_subject_matter_experts(
+            area, min_documents, max_results
+        )
+        
+        return {
+            "area": area,
+            "subject_matter_experts": [
+                {
+                    "user_id": sme.user.id,
+                    "display_name": sme.user.display_name,
+                    "username": sme.user.username,
+                    "relevance_score": sme.relevance_score,
+                    "explanation": sme.explanation,
+                    "evidence": sme.evidence,
+                    "document_count": len(sme.user.document_relationships)
+                }
+                for sme in smes
+            ],
+            "count": len(smes)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/experts/teammates/{user_id}", tags=["expert-finder"])
+async def find_potential_teammates(
+    user_id: str,
+    max_results: int = Query(5, ge=1, le=20)
+):
+    """Find potential teammates based on shared interests and services."""
+    try:
+        teammates = await expert_finder_service.find_teammates(user_id, max_results)
+        
+        return {
+            "user_id": user_id,
+            "potential_teammates": [
+                {
+                    "user_id": t["user"].id,
+                    "display_name": t["user"].display_name,
+                    "username": t["user"].username,
+                    "collaboration_score": t["collaboration_score"],
+                    "shared_topics": t["shared_topics"],
+                    "shared_services": t["shared_services"],
+                    "same_team": t["same_team"]
+                }
+                for t in teammates
+            ],
+            "count": len(teammates)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/teams/{team_id}/expertise", tags=["expert-finder", "teams"])
+async def get_team_expertise_summary(team_id: str):
+    """Get expertise summary for a team."""
+    try:
+        summary = await expert_finder_service.get_team_expertise_summary(team_id)
+        return summary
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
 # SERVICE REGISTRATION
 # ============================================================================
 
