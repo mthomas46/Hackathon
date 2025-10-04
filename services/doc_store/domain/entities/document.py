@@ -25,10 +25,14 @@ class Document:
         if not self.content_hash and self.content:
             self.content_hash = hashlib.sha256(self.content.encode()).hexdigest()
 
+    def update_timestamp(self) -> None:
+        """Update the updated_at timestamp."""
+        self.updated_at = datetime.now(timezone.utc)
+
     def update_content(self, new_content: str) -> None:
         """Update document content."""
         self.content = new_content
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
         self.version += 1
 
     def add_tags(self, tags: List[str]) -> None:
