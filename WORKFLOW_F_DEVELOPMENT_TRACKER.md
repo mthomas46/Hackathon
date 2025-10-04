@@ -9,13 +9,40 @@
 
 ### ✅ Phase 0: Infrastructure Setup (COMPLETE)
 **Status**: ✅ Complete  
-**Commit**: `4a7594eb`
+**Commit**: `4a7594eb`, `177ea74d`
 
 - [x] Create expert-finder-service as standalone microservice
 - [x] Docker infrastructure (Dockerfile, docker-compose)
 - [x] Network integration (hackathon_default)
 - [x] 6 API endpoints implemented
 - [x] Workflow F base implementation
+- [x] Test infrastructure created
+- [x] Development tracker established
+- [ ] **Swagger/OpenAPI annotations for all REST endpoints** ⏳ (Phase 0.1)
+
+#### Phase 0.1: API Documentation Enhancement ⏳
+**Status**: In Progress
+
+- [ ] Add comprehensive Swagger/OpenAPI annotations to expert-finder-service
+- [ ] Document request/response models with examples
+- [ ] Add endpoint descriptions and tags
+- [ ] Document error responses (400, 404, 500)
+- [ ] Add authentication/authorization docs (future)
+- [ ] Generate interactive API documentation at `/docs`
+- [ ] Generate ReDoc documentation at `/redoc`
+- [ ] Add OpenAPI JSON spec at `/openapi.json`
+
+**Deliverables**:
+- Enhanced FastAPI endpoint decorators with full OpenAPI specs
+- Interactive Swagger UI at `http://localhost:5160/docs`
+- ReDoc documentation at `http://localhost:5160/redoc`
+- Downloadable OpenAPI spec
+
+**Acceptance Criteria**:
+- All endpoints fully documented
+- Request/response examples provided
+- Error cases documented
+- Interactive docs accessible
 
 ---
 

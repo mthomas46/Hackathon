@@ -33,8 +33,47 @@ SERVICE_PORT = int(os.getenv("SERVICE_PORT", "5160"))
 
 app = FastAPI(
     title="Expert Finder Service",
-    description="Intelligent user discovery using smart relevance scoring",
-    version=SERVICE_VERSION
+    description="""
+    ## Intelligent User Discovery & Subject Matter Expert Identification
+    
+    The Expert Finder Service provides smart, relevance-based user search capabilities 
+    across the ecosystem. It analyzes user data, relationships, and document associations 
+    to identify relevant experts, SMEs, and potential collaborators.
+    
+    ### Key Features
+    
+    - **Natural Language Queries**: "Who knows Python backend development?"
+    - **Topic-Based Search**: Find experts by technology or domain
+    - **Service-Based Search**: Find users who worked on specific services
+    - **SME Identification**: High-bar expert search with document threshold
+    - **Teammate Discovery**: Find potential collaborators based on shared interests
+    - **Team Expertise**: Aggregate team capabilities and knowledge areas
+    
+    ### Relevance Scoring
+    
+    Multi-factor scoring algorithm (0.0 to 1.0):
+    - Role Matching (30% weight)
+    - Topic/Interest Matching (40% weight) - Strongest signal
+    - Service Subscriptions (20% weight)
+    - Document Relationships (10% weight)
+    - User Tags (bonus)
+    - Name Matching (bonus)
+    
+    ### Architecture
+    
+    - **Standalone Microservice**: Runs in own Docker container
+    - **Network**: hackathon_default (172.20.0.0/16)
+    - **Dependencies**: user-store (primary), doc-store, external-service-store (optional)
+    - **Horizontally Scalable**: Stateless design
+    """,
+    version=SERVICE_VERSION,
+    contact={
+        "name": "Hackathon Team",
+        "url": "https://github.com/hackathon/expert-finder-service",
+    },
+    license_info={
+        "name": "MIT",
+    },
 )
 
 # CORS
@@ -323,9 +362,38 @@ async def find_experts_logic(
 # API ENDPOINTS
 # ============================================================================
 
-@app.get("/health")
+@app.get(
+    "/health",
+    summary="Health Check",
+    description="Check service health and dependency status",
+    tags=["Health"],
+    responses={
+        200: {
+            "description": "Service is healthy",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "healthy",
+                        "service": "expert-finder-service",
+                        "version": "1.0.0",
+                        "timestamp": "2025-01-04T12:00:00Z",
+                        "dependencies": {
+                            "user_store": "http://user-store:5150",
+                            "doc_store": "http://doc-store:5087",
+                            "external_service_store": "http://external-service-store:5140"
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
 async def health_check():
-    """Health check endpoint."""
+    """
+    Health check endpoint for monitoring and load balancers.
+    
+    Returns service status, version, and dependency URLs.
+    """
     return {
         "status": "healthy",
         "service": SERVICE_NAME,
@@ -339,16 +407,89 @@ async def health_check():
     }
 
 
-@app.post("/experts/find", response_model=ExpertFinderResponse)
-async def find_experts(query_request: ExpertQuery):
-    """
-    Find experts based on natural language query.
+@app.post(
+    "/experts/find",
+    response_model=ExpertFinderResponse,
+    summary="Find Experts (Natural Language Query)",
+    description="""
+    Find experts using natural language queries with smart relevance scoring.
     
-    Examples:
+    This endpoint uses a multi-factor relevance algorithm to match users based on:
+    - Role keywords (backend, frontend, devops, etc.)
+    - Technology keywords (Python, React, Docker, etc.)
+    - Skill indicators (expert, experienced, specialist, etc.)
+    
+    ### Examples
+    
     - "Who knows Python backend development?"
     - "Find experts in React and TypeScript"
     - "Who worked on authentication services?"
     - "Show me iOS developers"
+    - "Find senior engineers with Kubernetes experience"
+    
+    ### Team Filtering
+    
+    - `team_id + exclude_team=false`: Find experts within a specific team
+    - `team_id + exclude_team=true`: Find external experts (exclude team members)
+    - No `team_id`: Search all users
+    
+    ### Relevance Scoring
+    
+    Results are scored from 0.0 to 1.0 based on:
+    - **Role Match**: 30% weight
+    - **Topic/Interest Match**: 40% weight (strongest signal)
+    - **Service Subscriptions**: 20% weight
+    - **Document Relationships**: 10% weight
+    - **Bonuses**: User tags, name matching
+    """,
+    tags=["Expert Discovery"],
+    responses={
+        200: {
+            "description": "Successfully found experts",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "query": "Who knows Python backend development?",
+                        "experts": [
+                            {
+                                "user_id": "user_001",
+                                "display_name": "Sarah Chen",
+                                "username": "sarah.chen",
+                                "relevance_score": 0.85,
+                                "explanation": "Matched on: Role: developer, Topic expertise: Python, Backend, 15 related documents",
+                                "evidence": ["Role: developer", "Topic expertise: Python, Backend", "15 related documents"],
+                                "metadata": {
+                                    "role": "developer",
+                                    "topics": ["Python", "Backend", "APIs"],
+                                    "services": ["user-service", "auth-service"],
+                                    "document_count": 15,
+                                    "team_id": "team_123"
+                                }
+                            }
+                        ],
+                        "total_candidates": 6,
+                        "execution_time_ms": 12.5
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Error finding experts",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Error finding experts: Connection timeout"
+                    }
+                }
+            }
+        }
+    }
+)
+async def find_experts(query_request: ExpertQuery):
+    """
+    Find experts based on natural language query.
+    
+    Uses smart relevance scoring to rank users by expertise.
     """
     try:
         result = await find_experts_logic(
@@ -367,10 +508,15 @@ async def find_experts(query_request: ExpertQuery):
         )
 
 
-@app.get("/experts/by-topic/{topic}")
+@app.get(
+    "/experts/by-topic/{topic}",
+    summary="Find Experts by Topic",
+    description="Find experts who have expertise in a specific topic or technology",
+    tags=["Expert Discovery"]
+)
 async def find_experts_by_topic(
     topic: str,
-    max_results: int = Query(5, ge=1, le=20)
+    max_results: int = Query(5, ge=1, le=20, description="Maximum number of results")
 ):
     """Find experts for a specific topic."""
     query = f"Who knows {topic}?"
@@ -384,10 +530,15 @@ async def find_experts_by_topic(
     }
 
 
-@app.get("/experts/by-service/{service}")
+@app.get(
+    "/experts/by-service/{service}",
+    summary="Find Experts by Service",
+    description="Find users who have worked on a specific service",
+    tags=["Expert Discovery"]
+)
 async def find_experts_by_service(
     service: str,
-    max_results: int = Query(5, ge=1, le=20)
+    max_results: int = Query(5, ge=1, le=20, description="Maximum number of results")
 ):
     """Find experts who worked on a specific service."""
     # Fetch all users
@@ -429,11 +580,16 @@ async def find_experts_by_service(
     }
 
 
-@app.get("/experts/sme/{area}")
+@app.get(
+    "/experts/sme/{area}",
+    summary="Find Subject Matter Experts",
+    description="Find SMEs with proven expertise (requires minimum document threshold)",
+    tags=["SME Identification"]
+)
 async def find_subject_matter_experts(
     area: str,
-    min_documents: int = Query(3, ge=1, description="Minimum document count"),
-    max_results: int = Query(5, ge=1, le=20)
+    min_documents: int = Query(3, ge=1, description="Minimum document count required"),
+    max_results: int = Query(5, ge=1, le=20, description="Maximum number of results")
 ):
     """
     Find subject matter experts in a specific area.
@@ -469,10 +625,15 @@ async def find_subject_matter_experts(
     }
 
 
-@app.get("/experts/teammates/{user_id}")
+@app.get(
+    "/experts/teammates/{user_id}",
+    summary="Find Potential Teammates",
+    description="Discover potential collaborators based on shared interests and services",
+    tags=["Team Collaboration"]
+)
 async def find_potential_teammates(
     user_id: str,
-    max_results: int = Query(5, ge=1, le=20)
+    max_results: int = Query(5, ge=1, le=20, description="Maximum number of results")
 ):
     """Find potential teammates based on shared interests and services."""
     try:
@@ -537,7 +698,12 @@ async def find_potential_teammates(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/teams/{team_id}/expertise")
+@app.get(
+    "/teams/{team_id}/expertise",
+    summary="Get Team Expertise Summary",
+    description="Aggregate expertise, skills, and capabilities for an entire team",
+    tags=["Team Collaboration"]
+)
 async def get_team_expertise_summary(team_id: str):
     """Get expertise summary for a team."""
     try:
