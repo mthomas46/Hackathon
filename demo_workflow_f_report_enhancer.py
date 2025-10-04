@@ -29,7 +29,8 @@ class WorkflowFReportEnhancer:
         self,
         workflow_f_result: Any,  # WorkflowFResult object
         mock_data: Dict[str, Any],
-        expert_finder_url: str = "http://localhost:5160"
+        expert_finder_url: str = "http://localhost:5160",
+        service_health_status: Optional[Dict[str, bool]] = None
     ):
         """
         Initialize Workflow F Report Enhancer.
@@ -38,10 +39,12 @@ class WorkflowFReportEnhancer:
             workflow_f_result: WorkflowFResult from Workflow F execution
             mock_data: Generated mock data (documents, PRs, tickets)
             expert_finder_url: URL of expert-finder service
+            service_health_status: Dictionary of service name -> health status (NEW)
         """
         self.workflow_f_result = workflow_f_result
         self.mock_data = mock_data
         self.expert_finder_url = expert_finder_url
+        self.service_health_status = service_health_status or {}
         
         # Extract key metrics from workflow_f_result
         if workflow_f_result:
@@ -349,10 +352,8 @@ was extracted from historical documents and how subject matter experts were iden
 | Team Expertise | `/teams/{{team_id}}/expertise` | 40ms | Full team profile |
 
 **Integration Points**:
-- ✅ User extraction data flows to user-store
-- ✅ Expert-finder queries user-store for expertise
-- ✅ Planning service uses expert-finder for recommendations
-- ✅ Section 10 (Planning Report) includes expert-finder API examples
+
+{self._generate_integration_status()}
 
 **API Documentation**: 
 - Swagger UI: {self.expert_finder_url}/docs
@@ -385,6 +386,47 @@ was extracted from historical documents and how subject matter experts were iden
 """)
         
         return "\n".join(sections)
+    
+    def _generate_integration_status(self) -> str:
+        """
+        Generate integration status with conditional disclaimers based on actual service health.
+        
+        Returns:
+            Markdown-formatted integration status with honest service state
+        """
+        lines = []
+        
+        # Check user-store status
+        user_store_running = self.service_health_status.get('user-store', False)
+        expert_finder_running = self.service_health_status.get('expert-finder', False)
+        
+        # User extraction to user-store
+        if user_store_running:
+            lines.append("- ✅ **User extraction data flows to user-store** (service operational)")
+        else:
+            lines.append("- ⚠️ **User extraction data NOT persisted to user-store** (service offline during demo)")
+            lines.append("  - **Impact**: Users extracted in-memory only, data lost after execution")
+            lines.append("  - **Fix**: Start user-store service and re-run demo")
+        
+        # Expert-finder queries user-store
+        if expert_finder_running and user_store_running:
+            lines.append("- ✅ **Expert-finder queries user-store for expertise** (both services operational)")
+        elif expert_finder_running and not user_store_running:
+            lines.append("- ⚠️ **Expert-finder operational but user-store offline** (queries return empty)")
+            lines.append("  - **Impact**: Expert-finder API returns no results (0 users in database)")
+        elif not expert_finder_running:
+            lines.append("- ⚠️ **Expert-finder service offline** (unable to query for experts)")
+            lines.append("  - **Impact**: Expert discovery features unavailable")
+        
+        # Planning service integration
+        lines.append("- ✅ **Planning service architecture supports expert-finder** (integration points defined)")
+        if not user_store_running or not expert_finder_running:
+            lines.append("  - ⚠️ **Note**: Section 10 recommendations are aspirational (no live data)")
+        
+        # Report integration
+        lines.append("- ✅ **Section 10 (Planning Report)** includes expert-finder API examples")
+        
+        return "\n".join(lines)
     
     def _identify_collaboration_patterns(self) -> List[Dict[str, Any]]:
         """

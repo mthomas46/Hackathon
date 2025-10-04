@@ -21,6 +21,18 @@ from datetime import datetime
 import httpx
 import os
 import logging
+import sys
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+try:
+    from services.shared.infrastructure.logging.datastore_operation_logger import add_datastore_logging
+except ImportError:
+    # Fallback if shared module not available
+    def add_datastore_logging(app, service_name):
+        logger.warning(f"Datastore logging middleware not available for {service_name}")
+        pass
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -84,6 +96,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add datastore operation logging middleware
+# This logs all expert-finder operations to the log-collector service
+add_datastore_logging(app, SERVICE_NAME)
 
 # ============================================================================
 # SERVICE CONFIGURATION
