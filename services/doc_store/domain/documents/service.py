@@ -133,3 +133,28 @@ class DocumentService(BaseService[Document]):
             "average_document_size": 0,  # Would calculate from repository
             "last_updated": None,  # Would get from repository
         }
+    
+    async def list_entities(self, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
+        """List documents with pagination.
+        
+        Args:
+            limit: Maximum number of documents to return
+            offset: Number of documents to skip
+            
+        Returns:
+            Dict with items, total, has_more, limit, offset
+        """
+        documents = await self.repository.find_all(limit + 1, offset)  # Get one extra to check has_more
+        has_more = len(documents) > limit
+        items = documents[:limit]  # Only return up to limit
+        
+        # Get total count
+        total = await self.repository.count()
+        
+        return {
+            "items": [doc.to_dict() for doc in items],
+            "total": total,
+            "has_more": has_more,
+            "limit": limit,
+            "offset": offset,
+        }

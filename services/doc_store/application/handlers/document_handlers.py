@@ -98,12 +98,12 @@ class DocumentHandlers(AbstractDocumentHandlers):
             # Process metadata
             metadata = request.metadata if isinstance(request.metadata, dict) else {}
 
-            # Create document
-            document = await self.service.create_document(
-                document_id=request.id,
-                content=request.content,
-                metadata=metadata
-            )
+            # Create document - using BaseService.create() method
+            document = await self.service.create({
+                "id": request.id,
+                "content": request.content,
+                "metadata": metadata
+            })
 
             # Return direct DocumentResponse without wrapper
             return DocumentResponse(
@@ -152,7 +152,7 @@ class DocumentHandlers(AbstractDocumentHandlers):
     ) -> DocumentListResponse:
         """Handle document listing."""
         try:
-            result = self.service.list_entities(limit, offset)
+            result = await self.service.list_entities(limit, offset)
 
             # Return DocumentListResponse directly
             return DocumentListResponse(
