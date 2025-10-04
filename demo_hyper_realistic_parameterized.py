@@ -1984,6 +1984,337 @@ class ParameterizedHyperRealisticDemo:
         
         return section
     
+    def _generate_core_roadmap_sections(self, workflow_e_result) -> str:
+        """Generate sections 1-9: Core roadmap content."""
+        acc = workflow_e_result.accuracy_enhancement
+        
+        # Calculate derived metrics
+        num_features = max(1, acc.adjusted_story_points // 13)  # ~13 SP per feature
+        num_sprints = max(1, int(acc.adjusted_weeks // 2))  # 2-week sprints
+        team_size = len(self.mock_data.get('team_members', []))
+        team_velocity = max(20, acc.adjusted_story_points // num_sprints)  # SP per sprint
+        
+        sections = []
+        
+        # Section 1: Executive Summary
+        sections.append(f"""## 1. Executive Summary
+
+### Project Overview
+**Project:** {self.feature_summary}  
+**Generated:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}  
+**Team Size:** {team_size} developers  
+
+### Key Metrics
+- **Total Story Points:** {acc.adjusted_story_points} SP
+- **Estimated Features:** {num_features} features
+- **Estimated Timeline:** {acc.adjusted_weeks:.1f} weeks ({num_sprints} sprints)
+- **Team Velocity:** {team_velocity} SP/sprint
+- **Confidence Score:** {acc.adjusted_confidence}%
+
+### Resource Requirements
+- **Team Size:** {team_size} developers
+- **Sprint Count:** {num_sprints} sprints
+- **Technologies:** {len(self.tech_stack)} in stack
+- **Services Discovered:** {acc.services_discovered}
+
+### Risk Summary
+- **Risk Level:** {acc.adjusted_risk_level}
+- **Validation Issues:** {sum(len(vr.issues) for vr in workflow_e_result.validation_results)}
+- **Knowledge Gaps:** {sum(len(ga.documentation_gaps) + len(ga.skills_gaps) + len(ga.configuration_gaps) for ga in workflow_e_result.gap_analyses)}
+- **Mitigation Required:** {'Yes - see Section 6' if acc.adjusted_risk_level in ['HIGH', 'MEDIUM'] else 'No'}
+
+### Status
+**Overall Status:** {'🟢 On Track' if acc.adjusted_confidence > 70 else '🟡 Needs Attention'}  
+**Ready for Execution:** Yes ✅
+
+---
+""")
+        
+        # Section 2: Scope & Objectives
+        sections.append(f"""## 2. Scope & Objectives
+
+### Feature Description
+{self.feature_summary}
+
+### Project Scope
+**In Scope:**
+- Core CRUD functionality for all identified entities
+- API endpoints with authentication and authorization
+- Database schema design and implementation
+- Frontend UI components for user management
+- Integration with {len(self.tech_stack)} technologies: {', '.join(self.tech_stack[:5])}{'...' if len(self.tech_stack) > 5 else ''}
+
+**Out of Scope:**
+- Advanced analytics and reporting (Phase 2)
+- Third-party integrations beyond core services
+- Mobile app development (separate project)
+- Data migration from legacy systems
+
+### Success Criteria
+1. All CRUD operations functional and tested
+2. API response times < 200ms for 95th percentile
+3. UI responsive and accessible (WCAG 2.1 AA)
+4. 80%+ unit test coverage
+5. Zero critical security vulnerabilities
+
+### Key Stakeholders
+- **Product Owner:** Project sponsor and requirements owner
+- **Development Team:** {team_size} developers with varying skillsets
+- **Technical Lead:** Architecture and technical decisions
+- **QA Team:** Quality assurance and testing
+
+---
+""")
+        
+        # Section 3: Timeline & Milestones
+        start_date = datetime.utcnow()
+        sprint_dates = []
+        for i in range(num_sprints):
+            sprint_start = start_date + timedelta(weeks=i*2)
+            sprint_end = sprint_start + timedelta(weeks=2, days=-1)
+            sprint_dates.append((sprint_start, sprint_end))
+        
+        milestones_section = f"""## 3. Timeline & Milestones
+
+### Project Timeline
+**Start Date:** {start_date.strftime('%Y-%m-%d')}  
+**End Date:** {(start_date + timedelta(weeks=acc.adjusted_weeks)).strftime('%Y-%m-%d')}  
+**Duration:** {acc.adjusted_weeks:.1f} weeks ({num_sprints} sprints)
+
+### Sprint Breakdown
+"""
+        for i, (sprint_start, sprint_end) in enumerate(sprint_dates, 1):
+            sp_per_sprint = acc.adjusted_story_points // num_sprints
+            focus = "Setup & Architecture" if i == 1 else f"Feature Development {i-1}" if i < num_sprints else "Testing & Polish"
+            milestones_section += f"""
+**Sprint {i}:** {sprint_start.strftime('%b %d')} - {sprint_end.strftime('%b %d, %Y')}  
+- **Story Points:** ~{sp_per_sprint} SP  
+- **Focus:** {focus}  
+- **Deliverables:** Sprint {i} demo, documentation updates
+"""
+        
+        milestones_section += f"""
+### Key Milestones
+1. **Week 1:** Project kickoff, environment setup complete
+2. **Week {num_sprints // 2 if num_sprints > 2 else 1}:** Core API endpoints functional
+3. **Week {num_sprints - 1 if num_sprints > 2 else 2}:** Frontend integration complete
+4. **Week {num_sprints}:** Final testing, production deployment
+
+---
+"""
+        sections.append(milestones_section)
+        
+        # Section 4: Resource Allocation
+        sections.append(f"""## 4. Resource Allocation
+
+### Team Composition
+**Total Team Size:** {team_size} developers
+
+**Role Distribution:**
+""")
+        
+        for i, member in enumerate(self.mock_data.get('team_members', [])[:6], 1):
+            name = member.get('name', f'Developer {i}')
+            role = member.get('role', member.get('experience_level', 'Developer'))
+            years = member.get('years_experience', 3)
+            skills = member.get('skills', [])[:3]
+            skill_str = ', '.join([s.get('skill', s) if isinstance(s, dict) else str(s) for s in skills])
+            sections[-1] += f"- **{name}** - {role} ({years}y exp) - Skills: {skill_str}\n"
+        
+        sections[-1] += f"""
+### Budget Allocation
+- **Personnel:** ${team_size * 120}K (estimated based on team size)
+- **Infrastructure:** $5K (cloud services, tools)
+- **Contingency:** $10K (15% buffer)
+- **Total Estimated Cost:** ${team_size * 120 + 15}K
+
+### Timeline Buffer
+- **Base Estimate:** {acc.original_weeks} weeks
+- **Adjusted Estimate:** {acc.adjusted_weeks:.1f} weeks
+- **Built-in Buffer:** {acc.weeks_added:.1f} weeks ({(acc.weeks_added / acc.original_weeks * 100):.0f}%)
+
+---
+"""
+        
+        # Section 5: Feature Decomposition
+        sections.append(f"""## 5. Feature Decomposition
+
+### High-Level Features ({num_features} features identified)
+
+""")
+        
+        features_per_category = {
+            "User Management": ["User registration", "User authentication", "Profile management", "Password reset"],
+            "CRUD Operations": ["Create operations", "Read/List operations", "Update operations", "Delete operations"],
+            "API Layer": ["REST API endpoints", "Request validation", "Response formatting", "Error handling"],
+            "Frontend": ["UI components", "Forms and validation", "Data display", "Navigation"],
+            "Testing & QA": ["Unit tests", "Integration tests", "E2E tests", "Performance tests"]
+        }
+        
+        feature_idx = 1
+        for category, feature_list in features_per_category.items():
+            num_category_features = min(len(feature_list), max(1, num_features // len(features_per_category)))
+            sections[-1] += f"**{category}** ({num_category_features} features):\n"
+            for feature in feature_list[:num_category_features]:
+                sp = max(3, acc.adjusted_story_points // (num_features * 2))
+                sections[-1] += f"{feature_idx}. {feature} (~{sp} SP)\n"
+                feature_idx += 1
+            sections[-1] += "\n"
+        
+        sections[-1] += f"""### Story Point Distribution
+- **Total Story Points:** {acc.adjusted_story_points} SP
+- **Average per Feature:** {acc.adjusted_story_points // num_features} SP
+- **Per Sprint:** ~{acc.adjusted_story_points // num_sprints} SP
+
+---
+"""
+        
+        # Section 6: Risk Assessment
+        sections.append(f"""## 6. Risk Assessment & Mitigation
+
+### Overall Risk Level: {acc.adjusted_risk_level}
+
+### Identified Risks
+
+**1. Technical Complexity Risk**
+- **Severity:** {acc.adjusted_risk_level}
+- **Impact:** Timeline delays, increased costs
+- **Mitigation:** 
+  - Allocated {acc.weeks_added:.1f} weeks buffer
+  - Regular technical reviews
+  - Prototype complex components early
+
+**2. Resource Availability Risk**
+- **Severity:** MEDIUM
+- **Impact:** Reduced velocity, missed deadlines
+- **Mitigation:**
+  - Cross-training team members
+  - Documentation of all decisions
+  - 15% budget contingency
+
+**3. Integration Risk**
+- **Severity:** {'HIGH' if acc.services_discovered > 5 else 'MEDIUM'}
+- **Impact:** API issues, data inconsistencies
+- **Mitigation:**
+  - Early integration testing
+  - API mocking for development
+  - Discovered {acc.services_discovered} services for validation
+
+### Risk Monitoring
+- **Weekly:** Team standups, blocker identification
+- **Bi-weekly:** Sprint retrospectives, velocity tracking
+- **Monthly:** Stakeholder updates, budget review
+
+---
+""")
+        
+        # Section 7: Dependencies & Blockers
+        discovered_services = [svc.name for svc in workflow_e_result.discovered_services[:5]] if hasattr(workflow_e_result, 'discovered_services') and workflow_e_result.discovered_services else []
+        
+        sections.append(f"""## 7. Dependencies & Blockers
+
+### Technical Dependencies
+
+**Core Technologies:**
+""")
+        
+        for tech in self.tech_stack[:7]:
+            sections[-1] += f"- **{tech}**: Primary technology for implementation\n"
+        
+        sections[-1] += f"""
+**External Services** ({len(discovered_services)} discovered):
+"""
+        for svc in discovered_services:
+            sections[-1] += f"- **{svc}**: Integration required\n"
+        
+        sections[-1] += f"""
+### Team Dependencies
+- **Design Team:** UI/UX mockups needed before frontend work
+- **DevOps Team:** Environment setup and CI/CD pipeline
+- **Security Team:** Security review before production deployment
+
+### Potential Blockers
+1. **Environment Access:** Delayed environment setup could impact sprint 1
+2. **Third-party APIs:** Service outages or rate limits
+3. **Team Availability:** Vacations, sick days, competing priorities
+
+### Mitigation Strategies
+- **Early Setup:** Complete environment configuration in week 1
+- **API Mocking:** Develop against mocks, integrate incrementally
+- **Resource Planning:** 20% capacity buffer for unexpected issues
+
+---
+"""
+        
+        # Section 8: Historical Context
+        sections.append(f"""## 8. Historical Context & Lessons Learned
+
+### Analysis of Historical Data
+- **Documents Analyzed:** {self.metadata.get('total_documents', 0)} historical documents
+- **Team History:** {len(self.mock_data.get('team_members', []))} team members with proven track record
+- **Services Identified:** {acc.services_discovered} services from ecosystem analysis
+
+### Key Patterns from History
+1. **Similar Projects:** Based on analysis of {self.metadata.get('github_prs', 0)} GitHub PRs, {self.metadata.get('jira_tickets', 0)} Jira tickets
+2. **Team Velocity:** Historical velocity suggests {team_velocity} SP/sprint is achievable
+3. **Common Pitfalls:** Integration testing, API changes, deployment complexity
+
+### Lessons Applied
+- **Adequate Buffer:** Added {acc.weeks_added:.1f} weeks based on historical variance
+- **Early Integration:** Test external services early based on past issues
+- **Documentation:** Maintain living documentation (learned from past projects)
+
+### Team Expertise
+- **Domain Knowledge:** Team has experience with similar {', '.join(self.tech_stack[:3])} projects
+- **SMEs Identified:** {self.metadata.get('smes_identified', 0)} subject matter experts available for consultation
+- **Collaboration:** {self.metadata.get('users_extracted', 0)} users mapped from historical documents
+
+---
+""")
+        
+        # Section 9: Recommendations & Next Steps
+        sections.append(f"""## 9. Recommendations & Next Steps
+
+### Immediate Actions (Week 1)
+1. ✅ **Kickoff Meeting:** Align team on goals, timeline, and responsibilities
+2. ✅ **Environment Setup:** Configure dev, staging, and production environments
+3. ✅ **Architecture Review:** Validate technical approach with stakeholders
+4. ✅ **Sprint 1 Planning:** Detail stories for first sprint
+
+### Short-term Actions (Weeks 2-4)
+1. **Core API Development:** Implement foundational CRUD endpoints
+2. **Database Schema:** Finalize and deploy database migrations
+3. **Authentication:** Implement auth layer and security controls
+4. **Frontend Scaffold:** Setup UI framework and routing
+
+### Mid-term Actions (Weeks 4-{int(acc.adjusted_weeks * 0.7)})
+1. **Feature Development:** Implement remaining features per roadmap
+2. **Integration Testing:** Test all external service integrations
+3. **Performance Optimization:** Profile and optimize critical paths
+4. **Security Review:** Conduct security audit and fix vulnerabilities
+
+### Pre-Launch Actions (Final {int(acc.adjusted_weeks * 0.3)} weeks)
+1. **UAT:** User acceptance testing with stakeholders
+2. **Production Prep:** Deployment scripts, monitoring, rollback plan
+3. **Documentation:** Finalize user guides, API docs, runbooks
+4. **Launch:** Phased rollout with monitoring
+
+### Ongoing Recommendations
+- **Daily Standups:** 15-minute syncs to identify blockers
+- **Weekly Reviews:** Track velocity, adjust estimates as needed
+- **Bi-weekly Demos:** Show progress to stakeholders
+- **Monthly Retrospectives:** Continuous improvement and team health
+
+### Decision Points
+- **Week 2:** Review initial architecture, adjust if needed
+- **Week {num_sprints // 2}:** Mid-project checkpoint, assess timeline
+- **Week {num_sprints - 1}:** Go/no-go decision for production launch
+
+---
+""")
+        
+        return "\n".join(sections)
+    
     def generate_planning_report(self, workflow_e_result) -> str:
         """Generate Report 1: Planning Service Output (production report)."""
         print(f"\n📄 GENERATING PLANNING SERVICE REPORT...")
@@ -2033,10 +2364,15 @@ class ParameterizedHyperRealisticDemo:
 
 """
         
+        # ⭐ NEW: Generate sections 1-9 (Core roadmap content)
+        print("   ⭐ Generating Sections 1-9: Core Roadmap")
+        sections_1_to_9 = self._generate_core_roadmap_sections(workflow_e_result)
+        print(f"   ✅ Sections 1-9 generated ({len(sections_1_to_9):,} characters)")
+        
         # ⭐ NEW: Generate Section 10 - SME & Contacts (Workflow F Enhancement)
         section_10 = ""
         if hasattr(self, 'workflow_f_result') and self.workflow_f_result:
-            print("   ⭐ Adding Section 10: SME & Contacts (Workflow F)")
+            print("   ⭐ Generating Section 10: SME & Contacts (Workflow F)")
             try:
                 # Create SME enhancer with actual Workflow F data
                 enhancer = SMEReportEnhancer(
@@ -2083,15 +2419,9 @@ class ParameterizedHyperRealisticDemo:
 **Report Type:** Production Planning Output  
 """
         
-        # ⭐ FIX: Insert Section 10 BEFORE sections 11-15 to maintain proper order
-        # Split the report to insert Section 10 in the correct position
-        if section_10 and "## 📍 Section 11:" in report:
-            # Find where Section 11 starts and insert Section 10 before it
-            parts = report.split("## 📍 Section 11:", 1)
-            full_report = header + parts[0] + section_10 + "\n\n## 📍 Section 11:" + parts[1] + footer
-        else:
-            # Fallback: append Section 10 at the end (old behavior)
-            full_report = header + report + section_10 + footer
+        # ⭐ FIXED: Assemble report in proper order: Header → Sections 1-9 → Section 10 → Sections 11-15
+        print("   ⭐ Assembling complete report with all sections")
+        full_report = header + sections_1_to_9 + section_10 + "\n\n" + report + footer
         
         # ⭐ NEW: Add workflow summary (Phase 3.1)
         full_report += self._generate_workflow_summary("Planning Service")
