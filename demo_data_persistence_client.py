@@ -164,12 +164,38 @@ class DemoPersistenceClient:
         """Save a team member/user to user-store with optional document relationships."""
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
+                # Map team role to valid user-store roles
+                role_mapping = {
+                    "backend": "developer",
+                    "frontend": "developer",
+                    "ios": "developer",
+                    "android": "developer",
+                    "fullstack": "developer",
+                    "engineer": "developer",
+                    "architect": "developer",
+                    "analyst": "analyst",
+                    "data": "analyst",
+                    "manager": "manager",
+                    "product": "manager",
+                    "admin": "admin",
+                    "viewer": "viewer"
+                }
+                
+                # Get role and clean it
+                raw_role = user.get("role", "developer").lower()
+                # Map to valid role
+                mapped_role = "developer"  # default
+                for keyword, valid_role in role_mapping.items():
+                    if keyword in raw_role:
+                        mapped_role = valid_role
+                        break
+                
                 # Create user payload
                 payload = {
                     "email": user.get("email", f"{user.get('name', 'user').lower().replace(' ', '.')}@example.com"),
                     "username": user.get("name", "").lower().replace(" ", "_"),
                     "display_name": user.get("name", "Unknown User"),
-                    "role": user.get("role", "developer").lower()
+                    "role": mapped_role
                 }
                 
                 # Create user
