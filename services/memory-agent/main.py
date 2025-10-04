@@ -162,7 +162,7 @@ except ImportError:
                 "utilization_percent": 1.0
             }
 
-        def build_memory_agent_context(**kwargs):
+        def build_memory_agent_context(action, **kwargs):
             """Build mock memory agent context for testing.
 
             Returns empty context when shared utilities are unavailable.
