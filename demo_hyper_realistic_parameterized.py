@@ -3054,20 +3054,23 @@ The ecosystem uses multiple interconnected datastores:
    └── Links to: User Store (skills), Doc Store (documentation)
    └── Relationships: Many-to-many with skills, one-to-many with docs
 
-2. User Store (SQLite)
-   └── Stores: Team members, skills, capacity, velocity
-   └── Links to: External Service Store (experience), Jira (history)
-   └── Relationships: One-to-many with skills, many-to-many with services
+2. ⭐ User Store (SQLite) - Enhanced by Workflow F
+   └── Stores: Team members, skills, capacity, velocity, ⭐SMEs, ⭐collaboration graph
+   └── Links to: External Service Store (experience), Doc Store (⭐authored documents)
+   └── Relationships: One-to-many with skills, many-to-many with services, ⭐many-to-many with documents
+   └── ⭐ Populated by: Workflow F (user intelligence extraction from historical documents)
 
 3. Doc Store (SQLite/Vector)
-   └── Stores: Confluence docs, GitHub files, embeddings
-   └── Links to: External Service Store (service docs), Memory Agent (context)
-   └── Relationships: One-to-many with services, many-to-many with memory
+   └── Stores: Confluence docs, GitHub files, embeddings, ⭐user metadata
+   └── Links to: External Service Store (service docs), Memory Agent (context), ⭐User Store (authors)
+   └── Relationships: One-to-many with services, many-to-many with memory, ⭐many-to-many with users
+   └── ⭐ Analyzed by: Workflow F (extracts user data from document metadata)
 
 4. Memory Agent (Redis + SQLite)
-   └── Stores: Workflow contexts, artifacts, execution history
+   └── Stores: Workflow contexts (A-F), artifacts, execution history
    └── Links to: All services (context tracking), Orchestrator (state)
    └── Relationships: Many-to-many with all services
+   └── ⭐ Tracks: Workflow F user extraction runs and results
 
 5. Prompt Store (SQLite)
    └── Stores: LLM prompts, templates, versioning
@@ -3084,16 +3087,39 @@ Feature Request
       ↓
 2. Source Agent → Doc Store (fetch historical docs)
       ↓
-3. User Store → Team capacity & skills
+      ├──> ⭐ Workflow F (parallel) → Extract user intelligence
+      │         │
+      │         ├──> GitHub PRs: authors, reviewers, assignees, commenters
+      │         ├──> Jira Tickets: reporters, assignees, watchers, commenters
+      │         ├──> Confluence Docs: authors, editors, maintainers, commenters
+      │         │
+      │         ├──> Deduplicate & merge user records
+      │         ├──> Score SME expertise
+      │         ├──> Map collaboration relationships
+      │         │
+      │         └──> User Store (persist users, SMEs, collaboration graph)
+      │                    │
+      │                    └──> Link users to authored documents (Doc Store)
+      │
+3. User Store → Team capacity, skills, ⭐SMEs, ⭐collaboration data
       ↓
 4. External Service Store → Service metadata & compliance
       ↓
 5. Workflow E → Validation & accuracy enhancement
       ↓
-6. Memory Agent → Aggregate results
+6. Memory Agent → Aggregate results (Workflows A-F)
       ↓
 7. Report Generator → Final planning report
+      │
+      └──> ⭐ Enhanced with: SME recommendations, expert contacts, skill gaps
 ```
+
+**⭐ Workflow F Cross-Store Impact:**
+- **Doc Store → User Store:** Historical documents analyzed to extract user data
+- **User Store → Doc Store:** Bidirectional links created (users ↔ authored documents)
+- **User Store → Memory Agent:** Workflow F execution contexts stored
+- **User Store → Reports:** SME data enriches Planning Service Report (Section 10)
+- **Expert-Finder Service:** Queries user-store for intelligent expert discovery
 
 ---
 
