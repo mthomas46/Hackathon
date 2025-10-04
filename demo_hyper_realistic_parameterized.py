@@ -3488,6 +3488,11 @@ Simply delete this folder and run the demo script again with your desired parame
         print(" "*20 + "🚀 PARAMETERIZED HYPER-REALISTIC DEMO 🚀")
         print("="*100)
         
+        # Generate unique team_id for this demo run
+        from datetime import datetime
+        self.team_id = f"team_{int(datetime.now().timestamp())}"
+        print(f"\n🏆 Team ID for this run: {self.team_id}")
+        
         # Generate mock data
         self.generate_realistic_mock_data()
         
@@ -3499,7 +3504,8 @@ Simply delete this folder and run the demo script again with your desired parame
             jira_tickets=self.mock_data.get('jira_tickets', []),
             confluence_docs=self.mock_data.get('confluence_docs', []),
             github_prs=self.mock_data.get('github_prs', []),
-            team_members=self.mock_data.get('team_members', [])
+            team_members=self.mock_data.get('team_members', []),
+            team_id=self.team_id
         )
         self.persistence_stats = persistence_stats
         

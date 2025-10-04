@@ -69,6 +69,9 @@ class User(BaseEntity):
     bio: Optional[str] = None
     metadata: Dict[str, any] = field(default_factory=dict)
 
+    # Team membership
+    team_id: Optional[str] = None  # Links users together as a team for capacity planning
+    
     # Relationship tracking
     document_relationships: List[str] = field(default_factory=list)  # Document IDs
     service_subscriptions: List[str] = field(default_factory=list)   # Service names

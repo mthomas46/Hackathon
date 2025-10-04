@@ -16,6 +16,7 @@ class CreateUserRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, description="Unique username")
     display_name: Optional[str] = Field(None, description="Display name for the user")
     role: str = Field("viewer", description="User role (admin, analyst, developer, manager, viewer)")
+    team_id: Optional[str] = Field(None, description="Team identifier for grouping users together")
 
     @field_validator('role')
     @classmethod
@@ -80,6 +81,7 @@ class UserResponse(BaseModel):
     status: str = Field(..., description="User account status")
     avatar_url: Optional[str] = Field(None, description="Avatar image URL")
     bio: Optional[str] = Field(None, description="User biography")
+    team_id: Optional[str] = Field(None, description="Team identifier")
     document_relationships: List[str] = Field(default_factory=list, description="Related document IDs")
     service_subscriptions: List[str] = Field(default_factory=list, description="Subscribed services")
     topic_interests: List[str] = Field(default_factory=list, description="Topics of interest")
