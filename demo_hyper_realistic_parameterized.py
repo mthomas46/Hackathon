@@ -3426,11 +3426,17 @@ This report provides an in-depth analysis of how data flows through the ecosyste
                 │ service-  │    │  store   │
                 │  store    │    │ (SQLite) │
                 │ (SQLite)  │    │          │
-                │           │    │  Team    │
-                │ Discovered│    │  Skills  │
-                │ Services  │    │  Data    │
+                │           │    │ ⭐Users   │
+                │ Discovered│    │ ⭐SMEs    │
+                │ Services  │    │ ⭐Skills  │
                 └───────────┘    └──────────┘
+                                      ▲
+                                      │
+                                 Workflow F
+                            (User Intelligence)
 ```
+
+**⭐ Workflow F Integration:** The user-store is populated by Workflow F, which extracts user data from historical documents (GitHub PRs, Jira tickets, Confluence docs), identifies Subject Matter Experts (SMEs), and maps collaboration relationships.
 
 ### 1.2 Data Flow Diagram
 
@@ -3447,16 +3453,32 @@ Historical Documents (doc_store)
         │                               │
         ├───────────────────────────────┘
         │
-        └──> Workflow Execution
+        ├──> ⭐ Workflow F (User Intelligence)
+        │         │
+        │         ├──> Extract Users from GitHub PRs
+        │         ├──> Extract Users from Jira Tickets
+        │         ├──> Extract Users from Confluence Docs
+        │         │
+        │         ├──> Deduplicate & Merge User Records
+        │         ├──> Score SME Expertise
+        │         ├──> Map Collaboration Relationships
+        │         │
+        │         └──> Store in user-store
+        │                     │
+        │                     └──> Link to Documents
+        │
+        └──> Workflow Execution (A-E)
                  │
                  ├──> Use Prompts (prompt_store)
                  │
                  ├──> Analyze Services (external-service-store)
                  │
-                 ├──> Match Team Skills (user-store)
+                 ├──> Match Team Skills (user-store) ⭐ Enhanced by Workflow F
                  │
                  └──> Store Context (memory-agent)
 ```
+
+**⭐ Workflow F Data Flow:** Historical documents flow through Workflow F's multi-stage pipeline (extraction → deduplication → scoring → relationship mapping) before being persisted to the user-store. This enables expert recommendations in planning reports.
 
 ---
 
@@ -3824,8 +3846,79 @@ memory-agent
     ├──> workflow:workflow_b:* (Historical Context executions)
     ├──> workflow:workflow_c:* (Timeline Estimation executions)
     ├──> workflow:workflow_d:* (Skills Matching executions)
-    └──> workflow:workflow_e:* (Service Validation executions)
+    ├──> workflow:workflow_e:* (Service Validation executions)
+    └──> ⭐ workflow:workflow_f:* (User Intelligence executions)
 ```
+
+### 3.7 ⭐ Workflow F → User-Store
+
+**NEW: User Intelligence & Expert Discovery Integration**
+
+Workflow F extracts user data from historical documents and stores it in `user-store`:
+
+```
+Historical Documents (doc_store)
+    │
+    ├──> GitHub PRs
+    │    ├─ Authors, Reviewers, Assignees
+    │    ├─ Merger, Commit Authors
+    │    └─ Commenters
+    │
+    ├──> Jira Tickets
+    │    ├─ Reporters, Assignees
+    │    ├─ Watchers, Worklog Contributors
+    │    └─ Commenters
+    │
+    └──> Confluence Docs
+         ├─ Authors, Editors
+         ├─ Maintainers, Watchers
+         └─ Commenters
+              │
+              ▼
+    Workflow F (User Intelligence)
+              │
+              ├──> Deduplicate Users
+              ├──> Score SME Expertise
+              ├──> Map Collaboration Relationships
+              │
+              ▼
+         user-store
+              │
+              ├──> Users Table
+              │    • user_id, name, email, role
+              │    • skills (JSON)
+              │    • expertise_score
+              │
+              ├──> User-Document Relationships
+              │    • Links users to documents they created/edited
+              │
+              └──> Collaboration Graph
+                   • Tracks user-user relationships
+                   • Identifies SMEs by domain
+```
+
+**Schema: user-store**
+```sql
+CREATE TABLE users (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    email TEXT,
+    role TEXT,  -- developer, analyst, manager
+    team_id TEXT,
+    skills JSON,  -- {"Python": 0.9, "FastAPI": 0.85}
+    expertise_score REAL,
+    documents_created INTEGER,
+    documents_reviewed INTEGER,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE INDEX idx_users_team_id ON users(team_id);
+CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_expertise ON users(expertise_score);
+```
+
+**Integration:** User data from user-store enriches planning reports with expert recommendations, skill gap analysis, and team augmentation suggestions (Section 10 of Planning Service Report).
 
 ---
 
@@ -3853,48 +3946,108 @@ Cross-store relationships are maintained through:
 
 ### 4.3 Discovery Pattern
 
-Services are discovered through multi-source analysis:
+Services and users are discovered through multi-source analysis:
 
 ```
 Historical Documents
     │
-    ├──> Jira Tickets
-    │    └──> Extract: tech_stack, description mentions
+    ├──> Service Discovery (Workflow B)
+    │    │
+    │    ├──> Jira Tickets
+    │    │    └──> Extract: tech_stack, description mentions
+    │    │
+    │    ├──> Confluence Docs
+    │    │    └──> Extract: tags, section titles, content
+    │    │
+    │    └──> GitHub PRs
+    │         └──> Extract: tech_stack, commit messages
+    │              │
+    │              └──> Aggregate & Deduplicate
+    │                   │
+    │                   └──> Store in external-service-store
+    │                        │
+    │                        └──> Create document linkings
     │
-    ├──> Confluence Docs
-    │    └──> Extract: tags, section titles, content
-    │
-    └──> GitHub PRs
-         └──> Extract: tech_stack, commit messages
-              │
-              └──> Aggregate & Deduplicate
+    └──> ⭐ User Discovery (Workflow F)
+         │
+         ├──> GitHub PRs
+         │    └──> Extract: authors, reviewers, assignees, commenters
+         │
+         ├──> Jira Tickets
+         │    └──> Extract: reporters, assignees, watchers, commenters
+         │
+         └──> Confluence Docs
+              └──> Extract: authors, editors, maintainers, commenters
                    │
-                   └──> Store in external-service-store
+                   └──> Deduplicate & Merge
                         │
-                        └──> Create document linkings
+                        ├──> Score SME Expertise
+                        ├──> Map Collaboration Relationships
+                        │
+                        └──> Store in user-store
+                             │
+                             └──> Link to documents
 ```
+
+**⭐ Workflow F Discovery:** While Workflow B discovers services, Workflow F discovers users using the same document sources. This parallel discovery enables comprehensive ecosystem intelligence.
 
 ### 4.4 Context Accumulation Pattern
 
-Workflow contexts accumulate over time in `memory-agent`:
+Workflow contexts accumulate over time in `memory-agent`, while user intelligence accumulates in `user-store`:
 
+**Memory-Agent Accumulation (Workflow Contexts):**
 ```
 Initial Run:
   workflow:workflow_a:001 (Feature X)
+  workflow:workflow_f:001 (User extraction: 5 users)
 
 Second Run:
   workflow:workflow_a:001 (Feature X)
   workflow:workflow_a:002 (Feature Y)
+  workflow:workflow_f:001 (User extraction: 5 users)
+  workflow:workflow_f:002 (User extraction: 3 new users)
 
 Third Run:
   workflow:workflow_a:001 (Feature X)
   workflow:workflow_a:002 (Feature Y)
   workflow:workflow_a:003 (Feature Z)
+  workflow:workflow_f:001 (User extraction: 5 users)
+  workflow:workflow_f:002 (User extraction: 3 new users)
+  workflow:workflow_f:003 (User extraction: 2 new users)
   
 → Historical context grows
 → Pattern recognition improves
 → Velocity calculations become more accurate
 ```
+
+**⭐ User-Store Accumulation (User Intelligence):**
+```
+Initial Run (3 documents):
+  user-store: 5 users
+  user_relationships: 2 collaborations
+  SMEs identified: 1
+
+Second Run (3 new documents):
+  user-store: 8 users (3 new + 5 existing)
+  user_relationships: 5 collaborations (3 new)
+  SMEs identified: 2 (1 new)
+  • User A: expertise_score 0.75 → 0.82 (more documents)
+  • User B: documents_reviewed 5 → 8
+
+Third Run (3 new documents):
+  user-store: 10 users (2 new + 8 existing)
+  user_relationships: 8 collaborations (3 new)
+  SMEs identified: 3 (1 new)
+  • User A: expertise_score 0.82 → 0.89
+  • User B: documents_reviewed 8 → 11
+  • User C: promoted to SME (expertise_score crossed 0.8 threshold)
+
+→ User expertise scores improve with more data
+→ Collaboration patterns become clearer
+→ SME identification becomes more accurate
+```
+
+**Key Difference:** Workflow contexts in memory-agent are immutable snapshots; user data in user-store is mutable and improves with each run as more documents are analyzed.
 
 ---
 
@@ -4390,26 +4543,36 @@ After Demo Run:
            │                     │                     │
            └─────────────────────┼─────────────────────┘
                                  │
-                                 ▼
-                    ┌────────────────────────┐
-                    │   Workflow Orchestrator│
-                    │                        │
-                    │  Executes Workflows:   │
-                    │  A, B, C, D, E         │
-                    └───────────┬────────────┘
-                                │
-                    ┌───────────┼───────────┐
-                    │           │           │
-                    ▼           ▼           ▼
-            ┌──────────┐ ┌──────────┐ ┌──────────┐
-            │user-store│ │ memory-  │ │  Report  │
-            │ (SQLite) │ │  agent   │ │Generator │
-            │          │ │(Redis+SQL)│ │          │
-            │Team &    │ │          │ │ 4 Reports│
-            │Skills    │ │Workflow  │ │Generated │
-            │Data      │ │Contexts  │ │          │
-            └──────────┘ └──────────┘ └──────────┘
+                    ┌────────────┼──────────────┐
+                    │            │              │
+                    ▼            │              ▼
+      ┌──────────────────────┐  │  ⭐┌────────────────────────┐
+      │Workflow Orchestrator │  │    │   Workflow F           │
+      │                      │  │    │  (User Intelligence)   │
+      │Executes Workflows:   │  │    │                        │
+      │A, B, C, D, E         │  │    │ • Extract Users        │
+      └───────────┬──────────┘  │    │ • Score SMEs           │
+                  │             │    │ • Map Collaborations   │
+                  │             │    └───────────┬────────────┘
+                  │             │                │
+        ┌─────────┼─────────────┼────────────────┘
+        │         │             │
+        ▼         ▼             ▼
+  ┌──────────┐ ┌──────────┐ ┌──────────┐
+  │user-store│ │ memory-  │ │  Report  │
+  │ (SQLite) │ │  agent   │ │Generator │
+  │          │ │(Redis+SQL)│ │          │
+  │⭐Users   │ │          │ │ 6 Reports│
+  │⭐SMEs    │ │Workflow  │ │Generated │
+  │⭐Collab  │ │Contexts  │ │          │
+  └──────────┘ └──────────┘ └──────────┘
+       ▲
+       │
+   Populated
+   by Workflow F
 ```
+
+**⭐ Workflow F Integration:** Historical documents flow through Workflow F (in parallel with other workflows) to extract user intelligence, which is then persisted to the user-store and used to enhance the 6 generated reports with expert recommendations.
 
 ### 7.2 Service Discovery Flow Detail
 
