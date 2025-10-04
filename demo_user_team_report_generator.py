@@ -34,7 +34,8 @@ class UserTeamReportGenerator:
         workflow_f_result: Any = None,
         feature_summary: str = "",
         mock_data: Optional[Dict[str, Any]] = None,
-        expert_finder_url: str = "http://localhost:5160"
+        expert_finder_url: str = "http://localhost:5160",
+        metadata: Optional[Dict[str, Any]] = None
     ):
         """
         Initialize User & Team Report Generator.
@@ -53,6 +54,7 @@ class UserTeamReportGenerator:
         self.feature_summary = feature_summary
         self.mock_data = mock_data or {}
         self.expert_finder_url = expert_finder_url
+        self.metadata = metadata or {}
         
         # Analyze team expertise
         self.team_expertise = self._analyze_team_expertise()

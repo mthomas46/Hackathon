@@ -2043,7 +2043,8 @@ class ParameterizedHyperRealisticDemo:
                     team_members=self.mock_data.get('team_members', []),
                     tech_stack=self.tech_stack,
                     mock_data=self.mock_data,
-                    expert_finder_url="http://localhost:5160"
+                    expert_finder_url="http://localhost:5160",
+                    metadata=self.metadata
                 )
                 section_10 = enhancer.generate_sme_section()
                 print(f"   ✅ Section 10 generated ({len(section_10):,} characters)")
@@ -4738,7 +4739,8 @@ Historical Documents (doc_store)
                 workflow_f_result=self.workflow_f_result if hasattr(self, 'workflow_f_result') else None,
                 feature_summary=self.feature_summary,
                 mock_data=self.mock_data,
-                expert_finder_url="http://localhost:5160"
+                expert_finder_url="http://localhost:5160",
+                metadata=self.metadata
             )
             
             full_report = generator.generate_complete_report()
