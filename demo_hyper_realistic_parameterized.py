@@ -1390,6 +1390,7 @@ This demo doesn't just simulate - it **actually persists data** to real ecosyste
 | **doc-store** | Historical Documents | {self.persistence_stats.get('historical_data', {}).get('documents_saved', 0)} | {'✅' if self.persistence_stats.get('historical_data', {}).get('documents_saved', 0) > 0 else '⚠️'} |
 | **prompt-store** | Workflow Prompts | {self.persistence_stats.get('prompts', {}).get('prompts_saved', 0)} | {'✅' if self.persistence_stats.get('prompts', {}).get('prompts_saved', 0) > 0 else '⚠️'} |
 | **external-service-store** | Discovered Services | {self.service_discovery_results.get('stats', {}).get('services_stored', 0)} services | {'✅' if self.service_discovery_results.get('stats', {}).get('services_stored', 0) > 0 else '⚠️'} |
+| **user-store** | Team Members | {self.persistence_stats.get('users', {}).get('users_saved', 0)} users | {'✅' if self.persistence_stats.get('users', {}).get('users_saved', 0) > 0 else '⚠️'} |
 | **memory-agent** | Workflow Contexts | {self.persistence_stats.get('workflow_contexts', {}).get('contexts_saved', 0)} workflows | {'✅' if self.persistence_stats.get('workflow_contexts', {}).get('contexts_saved', 0) > 0 else '⚠️'} |
 
 **Status Legend:**
@@ -1416,6 +1417,7 @@ This demo doesn't just simulate - it **actually persists data** to real ecosyste
 - ✅ **doc-store:** {self.persistence_stats.get('historical_data', {}).get('documents_saved', 0)}/{len(self.mock_data.get('jira_tickets', [])) + len(self.mock_data.get('confluence_docs', [])) + len(self.mock_data.get('github_prs', []))} documents saved
 - ✅ **prompt-store:** {self.persistence_stats.get('prompts', {}).get('prompts_saved', 0)}/8 prompts saved
 - ✅ **external-service-store:** {self.service_discovery_results.get('stats', {}).get('services_stored', 0)}/{self.service_discovery_results.get('stats', {}).get('services_discovered', 0)} services saved
+- ✅ **user-store:** {self.persistence_stats.get('users', {}).get('users_saved', 0)}/{len(self.mock_data.get('team_members', []))} users saved
 - ✅ **memory-agent:** {self.persistence_stats.get('workflow_contexts', {}).get('contexts_saved', 0)}/5 workflow contexts saved
 
 ### 6.2 Database Schemas (Live Stores)
@@ -1521,6 +1523,7 @@ GET /memory/get?key=workflow:workflow_e:*
 - doc-store: {'✅ Running' if self.persistence_stats.get('store_accessibility', {}).get('doc_store', False) else '⚠️ Not Running'}
 - prompt-store: {'✅ Running' if self.persistence_stats.get('store_accessibility', {}).get('prompt_store', False) else '⚠️ Not Running'}
 - external-service-store: {'✅ Running' if self.service_discovery_results.get('stats', {}).get('services_stored', 0) > 0 or len(self.service_discovery_results.get('stats', {}).get('errors', [])) == 0 else '⚠️ Not Running'}
+- user-store: {'✅ Running' if self.persistence_stats.get('store_accessibility', {}).get('user_store', False) else '⚠️ Not Running'}
 - memory-agent: {'✅ Running' if self.persistence_stats.get('store_accessibility', {}).get('memory_agent', False) else '⚠️ Not Running'}
 ''' if self.persistence_stats else '''
 **Persistence Status:** Data generation completed, persistence attempted
@@ -3178,7 +3181,8 @@ Simply delete this folder and run the demo script again with your desired parame
         persistence_stats = await save_demo_data_to_stores(
             jira_tickets=self.mock_data.get('jira_tickets', []),
             confluence_docs=self.mock_data.get('confluence_docs', []),
-            github_prs=self.mock_data.get('github_prs', [])
+            github_prs=self.mock_data.get('github_prs', []),
+            team_members=self.mock_data.get('team_members', [])
         )
         self.persistence_stats = persistence_stats
         

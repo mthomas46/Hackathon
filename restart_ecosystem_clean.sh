@@ -96,51 +96,41 @@ echo "="*80
 
 # Start doc_store
 echo "  [1/5] Starting doc_store on port 5087..."
-cd services/doc_store
-python3 main.py > /tmp/doc_store_clean.log 2>&1 &
+python3 services/doc_store/main.py > /tmp/doc_store_clean.log 2>&1 &
 DOC_PID=$!
 echo "        PID: $DOC_PID"
-cd ../..
 
 sleep 2
 
 # Start prompt_store
 echo "  [2/5] Starting prompt_store on port 5110..."
-cd services/prompt_store
-python3 main.py > /tmp/prompt_store_clean.log 2>&1 &
+python3 services/prompt_store/main.py > /tmp/prompt_store_clean.log 2>&1 &
 PROMPT_PID=$!
 echo "        PID: $PROMPT_PID"
-cd ../..
 
 sleep 2
 
 # Start external-service-store
 echo "  [3/5] Starting external-service-store on port 5140..."
-cd services/external-service-store
-python3 main.py > /tmp/external_service_store_clean.log 2>&1 &
+python3 services/external-service-store/main.py > /tmp/external_service_store_clean.log 2>&1 &
 EXTERNAL_PID=$!
 echo "        PID: $EXTERNAL_PID"
-cd ../..
 
 sleep 2
 
 # Start memory-agent
 echo "  [4/5] Starting memory-agent on port 5090..."
-cd services/memory-agent
-python3 main.py > /tmp/memory_agent_clean.log 2>&1 &
+python3 services/memory-agent/main.py > /tmp/memory_agent_clean.log 2>&1 &
 MEMORY_PID=$!
 echo "        PID: $MEMORY_PID"
-cd ../..
 
 sleep 2
 
 # Start log-collector (if needed)
 echo "  [5/5] Starting log-collector on port 8104..."
-cd services/log-collector
-python3 main.py > /tmp/log_collector_clean.log 2>&1 &
+python3 services/log-collector/main.py > /tmp/log_collector_clean.log 2>&1 &
 LOG_PID=$!
 echo "        PID: $LOG_PID"
-cd ../..
 
 echo ""
 echo "✅ All services started"

@@ -1,0 +1,240 @@
+{
+  "jira_tickets": [
+    {
+      "ticket_id": "NOTIF-001",
+      "title": "Implement push notifications with FCM",
+      "type": "Story",
+      "status": "DONE",
+      "story_points": 13,
+      "actual_hours": 52,
+      "assignee": "Team Member 1",
+      "sprint": "Sprint 20",
+      "completed_date": "2025-09-04",
+      "description": "Implementation of implement push notifications with fcm",
+      "labels": [
+        "mobile",
+        "firebase",
+        "notifications"
+      ],
+      "comments": 3,
+      "complexity": "High",
+      "accuracy_score": 0.95
+    }
+  ],
+  "confluence_docs": [
+    {
+      "doc_id": "CONF-001",
+      "title": "Best Practices for Python",
+      "space": "Engineering",
+      "author": "Sarah Chen",
+      "created": "2025-06-06",
+      "last_updated": "2025-07-06",
+      "word_count": 2500,
+      "sections": [
+        "Setup",
+        "Guidelines",
+        "Troubleshooting",
+        "Examples"
+      ],
+      "tags": [
+        "Python",
+        "iOS",
+        "Android"
+      ],
+      "views": 100,
+      "likes": 15,
+      "comments": 5,
+      "attachments": 0,
+      "contributors": [
+        "Sarah Chen"
+      ]
+    }
+  ],
+  "github_prs": [
+    {
+      "pr_id": "PR-0456",
+      "title": "feat: Implement Python functionality",
+      "author": "Sarah Chen",
+      "status": "merged",
+      "created": "2025-07-31",
+      "merged": "2025-08-05",
+      "files_changed": 15,
+      "additions": 500,
+      "deletions": 150,
+      "commits": 8,
+      "reviewers": [
+        "Sarah Chen"
+      ],
+      "labels": [
+        "feature",
+        "Python",
+        "iOS"
+      ],
+      "comments": 8,
+      "review_comments": 3,
+      "branch": "feature/python-1"
+    }
+  ],
+  "tangential_docs": [
+    {
+      "doc_id": "TAN-001",
+      "doc_type": "tangential_service_doc",
+      "title": "Monitoring & Observability with Datadog",
+      "service_name": "Datadog",
+      "service_type": "MONITORING",
+      "relevance": "Performance monitoring for Python",
+      "tech_stack": [
+        "Datadog",
+        "Python"
+      ],
+      "integration_complexity": "Medium",
+      "benefits": [
+        "Real-time metrics",
+        "APM",
+        "Log aggregation",
+        "Custom dashboards"
+      ],
+      "sections": [
+        "Getting Started",
+        "Integration Guide",
+        "Best Practices",
+        "Troubleshooting"
+      ],
+      "word_count": 2500,
+      "author": "External Service Team",
+      "created": "2025-05-07",
+      "last_updated": "2025-08-05",
+      "views": 250,
+      "bookmarks": 15,
+      "external_links": 8,
+      "code_examples": 5,
+      "related_services": [
+        "Auth0",
+        "Redis",
+        "Swagger"
+      ],
+      "tags": [
+        "external-service",
+        "monitoring",
+        "python",
+        "integration"
+      ],
+      "maturity": "production-ready",
+      "community_support": "active",
+      "documentation_quality": 0.85,
+      "integration_priority": "medium"
+    }
+  ],
+  "team_members": [
+    {
+      "user_id": "user_001",
+      "name": "Sarah Chen",
+      "role": "Senior Backend Engineer",
+      "skills": [
+        {
+          "skill": "Python",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        },
+        {
+          "skill": "Python",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        },
+        {
+          "skill": "APIs",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        }
+      ],
+      "current_workload": 0.6,
+      "availability": "Full-time",
+      "recent_velocity": 14
+    },
+    {
+      "user_id": "user_002",
+      "name": "Marcus Johnson",
+      "role": "Senior iOS Engineer",
+      "skills": [
+        {
+          "skill": "iOS (Swift)",
+          "level": "Advanced",
+          "years": 4,
+          "projects": 8
+        },
+        {
+          "skill": "Firebase",
+          "level": "Advanced",
+          "years": 4,
+          "projects": 8
+        }
+      ],
+      "current_workload": 0.65,
+      "availability": "Full-time",
+      "recent_velocity": 15
+    }
+  ],
+  "external_services": [
+    {
+      "service_id": "firebase-fcm",
+      "name": "Firebase Cloud Messaging",
+      "category": "Push Notifications",
+      "vendor": "Google",
+      "pricing": "Free up to 1M messages/month",
+      "api_version": "v1",
+      "rate_limits": {
+        "messages_per_minute": 60,
+        "messages_per_day": 1000000
+      },
+      "payload_limit": "4KB",
+      "platforms": [
+        "iOS",
+        "Android",
+        "Web"
+      ],
+      "team_experience": "High",
+      "documentation_quality": 0.92,
+      "reliability_sla": "99.9%"
+    },
+    {
+      "service_id": "sendgrid-api",
+      "name": "SendGrid Email API",
+      "category": "Email",
+      "vendor": "Twilio",
+      "pricing": "Free up to 100 emails/day",
+      "api_version": "v3",
+      "rate_limits": {
+        "emails_per_second": 10,
+        "emails_per_day": 100000
+      },
+      "payload_limit": "30MB",
+      "features": [
+        "Templates",
+        "Analytics",
+        "SMTP"
+      ],
+      "team_experience": "Medium",
+      "documentation_quality": 0.9,
+      "reliability_sla": "99.95%"
+    }
+  ],
+  "parameters": {
+    "total_historical_documents": 3,
+    "num_jira_tickets": 1,
+    "num_confluence_docs": 1,
+    "num_github_prs": 1,
+    "num_tangential_docs": 1,
+    "num_team_members": 2,
+    "tech_stack": [
+      "Python",
+      "iOS",
+      "Android",
+      "React",
+      "Firebase"
+    ]
+  },
+  "generated_at": "2025-10-04T00:49:19.978362"
+}

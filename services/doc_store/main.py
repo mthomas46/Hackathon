@@ -9,10 +9,10 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-# Add shared infrastructure to path
+# Add project root to path for imports
 project_root = Path(__file__).parent.parent.parent
-shared_path = project_root / "services" / "shared"
-sys.path.insert(0, str(shared_path))
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 # ============================================================================
 # STANDARDIZED SHARED INFRASTRUCTURE - Using consolidated utilities
