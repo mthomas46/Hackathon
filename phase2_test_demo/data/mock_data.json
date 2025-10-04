@@ -1,0 +1,991 @@
+{
+  "jira_tickets": [
+    {
+      "ticket_id": "NOTIF-001",
+      "title": "Implement push notifications with FCM",
+      "type": "Story",
+      "status": "DONE",
+      "story_points": 13,
+      "actual_hours": 52,
+      "assignee": "Team Member 1",
+      "sprint": "Sprint 20",
+      "completed_date": "2025-06-06",
+      "description": "Implementation of implement push notifications with fcm",
+      "labels": [
+        "mobile",
+        "firebase",
+        "notifications"
+      ],
+      "comments": 3,
+      "complexity": "High",
+      "accuracy_score": 0.95
+    },
+    {
+      "ticket_id": "MOBILE-002",
+      "title": "Firebase integration for analytics",
+      "type": "Story",
+      "status": "DONE",
+      "story_points": 8,
+      "actual_hours": 34,
+      "assignee": "Team Member 2",
+      "sprint": "Sprint 21",
+      "completed_date": "2025-07-06",
+      "description": "Implementation of firebase integration for analytics",
+      "labels": [
+        "mobile",
+        "firebase",
+        "analytics"
+      ],
+      "comments": 4,
+      "complexity": "Medium",
+      "accuracy_score": 0.98
+    },
+    {
+      "ticket_id": "EMAIL-003",
+      "title": "SendGrid email templating",
+      "type": "Story",
+      "status": "DONE",
+      "story_points": 5,
+      "actual_hours": 21,
+      "assignee": "Team Member 3",
+      "sprint": "Sprint 22",
+      "completed_date": "2025-08-05",
+      "description": "Implementation of sendgrid email templating",
+      "labels": [
+        "email",
+        "sendgrid",
+        "templates"
+      ],
+      "comments": 5,
+      "complexity": "Low",
+      "accuracy_score": 1.0
+    },
+    {
+      "ticket_id": "API-004",
+      "title": "REST API endpoint implementation",
+      "type": "Story",
+      "status": "DONE",
+      "story_points": 8,
+      "actual_hours": 32,
+      "assignee": "Team Member 4",
+      "sprint": "Sprint 23",
+      "completed_date": "2025-09-04",
+      "description": "Implementation of rest api endpoint implementation",
+      "labels": [
+        "backend",
+        "api",
+        "rest"
+      ],
+      "comments": 6,
+      "complexity": "Medium",
+      "accuracy_score": 0.92
+    }
+  ],
+  "confluence_docs": [
+    {
+      "doc_id": "CONF-001",
+      "title": "Best Practices for Python",
+      "space": "Engineering",
+      "author": "Sarah Chen",
+      "created": "2025-06-06",
+      "last_updated": "2025-07-06",
+      "word_count": 2500,
+      "sections": [
+        "Setup",
+        "Guidelines",
+        "Troubleshooting",
+        "Examples"
+      ],
+      "tags": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL"
+      ],
+      "views": 100,
+      "likes": 15,
+      "comments": 5,
+      "attachments": 0,
+      "contributors": [
+        "Sarah Chen"
+      ]
+    },
+    {
+      "doc_id": "CONF-002",
+      "title": "FastAPI Architecture Overview",
+      "space": "Architecture",
+      "author": "Marcus Johnson",
+      "created": "2025-06-08",
+      "last_updated": "2025-07-08",
+      "word_count": 3600,
+      "sections": [
+        "Overview",
+        "Components",
+        "Data Flow",
+        "Integration"
+      ],
+      "tags": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL"
+      ],
+      "views": 110,
+      "likes": 17,
+      "comments": 6,
+      "attachments": 1,
+      "contributors": [
+        "Sarah Chen",
+        "Marcus Johnson"
+      ]
+    },
+    {
+      "doc_id": "CONF-003",
+      "title": "Team Guide: Working with PostgreSQL",
+      "space": "Team Docs",
+      "author": "Priya Patel",
+      "created": "2025-06-10",
+      "last_updated": "2025-07-10",
+      "word_count": 2200,
+      "sections": [
+        "Getting Started",
+        "Common Patterns",
+        "Troubleshooting",
+        "Resources"
+      ],
+      "tags": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL"
+      ],
+      "views": 120,
+      "likes": 19,
+      "comments": 7,
+      "attachments": 2,
+      "contributors": [
+        "Sarah Chen",
+        "Marcus Johnson",
+        "Priya Patel"
+      ]
+    },
+    {
+      "doc_id": "CONF-004",
+      "title": "Redis API Documentation",
+      "space": "API Docs",
+      "author": "Emily Wu",
+      "created": "2025-06-12",
+      "last_updated": "2025-07-12",
+      "word_count": 4300,
+      "sections": [
+        "Endpoints",
+        "Authentication",
+        "Examples",
+        "Error Handling"
+      ],
+      "tags": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL"
+      ],
+      "views": 130,
+      "likes": 21,
+      "comments": 8,
+      "attachments": 0,
+      "contributors": [
+        "Sarah Chen"
+      ]
+    }
+  ],
+  "github_prs": [
+    {
+      "pr_id": "PR-0456",
+      "title": "feat: Implement Python functionality",
+      "author": "Sarah Chen",
+      "status": "merged",
+      "created": "2025-07-31",
+      "merged": "2025-08-05",
+      "files_changed": 15,
+      "additions": 500,
+      "deletions": 150,
+      "commits": 8,
+      "reviewers": [
+        "Sarah Chen"
+      ],
+      "labels": [
+        "feature",
+        "Python",
+        "FastAPI"
+      ],
+      "comments": 8,
+      "review_comments": 3,
+      "branch": "feature/python-1"
+    },
+    {
+      "pr_id": "PR-0457",
+      "title": "fix: Resolve FastAPI integration issue",
+      "author": "Marcus Johnson",
+      "status": "merged",
+      "created": "2025-08-01",
+      "merged": "2025-08-06",
+      "files_changed": 6,
+      "additions": 200,
+      "deletions": 60,
+      "commits": 4,
+      "reviewers": [
+        "Sarah Chen",
+        "Marcus Johnson"
+      ],
+      "labels": [
+        "bugfix",
+        "Python",
+        "FastAPI"
+      ],
+      "comments": 9,
+      "review_comments": 4,
+      "branch": "bugfix/fastapi-2"
+    },
+    {
+      "pr_id": "PR-0458",
+      "title": "refactor: Improve PostgreSQL implementation",
+      "author": "Priya Patel",
+      "status": "merged",
+      "created": "2025-08-02",
+      "merged": "2025-08-07",
+      "files_changed": 22,
+      "additions": 900,
+      "deletions": 270,
+      "commits": 14,
+      "reviewers": [
+        "Sarah Chen"
+      ],
+      "labels": [
+        "refactor",
+        "Python",
+        "FastAPI"
+      ],
+      "comments": 10,
+      "review_comments": 5,
+      "branch": "refactor/postgresql-3"
+    },
+    {
+      "pr_id": "PR-0459",
+      "title": "docs: Update Redis documentation",
+      "author": "Emily Wu",
+      "status": "merged",
+      "created": "2025-08-03",
+      "merged": "2025-08-08",
+      "files_changed": 6,
+      "additions": 400,
+      "deletions": 120,
+      "commits": 2,
+      "reviewers": [
+        "Sarah Chen",
+        "Marcus Johnson"
+      ],
+      "labels": [
+        "documentation",
+        "Python",
+        "FastAPI"
+      ],
+      "comments": 11,
+      "review_comments": 6,
+      "branch": "documentation/redis-4"
+    },
+    {
+      "pr_id": "PR-0460",
+      "title": "test: Add OAuth test coverage",
+      "author": "David Kim",
+      "status": "merged",
+      "created": "2025-08-04",
+      "merged": "2025-08-09",
+      "files_changed": 12,
+      "additions": 600,
+      "deletions": 180,
+      "commits": 6,
+      "reviewers": [
+        "Sarah Chen"
+      ],
+      "labels": [
+        "test",
+        "Python",
+        "FastAPI"
+      ],
+      "comments": 12,
+      "review_comments": 7,
+      "branch": "test/oauth-5"
+    },
+    {
+      "pr_id": "PR-0461",
+      "title": "feat: Implement JWT functionality",
+      "author": "Alex Rivera",
+      "status": "merged",
+      "created": "2025-08-05",
+      "merged": "2025-08-10",
+      "files_changed": 15,
+      "additions": 750,
+      "deletions": 225,
+      "commits": 10,
+      "reviewers": [
+        "Sarah Chen",
+        "Marcus Johnson"
+      ],
+      "labels": [
+        "feature",
+        "Python",
+        "FastAPI"
+      ],
+      "comments": 13,
+      "review_comments": 3,
+      "branch": "feature/jwt-6"
+    }
+  ],
+  "tangential_docs": [
+    {
+      "doc_id": "TAN-001",
+      "doc_type": "tangential_service_doc",
+      "title": "Monitoring & Observability with Datadog",
+      "service_name": "Datadog",
+      "service_type": "MONITORING",
+      "relevance": "Performance monitoring for Python",
+      "tech_stack": [
+        "Datadog",
+        "Python"
+      ],
+      "integration_complexity": "Medium",
+      "benefits": [
+        "Real-time metrics",
+        "APM",
+        "Log aggregation",
+        "Custom dashboards"
+      ],
+      "sections": [
+        "Getting Started",
+        "Integration Guide",
+        "Best Practices",
+        "Troubleshooting"
+      ],
+      "word_count": 2500,
+      "author": "External Service Team",
+      "created": "2025-05-07",
+      "last_updated": "2025-08-05",
+      "views": 250,
+      "bookmarks": 15,
+      "external_links": 8,
+      "code_examples": 5,
+      "related_services": [
+        "Auth0",
+        "Redis",
+        "Swagger"
+      ],
+      "tags": [
+        "external-service",
+        "monitoring",
+        "python",
+        "integration"
+      ],
+      "maturity": "production-ready",
+      "community_support": "active",
+      "documentation_quality": 0.85,
+      "integration_priority": "medium"
+    },
+    {
+      "doc_id": "TAN-002",
+      "doc_type": "tangential_service_doc",
+      "title": "Authentication with Auth0",
+      "service_name": "Auth0",
+      "service_type": "AUTHENTICATION",
+      "relevance": "Secure authentication for FastAPI APIs",
+      "tech_stack": [
+        "Auth0",
+        "FastAPI"
+      ],
+      "integration_complexity": "Low",
+      "benefits": [
+        "OAuth2/OIDC",
+        "Social login",
+        "MFA",
+        "User management"
+      ],
+      "sections": [
+        "Quick Start",
+        "SDK Integration",
+        "Security Best Practices",
+        "Migration Guide"
+      ],
+      "word_count": 2700,
+      "author": "External Service Team",
+      "created": "2025-04-22",
+      "last_updated": "2025-07-21",
+      "views": 300,
+      "bookmarks": 18,
+      "external_links": 9,
+      "code_examples": 6,
+      "related_services": [
+        "Datadog",
+        "Redis",
+        "Swagger"
+      ],
+      "tags": [
+        "external-service",
+        "authentication",
+        "fastapi",
+        "integration"
+      ],
+      "maturity": "production-ready",
+      "community_support": "active",
+      "documentation_quality": 0.87,
+      "integration_priority": "medium"
+    },
+    {
+      "doc_id": "TAN-003",
+      "doc_type": "tangential_service_doc",
+      "title": "Caching Strategy with Redis",
+      "service_name": "Redis",
+      "service_type": "DATABASE",
+      "relevance": "High-performance caching for PostgreSQL",
+      "tech_stack": [
+        "Redis",
+        "PostgreSQL"
+      ],
+      "integration_complexity": "Medium",
+      "benefits": [
+        "Sub-millisecond latency",
+        "Data structures",
+        "Pub/Sub",
+        "Persistence"
+      ],
+      "sections": [
+        "Installation",
+        "Data Structures",
+        "Performance Tuning",
+        "Replication"
+      ],
+      "word_count": 2900,
+      "author": "External Service Team",
+      "created": "2025-04-07",
+      "last_updated": "2025-07-06",
+      "views": 350,
+      "bookmarks": 21,
+      "external_links": 10,
+      "code_examples": 7,
+      "related_services": [
+        "Datadog",
+        "Auth0",
+        "Swagger"
+      ],
+      "tags": [
+        "external-service",
+        "database",
+        "postgresql",
+        "integration"
+      ],
+      "maturity": "production-ready",
+      "community_support": "active",
+      "documentation_quality": 0.89,
+      "integration_priority": "medium"
+    },
+    {
+      "doc_id": "TAN-004",
+      "doc_type": "tangential_service_doc",
+      "title": "API Documentation with Swagger/OpenAPI",
+      "service_name": "Swagger",
+      "service_type": "DOCUMENTATION",
+      "relevance": "API documentation for Redis endpoints",
+      "tech_stack": [
+        "Swagger",
+        "Redis"
+      ],
+      "integration_complexity": "Low",
+      "benefits": [
+        "Auto-generated docs",
+        "Interactive testing",
+        "Client SDK generation",
+        "Standardization"
+      ],
+      "sections": [
+        "Setup",
+        "Annotations",
+        "UI Customization",
+        "Code Generation"
+      ],
+      "word_count": 3100,
+      "author": "External Service Team",
+      "created": "2025-03-23",
+      "last_updated": "2025-06-21",
+      "views": 400,
+      "bookmarks": 24,
+      "external_links": 11,
+      "code_examples": 5,
+      "related_services": [
+        "Datadog",
+        "Auth0",
+        "Redis"
+      ],
+      "tags": [
+        "external-service",
+        "documentation",
+        "redis",
+        "integration"
+      ],
+      "maturity": "production-ready",
+      "community_support": "active",
+      "documentation_quality": 0.9099999999999999,
+      "integration_priority": "low"
+    },
+    {
+      "doc_id": "TAN-005",
+      "doc_type": "tangential_service_doc",
+      "title": "Message Queue Integration with Kafka",
+      "service_name": "Kafka",
+      "service_type": "MESSAGING",
+      "relevance": "Event streaming for OAuth microservices",
+      "tech_stack": [
+        "Kafka",
+        "OAuth"
+      ],
+      "integration_complexity": "High",
+      "benefits": [
+        "High throughput",
+        "Fault tolerance",
+        "Scalability",
+        "Real-time processing"
+      ],
+      "sections": [
+        "Architecture Overview",
+        "Producer/Consumer Setup",
+        "Performance Tuning",
+        "Security"
+      ],
+      "word_count": 3300,
+      "author": "External Service Team",
+      "created": "2025-03-08",
+      "last_updated": "2025-06-06",
+      "views": 450,
+      "bookmarks": 27,
+      "external_links": 12,
+      "code_examples": 6,
+      "related_services": [
+        "Datadog",
+        "Auth0",
+        "Redis"
+      ],
+      "tags": [
+        "external-service",
+        "messaging",
+        "oauth",
+        "integration"
+      ],
+      "maturity": "production-ready",
+      "community_support": "active",
+      "documentation_quality": 0.9299999999999999,
+      "integration_priority": "low"
+    },
+    {
+      "doc_id": "TAN-006",
+      "doc_type": "tangential_service_doc",
+      "title": "CI/CD Pipeline with GitHub Actions",
+      "service_name": "GitHub Actions",
+      "service_type": "DEVOPS",
+      "relevance": "Automated testing and deployment for JWT",
+      "tech_stack": [
+        "GitHub Actions",
+        "JWT"
+      ],
+      "integration_complexity": "Low",
+      "benefits": [
+        "Native GitHub integration",
+        "Matrix builds",
+        "Artifact caching",
+        "Free for public repos"
+      ],
+      "sections": [
+        "Workflow Basics",
+        "Advanced Strategies",
+        "Custom Actions",
+        "Secrets Management"
+      ],
+      "word_count": 3500,
+      "author": "External Service Team",
+      "created": "2025-02-21",
+      "last_updated": "2025-05-22",
+      "views": 500,
+      "bookmarks": 30,
+      "external_links": 8,
+      "code_examples": 7,
+      "related_services": [
+        "Datadog",
+        "Auth0",
+        "Redis"
+      ],
+      "tags": [
+        "external-service",
+        "devops",
+        "jwt",
+        "integration"
+      ],
+      "maturity": "production-ready",
+      "community_support": "active",
+      "documentation_quality": 0.95,
+      "integration_priority": "low"
+    },
+    {
+      "doc_id": "TAN-007",
+      "doc_type": "tangential_service_doc",
+      "title": "Container Orchestration with Kubernetes",
+      "service_name": "Kubernetes",
+      "service_type": "INFRASTRUCTURE",
+      "relevance": "Scalable deployment for React applications",
+      "tech_stack": [
+        "Kubernetes",
+        "React"
+      ],
+      "integration_complexity": "High",
+      "benefits": [
+        "Auto-scaling",
+        "Self-healing",
+        "Service discovery",
+        "Rolling updates"
+      ],
+      "sections": [
+        "Cluster Setup",
+        "Deployments",
+        "Services & Ingress",
+        "Monitoring"
+      ],
+      "word_count": 3700,
+      "author": "External Service Team",
+      "created": "2025-02-06",
+      "last_updated": "2025-05-07",
+      "views": 550,
+      "bookmarks": 33,
+      "external_links": 9,
+      "code_examples": 5,
+      "related_services": [
+        "Datadog",
+        "Auth0",
+        "Redis"
+      ],
+      "tags": [
+        "external-service",
+        "infrastructure",
+        "react",
+        "integration"
+      ],
+      "maturity": "production-ready",
+      "community_support": "active",
+      "documentation_quality": 0.97,
+      "integration_priority": "low"
+    },
+    {
+      "doc_id": "TAN-008",
+      "doc_type": "tangential_service_doc",
+      "title": "Error Tracking with Sentry",
+      "service_name": "Sentry",
+      "service_type": "MONITORING",
+      "relevance": "Error monitoring for Docker applications",
+      "tech_stack": [
+        "Sentry",
+        "Docker"
+      ],
+      "integration_complexity": "Low",
+      "benefits": [
+        "Real-time alerts",
+        "Stack traces",
+        "Release tracking",
+        "Performance monitoring"
+      ],
+      "sections": [
+        "SDK Installation",
+        "Error Handling",
+        "Performance Monitoring",
+        "Integrations"
+      ],
+      "word_count": 3900,
+      "author": "External Service Team",
+      "created": "2025-01-22",
+      "last_updated": "2025-04-22",
+      "views": 600,
+      "bookmarks": 36,
+      "external_links": 10,
+      "code_examples": 6,
+      "related_services": [
+        "Datadog",
+        "Auth0",
+        "Redis"
+      ],
+      "tags": [
+        "external-service",
+        "monitoring",
+        "docker",
+        "integration"
+      ],
+      "maturity": "production-ready",
+      "community_support": "active",
+      "documentation_quality": 0.99,
+      "integration_priority": "low"
+    }
+  ],
+  "team_members": [
+    {
+      "user_id": "user_001",
+      "name": "Sarah Chen",
+      "role": "senior backend engineer",
+      "skills": [
+        {
+          "skill": "Python",
+          "level": "Expert",
+          "years": 8,
+          "projects": 16
+        },
+        {
+          "skill": "Go",
+          "level": "Expert",
+          "years": 8,
+          "projects": 16
+        },
+        {
+          "skill": "APIs",
+          "level": "Expert",
+          "years": 9,
+          "projects": 18
+        }
+      ],
+      "experience_level": "Expert",
+      "services_worked_on": [
+        "Payment Service",
+        "User Service"
+      ],
+      "current_workload": 0.75,
+      "availability": "Full-time",
+      "recent_velocity": 18
+    },
+    {
+      "user_id": "user_002",
+      "name": "Marcus Johnson",
+      "role": "full stack engineer",
+      "skills": [
+        {
+          "skill": "React",
+          "level": "Advanced",
+          "years": 5,
+          "projects": 10
+        },
+        {
+          "skill": "Node.js",
+          "level": "Advanced",
+          "years": 5,
+          "projects": 10
+        },
+        {
+          "skill": "PostgreSQL",
+          "level": "Advanced",
+          "years": 5,
+          "projects": 10
+        }
+      ],
+      "experience_level": "Advanced",
+      "services_worked_on": [
+        "Admin Dashboard",
+        "User Portal",
+        "Analytics Dashboard"
+      ],
+      "current_workload": 0.6900000000000001,
+      "availability": "Full-time",
+      "recent_velocity": 16
+    },
+    {
+      "user_id": "user_003",
+      "name": "Priya Patel",
+      "role": "ios engineer",
+      "skills": [
+        {
+          "skill": "iOS (Swift)",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        },
+        {
+          "skill": "UIKit",
+          "level": "Intermediate",
+          "years": 3,
+          "projects": 6
+        },
+        {
+          "skill": "SwiftUI",
+          "level": "Intermediate",
+          "years": 2,
+          "projects": 4
+        }
+      ],
+      "experience_level": "Intermediate",
+      "services_worked_on": [
+        "Mobile App",
+        "Push Notifications"
+      ],
+      "current_workload": 0.6,
+      "availability": "Full-time",
+      "recent_velocity": 14
+    },
+    {
+      "user_id": "user_004",
+      "name": "Emily Wu",
+      "role": "devops engineer",
+      "skills": [
+        {
+          "skill": "AWS",
+          "level": "Expert",
+          "years": 10,
+          "projects": 20
+        },
+        {
+          "skill": "Kubernetes",
+          "level": "Expert",
+          "years": 10,
+          "projects": 20
+        },
+        {
+          "skill": "Docker",
+          "level": "Expert",
+          "years": 10,
+          "projects": 20
+        }
+      ],
+      "experience_level": "Expert",
+      "services_worked_on": [
+        "Infrastructure",
+        "Deployment Pipeline"
+      ],
+      "current_workload": 0.84,
+      "availability": "Full-time",
+      "recent_velocity": 21
+    },
+    {
+      "user_id": "user_005",
+      "name": "David Kim",
+      "role": "android engineer",
+      "skills": [
+        {
+          "skill": "Android (Kotlin)",
+          "level": "Advanced",
+          "years": 4,
+          "projects": 8
+        },
+        {
+          "skill": "Jetpack Compose",
+          "level": "Advanced",
+          "years": 4,
+          "projects": 8
+        },
+        {
+          "skill": "FCM",
+          "level": "Advanced",
+          "years": 4,
+          "projects": 8
+        }
+      ],
+      "experience_level": "Advanced",
+      "services_worked_on": [
+        "Android App",
+        "Offline Sync",
+        "Push Notifications"
+      ],
+      "current_workload": 0.81,
+      "availability": "Full-time",
+      "recent_velocity": 15
+    },
+    {
+      "user_id": "user_006",
+      "name": "Alex Rivera",
+      "role": "frontend engineer",
+      "skills": [
+        {
+          "skill": "React",
+          "level": "Intermediate",
+          "years": 2,
+          "projects": 4
+        },
+        {
+          "skill": "JavaScript",
+          "level": "Intermediate",
+          "years": 2,
+          "projects": 4
+        },
+        {
+          "skill": "CSS",
+          "level": "Intermediate",
+          "years": 2,
+          "projects": 4
+        }
+      ],
+      "experience_level": "Intermediate",
+      "services_worked_on": [
+        "Landing Page",
+        "User Dashboard"
+      ],
+      "current_workload": 0.75,
+      "availability": "Full-time",
+      "recent_velocity": 14
+    }
+  ],
+  "external_services": [
+    {
+      "service_id": "firebase-fcm",
+      "name": "Firebase Cloud Messaging",
+      "category": "Push Notifications",
+      "vendor": "Google",
+      "pricing": "Free up to 1M messages/month",
+      "api_version": "v1",
+      "rate_limits": {
+        "messages_per_minute": 60,
+        "messages_per_day": 1000000
+      },
+      "payload_limit": "4KB",
+      "platforms": [
+        "iOS",
+        "Android",
+        "Web"
+      ],
+      "team_experience": "High",
+      "documentation_quality": 0.92,
+      "reliability_sla": "99.9%"
+    },
+    {
+      "service_id": "sendgrid-api",
+      "name": "SendGrid Email API",
+      "category": "Email",
+      "vendor": "Twilio",
+      "pricing": "Free up to 100 emails/day",
+      "api_version": "v3",
+      "rate_limits": {
+        "emails_per_second": 10,
+        "emails_per_day": 100000
+      },
+      "payload_limit": "30MB",
+      "features": [
+        "Templates",
+        "Analytics",
+        "SMTP"
+      ],
+      "team_experience": "Medium",
+      "documentation_quality": 0.9,
+      "reliability_sla": "99.95%"
+    }
+  ],
+  "parameters": {
+    "total_historical_documents": 14,
+    "num_jira_tickets": 4,
+    "num_confluence_docs": 4,
+    "num_github_prs": 6,
+    "num_tangential_docs": 8,
+    "num_team_members": 6,
+    "tech_stack": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "Redis",
+      "OAuth",
+      "JWT",
+      "React",
+      "Docker"
+    ]
+  },
+  "generated_at": "2025-10-04T05:37:20.132134"
+}
