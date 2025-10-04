@@ -5184,8 +5184,8 @@ Historical Documents (doc_store)
             return ""
     
     def generate_demo_prompt_file(self) -> str:
-        """Generate DEMO_PROMPT.md file with original prompt and CLI command."""
-        print(f"\n📄 GENERATING DEMO PROMPT FILE...")
+        """Generate ORIGINAL_PROMPT.md file with original prompt and CLI command."""
+        print(f"\n📄 GENERATING ORIGINAL PROMPT FILE...")
         print("="*80)
         
         # Build the CLI command
@@ -5343,11 +5343,11 @@ python3 demo_hyper_realistic_parameterized.py \\
 """
         
         # Write to file
-        prompt_file = self.demo_folder / "reports" / "DEMO_PROMPT.md"
+        prompt_file = self.demo_folder / "reports" / "ORIGINAL_PROMPT.md"
         with open(prompt_file, 'w') as f:
             f.write(content)
         
-        print(f"✅ Demo prompt file saved: {prompt_file}")
+        print(f"✅ Original prompt file saved: {prompt_file}")
         print(f"   Contains: Original prompt + CLI command for reproduction")
         
         return str(prompt_file)
@@ -5412,7 +5412,7 @@ This approach means stakeholders can see **real results** from the ecosystem wit
 
 **What You're Seeing:**
 - Input: *"{self.feature_summary[:100]}{'...' if len(self.feature_summary) > 100 else ''}"*
-- Output: 7 comprehensive reports totaling 200+ pages of analysis
+- Output: 6 comprehensive reports totaling 200+ pages of analysis
 - Time: < 60 seconds
 - Accuracy: 90%+ confidence with validated service dependencies
 
@@ -5499,7 +5499,7 @@ Validates plans against:
          └───────────┬───────────┘
                      │
          ┌───────────▼───────────┐
-         │  7 Comprehensive      │
+         │  6 Comprehensive      │
          │  Reports Generated    │
          └───────────────────────┘
 ```
@@ -5553,19 +5553,15 @@ Each report serves a specific audience and purpose:
 **Purpose:** Understand data layer design and relationships  
 **Key Insight:** How 5 datastores work together to maintain system intelligence
 
-### **7. Ecosystem Architecture Report**
-**Audience:** Solution Architects, CTOs, System Designers  
-**Purpose:** Macro view of how services orchestrate together  
-**Key Insight:** Theory behind AI-powered microservices and orchestration patterns
-
 ---
 
 ## 📁 Quick Start
 
-### **For Stakeholders (Start Here):**
+### **For Stakeholders (Start Here - 20 min):**
 1. Read [**Executive Dashboard**](./reports/Executive_Dashboard.md) (3 min)
 2. Review [**Planning Service Report**](./reports/Planning_Service_Report.md) sections 1-9 (10 min)
 3. Check [**User & Team Report**](./reports/User_and_Team_Report.md) for staffing (5 min)
+4. See [**Original Prompt**](./reports/ORIGINAL_PROMPT.md) to reproduce this demo (2 min)
 
 **Time Investment:** 20 minutes to understand the entire project plan
 
@@ -5585,11 +5581,11 @@ Each report serves a specific audience and purpose:
 
 ---
 
-## 🔄 Reproduce This Demo
+## 🔄 Reproduce This Exact Demo
 
 Want to generate this exact output again or try different parameters?
 
-See **[DEMO_PROMPT.md](./reports/DEMO_PROMPT.md)** for:
+See **[Original Prompt & CLI Command](./reports/ORIGINAL_PROMPT.md)** for:
 - The original prompt used
 - Exact CLI command to reproduce
 - Examples of parameter variations
@@ -5605,14 +5601,13 @@ See **[DEMO_PROMPT.md](./reports/DEMO_PROMPT.md)** for:
 ├── data/
 │   └── mock_data.json                          ({total_docs} documents, {self.num_team_members} team members)
 └── reports/
-    ├── DEMO_PROMPT.md                          (How to reproduce this demo)
+    ├── ORIGINAL_PROMPT.md                      (⭐ How to reproduce)
     ├── Executive_Dashboard.md                  (⭐ C-Suite summary)
     ├── Planning_Service_Report.md              (⭐ Complete 15-section roadmap)
     ├── Behind_the_Scenes_Report.md             (Technical deep-dive)
     ├── User_and_Team_Report.md                 (Team expertise analysis)
     ├── Ecosystem_Validation_Report.md          (Proof of live execution)
-    ├── Data_Architecture_Report.md             (Database design)
-    └── Ecosystem_Architecture_Report.md        (System design)
+    └── Data_Architecture_Report.md             (Database design)
 ```
 
 ---
@@ -5666,17 +5661,17 @@ See **[DEMO_PROMPT.md](./reports/DEMO_PROMPT.md)** for:
 
 ## 📞 Next Steps
 
-1. **Explore the Reports:** Start with Executive Dashboard
-2. **Review the Code:** Check Ecosystem Validation Report for file paths
-3. **Run Your Own Demo:** Use DEMO_PROMPT.md for reproduction
-4. **Customize Parameters:** Try different team sizes, tech stacks, or document counts
+1. **Explore the Reports:** Start with [Executive Dashboard](./reports/Executive_Dashboard.md)
+2. **Review the Code:** Check [Ecosystem Validation Report](./reports/Ecosystem_Validation_Report.md) for file paths
+3. **Run Your Own Demo:** Use [Original Prompt](./reports/ORIGINAL_PROMPT.md) for reproduction
+4. **Customize Parameters:** Try different team sizes, tech stacks, or document counts (see CLI examples above)
 5. **Integrate with Real Data:** Connect source-agent for actual GitHub/Jira/Confluence
 
 ---
 
 **System:** AI-Powered LLM Documentation Ecosystem  
 **Workflows:** 6 parallel AI workflows (A, B, C, D, E, F)  
-**Reports:** 7 comprehensive outputs  
+**Reports:** 6 comprehensive outputs  
 **Status:** Production-ready and fully validated  
 
 **Generated with ❤️ by the LLM Documentation Ecosystem**
@@ -6020,7 +6015,7 @@ Simply delete this folder and run the demo script again with your desired parame
         # Generate README
         readme = self.generate_readme()
         
-        # ⭐ NEW: Generate DEMO_PROMPT.md file
+        # ⭐ NEW: Generate ORIGINAL_PROMPT.md file
         prompt_file = self.generate_demo_prompt_file()
         
         # Summary
@@ -6030,8 +6025,8 @@ Simply delete this folder and run the demo script again with your desired parame
         print(f"\n📁 Demo Folder: {self.demo_folder.absolute()}")
         print(f"\n📄 README:")
         print(f"      {self.demo_folder.absolute() / 'README.md'}")
-        print(f"\n📝 DEMO PROMPT (NEW - Auto-saved):")
-        print(f"      {self.demo_folder.absolute() / 'reports' / 'DEMO_PROMPT.md'}")
+        print(f"\n📝 ORIGINAL PROMPT (Auto-saved):")
+        print(f"      {self.demo_folder.absolute() / 'reports' / 'ORIGINAL_PROMPT.md'}")
         print(f"\n📄 Reports Generated:")
         print(f"   1. Executive Dashboard (NEW - Phase 2 Audit) ⭐ START HERE:")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Executive_Dashboard.md'}")
