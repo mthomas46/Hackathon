@@ -3541,9 +3541,329 @@ prompts = await get_prompts_by_workflow_type(workflows[0].workflow_type)
 
 ---
 
-## 7. Data Persistence Statistics
+## 7. User Intelligence & User-Store Enhancements (Workflow F)
 
-### 6.1 Current Demo Data
+**New user intelligence capabilities integrated into the ecosystem:**
+
+### 7.1 User-Store Schema Enhancements
+
+**Enhanced User Schema with Workflow F Fields**:
+
+```sql
+CREATE TABLE users (
+    id TEXT PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT,
+    first_name TEXT,
+    last_name TEXT,
+    role TEXT NOT NULL,
+    status TEXT DEFAULT 'active',
+    
+    -- ⭐ NEW: Workflow F Enhancements
+    team_id TEXT,  -- Groups users into teams
+    
+    -- Profile & Metadata
+    skills JSON,  -- [{{"skill": "Python", "level": "Expert", "years": 8}}]
+    experience_level TEXT,
+    years_experience INTEGER,
+    
+    -- Activity & Relationships
+    documents_created JSON,  -- List of document IDs
+    documents_updated JSON,
+    documents_commented JSON,
+    
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ⭐ NEW: Team grouping index
+CREATE INDEX idx_users_team_id ON users(team_id);
+
+-- Existing indexes
+CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_status ON users(status);
+CREATE INDEX idx_users_email ON users(email);
+```
+
+**Key Enhancements**:
+- **Team Organization**: `team_id` field enables team-based queries and analytics
+- **Document Relationships**: Track user's document authorship, edits, and comments
+- **Skills Tracking**: Structured skill data with proficiency levels and years
+- **Experience Metrics**: Capture experience level and years for expertise scoring
+
+### 7.2 User Extraction Data Flow
+
+**Workflow F User Extraction Pipeline**:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    WORKFLOW F: USER EXTRACTION FLOW                      │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Step 1: Document Analysis
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│ GitHub PRs   │    │ Jira Tickets │    │ Confluence   │
+│              │    │              │    │  Documents   │
+│ • Author     │    │ • Reporter   │    │ • Author     │
+│ • Reviewers  │    │ • Assignee   │    │ • Editors    │
+│ • Assignees  │    │ • Watchers   │    │ • Maintainers│
+│ • Merger     │    │ • Worklog    │    │ • Watchers   │
+│ • Commenters │    │ • Commenters │    │ • Commenters │
+└──────┬───────┘    └──────┬───────┘    └──────┬───────┘
+       │                   │                    │
+       └───────────────────┴────────────────────┘
+                           │
+                           ↓
+Step 2: User Metadata Extraction
+┌─────────────────────────────────────────────────────────────┐
+│ UserIntelligenceWorkflow.extract_user_from_*()               │
+│                                                               │
+│ Extracts:                                                     │
+│ • Username, email, display name                               │
+│ • Role based on activity patterns                             │
+│ • Skills from technologies used                               │
+│ • Document relationships (created/edited/commented)           │
+│ • Collaboration patterns                                      │
+│ • Expertise indicators (commit count, review quality, etc.)   │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+                            ↓
+Step 3: User Deduplication & Aggregation
+┌─────────────────────────────────────────────────────────────┐
+│ • Merge users by username                                     │
+│ • Aggregate document relationships                            │
+│ • Calculate total interactions                                │
+│ • Identify primary skills                                     │
+│ • Determine expertise areas                                   │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+                            ↓
+Step 4: User-Store Persistence
+┌─────────────────────────────────────────────────────────────┐
+│ POST http://localhost:5060/api/v1/users                      │
+│                                                               │
+│ Payload:                                                      │
+│ {{                                                             │
+│   "username": "sarah.chen",                                   │
+│   "email": "sarah.chen@company.com",                          │
+│   "role": "developer",                                        │
+│   "team_id": "team-abc-123",                                  │
+│   "skills": [{{"skill": "Python", "level": "Expert"}}],        │
+│   "documents_created": ["doc-123", "doc-456"]                 │
+│ }}                                                             │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+                            ↓
+Step 5: Expert-Finder Integration
+┌─────────────────────────────────────────────────────────────┐
+│ Expert-finder service queries user-store for:                 │
+│ • Natural language expert search                              │
+│ • Topic-based expert discovery                                │
+│ • SME identification                                          │
+│ • Teammate recommendations                                    │
+│ • Team expertise analysis                                     │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+                            ↓
+Step 6: Planning Service Enrichment
+┌─────────────────────────────────────────────────────────────┐
+│ Planning Service Report (Section 10):                         │
+│ • SME recommendations                                         │
+│ • Technology coverage analysis                                │
+│ • Knowledge gap identification                                │
+│ • Pairing suggestions                                         │
+│ • Expert-finder API examples                                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Flow Statistics (This Demo)**:
+- Documents Analyzed: {len(self.mock_data.get('github_prs', []))} GitHub PRs, {len(self.mock_data.get('jira_tickets', []))} Jira tickets, {len(self.mock_data.get('confluence_docs', []))} Confluence docs
+- Users Extracted: {len(getattr(self.workflow_f_result, 'extracted_users', {}))} unique users
+- SMEs Identified: {len(getattr(self.workflow_f_result, 'subject_matter_experts', []))} experts
+- Team ID: {self.mock_data.get('team_members', [{}])[0].get('team_id', 'N/A') if self.mock_data.get('team_members') else 'N/A'}
+
+### 7.3 Document-User Relationships
+
+**Relationship Types Tracked**:
+
+| Relationship Type | Description | Source Documents | Storage |
+|-------------------|-------------|------------------|---------|
+| **Created By** | User authored the document | GitHub PRs, Jira (reporter), Confluence (author) | `documents_created` JSON array |
+| **Updated By** | User edited/modified | GitHub (commits), Confluence (editors) | `documents_updated` JSON array |
+| **Commented By** | User left comments | GitHub (PR comments), Jira (comments), Confluence (comments) | `documents_commented` JSON array |
+| **Reviewed By** | User reviewed code | GitHub (PR reviewers) | User metadata |
+| **Assigned To** | User assigned to work | GitHub (assignees), Jira (assignee) | User metadata |
+| **Merged By** | User merged PR | GitHub (merger) | User metadata |
+| **Maintained By** | User maintains documentation | Confluence (maintainers) | User metadata |
+| **Watched By** | User follows updates | Jira (watchers), Confluence (watchers) | User metadata |
+
+**Relationship Mapping Example**:
+
+```
+User: sarah.chen
+├── documents_created: ["doc-gh-pr-789", "doc-jira-456", "doc-conf-123"]
+├── documents_updated: ["doc-gh-pr-234", "doc-conf-567"]
+├── documents_commented: ["doc-gh-pr-111", "doc-jira-222"]
+└── metadata:
+    ├── github_prs_authored: 5
+    ├── github_prs_reviewed: 12
+    ├── jira_tickets_reported: 8
+    ├── confluence_pages_authored: 3
+    └── total_interactions: 28
+```
+
+### 7.4 Team Organization
+
+**Team-Based User Grouping**:
+
+The `team_id` field enables powerful team-level queries and analytics:
+
+**Query 1: Get All Team Members**
+```bash
+curl 'http://localhost:5060/api/v1/users?team_id={{team_id}}' | jq '.'
+```
+
+**Query 2: Team Expertise Overview**
+```bash
+curl 'http://localhost:5160/teams/{{team_id}}/expertise' | jq '.'
+```
+
+**Response Example**:
+```json
+{{
+  "team_id": "team-abc-123",
+  "team_size": 6,
+  "total_skills": 18,
+  "technology_coverage": {{
+    "Python": {{"experts": 2, "avg_years": 6.5}},
+    "React": {{"experts": 2, "avg_years": 3.5}},
+    "Docker": {{"experts": 1, "avg_years": 10}}
+  }},
+  "knowledge_gaps": ["FastAPI", "Redis", "OAuth", "JWT"],
+  "team_documents": 42,
+  "team_contributions": 156
+}}
+```
+
+**Benefits**:
+- Team-wide skill assessments
+- Identify team knowledge gaps
+- Track team productivity
+- Facilitate team-based work assignments
+- Enable cross-team collaboration analysis
+
+### 7.5 User Intelligence Metrics
+
+**Key Metrics Tracked Per User**:
+
+| Metric Category | Metrics | Purpose |
+|-----------------|---------|---------|
+| **Contribution** | Documents created, updated, commented | Activity level assessment |
+| **Code Review** | PRs reviewed, review quality score, review comments | Code review expertise |
+| **Documentation** | Pages authored, pages edited, documentation quality | Documentation expertise |
+| **Collaboration** | Teammates worked with, cross-team interactions | Collaboration patterns |
+| **Expertise** | Technologies used, complexity handled, leadership | Expertise identification |
+| **Experience** | Years in role, years per technology | Proficiency estimation |
+| **Activity** | Last active date, frequency, consistency | Engagement tracking |
+
+**Sample User Intelligence Profile**:
+
+```json
+{{
+  "username": "sarah.chen",
+  "email": "sarah.chen@company.com",
+  "role": "developer",
+  "experience_level": "Expert",
+  "years_experience": 8,
+  "team_id": "team-abc-123",
+  
+  "skills": [
+    {{"skill": "Python", "level": "Expert", "years": 8}},
+    {{"skill": "Go", "level": "Expert", "years": 8}},
+    {{"skill": "APIs", "level": "Expert", "years": 9}}
+  ],
+  
+  "contributions": {{
+    "documents_created": 5,
+    "documents_updated": 12,
+    "documents_commented": 11,
+    "total_interactions": 28
+  }},
+  
+  "github_metrics": {{
+    "prs_authored": 5,
+    "prs_reviewed": 12,
+    "lines_added": 4500,
+    "files_touched": 87,
+    "review_quality_score": 0.85
+  }},
+  
+  "jira_metrics": {{
+    "tickets_reported": 8,
+    "tickets_assigned": 15,
+    "story_points": 120,
+    "resolution_speed": "fast"
+  }},
+  
+  "confluence_metrics": {{
+    "pages_authored": 3,
+    "pages_edited": 7,
+    "documentation_quality": 0.78,
+    "spaces": ["Engineering", "API Docs"]
+  }},
+  
+  "sme_score": 0.82,
+  "collaboration_score": 0.75
+}}
+```
+
+### 7.6 Integration with Expert-Finder
+
+**Expert-Finder Service Integration Flow**:
+
+```
+User Intelligence Data → User-Store → Expert-Finder → Planning Service
+```
+
+**Integration Points**:
+
+1. **Data Source**: Expert-finder queries user-store for user metadata
+2. **Search Capabilities**:
+   - Natural language queries ("Who knows OAuth 2.0?")
+   - Topic-based search (Python experts, React experts)
+   - SME identification (authentication experts, infrastructure experts)
+   - Teammate discovery (who has worked together)
+   - Team expertise overview (team skill matrix)
+
+3. **Planning Service Usage**:
+   - Section 10 (SME & Contacts) uses expert-finder recommendations
+   - Technology coverage analysis
+   - Knowledge gap identification
+   - Pairing suggestions based on complementary skills
+
+4. **User & Team Report Usage**:
+   - Team member profiles with real expertise data
+   - Skill matrix populated from user-store
+   - Collaboration insights from document relationships
+
+**Example Expert Query**:
+```bash
+# Find Python experts
+curl 'http://localhost:5160/experts/by-topic/Python?max_results=5'
+
+# Returns users from user-store with Python skills, ranked by:
+# - Years of experience
+# - Number of Python-related documents
+# - Code contribution metrics
+# - Review quality in Python projects
+```
+
+---
+
+## 8. Data Persistence Statistics
+
+### 8.1 Current Demo Data
 """)
         
         sections.append(f"""
@@ -3610,9 +3930,9 @@ After Demo Run:
 
 ---
 
-## 8. Visual Architecture Diagram
+## 9. Visual Architecture Diagram
 
-### 7.1 Complete Ecosystem Data Flow
+### 9.1 Complete Ecosystem Data Flow
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────┐
@@ -3729,7 +4049,7 @@ Historical Documents (doc_store)
 
 ---
 
-## 9. Related Reports & Documentation
+## 10. Related Reports & Documentation
 
 **Navigate to other reports for complete picture:**
 
@@ -3750,9 +4070,9 @@ Historical Documents (doc_store)
 
 ---
 
-## 10. Key Insights
+## 11. Key Insights
 
-### 9.1 Data Architecture Highlights
+### 11.1 Data Architecture Highlights
 
 1. **Multi-Store Architecture:** 5 specialized data stores working in concert
 2. **Intelligent Linkings:** Automatic discovery and linking of services to documents
