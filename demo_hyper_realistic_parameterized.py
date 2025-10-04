@@ -32,6 +32,374 @@ from domain.services.workflow_f_user_intelligence import UserIntelligenceWorkflo
 from demo_data_persistence_client import DemoPersistenceClient, save_demo_data_to_stores
 from intelligent_service_discovery import IntelligentServiceDiscovery, discover_and_store_services
 
+# Additional imports for service integration
+import httpx
+from enum import Enum
+
+
+class DataSourceMode(Enum):
+    """Data source modes for document generation."""
+    MANUAL = "manual"  # Current hardcoded mock data
+    AI_POWERED = "ai"  # AI-generated via mock-data-generator
+    REAL_API = "real"  # Real documents via source-agent
+
+
+class SourceAgentClient:
+    """Client for source-agent service to fetch real documents from GitHub/Jira/Confluence."""
+    
+    def __init__(self, base_url: str = "http://localhost:5085"):
+        self.base_url = base_url
+        self.timeout = 30.0
+    
+    async def fetch_document(
+        self,
+        source: str,
+        identifier: str,
+        scope: Optional[Dict[str, Any]] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Fetch a document from specified source.
+        
+        Args:
+            source: "github", "jira", or "confluence"
+            identifier: Source-specific identifier (e.g., "owner:repo#123" for GitHub PR)
+            scope: Additional options (e.g., {"include_reviews": True})
+        
+        Returns:
+            Document data or None if fetch fails
+        """
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}/docs/fetch",
+                    json={
+                        "source": source,
+                        "identifier": identifier,
+                        "scope": scope or {}
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    return data.get("document")
+                else:
+                    print(f"   ⚠️  Source-agent returned {response.status_code} for {source}:{identifier}")
+                    return None
+                    
+        except (httpx.ConnectError, httpx.TimeoutException) as e:
+            print(f"   ⚠️  Could not connect to source-agent: {e}")
+            return None
+        except Exception as e:
+            print(f"   ⚠️  Error fetching from source-agent: {e}")
+            return None
+    
+    async def fetch_github_prs(
+        self,
+        pr_identifiers: List[str],
+        include_reviews: bool = True,
+        include_comments: bool = True
+    ) -> List[Dict[str, Any]]:
+        """Fetch multiple GitHub PRs."""
+        prs = []
+        for identifier in pr_identifiers:
+            doc = await self.fetch_document(
+                source="github",
+                identifier=identifier,
+                scope={
+                    "include_reviews": include_reviews,
+                    "include_comments": include_comments
+                }
+            )
+            if doc:
+                prs.append(doc)
+        return prs
+    
+    async def fetch_jira_tickets(
+        self,
+        ticket_keys: List[str],
+        include_worklog: bool = True,
+        include_comments: bool = True
+    ) -> List[Dict[str, Any]]:
+        """Fetch multiple Jira tickets."""
+        tickets = []
+        for key in ticket_keys:
+            doc = await self.fetch_document(
+                source="jira",
+                identifier=key,
+                scope={
+                    "include_worklog": include_worklog,
+                    "include_comments": include_comments
+                }
+            )
+            if doc:
+                tickets.append(doc)
+        return tickets
+    
+    async def fetch_confluence_pages(
+        self,
+        page_ids: List[str],
+        include_history: bool = True,
+        include_comments: bool = True
+    ) -> List[Dict[str, Any]]:
+        """Fetch multiple Confluence pages."""
+        pages = []
+        for page_id in page_ids:
+            doc = await self.fetch_document(
+                source="confluence",
+                identifier=page_id,
+                scope={
+                    "include_history": include_history,
+                    "include_comments": include_comments
+                }
+            )
+            if doc:
+                pages.append(doc)
+        return pages
+
+
+class MockDataGeneratorClient:
+    """Client for mock-data-generator service to create AI-powered realistic mocks."""
+    
+    def __init__(self, base_url: str = "http://localhost:5065"):
+        self.base_url = base_url
+        self.timeout = 60.0  # AI generation can take longer
+    
+    async def generate_data(
+        self,
+        data_type: str,
+        count: int,
+        context: Dict[str, Any],
+        parameters: Optional[Dict[str, Any]] = None,
+        store_in_doc_store: bool = False
+    ) -> List[Dict[str, Any]]:
+        """
+        Generate AI-powered mock data.
+        
+        Args:
+            data_type: "github_pr", "jira_ticket", or "confluence_doc"
+            count: Number of documents to generate
+            context: Context for generation (project, tech_stack, team_size, etc.)
+            parameters: Additional generation parameters
+            store_in_doc_store: Whether to store in doc-store
+        
+        Returns:
+            List of generated documents
+        """
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}/generate",
+                    json={
+                        "data_type": data_type,
+                        "count": count,
+                        "context": context,
+                        "parameters": parameters or {},
+                        "store_in_doc_store": store_in_doc_store
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    return data.get("generated_data", [])
+                else:
+                    print(f"   ⚠️  Mock-data-generator returned {response.status_code}")
+                    return []
+                    
+        except (httpx.ConnectError, httpx.TimeoutException) as e:
+            print(f"   ⚠️  Could not connect to mock-data-generator: {e}")
+            return []
+        except Exception as e:
+            print(f"   ⚠️  Error generating data: {e}")
+            return []
+    
+    async def generate_github_prs(
+        self,
+        count: int,
+        context: Dict[str, Any],
+        quality: str = "high"
+    ) -> List[Dict[str, Any]]:
+        """Generate AI-powered GitHub PRs."""
+        return await self.generate_data(
+            data_type="github_pr",
+            count=count,
+            context={
+                **context,
+                "include_reviews": True,
+                "include_detailed_comments": True,
+                "realism_level": quality
+            },
+            parameters={
+                "generate_realistic_usernames": True,
+                "include_collaboration_patterns": True,
+                "vary_activity_levels": True
+            }
+        )
+    
+    async def generate_jira_tickets(
+        self,
+        count: int,
+        context: Dict[str, Any],
+        quality: str = "high"
+    ) -> List[Dict[str, Any]]:
+        """Generate AI-powered Jira tickets."""
+        return await self.generate_data(
+            data_type="jira_ticket",
+            count=count,
+            context={
+                **context,
+                "include_worklog": True,
+                "include_watchers": True,
+                "include_components": True,
+                "realism_level": quality
+            }
+        )
+    
+    async def generate_confluence_docs(
+        self,
+        count: int,
+        context: Dict[str, Any],
+        quality: str = "high"
+    ) -> List[Dict[str, Any]]:
+        """Generate AI-powered Confluence documents."""
+        return await self.generate_data(
+            data_type="confluence_doc",
+            count=count,
+            context={
+                **context,
+                "include_contributors": True,
+                "include_likes_and_watches": True,
+                "realism_level": quality
+            }
+        )
+
+
+class HybridDocumentManager:
+    """
+    Manages document generation/fetching from multiple sources.
+    
+    Supports 3 modes:
+    1. MANUAL: Current hardcoded mock generation
+    2. AI_POWERED: AI-generated mocks via mock-data-generator
+    3. REAL_API: Real documents via source-agent
+    """
+    
+    def __init__(
+        self,
+        mode: DataSourceMode = DataSourceMode.MANUAL,
+        mock_quality: str = "high"
+    ):
+        self.mode = mode
+        self.mock_quality = mock_quality
+        self.source_agent = SourceAgentClient()
+        self.mock_generator = MockDataGeneratorClient()
+    
+    async def get_documents(
+        self,
+        context: Dict[str, Any],
+        real_document_ids: Optional[Dict[str, List[str]]] = None
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get documents based on configured mode.
+        
+        Args:
+            context: Generation context (project, tech_stack, count, etc.)
+            real_document_ids: Document IDs for real API mode
+        
+        Returns:
+            Dict with keys: github_prs, jira_tickets, confluence_docs
+        """
+        if self.mode == DataSourceMode.REAL_API:
+            return await self._fetch_real_documents(real_document_ids or {})
+        elif self.mode == DataSourceMode.AI_POWERED:
+            return await self._generate_ai_mocks(context)
+        else:  # MANUAL
+            return {}  # Let demo use existing manual generation
+    
+    async def _fetch_real_documents(
+        self,
+        document_ids: Dict[str, List[str]]
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """Fetch real documents via source-agent."""
+        print("   📡 Fetching real documents from APIs via source-agent...")
+        
+        results = {
+            "github_prs": [],
+            "jira_tickets": [],
+            "confluence_docs": []
+        }
+        
+        # Fetch GitHub PRs
+        if document_ids.get("github_prs"):
+            print(f"      Fetching {len(document_ids['github_prs'])} GitHub PRs...")
+            results["github_prs"] = await self.source_agent.fetch_github_prs(
+                document_ids["github_prs"]
+            )
+            print(f"      ✅ Fetched {len(results['github_prs'])} GitHub PRs")
+        
+        # Fetch Jira tickets
+        if document_ids.get("jira_tickets"):
+            print(f"      Fetching {len(document_ids['jira_tickets'])} Jira tickets...")
+            results["jira_tickets"] = await self.source_agent.fetch_jira_tickets(
+                document_ids["jira_tickets"]
+            )
+            print(f"      ✅ Fetched {len(results['jira_tickets'])} Jira tickets")
+        
+        # Fetch Confluence pages
+        if document_ids.get("confluence_pages"):
+            print(f"      Fetching {len(document_ids['confluence_pages'])} Confluence pages...")
+            results["confluence_docs"] = await self.source_agent.fetch_confluence_pages(
+                document_ids["confluence_pages"]
+            )
+            print(f"      ✅ Fetched {len(results['confluence_docs'])} Confluence pages")
+        
+        return results
+    
+    async def _generate_ai_mocks(
+        self,
+        context: Dict[str, Any]
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """Generate AI-powered mocks via mock-data-generator."""
+        print(f"   🤖 Generating AI-powered mocks (quality: {self.mock_quality})...")
+        
+        results = {
+            "github_prs": [],
+            "jira_tickets": [],
+            "confluence_docs": []
+        }
+        
+        pr_count = context.get("pr_count", context.get("count", 3))
+        ticket_count = context.get("ticket_count", context.get("count", 3))
+        doc_count = context.get("doc_count", int(context.get("count", 3) * 0.3))
+        
+        # Generate GitHub PRs
+        print(f"      Generating {pr_count} GitHub PRs with AI...")
+        results["github_prs"] = await self.mock_generator.generate_github_prs(
+            count=pr_count,
+            context=context,
+            quality=self.mock_quality
+        )
+        print(f"      ✅ Generated {len(results['github_prs'])} GitHub PRs")
+        
+        # Generate Jira tickets
+        print(f"      Generating {ticket_count} Jira tickets with AI...")
+        results["jira_tickets"] = await self.mock_generator.generate_jira_tickets(
+            count=ticket_count,
+            context=context,
+            quality=self.mock_quality
+        )
+        print(f"      ✅ Generated {len(results['jira_tickets'])} Jira tickets")
+        
+        # Generate Confluence docs
+        print(f"      Generating {doc_count} Confluence docs with AI...")
+        results["confluence_docs"] = await self.mock_generator.generate_confluence_docs(
+            count=doc_count,
+            context=context,
+            quality=self.mock_quality
+        )
+        print(f"      ✅ Generated {len(results['confluence_docs'])} Confluence docs")
+        
+        return results
+
 
 class EcosystemValidationTracker:
     """
@@ -171,7 +539,10 @@ class ParameterizedHyperRealisticDemo:
         num_team_members: int = 6,
         tech_stack: Optional[List[str]] = None,
         demo_folder: str = "demo_output",
-        num_tangential_docs: int = 5
+        num_tangential_docs: int = 5,
+        data_source_mode: str = "manual",
+        mock_quality: str = "high",
+        real_document_ids: Optional[Dict[str, List[str]]] = None
     ):
         """
         Initialize demo with parameters.
@@ -183,6 +554,9 @@ class ParameterizedHyperRealisticDemo:
             tech_stack: List of technologies (e.g., ["Python", "iOS", "Android"])
             demo_folder: Output folder name
             num_tangential_docs: Number of tangential external service documents to generate
+            data_source_mode: "manual", "ai", or "real" (Phase 0.2)
+            mock_quality: "basic", "high", or "realistic" for AI generation (Phase 0.2)
+            real_document_ids: Document IDs for real API mode (Phase 0.2)
         """
         self.feature_summary = feature_summary
         self.num_historical_tickets = num_historical_tickets
@@ -190,6 +564,17 @@ class ParameterizedHyperRealisticDemo:
         self.tech_stack = tech_stack or ["Python", "iOS", "Android", "React"]
         self.demo_folder_name = demo_folder
         self.num_tangential_docs = num_tangential_docs
+        
+        # ⭐ NEW: Phase 0.2 - Service Integration
+        self.data_source_mode = DataSourceMode(data_source_mode)
+        self.mock_quality = mock_quality
+        self.real_document_ids = real_document_ids
+        
+        # Initialize Hybrid Document Manager
+        self.doc_manager = HybridDocumentManager(
+            mode=self.data_source_mode,
+            mock_quality=self.mock_quality
+        )
         
         # Create demo folder structure
         self.demo_folder = Path(demo_folder)
@@ -223,6 +608,11 @@ class ParameterizedHyperRealisticDemo:
         print(f"   Team Members: {num_team_members}")
         print(f"   Tech Stack: {', '.join(tech_stack)}")
         print(f"   Tangential Service Docs: {num_tangential_docs}")
+        print(f"   Data Source Mode: {self.data_source_mode.value}")
+        if self.data_source_mode == DataSourceMode.AI_POWERED:
+            print(f"   Mock Quality: {self.mock_quality}")
+        if self.data_source_mode == DataSourceMode.REAL_API and self.real_document_ids:
+            print(f"   Real Document IDs: {self.real_document_ids}")
         print(f"   Output Folder: {demo_folder}/")
         
     def _validate_live_imports(self):
@@ -755,24 +1145,54 @@ class ParameterizedHyperRealisticDemo:
         
         return docs
     
-    def generate_realistic_mock_data(self) -> Dict[str, Any]:
+    async def generate_realistic_mock_data(self) -> Dict[str, Any]:
         """Generate all realistic mock data based on parameters."""
         print(f"\n🎬 GENERATING REALISTIC MOCK DATA...")
+        print(f"   Data Source Mode: {self.data_source_mode.value.upper()}")
         print("="*80)
         
-        # Generate mixed historical documents
-        # About 30% Jira tickets, 30% Confluence docs, 40% GitHub PRs
-        num_jira = max(1, int(self.num_historical_tickets * 0.3))
-        
-        # Temporarily adjust for ticket generation
-        original_ticket_count = self.num_historical_tickets
-        self.num_historical_tickets = num_jira
-        jira_tickets = self.generate_historical_tickets()
-        self.num_historical_tickets = original_ticket_count
-        
-        # Generate other historical documents
-        confluence_docs = self.generate_confluence_docs()
-        github_prs = self.generate_github_prs()
+        # Check if we should use hybrid document manager (AI or REAL mode)
+        if self.data_source_mode in [DataSourceMode.AI_POWERED, DataSourceMode.REAL_API]:
+            print(f"\n⚡ Using HybridDocumentManager ({self.data_source_mode.value} mode)...")
+            
+            # Prepare context for AI generation or indicate real fetch
+            context = {
+                "project": self.feature_summary,
+                "tech_stack": self.tech_stack,
+                "team_size": self.num_team_members,
+                "count": self.num_historical_tickets
+            }
+            
+            # Get documents via hybrid manager
+            hybrid_docs = await self.doc_manager.get_documents(
+                context=context,
+                real_document_ids=self.real_document_ids
+            )
+            
+            # Use fetched/generated documents if available, otherwise fall back to manual
+            jira_tickets = hybrid_docs.get("jira_tickets") or self.generate_historical_tickets()
+            confluence_docs = hybrid_docs.get("confluence_docs") or self.generate_confluence_docs()
+            github_prs = hybrid_docs.get("github_prs") or self.generate_github_prs()
+            
+            if hybrid_docs.get("jira_tickets"):
+                print(f"   ✅ Used {len(hybrid_docs['jira_tickets'])} documents from {self.data_source_mode.value} source")
+        else:
+            # MANUAL mode: use existing generation methods
+            print("\n📝 Using manual mock generation (current method)...")
+            
+            # Generate mixed historical documents
+            # About 30% Jira tickets, 30% Confluence docs, 40% GitHub PRs
+            num_jira = max(1, int(self.num_historical_tickets * 0.3))
+            
+            # Temporarily adjust for ticket generation
+            original_ticket_count = self.num_historical_tickets
+            self.num_historical_tickets = num_jira
+            jira_tickets = self.generate_historical_tickets()
+            self.num_historical_tickets = original_ticket_count
+            
+            # Generate other historical documents
+            confluence_docs = self.generate_confluence_docs()
+            github_prs = self.generate_github_prs()
         
         # Generate tangential external service docs
         tangential_docs = self.generate_tangential_docs()
@@ -3573,8 +3993,8 @@ Simply delete this folder and run the demo script again with your desired parame
         self.team_id = f"team_{int(datetime.now().timestamp())}"
         print(f"\n🏆 Team ID for this run: {self.team_id}")
         
-        # Generate mock data
-        self.generate_realistic_mock_data()
+        # Generate mock data (now async to support service integration)
+        await self.generate_realistic_mock_data()
         
         # 💾 NEW: Save generated data to actual stores
         print("\n" + "="*100)
@@ -3743,12 +4163,63 @@ Examples:
         help="Number of tangential external service documents to generate (default: 5). These are realistic documents about external services/libraries that could enhance the feature."
     )
     
+    # ⭐ NEW: Service Integration Options (Phase 0.2)
+    parser.add_argument(
+        "--data-source",
+        "-ds",
+        type=str,
+        choices=["manual", "ai", "real"],
+        default="manual",
+        help="Data source mode: 'manual' (default, hardcoded mocks), 'ai' (AI-generated via mock-data-generator), or 'real' (real APIs via source-agent)"
+    )
+    
+    parser.add_argument(
+        "--mock-quality",
+        "-mq",
+        type=str,
+        choices=["basic", "high", "realistic"],
+        default="high",
+        help="Mock data quality level for AI generation (default: high). Only applies when --data-source is 'ai'"
+    )
+    
+    parser.add_argument(
+        "--github-prs",
+        type=str,
+        default=None,
+        help="Comma-separated list of GitHub PR identifiers (format: 'owner:repo#PR_NUMBER'). Only applies when --data-source is 'real'. Example: 'facebook:react#12345,vuejs:vue#6789'"
+    )
+    
+    parser.add_argument(
+        "--jira-tickets",
+        type=str,
+        default=None,
+        help="Comma-separated list of Jira ticket keys (format: 'PROJECT-NUMBER'). Only applies when --data-source is 'real'. Example: 'PROJ-123,PROJ-456,PROJ-789'"
+    )
+    
+    parser.add_argument(
+        "--confluence-pages",
+        type=str,
+        default=None,
+        help="Comma-separated list of Confluence page IDs. Only applies when --data-source is 'real'. Example: '123456,789012,345678'"
+    )
+    
     return parser.parse_args()
 
 
 async def main():
     """Main entry point with CLI argument parsing."""
     args = parse_args()
+    
+    # Parse real document IDs if provided
+    real_document_ids = None
+    if args.data_source == "real":
+        real_document_ids = {}
+        if args.github_prs:
+            real_document_ids["github_prs"] = [pr.strip() for pr in args.github_prs.split(",")]
+        if args.jira_tickets:
+            real_document_ids["jira_tickets"] = [ticket.strip() for ticket in args.jira_tickets.split(",")]
+        if args.confluence_pages:
+            real_document_ids["confluence_pages"] = [page.strip() for page in args.confluence_pages.split(",")]
     
     # Create demo with CLI parameters
     demo = ParameterizedHyperRealisticDemo(
@@ -3757,7 +4228,10 @@ async def main():
         num_team_members=args.team,
         tech_stack=args.tech,
         demo_folder=args.output,
-        num_tangential_docs=args.tangential_docs
+        num_tangential_docs=args.tangential_docs,
+        data_source_mode=args.data_source,
+        mock_quality=args.mock_quality,
+        real_document_ids=real_document_ids
     )
     
     await demo.run_demo()
