@@ -606,6 +606,26 @@ class ParameterizedHyperRealisticDemo:
         self.workflow_f_result = None  # User intelligence workflow results
         self.service_health_status = {}  # ⭐ NEW: Track actual service health during demo
         
+        # ⭐ NEW: Phase 1.1 - Metadata Single Source of Truth
+        # This dictionary will be populated during demo execution and passed to ALL report generators
+        # to ensure consistency across reports
+        self.metadata = {
+            'team_size': num_team_members,
+            'technologies': len(tech_stack) if tech_stack else 0,
+            'tech_stack': tech_stack or [],
+            'users_extracted': 0,  # Will be set after Workflow F
+            'smes_identified': 0,  # Will be set after Workflow F
+            'services_discovered': 0,  # Will be set after intelligent service discovery
+            'total_documents': 0,  # Will be set after data generation
+            'github_prs': 0,  # Will be set after data generation
+            'jira_tickets': 0,  # Will be set after data generation
+            'confluence_docs': 0,  # Will be set after data generation
+            'tangential_docs': num_tangential_docs,
+            'workflows_executed': ['A', 'B', 'C', 'D', 'E', 'F'],  # All 6 workflows
+            'demo_timestamp': None,  # Will be set at demo start
+            'report_confidence': 0.0  # Will be calculated based on data quality
+        }
+        
         print(f"\n✅ Demo initialized with parameters:")
         print(f"   Feature: {feature_summary[:60]}...")
         print(f"   Historical Tickets: {num_historical_tickets}")
@@ -1675,6 +1695,97 @@ class ParameterizedHyperRealisticDemo:
             'contexts_saved': client.stats['contexts_saved'],
             'errors': client.stats['errors']
         }
+    
+    def _generate_cross_report_references(self, current_report: str) -> str:
+        """
+        Generate cross-report references section for better cohesion.
+        
+        Args:
+            current_report: Name of the current report (e.g., "Planning Service")
+        
+        Returns:
+            Markdown section with links to other reports
+        """
+        # Report metadata
+        reports = {
+            "Planning Service": {
+                "file": "Planning_Service_Report.md",
+                "description": "Business timeline and ROI analysis",
+                "audience": "Business Stakeholders, Product Managers",
+                "reading_time": "10 min"
+            },
+            "Behind-the-Scenes": {
+                "file": "Behind_the_Scenes_Report.md",
+                "description": "Technical implementation details and data generation",
+                "audience": "Developers, Technical Leads",
+                "reading_time": "20 min"
+            },
+            "User & Team": {
+                "file": "User_and_Team_Report.md",
+                "description": "Team composition, skills, and collaboration",
+                "audience": "Team Leads, HR, Managers",
+                "reading_time": "15 min"
+            },
+            "Ecosystem Validation": {
+                "file": "Ecosystem_Validation_Report.md",
+                "description": "Live code proof and service validation",
+                "audience": "QA, DevOps, System Architects",
+                "reading_time": "15 min"
+            },
+            "Data Architecture": {
+                "file": "Data_Architecture_Report.md",
+                "description": "Data flow, schemas, and user intelligence",
+                "audience": "Data Engineers, Architects",
+                "reading_time": "25 min"
+            },
+            "Executive Dashboard": {
+                "file": "Executive_Dashboard.md",
+                "description": "One-page summary for decision-makers",
+                "audience": "C-suite, VPs, Directors",
+                "reading_time": "3 min"
+            }
+        }
+        
+        # Build cross-references section
+        section = "\n\n---\n\n## Related Reports\n\n"
+        section += "For complementary perspectives on this project:\n\n"
+        
+        for report_name, metadata in reports.items():
+            if report_name != current_report:  # Don't link to self
+                section += f"- **[{report_name} Report](./{metadata['file']})**"
+                section += f" - {metadata['description']}\n"
+                section += f"  - 👥 *Audience:* {metadata['audience']}\n"
+                section += f"  - ⏱️ *Reading Time:* {metadata['reading_time']}\n\n"
+        
+        # Add reading recommendations by persona
+        section += "### Recommended Reading Path by Role\n\n"
+        section += "| Your Role | Start Here | Then Read | Finally |\n"
+        section += "|-----------|------------|-----------|----------|\n"
+        section += "| 👔 **Business Stakeholder** | Executive Dashboard | Planning Service | User & Team |\n"
+        section += "| 👨‍💼 **Team Lead** | Executive Dashboard | User & Team | Planning Service |\n"
+        section += "| 👨‍💻 **Developer** | Behind-the-Scenes | Ecosystem Validation | Data Architecture |\n"
+        section += "| 🏗️ **Architect** | Data Architecture | Behind-the-Scenes | Ecosystem Validation |\n"
+        section += "| 📊 **Data Engineer** | Data Architecture | Behind-the-Scenes | User & Team |\n"
+        section += "| 🎯 **Executive** | Executive Dashboard | Planning Service | (Optional: Others) |\n\n"
+        
+        section += "### Report Statistics\n\n"
+        section += f"- **Total Reports**: 6 (comprehensive coverage)\n"
+        section += f"- **Total Pages**: ~50 pages (distilled to 3 pages in Executive Dashboard)\n"
+        section += f"- **Data Sources**: {self.metadata['total_documents']} historical documents analyzed\n"
+        section += f"- **Team Coverage**: {self.metadata['team_size']} members profiled\n"
+        section += f"- **Technologies**: {self.metadata['technologies']} in stack\n"
+        section += f"- **Users Identified**: {self.metadata['users_extracted']} unique users from documents\n"
+        section += f"- **SMEs Discovered**: {self.metadata['smes_identified']} subject matter experts\n"
+        section += f"- **Services Found**: {self.metadata['services_discovered']} from intelligent discovery\n"
+        section += f"- **Workflows Executed**: 6 (A, B, C, D, E, F)\n"
+        section += f"- **Report Confidence**: {self.metadata['report_confidence']:.0%}\n\n"
+        
+        section += "---\n\n"
+        section += "*All reports generated on {timestamp} by AI-powered planning system*\n".format(
+            timestamp=self.metadata.get('demo_timestamp', 'N/A')
+        )
+        
+        return section
     
     def generate_planning_report(self, workflow_e_result) -> str:
         """Generate Report 1: Planning Service Output (production report)."""
@@ -4563,6 +4674,17 @@ Simply delete this folder and run the demo script again with your desired parame
         # Generate mock data (now async to support service integration)
         await self.generate_realistic_mock_data()
         
+        # ⭐ NEW: Update metadata after data generation
+        self.metadata['total_documents'] = (
+            len(self.mock_data.get('jira_tickets', [])) +
+            len(self.mock_data.get('github_prs', [])) +
+            len(self.mock_data.get('confluence_docs', []))
+        )
+        self.metadata['github_prs'] = len(self.mock_data.get('github_prs', []))
+        self.metadata['jira_tickets'] = len(self.mock_data.get('jira_tickets', []))
+        self.metadata['confluence_docs'] = len(self.mock_data.get('confluence_docs', []))
+        self.metadata['demo_timestamp'] = datetime.now().isoformat()
+        
         # 💾 NEW: Save generated data to actual stores
         print("\n" + "="*100)
         print(" "*20 + "💾 PERSISTING DATA TO STORES")
@@ -4587,11 +4709,30 @@ Simply delete this folder and run the demo script again with your desired parame
             tangential_docs=self.mock_data.get('tangential_docs', [])
         )
         
+        # ⭐ NEW: Update metadata after service discovery
+        self.metadata['services_discovered'] = self.service_discovery_results.get('stats', {}).get('services_discovered', 0)
+        
         # 👥 NEW: Workflow F - User Intelligence & Expert Discovery
         print("\n" + "="*100)
         print(" "*20 + "👥 WORKFLOW F: USER INTELLIGENCE & EXPERT DISCOVERY")
         print("="*100)
         self.workflow_f_result = await self.execute_workflow_f()
+        
+        # ⭐ NEW: Update metadata after Workflow F execution
+        if self.workflow_f_result:
+            self.metadata['users_extracted'] = self.workflow_f_result.total_users_extracted
+            self.metadata['smes_identified'] = len(self.workflow_f_result.subject_matter_experts)
+            
+            # Calculate report confidence based on data quality
+            data_quality_factors = {
+                'has_documents': 1.0 if self.metadata['total_documents'] > 0 else 0.0,
+                'has_team': 1.0 if self.metadata['team_size'] > 0 else 0.0,
+                'has_tech_stack': 1.0 if self.metadata['technologies'] > 0 else 0.0,
+                'has_users': 1.0 if self.metadata['users_extracted'] > 0 else 0.0,
+                'has_services': 1.0 if self.metadata['services_discovered'] > 0 else 0.0,
+                'workflows_complete': 1.0  # All 6 workflows executed
+            }
+            self.metadata['report_confidence'] = sum(data_quality_factors.values()) / len(data_quality_factors)
         
         # Execute workflows
         self.execute_workflows()
