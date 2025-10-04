@@ -4281,6 +4281,49 @@ Historical Documents (doc_store)
             traceback.print_exc()
             return ""
     
+    def generate_executive_dashboard(self) -> str:
+        """Generate Executive Dashboard - 3-page C-level summary."""
+        print(f"\n📄 GENERATING EXECUTIVE DASHBOARD (NEW - PHASE 2 AUDIT)...")
+        print("="*80)
+        
+        try:
+            # Import the Executive Dashboard generator
+            from demo_executive_dashboard_generator import ExecutiveDashboardGenerator
+            
+            # Create generator with all relevant data
+            generator = ExecutiveDashboardGenerator(
+                metadata=self.metadata,
+                workflow_f_result=self.workflow_f_result,
+                service_discovery_results=self.service_discovery_results,
+                persistence_stats=self.persistence_stats,
+                feature_summary=self.feature_summary
+            )
+            
+            # Generate the 3-page report
+            dashboard_report = generator.generate_report()
+            
+            # Add cross-report references for cohesion
+            dashboard_report += self._generate_cross_report_references("Executive Dashboard")
+            
+            # Save to file
+            report_file = self.demo_folder / "reports" / "Executive_Dashboard.md"
+            with open(report_file, 'w') as f:
+                f.write(dashboard_report)
+            
+            print(f"✅ Executive Dashboard saved: {report_file}")
+            print(f"   Length: {len(dashboard_report):,} characters")
+            print(f"   GO/NO-GO: {generator.metrics.recommendation} ({generator.metrics.go_no_go_confidence:.0f}% confidence)")
+            print(f"   Estimated Cost: ${generator.metrics.estimated_cost/1000:.0f}K")
+            print(f"   ROI: {generator.metrics.roi_percentage:.0f}%")
+            print(f"   Risks Identified: {len(generator.risks)}")
+            
+            return str(report_file)
+        except Exception as e:
+            print(f"⚠️  Could not generate Executive Dashboard: {e}")
+            import traceback
+            traceback.print_exc()
+            return ""
+    
     def generate_readme(self):
         """Generate README.md for the demo folder."""
         readme_content = f"""# Hyper-Realistic Demo Output
@@ -4759,12 +4802,13 @@ Simply delete this folder and run the demo script again with your desired parame
         # 🔍 NEW: Fetch live data from datastores for report enrichment
         self.live_datastore_data = await self.fetch_live_datastore_samples()
         
-        # Generate all five reports (now enriched with live data + NEW User & Team Report)
+        # Generate all six reports (now enriched with live data + NEW User & Team Report + Executive Dashboard)
         planning_report = self.generate_planning_report(workflow_e_result)
         behind_scenes_report = self.generate_behind_scenes_report(workflow_e_result)
         validation_report = self.generate_ecosystem_validation_report()
         data_architecture_report = self.generate_data_architecture_report()
         user_team_report = self.generate_user_team_report()  # ⭐ NEW: Phase 3
+        executive_dashboard = self.generate_executive_dashboard()  # ⭐ NEW: Phase 2 - Audit Improvements
         
         # Generate README
         readme = self.generate_readme()
@@ -4777,15 +4821,17 @@ Simply delete this folder and run the demo script again with your desired parame
         print(f"\n📄 README:")
         print(f"      {self.demo_folder.absolute() / 'README.md'}")
         print(f"\n📄 Reports Generated:")
-        print(f"   1. Planning Service Report:")
+        print(f"   1. Executive Dashboard (NEW - Phase 2 Audit) ⭐ START HERE:")
+        print(f"      {self.demo_folder.absolute() / 'reports' / 'Executive_Dashboard.md'}")
+        print(f"   2. Planning Service Report:")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Planning_Service_Report.md'}")
-        print(f"   2. Behind-the-Scenes Report:")
+        print(f"   3. Behind-the-Scenes Report:")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Behind_the_Scenes_Report.md'}")
-        print(f"   3. User & Team Report (NEW - Phase 3):")
+        print(f"   4. User & Team Report (NEW - Phase 3):")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'User_and_Team_Report.md'}")
-        print(f"   4. Ecosystem Validation Report:")
+        print(f"   5. Ecosystem Validation Report:")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Ecosystem_Validation_Report.md'}")
-        print(f"   5. Data Architecture Report:")
+        print(f"   6. Data Architecture Report:")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Data_Architecture_Report.md'}")
         print(f"\n📊 Mock Data:")
         print(f"      {self.demo_folder.absolute() / 'data' / 'mock_data.json'}")
