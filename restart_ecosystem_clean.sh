@@ -95,7 +95,7 @@ echo "🚀 STEP 5: Starting services fresh..."
 echo "="*80
 
 # Start doc_store
-echo "  [1/5] Starting doc_store on port 5087..."
+echo "  [1/7] Starting doc_store on port 5087..."
 python3 services/doc_store/main.py > /tmp/doc_store_clean.log 2>&1 &
 DOC_PID=$!
 echo "        PID: $DOC_PID"
@@ -103,7 +103,7 @@ echo "        PID: $DOC_PID"
 sleep 2
 
 # Start prompt_store
-echo "  [2/5] Starting prompt_store on port 5110..."
+echo "  [2/7] Starting prompt_store on port 5110..."
 python3 services/prompt_store/main.py > /tmp/prompt_store_clean.log 2>&1 &
 PROMPT_PID=$!
 echo "        PID: $PROMPT_PID"
@@ -111,7 +111,7 @@ echo "        PID: $PROMPT_PID"
 sleep 2
 
 # Start external-service-store
-echo "  [3/5] Starting external-service-store on port 5140..."
+echo "  [3/7] Starting external-service-store on port 5140..."
 python3 services/external-service-store/main.py > /tmp/external_service_store_clean.log 2>&1 &
 EXTERNAL_PID=$!
 echo "        PID: $EXTERNAL_PID"
@@ -119,21 +119,37 @@ echo "        PID: $EXTERNAL_PID"
 sleep 2
 
 # Start memory-agent
-echo "  [4/5] Starting memory-agent on port 5090..."
+echo "  [4/7] Starting memory-agent on port 5090..."
 python3 services/memory-agent/main.py > /tmp/memory_agent_clean.log 2>&1 &
 MEMORY_PID=$!
 echo "        PID: $MEMORY_PID"
 
 sleep 2
 
-# Start log-collector (if needed)
-echo "  [5/5] Starting log-collector on port 8104..."
+# Start log-collector
+echo "  [5/7] Starting log-collector on port 8104..."
 python3 services/log-collector/main.py > /tmp/log_collector_clean.log 2>&1 &
 LOG_PID=$!
 echo "        PID: $LOG_PID"
 
+sleep 2
+
+# Start user-store (WORKFLOW F REQUIRED)
+echo "  [6/7] Starting user-store on port 5150..."
+python3 services/user-store/main.py > /tmp/user_store_clean.log 2>&1 &
+USER_PID=$!
+echo "        PID: $USER_PID"
+
+sleep 2
+
+# Start expert-finder-service (WORKFLOW F REQUIRED)
+echo "  [7/7] Starting expert-finder-service on port 5160..."
+python3 services/expert-finder-service/main.py > /tmp/expert_finder_clean.log 2>&1 &
+EXPERT_PID=$!
+echo "        PID: $EXPERT_PID"
+
 echo ""
-echo "✅ All services started"
+echo "✅ All 7 services started"
 echo ""
 
 # ============================================================================
@@ -266,18 +282,53 @@ async def test_all():
         except Exception as e:
             print(f'    ❌ memory-agent: {str(e)[:100]}')
             services_tested += 1
+        
+        # Test user-store
+        print('  Testing user-store...')
+        try:
+            response = await client.post(
+                'http://localhost:5150/users',
+                json={
+                    'name': 'Test User',
+                    'email': 'test@example.com',
+                    'role': 'developer'
+                }
+            )
+            services_tested += 1
+            if response.status_code < 400:
+                print(f'    ✅ user-store: {response.status_code} - Working!')
+                services_working += 1
+            else:
+                print(f'    ❌ user-store: {response.status_code} - {response.text[:100]}')
+        except Exception as e:
+            print(f'    ❌ user-store: {str(e)[:100]}')
+            services_tested += 1
+        
+        # Test expert-finder-service
+        print('  Testing expert-finder-service...')
+        try:
+            response = await client.get('http://localhost:5160/health')
+            services_tested += 1
+            if response.status_code < 400:
+                print(f'    ✅ expert-finder-service: {response.status_code} - Working!')
+                services_working += 1
+            else:
+                print(f'    ❌ expert-finder-service: {response.status_code} - {response.text[:100]}')
+        except Exception as e:
+            print(f'    ❌ expert-finder-service: {str(e)[:100]}')
+            services_tested += 1
     
     print()
-    print(f'  Services Tested: {services_tested}/4')
-    print(f'  Services Working: {services_working}/4')
+    print(f'  Services Tested: {services_tested}/7')
+    print(f'  Services Working: {services_working}/7')
     
-    if services_working == 4:
+    if services_working == 7:
         print()
-        print('  🎉🎉🎉 ALL SERVICES WORKING WITH FIXES! 🎉🎉🎉')
+        print('  🎉🎉🎉 ALL 7 SERVICES WORKING WITH FIXES! 🎉🎉🎉')
         return 0
     elif services_working > 0:
         print()
-        print(f'  ⚠️  Partial success: {services_working}/4 services working')
+        print(f'  ⚠️  Partial success: {services_working}/7 services working')
         return 1
     else:
         print()
@@ -310,6 +361,8 @@ echo "  prompt_store:           $PROMPT_PID"
 echo "  external-service-store: $EXTERNAL_PID"
 echo "  memory-agent:           $MEMORY_PID"
 echo "  log-collector:          $LOG_PID"
+echo "  user-store:             $USER_PID"
+echo "  expert-finder-service:  $EXPERT_PID"
 echo ""
 
 echo "Logs:"
@@ -318,6 +371,8 @@ echo "  prompt_store:           /tmp/prompt_store_clean.log"
 echo "  external-service-store: /tmp/external_service_store_clean.log"
 echo "  memory-agent:           /tmp/memory_agent_clean.log"
 echo "  log-collector:          /tmp/log_collector_clean.log"
+echo "  user-store:             /tmp/user_store_clean.log"
+echo "  expert-finder-service:  /tmp/expert_finder_clean.log"
 echo ""
 
 if [ $TEST_RESULT -eq 0 ]; then
