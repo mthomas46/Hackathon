@@ -133,40 +133,50 @@ def expected_user_extraction() -> Dict[str, Any]:
 @pytest.fixture
 def sample_user_extractions() -> Dict[str, Any]:
     """Sample user extractions for SME testing."""
+    import sys
+    import os
+    import importlib.util
+    
+    # Import UserExtraction
+    spec = importlib.util.spec_from_file_location(
+        "workflow_f_user_intelligence",
+        os.path.join(os.path.dirname(__file__), "../../../services/project-planning-service/domain/services/workflow_f_user_intelligence.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    UserExtraction = module.UserExtraction
+    
     return {
-        "sarah.chen": {
-            "username": "sarah.chen",
-            "display_name": "Sarah Chen",
-            "documents_created": ["doc1", "doc2", "doc3", "doc4", "doc5"],
-            "documents_commented": ["doc6", "doc7"],
-            "topics": ["Python", "Backend", "APIs", "Microservices"],
-            "services": ["user-service", "auth-service"],
-            "skills": ["Python Backend Development"],
-            "total_interactions": 7,
-            "expertise_score": 0.0
-        },
-        "john.doe": {
-            "username": "john.doe",
-            "display_name": "John Doe",
-            "documents_created": ["doc8"],
-            "documents_commented": ["doc9"],
-            "topics": ["React", "Frontend"],
-            "services": ["web-app"],
-            "skills": ["React Development"],
-            "total_interactions": 2,
-            "expertise_score": 0.0
-        },
-        "marcus.johnson": {
-            "username": "marcus.johnson",
-            "display_name": "Marcus Johnson",
-            "documents_created": ["doc10", "doc11", "doc12"],
-            "documents_commented": [],
-            "topics": ["Python", "Backend", "Database"],
-            "services": ["database-service"],
-            "skills": ["Database Design"],
-            "total_interactions": 3,
-            "expertise_score": 0.0
-        }
+        "sarah.chen": UserExtraction(
+            username="sarah.chen",
+            display_name="Sarah Chen",
+            documents_created=["doc1", "doc2", "doc3", "doc4", "doc5"],
+            documents_commented=["doc6", "doc7"],
+            topics=["Python", "Backend", "APIs", "Microservices"],
+            services=["user-service", "auth-service"],
+            skills=["Python Backend Development"],
+            total_interactions=7
+        ),
+        "john.doe": UserExtraction(
+            username="john.doe",
+            display_name="John Doe",
+            documents_created=["doc8"],
+            documents_commented=["doc9"],
+            topics=["React", "Frontend"],
+            services=["web-app"],
+            skills=["React Development"],
+            total_interactions=2
+        ),
+        "marcus.johnson": UserExtraction(
+            username="marcus.johnson",
+            display_name="Marcus Johnson",
+            documents_created=["doc10", "doc11", "doc12"],
+            documents_commented=[],
+            topics=["Python", "Backend", "Database"],
+            services=["database-service"],
+            skills=["Database Design"],
+            total_interactions=3
+        )
     }
 
 
