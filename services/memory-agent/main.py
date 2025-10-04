@@ -151,12 +151,16 @@ except ImportError:
             """
             return []
 
-        def put_memory_item(**kwargs):
+        def put_memory_item(item):
             """Store mock memory item for testing.
 
             Returns mock success response when memory operations are unavailable.
             """
-            return {"id": "mock_id", "status": "stored"}
+            return {
+                "count": 1,
+                "max_items": 100,
+                "utilization_percent": 1.0
+            }
 
         def build_memory_agent_context(**kwargs):
             """Build mock memory agent context for testing.
