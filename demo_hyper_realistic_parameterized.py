@@ -31,6 +31,7 @@ from domain.services.beautiful_markdown_formatter import BeautifulMarkdownFormat
 from domain.services.workflow_f_user_intelligence import UserIntelligenceWorkflow, WorkflowFResult
 from demo_data_persistence_client import DemoPersistenceClient, save_demo_data_to_stores
 from intelligent_service_discovery import IntelligentServiceDiscovery, discover_and_store_services
+from demo_sme_report_enhancer import SMEReportEnhancer
 
 # Additional imports for service integration
 import httpx
@@ -1721,6 +1722,24 @@ class ParameterizedHyperRealisticDemo:
 
 """
         
+        # ⭐ NEW: Generate Section 10 - SME & Contacts (Workflow F Enhancement)
+        section_10 = ""
+        if hasattr(self, 'workflow_f_result') and self.workflow_f_result:
+            print("   ⭐ Adding Section 10: SME & Contacts (Workflow F)")
+            try:
+                # Create SME enhancer with actual Workflow F data
+                enhancer = SMEReportEnhancer(
+                    team_members=self.mock_data.get('team_members', []),
+                    tech_stack=self.tech_stack,
+                    mock_data=self.mock_data,
+                    expert_finder_url="http://localhost:5160"
+                )
+                section_10 = enhancer.generate_sme_section()
+                print(f"   ✅ Section 10 generated ({len(section_10):,} characters)")
+            except Exception as e:
+                print(f"   ⚠️  Could not generate Section 10: {e}")
+                section_10 = "\n\n---\n\n## 10. Subject Matter Experts & Contacts\n\n*Section 10 generation encountered an error. See demo logs for details.*\n\n"
+        
         # Add footer with cross-links
         footer = """
 
@@ -1752,8 +1771,8 @@ class ParameterizedHyperRealisticDemo:
 **Report Type:** Production Planning Output  
 """
         
-        # Insert header, report content, and footer
-        full_report = header + report + footer
+        # Insert header, report content, Section 10 (NEW), and footer
+        full_report = header + report + section_10 + footer
         
         report_file = self.demo_folder / "reports" / "Planning_Service_Report.md"
         with open(report_file, 'w') as f:

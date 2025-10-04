@@ -62,9 +62,15 @@ class SMEReportEnhancer:
             skills = member.get("skills", [])
             services_worked_on = member.get("services_worked_on", [])
             
-            # Map skills to team members
+            # Map skills to team members (handle both string and dict formats)
             for skill in skills:
-                expertise[skill].append(name)
+                # Skills can be either strings or dicts with {"skill": "name", "level": "...", "years": ...}
+                if isinstance(skill, dict):
+                    skill_name = skill.get("skill", str(skill))
+                else:
+                    skill_name = str(skill)
+                
+                expertise[skill_name].append(name)
             
             # Map services to team members
             for service in services_worked_on:
@@ -78,7 +84,14 @@ class SMEReportEnhancer:
         team_skills = set()
         
         for member in self.team_members:
-            team_skills.update(member.get("skills", []))
+            skills = member.get("skills", [])
+            for skill in skills:
+                # Extract skill name from dict or use string directly
+                if isinstance(skill, dict):
+                    skill_name = skill.get("skill", "")
+                else:
+                    skill_name = str(skill)
+                team_skills.add(skill_name)
         
         for tech in self.tech_stack:
             # Check if tech or related skill exists in team
@@ -182,10 +195,18 @@ This section identifies expertise within and outside the team, helping with:
                 name = member.get("name", member.get("username", "Unknown"))
                 skills = member.get("skills", [])
                 
-                # Check if member has this tech as a skill
-                if any(tech.lower() in skill.lower() for skill in skills):
-                    experience = member.get("years_experience", 0)
-                    tech_experts.append(f"{name} ({experience}y exp)")
+                # Check if member has this tech as a skill (handle dict or string)
+                for skill in skills:
+                    if isinstance(skill, dict):
+                        skill_name = skill.get("skill", "")
+                        years = skill.get("years", 0)
+                    else:
+                        skill_name = str(skill)
+                        years = member.get("years_experience", 0)
+                    
+                    if tech.lower() in skill_name.lower():
+                        tech_experts.append(f"{name} ({years}y exp)")
+                        break  # Count each member only once per tech
             
             status = "✅" if tech_experts else "⚠️"
             experts_str = ", ".join(tech_experts) if tech_experts else "No internal expertise"
@@ -241,11 +262,19 @@ The current team has coverage for all technologies in the stack. External expert
 """)
         
         for tech in self.tech_stack:
-            # Count internal experts
-            expert_count = sum(
-                1 for member in self.team_members
-                if any(tech.lower() in skill.lower() for skill in member.get("skills", []))
-            )
+            # Count internal experts (handle dict or string skills)
+            expert_count = 0
+            for member in self.team_members:
+                skills = member.get("skills", [])
+                for skill in skills:
+                    if isinstance(skill, dict):
+                        skill_name = skill.get("skill", "")
+                    else:
+                        skill_name = str(skill)
+                    
+                    if tech.lower() in skill_name.lower():
+                        expert_count += 1
+                        break  # Count each member only once
             
             if expert_count >= 2:
                 status = "✅ Strong"
@@ -439,11 +468,33 @@ The expert-finder service is fully integrated into the planning workflow via:
                 name1 = member1.get("name", member1.get("username", "Member1"))
                 name2 = member2.get("name", member2.get("username", "Member2"))
                 
-                exp1 = member1.get("years_experience", 0)
-                exp2 = member2.get("years_experience", 0)
+                # Extract years of experience (handle dict skills or fallback)
+                skills1_raw = member1.get("skills", [])
+                skills2_raw = member2.get("skills", [])
                 
-                skills1 = set(member1.get("skills", []))
-                skills2 = set(member2.get("skills", []))
+                # Calculate average years of experience from skills (if dict format)
+                exp1 = member1.get("years_experience", 0)
+                if isinstance(skills1_raw, list) and skills1_raw and isinstance(skills1_raw[0], dict):
+                    exp1 = sum(s.get("years", 0) for s in skills1_raw) / len(skills1_raw)
+                
+                exp2 = member2.get("years_experience", 0)
+                if isinstance(skills2_raw, list) and skills2_raw and isinstance(skills2_raw[0], dict):
+                    exp2 = sum(s.get("years", 0) for s in skills2_raw) / len(skills2_raw)
+                
+                # Extract skill names (handle dict or string)
+                skills1 = set()
+                for skill in skills1_raw:
+                    if isinstance(skill, dict):
+                        skills1.add(skill.get("skill", ""))
+                    else:
+                        skills1.add(str(skill))
+                
+                skills2 = set()
+                for skill in skills2_raw:
+                    if isinstance(skill, dict):
+                        skills2.add(skill.get("skill", ""))
+                    else:
+                        skills2.add(str(skill))
                 
                 # Check for complementary skills (one has, other doesn't)
                 unique_to_1 = skills1 - skills2
