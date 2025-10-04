@@ -7,10 +7,13 @@ and technical specifications in the LLM Documentation Ecosystem.
 import sys
 import os
 
-# Add project root to path for imports when running as script
+# Add project root and current service to path for imports when running as script
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+service_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
+if service_root not in sys.path:
+    sys.path.insert(0, service_root)
 
 from services.shared.infrastructure.config import load_service_config
 
@@ -20,7 +23,7 @@ from fastapi import FastAPI, HTTPException, Query, Depends, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from services.external_service_store.infrastructure.repositories.sqlite_external_service_repository import (
+from infrastructure.repositories.sqlite_external_service_repository import (
     SQLiteExternalServiceRepository,
     SQLiteServiceEndpointRepository,
     SQLiteServiceDependencyRepository,
@@ -28,7 +31,7 @@ from services.external_service_store.infrastructure.repositories.sqlite_external
     SQLiteServiceUserRepository,
     SQLiteServiceTopicRepository
 )
-from services.external_service_store.domain.services.external_service_service import ExternalServiceService
+from domain.services.external_service_service import ExternalServiceService
 
 # ============================================================================
 # SERVICE CONFIGURATION
@@ -322,7 +325,11 @@ async def create_service(request: CreateServiceRequest):
 
         # Load full service data for response
         full_service = await external_service_service.get_service(service.id)
-        return ServiceResponse(**full_service.__dict__) if full_service else None
+        if full_service:
+            # Use to_dict() to properly serialize datetime fields
+            service_dict = full_service.to_dict()
+            return ServiceResponse(**service_dict)
+        return None
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

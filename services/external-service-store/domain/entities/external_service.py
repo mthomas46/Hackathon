@@ -319,8 +319,15 @@ class ExternalService:
         return str(uuid4())
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary representation with JSON serialization for complex fields."""
-        import json
+        """Convert to dictionary representation for API responses (NOT for database storage)."""
+        def serialize_entity(entity):
+            """Helper to serialize nested entities."""
+            if hasattr(entity, 'to_dict'):
+                return entity.to_dict()
+            elif hasattr(entity, '__dict__'):
+                return entity.__dict__
+            return entity
+        
         return {
             "id": self.id,
             "name": self.name,
@@ -331,25 +338,25 @@ class ExternalService:
             "status": self.status.value if isinstance(self.status, ServiceStatus) else str(self.status),
             "version": self.version,
             "latest_release": self.latest_release,
-            "release_date": self.release_date.isoformat() if isinstance(self.release_date, datetime) else self.release_date,
-            "technologies": json.dumps(self.technologies) if isinstance(self.technologies, list) else self.technologies,
-            "run_requirements": json.dumps(self.run_requirements) if isinstance(self.run_requirements, dict) else self.run_requirements,
+            "release_date": self.release_date.isoformat() if isinstance(self.release_date, datetime) and self.release_date else None,
+            "technologies": self.technologies,  # Keep as list
+            "run_requirements": self.run_requirements,  # Keep as dict
             "base_url": self.base_url,
             "port": self.port,
             "health_endpoint": self.health_endpoint,
-            "endpoints": json.dumps([e.__dict__ if hasattr(e, '__dict__') else e for e in self.endpoints]) if self.endpoints else "[]",
-            "dependencies": json.dumps([d.__dict__ if hasattr(d, '__dict__') else d for d in self.dependencies]) if self.dependencies else "[]",
-            "documents": json.dumps([doc.__dict__ if hasattr(doc, '__dict__') else doc for doc in self.documents]) if self.documents else "[]",
-            "users": json.dumps([u.__dict__ if hasattr(u, '__dict__') else u for u in self.users]) if self.users else "[]",
-            "topics": json.dumps([t.__dict__ if hasattr(t, '__dict__') else t for t in self.topics]) if self.topics else "[]",
+            "endpoints": [serialize_entity(e) for e in self.endpoints],  # Keep as list of dicts
+            "dependencies": [serialize_entity(d) for d in self.dependencies],  # Keep as list
+            "documents": [serialize_entity(doc) for doc in self.documents],  # Keep as list
+            "users": [serialize_entity(u) for u in self.users],  # Keep as list
+            "topics": [serialize_entity(t) for t in self.topics],  # Keep as list
             "last_confluence_document": self.last_confluence_document,
             "last_jira_ticket": self.last_jira_ticket,
             "last_github_pr": self.last_github_pr,
-            "data_contracts": json.dumps(self.data_contracts) if isinstance(self.data_contracts, dict) else self.data_contracts,
+            "data_contracts": self.data_contracts,  # Keep as dict
             "owner": self.owner,
-            "maintainers": json.dumps(self.maintainers) if isinstance(self.maintainers, list) else self.maintainers,
-            "tags": json.dumps(self.tags) if isinstance(self.tags, list) else self.tags,
-            "metadata": json.dumps(self.metadata) if isinstance(self.metadata, dict) else self.metadata,
+            "maintainers": self.maintainers,  # Keep as list
+            "tags": self.tags,  # Keep as list
+            "metadata": self.metadata,  # Keep as dict
             "created_at": self.created_at.isoformat() if isinstance(self.created_at, datetime) else self.created_at,
             "updated_at": self.updated_at.isoformat() if isinstance(self.updated_at, datetime) else self.updated_at,
         }
