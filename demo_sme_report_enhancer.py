@@ -32,7 +32,8 @@ class SMEReportEnhancer:
         team_members: List[Dict[str, Any]],
         tech_stack: List[str],
         mock_data: Dict[str, Any],
-        expert_finder_url: str = "http://localhost:5160"
+        expert_finder_url: str = "http://localhost:5160",
+        metadata: Dict[str, Any] = None
     ):
         """
         Initialize SME Report Enhancer.
@@ -42,11 +43,13 @@ class SMEReportEnhancer:
             tech_stack: List of technologies in the tech stack
             mock_data: Generated mock data (documents, PRs, tickets)
             expert_finder_url: URL of expert-finder service
+            metadata: Demo metadata dictionary with consistent metrics
         """
         self.team_members = team_members
         self.tech_stack = tech_stack
         self.mock_data = mock_data
         self.expert_finder_url = expert_finder_url
+        self.metadata = metadata or {}
         
         # Analyze team expertise
         self.team_expertise = self._analyze_team_expertise()
@@ -163,7 +166,7 @@ This section identifies expertise within and outside the team, helping with:
 
 ### 10.0.5 Workflow F: How Users Were Discovered
 
-**User Extraction Pipeline (10 Users from 14 Documents):**
+**User Extraction Pipeline ({self.metadata.get('users_extracted', 0)} Users from {self.metadata.get('total_documents', 0)} Documents):**
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -173,7 +176,7 @@ This section identifies expertise within and outside the team, helping with:
 Step 1: Document Sources
 ─────────────────────────
 
-GitHub PRs (6 docs)     Jira Tickets (4 docs)    Confluence (4 docs)
+GitHub PRs ({self.metadata.get('github_prs', 0)} docs)     Jira Tickets ({self.metadata.get('jira_tickets', 0)} docs)    Confluence ({self.metadata.get('confluence_docs', 0)} docs)
         │                        │                         │
         ├─ Authors: 6            ├─ Reporters: 4           ├─ Authors: 4
         ├─ Reviewers: ~12        ├─ Assignees: 4           ├─ Editors: ~8
@@ -212,13 +215,13 @@ Step 3: Deduplication & Aggregation
         └────────────────┬───────────────────────┘
                          │
                          ▼
-        Unique Users: 10 users
+        Unique Users: {self.metadata.get('users_extracted', 0)} users
         (deduplicated and enriched)
                          │
         ┌────────────────┼────────────────┐
         │                │                │
         ▼                ▼                ▼
-   6 Team           4 External      Metadata:
+   {self.metadata.get('team_size', 0)} Team           {self.metadata.get('users_extracted', 0) - self.metadata.get('team_size', 0)} External      Metadata:
    Members          Experts         - Skills
    (on team)        (discovered)    - Experience
                                     - Interactions
@@ -227,7 +230,7 @@ Step 3: Deduplication & Aggregation
 Step 4: SME Identification
 ───────────────────────────
 
-10 Users → SME Scoring Algorithm → 12 Subject Matter Experts
+{self.metadata.get('users_extracted', 0)} Users → SME Scoring Algorithm → {self.metadata.get('smes_identified', 0)} Subject Matter Experts
                                      (scored 0.0 - 1.0)
 ```
 
@@ -236,13 +239,13 @@ Step 4: SME Identification
 ```
 Document Type      │ Docs │ Avg Users/Doc │ Total Raw │ Unique After Dedup
 ───────────────────┼──────┼───────────────┼───────────┼────────────────────
-GitHub PRs         │  6   │     ~6.7      │    ~40    │       ~8
-Jira Tickets       │  4   │     ~5.5      │    ~22    │       ~6
-Confluence Docs    │  4   │     ~6.5      │    ~26    │       ~6
+GitHub PRs         │  {self.metadata.get('github_prs', 0)}   │     ~6.7      │    ~{self.metadata.get('github_prs', 0) * 6}    │       ~{int(self.metadata.get('github_prs', 0) * 1.3)}
+Jira Tickets       │  {self.metadata.get('jira_tickets', 0)}   │     ~5.5      │    ~{self.metadata.get('jira_tickets', 0) * 5}    │       ~{int(self.metadata.get('jira_tickets', 0) * 1.5)}
+Confluence Docs    │  {self.metadata.get('confluence_docs', 0)}   │     ~6.5      │    ~{self.metadata.get('confluence_docs', 0) * 6}    │       ~{int(self.metadata.get('confluence_docs', 0) * 1.5)}
 ───────────────────┼──────┼───────────────┼───────────┼────────────────────
-Total              │ 14   │     ~6.3      │    ~88    │       10 ✅
+Total              │ {self.metadata.get('total_documents', 0)}   │     ~6.3      │    ~{self.metadata.get('total_documents', 0) * 6}    │       {self.metadata.get('users_extracted', 0)} ✅
 
-Deduplication Rate: 88 → 10 (88% reduction, ~9 documents per user)
+Deduplication Rate: ~{self.metadata.get('total_documents', 0) * 6} → {self.metadata.get('users_extracted', 0)} (~{int(100 - (self.metadata.get('users_extracted', 0) / max(self.metadata.get('total_documents', 0) * 6, 1) * 100))}% reduction, ~{int(self.metadata.get('total_documents', 0) / max(self.metadata.get('users_extracted', 0), 1))} documents per user)
 ```
 
 
