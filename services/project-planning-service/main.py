@@ -125,6 +125,21 @@ register_exception_handlers(app)
 # Setup common middleware
 setup_common_middleware(app, SERVICE_NAME)
 
+# ============================================================================
+# DATASTORE OPERATION LOGGING
+# ============================================================================
+try:
+    from services.shared.infrastructure.logging.datastore_operation_logger import add_datastore_logging
+    
+    add_datastore_logging(
+        app,
+        service_name="project-planning-service",
+        log_collector_url="http://localhost:8104",
+        timeout_seconds=1.0
+    )
+except ImportError as e:
+    logger.warning(f"DataStore operation logging not available: {e}")
+
 # Include API routers
 app.include_router(planning.router)
 app.include_router(roadmap_routes.router, prefix="/api/v1")
