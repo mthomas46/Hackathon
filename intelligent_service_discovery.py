@@ -320,9 +320,10 @@ class IntelligentServiceDiscovery:
                         "display_name": service_data["name"],
                         "service_type": service_type,
                         "description": f"Discovered from {len(service_data['sources'])} historical documents",
-                        "version": "latest",
+                        "version": "1.0.0",  # Fixed: use semantic version instead of "latest"
                         "technologies": [service_data["name"]],
                         "tags": list(set(service_data["source_types"])),
+                        "run_requirements": {},  # Added: required field
                         "metadata": {
                             "discovery_method": "intelligent_document_analysis",
                             "confidence": service_data["confidence"],

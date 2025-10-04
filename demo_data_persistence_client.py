@@ -22,15 +22,18 @@ class DemoPersistenceClient:
         self,
         doc_store_url: str = "http://localhost:5087",
         prompt_store_url: str = "http://localhost:5110",
-        memory_agent_url: str = "http://localhost:5090"
+        memory_agent_url: str = "http://localhost:5090",
+        user_store_url: str = "http://localhost:5150"
     ):
         self.doc_store_url = doc_store_url
         self.prompt_store_url = prompt_store_url
         self.memory_agent_url = memory_agent_url
+        self.user_store_url = user_store_url
         self.stats = {
             "documents_saved": 0,
             "prompts_saved": 0,
             "contexts_saved": 0,
+            "users_saved": 0,
             "errors": []
         }
     
@@ -156,6 +159,57 @@ class DemoPersistenceClient:
         }
         
         return await self.save_document_to_store(content, metadata, doc_id=f"github_pr_{pr.get('pr_number')}")
+    
+    async def save_user_to_store(self, user: Dict[str, Any], document_ids: List[str] = None) -> Optional[Dict[str, Any]]:
+        """Save a team member/user to user-store with optional document relationships."""
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                # Create user payload
+                payload = {
+                    "email": user.get("email", f"{user.get('name', 'user').lower().replace(' ', '.')}@example.com"),
+                    "username": user.get("name", "").lower().replace(" ", "_"),
+                    "display_name": user.get("name", "Unknown User"),
+                    "role": user.get("role", "developer").lower()
+                }
+                
+                # Create user
+                response = await client.post(
+                    f"{self.user_store_url}/users",
+                    json=payload
+                )
+                
+                if response.status_code in [200, 201]:
+                    self.stats["users_saved"] += 1
+                    result = response.json()
+                    user_id = result.get("id")
+                    
+                    # If user has document relationships, add them
+                    if user_id and document_ids:
+                        for doc_id in document_ids:
+                            try:
+                                await client.post(
+                                    f"{self.user_store_url}/users/{user_id}/relationships",
+                                    params={
+                                        "document_id": doc_id,
+                                        "relationship_type": "author",
+                                        "access_level": "write"
+                                    }
+                                )
+                            except Exception as e:
+                                # Don't fail user creation if relationship fails
+                                print(f"   ⚠️  Failed to link document {doc_id} to user {user_id}: {str(e)}")
+                    
+                    return result
+                else:
+                    error_msg = f"Failed to save user '{user.get('name')}': {response.status_code} - {response.text}"
+                    self.stats["errors"].append(error_msg)
+                    print(f"⚠️  {error_msg}")
+                    return None
+        except Exception as e:
+            error_msg = f"Error saving user '{user.get('name')}': {str(e)}"
+            self.stats["errors"].append(error_msg)
+            print(f"⚠️  {error_msg}")
+            return None
     
     async def save_prompt_to_store(
         self,
@@ -461,7 +515,8 @@ Identify potential blindspots and mitigation strategies.""",
         results = {
             "doc_store": False,
             "prompt_store": False,
-            "memory_agent": False
+            "memory_agent": False,
+            "user_store": False
         }
         
         async with httpx.AsyncClient(timeout=5.0) as client:
@@ -485,6 +540,13 @@ Identify potential blindspots and mitigation strategies.""",
                 results["memory_agent"] = response.status_code == 200
             except:
                 pass
+            
+            # Check user_store
+            try:
+                response = await client.get(f"{self.user_store_url}/health")
+                results["user_store"] = response.status_code == 200
+            except:
+                pass
         
         return results
 
@@ -493,7 +555,8 @@ Identify potential blindspots and mitigation strategies.""",
 async def save_demo_data_to_stores(
     jira_tickets: List[Dict[str, Any]],
     confluence_docs: List[Dict[str, Any]],
-    github_prs: List[Dict[str, Any]]
+    github_prs: List[Dict[str, Any]],
+    team_members: List[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
     Save all demo data to stores.
@@ -507,6 +570,7 @@ async def save_demo_data_to_stores(
     print(f"   • doc_store: {'✅' if accessible['doc_store'] else '❌'}")
     print(f"   • prompt_store: {'✅' if accessible['prompt_store'] else '❌'}")
     print(f"   • memory_agent: {'✅' if accessible['memory_agent'] else '❌'}")
+    print(f"   • user_store: {'✅' if accessible['user_store'] else '❌'}")
     
     if not accessible["doc_store"]:
         print(f"\n⚠️  doc_store not accessible. Historical data will not be saved.")
@@ -520,6 +584,10 @@ async def save_demo_data_to_stores(
         print(f"\n⚠️  memory_agent not accessible. Workflow contexts will not be saved.")
         print(f"   Start memory_agent: cd services/memory-agent && python main.py")
     
+    if not accessible["user_store"]:
+        print(f"\n⚠️  user_store not accessible. Users will not be saved.")
+        print(f"   Start user_store: cd services/user-store && python main.py")
+    
     # Save data even if some stores are down
     historical_stats = await client.bulk_save_historical_data(
         jira_tickets, confluence_docs, github_prs
@@ -527,11 +595,54 @@ async def save_demo_data_to_stores(
     
     prompt_stats = await client.save_all_workflow_prompts()
     
+    # Save users with document relationships
+    users_stats = {"users_saved": 0, "errors": []}
+    if team_members and accessible["user_store"]:
+        print(f"\n💾 SAVING {len(team_members)} TEAM MEMBERS TO USER-STORE...")
+        print("="*80)
+        
+        # Build document mapping (user name -> document IDs they authored)
+        user_docs = {}
+        for ticket in jira_tickets:
+            assignee = ticket.get("assignee", "")
+            if assignee:
+                if assignee not in user_docs:
+                    user_docs[assignee] = []
+                user_docs[assignee].append(f"jira_{ticket.get('key')}")
+        
+        for doc in confluence_docs:
+            author = doc.get("author", "")
+            if author:
+                if author not in user_docs:
+                    user_docs[author] = []
+                user_docs[author].append(f"confluence_{doc.get('doc_id')}")
+        
+        for pr in github_prs:
+            author = pr.get("author", "")
+            if author:
+                if author not in user_docs:
+                    user_docs[author] = []
+                user_docs[author].append(f"github_pr_{pr.get('pr_number')}")
+        
+        # Save each team member with their document relationships
+        for member in team_members:
+            member_name = member.get("name", "")
+            doc_ids = user_docs.get(member_name, [])
+            result = await client.save_user_to_store(member, doc_ids)
+            if result:
+                users_stats["users_saved"] += 1
+                print(f"   ✅ Saved: {member_name} (linked to {len(doc_ids)} documents)")
+            else:
+                users_stats["errors"].append(f"Failed to save {member_name}")
+        
+        print(f"\n✅ Users Saved: {users_stats['users_saved']}/{len(team_members)}")
+    
     return {
         "store_accessibility": accessible,
         "historical_data": historical_stats,
         "prompts": prompt_stats,
-        "total_saved": client.stats["documents_saved"] + client.stats["prompts_saved"],
+        "users": users_stats,
+        "total_saved": client.stats["documents_saved"] + client.stats["prompts_saved"] + client.stats["users_saved"],
         "errors": client.stats["errors"]
     }
 
