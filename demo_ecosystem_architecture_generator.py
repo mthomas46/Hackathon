@@ -408,9 +408,9 @@ The ecosystem consists of **three main service types**:
 
 **API Endpoints:**
 - `GET /health` - Service health check
-- `POST /{resource}` - Create resource
-- `GET /{resource}` - List resources
-- `GET /{resource}/{{id}}` - Get specific resource
+- `POST /{{resource}}` - Create resource
+- `GET /{{resource}}` - List resources
+- `GET /{{resource}}/{{id}}` - Get specific resource
 
 **Used By:** All workflow services, report generators
 
