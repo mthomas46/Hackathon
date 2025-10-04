@@ -46,9 +46,100 @@
 
 ---
 
-### 🔄 Phase 1: Workflow F Core - User Extraction & Testing
+### ⭐ Phase 0.2: Service Integration Setup (CRITICAL - NEW)
+**Status**: ⏸️ Pending  
+**Priority**: CRITICAL PATH  
+**Effort**: 3-4 hours  
+**Impact**: Foundation for all metadata enhancements  
+**Related Document**: `API_AUDIT_AND_ENHANCEMENT_PLAN.md`
+
+**Background**: API audit revealed two critical ecosystem services that can dramatically enhance user intelligence:
+1. **source-agent** (port 5085): Fetches real documents from GitHub/Jira/Confluence
+2. **mock-data-generator** (port 5065): AI-powered mock data generation with LLM
+
+**Goal**: Create hybrid architecture that supports both real document fetching and AI-powered mock generation.
+
+#### Tasks:
+
+**1. Create Service Client Classes**
+- [ ] Create `SourceAgentClient` class in `demo_hyper_realistic_parameterized.py`
+  - Implement `fetch_document(source, identifier, scope)` method
+  - Add error handling and retries
+  - Support GitHub, Jira, and Confluence sources
+  - Handle authentication via source-agent
+  
+- [ ] Create `MockDataGeneratorClient` class in `demo_hyper_realistic_parameterized.py`
+  - Implement `generate_data(data_type, count, context, parameters)` method
+  - Configure AI generation parameters
+  - Support GitHub PR, Jira ticket, Confluence doc generation
+  - Enable context-aware generation
+
+**2. Build Hybrid Document Manager**
+- [ ] Create `HybridDocumentManager` class
+  - `__init__(use_real_data: bool = False)` - mode selection
+  - `get_documents(context: Dict) -> Dict[str, List]` - unified interface
+  - `_fetch_real_documents()` - source-agent integration
+  - `_generate_ai_mocks()` - mock-data-generator integration
+  - Graceful fallback if services unavailable
+
+**3. Update Demo Script CLI**
+- [ ] Add `--real-data` flag to use source-agent
+- [ ] Add `--github-prs`, `--jira-tickets`, `--confluence-pages` args for real document IDs
+- [ ] Add `--mock-quality` level (basic, high, realistic)
+- [ ] Add `--data-source` option (manual, ai, real)
+- [ ] Update help text and examples
+
+**4. Integration with Workflow F**
+- [ ] Update `execute_workflow_f()` to accept documents from any source
+- [ ] Ensure UserExtraction works with both real and mock data formats
+- [ ] Add logging for data source tracking
+- [ ] Update reports to show data source used
+
+**Deliverables**:
+- `SourceAgentClient` class with full integration
+- `MockDataGeneratorClient` class with AI generation
+- `HybridDocumentManager` for unified document access
+- Enhanced CLI with mode switching
+- Updated demo flow supporting 3 data sources
+
+**Architecture**:
+```
+Demo Script
+    ↓
+HybridDocumentManager
+    ├─→ Manual Mocks (current method)
+    ├─→ Source-Agent → Real APIs (GitHub/Jira/Confluence)
+    └─→ Mock-Data-Generator → LLM Gateway → AI-generated mocks
+```
+
+**Acceptance Criteria**:
+- [ ] Demo can fetch real documents via source-agent
+- [ ] Demo can generate AI mocks via mock-data-generator
+- [ ] CLI supports all 3 modes (manual, ai, real)
+- [ ] Graceful fallback if services unavailable
+- [ ] No breaking changes to existing demo flow
+- [ ] Documentation updated with new CLI options
+
+**Testing**:
+- [ ] Test source-agent integration with mock responses
+- [ ] Test mock-data-generator integration with mock responses
+- [ ] Test mode switching between manual/ai/real
+- [ ] Test fallback when services unavailable
+- [ ] Integration test with live services (optional)
+
+**Benefits Unlocked**:
+- ✅ Real document metadata from live APIs
+- ✅ AI-powered realistic mock generation
+- ✅ Consistent document quality
+- ✅ Production-ready document handling
+- ✅ Foundation for enhanced metadata extraction (Phase 1)
+
+---
+
+### 🔄 Phase 1: Enhanced Metadata Extraction & Testing
 **Status**: 🔄 In Progress  
-**Target**: Unit tests for all user extraction logic
+**Target**: Unit tests + GitHub/Jira/Confluence API field enhancements  
+**Depends On**: Phase 0.2 (Service Integration)
 
 #### Phase 1.1: Test Infrastructure Setup ⏳
 **Status**: In Progress
@@ -104,9 +195,159 @@
 - Collaboration graph correctly identifies co-workers
 - Team member detection works
 
+#### Phase 1.4: GitHub PR API Enhancements ⭐ NEW
+**Status**: Pending  
+**Priority**: HIGH  
+**Effort**: 4-6 hours  
+**Related**: `API_AUDIT_AND_ENHANCEMENT_PLAN.md` Section 1
+
+**Current State**: Using ~30% of available GitHub PR API fields
+
+**Enhancement Tasks**:
+
+**1. Multi-Role User Extraction**
+- [ ] Extract assignees (users responsible for PR)
+- [ ] Extract requested_reviewers (explicitly requested)
+- [ ] Extract actual reviewers from reviews array
+- [ ] Extract merged_by user (merge authority)
+- [ ] Extract commit authors from commits array
+- [ ] Extract comment contributors with engagement metrics
+
+**2. Code Contribution Metrics**
+- [ ] Calculate lines_added, lines_deleted per user
+- [ ] Track files_touched list (file paths)
+- [ ] Count commit_count per user
+- [ ] Calculate approval_rate (PRs approved / reviewed)
+- [ ] Measure avg_pr_size
+- [ ] Infer technologies from file paths
+
+**3. Review Quality Assessment**
+- [ ] Score review quality (detailed vs superficial)
+- [ ] Track review state (APPROVED, CHANGES_REQUESTED, COMMENTED)
+- [ ] Measure review comment depth
+- [ ] Calculate engagement score from reactions
+
+**4. Update UserExtraction Model**
+- [ ] Add code_metrics dict (lines, files, commits, languages)
+- [ ] Add pull_requests_authored, pull_requests_reviewed
+- [ ] Add review_quality_score, approval_rate
+- [ ] Add merge_authority boolean flag
+- [ ] Add frequent_reviewers list
+- [ ] Add technologies list
+
+**Deliverables**:
+- Enhanced `extract_user_from_github_pr()` method
+- New `infer_tech_from_files()` helper
+- Updated `UserExtraction` dataclass with code metrics
+- Unit tests for new extraction logic (28 tests updated)
+
+**Expected Improvements**:
+- User roles per PR: 1 → 5+ (400% increase)
+- Code expertise signals: Limited → Comprehensive
+- Review quality tracking: None → Detailed scoring
+
+#### Phase 1.5: Jira Ticket API Enhancements ⭐ NEW
+**Status**: Pending  
+**Priority**: MEDIUM  
+**Effort**: 3-5 hours  
+**Related**: `API_AUDIT_AND_ENHANCEMENT_PLAN.md` Section 2
+
+**Current State**: Using ~25% of available Jira API fields
+
+**Enhancement Tasks**:
+
+**1. Extended User Role Extraction**
+- [ ] Extract reporter (ticket creator)
+- [ ] Extract watchers (interested parties)
+- [ ] Extract component leads (area owners)
+- [ ] Extract worklog contributors (time tracking)
+- [ ] Extract comment authors
+- [ ] Extract attachment uploaders
+
+**2. Work Pattern Analysis**
+- [ ] Parse worklog entries (timeSpent, work description)
+- [ ] Calculate total time_spent per user
+- [ ] Track story_points handled
+- [ ] Measure resolution speed
+- [ ] Identify complexity handling (high/medium/low based on points)
+
+**3. Domain Expertise Signals**
+- [ ] Extract component ownership from components array
+- [ ] Map components to expertise areas
+- [ ] Track labels for technical skills
+- [ ] Analyze issue types for skill patterns (Bug → debugging, Story → feature dev)
+- [ ] Parse custom fields for team/squad info
+
+**4. Update UserExtraction Model**
+- [ ] Add jira_tickets_created, jira_tickets_resolved
+- [ ] Add components list (expertise areas)
+- [ ] Add time_spent_total
+- [ ] Add complexity_handling level
+- [ ] Add is_component_lead flag
+
+**Deliverables**:
+- Enhanced `extract_user_from_jira_ticket()` method
+- New `infer_skills_from_jira()` helper
+- Updated unit tests for Jira extraction
+- Complexity scoring algorithm
+
+**Expected Improvements**:
+- User roles per ticket: 1 → 4+ (300% increase)
+- Domain expertise detection: Basic → Advanced
+- Work pattern tracking: None → Comprehensive
+
+#### Phase 1.6: Confluence Doc API Enhancements ⭐ NEW
+**Status**: Pending  
+**Priority**: MEDIUM  
+**Effort**: 2-4 hours  
+**Related**: `API_AUDIT_AND_ENHANCEMENT_PLAN.md` Section 3
+
+**Current State**: Using ~20% of available Confluence API fields
+
+**Enhancement Tasks**:
+
+**1. Multi-Contributor Extraction**
+- [ ] Extract original author (createdBy)
+- [ ] Extract all contributors (publishers.users)
+- [ ] Extract last updater (lastUpdated.by)
+- [ ] Extract comment authors
+- [ ] Extract likers (engagement)
+- [ ] Extract watchers (ongoing interest)
+
+**2. Documentation Expertise Scoring**
+- [ ] Count pages_authored vs pages_updated
+- [ ] Track documentation_areas (space keys)
+- [ ] Calculate update_recency
+- [ ] Measure engagement_score (likes + comments + watches)
+- [ ] Detect is_space_admin from permissions
+
+**3. Version History Analysis**
+- [ ] Parse version history for edit patterns
+- [ ] Identify maintainers (frequent editors)
+- [ ] Track edit frequency
+- [ ] Measure documentation quality signals
+
+**4. Update UserExtraction Model**
+- [ ] Add confluence_pages_authored, confluence_pages_updated
+- [ ] Add documentation_areas list
+- [ ] Add engagement_score
+- [ ] Add is_space_admin flag
+- [ ] Add last_documentation_update timestamp
+
+**Deliverables**:
+- Enhanced `extract_user_from_confluence_doc()` method
+- Documentation expertise scoring algorithm
+- Updated unit tests for Confluence extraction
+- Engagement metrics calculation
+
+**Expected Improvements**:
+- User roles per document: 1 → 3+ (200% increase)
+- Documentation expertise tracking: None → Detailed
+- Engagement metrics: None → Comprehensive
+
 ---
 
-### Phase 2: Expert Finder Service - API Testing
+### Phase 2: Expert Finder Service - API Testing & Extensions
 **Status**: Pending  
 **Dependencies**: Phase 1 complete
 
@@ -150,6 +391,95 @@
 - Response times meet performance targets
 - System handles edge cases gracefully
 - Concurrent requests don't cause issues
+
+#### Phase 2.3: New API Endpoints (Enhanced Metadata) ⭐ NEW
+**Status**: Pending  
+**Priority**: HIGH  
+**Effort**: 4-6 hours  
+**Related**: `API_AUDIT_AND_ENHANCEMENT_PLAN.md` Section 5
+**Dependencies**: Phase 1.4, 1.5, 1.6 (API enhancements)
+
+**Background**: Enhanced metadata from GitHub/Jira/Confluence enables 5 new specialized query types.
+
+**New Endpoints to Implement**:
+
+**1. Experience Level Queries**
+```python
+GET /experts/by-experience?level=senior&domain=backend&min_contributions=50
+```
+- [ ] Filter by experience level (junior/mid/senior)
+- [ ] Calculate experience from: code volume, time span, PR count
+- [ ] Domain filtering (backend, frontend, devops, etc.)
+- [ ] Min contributions threshold
+
+**2. Code Review Experts**
+```python
+GET /experts/reviewers?quality=high&technology=Python&min_reviews=20
+```
+- [ ] Filter by review quality score (0.0-1.0)
+- [ ] Technology/language filtering
+- [ ] Min reviews count
+- [ ] Sort by approval rate
+
+**3. Component Ownership**
+```python
+GET /experts/component-leads?component=authentication&min_contributions=10
+```
+- [ ] Query by Jira component
+- [ ] Identify component leads
+- [ ] Filter by contribution count
+- [ ] Include worklog time spent
+
+**4. Merge Authority**
+```python
+GET /experts/merge-authority?repo=backend-api&min_merges=10
+```
+- [ ] Identify users with merge permissions
+- [ ] Filter by repository
+- [ ] Min merges threshold
+- [ ] Include merge history
+
+**5. Activity-Based Filtering**
+```python
+GET /experts/by-activity?recency=last_30_days&activity_frequency=daily
+```
+- [ ] Filter by last activity date
+- [ ] Activity frequency (daily/weekly/monthly)
+- [ ] Active vs historical expert distinction
+- [ ] Include activity timeline
+
+**6. Engagement Quality**
+```python
+GET /experts/by-engagement?min_score=0.8&include_documentation=true
+```
+- [ ] Filter by engagement score (likes, comments, reactions)
+- [ ] Include documentation contributions
+- [ ] Response time metrics
+- [ ] Community involvement signals
+
+**Implementation Tasks**:
+- [ ] Add 5 new endpoint handlers to `expert-finder-service/main.py`
+- [ ] Create request/response models for each endpoint
+- [ ] Implement filtering logic for enhanced metadata
+- [ ] Add Swagger/OpenAPI annotations
+- [ ] Create unit tests for each endpoint
+- [ ] Create integration tests for each endpoint
+- [ ] Update API documentation
+
+**Deliverables**:
+- 5 new REST endpoints in expert-finder-service
+- Enhanced filtering capabilities
+- Updated API documentation with examples
+- Unit tests (30 tests)
+- Integration tests (15 tests)
+
+**Expected Benefits**:
+- ✅ Experience-based expert matching
+- ✅ Code review quality assessment
+- ✅ Component ownership detection
+- ✅ Active vs historical expert distinction
+- ✅ Engagement-based filtering
+- ✅ Total query capabilities: 6 → 11+ endpoints (+80%)
 
 ---
 
