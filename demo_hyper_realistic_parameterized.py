@@ -33,6 +33,7 @@ from demo_data_persistence_client import DemoPersistenceClient, save_demo_data_t
 from intelligent_service_discovery import IntelligentServiceDiscovery, discover_and_store_services
 from demo_sme_report_enhancer import SMEReportEnhancer
 from demo_workflow_f_report_enhancer import WorkflowFReportEnhancer
+from demo_user_team_report_generator import UserTeamReportGenerator
 
 # Additional imports for service integration
 import httpx
@@ -3670,6 +3671,40 @@ Historical Documents (doc_store)
         
         return str(report_file)
     
+    def generate_user_team_report(self) -> str:
+        """Generate Report 5: User & Team Report (NEW - Phase 3)."""
+        print(f"\n📄 GENERATING USER & TEAM REPORT...")
+        print("="*80)
+        
+        try:
+            # Create User & Team Report generator
+            generator = UserTeamReportGenerator(
+                team_members=self.mock_data.get('team_members', []),
+                tech_stack=self.tech_stack,
+                workflow_f_result=self.workflow_f_result if hasattr(self, 'workflow_f_result') else None,
+                feature_summary=self.feature_summary,
+                mock_data=self.mock_data,
+                expert_finder_url="http://localhost:5160"
+            )
+            
+            full_report = generator.generate_complete_report()
+            
+            report_file = self.demo_folder / "reports" / "User_and_Team_Report.md"
+            with open(report_file, 'w') as f:
+                f.write(full_report)
+            
+            print(f"✅ User & Team report saved: {report_file}")
+            print(f"   Length: {len(full_report):,} characters")
+            print(f"   Team Members: {len(self.mock_data.get('team_members', []))}")
+            print(f"   Technologies: {len(self.tech_stack)}")
+            
+            return str(report_file)
+        except Exception as e:
+            print(f"⚠️  Could not generate User & Team Report: {e}")
+            import traceback
+            traceback.print_exc()
+            return ""
+    
     def generate_readme(self):
         """Generate README.md for the demo folder."""
         readme_content = f"""# Hyper-Realistic Demo Output
@@ -4079,11 +4114,12 @@ Simply delete this folder and run the demo script again with your desired parame
         # 🔍 NEW: Fetch live data from datastores for report enrichment
         self.live_datastore_data = await self.fetch_live_datastore_samples()
         
-        # Generate all four reports (now enriched with live data)
+        # Generate all five reports (now enriched with live data + NEW User & Team Report)
         planning_report = self.generate_planning_report(workflow_e_result)
         behind_scenes_report = self.generate_behind_scenes_report(workflow_e_result)
         validation_report = self.generate_ecosystem_validation_report()
         data_architecture_report = self.generate_data_architecture_report()
+        user_team_report = self.generate_user_team_report()  # ⭐ NEW: Phase 3
         
         # Generate README
         readme = self.generate_readme()
@@ -4100,9 +4136,11 @@ Simply delete this folder and run the demo script again with your desired parame
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Planning_Service_Report.md'}")
         print(f"   2. Behind-the-Scenes Report:")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Behind_the_Scenes_Report.md'}")
-        print(f"   3. Ecosystem Validation Report:")
+        print(f"   3. User & Team Report (NEW - Phase 3):")
+        print(f"      {self.demo_folder.absolute() / 'reports' / 'User_and_Team_Report.md'}")
+        print(f"   4. Ecosystem Validation Report:")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Ecosystem_Validation_Report.md'}")
-        print(f"   4. Data Architecture Report:")
+        print(f"   5. Data Architecture Report:")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Data_Architecture_Report.md'}")
         print(f"\n📊 Mock Data:")
         print(f"      {self.demo_folder.absolute() / 'data' / 'mock_data.json'}")
