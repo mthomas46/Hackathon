@@ -1390,17 +1390,18 @@ This demo doesn't just simulate - it **actually persists data** to real ecosyste
 | **doc-store** | Historical Documents | {self.persistence_stats.get('historical_data', {}).get('documents_saved', 0)} | {'✅' if self.persistence_stats.get('historical_data', {}).get('documents_saved', 0) > 0 else '⚠️'} |
 | **prompt-store** | Workflow Prompts | {self.persistence_stats.get('prompts', {}).get('prompts_saved', 0)} | {'✅' if self.persistence_stats.get('prompts', {}).get('prompts_saved', 0) > 0 else '⚠️'} |
 | **external-service-store** | Discovered Services | {self.service_discovery_results.get('stats', {}).get('services_stored', 0)} services | {'✅' if self.service_discovery_results.get('stats', {}).get('services_stored', 0) > 0 else '⚠️'} |
-| **user-store** | Team Members | {self.persistence_stats.get('users', {}).get('users_saved', 0)} users | {'✅' if self.persistence_stats.get('users', {}).get('users_saved', 0) > 0 else '⚠️'} |
+| **user-store** | Team Members | {len(self.persistence_stats.get('users', {}).get('user_id_map', {}))} users ({self.persistence_stats.get('users', {}).get('users_saved', 0)} new) | {'✅' if len(self.persistence_stats.get('users', {}).get('user_id_map', {})) > 0 or self.persistence_stats.get('store_accessibility', {}).get('user_store', False) else '⚠️'} |
 | **memory-agent** | Workflow Contexts | {self.persistence_stats.get('workflow_contexts', {}).get('contexts_saved', 0)} workflows | {'✅' if self.persistence_stats.get('workflow_contexts', {}).get('contexts_saved', 0) > 0 else '⚠️'} |
 
 **Status Legend:**
-- ✅ = Data successfully persisted
-- ⚠️ = No data persisted (service not running, schema error, or other issue)
+- ✅ = Data successfully persisted or available for use
+- ⚠️ = No data available (service not running or errors occurred)
 
-**Note on Zero Counts:**
-- **doc_store, prompt_store:** Services not running (connection refused). Start services to enable persistence.
+**Note on Counts:**
+- **user-store:** Shows total users available for document linking (new users created + existing users found)
+- **doc_store, prompt_store:** Services not running = connection refused. Start services to enable persistence.
 - **memory-agent:** If showing 0 despite being accessible, check for schema validation errors in console output.
-- **external-service-store:** Service not running (404 errors). Start service to enable persistence.
+- **external-service-store:** Service not running = 404 errors. Start service to enable persistence.
 
 **Data Breakdown:**
 - **Total Historical Documents:** {self.num_historical_tickets} (parameter)
@@ -1417,8 +1418,10 @@ This demo doesn't just simulate - it **actually persists data** to real ecosyste
 - ✅ **doc-store:** {self.persistence_stats.get('historical_data', {}).get('documents_saved', 0)}/{len(self.mock_data.get('jira_tickets', [])) + len(self.mock_data.get('confluence_docs', [])) + len(self.mock_data.get('github_prs', []))} documents saved
 - ✅ **prompt-store:** {self.persistence_stats.get('prompts', {}).get('prompts_saved', 0)}/8 prompts saved
 - ✅ **external-service-store:** {self.service_discovery_results.get('stats', {}).get('services_stored', 0)}/{self.service_discovery_results.get('stats', {}).get('services_discovered', 0)} services saved
-- ✅ **user-store:** {self.persistence_stats.get('users', {}).get('users_saved', 0)}/{len(self.mock_data.get('team_members', []))} users saved
+- ✅ **user-store:** {len(self.persistence_stats.get('users', {}).get('user_id_map', {}))} users available ({self.persistence_stats.get('users', {}).get('users_saved', 0)} new + {len(self.persistence_stats.get('users', {}).get('user_id_map', {})) - self.persistence_stats.get('users', {}).get('users_saved', 0)} existing)
 - ✅ **memory-agent:** {self.persistence_stats.get('workflow_contexts', {}).get('contexts_saved', 0)}/5 workflow contexts saved
+
+**Note:** user-store shows TOTAL users available for document linking (new users created in this run + existing users found in database). This enables proper document→user relationships regardless of whether users were just created or already existed.
 
 ### 6.2 Database Schemas (Live Stores)
 
