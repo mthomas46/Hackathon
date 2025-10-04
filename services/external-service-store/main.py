@@ -4,6 +4,14 @@ A lightweight service for managing external service metadata, relationships,
 and technical specifications in the LLM Documentation Ecosystem.
 """
 
+import sys
+import os
+
+# Add project root to path for imports when running as script
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from services.shared.infrastructure.config import load_service_config
 
 import time
