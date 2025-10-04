@@ -34,6 +34,7 @@ from intelligent_service_discovery import IntelligentServiceDiscovery, discover_
 from demo_sme_report_enhancer import SMEReportEnhancer
 from demo_workflow_f_report_enhancer import WorkflowFReportEnhancer
 from demo_user_team_report_generator import UserTeamReportGenerator
+from demo_ecosystem_architecture_generator import EcosystemArchitectureGenerator
 from visual_enhancements import (
     generate_service_architecture_diagram,
     generate_workflow_sequence_diagram,
@@ -4556,6 +4557,40 @@ Historical Documents (doc_store)
             traceback.print_exc()
             return ""
     
+    def generate_ecosystem_architecture_report(self) -> str:
+        """Generate Ecosystem Architecture Report - Technical architecture documentation."""
+        print(f"\n📄 GENERATING ECOSYSTEM ARCHITECTURE REPORT (NEW - OPTION 1.1)...")
+        print("="*80)
+        
+        try:
+            # Create generator with all relevant data
+            generator = EcosystemArchitectureGenerator(
+                metadata=self.metadata,
+                services=self.service_discovery_results.get('services', []),
+                team_size=self.metadata.get('team_size', 0)
+            )
+            
+            # Generate the comprehensive architecture report
+            arch_report = generator.generate_complete_report()
+            
+            # Save to file
+            report_file = self.demo_folder / "reports" / "Ecosystem_Architecture_Report.md"
+            with open(report_file, 'w') as f:
+                f.write(arch_report)
+            
+            print(f"✅ Ecosystem Architecture Report saved: {report_file}")
+            print(f"   Length: {len(arch_report):,} characters")
+            print(f"   Services Documented: {len(self.service_discovery_results.get('services', []))}")
+            print(f"   Workflows Explained: 6 (A-F)")
+            print(f"   Report Sections: 8")
+            
+            return str(report_file)
+        except Exception as e:
+            print(f"⚠️  Could not generate Ecosystem Architecture Report: {e}")
+            import traceback
+            traceback.print_exc()
+            return ""
+    
     def generate_readme(self):
         """Generate README.md for the demo folder."""
         readme_content = f"""# Hyper-Realistic Demo Output
@@ -5041,6 +5076,7 @@ Simply delete this folder and run the demo script again with your desired parame
         data_architecture_report = self.generate_data_architecture_report()
         user_team_report = self.generate_user_team_report()  # ⭐ NEW: Phase 3
         executive_dashboard = self.generate_executive_dashboard()  # ⭐ NEW: Phase 2 - Audit Improvements
+        ecosystem_architecture_report = self.generate_ecosystem_architecture_report()  # ⭐ NEW: Option 1.1 - Major Feature
         
         # Generate README
         readme = self.generate_readme()
@@ -5065,6 +5101,8 @@ Simply delete this folder and run the demo script again with your desired parame
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Ecosystem_Validation_Report.md'}")
         print(f"   6. Data Architecture Report:")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Data_Architecture_Report.md'}")
+        print(f"   7. Ecosystem Architecture Report (NEW - Option 1.1) ⭐ MAJOR FEATURE:")
+        print(f"      {self.demo_folder.absolute() / 'reports' / 'Ecosystem_Architecture_Report.md'}")
         print(f"\n📊 Mock Data:")
         print(f"      {self.demo_folder.absolute() / 'data' / 'mock_data.json'}")
         print(f"\n✨ All files are cross-linked for easy navigation!")
