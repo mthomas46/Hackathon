@@ -1624,3 +1624,550 @@ class TestJiraMetricsAggregation:
         assert "total_tickets" in user.jira_metrics
         assert user.jira_metrics["total_tickets"] == 1
 
+
+# ⭐ NEW: Phase 1.6 Enhancement Tests
+class TestConfluenceDocEnhancedExtraction:
+    """Test Phase 1.6 enhancements: Multi-role extraction, engagement metrics, quality scoring."""
+    
+    def test_extract_author(self):
+        """Test extracting page author."""
+        workflow = UserIntelligenceWorkflow()
+        
+        doc = {
+            "doc_id": "PAGE-123",
+            "title": "API Documentation",
+            "author": "docs.writer",
+            "tags": ["API", "REST"],
+            "space": "DEV",
+            "content": {"text": "API documentation content"}
+        }
+        
+        workflow.extract_user_from_confluence_doc(doc)
+        
+        # Check author was extracted
+        assert "docs.writer" in workflow.user_extractions
+        user = workflow.user_extractions["docs.writer"]
+        assert "confluence_PAGE-123" in user.confluence_pages_authored
+        assert "confluence_PAGE-123" in user.documents_created
+    
+    def test_extract_editors(self):
+        """Test extracting page editors."""
+        workflow = UserIntelligenceWorkflow()
+        
+        doc = {
+            "doc_id": "PAGE-456",
+            "title": "Design Document",
+            "author": "designer.lead",
+            "last_modified_by": "senior.engineer",
+            "contributors": ["junior.dev", "tech.writer"],
+            "tags": ["Design"],
+            "space": "ARCH",
+            "content": {"text": "Design details"}
+        }
+        
+        workflow.extract_user_from_confluence_doc(doc)
+        
+        # Check editors were extracted
+        assert "senior.engineer" in workflow.user_extractions
+        assert "junior.dev" in workflow.user_extractions
+        assert "tech.writer" in workflow.user_extractions
+        
+        senior = workflow.user_extractions["senior.engineer"]
+        assert "confluence_PAGE-456" in senior.confluence_pages_edited
+        assert "confluence_PAGE-456" in senior.documents_updated
+    
+    def test_extract_maintainers(self):
+        """Test extracting page maintainers."""
+        workflow = UserIntelligenceWorkflow()
+        
+        doc = {
+            "doc_id": "PAGE-789",
+            "title": "Runbook: Database Operations",
+            "author": "dba.primary",
+            "maintainers": ["dba.primary", "dba.secondary"],
+            "tags": ["Runbook", "Database"],
+            "space": "OPS",
+            "content": {"text": "Database procedures"}
+        }
+        
+        workflow.extract_user_from_confluence_doc(doc)
+        
+        # Check maintainers were extracted
+        assert "dba.primary" in workflow.user_extractions
+        assert "dba.secondary" in workflow.user_extractions
+        
+        primary = workflow.user_extractions["dba.primary"]
+        assert "confluence_PAGE-789" in primary.confluence_pages_maintained
+    
+    def test_extract_watchers(self):
+        """Test extracting page watchers."""
+        workflow = UserIntelligenceWorkflow()
+        
+        doc = {
+            "doc_id": "PAGE-111",
+            "title": "Service Architecture",
+            "author": "architect.senior",
+            "watchers": ["product.manager", "tech.lead", "cto"],
+            "tags": ["Architecture"],
+            "space": "ENG",
+            "content": {"text": "Architecture overview"}
+        }
+        
+        workflow.extract_user_from_confluence_doc(doc)
+        
+        # Check watchers were extracted
+        assert "product.manager" in workflow.user_extractions
+        assert "tech.lead" in workflow.user_extractions
+        assert "cto" in workflow.user_extractions
+        
+        pm = workflow.user_extractions["product.manager"]
+        assert "confluence_PAGE-111" in pm.confluence_pages_watched
+    
+    def test_extract_commenters(self):
+        """Test extracting page commenters."""
+        workflow = UserIntelligenceWorkflow()
+        
+        doc = {
+            "doc_id": "PAGE-222",
+            "title": "Security Guidelines",
+            "author": "security.lead",
+            "comments": [
+                {"author": "developer.one", "text": "Great guidelines!"},
+                {"user": "developer.two", "text": "Question about encryption"}
+            ],
+            "tags": ["Security"],
+            "space": "SEC",
+            "content": {"text": "Security best practices"}
+        }
+        
+        workflow.extract_user_from_confluence_doc(doc)
+        
+        # Check commenters were extracted
+        assert "developer.one" in workflow.user_extractions
+        assert "developer.two" in workflow.user_extractions
+        
+        dev1 = workflow.user_extractions["developer.one"]
+        assert "confluence_PAGE-222" in dev1.confluence_pages_commented
+        assert "confluence_PAGE-222" in dev1.documents_commented
+    
+    def test_engagement_metrics_collection(self):
+        """Test collecting engagement metrics."""
+        workflow = UserIntelligenceWorkflow()
+        
+        doc = {
+            "doc_id": "PAGE-333",
+            "title": "Popular API Guide",
+            "author": "api.expert",
+            "likes": 25,
+            "watchers": ["user1", "user2", "user3"],
+            "comments": [
+                {"author": "user4", "text": "Helpful!"},
+                {"user": "user5", "text": "Thanks"}
+            ],
+            "views": 500,
+            "tags": ["API", "Tutorial"],
+            "space": "DEV",
+            "content": {"text": "API usage guide with code examples: ```python\napi.call()\n```"}
+        }
+        
+        workflow.extract_user_from_confluence_doc(doc)
+        
+        # Check engagement metrics were captured
+        author = workflow.user_extractions["api.expert"]
+        assert author.confluence_metrics["total_likes_received"] == 25
+        assert author.confluence_metrics["total_watches"] == 3
+        assert author.confluence_metrics["total_comments"] == 2
+        assert author.confluence_metrics["pages_created"] == 1
+        assert author.confluence_metrics["avg_page_views"] == 500.0
+        assert author.confluence_metrics["documentation_quality_score"] > 0
+    
+    def test_space_tracking(self):
+        """Test tracking Confluence spaces."""
+        workflow = UserIntelligenceWorkflow()
+        
+        doc1 = {
+            "doc_id": "PAGE-401",
+            "title": "Doc in DEV space",
+            "author": "multi.contributor",
+            "space": "DEV",
+            "tags": [],
+            "content": {"text": "Content"}
+        }
+        
+        doc2 = {
+            "doc_id": "PAGE-402",
+            "title": "Doc in OPS space",
+            "author": "multi.contributor",
+            "space": "OPS",
+            "tags": [],
+            "content": {"text": "Content"}
+        }
+        
+        workflow.extract_user_from_confluence_doc(doc1)
+        workflow.extract_user_from_confluence_doc(doc2)
+        
+        # Check spaces were tracked
+        user = workflow.user_extractions["multi.contributor"]
+        assert "DEV" in user.confluence_spaces
+        assert "OPS" in user.confluence_spaces
+        assert len(user.confluence_spaces) == 2
+    
+    def test_space_admin_detection(self):
+        """Test detecting space administrators."""
+        workflow = UserIntelligenceWorkflow()
+        
+        doc = {
+            "doc_id": "PAGE-444",
+            "title": "Space Overview",
+            "author": "space.owner",
+            "space_admins": ["space.owner", "co.admin"],
+            "tags": [],
+            "space": "PROJ",
+            "content": {"text": "Overview"}
+        }
+        
+        workflow.extract_user_from_confluence_doc(doc)
+        
+        # Check space admin flag
+        owner = workflow.user_extractions["space.owner"]
+        assert owner.is_space_admin == True
+    
+    def test_multiple_pages_aggregate_metrics(self):
+        """Test that Confluence metrics aggregate correctly across multiple pages."""
+        workflow = UserIntelligenceWorkflow()
+        
+        doc1 = {
+            "doc_id": "PAGE-501",
+            "title": "Guide 1",
+            "author": "prolific.writer",
+            "likes": 10,
+            "watchers": ["user1"],
+            "comments": [{"author": "user2", "text": "Good"}],
+            "views": 200,
+            "tags": ["Guide"],
+            "space": "DOC",
+            "content": {"text": "A" * 1000}  # 1000 chars
+        }
+        
+        doc2 = {
+            "doc_id": "PAGE-502",
+            "title": "Guide 2",
+            "author": "prolific.writer",
+            "likes": 20,
+            "watchers": ["user3", "user4"],
+            "comments": [{"author": "user5", "text": "Excellent"}],
+            "views": 400,
+            "tags": ["Guide"],
+            "space": "DOC",
+            "content": {"text": "B" * 3000}  # 3000 chars
+        }
+        
+        workflow.extract_user_from_confluence_doc(doc1)
+        workflow.extract_user_from_confluence_doc(doc2)
+        
+        # Check aggregated metrics
+        user = workflow.user_extractions["prolific.writer"]
+        assert user.confluence_metrics["pages_created"] == 2
+        assert user.confluence_metrics["total_likes_received"] == 30  # 10 + 20
+        assert user.confluence_metrics["total_watches"] == 3  # 1 + 2
+        assert user.confluence_metrics["total_comments"] == 2  # 1 + 1
+        assert user.confluence_metrics["avg_page_views"] == 300.0  # (200 + 400) / 2
+        assert user.confluence_metrics["total_pages"] == 2
+    
+    def test_all_roles_in_single_page(self):
+        """Test extracting all possible roles from a comprehensive Confluence page."""
+        workflow = UserIntelligenceWorkflow()
+        
+        doc = {
+            "doc_id": "PAGE-MEGA",
+            "title": "Complete API Documentation",
+            "author": "api.lead",
+            "last_modified_by": "tech.writer",
+            "contributors": ["backend.dev", "frontend.dev"],
+            "maintainers": ["api.lead", "tech.lead"],
+            "watchers": ["product.manager", "cto"],
+            "comments": [
+                {"author": "reviewer.one", "text": "Comprehensive!"},
+                {"user": "reviewer.two", "text": "Very helpful"}
+            ],
+            "likes": 50,
+            "views": 1000,
+            "space": "API",
+            "space_admins": ["api.lead"],
+            "tags": ["API", "REST", "Documentation"],
+            "content": {"text": "@docs.writer please update the examples section. " + "x" * 3000}
+        }
+        
+        workflow.extract_user_from_confluence_doc(doc)
+        
+        # Verify all role types were extracted
+        # 1. Author
+        assert "api.lead" in workflow.user_extractions
+        assert "confluence_PAGE-MEGA" in workflow.user_extractions["api.lead"].confluence_pages_authored
+        
+        # 2. Editors
+        assert "tech.writer" in workflow.user_extractions
+        assert "backend.dev" in workflow.user_extractions
+        assert "frontend.dev" in workflow.user_extractions
+        assert "confluence_PAGE-MEGA" in workflow.user_extractions["tech.writer"].confluence_pages_edited
+        
+        # 3. Maintainers
+        assert "tech.lead" in workflow.user_extractions
+        assert "confluence_PAGE-MEGA" in workflow.user_extractions["api.lead"].confluence_pages_maintained
+        
+        # 4. Watchers
+        assert "product.manager" in workflow.user_extractions
+        assert "cto" in workflow.user_extractions
+        assert "confluence_PAGE-MEGA" in workflow.user_extractions["product.manager"].confluence_pages_watched
+        
+        # 5. Commenters
+        assert "reviewer.one" in workflow.user_extractions
+        assert "reviewer.two" in workflow.user_extractions
+        assert "confluence_PAGE-MEGA" in workflow.user_extractions["reviewer.one"].confluence_pages_commented
+        
+        # 6. Mentioned users
+        assert "docs.writer" in workflow.user_extractions
+        assert "confluence_PAGE-MEGA" in workflow.user_extractions["docs.writer"].confluence_pages_commented
+        
+        # Total: Should have extracted 10 unique users (api.lead is both author and maintainer)
+        assert len(workflow.user_extractions) == 10
+        
+        # Verify space admin was detected
+        assert workflow.user_extractions["api.lead"].is_space_admin == True
+
+
+class TestPageTypeInference:
+    """Test page type inference algorithm."""
+    
+    def test_infer_api_documentation(self):
+        """Test inferring API Documentation type."""
+        workflow = UserIntelligenceWorkflow()
+        assert workflow._infer_page_type("REST API Endpoints", [], {}) == "API Documentation"
+        assert workflow._infer_page_type("GraphQL Schema", [], {}) == "API Documentation"
+        assert workflow._infer_page_type("Service Documentation", ["api", "rest"], {}) == "API Documentation"
+    
+    def test_infer_how_to_guide(self):
+        """Test inferring How-To Guide type."""
+        workflow = UserIntelligenceWorkflow()
+        assert workflow._infer_page_type("How to Deploy", [], {}) == "How-To Guide"
+        assert workflow._infer_page_type("Tutorial: Database Migration", [], {}) == "How-To Guide"
+        assert workflow._infer_page_type("Configuration Walkthrough", ["tutorial"], {}) == "How-To Guide"
+    
+    def test_infer_design_document(self):
+        """Test inferring Design Document type."""
+        workflow = UserIntelligenceWorkflow()
+        assert workflow._infer_page_type("Architecture Design", [], {}) == "Design Document"
+        assert workflow._infer_page_type("RFC-001: Service Split", [], {}) == "Design Document"
+        assert workflow._infer_page_type("System Overview", ["architecture"], {}) == "Design Document"
+    
+    def test_infer_runbook(self):
+        """Test inferring Runbook type."""
+        workflow = UserIntelligenceWorkflow()
+        assert workflow._infer_page_type("Runbook: Production Issues", [], {}) == "Runbook"
+        assert workflow._infer_page_type("Troubleshooting Guide", [], {}) == "Runbook"
+        assert workflow._infer_page_type("Operations Manual", ["runbook"], {}) == "Runbook"
+    
+    def test_infer_meeting_notes(self):
+        """Test inferring Meeting Notes type."""
+        workflow = UserIntelligenceWorkflow()
+        assert workflow._infer_page_type("Team Meeting - Jan 2024", [], {}) == "Meeting Notes"
+        assert workflow._infer_page_type("Sprint Planning Notes", [], {}) == "Meeting Notes"
+    
+    def test_infer_requirements(self):
+        """Test inferring Requirements type."""
+        workflow = UserIntelligenceWorkflow()
+        assert workflow._infer_page_type("Product Requirements", [], {}) == "Requirements"
+        assert workflow._infer_page_type("Feature Specification", [], {}) == "Requirements"
+    
+    def test_infer_onboarding(self):
+        """Test inferring Onboarding type."""
+        workflow = UserIntelligenceWorkflow()
+        assert workflow._infer_page_type("Onboarding Checklist", [], {}) == "Onboarding"
+        assert workflow._infer_page_type("Getting Started Guide", [], {}) == "Onboarding"
+    
+    def test_explicit_page_type(self):
+        """Test using explicit page_type field."""
+        workflow = UserIntelligenceWorkflow()
+        result = workflow._infer_page_type("Random Title", [], {"page_type": "Custom Type"})
+        assert result == "Custom Type"
+    
+    def test_default_documentation(self):
+        """Test default to Documentation when no match."""
+        workflow = UserIntelligenceWorkflow()
+        assert workflow._infer_page_type("Random Page Title", [], {}) == "Documentation"
+
+
+class TestDocumentationQualityScoring:
+    """Test documentation quality scoring algorithm."""
+    
+    def test_high_quality_page(self):
+        """Test scoring for high-quality page with all indicators."""
+        workflow = UserIntelligenceWorkflow()
+        score = workflow._calculate_documentation_quality(
+            likes=50,
+            watches=20,
+            comments_count=15,
+            page_views=1000,
+            content_length=6000,  # Long, comprehensive
+            has_code_blocks=True,
+            has_images=True
+        )
+        # Should score very high (close to 1.0)
+        assert score > 0.8
+        assert score <= 1.0
+    
+    def test_medium_quality_page(self):
+        """Test scoring for medium-quality page."""
+        workflow = UserIntelligenceWorkflow()
+        score = workflow._calculate_documentation_quality(
+            likes=5,
+            watches=2,
+            comments_count=1,
+            page_views=100,
+            content_length=1500,  # Medium length
+            has_code_blocks=False,
+            has_images=True
+        )
+        # Should score medium-high
+        assert 0.3 <= score <= 0.8
+    
+    def test_low_quality_page(self):
+        """Test scoring for low-quality page."""
+        workflow = UserIntelligenceWorkflow()
+        score = workflow._calculate_documentation_quality(
+            likes=0,
+            watches=0,
+            comments_count=0,
+            page_views=10,
+            content_length=200,  # Short
+            has_code_blocks=False,
+            has_images=False
+        )
+        # Should score low
+        assert score < 0.3
+        assert score >= 0.0
+    
+    def test_page_with_no_views(self):
+        """Test scoring for page with no views but other engagement."""
+        workflow = UserIntelligenceWorkflow()
+        score = workflow._calculate_documentation_quality(
+            likes=5,
+            watches=3,
+            comments_count=2,
+            page_views=0,  # No views yet
+            content_length=3000,
+            has_code_blocks=True,
+            has_images=True
+        )
+        # Should still get points for content quality and some engagement
+        assert score > 0.4
+    
+    def test_comprehensive_page_no_engagement(self):
+        """Test scoring for comprehensive page with no engagement yet."""
+        workflow = UserIntelligenceWorkflow()
+        score = workflow._calculate_documentation_quality(
+            likes=0,
+            watches=0,
+            comments_count=0,
+            page_views=0,
+            content_length=5000,  # Long
+            has_code_blocks=True,
+            has_images=True
+        )
+        # Should get 0.5 (full content quality points, no engagement)
+        assert score == 0.5
+    
+    def test_score_capped_at_one(self):
+        """Test that score never exceeds 1.0."""
+        workflow = UserIntelligenceWorkflow()
+        score = workflow._calculate_documentation_quality(
+            likes=1000,
+            watches=500,
+            comments_count=200,
+            page_views=10000,
+            content_length=20000,
+            has_code_blocks=True,
+            has_images=True
+        )
+        assert score <= 1.0
+        assert score >= 0.0
+
+
+class TestConfluenceMetricsAggregation:
+    """Test Confluence metrics aggregation across multiple pages."""
+    
+    def test_pages_created_vs_edited(self):
+        """Test tracking pages created vs edited."""
+        workflow = UserIntelligenceWorkflow()
+        user = UserExtraction(username="test.user")
+        
+        # Create 2 pages
+        workflow._update_confluence_metrics(user, is_created=True)
+        workflow._update_confluence_metrics(user, is_created=True)
+        
+        # Edit 1 page
+        workflow._update_confluence_metrics(user, is_created=False)
+        
+        assert user.confluence_metrics["pages_created"] == 2
+        assert user.confluence_metrics["pages_edited"] == 1
+        assert user.confluence_metrics["total_pages"] == 3
+    
+    def test_engagement_metrics_aggregation(self):
+        """Test aggregation of engagement metrics."""
+        workflow = UserIntelligenceWorkflow()
+        user = UserExtraction(username="test.user")
+        
+        workflow._update_confluence_metrics(user, likes_received=10, watches=5, comments_count=2, is_created=True)
+        workflow._update_confluence_metrics(user, likes_received=20, watches=8, comments_count=3, is_created=True)
+        
+        assert user.confluence_metrics["total_likes_received"] == 30
+        assert user.confluence_metrics["total_watches"] == 13
+        assert user.confluence_metrics["total_comments"] == 5
+    
+    def test_avg_page_views_calculation(self):
+        """Test average page views calculation."""
+        workflow = UserIntelligenceWorkflow()
+        user = UserExtraction(username="test.user")
+        
+        workflow._update_confluence_metrics(user, page_views=100, is_created=True)
+        workflow._update_confluence_metrics(user, page_views=200, is_created=True)
+        workflow._update_confluence_metrics(user, page_views=300, is_created=True)
+        
+        # Average: (100 + 200 + 300) / 3 = 200
+        assert user.confluence_metrics["avg_page_views"] == 200.0
+        assert user.confluence_metrics["total_pages"] == 3
+    
+    def test_avg_quality_score_calculation(self):
+        """Test average documentation quality score calculation."""
+        workflow = UserIntelligenceWorkflow()
+        user = UserExtraction(username="test.user")
+        
+        workflow._update_confluence_metrics(user, quality_score=0.8, is_created=True)
+        workflow._update_confluence_metrics(user, quality_score=0.6, is_created=True)
+        workflow._update_confluence_metrics(user, quality_score=1.0, is_created=True)
+        
+        # Average: (0.8 + 0.6 + 1.0) / 3 = 0.8 (use approx for float precision)
+        assert abs(user.confluence_metrics["documentation_quality_score"] - 0.8) < 0.01
+        assert user.confluence_metrics["total_pages"] == 3
+    
+    def test_metrics_initialization(self):
+        """Test that metrics are properly initialized on first update."""
+        workflow = UserIntelligenceWorkflow()
+        user = UserExtraction(username="test.user")
+        
+        # User should have no confluence_metrics initially
+        assert user.confluence_metrics == {}
+        
+        workflow._update_confluence_metrics(user, likes_received=10, is_created=True)
+        
+        # After first update, all fields should exist
+        assert "pages_created" in user.confluence_metrics
+        assert "pages_edited" in user.confluence_metrics
+        assert "total_likes_received" in user.confluence_metrics
+        assert "total_watches" in user.confluence_metrics
+        assert "total_comments" in user.confluence_metrics
+        assert "avg_page_views" in user.confluence_metrics
+        assert "documentation_quality_score" in user.confluence_metrics
+        assert "total_pages" in user.confluence_metrics
+        assert user.confluence_metrics["total_pages"] == 1
+

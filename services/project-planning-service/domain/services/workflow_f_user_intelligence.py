@@ -1322,21 +1322,21 @@ class UserIntelligenceWorkflow:
         if explicit_type and explicit_type != "page":
             return explicit_type.title()
         
-        # Infer from title
+        # Infer from title (check specific multi-word phrases first!)
         if any(keyword in title_lower for keyword in ["api", "endpoint", "rest", "graphql"]):
             return "API Documentation"
-        elif any(keyword in title_lower for keyword in ["how to", "tutorial", "guide", "walkthrough"]):
-            return "How-To Guide"
-        elif any(keyword in title_lower for keyword in ["design", "architecture", "rfc", "adr"]):
-            return "Design Document"
+        elif any(keyword in title_lower for keyword in ["getting started", "onboarding", "setup"]):
+            return "Onboarding"
         elif any(keyword in title_lower for keyword in ["runbook", "playbook", "troubleshooting", "sop"]):
             return "Runbook"
-        elif any(keyword in title_lower for keyword in ["meeting", "minutes", "notes", "agenda"]):
-            return "Meeting Notes"
+        elif any(keyword in title_lower for keyword in ["design", "architecture", "rfc", "adr"]):
+            return "Design Document"
         elif any(keyword in title_lower for keyword in ["requirements", "spec", "specification"]):
             return "Requirements"
-        elif any(keyword in title_lower for keyword in ["onboarding", "getting started", "setup"]):
-            return "Onboarding"
+        elif any(keyword in title_lower for keyword in ["meeting", "minutes", "notes", "agenda"]):
+            return "Meeting Notes"
+        elif any(keyword in title_lower for keyword in ["how to", "tutorial", "guide", "walkthrough"]):
+            return "How-To Guide"
         
         # Infer from tags
         if any(tag in tags_lower for tag in ["api", "rest", "graphql"]):
