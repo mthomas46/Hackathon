@@ -97,6 +97,10 @@ echo "="*80
 # Set PYTHONPATH to include project root for imports
 export PYTHONPATH=/Users/mykalthomas/Documents/work/Hackathon:$PYTHONPATH
 
+# Ensure data directories exist for services
+mkdir -p services/user-store/data
+echo "  ✅ Created service data directories"
+
 # Start doc_store
 echo "  [1/7] Starting doc_store on port 5087..."
 python3 services/doc_store/main.py > /tmp/doc_store_clean.log 2>&1 &
@@ -292,6 +296,7 @@ async def test_all():
             response = await client.post(
                 'http://localhost:5150/users',
                 json={
+                    'username': 'testuser',
                     'name': 'Test User',
                     'email': 'test@example.com',
                     'role': 'developer'

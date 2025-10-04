@@ -7,8 +7,8 @@ processing pipeline to automatically extract and create relationships.
 
 from typing import Dict, List, Optional
 
-from ...domain.services.user_service import UserService
-from ..dto.user_dto import UserResponse
+from domain.services.user_service import UserService
+from application.dto.user_dto import UserResponse
 
 
 class ProcessDocumentRelationshipsUseCase:

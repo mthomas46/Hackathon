@@ -8,12 +8,12 @@ import sqlite3
 import json
 from typing import Dict, List, Optional
 
-from ...domain.entities.document_relationship import (
+from domain.entities.document_relationship import (
     DocumentRelationship,
     RelationshipType,
     AccessLevel
 )
-from ...domain.repositories.document_relationship_repository import DocumentRelationshipRepository
+from domain.repositories.document_relationship_repository import DocumentRelationshipRepository
 
 
 class SQLiteDocumentRelationshipRepository(DocumentRelationshipRepository):
