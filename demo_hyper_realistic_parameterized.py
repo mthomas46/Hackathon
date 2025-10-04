@@ -1888,6 +1888,9 @@ class ParameterizedHyperRealisticDemo:
         # Insert header, report content, Section 10 (NEW), and footer
         full_report = header + report + section_10 + footer
         
+        # ⭐ NEW: Add cross-report references for cohesion
+        full_report += self._generate_cross_report_references("Planning Service")
+        
         report_file = self.demo_folder / "reports" / "Planning_Service_Report.md"
         with open(report_file, 'w') as f:
             f.write(full_report)
@@ -2564,6 +2567,9 @@ This demo created the following files:
         
         full_report = "\n".join(sections)
         
+        # ⭐ NEW: Add cross-report references for cohesion
+        full_report += self._generate_cross_report_references("Behind-the-Scenes")
+        
         report_file = self.demo_folder / "reports" / "Behind_the_Scenes_Report.md"
         with open(report_file, 'w') as f:
             f.write(full_report)
@@ -3047,6 +3053,9 @@ curl http://localhost:5160/experts/sme/authentication?max_results=3
 """)
         
         full_report = "\n".join(sections)
+        
+        # ⭐ NEW: Add cross-report references for cohesion
+        full_report += self._generate_cross_report_references("Ecosystem Validation")
         
         report_file = self.demo_folder / "reports" / "Ecosystem_Validation_Report.md"
         with open(report_file, 'w') as f:
@@ -4221,6 +4230,9 @@ Historical Documents (doc_store)
         
         full_report = "\n".join(sections)
         
+        # ⭐ NEW: Add cross-report references for cohesion
+        full_report += self._generate_cross_report_references("Data Architecture")
+        
         report_file = self.demo_folder / "reports" / "Data_Architecture_Report.md"
         with open(report_file, 'w') as f:
             f.write(full_report)
@@ -4249,6 +4261,9 @@ Historical Documents (doc_store)
             )
             
             full_report = generator.generate_complete_report()
+            
+            # ⭐ NEW: Add cross-report references for cohesion
+            full_report += self._generate_cross_report_references("User & Team")
             
             report_file = self.demo_folder / "reports" / "User_and_Team_Report.md"
             with open(report_file, 'w') as f:
