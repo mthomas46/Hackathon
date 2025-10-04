@@ -166,12 +166,12 @@ except ImportError as e:
     try:
         print(f"🔍 [STARTUP] Attempting absolute import of router...")
         send_startup_log("INFO", "Attempting absolute import", {
-            "import_path": "presentation.api.routes",
+            "import_path": "services.doc_store.presentation.api.routes",
             "phase": "import_attempt_fallback"
         })
         
-        from presentation.api.routes import router as api_router
-        from infrastructure.resource_monitor import DocStoreResourceMonitor
+        from services.doc_store.presentation.api.routes import router as api_router
+        from services.doc_store.infrastructure.resource_monitor import DocStoreResourceMonitor
         
         route_count = len(api_router.routes)
         print(f"✅ SUCCESS: Loaded router with {route_count} routes (absolute import)")
@@ -184,7 +184,7 @@ except ImportError as e:
         print(f"❌ FAILED: Both imports failed. Using empty router. Error: {e2}")
         send_startup_log("CRITICAL", f"Both imports FAILED: {str(e2)}", {
             "import_type": "absolute",
-            "import_path": "presentation.api.routes",
+            "import_path": "services.doc_store.presentation.api.routes",
             "error": str(e2),
             "fatal": True,
             "phase": "import_failure_fatal"

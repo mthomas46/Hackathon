@@ -167,12 +167,12 @@ except ImportError:
             """
             return {"success": True, "data": data}
 
-        def handle_memory_agent_error(error):
+        def handle_memory_agent_error(operation, error, **kwargs):
             """Handle mock memory agent error for testing.
 
             Returns standardized error response when shared utilities are unavailable.
             """
-            return {"success": False, "error": str(error)}
+            return {"success": False, "error": f"{operation}: {str(error)}"}
 
         def validate_memory_item(**kwargs):
             """Validate mock memory item for testing.
