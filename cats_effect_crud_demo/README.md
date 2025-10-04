@@ -49,7 +49,7 @@ This approach means stakeholders can see **real results** from the ecosystem wit
 
 **What You're Seeing:**
 - Input: *"Cats Effect API expansion for CRUD user endpoints with MongoDB and Elm"*
-- Output: 7 comprehensive reports totaling 200+ pages of analysis
+- Output: 6 comprehensive reports totaling 200+ pages of analysis
 - Time: < 60 seconds
 - Accuracy: 90%+ confidence with validated service dependencies
 
@@ -136,7 +136,7 @@ Validates plans against:
          └───────────┬───────────┘
                      │
          ┌───────────▼───────────┐
-         │  7 Comprehensive      │
+         │  6 Comprehensive      │
          │  Reports Generated    │
          └───────────────────────┘
 ```
@@ -190,11 +190,6 @@ Each report serves a specific audience and purpose:
 **Purpose:** Understand data layer design and relationships  
 **Key Insight:** How 5 datastores work together to maintain system intelligence
 
-### **7. Ecosystem Architecture Report**
-**Audience:** Solution Architects, CTOs, System Designers  
-**Purpose:** Macro view of how services orchestrate together  
-**Key Insight:** Theory behind AI-powered microservices and orchestration patterns
-
 ---
 
 ## 📁 Quick Start Guide
@@ -203,7 +198,7 @@ Each report serves a specific audience and purpose:
 1. Read [**Executive Dashboard**](./reports/Executive_Dashboard.md) (3 min)
 2. Review [**Planning Service Report**](./reports/Planning_Service_Report.md) sections 1-9 (10 min)
 3. Check [**User & Team Report**](./reports/User_and_Team_Report.md) for staffing (5 min)
-4. See [**DEMO_PROMPT.md**](./reports/DEMO_PROMPT.md) to reproduce this demo (2 min)
+4. See [**Original Prompt**](./reports/ORIGINAL_PROMPT.md) to reproduce this demo (2 min)
 
 ### **For Technical Teams (45 min):**
 1. Review [**Planning Service Report**](./reports/Planning_Service_Report.md) sections 11-15 (technical validation)
@@ -225,14 +220,13 @@ cats_effect_crud_demo/
 ├── data/
 │   └── mock_data.json                          (30 documents, 6 team members)
 └── reports/
-    ├── DEMO_PROMPT.md                          (⭐ How to reproduce)
+    ├── ORIGINAL_PROMPT.md                      (⭐ How to reproduce)
     ├── Executive_Dashboard.md                  (⭐ C-Suite summary)
     ├── Planning_Service_Report.md              (⭐ Complete 15-section roadmap)
     ├── Behind_the_Scenes_Report.md             (Technical deep-dive)
     ├── User_and_Team_Report.md                 (Team expertise analysis)
     ├── Ecosystem_Validation_Report.md          (Proof of live execution)
-    ├── Data_Architecture_Report.md             (Database design)
-    └── Ecosystem_Architecture_Report.md        (System design)
+    └── Data_Architecture_Report.md             (Database design)
 ```
 
 ---
@@ -275,7 +269,7 @@ This demo was run with the following parameters:
 ### Performance
 - **Total Execution Time:** < 60 seconds
 - **Workflows Executed:** 6 (A, B, C, D, E, F) running in parallel
-- **Reports Generated:** 7 comprehensive documents (200+ pages total)
+- **Reports Generated:** 6 comprehensive documents (200+ pages total)
 
 ---
 
@@ -362,7 +356,7 @@ python demo_hyper_realistic_parameterized.py \
 
 Want to generate this exact output again or try different parameters?
 
-See **[DEMO_PROMPT.md](./reports/DEMO_PROMPT.md)** for:
+See **[Original Prompt & CLI Command](./reports/ORIGINAL_PROMPT.md)** for:
 - The original prompt used
 - Exact CLI command to reproduce
 - Examples of parameter variations
@@ -411,7 +405,7 @@ See **[DEMO_PROMPT.md](./reports/DEMO_PROMPT.md)** for:
 - Verify Python version is 3.8 or higher
 
 ### Want to Regenerate?
-Simply delete this folder and run the demo script again with your desired parameters, or use the exact command from [DEMO_PROMPT.md](./reports/DEMO_PROMPT.md).
+Simply delete this folder and run the demo script again with your desired parameters, or use the exact command from [Original Prompt](./reports/ORIGINAL_PROMPT.md).
 
 ### Need Help?
 - Check the [Behind-the-Scenes Report](./reports/Behind_the_Scenes_Report.md) for detailed execution information
@@ -423,10 +417,10 @@ Simply delete this folder and run the demo script again with your desired parame
 
 ## 📞 Next Steps
 
-1. **Explore the Reports:** Start with Executive Dashboard
-2. **Review the Code:** Check Ecosystem Validation Report for file paths
-3. **Run Your Own Demo:** Use DEMO_PROMPT.md for reproduction
-4. **Customize Parameters:** Try different team sizes, tech stacks, or document counts
+1. **Explore the Reports:** Start with [Executive Dashboard](./reports/Executive_Dashboard.md)
+2. **Review the Code:** Check [Ecosystem Validation Report](./reports/Ecosystem_Validation_Report.md) for file paths
+3. **Run Your Own Demo:** Use [Original Prompt](./reports/ORIGINAL_PROMPT.md) for reproduction
+4. **Customize Parameters:** Try different team sizes, tech stacks, or document counts (see CLI examples above)
 5. **Integrate with Real Data:** Connect source-agent for actual GitHub/Jira/Confluence
 
 ---
@@ -444,7 +438,7 @@ Simply delete this folder and run the demo script again with your desired parame
 
 **System:** AI-Powered LLM Documentation Ecosystem  
 **Workflows:** 6 parallel AI workflows (A, B, C, D, E, F)  
-**Reports:** 7 comprehensive outputs  
+**Reports:** 6 comprehensive outputs  
 **Status:** Production-ready and fully validated  
 **Demo Version:** Phase 9 - Hyper-Realistic Parameterized Demo v2.0  
 **Generated:** 2025-10-04 09:32:29 UTC
