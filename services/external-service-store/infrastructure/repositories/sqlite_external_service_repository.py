@@ -9,12 +9,12 @@ import json
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
-from ...domain.entities.external_service import (
+from domain.entities.external_service import (
     ExternalService, ServiceEndpoint, ServiceDependency,
     ServiceDocument, ServiceUser, ServiceTopic,
     ServiceStatus, ServiceType
 )
-from ...domain.repositories.external_service_repository import (
+from domain.repositories.external_service_repository import (
     ExternalServiceRepository, ServiceEndpointRepository,
     ServiceDependencyRepository, ServiceDocumentRepository,
     ServiceUserRepository, ServiceTopicRepository
