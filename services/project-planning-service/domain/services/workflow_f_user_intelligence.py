@@ -71,6 +71,29 @@ class UserExtraction:
     merge_authority: bool = False  # Has merge permissions
     frequent_reviewers: List[str] = field(default_factory=list)  # Users they frequently review with
     technologies: List[str] = field(default_factory=list)  # Inferred from file paths
+    
+    # ⭐ NEW (Phase 1.5): Jira Ticket Metrics
+    jira_metrics: Dict[str, Any] = field(default_factory=dict)
+    # {
+    #   "time_spent_minutes": int,
+    #   "story_points_handled": float,
+    #   "tickets_resolved": int,
+    #   "avg_resolution_time_hours": float,
+    #   "complexity_levels": {"low": int, "medium": int, "high": int}
+    # }
+    
+    # ⭐ NEW (Phase 1.5): Jira Role Tracking
+    jira_tickets_reported: List[str] = field(default_factory=list)  # Tickets created
+    jira_tickets_assigned: List[str] = field(default_factory=list)  # Tickets assigned to
+    jira_tickets_watched: List[str] = field(default_factory=list)  # Tickets watching
+    jira_tickets_worked: List[str] = field(default_factory=list)  # Tickets with worklog entries
+    jira_tickets_commented: List[str] = field(default_factory=list)  # Tickets commented on
+    
+    # ⭐ NEW (Phase 1.5): Domain Expertise from Jira
+    components: List[str] = field(default_factory=list)  # Jira components (expertise areas)
+    is_component_lead: bool = False  # Component lead/owner
+    issue_types_handled: List[str] = field(default_factory=list)  # Bug, Story, Task, Epic, etc.
+    labels: List[str] = field(default_factory=list)  # Jira labels (technical skills)
 
 
 @dataclass
@@ -264,29 +287,138 @@ class UserIntelligenceWorkflow:
             )
     
     def extract_user_from_jira_ticket(self, ticket: Dict[str, Any]) -> None:
-        """Extract user information from a Jira ticket."""
-        # Assignee
-        assignee = ticket.get("assignee", "")
-        if assignee:
-            self._add_or_update_user(
-                username=assignee,
-                document_id=f"jira_{ticket.get('key')}",
-                relationship="created",
-                topics=ticket.get("tech_stack", []),
-                skills=[ticket.get("summary", "")[:50]],  # Use summary as skill indicator
-                document_title=ticket.get("summary", "")
+        """
+        Extract comprehensive user information from a Jira ticket.
+        
+        ⭐ Phase 1.5 Enhancements:
+        - Extract 4+ user roles (reporter, assignee, watchers, worklog contributors, commenters)
+        - Parse work patterns (time spent, story points, resolution time)
+        - Extract domain expertise signals (components, labels, issue types)
+        - Calculate complexity handling levels
+        """
+        ticket_key = ticket.get('key', ticket.get('id', 'unknown'))
+        ticket_id = f"jira_{ticket_key}"
+        topics = ticket.get("tech_stack", [])
+        summary = ticket.get("summary", "")
+        
+        # 1. REPORTER (ticket creator)
+        reporter = ticket.get("reporter", ticket.get("creator", ""))
+        if reporter:
+            self._add_or_update_user_jira(
+                username=reporter,
+                ticket_id=ticket_id,
+                role="reported",
+                ticket_data=ticket,
+                topics=topics,
+                summary=summary
             )
         
-        # Extract mentions from description
+        # 2. ASSIGNEE (user responsible for the ticket)
+        assignee = ticket.get("assignee", "")
+        if assignee:
+            self._add_or_update_user_jira(
+                username=assignee,
+                ticket_id=ticket_id,
+                role="assigned",
+                ticket_data=ticket,
+                topics=topics,
+                summary=summary
+            )
+        
+        # 3. WATCHERS (users interested in/monitoring the ticket)
+        watchers = ticket.get("watchers", [])
+        if isinstance(watchers, str):
+            watchers = [watchers]
+        for watcher in watchers:
+            if watcher:
+                self._add_or_update_user_jira(
+                    username=watcher,
+                    ticket_id=ticket_id,
+                    role="watched",
+                    ticket_data=ticket,
+                    topics=topics,
+                    summary=summary
+                )
+        
+        # 4. WORKLOG CONTRIBUTORS (users who logged work time)
+        worklog = ticket.get("worklog", [])
+        if isinstance(worklog, list):
+            for entry in worklog:
+                worker = entry.get("author", entry.get("user", ""))
+                if worker:
+                    time_spent = entry.get("timeSpent", entry.get("time_spent", ""))
+                    self._add_or_update_user_jira(
+                        username=worker,
+                        ticket_id=ticket_id,
+                        role="worked",
+                        ticket_data=ticket,
+                        topics=topics,
+                        summary=summary,
+                        time_spent=time_spent
+                    )
+        
+        # 5. COMMENTERS (users who commented on the ticket)
+        comments = ticket.get("comments", [])
+        comment_authors = []
+        if isinstance(comments, list):
+            for comment in comments:
+                commenter = comment.get("author", comment.get("user", ""))
+                if commenter and commenter not in comment_authors:
+                    comment_authors.append(commenter)
+                    self._add_or_update_user_jira(
+                        username=commenter,
+                        ticket_id=ticket_id,
+                        role="commented",
+                        ticket_data=ticket,
+                        topics=topics,
+                        summary=summary
+                    )
+        
+        # Extract mentions from description as additional commenters
         description = ticket.get("description", "")
-        mentions = self._extract_mentions(description)
-        for mentioned_user in mentions:
-            self._add_or_update_user(
-                username=mentioned_user,
-                document_id=f"jira_{ticket.get('key')}",
-                relationship="commented",
-                topics=ticket.get("tech_stack", []),
-                document_title=ticket.get("summary", "")
+        mentioned_users = self._extract_mentions(description)
+        for mentioned_user in mentioned_users:
+            if mentioned_user not in comment_authors:
+                self._add_or_update_user_jira(
+                    username=mentioned_user,
+                    ticket_id=ticket_id,
+                    role="commented",
+                    ticket_data=ticket,
+                    topics=topics,
+                    summary=summary
+                )
+        
+        # 6. CALCULATE WORK METRICS (for assignee and worklog contributors)
+        # Parse story points
+        story_points = ticket.get("story_points", ticket.get("storyPoints", 0))
+        if isinstance(story_points, str):
+            try:
+                story_points = float(story_points)
+            except (ValueError, TypeError):
+                story_points = 0
+        
+        # Calculate resolution time if resolved
+        created_at = ticket.get("created", ticket.get("createdAt", ""))
+        resolved_at = ticket.get("resolved", ticket.get("resolutionDate", ""))
+        resolution_time_hours = 0
+        if created_at and resolved_at:
+            # Simple hour difference (in real implementation, would parse dates)
+            resolution_time_hours = 24  # Placeholder
+        
+        # Update metrics for assignee
+        if assignee and assignee in self.user_extractions:
+            user = self.user_extractions[assignee]
+            
+            # Determine complexity level from story points or priority
+            priority = ticket.get("priority", "medium").lower()
+            complexity = self._determine_complexity(story_points, priority)
+            
+            self._update_jira_metrics(
+                user,
+                story_points=story_points,
+                resolution_time_hours=resolution_time_hours,
+                is_resolved=bool(resolved_at),
+                complexity=complexity
             )
     
     def extract_user_from_confluence_doc(self, doc: Dict[str, Any]) -> None:
@@ -694,6 +826,225 @@ class UserIntelligenceWorkflow:
         if total_prs > 0:
             total_lines = user.code_metrics["lines_added"] + user.code_metrics["lines_deleted"]
             user.code_metrics["avg_pr_size"] = total_lines / total_prs
+    
+    # ⭐ NEW (Phase 1.5): Jira-specific user extraction and metrics
+    
+    def _add_or_update_user_jira(
+        self,
+        username: str,
+        ticket_id: str,
+        role: str,  # "reported", "assigned", "watched", "worked", "commented"
+        ticket_data: Dict[str, Any],
+        topics: List[str],
+        summary: str,
+        time_spent: str = ""
+    ) -> None:
+        """
+        Add or update user extraction data specifically for Jira tickets.
+        
+        Tracks Jira-specific roles, metrics, and domain expertise.
+        """
+        # Create user if not exists
+        if username not in self.user_extractions:
+            self.user_extractions[username] = UserExtraction(
+                username=username,
+                display_name=self._format_display_name(username)
+            )
+        
+        user = self.user_extractions[username]
+        
+        # Track role-specific ticket relationships
+        if role == "reported":
+            if ticket_id not in user.jira_tickets_reported:
+                user.jira_tickets_reported.append(ticket_id)
+            if ticket_id not in user.documents_created:
+                user.documents_created.append(ticket_id)
+        
+        elif role == "assigned":
+            if ticket_id not in user.jira_tickets_assigned:
+                user.jira_tickets_assigned.append(ticket_id)
+        
+        elif role == "watched":
+            if ticket_id not in user.jira_tickets_watched:
+                user.jira_tickets_watched.append(ticket_id)
+        
+        elif role == "worked":
+            if ticket_id not in user.jira_tickets_worked:
+                user.jira_tickets_worked.append(ticket_id)
+            
+            # Parse time spent and update metrics
+            if time_spent:
+                minutes = self._parse_time_spent(time_spent)
+                if not user.jira_metrics:
+                    user.jira_metrics = {"time_spent_minutes": 0}
+                user.jira_metrics["time_spent_minutes"] = user.jira_metrics.get("time_spent_minutes", 0) + minutes
+        
+        elif role == "commented":
+            if ticket_id not in user.jira_tickets_commented:
+                user.jira_tickets_commented.append(ticket_id)
+            if ticket_id not in user.documents_commented:
+                user.documents_commented.append(ticket_id)
+        
+        # Extract domain expertise signals
+        # Components (expertise areas)
+        components = ticket_data.get("components", [])
+        if isinstance(components, str):
+            components = [components]
+        for component in components:
+            if component and component not in user.components:
+                user.components.append(component)
+        
+        # Labels (technical skills)
+        labels = ticket_data.get("labels", [])
+        if isinstance(labels, str):
+            labels = [labels]
+        for label in labels:
+            if label and label not in user.labels:
+                user.labels.append(label)
+        
+        # Issue type (skill patterns)
+        issue_type = ticket_data.get("issue_type", ticket_data.get("type", ""))
+        if issue_type and issue_type not in user.issue_types_handled:
+            user.issue_types_handled.append(issue_type)
+        
+        # Add topics
+        if topics:
+            for topic in topics:
+                if topic and topic not in user.topics:
+                    user.topics.append(topic)
+        
+        # Extract skills from summary
+        if summary and role in ["reported", "assigned"]:
+            # First 50 chars of summary as skill indicator
+            skill = summary[:50]
+            if skill and skill not in user.skills:
+                user.skills.append(skill)
+        
+        # Increment interaction count
+        user.total_interactions += 1
+    
+    def _parse_time_spent(self, time_spent_str: str) -> int:
+        """
+        Parse Jira time spent string to minutes.
+        
+        Formats: "2h 30m", "1d 4h", "30m", "2h", "1d", etc.
+        
+        Returns: Total minutes
+        """
+        if not time_spent_str:
+            return 0
+        
+        minutes = 0
+        time_spent_lower = time_spent_str.lower().strip()
+        
+        # Parse days
+        if 'd' in time_spent_lower:
+            try:
+                days_part = time_spent_lower.split('d')[0].strip()
+                days = float(days_part)
+                minutes += int(days * 8 * 60)  # Assuming 8-hour workday
+                time_spent_lower = time_spent_lower.split('d')[1].strip()
+            except (ValueError, IndexError):
+                pass
+        
+        # Parse hours
+        if 'h' in time_spent_lower:
+            try:
+                hours_part = time_spent_lower.split('h')[0].strip()
+                hours = float(hours_part)
+                minutes += int(hours * 60)
+                time_spent_lower = time_spent_lower.split('h')[1].strip()
+            except (ValueError, IndexError):
+                pass
+        
+        # Parse minutes
+        if 'm' in time_spent_lower:
+            try:
+                mins_part = time_spent_lower.split('m')[0].strip()
+                mins = float(mins_part)
+                minutes += int(mins)
+            except (ValueError, IndexError):
+                pass
+        
+        return minutes
+    
+    def _determine_complexity(self, story_points: float, priority: str) -> str:
+        """
+        Determine complexity level from story points and priority.
+        
+        Returns: "low", "medium", or "high"
+        """
+        # Priority-based complexity
+        if priority in ["critical", "highest", "blocker"]:
+            return "high"
+        elif priority in ["high"]:
+            return "medium" if story_points < 5 else "high"
+        elif priority in ["low", "lowest", "trivial"]:
+            return "low"
+        
+        # Story points-based complexity
+        if story_points >= 8:
+            return "high"
+        elif story_points >= 3:
+            return "medium"
+        elif story_points > 0:
+            return "low"
+        
+        # Default to medium
+        return "medium"
+    
+    def _update_jira_metrics(
+        self,
+        user: UserExtraction,
+        story_points: float = 0,
+        resolution_time_hours: float = 0,
+        is_resolved: bool = False,
+        complexity: str = "medium"
+    ) -> None:
+        """
+        Update Jira work metrics for a user.
+        
+        Aggregates metrics across multiple tickets.
+        """
+        if not user.jira_metrics:
+            user.jira_metrics = {
+                "time_spent_minutes": 0,
+                "story_points_handled": 0.0,
+                "tickets_resolved": 0,
+                "avg_resolution_time_hours": 0.0,
+                "complexity_levels": {"low": 0, "medium": 0, "high": 0},
+                "total_tickets": 0
+            }
+        
+        # Aggregate metrics
+        user.jira_metrics["story_points_handled"] = (
+            user.jira_metrics.get("story_points_handled", 0.0) + story_points
+        )
+        
+        if is_resolved:
+            user.jira_metrics["tickets_resolved"] = (
+                user.jira_metrics.get("tickets_resolved", 0) + 1
+            )
+            
+            # Update avg resolution time
+            current_avg = user.jira_metrics.get("avg_resolution_time_hours", 0.0)
+            total_resolved = user.jira_metrics["tickets_resolved"]
+            if total_resolved == 1:
+                user.jira_metrics["avg_resolution_time_hours"] = resolution_time_hours
+            else:
+                user.jira_metrics["avg_resolution_time_hours"] = (
+                    (current_avg * (total_resolved - 1) + resolution_time_hours) / total_resolved
+                )
+        
+        # Track complexity levels
+        if "complexity_levels" not in user.jira_metrics:
+            user.jira_metrics["complexity_levels"] = {"low": 0, "medium": 0, "high": 0}
+        
+        user.jira_metrics["complexity_levels"][complexity] = (
+            user.jira_metrics["complexity_levels"].get(complexity, 0) + 1
+        )
+        
+        user.jira_metrics["total_tickets"] = user.jira_metrics.get("total_tickets", 0) + 1
     
     def synthesize_subject_matter_experts(
         self,
