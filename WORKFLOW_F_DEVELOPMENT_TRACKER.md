@@ -549,25 +549,29 @@ GET /experts/by-engagement?min_score=0.8&include_documentation=true
 **Dependencies**: Phase 3 complete
 
 #### Phase 4.1: Integrate Expert Finder into Planning Service
-**Status**: Pending
+**Status**: ✅ Complete  
+**Commit**: `5648ba37`  
+**Files**: 2 new + 1 enhanced (~1100 lines)
 
-- [ ] Add expert-finder client to planning service
-- [ ] Query experts for required tech stack
-- [ ] Identify SMEs for each component
-- [ ] Find potential reviewers for PRs
-- [ ] Suggest team augmentation based on gaps
-- [ ] Add expert context to development plan
+- [x] Add expert-finder client to planning service (~500 lines)
+- [x] Query experts for required tech stack (batch helper method)
+- [x] Identify SMEs for each component (batch helper method)
+- [x] Find potential reviewers for PRs (code review expert discovery)
+- [x] Suggest team augmentation based on gaps (skill gap analysis)
+- [x] Add expert context to development plan (ExpertContext dataclass)
 
 **Deliverables**:
-- `services/project-planning-service/infrastructure/expert_finder_client.py`
-- Updated workflow execution to include expert queries
-- Enhanced development plan with expert recommendations
+- ✅ `services/project-planning-service/infrastructure/expert_finder_client.py` (14 methods)
+- ✅ `services/project-planning-service/domain/services/expert_augmented_orchestrator.py` (new)
+- ✅ Enhanced `planning.py` with POST /roadmap/expert-augmented endpoint (+122 lines)
+- ✅ ExpertContext & ExpertAugmentedRoadmap data models
 
 **Acceptance Criteria**:
-- Planning service successfully queries expert-finder
-- Experts identified for each technology
-- SME recommendations included in plan
-- Team gaps identified and flagged
+- ✅ Planning service successfully queries expert-finder (async client)
+- ✅ Experts identified for each technology (batch query support)
+- ✅ SME recommendations included in plan (component SME discovery)
+- ✅ Team gaps identified and flagged (skill gap analysis)
+- ✅ Fallback support if expert-finder unavailable
 
 #### Phase 4.2: Integration Tests - Planning Workflow
 **Status**: Pending
