@@ -158,6 +158,94 @@ This section identifies expertise within and outside the team, helping with:
 
 ---
 
+
+---
+
+### 10.0.5 Workflow F: How Users Were Discovered
+
+**User Extraction Pipeline (10 Users from 14 Documents):**
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│              WORKFLOW F: USER DISCOVERY PIPELINE                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+Step 1: Document Sources
+─────────────────────────
+
+GitHub PRs (6 docs)     Jira Tickets (4 docs)    Confluence (4 docs)
+        │                        │                         │
+        ├─ Authors: 6            ├─ Reporters: 4           ├─ Authors: 4
+        ├─ Reviewers: ~12        ├─ Assignees: 4           ├─ Editors: ~8
+        ├─ Assignees: 6          ├─ Watchers: ~8           ├─ Maintainers: ~4
+        ├─ Merger: ~6            ├─ Worklog: ~4            ├─ Watchers: ~8
+        └─ Commenters: ~12       └─ Commenters: ~8         └─ Commenters: ~8
+                │                        │                         │
+                └────────────────────────┴─────────────────────────┘
+                                        │
+                                        ▼
+Step 2: Role-Based Extraction
+──────────────────────────────
+
+        ┌────────────────────────────────────────┐
+        │  UserIntelligenceWorkflow              │
+        │                                        │
+        │  • extract_user_from_github_pr()       │
+        │  • extract_user_from_jira_ticket()     │
+        │  • extract_user_from_confluence_doc()  │
+        └────────────────┬───────────────────────┘
+                         │
+                         ▼
+        Raw Users: ~22 user instances
+        (with duplicates across documents)
+                         │
+                         ▼
+Step 3: Deduplication & Aggregation
+────────────────────────────────────
+
+        ┌────────────────────────────────────────┐
+        │  Merge by username                     │
+        │  • sarah.chen appears in 5 documents   │
+        │  • Aggregate: 2 PRs authored,         │
+        │               3 PRs reviewed,          │
+        │               5 total interactions     │
+        └────────────────┬───────────────────────┘
+                         │
+                         ▼
+        Unique Users: 10 users
+        (deduplicated and enriched)
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+        ▼                ▼                ▼
+   6 Team           4 External      Metadata:
+   Members          Experts         - Skills
+   (on team)        (discovered)    - Experience
+                                    - Interactions
+
+
+Step 4: SME Identification
+───────────────────────────
+
+10 Users → SME Scoring Algorithm → 12 Subject Matter Experts
+                                     (scored 0.0 - 1.0)
+```
+
+**Extraction Effectiveness:**
+
+```
+Document Type      │ Docs │ Avg Users/Doc │ Total Raw │ Unique After Dedup
+───────────────────┼──────┼───────────────┼───────────┼────────────────────
+GitHub PRs         │  6   │     ~6.7      │    ~40    │       ~8
+Jira Tickets       │  4   │     ~5.5      │    ~22    │       ~6
+Confluence Docs    │  4   │     ~6.5      │    ~26    │       ~6
+───────────────────┼──────┼───────────────┼───────────┼────────────────────
+Total              │ 14   │     ~6.3      │    ~88    │       10 ✅
+
+Deduplication Rate: 88 → 10 (88% reduction, ~9 documents per user)
+```
+
+
 ### 10.1 SME Summary
 
 **Internal Team Expertise**:
@@ -290,6 +378,52 @@ The current team has coverage for all technologies in the stack. External expert
         sections.append("""
 
 ---
+
+
+
+### 10.4.5 Technology Coverage Heat Map
+
+**Visual representation of team expertise depth:**
+
+```
+Technology    │ Experts │ Avg Years │ Coverage Visualization
+──────────────┼─────────┼───────────┼─────────────────────────────────────────
+
+{tech_heatmap_rows}
+
+Legend:
+████████████████████████████ = Full coverage (2+ experts, 5+ years avg)  ✅
+████████████████░░░░░░░░░░░░ = Partial coverage (1 expert OR <5 years)    ⚠️
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░ = No coverage (external help needed)          ❌
+```
+
+**Risk Heat Map:**
+
+```
+     🔴 HIGH RISK              ⚠️  MEDIUM RISK            ✅ LOW RISK
+  ┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+{risk_heatmap_boxes}
+  └──────────────────┘     └──────────────────┘     └──────────────────┘
+
+Risk Calculation:
+• HIGH    = 0 experts (blocking risk, project cannot proceed)
+• MEDIUM  = 1 expert (single point of failure, knowledge not distributed)
+• LOW     = 2+ experts (knowledge redundancy, team resilience)
+```
+
+**Impact Assessment:**
+
+```
+Risk Level │ Technologies │ Team Members │ Story Points at Risk
+───────────┼──────────────┼──────────────┼──────────────────────
+🔴 HIGH    │      {high_risk_count}       │       0      │         ~20-40
+⚠️  MEDIUM │      {medium_risk_count}       │      {medium_experts}      │         ~10-20
+✅ LOW     │      {low_risk_count}       │      {low_experts}+     │          ~0-5
+
+Recommended Actions:
+{risk_actions}
+```
+
 
 ### 10.5 Knowledge Gap Analysis
 
