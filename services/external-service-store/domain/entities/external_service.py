@@ -311,3 +311,45 @@ class ExternalService:
         """Get top topics by relevance score."""
         sorted_topics = sorted(self.topics, key=lambda t: t.relevance_score, reverse=True)
         return sorted_topics[:limit]
+    
+    @classmethod
+    def generate_id(cls) -> str:
+        """Generate a unique identifier for new entities."""
+        from uuid import uuid4
+        return str(uuid4())
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation with JSON serialization for complex fields."""
+        import json
+        return {
+            "id": self.id,
+            "name": self.name,
+            "display_name": self.display_name,
+            "description": self.description,
+            "summary": self.summary,
+            "service_type": self.service_type.value if isinstance(self.service_type, ServiceType) else str(self.service_type),
+            "status": self.status.value if isinstance(self.status, ServiceStatus) else str(self.status),
+            "version": self.version,
+            "latest_release": self.latest_release,
+            "release_date": self.release_date.isoformat() if isinstance(self.release_date, datetime) else self.release_date,
+            "technologies": json.dumps(self.technologies) if isinstance(self.technologies, list) else self.technologies,
+            "run_requirements": json.dumps(self.run_requirements) if isinstance(self.run_requirements, dict) else self.run_requirements,
+            "base_url": self.base_url,
+            "port": self.port,
+            "health_endpoint": self.health_endpoint,
+            "endpoints": json.dumps([e.__dict__ if hasattr(e, '__dict__') else e for e in self.endpoints]) if self.endpoints else "[]",
+            "dependencies": json.dumps([d.__dict__ if hasattr(d, '__dict__') else d for d in self.dependencies]) if self.dependencies else "[]",
+            "documents": json.dumps([doc.__dict__ if hasattr(doc, '__dict__') else doc for doc in self.documents]) if self.documents else "[]",
+            "users": json.dumps([u.__dict__ if hasattr(u, '__dict__') else u for u in self.users]) if self.users else "[]",
+            "topics": json.dumps([t.__dict__ if hasattr(t, '__dict__') else t for t in self.topics]) if self.topics else "[]",
+            "last_confluence_document": self.last_confluence_document,
+            "last_jira_ticket": self.last_jira_ticket,
+            "last_github_pr": self.last_github_pr,
+            "data_contracts": json.dumps(self.data_contracts) if isinstance(self.data_contracts, dict) else self.data_contracts,
+            "owner": self.owner,
+            "maintainers": json.dumps(self.maintainers) if isinstance(self.maintainers, list) else self.maintainers,
+            "tags": json.dumps(self.tags) if isinstance(self.tags, list) else self.tags,
+            "metadata": json.dumps(self.metadata) if isinstance(self.metadata, dict) else self.metadata,
+            "created_at": self.created_at.isoformat() if isinstance(self.created_at, datetime) else self.created_at,
+            "updated_at": self.updated_at.isoformat() if isinstance(self.updated_at, datetime) else self.updated_at,
+        }

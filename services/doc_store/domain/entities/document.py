@@ -66,6 +66,21 @@ class Document:
         from uuid import uuid4
         return str(uuid4())
     
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Document":
+        """Create document from dictionary representation."""
+        return cls(
+            id=data.get("id", ""),
+            content=data.get("content", ""),
+            content_hash=data.get("content_hash", ""),
+            metadata=data.get("metadata", {}) if isinstance(data.get("metadata"), dict) else {},
+            tags=data.get("tags", []) if isinstance(data.get("tags"), list) else [],
+            correlation_id=data.get("correlation_id"),
+            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else data.get("created_at", datetime.now(timezone.utc)),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) and data.get("updated_at") else None,
+            version=data.get("version", 1),
+        )
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
         import json
