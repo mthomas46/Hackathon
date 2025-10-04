@@ -604,6 +604,7 @@ class ParameterizedHyperRealisticDemo:
         self.persistence_stats = {}
         self.service_discovery_results = {}
         self.workflow_f_result = None  # User intelligence workflow results
+        self.service_health_status = {}  # ⭐ NEW: Track actual service health during demo
         
         print(f"\n✅ Demo initialized with parameters:")
         print(f"   Feature: {feature_summary[:60]}...")
@@ -2438,7 +2439,8 @@ This demo created the following files:
                 workflow_f_enhancer = WorkflowFReportEnhancer(
                     workflow_f_result=self.workflow_f_result,
                     mock_data=self.mock_data,
-                    expert_finder_url="http://localhost:5160"
+                    expert_finder_url="http://localhost:5160",
+                    service_health_status=self.service_health_status  # ⭐ NEW: Pass actual service state
                 )
                 section_11 = workflow_f_enhancer.generate_workflow_f_section()
                 sections.append(section_11)
@@ -4508,11 +4510,50 @@ Simply delete this folder and run the demo script again with your desired parame
         
         return saved_count
     
+    async def check_service_health(self) -> Dict[str, bool]:
+        """
+        Check the health of all critical services.
+        Returns a dictionary with service names and their health status.
+        This provides transparency about which services are actually operational during the demo.
+        """
+        services = {
+            "user-store": "http://localhost:5150/health",
+            "doc-store": "http://localhost:5087/health",
+            "prompt-store": "http://localhost:5110/health",
+            "external-service-store": "http://localhost:5140/health",
+            "memory-agent": "http://localhost:5090/health",
+            "expert-finder": "http://localhost:5160/health",
+            "log-collector": "http://localhost:8104/health",
+        }
+        
+        health_status = {}
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            for service_name, health_url in services.items():
+                try:
+                    response = await client.get(health_url)
+                    health_status[service_name] = response.status_code == 200
+                except Exception as e:
+                    health_status[service_name] = False
+        
+        # Store for use in reports
+        self.service_health_status = health_status
+        
+        # Print status for visibility
+        print(f"\n🏥 Service Health Check:")
+        for service, is_healthy in health_status.items():
+            status = "✅ Running" if is_healthy else "❌ Offline"
+            print(f"   • {service}: {status}")
+        
+        return health_status
+    
     async def run_demo(self):
         """Execute complete parameterized demo."""
         print("\n" + "="*100)
         print(" "*20 + "🚀 PARAMETERIZED HYPER-REALISTIC DEMO 🚀")
         print("="*100)
+        
+        # ⭐ NEW: Check service health for transparency
+        await self.check_service_health()
         
         # Generate unique team_id for this demo run
         from datetime import datetime
