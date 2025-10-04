@@ -1,0 +1,608 @@
+"""
+Expert Finder Service
+
+An ecosystem-level microservice for intelligent user discovery.
+Tightly coupled with user-store data but architecturally independent.
+
+This service:
+- Queries user-store for user data and relationships
+- Queries doc-store for document authorship
+- Queries external-service-store for service expertise
+- Uses smart relevance scoring for expert matching
+- Supports natural language queries
+- Can integrate with LLM-gateway for advanced understanding
+"""
+
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+import httpx
+import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Service metadata
+SERVICE_NAME = "expert-finder-service"
+SERVICE_VERSION = "1.0.0"
+SERVICE_PORT = int(os.getenv("SERVICE_PORT", "5160"))
+
+app = FastAPI(
+    title="Expert Finder Service",
+    description="Intelligent user discovery using smart relevance scoring",
+    version=SERVICE_VERSION
+)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ============================================================================
+# SERVICE CONFIGURATION
+# ============================================================================
+
+USER_STORE_URL = os.getenv("USER_STORE_URL", "http://localhost:5150")
+DOC_STORE_URL = os.getenv("DOC_STORE_URL", "http://localhost:5087")
+EXTERNAL_SERVICE_STORE_URL = os.getenv("EXTERNAL_SERVICE_STORE_URL", "http://localhost:5140")
+LLM_GATEWAY_URL = os.getenv("LLM_GATEWAY_URL", "http://localhost:8100")
+
+
+# ============================================================================
+# MODELS
+# ============================================================================
+
+class ExpertQuery(BaseModel):
+    """Query for finding experts."""
+    query: str = Field(..., description="Natural language query (e.g., 'Who knows Python backend?')")
+    max_results: int = Field(5, ge=1, le=20, description="Maximum number of results")
+    team_id: Optional[str] = Field(None, description="Filter by team ID")
+    exclude_team: bool = Field(False, description="Exclude team members if team_id provided")
+    min_score: float = Field(0.1, ge=0.0, le=1.0, description="Minimum relevance score threshold")
+
+
+class ExpertResult(BaseModel):
+    """A single expert result."""
+    user_id: str
+    display_name: str
+    username: str
+    relevance_score: float  # 0.0 to 1.0
+    explanation: str
+    evidence: List[str]  # Supporting evidence
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ExpertFinderResponse(BaseModel):
+    """Response from expert finder."""
+    query: str
+    experts: List[ExpertResult]
+    total_candidates: int
+    execution_time_ms: float
+
+
+# ============================================================================
+# CORE LOGIC - USER DATA FETCHING
+# ============================================================================
+
+async def fetch_all_users() -> List[Dict[str, Any]]:
+    """Fetch all users from user-store."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"{USER_STORE_URL}/users")
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.warning(f"Failed to fetch users: {response.status_code}")
+    except Exception as e:
+        logger.error(f"Error fetching users: {e}")
+    return []
+
+
+async def fetch_users_by_team(team_id: str) -> List[Dict[str, Any]]:
+    """Fetch users belonging to a specific team."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"{USER_STORE_URL}/teams/{team_id}/users")
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.warning(f"Failed to fetch team users: {response.status_code}")
+    except Exception as e:
+        logger.error(f"Error fetching team users: {e}")
+    return []
+
+
+# ============================================================================
+# CORE LOGIC - KEYWORD EXTRACTION
+# ============================================================================
+
+def extract_keywords(query: str) -> Dict[str, List[str]]:
+    """Extract keywords from query using pattern matching."""
+    query_lower = query.lower()
+    
+    # Technology keywords
+    tech_keywords = [
+        "python", "java", "javascript", "typescript", "go", "rust", "c++", "c#", "ruby", "php",
+        "react", "vue", "angular", "svelte", "node", "django", "flask", "spring", "express", "fastapi",
+        "kubernetes", "docker", "aws", "gcp", "azure", "terraform", "ansible",
+        "postgresql", "mongodb", "redis", "mysql", "cassandra", "elasticsearch",
+        "ios", "android", "swift", "kotlin", "react native", "flutter",
+        "graphql", "rest", "grpc", "kafka", "rabbitmq", "microservices"
+    ]
+    
+    # Role/domain keywords
+    role_keywords = [
+        "backend", "frontend", "fullstack", "full stack", "full-stack",
+        "devops", "sre", "mobile", "ios", "android", "architect", "engineer", 
+        "developer", "senior", "junior", "lead", "principal", "staff",
+        "analyst", "manager", "admin"
+    ]
+    
+    # Skill/action keywords
+    skill_keywords = [
+        "expert", "experienced", "specialist", "knows", "familiar",
+        "worked on", "created", "built", "designed", "implemented",
+        "maintains", "lead", "contributed"
+    ]
+    
+    found_tech = [k for k in tech_keywords if k in query_lower]
+    found_roles = [k for k in role_keywords if k in query_lower]
+    found_skills = [k for k in skill_keywords if k in query_lower]
+    
+    return {
+        "technologies": found_tech,
+        "roles": found_roles,
+        "skills": found_skills
+    }
+
+
+# ============================================================================
+# CORE LOGIC - RELEVANCE SCORING
+# ============================================================================
+
+def score_user_relevance(
+    user: Dict[str, Any],
+    keywords: Dict[str, List[str]],
+    query: str
+) -> tuple[float, List[str]]:
+    """
+    Score how relevant a user is to the query.
+    Returns (score, evidence_list).
+    """
+    score = 0.0
+    evidence = []
+    
+    # 1. Role matching (30% weight)
+    user_role = user.get("role", "").lower()
+    for role_keyword in keywords.get("roles", []):
+        if role_keyword in user_role or role_keyword in user.get("display_name", "").lower():
+            score += 0.3
+            evidence.append(f"Role: {user_role}")
+            break
+    
+    # 2. Topic/Interest matching (40% weight - strongest signal)
+    topics = user.get("topic_interests", [])
+    for tech in keywords.get("technologies", []):
+        matching_topics = [t for t in topics if tech.lower() in t.lower()]
+        if matching_topics:
+            score += 0.2  # 0.2 per tech (up to 0.4 for 2+ techs)
+            evidence.append(f"Topic expertise: {', '.join(matching_topics[:3])}")
+    
+    # 3. Service subscriptions (20% weight)
+    services = user.get("service_subscriptions", [])
+    for tech in keywords.get("technologies", []):
+        matching_services = [s for s in services if tech.lower() in s.lower()]
+        if matching_services:
+            score += 0.1
+            evidence.append(f"Service: {', '.join(matching_services[:2])}")
+    
+    # 4. Document relationships (10% weight - shows actual work)
+    doc_count = len(user.get("document_relationships", []))
+    if doc_count > 0:
+        doc_score = min(doc_count * 0.02, 0.1)  # Cap at 0.1
+        score += doc_score
+        evidence.append(f"{doc_count} related documents")
+    
+    # 5. User tags (bonus)
+    user_tags = user.get("user_tags", [])
+    if user_tags:
+        for tech in keywords.get("technologies", []):
+            if any(tech.lower() in tag.lower() for tag in user_tags):
+                score += 0.1
+                evidence.append(f"Tagged: {tech}")
+                break
+    
+    # 6. Name/username relevance (bonus)
+    query_words = set(query.lower().split())
+    display_name = user.get("display_name", "").lower()
+    username = user.get("username", "").lower()
+    
+    name_words = set(display_name.split())
+    username_words = set(username.split('_') + username.split('.'))
+    
+    if query_words & (name_words | username_words):
+        score += 0.05
+        evidence.append("Name match")
+    
+    return min(score, 1.0), evidence
+
+
+# ============================================================================
+# CORE LOGIC - EXPERT FINDING
+# ============================================================================
+
+async def find_experts_logic(
+    query: str,
+    max_results: int = 5,
+    min_score: float = 0.1,
+    team_id: Optional[str] = None,
+    exclude_team: bool = False
+) -> ExpertFinderResponse:
+    """
+    Core logic for finding experts.
+    """
+    start_time = datetime.utcnow()
+    
+    # Fetch users
+    all_users = await fetch_all_users()
+    
+    if not all_users:
+        return ExpertFinderResponse(
+            query=query,
+            experts=[],
+            total_candidates=0,
+            execution_time_ms=0.0
+        )
+    
+    # Filter by team if specified
+    if team_id:
+        if exclude_team:
+            # Exclude team members (find external experts)
+            all_users = [u for u in all_users if u.get("team_id") != team_id]
+        else:
+            # Only team members
+            all_users = [u for u in all_users if u.get("team_id") == team_id]
+    
+    # Extract keywords from query
+    keywords = extract_keywords(query)
+    
+    # Score all users
+    scored_users = []
+    for user in all_users:
+        score, evidence = score_user_relevance(user, keywords, query)
+        
+        if score >= min_score:
+            scored_users.append({
+                "user": user,
+                "score": score,
+                "evidence": evidence
+            })
+    
+    # Sort by score (highest first)
+    scored_users.sort(key=lambda x: x["score"], reverse=True)
+    
+    # Convert to ExpertResult objects
+    experts = []
+    for item in scored_users[:max_results]:
+        user = item["user"]
+        experts.append(ExpertResult(
+            user_id=user.get("id", ""),
+            display_name=user.get("display_name", "Unknown"),
+            username=user.get("username", ""),
+            relevance_score=item["score"],
+            explanation=f"Matched on: {', '.join(item['evidence'][:3])}",
+            evidence=item["evidence"],
+            metadata={
+                "role": user.get("role"),
+                "topics": user.get("topic_interests", [])[:3],
+                "services": user.get("service_subscriptions", [])[:3],
+                "document_count": len(user.get("document_relationships", [])),
+                "team_id": user.get("team_id")
+            }
+        ))
+    
+    execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+    
+    return ExpertFinderResponse(
+        query=query,
+        experts=experts,
+        total_candidates=len(scored_users),
+        execution_time_ms=execution_time
+    )
+
+
+# ============================================================================
+# API ENDPOINTS
+# ============================================================================
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {
+        "status": "healthy",
+        "service": SERVICE_NAME,
+        "version": SERVICE_VERSION,
+        "timestamp": datetime.utcnow().isoformat(),
+        "dependencies": {
+            "user_store": USER_STORE_URL,
+            "doc_store": DOC_STORE_URL,
+            "external_service_store": EXTERNAL_SERVICE_STORE_URL
+        }
+    }
+
+
+@app.post("/experts/find", response_model=ExpertFinderResponse)
+async def find_experts(query_request: ExpertQuery):
+    """
+    Find experts based on natural language query.
+    
+    Examples:
+    - "Who knows Python backend development?"
+    - "Find experts in React and TypeScript"
+    - "Who worked on authentication services?"
+    - "Show me iOS developers"
+    """
+    try:
+        result = await find_experts_logic(
+            query=query_request.query,
+            max_results=query_request.max_results,
+            min_score=query_request.min_score,
+            team_id=query_request.team_id,
+            exclude_team=query_request.exclude_team
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error finding experts: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error finding experts: {str(e)}"
+        )
+
+
+@app.get("/experts/by-topic/{topic}")
+async def find_experts_by_topic(
+    topic: str,
+    max_results: int = Query(5, ge=1, le=20)
+):
+    """Find experts for a specific topic."""
+    query = f"Who knows {topic}?"
+    result = await find_experts_logic(query, max_results=max_results)
+    
+    return {
+        "topic": topic,
+        "experts": [e.dict() for e in result.experts],
+        "count": len(result.experts),
+        "execution_time_ms": result.execution_time_ms
+    }
+
+
+@app.get("/experts/by-service/{service}")
+async def find_experts_by_service(
+    service: str,
+    max_results: int = Query(5, ge=1, le=20)
+):
+    """Find experts who worked on a specific service."""
+    # Fetch all users
+    users = await fetch_all_users()
+    
+    # Find users subscribed to this service
+    matches = []
+    for user in users:
+        services = user.get("service_subscriptions", [])
+        if any(service.lower() in s.lower() for s in services):
+            score = 0.8  # High score for direct service subscription
+            evidence = [f"Subscribed to {service}"]
+            
+            # Bonus for document relationships
+            doc_count = len(user.get("document_relationships", []))
+            if doc_count > 0:
+                score = min(score + 0.1, 1.0)
+                evidence.append(f"{doc_count} related documents")
+            
+            matches.append({
+                "user_id": user.get("id"),
+                "display_name": user.get("display_name"),
+                "username": user.get("username"),
+                "relevance_score": score,
+                "evidence": evidence,
+                "metadata": {
+                    "services": services[:3],
+                    "document_count": doc_count
+                }
+            })
+    
+    # Sort by score
+    matches.sort(key=lambda x: x["relevance_score"], reverse=True)
+    
+    return {
+        "service": service,
+        "experts": matches[:max_results],
+        "count": len(matches)
+    }
+
+
+@app.get("/experts/sme/{area}")
+async def find_subject_matter_experts(
+    area: str,
+    min_documents: int = Query(3, ge=1, description="Minimum document count"),
+    max_results: int = Query(5, ge=1, le=20)
+):
+    """
+    Find subject matter experts in a specific area.
+    Requires users to have meaningful document relationships (actual work).
+    """
+    # Use expert finder with higher threshold
+    result = await find_experts_logic(
+        query=f"Expert in {area}",
+        max_results=max_results * 2,  # Get more candidates
+        min_score=0.3  # Higher threshold for SMEs
+    )
+    
+    # Filter to those with sufficient document history
+    smes = [
+        expert for expert in result.experts
+        if expert.metadata.get("document_count", 0) >= min_documents
+    ]
+    
+    # Re-score with document count emphasis
+    for expert in smes:
+        doc_count = expert.metadata.get("document_count", 0)
+        doc_bonus = min(doc_count * 0.05, 0.3)
+        expert.relevance_score = min(expert.relevance_score + doc_bonus, 1.0)
+        expert.evidence.append(f"SME: {doc_count} documents")
+    
+    # Re-sort and limit
+    smes.sort(key=lambda x: x.relevance_score, reverse=True)
+    
+    return {
+        "area": area,
+        "subject_matter_experts": [e.dict() for e in smes[:max_results]],
+        "count": len(smes[:max_results])
+    }
+
+
+@app.get("/experts/teammates/{user_id}")
+async def find_potential_teammates(
+    user_id: str,
+    max_results: int = Query(5, ge=1, le=20)
+):
+    """Find potential teammates based on shared interests and services."""
+    try:
+        # Get all users
+        all_users = await fetch_all_users()
+        
+        # Find the target user
+        target_user = None
+        for u in all_users:
+            if u.get("id") == user_id:
+                target_user = u
+                break
+        
+        if not target_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_topics = set(target_user.get("topic_interests", []))
+        user_services = set(target_user.get("service_subscriptions", []))
+        
+        potential_teammates = []
+        
+        for other_user in all_users:
+            if other_user.get("id") == user_id:
+                continue  # Skip self
+            
+            other_topics = set(other_user.get("topic_interests", []))
+            other_services = set(other_user.get("service_subscriptions", []))
+            
+            # Calculate overlap
+            shared_topics = user_topics & other_topics
+            shared_services = user_services & other_services
+            
+            if shared_topics or shared_services:
+                # Score based on overlap
+                topic_score = len(shared_topics) * 0.3
+                service_score = len(shared_services) * 0.7
+                total_score = min(topic_score + service_score, 1.0)
+                
+                potential_teammates.append({
+                    "user_id": other_user.get("id"),
+                    "display_name": other_user.get("display_name"),
+                    "username": other_user.get("username"),
+                    "collaboration_score": total_score,
+                    "shared_topics": list(shared_topics),
+                    "shared_services": list(shared_services),
+                    "same_team": other_user.get("team_id") == target_user.get("team_id")
+                })
+        
+        # Sort by score
+        potential_teammates.sort(key=lambda x: x["collaboration_score"], reverse=True)
+        
+        return {
+            "user_id": user_id,
+            "potential_teammates": potential_teammates[:max_results],
+            "count": len(potential_teammates[:max_results])
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error finding teammates: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/teams/{team_id}/expertise")
+async def get_team_expertise_summary(team_id: str):
+    """Get expertise summary for a team."""
+    try:
+        # Fetch all users and filter by team
+        all_users = await fetch_all_users()
+        team_members = [u for u in all_users if u.get("team_id") == team_id]
+        
+        if not team_members:
+            return {
+                "team_id": team_id,
+                "member_count": 0,
+                "topics": [],
+                "services": [],
+                "total_documents": 0
+            }
+        
+        # Aggregate expertise
+        all_topics = []
+        all_services = []
+        total_docs = 0
+        
+        for member in team_members:
+            all_topics.extend(member.get("topic_interests", []))
+            all_services.extend(member.get("service_subscriptions", []))
+            total_docs += len(member.get("document_relationships", []))
+        
+        # Count frequencies
+        from collections import Counter
+        topic_counts = Counter(all_topics)
+        service_counts = Counter(all_services)
+        
+        return {
+            "team_id": team_id,
+            "member_count": len(team_members),
+            "topics": [{"topic": k, "count": v} for k, v in topic_counts.most_common(10)],
+            "services": [{"service": k, "count": v} for k, v in service_counts.most_common(10)],
+            "total_documents": total_docs,
+            "avg_documents_per_member": total_docs / len(team_members) if team_members else 0
+        }
+    except Exception as e:
+        logger.error(f"Error getting team expertise: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# SERVICE REGISTRATION & STARTUP
+# ============================================================================
+
+@app.on_event("startup")
+async def startup_event():
+    """Register service with service discovery on startup."""
+    logger.info(f"🚀 Starting {SERVICE_NAME} v{SERVICE_VERSION}")
+    logger.info(f"   Port: {SERVICE_PORT}")
+    logger.info(f"   User Store: {USER_STORE_URL}")
+    logger.info(f"   Doc Store: {DOC_STORE_URL}")
+    logger.info(f"   External Service Store: {EXTERNAL_SERVICE_STORE_URL}")
+    
+    # TODO: Register with service discovery if available
+    # try:
+    #     from services.shared.infrastructure.service_discovery import register_service
+    #     register_service(SERVICE_NAME, SERVICE_PORT)
+    # except Exception as e:
+    #     logger.warning(f"Could not register with service discovery: {e}")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=SERVICE_PORT)

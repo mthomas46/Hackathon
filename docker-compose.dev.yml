@@ -468,6 +468,39 @@ services:
     volumes:
     - ./services/user-store:/app/services/user-store:rw
     - ./services/shared:/app/services/shared:rw
+  expert-finder-service:
+    build:
+      context: ./services/expert-finder-service
+      dockerfile: Dockerfile
+    environment:
+    - SERVICE_PORT=5160
+    - USER_STORE_URL=http://user-store:5150
+    - DOC_STORE_URL=http://doc-store:5087
+    - EXTERNAL_SERVICE_STORE_URL=http://external-service-store:5140
+    - LLM_GATEWAY_URL=http://llm-gateway:8100
+    - ENVIRONMENT=development
+    ports:
+    - 5160:5160
+    depends_on:
+      user-store:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5160/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+    - hackathon_default
+    profiles:
+    - all
+    - development
+    working_dir: /app
+    volumes:
+    - ./services/expert-finder-service:/app:rw
   prompt_store:
     build:
       context: .
