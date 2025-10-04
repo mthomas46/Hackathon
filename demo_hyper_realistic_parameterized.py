@@ -2399,7 +2399,7 @@ Timeline = Story Points ÷ Team Velocity
 - **Total Users Extracted:** {self.workflow_f_result.total_users_extracted}
 - **Subject Matter Experts:** {len(self.workflow_f_result.subject_matter_experts)}
 - **Collaboration Relationships:** {len(self.workflow_f_result.collaboration_graph)}
-- **User-Store Integration:** {f"{len(self.workflow_f_result.user_extractions)} users persisted" if self.workflow_f_result.user_extractions else "Available if user-store running"}
+- **User-Store Integration:** {f"{len(self.workflow_f_result.extracted_users)} users persisted" if self.workflow_f_result.extracted_users else "Available if user-store running"}
 - **Expert-Finder Integration:** {"✅ Online" if self.service_health_status.get('expert-finder', False) else "⚠️ Service offline (enhancements limited)"}
 
 **Business Impact:**
