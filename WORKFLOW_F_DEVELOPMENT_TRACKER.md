@@ -574,22 +574,28 @@ GET /experts/by-engagement?min_score=0.8&include_documentation=true
 - ✅ Fallback support if expert-finder unavailable
 
 #### Phase 4.2: Integration Tests - Planning Workflow
-**Status**: Pending
+**Status**: ✅ Complete  
+**Commit**: `1638cbbb`  
+**Files**: 2 new (~450 lines)
 
-- [ ] Test expert-finder integration in planning workflow
-- [ ] Test with various tech stacks
-- [ ] Test with different team compositions
-- [ ] Test SME identification for components
-- [ ] Test team augmentation suggestions
+- [x] Test expert-finder integration in planning workflow (13 tests)
+- [x] Test with various tech stacks (Python, FastAPI, React, Docker, Rust, Go, Haskell)
+- [x] Test with different team compositions (team-alpha, beta, gamma)
+- [x] Test SME identification for components (authentication, frontend, infrastructure)
+- [x] Test team augmentation suggestions (skill gap analysis)
+- [x] Test performance (<5000ms target)
+- [x] Test fallback scenarios (unavailable service)
+- [x] Test feature flags (enable_expert_discovery)
 
 **Deliverables**:
-- `tests/integration/planning_service/test_expert_finder_integration.py`
+- ✅ `tests/integration/planning_service/test_expert_finder_integration.py` (13 tests, ~440 lines)
+- ✅ `tests/integration/planning_service/__init__.py`
 
 **Acceptance Criteria**:
-- Planning service correctly queries expert-finder
-- Results are properly formatted
-- Fallback works if expert-finder unavailable
-- Performance impact is minimal
+- ✅ Planning service correctly queries expert-finder (10 tests)
+- ✅ Results are properly formatted (validation in all tests)
+- ✅ Fallback works if expert-finder unavailable (test_fallback_when_expert_finder_unavailable)
+- ✅ Performance impact is minimal (test_performance_with_expert_discovery, <5s target)
 
 ---
 
