@@ -34,6 +34,7 @@ class SQLiteUserRepository(UserRepository):
                     status TEXT NOT NULL,
                     avatar_url TEXT,
                     bio TEXT,
+                    team_id TEXT,                           -- Links users together as a team
                     document_relationships TEXT NOT NULL, -- JSON array
                     service_subscriptions TEXT NOT NULL,    -- JSON array
                     topic_interests TEXT NOT NULL,          -- JSON array
@@ -47,6 +48,8 @@ class SQLiteUserRepository(UserRepository):
                     updated_at TEXT NOT NULL
                 )
             """)
+            # Create index on team_id for efficient team queries
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_users_team_id ON users(team_id)")
             conn.commit()
 
     def _user_from_row(self, row) -> User:
@@ -60,17 +63,18 @@ class SQLiteUserRepository(UserRepository):
             status=UserStatus(row[5]),
             avatar_url=row[6],
             bio=row[7],
-            document_relationships=json.loads(row[8]),
-            service_subscriptions=json.loads(row[9]),
-            topic_interests=json.loads(row[10]),
-            user_tags=json.loads(row[11]) if row[11] else [],
-            contact_email=row[12],
-            contact_webhook=row[13],
-            contact_slack=row[14],
-            notification_preferences=json.loads(row[15]) if row[15] else {},
-            last_login_at=datetime.fromisoformat(row[16]) if row[16] else None,
-            created_at=datetime.fromisoformat(row[17]),
-            updated_at=datetime.fromisoformat(row[18])
+            team_id=row[8],
+            document_relationships=json.loads(row[9]),
+            service_subscriptions=json.loads(row[10]),
+            topic_interests=json.loads(row[11]),
+            user_tags=json.loads(row[12]) if row[12] else [],
+            contact_email=row[13],
+            contact_webhook=row[14],
+            contact_slack=row[15],
+            notification_preferences=json.loads(row[16]) if row[16] else {},
+            last_login_at=datetime.fromisoformat(row[17]) if row[17] else None,
+            created_at=datetime.fromisoformat(row[18]),
+            updated_at=datetime.fromisoformat(row[19])
         )
 
     async def save(self, user: User) -> None:
@@ -79,14 +83,14 @@ class SQLiteUserRepository(UserRepository):
             conn.execute("""
                 INSERT OR REPLACE INTO users (
                     id, email, username, display_name, role, status,
-                    avatar_url, bio, document_relationships, service_subscriptions,
+                    avatar_url, bio, team_id, document_relationships, service_subscriptions,
                     topic_interests, user_tags, contact_email, contact_webhook,
                     contact_slack, notification_preferences, last_login_at,
                     created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 user.id, user.email, user.username, user.display_name, user.role.value, user.status.value,
-                user.avatar_url, user.bio,
+                user.avatar_url, user.bio, user.team_id,
                 json.dumps(user.document_relationships),
                 json.dumps(user.service_subscriptions),
                 json.dumps(user.topic_interests),
@@ -126,6 +130,12 @@ class SQLiteUserRepository(UserRepository):
         """Find all users with a specific role."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("SELECT * FROM users WHERE role = ?", (role.value,))
+            return [self._user_from_row(row) for row in cursor.fetchall()]
+    
+    async def find_by_team_id(self, team_id: str) -> List[User]:
+        """Find all users belonging to a specific team."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("SELECT * FROM users WHERE team_id = ?", (team_id,))
             return [self._user_from_row(row) for row in cursor.fetchall()]
 
     async def find_by_status(self, status: UserStatus) -> List[User]:

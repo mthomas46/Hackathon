@@ -175,8 +175,8 @@ class DemoPersistenceClient:
         
         return await self.save_document_to_store(content, metadata, doc_id=f"github_pr_{pr.get('pr_number')}")
     
-    async def save_user_to_store(self, user: Dict[str, Any], document_ids: List[str] = None) -> Optional[Dict[str, Any]]:
-        """Save a team member/user to user-store with optional document relationships."""
+    async def save_user_to_store(self, user: Dict[str, Any], document_ids: List[str] = None, team_id: str = None) -> Optional[Dict[str, Any]]:
+        """Save a team member/user to user-store with optional document relationships and team_id."""
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 # Map team role to valid user-store roles
@@ -212,6 +212,10 @@ class DemoPersistenceClient:
                     "display_name": user.get("name", "Unknown User"),
                     "role": mapped_role
                 }
+                
+                # Add team_id if provided
+                if team_id:
+                    payload["team_id"] = team_id
                 
                 # Create user
                 response = await client.post(
@@ -617,7 +621,8 @@ async def save_demo_data_to_stores(
     jira_tickets: List[Dict[str, Any]],
     confluence_docs: List[Dict[str, Any]],
     github_prs: List[Dict[str, Any]],
-    team_members: List[Dict[str, Any]] = None
+    team_members: List[Dict[str, Any]] = None,
+    team_id: str = None
 ) -> Dict[str, Any]:
     """
     Save all demo data to stores.
@@ -663,7 +668,7 @@ async def save_demo_data_to_stores(
             for member in team_members:
                 member_name = member.get("name", "")
                 # Try to save user (without document links - documents don't exist yet)
-                result = await client.save_user_to_store(member, document_ids=[])
+                result = await client.save_user_to_store(member, document_ids=[], team_id=team_id)
                 
                 if result and result.get("id"):
                     # Successfully created new user

@@ -266,6 +266,7 @@ async def create_user(request: CreateUserRequest):
             status=user.status.value if hasattr(user.status, 'value') else user.status,
             avatar_url=user.avatar_url,
             bio=user.bio,
+            team_id=user.team_id,
             document_relationships=user.document_relationships,
             service_subscriptions=user.service_subscriptions,
             topic_interests=user.topic_interests,
