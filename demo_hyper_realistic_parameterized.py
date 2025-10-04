@@ -167,7 +167,7 @@ class ParameterizedHyperRealisticDemo:
         self,
         feature_summary: str,
         num_historical_tickets: int = 3,
-        num_team_members: int = 5,
+        num_team_members: int = 6,
         tech_stack: Optional[List[str]] = None,
         demo_folder: str = "demo_output",
         num_tangential_docs: int = 5
@@ -178,7 +178,7 @@ class ParameterizedHyperRealisticDemo:
         Args:
             feature_summary: Natural language feature request
             num_historical_tickets: Number of historical Jira tickets to generate
-            num_team_members: Number of team members to generate
+            num_team_members: Number of team members to generate (default 6 for diverse team mix)
             tech_stack: List of technologies (e.g., ["Python", "iOS", "Android"])
             demo_folder: Output folder name
             num_tangential_docs: Number of tangential external service documents to generate
@@ -338,59 +338,139 @@ class ParameterizedHyperRealisticDemo:
         return tickets
     
     def generate_team_members(self) -> List[Dict[str, Any]]:
-        """Generate parameterized team member profiles."""
-        roles = [
-            ("Backend Engineer", ["Python", "APIs", "Backend", "System Design"]),
-            ("iOS Engineer", ["iOS (Swift)", "Mobile", "Firebase", "APNs"]),
-            ("Android Engineer", ["Android (Kotlin)", "Mobile", "Firebase", "FCM"]),
-            ("Full Stack Engineer", ["React", "Node.js", "Frontend", "APIs"]),
-            ("DevOps Engineer", ["AWS", "CI/CD", "Infrastructure", "Monitoring"]),
-            ("Frontend Engineer", ["React", "TypeScript", "UI/UX", "Frontend"]),
-            ("Backend Engineer", ["Go", "Microservices", "APIs", "Database"]),
-            ("Mobile Engineer", ["React Native", "iOS", "Android", "Mobile"])
+        """Generate diverse team member profiles with varied experience levels and service exposure."""
+        # Define diverse roles with skills and experience levels
+        role_profiles = [
+            {
+                "name": "Senior Backend Engineer",
+                "role": "senior backend engineer",
+                "skills": ["Python", "Go", "APIs", "System Design", "Microservices", "Database Design"],
+                "level": "Expert",
+                "years_range": (8, 12),
+                "services": ["Payment Service", "User Service", "Auth Service", "Notification Service"]
+            },
+            {
+                "name": "Mid-Level Full Stack Engineer",
+                "role": "full stack engineer",
+                "skills": ["React", "Node.js", "TypeScript", "PostgreSQL", "REST APIs", "Frontend"],
+                "level": "Advanced",
+                "years_range": (4, 6),
+                "services": ["Admin Dashboard", "User Portal", "Analytics Dashboard"]
+            },
+            {
+                "name": "Junior iOS Engineer",
+                "role": "ios engineer",
+                "skills": ["iOS (Swift)", "UIKit", "SwiftUI", "Firebase", "APNs"],
+                "level": "Intermediate",
+                "years_range": (1, 3),
+                "services": ["Mobile App", "Push Notifications"]
+            },
+            {
+                "name": "Senior DevOps Engineer",
+                "role": "devops engineer",
+                "skills": ["AWS", "Kubernetes", "Docker", "CI/CD", "Terraform", "Monitoring"],
+                "level": "Expert",
+                "years_range": (7, 10),
+                "services": ["Infrastructure", "Deployment Pipeline", "Log Aggregation", "Monitoring Stack"]
+            },
+            {
+                "name": "Mid-Level Android Engineer",
+                "role": "android engineer",
+                "skills": ["Android (Kotlin)", "Jetpack Compose", "FCM", "Room DB", "Coroutines"],
+                "level": "Advanced",
+                "years_range": (3, 5),
+                "services": ["Android App", "Offline Sync", "Push Notifications"]
+            },
+            {
+                "name": "Junior Frontend Engineer",
+                "role": "frontend engineer",
+                "skills": ["React", "JavaScript", "CSS", "HTML", "Redux", "UI/UX"],
+                "level": "Intermediate",
+                "years_range": (1, 2),
+                "services": ["Landing Page", "User Dashboard"]
+            },
+            {
+                "name": "Senior Architect",
+                "role": "backend engineer",  # Maps to valid user-store role
+                "skills": ["System Architecture", "Microservices", "Event-Driven Design", "Cloud Patterns", "Security"],
+                "level": "Expert",
+                "years_range": (10, 15),
+                "services": ["Platform Architecture", "Service Mesh", "API Gateway", "Event Bus", "Message Queue"]
+            },
+            {
+                "name": "Mid-Level Mobile Engineer",
+                "role": "fullstack engineer",  # Maps to developer role
+                "skills": ["React Native", "iOS", "Android", "Mobile Architecture", "Redux"],
+                "level": "Advanced",
+                "years_range": (4, 7),
+                "services": ["Cross-Platform App", "Mobile SDK", "App Store Deployment"]
+            }
         ]
         
         names = [
             "Sarah Chen", "Marcus Johnson", "Priya Patel", "Emily Wu", "David Kim",
-            "Alex Rivera", "Jordan Lee", "Taylor Swift", "Morgan Freeman", "Jamie Fox"
+            "Alex Rivera", "Jordan Lee", "Casey Morgan", "Riley Taylor", "Quinn Parker"
         ]
         
         members = []
         for i in range(self.num_team_members):
-            role_name, base_skills = roles[i % len(roles)]
+            profile = role_profiles[i % len(role_profiles)]
             name = names[i % len(names)]
             
-            # Filter skills to match tech stack
+            # Generate skills based on tech stack and profile
             skills = []
-            for skill in base_skills:
-                if any(tech.lower() in skill.lower() for tech in self.tech_stack):
-                    level = ["Intermediate", "Advanced", "Expert"][i % 3]
-                    years = 3 + (i % 6)
+            for skill in profile["skills"]:
+                # Check if skill matches tech stack
+                matches_stack = any(tech.lower() in skill.lower() for tech in self.tech_stack)
+                # Always include first 2 skills, then filter by tech stack
+                if matches_stack or len(skills) < 2:
+                    # Vary experience based on profile level
+                    years_min, years_max = profile["years_range"]
+                    years = years_min + (i % (years_max - years_min + 1))
+                    
                     skills.append({
                         "skill": skill,
-                        "level": level,
+                        "level": profile["level"],
                         "years": years,
-                        "projects": years * 2
+                        "projects": min(years * 2, 20)  # Cap projects at 20
                     })
             
-            # Ensure at least 2 skills
-            if len(skills) < 2:
-                for skill in base_skills[:2]:
-                    skills.append({
-                        "skill": skill,
-                        "level": "Intermediate",
-                        "years": 3,
-                        "projects": 6
-                    })
+            # Ensure at least 3 skills for diversity
+            while len(skills) < 3 and len(skills) < len(profile["skills"]):
+                remaining_skill = profile["skills"][len(skills)]
+                years_min, years_max = profile["years_range"]
+                years = years_min + 1
+                skills.append({
+                    "skill": remaining_skill,
+                    "level": profile["level"],
+                    "years": years,
+                    "projects": years * 2
+                })
+            
+            # Select services worked on based on profile
+            services_worked_on = profile["services"][:2 + (i % 3)]  # Vary between 2-4 services
+            
+            # Calculate workload and velocity based on experience
+            if profile["level"] == "Expert":
+                workload = 0.75 + (i * 0.03)
+                velocity = 18 + (i % 5)
+            elif profile["level"] == "Advanced":
+                workload = 0.65 + (i * 0.04)
+                velocity = 15 + (i % 4)
+            else:  # Intermediate
+                workload = 0.50 + (i * 0.05)
+                velocity = 12 + (i % 3)
             
             members.append({
                 "user_id": f"user_{str(i+1).zfill(3)}",
                 "name": name if i < len(names) else f"Team Member {i+1}",
-                "role": f"Senior {role_name}" if i < 3 else role_name,
+                "role": profile["role"],
                 "skills": skills,
-                "current_workload": 0.6 + (i * 0.05),
+                "experience_level": profile["level"],
+                "services_worked_on": services_worked_on,
+                "current_workload": min(workload, 0.95),  # Cap at 95%
                 "availability": "Full-time",
-                "recent_velocity": 14 + (i % 5)
+                "recent_velocity": velocity
             })
         
         return members
@@ -3266,7 +3346,7 @@ python demo_hyper_realistic_parameterized.py --help
 |-----------|-------|------|---------|-------------|
 | `--feature` | `-f` | str | (notification system) | Natural language feature request |
 | `--tickets` | `-t` | int | 5 | Number of historical Jira tickets |
-| `--team` | `-m` | int | 5 | Number of team members |
+| `--team` | `-m` | int | 6 | Number of team members |
 | `--tech` | `-s` | list | Python iOS Android React Firebase | Technology stack (space-separated) |
 | `--output` | `-o` | str | demo_output | Output folder name |
 
@@ -3536,8 +3616,8 @@ Examples:
         "--team",
         "-m",
         type=int,
-        default=5,
-        help="Number of team members to generate (default: 5)"
+        default=6,
+        help="Number of team members to generate (default: 6 for diverse experience mix)"
     )
     
     parser.add_argument(
