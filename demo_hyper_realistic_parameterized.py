@@ -2082,8 +2082,15 @@ class ParameterizedHyperRealisticDemo:
 **Report Type:** Production Planning Output  
 """
         
-        # Insert header, report content, Section 10 (NEW), and footer
-        full_report = header + report + section_10 + footer
+        # ⭐ FIX: Insert Section 10 BEFORE sections 11-15 to maintain proper order
+        # Split the report to insert Section 10 in the correct position
+        if section_10 and "## 📍 Section 11:" in report:
+            # Find where Section 11 starts and insert Section 10 before it
+            parts = report.split("## 📍 Section 11:", 1)
+            full_report = header + parts[0] + section_10 + "\n\n## 📍 Section 11:" + parts[1] + footer
+        else:
+            # Fallback: append Section 10 at the end (old behavior)
+            full_report = header + report + section_10 + footer
         
         # ⭐ NEW: Add workflow summary (Phase 3.1)
         full_report += self._generate_workflow_summary("Planning Service")
@@ -2369,6 +2376,45 @@ Timeline = Story Points ÷ Team Velocity
 - **Confidence:** {acc.original_confidence}% → {acc.adjusted_confidence}% (+{acc.confidence_improvement} points)
 - **Risk:** {acc.original_risk_level} → {acc.adjusted_risk_level}
 
+### 3.7 Workflow F: User Intelligence & Expert Discovery
+
+**⭐ NEW: AI-Powered Expert Discovery System**
+
+**Multi-Source User Extraction Process:**
+1. **GitHub PRs:** Extracted users from authors, reviewers, assignees, mergers, commit authors, commenters
+2. **Jira Tickets:** Extracted users from reporters, assignees, watchers, worklog contributors, commenters
+3. **Confluence Docs:** Extracted users from authors, editors, maintainers, watchers, commenters
+4. **Deduplication:** Merged user records across documents to create unified profiles
+
+**Expert Intelligence Analysis:**
+- **SME Identification:** Analyzed contribution patterns, review quality, and documentation depth
+- **Collaboration Mapping:** Identified co-authorship, review relationships, and comment interactions
+- **Skill Inference:** Technology expertise derived from files touched, components owned, and topics documented
+
+**Output:**""")
+        
+        # Add Workflow F stats if available
+        if hasattr(self, 'workflow_f_result') and self.workflow_f_result:
+            sections.append(f"""
+- **Total Users Extracted:** {self.workflow_f_result.total_users_extracted}
+- **Subject Matter Experts:** {len(self.workflow_f_result.subject_matter_experts)}
+- **Collaboration Relationships:** {len(self.workflow_f_result.collaboration_graph)}
+- **User-Store Integration:** {f"{len(self.workflow_f_result.user_extractions)} users persisted" if self.workflow_f_result.user_extractions else "Available if user-store running"}
+- **Expert-Finder Integration:** {"✅ Online" if self.service_health_status.get('expert-finder', False) else "⚠️ Service offline (enhancements limited)"}
+
+**Business Impact:**
+- **Expert Recommendations:** Planning reports enriched with SME contacts for project phases
+- **Team Augmentation:** Identifies external experts to fill skill gaps
+- **Knowledge Transfer:** Maps subject matter expertise for onboarding and collaboration
+- **Risk Mitigation:** Ensures critical expertise available for complex components
+""")
+        else:
+            sections.append("""
+- **Status:** Workflow F not executed in this demo run
+- **Note:** Enable Workflow F by ensuring user-store and expert-finder-service are running
+""")
+        
+        sections.append("""
 ---
 
 ## 4. Service Interactions
@@ -2380,23 +2426,38 @@ Timeline = Story Points ÷ Team Velocity
 │   Demo Controller   │
 └──────────┬──────────┘
            │
-    ┌──────┴──────┐
-    │             │
-    ▼             ▼
-┌────────┐   ┌────────────────┐
-│ Mock   │   │ Workflow       │
-│ Data   │   │ Orchestrator   │
-│ Gen    │   └────────┬───────┘
-└────────┘            │
-                      ├── Workflow A-D (Parallel)
-                      └── Workflow E (Sequential)
-                           ├── Discovery
-                           ├── Cataloging
-                           ├── Validation
-                           ├── Gap Detection
-                           ├── Blindspot Detection
-                           └── Accuracy Enhancement
+    ┌──────┴──────────────────┐
+    │                         │
+    ▼                         ▼
+┌────────┐           ┌────────────────┐
+│ Mock   │           │ Workflow       │
+│ Data   │           │ Orchestrator   │
+│ Gen    │           └────────┬───────┘
+└────────┘                    │
+                       ┌──────┼──────────────┐
+                       │      │              │
+                       ▼      ▼              ▼
+            Workflow A-D  Workflow E  ⭐ Workflow F
+            (Parallel)    (Sequential)   (User Intel)
+                │             │              │
+                │             ├─ Discovery   ├─ GitHub PR
+                │             ├─ Cataloging  ├─ Jira Tickets
+                │             ├─ Validation  ├─ Confluence
+                │             ├─ Gap Detect  ├─ Deduplication
+                │             ├─ Blindspot   ├─ SME Scoring
+                │             └─ Accuracy    └─ Collaboration
+                │
+                └─────────────┬─────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │   Report Gen     │
+                    │  (6 reports)     │
+                    └──────────────────┘
 ```
+
+**⭐ New in this architecture:** Workflow F runs in parallel with other workflows, extracting user intelligence from historical documents and enriching reports with expert recommendations.
+
 
 ### 4.2 Workflow Orchestration
 
@@ -2653,8 +2714,18 @@ curl http://localhost:5090/memory/get?key=workflow:workflow_e:* | jq '.'
 | **D** | Skills Coverage | {self.workflow_details['workflow_d']['skills_coverage']*100:.1f}% |
 | **E** | Services Discovered | {acc.services_discovered} |
 | **E** | Issues Found | {acc.issues_found_total} |
-| **E** | Confidence Adjustment | +{acc.confidence_improvement} points |
-
+| **E** | Confidence Adjustment | +{acc.confidence_improvement} points |""")
+        
+        # Add Workflow F metrics if available
+        if hasattr(self, 'workflow_f_result') and self.workflow_f_result:
+            sections.append(f"""
+| **F** | Users Extracted | {self.workflow_f_result.total_users_extracted} |
+| **F** | SMEs Identified | {len(self.workflow_f_result.subject_matter_experts)} |
+| **F** | Collaboration Relationships | {len(self.workflow_f_result.collaboration_graph)} |
+| **F** | Expert-Finder Integration | {"✅ Online" if self.service_health_status.get('expert-finder', False) else "⚠️ Offline"} |
+""")
+        
+        sections.append("""
 ---
 
 ## 8. Key Insights
