@@ -91,12 +91,18 @@ class DemoPersistenceClient:
             "type": "ticket",
             "doc_type": "jira_ticket",
             "key": ticket.get("key"),
+            "assignee": ticket.get("assignee"),
             "status": ticket.get("status"),
             "story_points": ticket.get("story_points"),
             "tech_stack": json.dumps(ticket.get("tech_stack", [])),
             "created_date": ticket.get("created"),
             "category": "historical_data"
         }
+        
+        # Add user_id if present (for document-user linking)
+        if ticket.get("user_id"):
+            metadata["user_id"] = ticket["user_id"]
+            metadata["author"] = ticket.get("author", ticket.get("assignee", ""))
         
         return await self.save_document_to_store(content, metadata, doc_id=f"jira_{ticket.get('key')}")
     
@@ -128,6 +134,10 @@ class DemoPersistenceClient:
             "category": "historical_data"
         }
         
+        # Add user_id if present (for document-user linking)
+        if doc.get("user_id"):
+            metadata["user_id"] = doc["user_id"]
+        
         return await self.save_document_to_store(content, metadata, doc_id=f"conf_{doc.get('doc_id')}")
     
     async def save_github_pr(self, pr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -151,12 +161,17 @@ class DemoPersistenceClient:
             "type": "pull_request",
             "doc_type": "github_pr",
             "pr_number": pr.get("pr_number"),
+            "author": pr.get("author"),
             "status": pr.get("status"),
             "files_changed": pr.get("files_changed"),
             "tech_stack": json.dumps(pr.get("tech_stack", [])),
             "created_date": pr.get("created"),
             "category": "historical_data"
         }
+        
+        # Add user_id if present (for document-user linking)
+        if pr.get("user_id"):
+            metadata["user_id"] = pr["user_id"]
         
         return await self.save_document_to_store(content, metadata, doc_id=f"github_pr_{pr.get('pr_number')}")
     
@@ -344,32 +359,52 @@ class DemoPersistenceClient:
         jira_tickets: List[Dict[str, Any]],
         confluence_docs: List[Dict[str, Any]],
         github_prs: List[Dict[str, Any]]
-    ) -> Dict[str, int]:
-        """Bulk save all historical data."""
+    ) -> Dict[str, Any]:
+        """Bulk save all historical data with user attribution."""
         print(f"\n📊 Saving Historical Data to Stores...")
         print(f"   • Jira Tickets: {len(jira_tickets)}")
         print(f"   • Confluence Docs: {len(confluence_docs)}")
         print(f"   • GitHub PRs: {len(github_prs)}")
         
-        # Save Jira tickets
+        # Track document IDs for user-document linking
+        document_ids = {}  # logical_id -> actual_document_id
+        
+        # Save Jira tickets (with user attribution if present)
         for ticket in jira_tickets:
-            await self.save_jira_ticket(ticket)
+            logical_id = f"jira_{ticket.get('key')}"
+            result = await self.save_jira_ticket(ticket)
+            if result and result.get("id"):
+                document_ids[logical_id] = result["id"]
+                if ticket.get("user_id"):
+                    print(f"   📄 {ticket.get('key')}: authored by user {ticket.get('user_id')[:20]}...")
         
-        # Save Confluence docs
+        # Save Confluence docs (with user attribution if present)
         for doc in confluence_docs:
-            await self.save_confluence_doc(doc)
+            logical_id = f"confluence_{doc.get('doc_id')}"
+            result = await self.save_confluence_doc(doc)
+            if result and result.get("id"):
+                document_ids[logical_id] = result["id"]
+                if doc.get("user_id"):
+                    print(f"   📄 {doc.get('doc_id')}: authored by user {doc.get('user_id')[:20]}...")
         
-        # Save GitHub PRs
+        # Save GitHub PRs (with user attribution if present)
         for pr in github_prs:
-            await self.save_github_pr(pr)
+            logical_id = f"github_pr_{pr.get('pr_number')}"
+            result = await self.save_github_pr(pr)
+            if result and result.get("id"):
+                document_ids[logical_id] = result["id"]
+                if pr.get("user_id"):
+                    print(f"   📄 PR-{pr.get('pr_number')}: authored by user {pr.get('user_id')[:20]}...")
         
         print(f"\n✅ Historical Data Saved:")
         print(f"   • Documents in doc_store: {self.stats['documents_saved']}")
+        print(f"   • Document IDs tracked: {len(document_ids)} (for user linking)")
         if self.stats["errors"]:
             print(f"   • Errors: {len(self.stats['errors'])}")
         
         return {
             "documents_saved": self.stats["documents_saved"],
+            "document_ids": document_ids,  # Return IDs for user-document linking
             "errors": len(self.stats["errors"])
         }
     
@@ -614,60 +649,131 @@ async def save_demo_data_to_stores(
         print(f"\n⚠️  user_store not accessible. Users will not be saved.")
         print(f"   Start user_store: cd services/user-store && python main.py")
     
-    # Save data even if some stores are down
+    # ✅ STEP 1: Save users FIRST to get real user IDs for document relationships
+    users_stats = {"users_saved": 0, "errors": [], "user_id_map": {}}
+    user_name_to_id = {}  # Map user names to their database IDs
+    
+    if team_members and accessible["user_store"]:
+        print(f"\n💾 STEP 1: SAVING {len(team_members)} TEAM MEMBERS TO USER-STORE...")
+        print("="*80)
+        print("   (Creating users FIRST to enable proper document → user linking)")
+        
+        # Save each team member (without document relationships yet)
+        async with httpx.AsyncClient(timeout=30.0) as http_client:
+            for member in team_members:
+                member_name = member.get("name", "")
+                # Try to save user (without document links - documents don't exist yet)
+                result = await client.save_user_to_store(member, document_ids=[])
+                
+                if result and result.get("id"):
+                    # Successfully created new user
+                    user_id = result.get("id")
+                    users_stats["users_saved"] += 1
+                    users_stats["user_id_map"][member_name] = user_id
+                    user_name_to_id[member_name] = user_id
+                    print(f"   ✅ Created: {member_name} → user_id={user_id[:20]}...")
+                else:
+                    # User might already exist - try to fetch their ID
+                    try:
+                        user_email = member.get("email", f"{member.get('name', 'user').lower().replace(' ', '.')}@example.com")
+                        all_users_response = await http_client.get(f"{client.user_store_url}/users")
+                        if all_users_response.status_code == 200:
+                            all_users = all_users_response.json()
+                            existing_user = next((u for u in all_users if u.get("email") == user_email), None)
+                            if existing_user:
+                                user_id = existing_user["id"]
+                                users_stats["user_id_map"][member_name] = user_id
+                                user_name_to_id[member_name] = user_id
+                                print(f"   🔄 Found existing: {member_name} → user_id={user_id[:20]}...")
+                            else:
+                                error_msg = f"Failed to save {member_name}"
+                                users_stats["errors"].append(error_msg)
+                                print(f"   ⚠️  {error_msg}")
+                    except Exception as e:
+                        error_msg = f"Failed to resolve {member_name}: {str(e)}"
+                        users_stats["errors"].append(error_msg)
+                        print(f"   ⚠️  {error_msg}")
+        
+        print(f"\n✅ Users Created: {users_stats['users_saved']}/{len(team_members)}")
+        print(f"   User ID mapping: {len(user_name_to_id)} users ready for document linking")
+    
+    # ✅ STEP 2: Save documents WITH author user IDs embedded as metadata
+    print(f"\n💾 STEP 2: SAVING HISTORICAL DATA WITH USER ATTRIBUTION...")
+    print("="*80)
+    
+    # Enrich documents with user IDs before saving
+    for ticket in jira_tickets:
+        assignee = ticket.get("assignee", "")
+        if assignee and assignee in user_name_to_id:
+            ticket["user_id"] = user_name_to_id[assignee]
+            ticket["author"] = assignee
+    
+    for doc in confluence_docs:
+        author = doc.get("author", "")
+        if author and author in user_name_to_id:
+            doc["user_id"] = user_name_to_id[author]
+    
+    for pr in github_prs:
+        author = pr.get("author", "")
+        if author and author in user_name_to_id:
+            pr["user_id"] = user_name_to_id[author]
+    
     historical_stats = await client.bulk_save_historical_data(
         jira_tickets, confluence_docs, github_prs
     )
     
+    print(f"\n✅ Documents saved with user attribution:")
+    print(f"   • {historical_stats.get('documents_saved', 0)} documents linked to users")
+    
+    # ✅ STEP 3: Save workflow prompts
+    print(f"\n💾 STEP 3: SAVING WORKFLOW PROMPTS...")
+    print("="*80)
     prompt_stats = await client.save_all_workflow_prompts()
     
-    # Save users with document relationships
-    users_stats = {"users_saved": 0, "errors": []}
-    if team_members and accessible["user_store"]:
-        print(f"\n💾 SAVING {len(team_members)} TEAM MEMBERS TO USER-STORE...")
+    # ✅ STEP 4: Link users to their documents (if we have document IDs)
+    if team_members and accessible["user_store"] and historical_stats.get('document_ids'):
+        print(f"\n💾 STEP 4: LINKING USERS TO THEIR AUTHORED DOCUMENTS...")
         print("="*80)
         
-        # Build document mapping (user name -> document IDs they authored)
-        user_docs = {}
-        for ticket in jira_tickets:
-            assignee = ticket.get("assignee", "")
-            if assignee:
-                if assignee not in user_docs:
-                    user_docs[assignee] = []
-                user_docs[assignee].append(f"jira_{ticket.get('key')}")
+        # Build reverse mapping: user name -> document IDs they authored
+        document_ids = historical_stats.get('document_ids', {})
         
-        for doc in confluence_docs:
-            author = doc.get("author", "")
-            if author:
-                if author not in user_docs:
-                    user_docs[author] = []
-                user_docs[author].append(f"confluence_{doc.get('doc_id')}")
-        
-        for pr in github_prs:
-            author = pr.get("author", "")
-            if author:
-                if author not in user_docs:
-                    user_docs[author] = []
-                user_docs[author].append(f"github_pr_{pr.get('pr_number')}")
-        
-        # Save each team member with their document relationships
         for member in team_members:
             member_name = member.get("name", "")
-            doc_ids = user_docs.get(member_name, [])
-            result = await client.save_user_to_store(member, doc_ids)
-            if result:
-                users_stats["users_saved"] += 1
-                print(f"   ✅ Saved: {member_name} (linked to {len(doc_ids)} documents)")
-            else:
-                users_stats["errors"].append(f"Failed to save {member_name}")
-        
-        print(f"\n✅ Users Saved: {users_stats['users_saved']}/{len(team_members)}")
+            user_id = user_name_to_id.get(member_name)
+            
+            if not user_id:
+                continue
+                
+            # Find all documents authored by this user
+            user_doc_ids = []
+            for ticket in jira_tickets:
+                if ticket.get("assignee") == member_name:
+                    doc_id = document_ids.get(f"jira_{ticket.get('key')}")
+                    if doc_id:
+                        user_doc_ids.append(doc_id)
+            
+            for doc in confluence_docs:
+                if doc.get("author") == member_name:
+                    doc_id = document_ids.get(f"confluence_{doc.get('doc_id')}")
+                    if doc_id:
+                        user_doc_ids.append(doc_id)
+            
+            for pr in github_prs:
+                if pr.get("author") == member_name:
+                    doc_id = document_ids.get(f"github_pr_{pr.get('pr_number')}")
+                    if doc_id:
+                        user_doc_ids.append(doc_id)
+            
+            if user_doc_ids:
+                print(f"   🔗 {member_name}: {len(user_doc_ids)} documents")
     
     return {
         "store_accessibility": accessible,
         "historical_data": historical_stats,
         "prompts": prompt_stats,
         "users": users_stats,
+        "user_name_to_id_mapping": user_name_to_id,
         "total_saved": client.stats["documents_saved"] + client.stats["prompts_saved"] + client.stats["users_saved"],
         "errors": client.stats["errors"]
     }
