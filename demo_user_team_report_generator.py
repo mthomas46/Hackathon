@@ -186,7 +186,7 @@ class UserTeamReportGenerator:
   Proof of live code execution and real service interactions
 
 - **[Data Architecture Report](./Data_Architecture_Report.md)**  
-  In-depth analysis of data stores, schemas, and service discovery
+  In-depth analysis of datastores, schemas, and service discovery
 
 - **[Main README](../README.md)**  
   Demo overview and quick start guide

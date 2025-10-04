@@ -80,6 +80,273 @@ The LLM Documentation Ecosystem is a **sophisticated AI-powered platform** featu
 - ✅ **Performance optimized**: 100% memory efficiency, advanced indexing, load balancing
 - ✅ **Fully tested**: 35/40 tasks completed with comprehensive validation suite
 
+## 🚀 **Quick Start: Running Demo & Generating Reports**
+
+### 📖 **Demo Overview**
+
+The hyper-realistic demo generates comprehensive planning reports using AI-powered workflows. It simulates a real project planning scenario by:
+- Generating realistic mock data (Jira tickets, GitHub PRs, Confluence docs)
+- Extracting user intelligence from historical documents
+- Discovering services and dependencies
+- Creating detailed project plans with expert recommendations
+- Generating 6 interconnected reports with 172K+ characters of insights
+
+### **Example 1: Small Demo (Quick Test - 2 minutes)**
+
+**Use Case:** Quick validation, testing changes, demo preview
+
+```bash
+# Start required services
+bash restart_ecosystem_clean.sh
+
+# Run small demo
+python3 demo_hyper_realistic_parameterized.py \
+  --feature "User authentication module" \
+  --tickets 3 \
+  --team 4 \
+  --tech Python React \
+  --output small_demo_test
+
+# Expected output: 6 reports in ~2 minutes
+```
+
+**Generated Reports:**
+- Executive Dashboard (15KB) - GO/NO-GO decision in 3 minutes
+- Planning Service Report (25KB) - 4-week timeline
+- Behind-the-Scenes Report (42KB) - Complete workflow execution
+- User & Team Report (20KB) - Team composition analysis
+- Ecosystem Validation Report (21KB) - Service health
+- Data Architecture Report (50KB) - Datastore schemas
+
+**Key Metrics (Small Demo):**
+- Historical documents: 3
+- Team members: 4
+- Technologies: 2
+- Users extracted: 2-3
+- Services discovered: 3-5
+- Execution time: ~2 minutes
+
+---
+
+### **Example 2: Medium Demo (Realistic Project - 5 minutes)**
+
+**Use Case:** Realistic planning scenario, typical microservice project
+
+```bash
+python3 demo_hyper_realistic_parameterized.py \
+  --feature "E-commerce checkout microservice" \
+  --tickets 10 \
+  --team 8 \
+  --tech Python React PostgreSQL Redis Docker \
+  --tangential 8 \
+  --output medium_ecommerce_demo
+
+# Expected output: 6 reports in ~5 minutes
+```
+
+**Generated Reports:**
+- Executive Dashboard (18KB) - Detailed cost/ROI analysis
+- Planning Service Report (35KB) - 6-8 week timeline with phases
+- Behind-the-Scenes Report (55KB) - Full workflow orchestration
+- User & Team Report (28KB) - Skill gap analysis
+- Ecosystem Validation Report (25KB) - 8+ services validated
+- Data Architecture Report (65KB) - Complex schema relationships
+
+**Key Metrics (Medium Demo):**
+- Historical documents: 10
+- Team members: 8
+- Technologies: 5
+- Users extracted: 5-8
+- Services discovered: 8-12
+- SMEs identified: 5-8
+- Execution time: ~5 minutes
+
+---
+
+### **Example 3: Large Demo (Enterprise Project - 10 minutes)**
+
+**Use Case:** Complex enterprise planning, large team, comprehensive analysis
+
+```bash
+python3 demo_hyper_realistic_parameterized.py \
+  --feature "Distributed payment processing platform with fraud detection" \
+  --tickets 30 \
+  --team 15 \
+  --tech Python Java Kotlin React TypeScript PostgreSQL MongoDB Redis Kafka Docker Kubernetes AWS \
+  --tangential 15 \
+  --output large_enterprise_demo
+
+# Expected output: 6 reports in ~10 minutes
+```
+
+**Generated Reports:**
+- Executive Dashboard (22KB) - Multi-scenario ROI analysis
+- Planning Service Report (50KB) - 12+ week timeline, multiple phases
+- Behind-the-Scenes Report (80KB) - Comprehensive orchestration
+- User & Team Report (40KB) - Detailed skill matrices
+- Ecosystem Validation Report (35KB) - 15+ services
+- Data Architecture Report (90KB) - Complex data flows
+
+**Key Metrics (Large Demo):**
+- Historical documents: 30
+- Team members: 15
+- Technologies: 11
+- Users extracted: 12-18
+- Services discovered: 15-20
+- SMEs identified: 10-15
+- Collaboration relationships: 20+
+- Execution time: ~10 minutes
+
+---
+
+### **Example 4: Advanced Demo (All Features - 15 minutes)**
+
+**Use Case:** Full system showcase, maximum insights, presentation demo
+
+```bash
+python3 demo_hyper_realistic_parameterized.py \
+  --feature "Cloud-native AI/ML platform with real-time inference, model versioning, and A/B testing capabilities" \
+  --tickets 50 \
+  --team 20 \
+  --tech Python Go TypeScript React Vue PostgreSQL MongoDB Redis Kafka RabbitMQ Docker Kubernetes Terraform AWS GCP Azure Prometheus Grafana \
+  --tangential 25 \
+  --data-source hybrid \
+  --output advanced_aiml_platform
+
+# Expected output: 6 reports in ~15 minutes
+```
+
+**Generated Reports:**
+- Executive Dashboard (25KB) - Comprehensive decision support
+- Planning Service Report (70KB) - Multi-quarter roadmap
+- Behind-the-Scenes Report (120KB) - Full system orchestration
+- User & Team Report (55KB) - Cross-functional team analysis
+- Ecosystem Validation Report (45KB) - 20+ services validated
+- Data Architecture Report (120KB) - Enterprise-scale architecture
+
+**Key Metrics (Advanced Demo):**
+- Historical documents: 50
+- Team members: 20
+- Technologies: 20
+- Users extracted: 18-25
+- Services discovered: 20-30
+- SMEs identified: 15-20
+- Collaboration relationships: 40+
+- Technology coverage: 90%+
+- Execution time: ~15 minutes
+
+---
+
+### **📊 Demo Parameters Reference**
+
+| Parameter | Flag | Description | Small | Medium | Large | Advanced |
+|-----------|------|-------------|-------|--------|-------|----------|
+| **Feature** | `--feature` | Project description | Short | 1 sentence | 2 sentences | Detailed |
+| **Tickets** | `--tickets` | Historical documents | 3 | 10 | 30 | 50 |
+| **Team Size** | `--team` | Team members | 4 | 8 | 15 | 20 |
+| **Technologies** | `--tech` | Tech stack (space-separated) | 2 | 5 | 10+ | 20+ |
+| **Tangential** | `--tangential` | Service docs for discovery | 5 (default) | 8 | 15 | 25 |
+| **Data Source** | `--data-source` | `manual` (default) or `hybrid` | manual | manual | manual | hybrid |
+| **Output** | `--output` | Output folder name | Required | Required | Required | Required |
+
+---
+
+### **📁 Demo Output Structure**
+
+After running a demo, you'll find this structure in your output folder:
+
+```
+{output_folder}/
+├── README.md                    # Demo summary & navigation
+├── data/
+│   └── mock_data.json          # All generated data (preserves for audit)
+└── reports/
+    ├── Executive_Dashboard.md           # 🎯 START HERE (3-page C-level summary)
+    ├── Planning_Service_Report.md       # 📋 Detailed project plan
+    ├── Behind_the_Scenes_Report.md      # 🔧 Complete workflow execution
+    ├── User_and_Team_Report.md          # 👥 Team & skill analysis
+    ├── Ecosystem_Validation_Report.md   # ✅ Service health validation
+    └── Data_Architecture_Report.md      # 🗄️ Datastore schemas & relationships
+```
+
+---
+
+### **📖 Reading Guide by Persona**
+
+**For Executives (5 minutes):**
+1. Read **Executive Dashboard** (Page 1: Summary & GO/NO-GO)
+2. Scan **Planning Service Report** (Executive Summary only)
+3. Done! You have what you need for decision-making.
+
+**For Project Managers (15 minutes):**
+1. **Executive Dashboard** (full 3 pages)
+2. **Planning Service Report** (focus on timeline, risks, resources)
+3. **User & Team Report** (skill gaps, team composition)
+
+**For Tech Leads (30 minutes):**
+1. **Planning Service Report** (technical approach, architecture)
+2. **User & Team Report** (skills, SMEs, collaboration)
+3. **Data Architecture Report** (schemas, services, dependencies)
+4. **Ecosystem Validation Report** (service health)
+
+**For Engineers (45-60 minutes):**
+1. All 6 reports (comprehensive understanding)
+2. **Behind-the-Scenes Report** (learn how system works)
+3. **Data Architecture Report** (implementation details)
+
+---
+
+### **🔧 Troubleshooting**
+
+**Services Not Running:**
+```bash
+# Check service status
+curl http://localhost:5087/health  # doc-store
+curl http://localhost:5110/health  # prompt-store
+curl http://localhost:5140/health  # external-service-store
+
+# Restart all services
+bash restart_ecosystem_clean.sh
+
+# Check logs
+tail -f /tmp/doc_store_clean.log
+tail -f /tmp/prompt_store_clean.log
+```
+
+**Demo Errors:**
+- **Import errors:** Ensure `PYTHONPATH` includes project root
+- **Connection refused:** Services not started - run `restart_ecosystem_clean.sh`
+- **Permission denied:** Make scripts executable - `chmod +x *.sh`
+
+**Performance Issues:**
+- **Slow generation:** Reduce `--tickets` and `--team` size
+- **Memory issues:** Close other applications, use smaller demo
+- **Timeout errors:** Increase wait time or restart services
+
+---
+
+### **🎯 Best Practices**
+
+**For Meaningful Results:**
+- **Team size:** 4-8 members for focused analysis, 12-20 for enterprise
+- **Technologies:** 3-5 for microservice, 10+ for platform projects
+- **Historical tickets:** 10-30 for realistic document analysis
+- **Tangential docs:** 5-15 for good service discovery coverage
+
+**For Demo Presentations:**
+1. Run **Medium** or **Large** demo before presentation
+2. Start with **Executive Dashboard** (shows immediate value)
+3. Deep-dive into 2-3 reports based on audience
+4. Keep **Data Architecture** and **Behind-the-Scenes** for Q&A
+
+**For Development:**
+- Use **Small** demos for quick iteration testing
+- Run **Medium** demo after major changes
+- Run **Large** demo before commits to main
+- Use **Advanced** demo for comprehensive validation
+
+---
+
 ## 📁 **Project Structure & Organization**
 
 ### 🏗️ **Directory Layout**

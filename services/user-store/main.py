@@ -33,18 +33,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from services.shared.infrastructure.utilities import attach_self_register, setup_common_middleware
 
 # Import domain and application layers
-from services.user_store.infrastructure.repositories.sqlite_user_repository import (
+from .infrastructure.repositories.sqlite_user_repository import (
     SQLiteUserRepository,
     SQLiteUserPreferencesRepository
 )
-from services.user_store.infrastructure.repositories.sqlite_document_relationship_repository import (
+from .infrastructure.repositories.sqlite_document_relationship_repository import (
     SQLiteDocumentRelationshipRepository
 )
-from services.user_store.domain.services.user_service import UserService
-from services.user_store.application.use_cases.create_user_use_case import CreateUserUseCase
-from services.user_store.application.use_cases.query_users_by_relationship_use_case import QueryUsersByRelationshipUseCase
-from services.user_store.application.use_cases.process_document_relationships_use_case import ProcessDocumentRelationshipsUseCase
-from services.user_store.application.dto.user_dto import (
+from .domain.services.user_service import UserService
+from .application.use_cases.create_user_use_case import CreateUserUseCase
+from .application.use_cases.query_users_by_relationship_use_case import QueryUsersByRelationshipUseCase
+from .application.use_cases.process_document_relationships_use_case import ProcessDocumentRelationshipsUseCase
+from .application.dto.user_dto import (
     CreateUserRequest,
     UpdateUserRequest,
     UserPreferencesRequest,
