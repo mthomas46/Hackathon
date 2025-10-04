@@ -36,21 +36,17 @@ class DuplicateEntityError(RepositoryError):
     pass
 
 
-class BaseEntity(ABC):
+class BaseEntity:
     """Base entity interface with common fields and methods."""
 
-    id: Any
-    created_at: Any
-    updated_at: Optional[Any]
-
-    @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         """Convert entity to dictionary representation."""
-        pass
+        raise NotImplementedError("Subclasses must implement to_dict()")
 
     def update_timestamp(self) -> None:
         """Update the updated_at timestamp."""
-        self.updated_at = datetime.now(timezone.utc)
+        if hasattr(self, 'updated_at'):
+            self.updated_at = datetime.now(timezone.utc)
 
     @classmethod
     def generate_id(cls) -> str:
@@ -362,8 +358,11 @@ class SqlRepository(BaseRepository[T]):
     ) -> List[Dict[str, Any]]:
         """Execute SQL query using aiosqlite."""
         import aiosqlite
+        
+        # Strip sqlite:// prefix if present
+        db_path = self.connection_string.replace('sqlite:///', '')
 
-        async with aiosqlite.connect(self.connection_string) as conn:
+        async with aiosqlite.connect(db_path) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute(query, params)
             rows = await cursor.fetchall()
@@ -372,8 +371,11 @@ class SqlRepository(BaseRepository[T]):
     async def _execute_command(self, command: str, params: tuple = ()) -> int:
         """Execute SQL command using aiosqlite."""
         import aiosqlite
+        
+        # Strip sqlite:// prefix if present
+        db_path = self.connection_string.replace('sqlite:///', '')
 
-        async with aiosqlite.connect(self.connection_string) as conn:
+        async with aiosqlite.connect(db_path) as conn:
             cursor = await conn.execute(command, params)
             await conn.commit()
             return cursor.rowcount

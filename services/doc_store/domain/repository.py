@@ -23,7 +23,8 @@ class DocumentRepository(SqlRepository[Document]):
 
     def _dict_to_entity(self, data: Dict[str, Any]) -> Document:
         """Convert database row to document entity."""
-        return Document(**data)
+        # Use the Document.from_dict method which handles type conversions
+        return Document.from_dict(data)
 
     async def find_by_content_hash(self, content_hash: str) -> Optional[Document]:
         """Find document by content hash (service-specific method)."""

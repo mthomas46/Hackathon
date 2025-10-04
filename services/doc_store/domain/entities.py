@@ -15,7 +15,7 @@ from services.shared.domain.repositories.base_repository import BaseEntity
 
 
 @dataclass(eq=True, frozen=False)
-class Document(BaseEntity):
+class Document:
     """Core document entity using standardized base class."""
 
     id: str
@@ -48,6 +48,16 @@ class Document(BaseEntity):
     def __hash__(self) -> int:
         """Hash based on immutable fields."""
         return hash((self.id, self.content, self.content_hash))
+
+    def update_timestamp(self) -> None:
+        """Update the updated_at timestamp."""
+        self.updated_at = datetime.now(timezone.utc)
+
+    @classmethod
+    def generate_id(cls) -> str:
+        """Generate a unique identifier for new entities."""
+        from uuid import uuid4
+        return str(uuid4())
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Document":
