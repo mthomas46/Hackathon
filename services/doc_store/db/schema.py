@@ -14,9 +14,11 @@ def create_documents_table() -> str:
         content TEXT NOT NULL,
         content_hash TEXT,
         metadata TEXT,
+        tags TEXT,
         correlation_id TEXT,
         created_at TEXT NOT NULL,
-        updated_at TEXT
+        updated_at TEXT,
+        version INTEGER DEFAULT 1
         )
     """
 
