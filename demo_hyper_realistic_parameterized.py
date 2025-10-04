@@ -5183,6 +5183,175 @@ Historical Documents (doc_store)
             traceback.print_exc()
             return ""
     
+    def generate_demo_prompt_file(self) -> str:
+        """Generate DEMO_PROMPT.md file with original prompt and CLI command."""
+        print(f"\n📄 GENERATING DEMO PROMPT FILE...")
+        print("="*80)
+        
+        # Build the CLI command
+        cli_command = f"""python3 demo_hyper_realistic_parameterized.py \\
+  --feature "{self.feature_summary}" \\
+  --tickets {self.num_historical_tickets} \\
+  --team {self.num_team_members} \\
+  --tech {' '.join([f'"{tech}"' for tech in self.tech_stack])} \\
+  --output {self.demo_folder.name}"""
+        
+        if self.num_tangential_docs != 10:
+            cli_command += f" \\\n  --tangential-docs {self.num_tangential_docs}"
+        
+        if self.data_source_mode != DataSourceMode.MANUAL:
+            cli_command += f" \\\n  --data-source {self.data_source_mode.value}"
+        
+        if self.mock_quality != "high":
+            cli_command += f" \\\n  --mock-quality {self.mock_quality}"
+        
+        # Generate file content
+        content = f"""# Demo Prompt & Parameters
+
+**Generated:** {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}  
+**Demo Output Folder:** `{self.demo_folder.name}/`
+
+---
+
+## 📝 Original Prompt
+
+> {self.feature_summary}
+
+---
+
+## 🚀 Equivalent CLI Command
+
+To reproduce this exact demo, run:
+
+```bash
+{cli_command}
+```
+
+---
+
+## 📊 Demo Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| **Feature** | {self.feature_summary[:80]}{"..." if len(self.feature_summary) > 80 else ""} | Main feature to plan |
+| **Documents** | {self.num_historical_tickets} tickets | Historical documents analyzed |
+| **Tangential Docs** | {self.num_tangential_docs} | Supporting documents |
+| **Team Size** | {self.num_team_members} developers | Team composition |
+| **Technologies** | {len(self.tech_stack)} in stack | Tech stack size |
+| **Data Source** | {self.data_source_mode.value} | Document generation mode |
+| **Mock Quality** | {self.mock_quality} | AI-generated data quality |
+
+---
+
+## 🛠️ Technology Stack
+
+"""
+        
+        for i, tech in enumerate(self.tech_stack, 1):
+            content += f"{i}. **{tech}**\n"
+        
+        content += f"""
+---
+
+## 📈 Results Generated
+
+### Key Metrics
+- **Services Discovered:** {self.service_discovery_results.get('stats', {}).get('services_discovered', 0)}
+"""
+        
+        if self.workflow_f_result:
+            content += f"""- **Users Extracted:** {self.workflow_f_result.total_users_extracted}
+- **SMEs Identified:** {len(self.workflow_f_result.subject_matter_experts)}
+- **Collaboration Relationships:** {len(self.workflow_f_result.collaboration_graph)}
+"""
+        
+        content += f"""
+### Reports Generated
+1. **Executive Dashboard** - C-level summary with GO/NO-GO recommendation
+2. **Planning Service Report** - Complete sections 1-15 roadmap
+3. **Behind-the-Scenes Report** - Technical implementation details
+4. **User & Team Report** - Team composition and expertise
+5. **Ecosystem Validation Report** - Service health checks
+6. **Data Architecture Report** - Database schemas and relationships
+7. **Ecosystem Architecture Report** - Macro-level ecosystem design
+
+### Data Files
+- **Mock Data:** `data/mock_data.json` - {self.num_historical_tickets} documents, {self.num_team_members} team members
+- **README:** `README.md` - Demo overview and navigation
+
+---
+
+## 🔄 How to Modify This Demo
+
+### Change Team Size
+```bash
+# Same demo with 10 developers instead of {self.num_team_members}
+python3 demo_hyper_realistic_parameterized.py \\
+  --feature "{self.feature_summary[:60]}..." \\
+  --tickets {self.num_historical_tickets} \\
+  --team 10 \\
+  --tech {' '.join([f'"{tech}"' for tech in self.tech_stack[:3]])} \\
+  --output {self.demo_folder.name}_10_devs
+```
+
+### Change Document Count
+```bash
+# Same demo with 50 documents instead of {self.num_historical_tickets}
+python3 demo_hyper_realistic_parameterized.py \\
+  --feature "{self.feature_summary[:60]}..." \\
+  --tickets 50 \\
+  --team {self.num_team_members} \\
+  --tech {' '.join([f'"{tech}"' for tech in self.tech_stack[:3]])} \\
+  --output {self.demo_folder.name}_50_docs
+```
+
+### Add More Technologies
+```bash
+# Same demo with additional tech stack
+python3 demo_hyper_realistic_parameterized.py \\
+  --feature "{self.feature_summary[:60]}..." \\
+  --tickets {self.num_historical_tickets} \\
+  --team {self.num_team_members} \\
+  --tech {' '.join([f'"{tech}"' for tech in self.tech_stack[:3]])} "Docker" "Kubernetes" "Redis" \\
+  --output {self.demo_folder.name}_extended
+```
+
+---
+
+## 📚 Related Files
+
+- **[README](../README.md)** - Main documentation
+- **[Executive Dashboard](./Executive_Dashboard.md)** - Start here for high-level overview
+- **[Planning Service Report](./Planning_Service_Report.md)** - Complete 15-section roadmap
+- **[Mock Data](../data/mock_data.json)** - Raw generated data
+
+---
+
+## 💡 Tips
+
+1. **For Quick Demos:** Use `--tickets 5 --team 3` for fast results (< 30 seconds)
+2. **For Comprehensive Demos:** Use `--tickets 50 --team 12` for detailed analysis (2-3 minutes)
+3. **For Specific Tech Stacks:** Always quote technology names with spaces (e.g., `"Cats Effect"`)
+4. **For Reproducibility:** Save this file and use the CLI command above to regenerate identical results
+
+---
+
+**Generated by:** AI-powered LLM Documentation Ecosystem  
+**Workflow Version:** 6 workflows (A, B, C, D, E, F)  
+**Demo System:** Parameterized Hyper-Realistic Demo  
+**Timestamp:** {datetime.utcnow().isoformat()}
+"""
+        
+        # Write to file
+        prompt_file = self.demo_folder / "reports" / "DEMO_PROMPT.md"
+        with open(prompt_file, 'w') as f:
+            f.write(content)
+        
+        print(f"✅ Demo prompt file saved: {prompt_file}")
+        print(f"   Contains: Original prompt + CLI command for reproduction")
+        
+        return str(prompt_file)
+    
     def generate_readme(self):
         """Generate README.md for the demo folder."""
         readme_content = f"""# Hyper-Realistic Demo Output
@@ -5673,6 +5842,9 @@ Simply delete this folder and run the demo script again with your desired parame
         # Generate README
         readme = self.generate_readme()
         
+        # ⭐ NEW: Generate DEMO_PROMPT.md file
+        prompt_file = self.generate_demo_prompt_file()
+        
         # Summary
         print("\n" + "="*100)
         print("✅ DEMO COMPLETE!")
@@ -5680,6 +5852,8 @@ Simply delete this folder and run the demo script again with your desired parame
         print(f"\n📁 Demo Folder: {self.demo_folder.absolute()}")
         print(f"\n📄 README:")
         print(f"      {self.demo_folder.absolute() / 'README.md'}")
+        print(f"\n📝 DEMO PROMPT (NEW - Auto-saved):")
+        print(f"      {self.demo_folder.absolute() / 'reports' / 'DEMO_PROMPT.md'}")
         print(f"\n📄 Reports Generated:")
         print(f"   1. Executive Dashboard (NEW - Phase 2 Audit) ⭐ START HERE:")
         print(f"      {self.demo_folder.absolute() / 'reports' / 'Executive_Dashboard.md'}")
