@@ -44,10 +44,10 @@ except ImportError:
         content: str
         metadata: Optional[dict] = None
 
-# Add shared infrastructure to path
+# Add project root to path for imports
 project_root = Path(__file__).parent.parent.parent
-shared_path = project_root / "services" / "shared"
-sys.path.insert(0, str(shared_path))
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 try:
     from services.shared.presentation.api.responses import APIResponse
@@ -303,6 +303,14 @@ async def memory_health():
         }
 
 
+class MemoryItemRequest(BaseModel):
+    """Pydantic model for memory item API requests."""
+    id: str
+    user_id: str
+    memory_type: str
+    content: str
+    metadata: Optional[Dict[str, Any]] = None
+
 class PutMemoryRequest(BaseModel):
     """Request model for storing memory items.
 
@@ -310,7 +318,7 @@ class PutMemoryRequest(BaseModel):
     operational context storage with TTL-based expiration.
     """
 
-    item: MemoryItem
+    item: MemoryItemRequest
     """The memory item to store, containing type, key, value, and metadata."""
 
 
@@ -318,17 +326,26 @@ class PutMemoryRequest(BaseModel):
 async def put_memory(req: PutMemoryRequest):
     """Store a memory item with validation and error handling."""
     try:
+        # Convert Pydantic request model to MemoryItem dataclass entity
+        memory_item = MemoryItem(
+            id=req.item.id,
+            user_id=req.item.user_id,
+            memory_type=req.item.memory_type,
+            content=req.item.content,
+            metadata=req.item.metadata or {}
+        )
+        
         # Validate memory item
-        validate_memory_item(req.item)
+        validate_memory_item(memory_item)
 
-        result = put_memory_item(req.item)
+        result = put_memory_item(memory_item)
 
         context = build_memory_agent_context("store", item_count=result.get("count", 1))
         context = {k: v for k, v in context.items() if k in ["request_id"]}
         return create_memory_agent_success_response("stored", result, **context)
 
     except Exception as e:
-        context = {"item_type": getattr(req.item, "type", None)}
+        context = {"item_type": getattr(req.item, "memory_type", None)}
         return handle_memory_agent_error("store memory item", e, **context)
 
 
