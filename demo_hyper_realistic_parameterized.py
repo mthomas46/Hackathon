@@ -872,6 +872,226 @@ class ParameterizedHyperRealisticDemo:
         
         return result
     
+    def _generate_live_data_samples_section(self) -> str:
+        """Generate markdown section showing actual data samples from live datastores."""
+        if not hasattr(self, 'live_datastore_data'):
+            return "⚠️ Live datastore data not available. Run demo with services started."
+        
+        sections = []
+        data = self.live_datastore_data
+        
+        # doc-store samples
+        if data["doc_store"]["accessible"] and data["doc_store"]["samples"]:
+            sections.append(f"""
+#### 📄 doc-store: Historical Documents
+
+**Total Records:** {data["doc_store"]["total"]} documents
+
+**Sample Records:**
+""")
+            for i, doc in enumerate(data["doc_store"]["samples"][:2], 1):
+                metadata = doc.get("metadata", {})
+                sections.append(f"""
+**Document {i}:**
+- **ID:** `{doc.get('id', 'N/A')[:50]}...`
+- **Type:** {metadata.get('doc_type', 'unknown')}
+- **Source:** {metadata.get('source', 'unknown')}
+- **Created:** {doc.get('created_at', 'N/A')[:19]}
+- **User Attribution:** {metadata.get('user_id', 'N/A')[:30]}{'...' if metadata.get('user_id') and len(metadata.get('user_id', '')) > 30 else ''}
+- **Content Hash:** `{doc.get('content_hash', 'N/A')[:16]}...`
+""")
+        
+        # user-store samples
+        if data["user_store"]["accessible"] and data["user_store"]["samples"]:
+            sections.append(f"""
+#### 👥 user-store: Team Members
+
+**Total Records:** {data["user_store"]["total"]} users
+
+**Sample Records:**
+""")
+            for i, user in enumerate(data["user_store"]["samples"][:2], 1):
+                sections.append(f"""
+**User {i}:**
+- **ID:** `{user.get('id', 'N/A')}`
+- **Name:** {user.get('display_name', 'N/A')}
+- **Email:** {user.get('email', 'N/A')}
+- **Role:** {user.get('role', 'N/A')}
+- **Status:** {user.get('status', 'N/A')}
+- **Created:** {user.get('created_at', 'N/A')[:19]}
+- **Document Links:** {len(user.get('document_relationships', []))} documents
+""")
+        
+        # prompt-store samples
+        if data["prompt_store"]["accessible"] and data["prompt_store"]["samples"]:
+            sections.append(f"""
+#### 📝 prompt-store: Workflow Prompts
+
+**Total Records:** {data["prompt_store"]["total"]} prompts
+
+**Sample Records:**
+""")
+            for i, prompt in enumerate(data["prompt_store"]["samples"][:2], 1):
+                template = prompt.get('template', '')
+                sections.append(f"""
+**Prompt {i}:**
+- **Name:** `{prompt.get('name', 'N/A')}`
+- **Category:** {prompt.get('category', 'N/A')}
+- **Description:** {prompt.get('description', 'N/A')[:80]}{'...' if len(prompt.get('description', '')) > 80 else ''}
+- **Template Preview:** `{template[:100]}...`
+- **Tags:** {', '.join(prompt.get('tags', [])[:3])}
+""")
+        
+        # external-service-store samples
+        if data["external_service_store"]["accessible"] and data["external_service_store"]["samples"]:
+            sections.append(f"""
+#### 🔧 external-service-store: Discovered Services
+
+**Total Records:** {data["external_service_store"]["total"]} services
+
+**Sample Records:**
+""")
+            for i, service in enumerate(data["external_service_store"]["samples"][:2], 1):
+                sections.append(f"""
+**Service {i}:**
+- **ID:** `{service.get('id', 'N/A')[:30]}...`
+- **Name:** {service.get('display_name', service.get('name', 'N/A'))}
+- **Type:** {service.get('service_type', 'N/A')}
+- **Version:** {service.get('version', 'N/A')}
+- **Status:** {service.get('status', 'N/A')}
+- **Technologies:** {', '.join(service.get('technologies', [])[:3])}
+- **Created:** {service.get('created_at', 'N/A')[:19]}
+""")
+        
+        # memory-agent samples
+        if data["memory_agent"]["accessible"] and data["memory_agent"]["samples"]:
+            sections.append(f"""
+#### 🧠 memory-agent: Workflow Contexts
+
+**Total Records:** {data["memory_agent"]["total"]} memory items
+
+**Sample Records:**
+""")
+            for i, memory in enumerate(data["memory_agent"]["samples"][:2], 1):
+                metadata = memory.get('metadata', {})
+                sections.append(f"""
+**Memory {i}:**
+- **ID:** `{memory.get('id', 'N/A')}`
+- **Type:** {memory.get('memory_type', 'N/A')}
+- **User:** {memory.get('user_id', 'N/A')[:30]}...
+- **Created:** {memory.get('created_at', 'N/A')[:19]}
+- **Access Count:** {memory.get('access_count', 0)}
+- **Content Preview:** {str(memory.get('content', ''))[:80]}...
+""")
+        
+        if not sections:
+            return "⚠️ No live data available. Ensure all services are running."
+        
+        return "\n".join(sections)
+    
+    async def fetch_live_datastore_samples(self) -> Dict[str, Any]:
+        """
+        Fetch actual data samples from all datastores for report enrichment.
+        Returns real data, schemas, and statistics.
+        """
+        print(f"\n🔍 FETCHING LIVE DATA FROM DATASTORES FOR REPORT ENRICHMENT...")
+        print("="*80)
+        
+        import httpx
+        
+        live_data = {
+            "doc_store": {"accessible": False, "samples": [], "total": 0, "schema": None},
+            "prompt_store": {"accessible": False, "samples": [], "total": 0, "schema": None},
+            "user_store": {"accessible": False, "samples": [], "total": 0, "schema": None},
+            "external_service_store": {"accessible": False, "samples": [], "total": 0, "schema": None},
+            "memory_agent": {"accessible": False, "samples": [], "total": 0, "schema": None},
+        }
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Fetch from doc-store
+            try:
+                response = await client.get("http://localhost:5087/documents?limit=3")
+                if response.status_code == 200:
+                    data = response.json()
+                    live_data["doc_store"]["accessible"] = True
+                    live_data["doc_store"]["samples"] = data.get("items", [])[:3]
+                    live_data["doc_store"]["total"] = data.get("total", 0)
+                    live_data["doc_store"]["schema"] = {
+                        "table": "documents",
+                        "columns": ["id", "content", "content_hash", "metadata", "tags", "correlation_id", "created_at", "updated_at", "version"]
+                    }
+                    print(f"   ✅ doc-store: {live_data['doc_store']['total']} documents")
+            except Exception as e:
+                print(f"   ⚠️  doc-store: {str(e)[:50]}")
+            
+            # Fetch from prompt-store
+            try:
+                response = await client.get("http://localhost:5110/prompts?limit=3")
+                if response.status_code == 200:
+                    data = response.json()
+                    live_data["prompt_store"]["accessible"] = True
+                    live_data["prompt_store"]["samples"] = data.get("items", [])[:3] if isinstance(data, dict) else data[:3]
+                    live_data["prompt_store"]["total"] = data.get("total", len(data)) if isinstance(data, dict) else len(data)
+                    live_data["prompt_store"]["schema"] = {
+                        "table": "prompts",
+                        "columns": ["id", "name", "template", "category", "description", "tags", "version", "created_at"]
+                    }
+                    print(f"   ✅ prompt-store: {live_data['prompt_store']['total']} prompts")
+            except Exception as e:
+                print(f"   ⚠️  prompt-store: {str(e)[:50]}")
+            
+            # Fetch from user-store
+            try:
+                response = await client.get("http://localhost:5150/users?limit=3")
+                if response.status_code == 200:
+                    data = response.json()
+                    live_data["user_store"]["accessible"] = True
+                    live_data["user_store"]["samples"] = data[:3] if isinstance(data, list) else []
+                    live_data["user_store"]["total"] = len(data) if isinstance(data, list) else 0
+                    live_data["user_store"]["schema"] = {
+                        "table": "users",
+                        "columns": ["id", "email", "username", "display_name", "role", "status", "document_relationships", "service_subscriptions", "topic_interests", "created_at", "updated_at"]
+                    }
+                    print(f"   ✅ user-store: {live_data['user_store']['total']} users")
+            except Exception as e:
+                print(f"   ⚠️  user-store: {str(e)[:50]}")
+            
+            # Fetch from external-service-store
+            try:
+                response = await client.get("http://localhost:5140/services?limit=3")
+                if response.status_code == 200:
+                    data = response.json()
+                    live_data["external_service_store"]["accessible"] = True
+                    live_data["external_service_store"]["samples"] = data.get("items", data)[:3] if isinstance(data, (list, dict)) else []
+                    live_data["external_service_store"]["total"] = data.get("total", len(data)) if isinstance(data, dict) else len(data)
+                    live_data["external_service_store"]["schema"] = {
+                        "table": "external_services",
+                        "columns": ["id", "name", "service_type", "description", "version", "technologies", "endpoints", "status", "created_at"]
+                    }
+                    print(f"   ✅ external-service-store: {live_data['external_service_store']['total']} services")
+            except Exception as e:
+                print(f"   ⚠️  external-service-store: {str(e)[:50]}")
+            
+            # Fetch from memory-agent
+            try:
+                response = await client.get("http://localhost:5090/memory?limit=3")
+                if response.status_code == 200:
+                    data = response.json()
+                    memories = data.get("items", data.get("memories", []))
+                    live_data["memory_agent"]["accessible"] = True
+                    live_data["memory_agent"]["samples"] = memories[:3]
+                    live_data["memory_agent"]["total"] = data.get("total", len(memories))
+                    live_data["memory_agent"]["schema"] = {
+                        "table": "memory_items",
+                        "columns": ["id", "user_id", "memory_type", "content", "metadata", "created_at", "expires_at", "access_count"]
+                    }
+                    print(f"   ✅ memory-agent: {live_data['memory_agent']['total']} memory items")
+            except Exception as e:
+                print(f"   ⚠️  memory-agent: {str(e)[:50]}")
+        
+        print(f"\n✅ Live data fetched from {sum(1 for v in live_data.values() if v['accessible'])} / 5 datastores")
+        return live_data
+    
     async def save_workflow_executions_to_memory(self):
         """Save all workflow executions to memory-agent for context storage."""
         print(f"\n💾 SAVING WORKFLOW EXECUTIONS TO MEMORY-AGENT...")
@@ -1423,7 +1643,13 @@ This demo doesn't just simulate - it **actually persists data** to real ecosyste
 
 **Note:** user-store shows TOTAL users available for document linking (new users created in this run + existing users found in database). This enables proper document→user relationships regardless of whether users were just created or already existed.
 
-### 6.2 Database Schemas (Live Stores)
+### 6.2 Live Data Samples from Datastores
+
+This section shows ACTUAL data currently stored in the ecosystem datastores - not simulated, but real persisted records:
+
+{self._generate_live_data_samples_section()}
+
+### 6.3 Database Schemas (Live Stores)
 
 **doc_store Schema:**
 ```sql
@@ -2152,9 +2378,17 @@ Historical Documents (doc_store)
 
 ---
 
-## 2. Data Store Schemas
+## 2. Live Data Store Contents
 
-### 2.1 doc_store (Historical Documents)
+**This section shows ACTUAL data currently persisted in the ecosystem datastores - real records with IDs, timestamps, and relationships:**
+
+{self._generate_live_data_samples_section()}
+
+---
+
+## 3. Data Store Schemas
+
+### 3.1 doc_store (Historical Documents)
 
 **Purpose:** Stores all historical project documents (Jira tickets, Confluence docs, GitHub PRs)
 
@@ -2197,7 +2431,7 @@ CREATE INDEX idx_doc_type ON documents((metadata->>'doc_type'));
 - **GitHub PRs:** {len([d for d in self.mock_data.get('github_prs', []) if d])} documents
 - **Total:** {len(self.mock_data.get('jira_tickets', [])) + len(self.mock_data.get('confluence_docs', [])) + len(self.mock_data.get('github_prs', []))} documents
 
-### 2.2 prompt_store (Workflow Prompts)
+### 3.2 prompt_store (Workflow Prompts)
 
 **Purpose:** Stores all prompts used by AI-powered workflows
 
@@ -2243,7 +2477,7 @@ CREATE INDEX idx_prompt_active ON prompts(is_active);
   - knowledge_gap_detection_prompt
   - blindspot_detection_prompt
 
-### 2.3 external-service-store (Discovered Services)
+### 3.3 external-service-store (Discovered Services)
 
 **Purpose:** Catalog of all external services discovered from documents and user input
 
@@ -2309,7 +2543,7 @@ CREATE INDEX idx_service_doc_links ON service_document_links(service_id, documen
         
         sections.append(f"""
 
-### 2.4 memory-agent (Workflow Execution Contexts)
+### 3.4 memory-agent (Workflow Execution Contexts)
 
 **Purpose:** Stores execution history and context for all workflows
 
@@ -2354,7 +2588,7 @@ workflow:<workflow_type>:<workflow_id>
 - **Total Execution Time:** {self.execution_metrics.get('total', 0):.2f}s
 - **Storage TTL:** 7 days
 
-### 2.5 user-store (Team & Skills Data)
+### 3.5 user-store (Team & Skills Data)
 
 **Purpose:** Stores team member profiles, skills, and capacity data
 
@@ -2391,7 +2625,7 @@ CREATE INDEX idx_skill_proficiency ON skills(proficiency_level);
 
 ---
 
-## 3. Data Relationships & Linkings
+## 4. Data Relationships & Linkings
 
 ### 3.1 Document → Service Linkings
 
@@ -2513,7 +2747,7 @@ memory-agent
 
 ---
 
-## 4. Data Architecture Patterns
+## 5. Data Architecture Patterns
 
 ### 4.1 Source-of-Truth Pattern
 
@@ -2582,7 +2816,7 @@ Third Run:
 
 ---
 
-## 5. Query Examples
+## 6. Query Examples
 
 ### 5.1 Find All Documents Mentioning a Service
 
@@ -2633,7 +2867,7 @@ prompts = await get_prompts_by_workflow_type(workflows[0].workflow_type)
 
 ---
 
-## 6. Data Persistence Statistics
+## 7. Data Persistence Statistics
 
 ### 6.1 Current Demo Data
 """)
@@ -2702,7 +2936,7 @@ After Demo Run:
 
 ---
 
-## 7. Visual Architecture Diagram
+## 8. Visual Architecture Diagram
 
 ### 7.1 Complete Ecosystem Data Flow
 
@@ -2821,7 +3055,7 @@ Historical Documents (doc_store)
 
 ---
 
-## 8. Related Reports & Documentation
+## 9. Related Reports & Documentation
 
 **Navigate to other reports for complete picture:**
 
@@ -2842,7 +3076,7 @@ Historical Documents (doc_store)
 
 ---
 
-## 9. Key Insights
+## 10. Key Insights
 
 ### 9.1 Data Architecture Highlights
 
@@ -3207,7 +3441,10 @@ Simply delete this folder and run the demo script again with your desired parame
         # 💾 NEW: Save workflow executions to memory-agent
         await self.save_workflow_executions_to_memory()
         
-        # Generate all four reports
+        # 🔍 NEW: Fetch live data from datastores for report enrichment
+        self.live_datastore_data = await self.fetch_live_datastore_samples()
+        
+        # Generate all four reports (now enriched with live data)
         planning_report = self.generate_planning_report(workflow_e_result)
         behind_scenes_report = self.generate_behind_scenes_report(workflow_e_result)
         validation_report = self.generate_ecosystem_validation_report()
