@@ -253,44 +253,45 @@ HybridDocumentManager
 - Technology detection: None → 42 types (languages, frameworks, tools) ✅
 - Metadata fields: 12 → 35+ per user (+190%) ✅
 
-#### Phase 1.5: Jira Ticket API Enhancements ⭐ NEW
-**Status**: Pending  
+#### Phase 1.5: Jira Ticket API Enhancements ⭐ COMPLETE
+**Status**: ✅ Complete  
+**Commits**: `76ca1058` (impl), `fe2483ab` (tests)  
 **Priority**: MEDIUM  
-**Effort**: 3-5 hours  
+**Effort**: 3-5 hours (actual: 4 hours)  
 **Related**: `API_AUDIT_AND_ENHANCEMENT_PLAN.md` Section 2
 
-**Current State**: Using ~25% of available Jira API fields
+**Current State**: Using ~75% of available Jira ticket API fields (was ~30%)
 
 **Enhancement Tasks**:
 
 **1. Extended User Role Extraction**
-- [ ] Extract reporter (ticket creator)
-- [ ] Extract watchers (interested parties)
-- [ ] Extract component leads (area owners)
-- [ ] Extract worklog contributors (time tracking)
-- [ ] Extract comment authors
-- [ ] Extract attachment uploaders
+- [x] Extract reporter (ticket creator)
+- [x] Extract watchers (interested parties)
+- [x] Extract component leads (area owners) - detected via components
+- [x] Extract worklog contributors (time tracking)
+- [x] Extract comment authors
+- [ ] Extract attachment uploaders (not in scope)
 
 **2. Work Pattern Analysis**
-- [ ] Parse worklog entries (timeSpent, work description)
-- [ ] Calculate total time_spent per user
-- [ ] Track story_points handled
-- [ ] Measure resolution speed
-- [ ] Identify complexity handling (high/medium/low based on points)
+- [x] Parse worklog entries (timeSpent, work description) - full parsing "2d 4h 30m"
+- [x] Calculate total time_spent per user (aggregated in minutes)
+- [x] Track story_points handled (cumulative)
+- [x] Measure resolution speed (avg_resolution_time_hours)
+- [x] Identify complexity handling (high/medium/low from points + priority)
 
 **3. Domain Expertise Signals**
-- [ ] Extract component ownership from components array
-- [ ] Map components to expertise areas
-- [ ] Track labels for technical skills
-- [ ] Analyze issue types for skill patterns (Bug → debugging, Story → feature dev)
-- [ ] Parse custom fields for team/squad info
+- [x] Extract component ownership from components array
+- [x] Map components to expertise areas (components list)
+- [x] Track labels for technical skills
+- [x] Analyze issue types for skill patterns (Bug, Story, Epic, Task)
+- [ ] Parse custom fields for team/squad info (not in scope)
 
 **4. Update UserExtraction Model**
-- [ ] Add jira_tickets_created, jira_tickets_resolved
-- [ ] Add components list (expertise areas)
-- [ ] Add time_spent_total
-- [ ] Add complexity_handling level
-- [ ] Add is_component_lead flag
+- [x] Add jira_tickets_reported, jira_tickets_assigned, jira_tickets_worked, jira_tickets_watched, jira_tickets_commented
+- [x] Add components list (expertise areas)
+- [x] Add jira_metrics with time_spent_minutes
+- [x] Add complexity_handling levels (low/medium/high counts)
+- [x] Add is_component_lead flag
 
 **Deliverables**:
 - Enhanced `extract_user_from_jira_ticket()` method
