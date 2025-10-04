@@ -3931,7 +3931,7 @@ CREATE TABLE users (
     email TEXT,
     role TEXT,  -- developer, analyst, manager
     team_id TEXT,
-    skills JSON,  -- {"Python": 0.9, "FastAPI": 0.85}
+    skills JSON,  -- {{"Python": 0.9, "FastAPI": 0.85}}
     expertise_score REAL,
     documents_created INTEGER,
     documents_reviewed INTEGER,
