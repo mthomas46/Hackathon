@@ -32,6 +32,7 @@ from domain.services.workflow_f_user_intelligence import UserIntelligenceWorkflo
 from demo_data_persistence_client import DemoPersistenceClient, save_demo_data_to_stores
 from intelligent_service_discovery import IntelligentServiceDiscovery, discover_and_store_services
 from demo_sme_report_enhancer import SMEReportEnhancer
+from demo_workflow_f_report_enhancer import WorkflowFReportEnhancer
 
 # Additional imports for service integration
 import httpx
@@ -1812,8 +1813,12 @@ class ParameterizedHyperRealisticDemo:
 3. [Workflow Execution Details](#workflow-execution-details)
 4. [Service Interactions](#service-interactions)
 5. [Data Correlations](#data-correlations)
-6. [Performance Metrics](#performance-metrics)
-7. [Key Insights](#key-insights)
+6. [Data Persistence & Ecosystem Integration](#data-persistence--ecosystem-integration)
+7. [Performance Metrics](#performance-metrics)
+8. [Key Insights](#key-insights)
+9. [Files Generated](#files-generated)
+10. [Related Reports](#related-reports)
+11. [User Intelligence & Expert Discovery (Workflow F)](#user-intelligence--expert-discovery-workflow-f-)
 
 ---
 
@@ -2423,6 +2428,25 @@ This demo created the following files:
 **Generated:** {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}  
 **System Version:** Phase 9 - Hyper-Realistic Demo v2.0  
 """)
+        
+        # ⭐ NEW: Generate Section 11 - User Intelligence & Expert Discovery (Workflow F - Phase 2)
+        if hasattr(self, 'workflow_f_result') and self.workflow_f_result:
+            print("   ⭐ Adding Section 11: User Intelligence & Expert Discovery (Workflow F)")
+            try:
+                # Create Workflow F report enhancer
+                workflow_f_enhancer = WorkflowFReportEnhancer(
+                    workflow_f_result=self.workflow_f_result,
+                    mock_data=self.mock_data,
+                    expert_finder_url="http://localhost:5160"
+                )
+                section_11 = workflow_f_enhancer.generate_workflow_f_section()
+                sections.append(section_11)
+                print(f"   ✅ Section 11 generated ({len(section_11):,} characters)")
+            except Exception as e:
+                print(f"   ⚠️  Could not generate Section 11: {e}")
+                import traceback
+                traceback.print_exc()
+                sections.append("\n\n---\n\n## 11. User Intelligence & Expert Discovery\n\n*Section 11 generation encountered an error. See demo logs for details.*\n\n")
         
         full_report = "\n".join(sections)
         
