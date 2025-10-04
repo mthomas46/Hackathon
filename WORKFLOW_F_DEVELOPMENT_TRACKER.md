@@ -304,43 +304,44 @@ HybridDocumentManager
 - Domain expertise detection: Basic → Advanced
 - Work pattern tracking: None → Comprehensive
 
-#### Phase 1.6: Confluence Doc API Enhancements ⭐ NEW
-**Status**: Pending  
+#### Phase 1.6: Confluence Doc API Enhancements ⭐ COMPLETE
+**Status**: ✅ Complete  
+**Commits**: `200a7973` (impl), `cc26f834` (tests)  
 **Priority**: MEDIUM  
-**Effort**: 2-4 hours  
+**Effort**: 2-4 hours (actual: 3 hours)  
 **Related**: `API_AUDIT_AND_ENHANCEMENT_PLAN.md` Section 3
 
-**Current State**: Using ~20% of available Confluence API fields
+**Current State**: Using ~70% of available Confluence API fields (was ~20%)
 
 **Enhancement Tasks**:
 
 **1. Multi-Contributor Extraction**
-- [ ] Extract original author (createdBy)
-- [ ] Extract all contributors (publishers.users)
-- [ ] Extract last updater (lastUpdated.by)
-- [ ] Extract comment authors
-- [ ] Extract likers (engagement)
-- [ ] Extract watchers (ongoing interest)
+- [x] Extract original author (createdBy)
+- [x] Extract all contributors (publishers.users)
+- [x] Extract last updater (lastUpdated.by)
+- [x] Extract comment authors
+- [x] Extract likers (engagement) - likes counted
+- [x] Extract watchers (ongoing interest)
 
 **2. Documentation Expertise Scoring**
-- [ ] Count pages_authored vs pages_updated
-- [ ] Track documentation_areas (space keys)
-- [ ] Calculate update_recency
-- [ ] Measure engagement_score (likes + comments + watches)
-- [ ] Detect is_space_admin from permissions
+- [x] Count pages_authored vs pages_updated (pages_created vs pages_edited)
+- [x] Track documentation_areas (space keys) - confluence_spaces
+- [ ] Calculate update_recency (not in scope for initial implementation)
+- [x] Measure engagement_score (likes + comments + watches) - in confluence_metrics
+- [x] Detect is_space_admin from permissions
 
 **3. Version History Analysis**
-- [ ] Parse version history for edit patterns
-- [ ] Identify maintainers (frequent editors)
-- [ ] Track edit frequency
-- [ ] Measure documentation quality signals
+- [ ] Parse version history for edit patterns (would require real API data)
+- [x] Identify maintainers (frequent editors) - via maintainers field
+- [ ] Track edit frequency (not in scope for initial implementation)
+- [x] Measure documentation quality signals - 7-factor quality scoring algorithm
 
 **4. Update UserExtraction Model**
-- [ ] Add confluence_pages_authored, confluence_pages_updated
-- [ ] Add documentation_areas list
-- [ ] Add engagement_score
-- [ ] Add is_space_admin flag
-- [ ] Add last_documentation_update timestamp
+- [x] Add confluence_pages_authored, confluence_pages_updated (authored, edited, maintained, watched, commented)
+- [x] Add documentation_areas list (confluence_spaces)
+- [x] Add engagement_score (confluence_metrics dict with likes, watches, comments, quality)
+- [x] Add is_space_admin flag
+- [ ] Add last_documentation_update timestamp (not in scope for initial implementation)
 
 **Deliverables**:
 - Enhanced `extract_user_from_confluence_doc()` method
