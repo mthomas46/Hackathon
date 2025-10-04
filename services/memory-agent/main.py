@@ -54,10 +54,14 @@ try:
     from services.shared.infrastructure.config import load_service_config
 except ImportError:
     # Fallback implementations
+    from datetime import datetime, timezone
+    
     class APIResponse(BaseModel):
         success: bool
         message: Optional[str] = None
         data: Optional[Any] = None
+        timestamp: str = ""
+        request_id: Optional[str] = None
 
     def load_service_config(**kwargs):
         """Load fallback service configuration for memory-agent.
@@ -160,21 +164,31 @@ except ImportError:
             """
             return {}
 
-        def create_memory_agent_success_response(data):
+        def create_memory_agent_success_response(action, data, **kwargs):
             """Create mock success response for testing.
 
             Returns standardized success response when shared utilities are unavailable.
             """
-            return {"success": True, "data": data}
+            return {
+                "success": True,
+                "data": data,
+                "message": f"Memory {action}",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
 
         def handle_memory_agent_error(operation, error, **kwargs):
             """Handle mock memory agent error for testing.
 
             Returns standardized error response when shared utilities are unavailable.
             """
-            return {"success": False, "error": f"{operation}: {str(error)}"}
+            return {
+                "success": False,
+                "message": f"{operation}: {str(error)}",
+                "data": None,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
 
-        def validate_memory_item(**kwargs):
+        def validate_memory_item(item):
             """Validate mock memory item for testing.
 
             Always returns True when validation utilities are unavailable.
