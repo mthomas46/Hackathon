@@ -9,8 +9,8 @@ import json
 from typing import Dict, List, Optional
 from datetime import datetime, timezone
 
-from ...domain.entities.user import User, UserPreferences, UserRole, UserStatus
-from ...domain.repositories.user_repository import UserRepository, UserPreferencesRepository
+from domain.entities.user import User, UserPreferences, UserRole, UserStatus
+from domain.repositories.user_repository import UserRepository, UserPreferencesRepository
 
 
 class SQLiteUserRepository(UserRepository):

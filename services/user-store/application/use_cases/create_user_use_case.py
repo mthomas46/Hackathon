@@ -6,9 +6,9 @@ handling validation, business rules, and persistence.
 
 from typing import Optional
 
-from ...domain.entities.user import User, UserRole
-from ...domain.services.user_service import UserService
-from ..dto.user_dto import CreateUserRequest, UserResponse
+from domain.entities.user import User, UserRole
+from domain.services.user_service import UserService
+from application.dto.user_dto import CreateUserRequest, UserResponse
 
 
 class CreateUserUseCase:
