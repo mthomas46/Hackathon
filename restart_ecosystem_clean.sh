@@ -94,6 +94,9 @@ echo ""
 echo "🚀 STEP 5: Starting services fresh..."
 echo "="*80
 
+# Set PYTHONPATH to include project root for imports
+export PYTHONPATH=/Users/mykalthomas/Documents/work/Hackathon:$PYTHONPATH
+
 # Start doc_store
 echo "  [1/7] Starting doc_store on port 5087..."
 python3 services/doc_store/main.py > /tmp/doc_store_clean.log 2>&1 &
