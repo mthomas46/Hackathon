@@ -852,8 +852,13 @@ class UserIntelligenceWorkflow:
         Returns:
             List of inferred technology names
         """
-        if not files:
+        # Handle case where files is an integer (count) or not a list
+        if not files or isinstance(files, (int, float, str)):
             return []
+        
+        # Ensure files is a list
+        if not isinstance(files, list):
+            files = [files]
         
         technologies = set()
         
