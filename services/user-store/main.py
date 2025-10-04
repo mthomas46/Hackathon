@@ -145,6 +145,21 @@ app.add_middleware(
 )
 
 # ============================================================================
+# DATASTORE OPERATION LOGGING
+# ============================================================================
+try:
+    from services.shared.infrastructure.logging.datastore_operation_logger import add_datastore_logging
+    
+    add_datastore_logging(
+        app,
+        service_name="user-store",
+        log_collector_url="http://localhost:8104",
+        timeout_seconds=1.0
+    )
+except ImportError as e:
+    logger.warning(f"DataStore operation logging not available: {e}")
+
+# ============================================================================
 # API ENDPOINTS
 # ============================================================================
 
