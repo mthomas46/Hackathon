@@ -94,6 +94,31 @@ class UserExtraction:
     is_component_lead: bool = False  # Component lead/owner
     issue_types_handled: List[str] = field(default_factory=list)  # Bug, Story, Task, Epic, etc.
     labels: List[str] = field(default_factory=list)  # Jira labels (technical skills)
+    
+    # ⭐ NEW (Phase 1.6): Confluence Documentation Metrics
+    confluence_metrics: Dict[str, Any] = field(default_factory=dict)
+    # {
+    #   "pages_created": int,
+    #   "pages_edited": int,
+    #   "total_likes_received": int,
+    #   "total_watches": int,
+    #   "total_comments": int,
+    #   "avg_page_views": float,
+    #   "documentation_quality_score": float  # 0.0 to 1.0
+    # }
+    
+    # ⭐ NEW (Phase 1.6): Confluence Role Tracking
+    confluence_pages_authored: List[str] = field(default_factory=list)  # Pages created
+    confluence_pages_edited: List[str] = field(default_factory=list)  # Pages edited/updated
+    confluence_pages_maintained: List[str] = field(default_factory=list)  # Pages actively maintained
+    confluence_pages_watched: List[str] = field(default_factory=list)  # Pages watching
+    confluence_pages_commented: List[str] = field(default_factory=list)  # Pages commented on
+    
+    # ⭐ NEW (Phase 1.6): Documentation Expertise
+    confluence_spaces: List[str] = field(default_factory=list)  # Confluence spaces contributed to
+    is_space_admin: bool = False  # Space administrator flag
+    page_types: List[str] = field(default_factory=list)  # Types of pages created (how-to, API, design, etc.)
+    documentation_topics: List[str] = field(default_factory=list)  # Topics documented
 
 
 @dataclass
@@ -422,34 +447,190 @@ class UserIntelligenceWorkflow:
             )
     
     def extract_user_from_confluence_doc(self, doc: Dict[str, Any]) -> None:
-        """Extract user information from a Confluence document."""
-        # Author
-        author = doc.get("author", "")
+        """
+        Extract comprehensive user information from a Confluence document.
+        
+        ⭐ Phase 1.6 Enhancements:
+        - Extract 3+ user roles (author, editors, maintainers, watchers, commenters)
+        - Track engagement metrics (likes, watches, comments, page views)
+        - Calculate documentation expertise scores
+        - Detect space administration
+        """
+        doc_id_raw = doc.get('doc_id', doc.get('id', doc.get('page_id', 'unknown')))
+        doc_id = f"confluence_{doc_id_raw}"
+        tags = doc.get("tags", [])
+        title = doc.get("title", "")
+        space = doc.get("space", doc.get("space_key", ""))
+        
+        # 1. AUTHOR (page creator)
+        author = doc.get("author", doc.get("creator", ""))
         if author:
-            self._add_or_update_user(
+            self._add_or_update_user_confluence(
                 username=author,
-                document_id=f"confluence_{doc.get('doc_id')}",
-                relationship="created",
-                topics=doc.get("tags", []),
-                document_title=doc.get("title", "")
+                doc_id=doc_id,
+                role="authored",
+                doc_data=doc,
+                tags=tags,
+                title=title,
+                space=space
             )
         
-        # Extract contributors from content
+        # 2. EDITORS (users who have modified the page)
+        # Last modifier
+        last_modified_by = doc.get("last_modified_by", doc.get("lastModifiedBy", ""))
+        if last_modified_by and last_modified_by != author:
+            self._add_or_update_user_confluence(
+                username=last_modified_by,
+                doc_id=doc_id,
+                role="edited",
+                doc_data=doc,
+                tags=tags,
+                title=title,
+                space=space
+            )
+        
+        # Contributors list
+        contributors = doc.get("contributors", [])
+        if isinstance(contributors, str):
+            contributors = [contributors]
+        for contributor in contributors:
+            if contributor and contributor != author:
+                self._add_or_update_user_confluence(
+                    username=contributor,
+                    doc_id=doc_id,
+                    role="edited",
+                    doc_data=doc,
+                    tags=tags,
+                    title=title,
+                    space=space
+                )
+        
+        # 3. MAINTAINERS (page owners / responsible parties)
+        maintainers = doc.get("maintainers", doc.get("owners", []))
+        if isinstance(maintainers, str):
+            maintainers = [maintainers]
+        for maintainer in maintainers:
+            if maintainer:
+                self._add_or_update_user_confluence(
+                    username=maintainer,
+                    doc_id=doc_id,
+                    role="maintained",
+                    doc_data=doc,
+                    tags=tags,
+                    title=title,
+                    space=space
+                )
+        
+        # 4. WATCHERS (users watching the page)
+        watchers = doc.get("watchers", [])
+        if isinstance(watchers, str):
+            watchers = [watchers]
+        for watcher in watchers:
+            if watcher:
+                self._add_or_update_user_confluence(
+                    username=watcher,
+                    doc_id=doc_id,
+                    role="watched",
+                    doc_data=doc,
+                    tags=tags,
+                    title=title,
+                    space=space
+                )
+        
+        # 5. COMMENTERS (users who commented on the page)
+        comments = doc.get("comments", [])
+        comment_authors = []
+        if isinstance(comments, list):
+            for comment in comments:
+                commenter = comment.get("author", comment.get("user", ""))
+                if commenter and commenter not in comment_authors:
+                    comment_authors.append(commenter)
+                    self._add_or_update_user_confluence(
+                        username=commenter,
+                        doc_id=doc_id,
+                        role="commented",
+                        doc_data=doc,
+                        tags=tags,
+                        title=title,
+                        space=space
+                    )
+        
+        # Extract mentions from content as additional commenters
         content = doc.get("content", {})
         if isinstance(content, dict):
             content_text = content.get("text", "")
         else:
             content_text = str(content)
         
-        contributors = self._extract_mentions(content_text)
-        for contributor in contributors:
-            self._add_or_update_user(
-                username=contributor,
-                document_id=f"confluence_{doc.get('doc_id')}",
-                relationship="commented",
-                topics=doc.get("tags", []),
-                document_title=doc.get("title", "")
+        mentioned_users = self._extract_mentions(content_text)
+        for mentioned_user in mentioned_users:
+            if mentioned_user not in comment_authors:
+                self._add_or_update_user_confluence(
+                    username=mentioned_user,
+                    doc_id=doc_id,
+                    role="commented",
+                    doc_data=doc,
+                    tags=tags,
+                    title=title,
+                    space=space
+                )
+        
+        # 6. CALCULATE ENGAGEMENT METRICS (for author and maintainers)
+        likes = doc.get("likes", doc.get("like_count", 0))
+        if isinstance(likes, list):
+            likes = len(likes)
+        elif isinstance(likes, str):
+            try:
+                likes = int(likes)
+            except (ValueError, TypeError):
+                likes = 0
+        
+        watches = len(watchers) if watchers else 0
+        comments_count = len(comments) if isinstance(comments, list) else 0
+        page_views = doc.get("views", doc.get("page_views", 0))
+        if isinstance(page_views, str):
+            try:
+                page_views = int(page_views)
+            except (ValueError, TypeError):
+                page_views = 0
+        
+        # Calculate documentation quality score
+        quality_score = self._calculate_documentation_quality(
+            likes=likes,
+            watches=watches,
+            comments_count=comments_count,
+            page_views=page_views,
+            content_length=len(content_text),
+            has_code_blocks="```" in content_text or "<code>" in content_text,
+            has_images="!" in content_text or "<img" in content_text
+        )
+        
+        # Update metrics for author
+        if author and author in self.user_extractions:
+            user = self.user_extractions[author]
+            self._update_confluence_metrics(
+                user,
+                likes_received=likes,
+                watches=watches,
+                comments_count=comments_count,
+                page_views=page_views,
+                quality_score=quality_score,
+                is_created=True
             )
+        
+        # Update metrics for maintainers
+        for maintainer in maintainers:
+            if maintainer and maintainer in self.user_extractions:
+                user = self.user_extractions[maintainer]
+                self._update_confluence_metrics(
+                    user,
+                    likes_received=likes,
+                    watches=watches,
+                    comments_count=comments_count,
+                    page_views=page_views,
+                    quality_score=quality_score,
+                    is_created=False
+                )
     
     def _extract_mentions(self, text: str) -> List[str]:
         """Extract @mentions from text."""
@@ -1045,6 +1226,257 @@ class UserIntelligenceWorkflow:
         )
         
         user.jira_metrics["total_tickets"] = user.jira_metrics.get("total_tickets", 0) + 1
+    
+    # ⭐ NEW (Phase 1.6): Confluence-specific user extraction and metrics
+    
+    def _add_or_update_user_confluence(
+        self,
+        username: str,
+        doc_id: str,
+        role: str,  # "authored", "edited", "maintained", "watched", "commented"
+        doc_data: Dict[str, Any],
+        tags: List[str],
+        title: str,
+        space: str
+    ) -> None:
+        """
+        Add or update user extraction data specifically for Confluence pages.
+        
+        Tracks Confluence-specific roles, metrics, and documentation expertise.
+        """
+        # Create user if not exists
+        if username not in self.user_extractions:
+            self.user_extractions[username] = UserExtraction(
+                username=username,
+                display_name=self._format_display_name(username)
+            )
+        
+        user = self.user_extractions[username]
+        
+        # Track role-specific page relationships
+        if role == "authored":
+            if doc_id not in user.confluence_pages_authored:
+                user.confluence_pages_authored.append(doc_id)
+            if doc_id not in user.documents_created:
+                user.documents_created.append(doc_id)
+        
+        elif role == "edited":
+            if doc_id not in user.confluence_pages_edited:
+                user.confluence_pages_edited.append(doc_id)
+            if doc_id not in user.documents_updated:
+                user.documents_updated.append(doc_id)
+        
+        elif role == "maintained":
+            if doc_id not in user.confluence_pages_maintained:
+                user.confluence_pages_maintained.append(doc_id)
+        
+        elif role == "watched":
+            if doc_id not in user.confluence_pages_watched:
+                user.confluence_pages_watched.append(doc_id)
+        
+        elif role == "commented":
+            if doc_id not in user.confluence_pages_commented:
+                user.confluence_pages_commented.append(doc_id)
+            if doc_id not in user.documents_commented:
+                user.documents_commented.append(doc_id)
+        
+        # Extract documentation expertise signals
+        # Spaces
+        if space and space not in user.confluence_spaces:
+            user.confluence_spaces.append(space)
+        
+        # Check for space admin
+        space_admins = doc_data.get("space_admins", doc_data.get("administrators", []))
+        if isinstance(space_admins, str):
+            space_admins = [space_admins]
+        if username in space_admins:
+            user.is_space_admin = True
+        
+        # Page types (infer from title/labels)
+        page_type = self._infer_page_type(title, tags, doc_data)
+        if page_type and page_type not in user.page_types:
+            user.page_types.append(page_type)
+        
+        # Documentation topics (from tags)
+        if tags:
+            for tag in tags:
+                if tag and tag not in user.documentation_topics:
+                    user.documentation_topics.append(tag)
+                if tag and tag not in user.topics:
+                    user.topics.append(tag)
+        
+        # Increment interaction count
+        user.total_interactions += 1
+    
+    def _infer_page_type(self, title: str, tags: List[str], doc_data: Dict[str, Any]) -> str:
+        """
+        Infer the type of Confluence page from title, tags, and content.
+        
+        Returns: Page type (e.g., "API Documentation", "How-To Guide", "Design Doc")
+        """
+        title_lower = title.lower()
+        tags_lower = [t.lower() for t in tags] if tags else []
+        
+        # Check explicit page type
+        explicit_type = doc_data.get("page_type", doc_data.get("type", ""))
+        if explicit_type and explicit_type != "page":
+            return explicit_type.title()
+        
+        # Infer from title
+        if any(keyword in title_lower for keyword in ["api", "endpoint", "rest", "graphql"]):
+            return "API Documentation"
+        elif any(keyword in title_lower for keyword in ["how to", "tutorial", "guide", "walkthrough"]):
+            return "How-To Guide"
+        elif any(keyword in title_lower for keyword in ["design", "architecture", "rfc", "adr"]):
+            return "Design Document"
+        elif any(keyword in title_lower for keyword in ["runbook", "playbook", "troubleshooting", "sop"]):
+            return "Runbook"
+        elif any(keyword in title_lower for keyword in ["meeting", "minutes", "notes", "agenda"]):
+            return "Meeting Notes"
+        elif any(keyword in title_lower for keyword in ["requirements", "spec", "specification"]):
+            return "Requirements"
+        elif any(keyword in title_lower for keyword in ["onboarding", "getting started", "setup"]):
+            return "Onboarding"
+        
+        # Infer from tags
+        if any(tag in tags_lower for tag in ["api", "rest", "graphql"]):
+            return "API Documentation"
+        elif any(tag in tags_lower for tag in ["tutorial", "guide", "how-to"]):
+            return "How-To Guide"
+        elif any(tag in tags_lower for tag in ["design", "architecture"]):
+            return "Design Document"
+        elif any(tag in tags_lower for tag in ["runbook", "troubleshooting"]):
+            return "Runbook"
+        
+        # Default
+        return "Documentation"
+    
+    def _calculate_documentation_quality(
+        self,
+        likes: int,
+        watches: int,
+        comments_count: int,
+        page_views: int,
+        content_length: int,
+        has_code_blocks: bool,
+        has_images: bool
+    ) -> float:
+        """
+        Calculate documentation quality score based on engagement and content.
+        
+        Returns: Quality score from 0.0 to 1.0
+        """
+        score = 0.0
+        
+        # Engagement metrics (50% of score)
+        # Likes (worth 0.2)
+        if page_views > 0:
+            like_rate = likes / max(page_views, 1)
+            score += min(like_rate * 10, 0.2)  # Max 0.2 for 2%+ like rate
+        elif likes > 0:
+            score += 0.1
+        
+        # Watches (worth 0.15)
+        if page_views > 0:
+            watch_rate = watches / max(page_views, 1)
+            score += min(watch_rate * 15, 0.15)  # Max 0.15 for 1%+ watch rate
+        elif watches > 0:
+            score += 0.05
+        
+        # Comments (worth 0.15)
+        if page_views > 0:
+            comment_rate = comments_count / max(page_views, 1)
+            score += min(comment_rate * 20, 0.15)  # Max 0.15 for 0.75%+ comment rate
+        elif comments_count > 0:
+            score += 0.05
+        
+        # Content quality indicators (50% of score)
+        # Content length (worth 0.2)
+        if content_length >= 5000:  # Long, comprehensive
+            score += 0.2
+        elif content_length >= 2000:  # Medium length
+            score += 0.15
+        elif content_length >= 500:  # Decent length
+            score += 0.1
+        elif content_length >= 100:  # Short but exists
+            score += 0.05
+        
+        # Code blocks (worth 0.15)
+        if has_code_blocks:
+            score += 0.15
+        
+        # Images/diagrams (worth 0.15)
+        if has_images:
+            score += 0.15
+        
+        # Cap at 1.0
+        return min(score, 1.0)
+    
+    def _update_confluence_metrics(
+        self,
+        user: UserExtraction,
+        likes_received: int = 0,
+        watches: int = 0,
+        comments_count: int = 0,
+        page_views: int = 0,
+        quality_score: float = 0.0,
+        is_created: bool = False
+    ) -> None:
+        """
+        Update Confluence documentation metrics for a user.
+        
+        Aggregates metrics across multiple pages.
+        """
+        if not user.confluence_metrics:
+            user.confluence_metrics = {
+                "pages_created": 0,
+                "pages_edited": 0,
+                "total_likes_received": 0,
+                "total_watches": 0,
+                "total_comments": 0,
+                "avg_page_views": 0.0,
+                "documentation_quality_score": 0.0,
+                "total_pages": 0
+            }
+        
+        # Track creation vs edit
+        if is_created:
+            user.confluence_metrics["pages_created"] = user.confluence_metrics.get("pages_created", 0) + 1
+        else:
+            user.confluence_metrics["pages_edited"] = user.confluence_metrics.get("pages_edited", 0) + 1
+        
+        # Aggregate engagement metrics
+        user.confluence_metrics["total_likes_received"] = (
+            user.confluence_metrics.get("total_likes_received", 0) + likes_received
+        )
+        user.confluence_metrics["total_watches"] = (
+            user.confluence_metrics.get("total_watches", 0) + watches
+        )
+        user.confluence_metrics["total_comments"] = (
+            user.confluence_metrics.get("total_comments", 0) + comments_count
+        )
+        
+        # Update page count
+        user.confluence_metrics["total_pages"] = user.confluence_metrics.get("total_pages", 0) + 1
+        total_pages = user.confluence_metrics["total_pages"]
+        
+        # Calculate average page views
+        current_avg_views = user.confluence_metrics.get("avg_page_views", 0.0)
+        if total_pages == 1:
+            user.confluence_metrics["avg_page_views"] = float(page_views)
+        else:
+            user.confluence_metrics["avg_page_views"] = (
+                (current_avg_views * (total_pages - 1) + page_views) / total_pages
+            )
+        
+        # Calculate average documentation quality score
+        current_avg_quality = user.confluence_metrics.get("documentation_quality_score", 0.0)
+        if total_pages == 1:
+            user.confluence_metrics["documentation_quality_score"] = quality_score
+        else:
+            user.confluence_metrics["documentation_quality_score"] = (
+                (current_avg_quality * (total_pages - 1) + quality_score) / total_pages
+            )
     
     def synthesize_subject_matter_experts(
         self,
