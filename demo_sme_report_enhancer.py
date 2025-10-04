@@ -143,7 +143,7 @@ class SMEReportEnhancer:
         sections = []
         
         # Header
-        sections.append("""
+        sections.append(f"""
 ---
 
 ## 10. Subject Matter Experts & Contacts 👥

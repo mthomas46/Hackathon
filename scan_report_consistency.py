@@ -49,22 +49,29 @@ class ReportConsistencyScanner:
                 r'(\d+)\s+users?\s+extracted',
                 r'Team size:\s+(\d+)',
                 r'(\d+)\s+team\s+members?',
+                r'Team Members.*?\|\s+(\d+)',  # Table format
             ],
             'documents': [
                 r'(\d+)\s+(?:historical\s+)?documents?',
                 r'Total documents:\s+(\d+)',
+                r'from\s+(\d+)\s+documents?',  # "from 4 documents"
             ],
             'technologies': [
-                r'(\d+)\s+technologies',
+                r'Technologies Covered.*?\|\s*(\d+)/(\d+)',  # Table format: | **Tech Covered** | 3/3 | (MUST BE FIRST)
                 r'(\d+)\s+tech\s+stack',
+                r'(\d+)\s+technology\s+stack',
+                r'(\d+)\s+technologies',  # Generic - put last to avoid matching "0 technologies" from gaps
             ],
             'smes': [
                 r'(\d+)\s+(?:subject\s+matter\s+)?experts?',
                 r'(\d+)\s+SMEs?\s+identified',
+                r'SME[s]?\s+Identified.*?\|\s+(\d+)',  # Table format
             ],
             'services': [
                 r'(\d+)\s+services?\s+discovered',
                 r'discovered\s+(\d+)\s+services?',
+                r'Services Discovered.*?\|\s+(\d+)',  # Table format
+                r'(\d+)\s+ecosystem[- ]level\s+services?',
             ],
         }
         
@@ -74,9 +81,15 @@ class ReportConsistencyScanner:
                 if matches:
                     # Take first match
                     try:
-                        metrics[metric] = int(matches[0])
+                        match = matches[0]
+                        # Handle tuple from patterns like "3/3" which capture both numbers
+                        if isinstance(match, tuple):
+                            # For "3/3" format, take the total (second number)
+                            metrics[metric] = int(match[1]) if len(match) > 1 else int(match[0])
+                        else:
+                            metrics[metric] = int(match)
                         break  # Found a match, move to next metric
-                    except (ValueError, IndexError):
+                    except (ValueError, IndexError, TypeError):
                         pass
         
         self.extracted_metrics[report_name] = metrics
