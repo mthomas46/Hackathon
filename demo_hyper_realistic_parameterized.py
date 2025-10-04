@@ -34,6 +34,18 @@ from intelligent_service_discovery import IntelligentServiceDiscovery, discover_
 from demo_sme_report_enhancer import SMEReportEnhancer
 from demo_workflow_f_report_enhancer import WorkflowFReportEnhancer
 from demo_user_team_report_generator import UserTeamReportGenerator
+from visual_enhancements import (
+    generate_service_architecture_diagram,
+    generate_workflow_sequence_diagram,
+    generate_technology_coverage_heatmap,
+    generate_risk_heatmap,
+    generate_skill_matrix_table,
+    generate_timeline_gantt,
+    generate_data_flow_diagram,
+    generate_collaboration_network,
+    generate_effort_distribution_chart,
+    generate_dependency_matrix
+)
 
 # Additional imports for service integration
 import httpx
