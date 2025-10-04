@@ -256,21 +256,14 @@ async def get_service_config():
 async def create_user(request: CreateUserRequest):
     """Create a new user with comprehensive profile information."""
     try:
-        user = await create_user_use_case.execute(
-            email=request.email,
-            username=request.username,
-            display_name=request.display_name,
-            role=request.role,
-            initial_topics=request.topic_interests,
-            initial_services=request.service_subscriptions
-        )
+        user = await create_user_use_case.execute(request)
         return UserResponse(
             id=user.id,
             email=user.email,
             username=user.username,
             display_name=user.display_name,
-            role=user.role.value,
-            status=user.status.value,
+            role=user.role.value if hasattr(user.role, 'value') else user.role,
+            status=user.status.value if hasattr(user.status, 'value') else user.status,
             avatar_url=user.avatar_url,
             bio=user.bio,
             document_relationships=user.document_relationships,
