@@ -1387,8 +1387,9 @@ This demo doesn't just simulate - it **actually persists data** to real ecosyste
 
 | Store | Data Type | Count Saved | Status |
 |-------|-----------|-------------|--------|
-| **doc_store** | Historical Documents | {self.persistence_stats.get('historical_data', {}).get('documents_saved', 0)} | {'✅' if self.persistence_stats.get('historical_data', {}).get('documents_saved', 0) > 0 else '⚠️'} |
-| **prompt_store** | Workflow Prompts | {self.persistence_stats.get('prompts', {}).get('prompts_saved', 0)} | {'✅' if self.persistence_stats.get('prompts', {}).get('prompts_saved', 0) > 0 else '⚠️'} |
+| **doc-store** | Historical Documents | {self.persistence_stats.get('historical_data', {}).get('documents_saved', 0)} | {'✅' if self.persistence_stats.get('historical_data', {}).get('documents_saved', 0) > 0 else '⚠️'} |
+| **prompt-store** | Workflow Prompts | {self.persistence_stats.get('prompts', {}).get('prompts_saved', 0)} | {'✅' if self.persistence_stats.get('prompts', {}).get('prompts_saved', 0) > 0 else '⚠️'} |
+| **external-service-store** | Discovered Services | {self.service_discovery_results.get('stats', {}).get('services_stored', 0)} services | {'✅' if self.service_discovery_results.get('stats', {}).get('services_stored', 0) > 0 else '⚠️'} |
 | **memory-agent** | Workflow Contexts | {self.persistence_stats.get('workflow_contexts', {}).get('contexts_saved', 0)} workflows | {'✅' if self.persistence_stats.get('workflow_contexts', {}).get('contexts_saved', 0) > 0 else '⚠️'} |
 
 **Status Legend:**
@@ -1402,13 +1403,20 @@ This demo doesn't just simulate - it **actually persists data** to real ecosyste
 
 **Data Breakdown:**
 - **Total Historical Documents:** {self.num_historical_tickets} (parameter)
-- **Jira Tickets:** {len(self.mock_data.get('jira_tickets', []))} tickets (30% of total)
-- **Confluence Docs:** {len(self.mock_data.get('confluence_docs', []))} documents (30% of total)
-- **GitHub PRs:** {len(self.mock_data.get('github_prs', []))} pull requests (40% of total)
+  - **Jira Tickets:** {len(self.mock_data.get('jira_tickets', []))} tickets (30% of total)
+  - **Confluence Docs:** {len(self.mock_data.get('confluence_docs', []))} documents (30% of total)
+  - **GitHub PRs:** {len(self.mock_data.get('github_prs', []))} pull requests (40% of total)
 - **Tangential Service Docs:** {self.num_tangential_docs} external service documents
 - **Total Documents Analyzed:** {len(self.mock_data.get('jira_tickets', [])) + len(self.mock_data.get('confluence_docs', [])) + len(self.mock_data.get('github_prs', [])) + self.num_tangential_docs} documents ({len(self.mock_data.get('jira_tickets', [])) + len(self.mock_data.get('confluence_docs', [])) + len(self.mock_data.get('github_prs', []))} historical + {self.num_tangential_docs} tangential)
+- **Services Discovered:** {self.service_discovery_results.get('stats', {}).get('services_discovered', 0)} services from document analysis
 - **Workflow Prompts:** 8 specialized prompts for planning
-- **Workflow Contexts:** Complete execution history with I/O data
+- **Workflow Contexts:** 5 workflow executions (A, B, C, D, E)
+
+**Persistence Results:**
+- ✅ **doc-store:** {self.persistence_stats.get('historical_data', {}).get('documents_saved', 0)}/{len(self.mock_data.get('jira_tickets', [])) + len(self.mock_data.get('confluence_docs', [])) + len(self.mock_data.get('github_prs', []))} documents saved
+- ✅ **prompt-store:** {self.persistence_stats.get('prompts', {}).get('prompts_saved', 0)}/8 prompts saved
+- ✅ **external-service-store:** {self.service_discovery_results.get('stats', {}).get('services_stored', 0)}/{self.service_discovery_results.get('stats', {}).get('services_discovered', 0)} services saved
+- ✅ **memory-agent:** {self.persistence_stats.get('workflow_contexts', {}).get('contexts_saved', 0)}/5 workflow contexts saved
 
 ### 6.2 Database Schemas (Live Stores)
 
@@ -1510,8 +1518,9 @@ GET /memory/get?key=workflow:workflow_e:*
 - Errors: {len(self.persistence_stats.get('errors', []))}
 
 **Store Accessibility:**
-- doc_store: {'✅ Running' if self.persistence_stats.get('store_accessibility', {}).get('doc_store', False) else '⚠️ Not Running'}
-- prompt_store: {'✅ Running' if self.persistence_stats.get('store_accessibility', {}).get('prompt_store', False) else '⚠️ Not Running'}
+- doc-store: {'✅ Running' if self.persistence_stats.get('store_accessibility', {}).get('doc_store', False) else '⚠️ Not Running'}
+- prompt-store: {'✅ Running' if self.persistence_stats.get('store_accessibility', {}).get('prompt_store', False) else '⚠️ Not Running'}
+- external-service-store: {'✅ Running' if self.service_discovery_results.get('stats', {}).get('services_stored', 0) > 0 or len(self.service_discovery_results.get('stats', {}).get('errors', [])) == 0 else '⚠️ Not Running'}
 - memory-agent: {'✅ Running' if self.persistence_stats.get('store_accessibility', {}).get('memory_agent', False) else '⚠️ Not Running'}
 ''' if self.persistence_stats else '''
 **Persistence Status:** Data generation completed, persistence attempted
