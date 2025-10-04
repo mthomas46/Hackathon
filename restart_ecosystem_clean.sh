@@ -139,7 +139,7 @@ sleep 2
 
 # Start user-store (WORKFLOW F REQUIRED)
 echo "  [6/7] Starting user-store on port 5150..."
-python3 services/user-store/main.py > /tmp/user_store_clean.log 2>&1 &
+(cd services/user-store && PYTHONPATH=/Users/mykalthomas/Documents/work/Hackathon:$PYTHONPATH python3 main.py) > /tmp/user_store_clean.log 2>&1 &
 USER_PID=$!
 echo "        PID: $USER_PID"
 
@@ -147,7 +147,7 @@ sleep 2
 
 # Start expert-finder-service (WORKFLOW F REQUIRED)
 echo "  [7/7] Starting expert-finder-service on port 5160..."
-python3 services/expert-finder-service/main.py > /tmp/expert_finder_clean.log 2>&1 &
+PYTHONPATH=/Users/mykalthomas/Documents/work/Hackathon:$PYTHONPATH python3 services/expert-finder-service/main.py > /tmp/expert_finder_clean.log 2>&1 &
 EXPERT_PID=$!
 echo "        PID: $EXPERT_PID"
 
