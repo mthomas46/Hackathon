@@ -447,3 +447,125 @@ async def list_tasks(
         "count": len(tasks)
     }
 
+
+# ============================================================================
+# EXPERT-AUGMENTED PLANNING (Phase 4.1)
+# ============================================================================
+
+class ExpertAugmentedRoadmapRequest(BaseModel):
+    """Request for expert-augmented roadmap generation."""
+    feature_ids: List[str] = Field(..., description="List of feature IDs to include in roadmap")
+    team_id: str = Field(..., description="Team identifier")
+    start_date: str = Field(..., description="Start date (YYYY-MM-DD)")
+    team_velocity: float = Field(default=20.0, description="Team velocity (story points per sprint)")
+    sprint_duration_weeks: int = Field(default=2, description="Sprint duration in weeks")
+    technologies: Optional[List[str]] = Field(default=None, description="Override technologies list")
+    components: Optional[List[str]] = Field(default=None, description="Override components list")
+    enable_expert_discovery: bool = Field(default=True, description="Enable expert-finder integration")
+    expert_finder_url: Optional[str] = Field(default=None, description="Expert-finder service URL")
+
+
+class ExpertAugmentedRoadmapResponse(BaseModel):
+    """Response from expert-augmented roadmap generation."""
+    roadmap_id: str
+    roadmap_name: str
+    features_count: int
+    sprints_count: int
+    story_points: float
+    estimated_completion: Optional[str]
+    warnings: List[str]
+    recommendations: List[str]
+    expert_context: Optional[Dict[str, Any]]
+    generation_time_ms: float
+
+
+@router.post(
+    "/roadmap/expert-augmented",
+    response_model=ExpertAugmentedRoadmapResponse,
+    summary="Generate expert-augmented roadmap",
+    description="""Generate a comprehensive development roadmap enhanced with expert recommendations.
+    
+    This endpoint:
+    - Generates standard roadmap (sprints, dependencies, timeline)
+    - Identifies technology experts via expert-finder service
+    - Finds Subject Matter Experts (SMEs) for components
+    - Recommends code reviewers
+    - Suggests team augmentation for skill gaps
+    - Provides expert context in development plan
+    
+    Phase 4.1: Planning Service Integration
+    """,
+    tags=["Expert-Augmented Planning"]
+)
+async def generate_expert_augmented_roadmap(
+    request: ExpertAugmentedRoadmapRequest,
+    db: Session = Depends(get_db)
+):
+    """Generate expert-augmented roadmap with SME recommendations."""
+    from ....domain.services.expert_augmented_orchestrator import ExpertAugmentedOrchestrator
+    from ....domain.services.roadmap_orchestrator import ComprehensiveRoadmapRequest
+    from datetime import datetime as dt
+    import time
+    
+    start_time = time.time()
+    
+    try:
+        # Fetch features
+        feature_repo = FeatureRepository(db)
+        features = []
+        for feature_id in request.feature_ids:
+            feature = feature_repo.find_by_id(feature_id)
+            if feature:
+                features.append(feature)
+        
+        if not features:
+            raise HTTPException(status_code=404, detail="No valid features found")
+        
+        # Create roadmap request
+        start_date = dt.strptime(request.start_date, "%Y-%m-%d").date()
+        roadmap_request = ComprehensiveRoadmapRequest(
+            features=features,
+            team_id=request.team_id,
+            start_date=start_date,
+            team_velocity=request.team_velocity,
+            sprint_duration_weeks=request.sprint_duration_weeks,
+            decompose_features=True,
+            analyze_dependencies=True,
+            create_milestones=True
+        )
+        
+        # Generate expert-augmented roadmap
+        expert_finder_url = request.expert_finder_url or "http://localhost:5160"
+        orchestrator = ExpertAugmentedOrchestrator(
+            expert_finder_url=expert_finder_url,
+            enable_expert_discovery=request.enable_expert_discovery
+        )
+        
+        roadmap = await orchestrator.generate_comprehensive_roadmap_with_experts(
+            request=roadmap_request,
+            technologies=request.technologies,
+            components=request.components
+        )
+        
+        # Calculate generation time
+        generation_time_ms = (time.time() - start_time) * 1000
+        
+        # Prepare response
+        summary = roadmap.summary()
+        
+        return ExpertAugmentedRoadmapResponse(
+            roadmap_id=roadmap.roadmap.id,
+            roadmap_name=roadmap.roadmap.name,
+            features_count=summary.get("total_features", 0),
+            sprints_count=summary.get("total_sprints", 0),
+            story_points=summary.get("story_points", 0.0),
+            estimated_completion=summary.get("estimated_completion"),
+            warnings=roadmap.warnings,
+            recommendations=roadmap.recommendations,
+            expert_context=summary.get("expert_context"),
+            generation_time_ms=generation_time_ms
+        )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Roadmap generation failed: {str(e)}")
+
