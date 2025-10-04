@@ -44,6 +44,33 @@ class UserExtraction:
     # Metrics
     total_interactions: int = 0
     expertise_score: float = 0.0
+    
+    # ⭐ NEW (Phase 1.4): GitHub PR Code Metrics
+    code_metrics: Dict[str, Any] = field(default_factory=dict)
+    # {
+    #   "lines_added": int,
+    #   "lines_deleted": int,
+    #   "files_touched": List[str],
+    #   "commit_count": int,
+    #   "languages": List[str],
+    #   "avg_pr_size": float
+    # }
+    
+    # ⭐ NEW (Phase 1.4): GitHub PR Role Tracking
+    pull_requests_authored: List[str] = field(default_factory=list)
+    pull_requests_reviewed: List[str] = field(default_factory=list)
+    pull_requests_merged: List[str] = field(default_factory=list)
+    pull_requests_assigned: List[str] = field(default_factory=list)
+    pull_requests_committed: List[str] = field(default_factory=list)
+    
+    # ⭐ NEW (Phase 1.4): Review Quality Metrics
+    review_quality_score: float = 0.0  # 0.0 to 1.0
+    approval_rate: float = 0.0  # Percentage of reviews that resulted in approval
+    
+    # ⭐ NEW (Phase 1.4): Authority Indicators
+    merge_authority: bool = False  # Has merge permissions
+    frequent_reviewers: List[str] = field(default_factory=list)  # Users they frequently review with
+    technologies: List[str] = field(default_factory=list)  # Inferred from file paths
 
 
 @dataclass
@@ -83,28 +110,157 @@ class UserIntelligenceWorkflow:
         self.user_extractions: Dict[str, UserExtraction] = {}
         
     def extract_user_from_github_pr(self, pr: Dict[str, Any]) -> None:
-        """Extract user information from a GitHub PR."""
-        # Author
+        """
+        Extract comprehensive user information from a GitHub PR.
+        
+        ⭐ Phase 1.4 Enhancements:
+        - Extract 5+ user roles (author, assignees, reviewers, merger, commit authors)
+        - Calculate code contribution metrics
+        - Assess review quality
+        - Infer technologies from file paths
+        """
+        pr_id = f"github_pr_{pr.get('pr_number', pr.get('id', 'unknown'))}"
+        topics = pr.get("tech_stack", [])
+        title = pr.get("title", "")
+        
+        # 1. AUTHOR (PR creator)
         author = pr.get("author", "")
         if author:
-            self._add_or_update_user(
+            self._add_or_update_user_github(
                 username=author,
-                document_id=f"github_pr_{pr.get('pr_number')}",
-                relationship="created",
-                topics=pr.get("tech_stack", []),
-                document_title=pr.get("title", "")
+                pr_id=pr_id,
+                role="authored",
+                topics=topics,
+                title=title,
+                pr_data=pr
             )
         
-        # Reviewers (from description or metadata)
+        # 2. ASSIGNEES (users responsible for the PR)
+        assignees = pr.get("assignees", [])
+        if isinstance(assignees, str):
+            assignees = [assignees]
+        for assignee in assignees:
+            if assignee:
+                self._add_or_update_user_github(
+                    username=assignee,
+                    pr_id=pr_id,
+                    role="assigned",
+                    topics=topics,
+                    title=title,
+                    pr_data=pr
+                )
+        
+        # 3. REVIEWERS (requested and actual)
+        # Requested reviewers
+        requested_reviewers = pr.get("requested_reviewers", [])
+        if isinstance(requested_reviewers, str):
+            requested_reviewers = [requested_reviewers]
+        
+        # Actual reviewers from reviews array
+        reviews = pr.get("reviews", [])
+        actual_reviewers = []
+        if isinstance(reviews, list):
+            for review in reviews:
+                reviewer = review.get("user", review.get("reviewer", ""))
+                if reviewer:
+                    actual_reviewers.append(reviewer)
+                    # Calculate review quality for this reviewer
+                    review_state = review.get("state", review.get("review_state", ""))
+                    comment_body = review.get("body", review.get("comment", ""))
+                    quality_score = self._calculate_review_quality(comment_body, review_state)
+                    
+                    self._add_or_update_user_github(
+                        username=reviewer,
+                        pr_id=pr_id,
+                        role="reviewed",
+                        topics=topics,
+                        title=title,
+                        pr_data=pr,
+                        review_quality=quality_score,
+                        review_state=review_state
+                    )
+        
+        # Merge requested and actual reviewers
+        all_reviewers = list(set(requested_reviewers + actual_reviewers))
+        
+        # 4. MERGER (user who merged the PR)
+        merged_by = pr.get("merged_by", pr.get("merger", ""))
+        if merged_by:
+            self._add_or_update_user_github(
+                username=merged_by,
+                pr_id=pr_id,
+                role="merged",
+                topics=topics,
+                title=title,
+                pr_data=pr
+            )
+        
+        # 5. COMMIT AUTHORS (from commits array)
+        commits = pr.get("commits", [])
+        commit_authors = []
+        if isinstance(commits, list):
+            for commit in commits:
+                commit_author = commit.get("author", commit.get("committer", ""))
+                if commit_author and commit_author not in commit_authors:
+                    commit_authors.append(commit_author)
+                    self._add_or_update_user_github(
+                        username=commit_author,
+                        pr_id=pr_id,
+                        role="committed",
+                        topics=topics,
+                        title=title,
+                        pr_data=pr
+                    )
+        
+        # 6. COMMENTERS (from comments array or mentions in description)
+        comments = pr.get("comments", [])
+        commenters = []
+        if isinstance(comments, list):
+            for comment in comments:
+                commenter = comment.get("user", comment.get("author", ""))
+                if commenter and commenter not in commenters:
+                    commenters.append(commenter)
+                    self._add_or_update_user_github(
+                        username=commenter,
+                        pr_id=pr_id,
+                        role="commented",
+                        topics=topics,
+                        title=title,
+                        pr_data=pr
+                    )
+        
+        # Extract mentions from description as additional commenters
         description = pr.get("description", "")
-        reviewers = self._extract_mentions(description)
-        for reviewer in reviewers:
-            self._add_or_update_user(
-                username=reviewer,
-                document_id=f"github_pr_{pr.get('pr_number')}",
-                relationship="commented",
-                topics=pr.get("tech_stack", []),
-                document_title=pr.get("title", "")
+        mentioned_users = self._extract_mentions(description)
+        for mentioned_user in mentioned_users:
+            if mentioned_user not in commenters:
+                self._add_or_update_user_github(
+                    username=mentioned_user,
+                    pr_id=pr_id,
+                    role="commented",
+                    topics=topics,
+                    title=title,
+                    pr_data=pr
+                )
+        
+        # 7. CALCULATE CODE METRICS (for author and commit authors)
+        files_changed = pr.get("files_changed", pr.get("files", []))
+        lines_added = pr.get("additions", pr.get("lines_added", 0))
+        lines_deleted = pr.get("deletions", pr.get("lines_deleted", 0))
+        
+        # Infer technologies from file paths
+        technologies = self._infer_technologies_from_files(files_changed)
+        
+        # Update code metrics for author
+        if author and author in self.user_extractions:
+            user = self.user_extractions[author]
+            self._update_code_metrics(
+                user,
+                lines_added=lines_added,
+                lines_deleted=lines_deleted,
+                files_touched=files_changed if isinstance(files_changed, list) else [],
+                commit_count=len(commits) if isinstance(commits, list) else 1,
+                technologies=technologies
             )
     
     def extract_user_from_jira_ticket(self, ticket: Dict[str, Any]) -> None:
@@ -232,6 +388,312 @@ class UserIntelligenceWorkflow:
             return ' '.join(p.capitalize() for p in parts)
         else:
             return username.capitalize()
+    
+    # ⭐ NEW (Phase 1.4): GitHub-specific user extraction and metrics
+    
+    def _add_or_update_user_github(
+        self,
+        username: str,
+        pr_id: str,
+        role: str,  # "authored", "assigned", "reviewed", "merged", "committed", "commented"
+        topics: List[str],
+        title: str,
+        pr_data: Dict[str, Any],
+        review_quality: float = 0.0,
+        review_state: str = ""
+    ) -> None:
+        """
+        Add or update user extraction data specifically for GitHub PRs.
+        
+        Tracks PR-specific roles and metrics.
+        """
+        # Create user if not exists
+        if username not in self.user_extractions:
+            self.user_extractions[username] = UserExtraction(
+                username=username,
+                display_name=self._format_display_name(username)
+            )
+        
+        user = self.user_extractions[username]
+        
+        # Track role-specific PR relationships
+        if role == "authored":
+            if pr_id not in user.pull_requests_authored:
+                user.pull_requests_authored.append(pr_id)
+            if pr_id not in user.documents_created:
+                user.documents_created.append(pr_id)
+        
+        elif role == "assigned":
+            if pr_id not in user.pull_requests_assigned:
+                user.pull_requests_assigned.append(pr_id)
+        
+        elif role == "reviewed":
+            if pr_id not in user.pull_requests_reviewed:
+                user.pull_requests_reviewed.append(pr_id)
+            
+            # Update review quality score (running average)
+            if review_quality > 0:
+                current_score = user.review_quality_score
+                total_reviews = len(user.pull_requests_reviewed)
+                if total_reviews == 1:
+                    user.review_quality_score = review_quality
+                else:
+                    # Running average
+                    user.review_quality_score = (
+                        (current_score * (total_reviews - 1) + review_quality) / total_reviews
+                    )
+            
+            # Update approval rate
+            if review_state.upper() in ["APPROVED", "APPROVE"]:
+                total_reviews = len(user.pull_requests_reviewed)
+                approved_count = int(user.approval_rate * (total_reviews - 1)) + 1
+                user.approval_rate = approved_count / total_reviews
+        
+        elif role == "merged":
+            if pr_id not in user.pull_requests_merged:
+                user.pull_requests_merged.append(pr_id)
+            user.merge_authority = True  # Has merge permissions
+        
+        elif role == "committed":
+            if pr_id not in user.pull_requests_committed:
+                user.pull_requests_committed.append(pr_id)
+        
+        elif role == "commented":
+            if pr_id not in user.documents_commented:
+                user.documents_commented.append(pr_id)
+        
+        # Add topics
+        if topics:
+            for topic in topics:
+                if topic and topic not in user.topics:
+                    user.topics.append(topic)
+        
+        # Increment interaction count
+        user.total_interactions += 1
+    
+    def _calculate_review_quality(self, comment_body: str, review_state: str) -> float:
+        """
+        Calculate review quality score based on comment depth and review state.
+        
+        Returns: Score from 0.0 to 1.0
+        
+        Factors:
+        - Comment length (longer = more detailed)
+        - Presence of code snippets
+        - Presence of actionable feedback keywords
+        - Review state (APPROVED, CHANGES_REQUESTED, COMMENTED)
+        """
+        if not comment_body:
+            # No comment = superficial review
+            return 0.2 if review_state.upper() == "APPROVED" else 0.1
+        
+        score = 0.0
+        
+        # Factor 1: Comment length (max 0.3)
+        comment_length = len(comment_body)
+        if comment_length > 500:
+            score += 0.3
+        elif comment_length > 200:
+            score += 0.2
+        elif comment_length > 50:
+            score += 0.1
+        
+        # Factor 2: Code snippets (0.2)
+        if '```' in comment_body or '`' in comment_body:
+            score += 0.2
+        
+        # Factor 3: Actionable feedback keywords (0.3)
+        actionable_keywords = [
+            'suggest', 'recommend', 'consider', 'could',
+            'should', 'might want', 'please', 'try',
+            'refactor', 'optimize', 'improve', 'fix',
+            'issue', 'problem', 'concern', 'question'
+        ]
+        comment_lower = comment_body.lower()
+        keyword_matches = sum(1 for keyword in actionable_keywords if keyword in comment_lower)
+        if keyword_matches >= 3:
+            score += 0.3
+        elif keyword_matches >= 2:
+            score += 0.2
+        elif keyword_matches >= 1:
+            score += 0.1
+        
+        # Factor 4: Review state (0.2)
+        if review_state.upper() == "CHANGES_REQUESTED":
+            score += 0.2  # Requested changes = thorough review
+        elif review_state.upper() == "APPROVED":
+            score += 0.1  # Approved = positive but maybe less critical
+        elif review_state.upper() == "COMMENTED":
+            score += 0.15  # Just commented = medium engagement
+        
+        # Ensure score is between 0.0 and 1.0
+        return min(1.0, score)
+    
+    def _infer_technologies_from_files(self, files: List[Any]) -> List[str]:
+        """
+        Infer technologies/languages from file paths.
+        
+        Args:
+            files: List of file paths (strings) or file objects with 'filename' or 'path' keys
+        
+        Returns:
+            List of inferred technology names
+        """
+        if not files:
+            return []
+        
+        technologies = set()
+        
+        # Technology mapping from file extensions and patterns
+        tech_map = {
+            # Languages
+            '.py': 'Python',
+            '.js': 'JavaScript',
+            '.jsx': 'React',
+            '.ts': 'TypeScript',
+            '.tsx': 'React',
+            '.java': 'Java',
+            '.scala': 'Scala',
+            '.go': 'Go',
+            '.rb': 'Ruby',
+            '.php': 'PHP',
+            '.rs': 'Rust',
+            '.cpp': 'C++',
+            '.c': 'C',
+            '.cs': 'C#',
+            '.swift': 'Swift',
+            '.kt': 'Kotlin',
+            '.elm': 'Elm',
+            
+            # Frameworks/Tools
+            'Dockerfile': 'Docker',
+            'docker-compose': 'Docker',
+            '.yml': 'YAML',
+            '.yaml': 'YAML',
+            '.json': 'JSON',
+            '.toml': 'TOML',
+            '.tf': 'Terraform',
+            'Makefile': 'Make',
+            '.sh': 'Shell',
+            '.sql': 'SQL',
+            '.proto': 'Protobuf',
+            '.graphql': 'GraphQL',
+            
+            # Web
+            '.html': 'HTML',
+            '.css': 'CSS',
+            '.scss': 'SCSS',
+            '.sass': 'SASS',
+            '.less': 'LESS',
+            '.vue': 'Vue',
+            
+            # Data
+            '.csv': 'CSV',
+            '.xml': 'XML',
+            '.md': 'Markdown'
+        }
+        
+        # Directory/path patterns
+        path_patterns = {
+            '/backend/': 'Backend',
+            '/frontend/': 'Frontend',
+            '/api/': 'API',
+            '/ui/': 'UI',
+            '/web/': 'Web',
+            '/mobile/': 'Mobile',
+            '/ios/': 'iOS',
+            '/android/': 'Android',
+            '/tests/': 'Testing',
+            '/test/': 'Testing',
+            '__tests__': 'Testing',
+            '.test.': 'Testing',
+            '.spec.': 'Testing',
+            '/db/': 'Database',
+            '/database/': 'Database',
+            '/migrations/': 'Database',
+            '/docker/': 'Docker',
+            '/k8s/': 'Kubernetes',
+            '/kubernetes/': 'Kubernetes',
+            '/ci/': 'CI/CD',
+            '/infra/': 'Infrastructure',
+            '/terraform/': 'Terraform'
+        }
+        
+        for file_item in files:
+            # Extract filename from various formats
+            if isinstance(file_item, str):
+                filename = file_item
+            elif isinstance(file_item, dict):
+                filename = file_item.get('filename', file_item.get('path', file_item.get('name', '')))
+            else:
+                continue
+            
+            if not filename:
+                continue
+            
+            # Check file extension
+            for ext, tech in tech_map.items():
+                if filename.endswith(ext) or ext in filename:
+                    technologies.add(tech)
+            
+            # Check path patterns
+            for pattern, tech in path_patterns.items():
+                if pattern in filename.lower():
+                    technologies.add(tech)
+        
+        return sorted(list(technologies))
+    
+    def _update_code_metrics(
+        self,
+        user: UserExtraction,
+        lines_added: int = 0,
+        lines_deleted: int = 0,
+        files_touched: List[Any] = None,
+        commit_count: int = 0,
+        technologies: List[str] = None
+    ) -> None:
+        """
+        Update code contribution metrics for a user.
+        
+        Aggregates metrics across multiple PRs.
+        """
+        if not user.code_metrics:
+            user.code_metrics = {
+                "lines_added": 0,
+                "lines_deleted": 0,
+                "files_touched": [],
+                "commit_count": 0,
+                "languages": [],
+                "avg_pr_size": 0.0,
+                "total_prs": 0
+            }
+        
+        # Aggregate metrics
+        user.code_metrics["lines_added"] += lines_added
+        user.code_metrics["lines_deleted"] += lines_deleted
+        user.code_metrics["commit_count"] += commit_count
+        user.code_metrics["total_prs"] += 1
+        
+        # Add new files (avoid duplicates)
+        if files_touched:
+            for file in files_touched:
+                filename = file if isinstance(file, str) else file.get('filename', file.get('path', ''))
+                if filename and filename not in user.code_metrics["files_touched"]:
+                    user.code_metrics["files_touched"].append(filename)
+        
+        # Add technologies to both code_metrics and user.technologies
+        if technologies:
+            for tech in technologies:
+                if tech not in user.code_metrics["languages"]:
+                    user.code_metrics["languages"].append(tech)
+                if tech not in user.technologies:
+                    user.technologies.append(tech)
+        
+        # Calculate average PR size
+        total_prs = user.code_metrics["total_prs"]
+        if total_prs > 0:
+            total_lines = user.code_metrics["lines_added"] + user.code_metrics["lines_deleted"]
+            user.code_metrics["avg_pr_size"] = total_lines / total_prs
     
     def synthesize_subject_matter_experts(
         self,
