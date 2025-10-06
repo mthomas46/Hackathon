@@ -1750,6 +1750,160 @@ services:
 
     restart: unless-stopped
 
+  mcp-orchestrator:
+    container_name: hackathon-mcp-orchestrator
+    build:
+      context: .
+      dockerfile: services/mcp-orchestrator/Dockerfile
+
+    ports:
+      - "8153:5200"  # External:Internal
+
+    environment:
+      # Service configuration
+      - PYTHONPATH=/app
+      - SERVICE_NAME=mcp-orchestrator
+      - SERVICE_API_PORT=5200
+      - ENVIRONMENT=development
+
+      # Redis configuration (workflow state)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=4
+      - REDIS_KEY_PREFIX=mcp:orchestrator:
+      - REDIS_SOCKET_CONNECT_TIMEOUT=5
+      - REDIS_SOCKET_TIMEOUT=5
+
+      # Workflow management
+      - MAX_CONCURRENT_WORKFLOWS=100
+      - DEFAULT_WORKFLOW_TIMEOUT_SECONDS=300
+      - WORKFLOW_CLEANUP_INTERVAL_SECONDS=3600
+      - MAX_WORKFLOW_RETRIES=3
+
+      # Execution configuration
+      - DEFAULT_EXECUTION_STRATEGY=scatter_gather
+      - ENABLE_ASYNC_EXECUTION=true
+      - ENABLE_PARALLEL_STEP_EXECUTION=true
+      - MAX_PARALLEL_STEPS=5
+      - STEP_TIMEOUT_SECONDS=60
+
+      # LLM pattern configuration
+      - ENABLE_CHAIN_OF_THOUGHT=true
+      - ENABLE_SELF_CRITIQUE=true
+      - ENABLE_ENSEMBLE=true
+      - PATTERN_CONFIDENCE_THRESHOLD=0.7
+
+      # MCP selection
+      - MAX_MCPS_PER_WORKFLOW=10
+      - PREFER_HOT_INSTANCES=true
+      - MCP_QUERY_TIMEOUT_SECONDS=30
+      - ENABLE_MCP_FALLBACKS=true
+
+      # Integration with ecosystem services
+      - MCP_GATEWAY_URL=http://mcp-gateway:5300
+      - MCP_GATEWAY_ENABLED=true
+      - MCP_GATEWAY_TIMEOUT_SECONDS=30
+      - MCP_INTERPRETER_URL=http://mcp-interpreter:5100
+      - MCP_INTERPRETER_ENABLED=true
+      - MCP_INFRASTRUCTURE_URL=http://mcp-infrastructure:5500
+      - MCP_INFRASTRUCTURE_ENABLED=true
+      - LLM_GATEWAY_URL=http://llm-gateway:5055
+      - LLM_GATEWAY_ENABLED=true
+      - LLM_MODEL=llama3.2:3b
+      - LLM_TEMPERATURE=0.3
+      - LLM_MAX_TOKENS=500
+      - LLM_TIMEOUT_SECONDS=30
+      - LOG_COLLECTOR_URL=http://log-collector:5080
+      - LOG_COLLECTOR_ENABLED=true
+
+      # Background tasks (Celery)
+      - CELERY_BROKER_URL=redis://redis:6379/5
+      - CELERY_RESULT_BACKEND=redis://redis:6379/5
+      - CELERY_TASK_SOFT_TIME_LIMIT=300
+      - CELERY_TASK_TIME_LIMIT=360
+
+      # Logging
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+
+      # API configuration
+      - API_PREFIX=/api/v1
+      - DOCS_URL=/docs
+      - OPENAPI_URL=/openapi.json
+      - REDOC_URL=/redoc
+
+      # CORS
+      - CORS_ORIGINS=*
+      - CORS_ALLOW_CREDENTIALS=true
+
+      # WebSocket
+      - WEBSOCKET_ENABLED=true
+      - WEBSOCKET_PING_INTERVAL=30
+      - WEBSOCKET_PING_TIMEOUT=10
+      - ENABLE_PROGRESS_STREAMING=true
+
+      # Monitoring
+      - ENABLE_METRICS=true
+      - METRICS_PORT=9090
+      - ENABLE_TRACING=false
+
+      # DDD Architecture
+      - DDD_ARCHITECTURE=true
+
+      # Approval workflow
+      - ENABLE_APPROVAL_WORKFLOW=true
+      - APPROVAL_TIMEOUT_SECONDS=86400
+
+      # Result caching
+      - ENABLE_RESULT_CACHING=true
+      - RESULT_CACHE_TTL_SECONDS=3600
+
+      # Performance optimization
+      - ENABLE_QUERY_OPTIMIZATION=true
+      - ENABLE_PROMPT_CACHING=true
+      - ENABLE_CONNECTION_POOLING=true
+      - CONNECTION_POOL_SIZE=10
+
+      # Debug
+      - DEBUG_MODE=false
+      - VERBOSE_LOGGING=false
+
+    volumes:
+      - ./:/app:ro
+      - ./services/mcp-orchestrator:/app/services/mcp-orchestrator:rw
+      - ./services/shared:/app/services/shared:ro
+
+    working_dir: /app
+
+    depends_on:
+      redis:
+        condition: service_healthy
+      mcp-gateway:
+        condition: service_started
+      mcp-interpreter:
+        condition: service_started
+      mcp-infrastructure:
+        condition: service_started
+      llm-gateway:
+        condition: service_started
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5200/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - hackathon_default  # Ecosystem standard network
+
+    profiles:
+      - all
+      - mcp_services
+      - development
+
+    restart: unless-stopped
+
   external-service-store:
     build:
       context: .
