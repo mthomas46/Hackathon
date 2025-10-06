@@ -49,6 +49,27 @@ This directory contains comprehensive audit reports, security assessments, and c
 - **Organization Improvements**: Structural enhancements and categorization
 - **Maintenance Benefits**: Improved documentation maintenance and updates
 
+### Recent Audit Reports (October 2025)
+
+#### Report Generation & Accuracy Audits
+- **[`AUDIT_ACTION_PLAN_AND_EXECUTIVE_DASHBOARD.md`](AUDIT_ACTION_PLAN_AND_EXECUTIVE_DASHBOARD.md)** - Action plan for report improvements and executive dashboard
+- **[`AUDIT_COMPLETION_FACTUAL_SUMMARY.md`](AUDIT_COMPLETION_FACTUAL_SUMMARY.md)** - Factual summary of audit completion status
+- **[`AUDIT_FACTUAL_CORRECTION.md`](AUDIT_FACTUAL_CORRECTION.md)** - Corrections to ensure factual accuracy in reports
+- **[`AUDIT_IMPLEMENTATION_COMPLETE.md`](AUDIT_IMPLEMENTATION_COMPLETE.md)** - Audit implementation completion report
+- **[`FINAL_AUDIT_REPORT_WITH_VISUAL_ANALYSIS.md`](FINAL_AUDIT_REPORT_WITH_VISUAL_ANALYSIS.md)** - Comprehensive audit with visual element analysis
+
+#### Audit Passes & Verification
+- **[`AUDIT_PASS_1_RESULTS.md`](AUDIT_PASS_1_RESULTS.md)** - First pass audit results and findings
+- **[`AUDIT_PASS_2_VERIFICATION.md`](AUDIT_PASS_2_VERIFICATION.md)** - Second pass verification and improvements
+
+#### Comprehensive Accuracy & Consistency
+- **[`COMPREHENSIVE_ACCURACY_AUDIT_REPORT.md`](COMPREHENSIVE_ACCURACY_AUDIT_REPORT.md)** - Comprehensive accuracy audit across all reports
+- **[`CONSISTENCY_AUDIT_RESULTS.md`](CONSISTENCY_AUDIT_RESULTS.md)** - Consistency check results and recommendations
+
+#### Infrastructure & Service Audits
+- **[`INFRASTRUCTURE_AND_CONSISTENCY_AUDIT.md`](INFRASTRUCTURE_AND_CONSISTENCY_AUDIT.md)** - Infrastructure and consistency audit
+- **[`REPORT_AUDIT_USER_STORE_AND_WORKFLOW_F.md`](REPORT_AUDIT_USER_STORE_AND_WORKFLOW_F.md)** - User-store and Workflow F specific audit
+
 ## Audit Framework
 
 ### Audit Types
