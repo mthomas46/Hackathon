@@ -2024,6 +2024,97 @@ services:
 
     restart: unless-stopped
 
+  training-coordinator:
+    container_name: hackathon-training-coordinator
+    build:
+      context: .
+      dockerfile: services/training-coordinator/Dockerfile
+
+    ports:
+      - "8155:5600"  # External:Internal
+
+    environment:
+      # Service configuration
+      - PYTHONPATH=/app
+      - SERVICE_NAME=training-coordinator
+      - SERVICE_API_PORT=5600
+      - ENVIRONMENT=development
+
+      # Redis configuration (job queue)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=7
+      - REDIS_KEY_PREFIX=training:
+
+      # PostgreSQL configuration (future)
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=training_coordinator
+      - POSTGRES_USER=training
+      - POSTGRES_PASSWORD=training
+
+      # Celery configuration
+      - CELERY_BROKER_URL=redis://redis:6379/8
+      - CELERY_RESULT_BACKEND=redis://redis:6379/8
+
+      # Worker pool configuration
+      - MAX_EXTRACTION_WORKERS=5
+      - MAX_NORMALIZATION_WORKERS=3
+      - MAX_EMBEDDING_WORKERS=3
+      - MAX_STORAGE_WORKERS=2
+
+      # Job configuration
+      - MAX_CONCURRENT_JOBS=10
+      - DEFAULT_JOB_TIMEOUT_SECONDS=3600
+      - JOB_CLEANUP_INTERVAL_SECONDS=86400
+
+      # Ecosystem integration
+      - MCP_PROVISIONER_URL=http://mcp-provisioner:5400
+      - MCP_INFRASTRUCTURE_URL=http://mcp-infrastructure:5500
+
+      # API configuration
+      - API_PREFIX=/api/v1
+      - DOCS_URL=/docs
+
+      # CORS
+      - CORS_ORIGINS=*
+
+      # Logging
+      - LOG_LEVEL=INFO
+
+    volumes:
+      - ./:/app:ro
+      - ./services/training-coordinator:/app/services/training-coordinator:rw
+      - ./services/shared:/app/services/shared:ro
+
+    working_dir: /app
+
+    depends_on:
+      redis:
+        condition: service_healthy
+      mcp-provisioner:
+        condition: service_started
+      mcp-infrastructure:
+        condition: service_started
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5600/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - hackathon_default
+
+    profiles:
+      - all
+      - mcp_services
+      - training_services
+      - development
+
+    restart: unless-stopped
+
   external-service-store:
     build:
       context: .
