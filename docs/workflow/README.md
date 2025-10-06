@@ -2,7 +2,44 @@
 
 This directory contains documentation for workflow orchestration, business process automation, and development workflows in the LLM Documentation Ecosystem.
 
-## Workflow Documents
+---
+
+## 📋 Workflow F Consolidated Documentation (Primary Documents)
+
+**🎉 Start here for Workflow F (User Intelligence & Expert Discovery):**
+
+### Complete Guides
+- **[WORKFLOW_F_COMPLETE_GUIDE.md](./WORKFLOW_F_COMPLETE_GUIDE.md)** ⭐  
+  **Complete implementation & architecture guide (8 source documents)**
+  - Multi-source user extraction (GitHub, Jira, Confluence)
+  - SME identification algorithm (detailed formulas)
+  - Expert-finder service architecture (11 endpoints)
+  - Integration with planning service
+  - **~8,000 words** | **Complete Implementation**
+
+- **[WORKFLOW_F_DEMO_COMPLETE.md](./WORKFLOW_F_DEMO_COMPLETE.md)** ⭐  
+  **Demo execution & enhancement report (4 source documents)**
+  - 6 demo runs documented (chronological)
+  - Report enhancement strategy (5 reports modified)
+  - 10 visual elements implemented
+  - 2 new reports created (User & Team, Executive Dashboard)
+  - **~6,500 words** | **Demo & Enhancements**
+
+- **[WORKFLOW_F_COMPARISON_COMPLETE.md](./WORKFLOW_F_COMPARISON_COMPLETE.md)** ⭐  
+  **Before & after comparison analysis (3 source documents)**
+  - System capabilities comparison (6 dimensions)
+  - Quantitative impact metrics (99.9% faster expert search)
+  - Report quality before/after
+  - Audit verification results (100% accuracy)
+  - **~7,000 words** | **Impact Analysis**
+
+**Total:** 15 Workflow F documents consolidated → 3 comprehensive guides  
+**Reduction:** 80%  
+**Content:** ~21,500 words of Workflow F documentation  
+
+---
+
+## 📂 Additional Workflow Documents
 
 ### Orchestration Framework
 - **`workflow_orchestration_framework.md`** - Core workflow orchestration framework and architecture
