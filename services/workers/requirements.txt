@@ -1,0 +1,42 @@
+# Worker Dependencies
+celery[redis]==5.3.4
+redis==5.0.1
+
+# HTTP and API
+httpx==0.25.2
+requests==2.31.0
+
+# GitHub Integration
+PyGithub==2.1.1
+gitpython==3.1.40
+
+# Confluence Integration  
+atlassian-python-api==3.41.0
+
+# Jira Integration
+jira==3.5.2
+
+# Document Processing
+markdown==3.5.1
+python-frontmatter==1.0.0
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# NLP and Embeddings
+spacy==3.7.2
+sentence-transformers==2.2.2
+
+# Data validation
+pydantic==2.5.2
+pydantic-settings==2.1.0
+
+# Utilities
+python-dotenv==1.0.0
+tenacity==8.2.3
+pyyaml==6.0.1
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-celery==0.0.0
+
