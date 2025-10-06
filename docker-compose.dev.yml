@@ -1638,6 +1638,118 @@ services:
 
     restart: unless-stopped
 
+  mcp-interpreter:
+    container_name: hackathon-mcp-interpreter
+    build:
+      context: .
+      dockerfile: services/mcp-interpreter/Dockerfile
+
+    ports:
+      - "8152:5100"  # External:Internal
+
+    environment:
+      # Service configuration
+      - PYTHONPATH=/app
+      - SERVICE_NAME=mcp-interpreter
+      - SERVICE_API_PORT=5100
+      - ENVIRONMENT=development
+
+      # Redis configuration (caching)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=3
+      - REDIS_KEY_PREFIX=mcp:interpreter:
+      - REDIS_SOCKET_CONNECT_TIMEOUT=5
+      - REDIS_SOCKET_TIMEOUT=5
+
+      # Query caching
+      - CACHE_ENABLED=true
+      - CACHE_TTL_SECONDS=3600
+      - CACHE_MAX_QUERIES=10000
+
+      # NLP configuration
+      - SPACY_MODEL=en_core_web_sm
+      - NLP_ENABLED=true
+      - ENTITY_CONFIDENCE_THRESHOLD=0.5
+
+      # Intent classification
+      - INTENT_CLASSIFICATION_ENABLED=true
+      - USE_LLM_FOR_INTENT=true
+      - INTENT_CONFIDENCE_THRESHOLD=0.6
+
+      # LLM Gateway integration
+      - LLM_GATEWAY_URL=http://llm-gateway:5055
+      - LLM_GATEWAY_ENABLED=true
+      - LLM_MODEL=llama3.2:3b
+      - LLM_TEMPERATURE=0.3
+      - LLM_MAX_TOKENS=200
+      - LLM_TIMEOUT_SECONDS=10
+
+      # Query processing
+      - MAX_QUERY_LENGTH=500
+      - MAX_KEYWORDS=10
+      - DEFAULT_COMPLEXITY=5
+
+      # Integration with ecosystem services
+      - MCP_INFRASTRUCTURE_URL=http://mcp-infrastructure:5500
+      - MCP_INFRASTRUCTURE_ENABLED=false
+      - LOG_COLLECTOR_URL=http://log-collector:5080
+      - LOG_COLLECTOR_ENABLED=true
+
+      # Logging
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+
+      # API configuration
+      - API_PREFIX=/api/v1
+      - DOCS_URL=/docs
+      - OPENAPI_URL=/openapi.json
+      - REDOC_URL=/redoc
+
+      # CORS
+      - CORS_ORIGINS=*
+      - CORS_ALLOW_CREDENTIALS=true
+
+      # Monitoring
+      - ENABLE_METRICS=true
+      - METRICS_PORT=9090
+
+      # DDD Architecture
+      - DDD_ARCHITECTURE=true
+
+      # Debug
+      - DEBUG_MODE=false
+
+    volumes:
+      - ./:/app:ro
+      - ./services/mcp-interpreter:/app/services/mcp-interpreter:rw
+      - ./services/shared:/app/services/shared:ro
+
+    working_dir: /app
+
+    depends_on:
+      redis:
+        condition: service_healthy
+      llm-gateway:
+        condition: service_started
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - hackathon_default  # Ecosystem standard network
+
+    profiles:
+      - all
+      - mcp_services
+      - development
+
+    restart: unless-stopped
+
   external-service-store:
     build:
       context: .
