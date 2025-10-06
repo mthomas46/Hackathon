@@ -1516,6 +1516,128 @@ services:
 
     restart: unless-stopped
 
+  mcp-gateway:
+    container_name: hackathon-mcp-gateway
+    build:
+      context: .
+      dockerfile: services/mcp-gateway/Dockerfile
+
+    ports:
+      - "8151:5300"  # External:Internal
+
+    environment:
+      # Service configuration
+      - PYTHONPATH=/app
+      - SERVICE_NAME=mcp-gateway
+      - SERVICE_API_PORT=5300
+      - ENVIRONMENT=development
+
+      # Redis configuration (registry and caching)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=2
+      - REDIS_KEY_PREFIX=mcp:gateway:
+      - REDIS_SOCKET_CONNECT_TIMEOUT=5
+      - REDIS_SOCKET_TIMEOUT=5
+
+      # Routing configuration
+      - DEFAULT_ROUTING_STRATEGY=least_loaded
+      - MAX_CONCURRENT_REQUESTS_PER_INSTANCE=100
+      - ENABLE_STICKY_SESSIONS=true
+      - SESSION_TTL_SECONDS=3600
+
+      # Health check configuration
+      - HEALTH_CHECK_ENABLED=true
+      - HEALTH_CHECK_INTERVAL_SECONDS=30
+      - HEALTH_CHECK_TIMEOUT_SECONDS=5
+      - MAX_CONSECUTIVE_FAILURES=3
+      - UNHEALTHY_INSTANCE_TTL_SECONDS=300
+
+      # Circuit breaker configuration
+      - CIRCUIT_BREAKER_ENABLED=true
+      - CIRCUIT_BREAKER_FAILURE_THRESHOLD=5
+      - CIRCUIT_BREAKER_TIMEOUT_SECONDS=60
+
+      # Request configuration
+      - DEFAULT_REQUEST_TIMEOUT_SECONDS=30
+      - MAX_RETRIES=2
+      - RETRY_BACKOFF_FACTOR=1.5
+
+      # Rate limiting
+      - RATE_LIMITING_ENABLED=true
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=1000
+      - RATE_LIMIT_BURST=100
+
+      # Caching
+      - CACHE_ENABLED=true
+      - CACHE_TTL_SECONDS=300
+      - CACHE_MAX_SIZE=10000
+
+      # Integration with ecosystem services
+      - MCP_INFRASTRUCTURE_URL=http://mcp-infrastructure:5500
+      - MCP_INFRASTRUCTURE_ENABLED=true
+      - LOG_COLLECTOR_URL=http://log-collector:5080
+      - LOG_COLLECTOR_ENABLED=true
+
+      # Logging
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+
+      # API configuration
+      - API_PREFIX=/api/v1
+      - DOCS_URL=/docs
+      - OPENAPI_URL=/openapi.json
+      - REDOC_URL=/redoc
+
+      # CORS
+      - CORS_ORIGINS=*
+      - CORS_ALLOW_CREDENTIALS=true
+
+      # Monitoring
+      - ENABLE_METRICS=true
+      - METRICS_PORT=9090
+
+      # Cleanup
+      - STALE_INSTANCE_CLEANUP_ENABLED=true
+      - STALE_INSTANCE_MAX_AGE_SECONDS=3600
+      - CLEANUP_INTERVAL_SECONDS=300
+
+      # DDD Architecture
+      - DDD_ARCHITECTURE=true
+
+      # Debug
+      - DEBUG_MODE=false
+
+    volumes:
+      - ./:/app:ro
+      - ./services/mcp-gateway:/app/services/mcp-gateway:rw
+      - ./services/shared:/app/services/shared:ro
+
+    working_dir: /app
+
+    depends_on:
+      redis:
+        condition: service_healthy
+      mcp-infrastructure:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5300/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - hackathon_default  # Ecosystem standard network
+
+    profiles:
+      - all
+      - mcp_services
+      - development
+
+    restart: unless-stopped
+
   external-service-store:
     build:
       context: .
