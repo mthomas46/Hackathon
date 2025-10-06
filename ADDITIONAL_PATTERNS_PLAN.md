@@ -40,7 +40,7 @@
 
 ---
 
-## 🆕 **MISSING PATTERNS (7 new patterns)**
+## 🆕 **MISSING PATTERNS (12 new patterns)**
 
 ### 1. **Hypothetical Document Embeddings (HyDE)** 🆕
 - **Category:** Advanced RAG
@@ -98,13 +98,53 @@
 - **LOC Estimate:** ~400
 - **Key Innovation:** Domain expertise simulation
 
+### 8. **Deductive Closure Training (DCT)** 🆕
+- **Category:** Reasoning Enhancement / Training
+- **Description:** Enhance reasoning through logical closure and entailment
+- **Status:** ❌ Not Implemented
+- **Priority:** Medium
+- **LOC Estimate:** ~450
+- **Key Innovation:** Logical consistency through deductive closure
+
+### 9. **Semantic Chunking** 🆕
+- **Category:** RAG Preprocessing
+- **Description:** Intelligent document chunking based on semantic boundaries
+- **Status:** ❌ Not Implemented
+- **Priority:** High
+- **LOC Estimate:** ~400
+- **Key Innovation:** Semantic-aware splitting vs fixed-size chunks
+
+### 10. **LLM-as-a-Judge** 🆕
+- **Category:** Evaluation / Quality Assurance
+- **Description:** Use LLM to evaluate and rank responses/outputs
+- **Status:** ⚠️ Partially in Self-Critique, needs standalone
+- **Priority:** High
+- **LOC Estimate:** ~350
+- **Key Innovation:** Automated evaluation and comparison
+
+### 11. **Positional Bias Exploitation** 🆕
+- **Category:** Optimization / Context Management
+- **Description:** Strategic placement of information based on positional bias
+- **Status:** ❌ Not Implemented
+- **Priority:** Medium
+- **LOC Estimate:** ~300
+- **Key Innovation:** Optimize context ordering for better results
+
+### 12. **Lost in the Middle Mitigation** 🆕
+- **Category:** Context Management / RAG
+- **Description:** Address "lost in the middle" problem in long contexts
+- **Status:** ❌ Not Implemented
+- **Priority:** High
+- **LOC Estimate:** ~400
+- **Key Innovation:** Re-ordering, chunking, and attention guidance
+
 ---
 
 ## 📋 **IMPLEMENTATION PLAN**
 
-### Phase 2B: RAG Extensions (3 patterns)
-**Duration:** 2-3 hours  
-**Focus:** Advanced retrieval techniques
+### Phase 2B: RAG Extensions (5 patterns)
+**Duration:** 3-4 hours  
+**Focus:** Advanced retrieval and preprocessing
 
 1. **Hypothetical Document Embeddings (HyDE)**
    - Generate hypothetical answer
@@ -126,37 +166,67 @@
    - Result fusion
    - Answer generation
 
+4. **Semantic Chunking**
+   - Analyze document structure
+   - Identify semantic boundaries
+   - Split on meaning breaks
+   - Maintain context coherence
+
+5. **Lost in the Middle Mitigation**
+   - Detect long context scenarios
+   - Re-order retrieved chunks
+   - Apply attention guidance
+   - Ensure critical info visibility
+
 ### Phase 2C: Reasoning Extensions (3 patterns)
 **Duration:** 2-3 hours  
 **Focus:** Enhanced reasoning capabilities
 
-4. **Rephrase and Respond (RaR)**
+6. **Rephrase and Respond (RaR)**
    - Analyze query
    - Generate rephrased versions
    - Select best rephrase
    - Answer based on clarified query
 
-5. **Skeleton of Thoughts (SoT)**
+7. **Skeleton of Thoughts (SoT)**
    - Generate outline/skeleton
    - Parallel point elaboration
    - Synthesis
    - Final answer
 
-6. **Expert Persona Pattern**
+8. **Expert Persona Pattern**
    - Identify domain
    - Adopt expert persona
    - Apply domain knowledge
    - Expert-level reasoning
 
-### Phase 2D: Utility Pattern (1 pattern)
-**Duration:** 1 hour  
-**Focus:** Reranking utility
+9. **Deductive Closure Training (DCT)**
+   - Apply logical rules
+   - Ensure consistency
+   - Derive entailments
+   - Verify closure
 
-7. **Explicit Reranking**
-   - Multiple reranking strategies
-   - Cross-encoder reranking
-   - Diversity-aware reranking
-   - Fusion algorithms
+### Phase 2D: Utility Patterns (3 patterns)
+**Duration:** 2 hours  
+**Focus:** Optimization and evaluation
+
+10. **Explicit Reranking**
+    - Multiple reranking strategies
+    - Cross-encoder reranking
+    - Diversity-aware reranking
+    - Fusion algorithms
+
+11. **LLM-as-a-Judge**
+    - Define evaluation criteria
+    - Compare multiple responses
+    - Rank and score outputs
+    - Provide justification
+
+12. **Positional Bias Exploitation**
+    - Analyze positional effects
+    - Strategic info placement
+    - Optimize context ordering
+    - Maximize attention
 
 ---
 
@@ -245,24 +315,32 @@ Combine RAG + Thought patterns for:
 
 ## 📊 **UPDATED PATTERN PORTFOLIO**
 
-### After Implementation (29 total patterns)
+### After Implementation (34 total patterns)
 
-**RAG Patterns (7):**
+**RAG Patterns (9):**
 1. Advanced RAG ✅
 2. HyDE 🆕
 3. Parent Document Retriever 🆕
 4. Corrective RAG (CRAG) 🆕
-5. Explicit Reranking 🆕
+5. Semantic Chunking 🆕
+6. Lost in the Middle Mitigation 🆕
 
-**Reasoning Patterns (8):**
-6. Chain-of-Thought ✅
-7. Tree-of-Thought ✅
-8. Graph-of-Thought ✅
-9. ReAct ✅
-10. Self-Consistency ✅
-11. Rephrase and Respond (RaR) 🆕
-12. Skeleton of Thoughts (SoT) 🆕
-13. Expert Persona 🆕
+**Reasoning Patterns (10):**
+7. Chain-of-Thought ✅
+8. Tree-of-Thought ✅
+9. Graph-of-Thought ✅
+10. ReAct ✅
+11. Self-Consistency ✅
+12. Rephrase and Respond (RaR) 🆕
+13. Skeleton of Thoughts (SoT) 🆕
+14. Expert Persona 🆕
+15. Deductive Closure Training (DCT) 🆕
+
+**Evaluation & Optimization (4):**
+16. Explicit Reranking 🆕
+17. LLM-as-a-Judge 🆕
+18. Positional Bias Exploitation 🆕
+19. Context Pruning ✅
 
 **Other Categories (14):**
 - Ensemble (2) ✅
@@ -277,32 +355,38 @@ Combine RAG + Thought patterns for:
 | Phase | Patterns | LOC | Duration | Status |
 |-------|----------|-----|----------|--------|
 | Phase 2 (Complete) | 22 | ~10,900 | 9 hours | ✅ Done |
-| Phase 2B (RAG) | 3 | ~1,250 | 2-3 hours | 🔜 Next |
-| Phase 2C (Reasoning) | 3 | ~1,200 | 2-3 hours | 🔜 Pending |
-| Phase 2D (Utility) | 1 | ~300 | 1 hour | 🔜 Pending |
-| **Total** | **29** | **~13,650** | **15-16 hours** | **76% Complete** |
+| Phase 2B (RAG + Context) | 5 | ~2,050 | 3-4 hours | 🔜 Next |
+| Phase 2C (Reasoning) | 4 | ~1,650 | 2-3 hours | 🔜 Pending |
+| Phase 2D (Utility/Eval) | 3 | ~1,050 | 2 hours | 🔜 Pending |
+| **Total** | **34** | **~15,650** | **16-18 hours** | **65% Complete** |
 
 ---
 
 ## 🎯 **NEXT STEPS**
 
-### Immediate (Phase 2B)
+### Immediate (Phase 2B - RAG Extensions)
 1. Implement HyDE pattern
 2. Implement Parent Document Retriever
 3. Implement Corrective RAG (CRAG)
+4. Implement Semantic Chunking
+5. Implement Lost in the Middle Mitigation
 
-### Then (Phase 2C)
-4. Implement Rephrase and Respond
-5. Implement Skeleton of Thoughts
-6. Implement Expert Persona
+### Then (Phase 2C - Reasoning Extensions)
+6. Implement Rephrase and Respond
+7. Implement Skeleton of Thoughts
+8. Implement Expert Persona
+9. Implement Deductive Closure Training
 
-### Finally (Phase 2D)
-7. Extract and enhance Reranking pattern
+### Finally (Phase 2D - Utility & Evaluation)
+10. Extract and enhance Reranking pattern
+11. Implement LLM-as-a-Judge
+12. Implement Positional Bias Exploitation
 
 ### Integration
-8. Update Adaptive Selection with new patterns
-9. Document decision framework in Orchestrator
-10. Create pattern selection helper
+13. Update Adaptive Selection with new patterns
+14. Document decision framework in Orchestrator
+15. Create pattern selection helper
+16. Add semantic chunking to data pipeline
 
 ---
 
@@ -313,18 +397,53 @@ Combine RAG + Thought patterns for:
 - **CRAG + Fallback Cascade:** Robust retrieval with multiple fallbacks
 - **SoT + Multi-Agent:** Parallel skeleton elaboration by different agents
 - **Expert Persona + Constitutional AI:** Domain expertise with ethical guidelines
+- **Semantic Chunking + Parent Retriever:** Hierarchical semantic retrieval
+- **Lost in Middle + Context Pruning:** Comprehensive context optimization
+- **LLM-as-Judge + Self-Consistency:** Evaluation-based consensus
+- **Positional Bias + Advanced RAG:** Optimized retrieval ordering
+- **DCT + CoT:** Logically consistent step-by-step reasoning
 
 ### Architecture Considerations
 - All new patterns follow BasePatternEngine
 - Decision framework integrated into Adaptive Selection
 - Hybrid pattern support built-in
 - Pattern composition enabled
+- Semantic chunking can be preprocessing step for all RAG patterns
+- LLM-as-Judge can evaluate outputs from any pattern
+- Positional bias applies to all context-heavy patterns
+
+### New Pattern Categories
+- **Preprocessing:** Semantic Chunking
+- **Context Optimization:** Lost in Middle, Positional Bias
+- **Evaluation:** LLM-as-Judge
+- **Training/Enhancement:** DCT
 
 ---
 
 **Plan Created:** October 6, 2025  
+**Last Updated:** October 6, 2025  
 **Status:** Ready for Phase 2B Implementation  
-**Expected Completion:** 7 more patterns, ~3,000 LOC, 6-7 hours  
+**Expected Completion:** 12 more patterns, ~4,750 LOC, 7-9 hours  
 
-**Total Portfolio Target:** 29 patterns covering all major LLM techniques! 🎯
+**Total Portfolio Target:** 34 patterns covering all major LLM techniques! 🎯
+
+---
+
+## 🆕 **NEWLY ADDED PATTERNS (5 additional)**
+
+### Context & Optimization Focus
+- **Semantic Chunking:** Smart document splitting
+- **Lost in the Middle Mitigation:** Long context handling
+- **Positional Bias Exploitation:** Strategic ordering
+
+### Reasoning & Evaluation Focus
+- **Deductive Closure Training:** Logical consistency
+- **LLM-as-a-Judge:** Automated evaluation
+
+These patterns address critical gaps in:
+- Document preprocessing
+- Long context handling
+- Evaluation automation
+- Logical reasoning enhancement
+- Context optimization
 
