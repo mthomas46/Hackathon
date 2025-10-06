@@ -1343,6 +1343,179 @@ services:
       retries: 3
       start_period: 10s
     working_dir: /app
+  # ============================================================================
+  # MCP SERVICES - Model Context Protocol System
+  # ============================================================================
+  mcp-provisioner:
+    build:
+      context: .
+      dockerfile: services/mcp-provisioner/Dockerfile
+    container_name: hackathon-mcp-provisioner
+    ports:
+      - "8144:5400"  # External:Internal
+    environment:
+      # Standard service configuration
+      - PYTHONPATH=/app
+      - SERVICE_NAME=mcp-provisioner
+      - SERVICE_API_PORT=5400
+      - ENVIRONMENT=development
+
+      # Logging (ecosystem standard)
+      - LOG_COLLECTOR_URL=http://log-collector:5080
+      - LOG_COLLECTOR_ENABLED=true
+      - LOG_LEVEL=INFO
+
+      # Dependencies
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_KEY_PREFIX=mcp:provisioner:
+
+      # Docker configuration
+      - DOCKER_SOCKET=unix:///var/run/docker.sock
+      - DOCKER_NETWORK=hackathon_default
+      - MCP_PORT_RANGE_START=9000
+      - MCP_PORT_RANGE_END=9100
+
+      # LLM Gateway integration
+      - LLM_GATEWAY_URL=http://llm-gateway:5055
+      - LLM_GATEWAY_ENABLED=true
+
+      # DDD Architecture flag
+      - DDD_ARCHITECTURE=true
+      - DDD_CONFIG_FILE=config/ddd_config.yaml
+
+      # Network resilience (ecosystem standard)
+      - HTTP_CONNECTION_POOL_SIZE=10
+      - HTTP_MAX_KEEPALIVE_CONNECTIONS=5
+      - HTTP_TIMEOUT=30
+      - CIRCUIT_BREAKER_FAILURE_THRESHOLD=3
+      - CIRCUIT_BREAKER_RECOVERY_TIMEOUT=45
+      - RETRY_MAX_ATTEMPTS=2
+      - RETRY_BACKOFF_FACTOR=2.0
+
+    volumes:
+      - ./:/app:ro                                           # Read-only workspace
+      - ./services/mcp-provisioner:/app/services/mcp-provisioner:rw  # Service code
+      - ./services/shared:/app/services/shared:ro            # Shared libraries
+      - /var/run/docker.sock:/var/run/docker.sock            # Docker socket
+
+    working_dir: /app
+
+    depends_on:
+      redis:
+        condition: service_healthy
+      log-collector:
+        condition: service_started
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5400/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - hackathon_default  # Ecosystem standard network
+
+    profiles:
+      - all
+      - mcp_services
+      - development
+
+    restart: unless-stopped
+
+  mcp-infrastructure:
+    container_name: hackathon-mcp-infrastructure
+    build:
+      context: .
+      dockerfile: services/mcp-infrastructure/Dockerfile
+      target: development
+
+    environment:
+      # Service configuration
+      - PYTHONPATH=/app
+      - SERVICE_NAME=mcp-infrastructure
+      - SERVICE_API_PORT=5500
+      - ENVIRONMENT=development
+
+      # Redis configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=1
+      - REDIS_KEY_PREFIX=mcp:infra:
+      - REDIS_SOCKET_CONNECT_TIMEOUT=5
+      - REDIS_SOCKET_TIMEOUT=5
+
+      # Memory management
+      - MAX_CONTEXT_ITEMS=10000
+      - DEFAULT_TTL=3600
+      - RING_BUFFER_SIZE=5000
+      - CLEANUP_INTERVAL=300
+
+      # Event processing
+      - SUBSCRIBE_TO_MCP_EVENTS=true
+
+      # Integration with ecosystem services
+      - LOG_COLLECTOR_URL=http://log-collector:5080
+      - LOG_COLLECTOR_ENABLED=true
+      - LLM_GATEWAY_URL=http://llm-gateway:5055
+      - LLM_GATEWAY_ENABLED=true
+      - MEMORY_AGENT_URL=http://memory-agent:5040
+      - MEMORY_AGENT_SYNC_ENABLED=false
+
+      # Logging
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+
+      # API configuration
+      - API_PREFIX=/api/v1
+      - DOCS_URL=/docs
+      - OPENAPI_URL=/openapi.json
+
+      # CORS
+      - CORS_ORIGINS=*
+      - CORS_ALLOW_CREDENTIALS=true
+
+      # DDD configuration
+      - DDD_ARCHITECTURE=true
+
+      # WebSocket configuration
+      - WEBSOCKET_ENABLED=true
+      - WEBSOCKET_PING_INTERVAL=30
+      - WEBSOCKET_PING_TIMEOUT=10
+
+    ports:
+      - "8150:5500"  # External:Internal
+
+    working_dir: /app
+
+    volumes:
+      - ./:/app:ro
+      - ./services/mcp-infrastructure:/app/services/mcp-infrastructure:rw
+      - ./services/shared:/app/services/shared:ro
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5500/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - hackathon_default  # Ecosystem standard network
+
+    profiles:
+      - all
+      - mcp_services
+      - development
+
+    restart: unless-stopped
+
   external-service-store:
     build:
       context: .
