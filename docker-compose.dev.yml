@@ -1904,6 +1904,126 @@ services:
 
     restart: unless-stopped
 
+  mcp-registry:
+    container_name: hackathon-mcp-registry
+    build:
+      context: .
+      dockerfile: services/mcp-registry/Dockerfile
+
+    ports:
+      - "8154:5550"  # External:Internal
+
+    environment:
+      # Service configuration
+      - PYTHONPATH=/app
+      - SERVICE_NAME=mcp-registry
+      - SERVICE_API_PORT=5550
+      - ENVIRONMENT=development
+
+      # Redis configuration (registry metadata)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=6
+      - REDIS_KEY_PREFIX=mcp:registry:
+      - REDIS_SOCKET_CONNECT_TIMEOUT=5
+      - REDIS_SOCKET_TIMEOUT=5
+      - REDIS_MAX_CONNECTIONS=50
+
+      # Storage configuration
+      - DEFAULT_STORAGE_BACKEND=local_filesystem
+      - LOCAL_STORAGE_PATH=/app/data/mcp-packages
+      - S3_BUCKET_NAME=mcp-packages
+      - S3_ENDPOINT_URL=
+      - S3_ACCESS_KEY=
+      - S3_SECRET_KEY=
+      - S3_REGION=us-east-1
+
+      # Export/Import configuration
+      - DEFAULT_EXPORT_FORMAT=msgpack
+      - ENABLE_COMPRESSION=true
+      - DEFAULT_COMPRESSION_LEVEL=6
+      - MAX_PACKAGE_SIZE_MB=1024
+
+      # Security configuration
+      - ENABLE_SECURITY_SCAN=true
+      - ENABLE_INTEGRITY_CHECK=true
+      - QUARANTINE_ON_SECURITY_FAILURE=true
+
+      # Versioning configuration
+      - ENABLE_AUTO_VERSIONING=true
+      - MAX_VERSIONS_PER_MCP=10
+      - AUTO_DEPRECATE_OLD_VERSIONS=false
+
+      # Registry configuration
+      - ENABLE_PUBLIC_REGISTRY=true
+      - DEFAULT_MCP_VISIBILITY=private
+      - MAX_SEARCH_RESULTS=100
+
+      # Integration with ecosystem services
+      - MCP_PROVISIONER_URL=http://mcp-provisioner:5400
+      - MCP_PROVISIONER_ENABLED=true
+      - MCP_GATEWAY_URL=http://mcp-gateway:5300
+      - MCP_GATEWAY_ENABLED=true
+      - LOG_COLLECTOR_URL=http://log-collector:5080
+      - LOG_COLLECTOR_ENABLED=true
+
+      # Background tasks
+      - ENABLE_BACKGROUND_TASKS=true
+      - CLEANUP_INTERVAL_SECONDS=3600
+      - INTEGRITY_CHECK_INTERVAL_SECONDS=86400
+
+      # Logging
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+
+      # API configuration
+      - API_PREFIX=/api/v1
+      - DOCS_URL=/docs
+      - OPENAPI_URL=/openapi.json
+      - REDOC_URL=/redoc
+
+      # CORS
+      - CORS_ORIGINS=*
+      - CORS_ALLOW_CREDENTIALS=true
+
+      # Monitoring
+      - ENABLE_METRICS=true
+      - METRICS_PORT=9090
+      - ENABLE_TRACING=false
+
+      # Debug
+      - DEBUG_MODE=false
+      - VERBOSE_LOGGING=false
+
+    volumes:
+      - ./:/app:ro
+      - ./services/mcp-registry:/app/services/mcp-registry:rw
+      - ./services/shared:/app/services/shared:ro
+      - mcp-registry-data:/app/data/mcp-packages
+
+    working_dir: /app
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5550/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - hackathon_default  # Ecosystem standard network
+
+    profiles:
+      - all
+      - mcp_services
+      - development
+
+    restart: unless-stopped
+
   external-service-store:
     build:
       context: .
@@ -1944,6 +2064,10 @@ volumes:
   doc_store_data:
     driver: local
   prompt_store_data:
+    driver: local
+  mcp-registry-data:
+    driver: local
+  prompt_store_data_old:
     driver: local
   llm_gateway_cache:
     driver: local
