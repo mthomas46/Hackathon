@@ -154,7 +154,7 @@ services:
       dockerfile: Dockerfile
     container_name: llm-tagging-pipeline
     ports:
-      - "8021:8021"
+      - "8022:8021"
     environment:
       - SERVICE_PORT=8021
       - OLLAMA_HOST=ollama

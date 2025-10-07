@@ -17,6 +17,6 @@ RUN mkdir -p /app/packages
 # Expose port
 EXPOSE 8020
 
-# Run application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8020"]
+# Run application (use simple version temporarily)
+CMD ["uvicorn", "main_simple:app", "--host", "0.0.0.0", "--port", "8103"]
 

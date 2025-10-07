@@ -1,0 +1,28 @@
+{
+  "correlation_id": "b7f78684-b4be-4df8-aa24-d233dd9048f9",
+  "timestamp": "2025-10-07T23:24:08.791527",
+  "results": {
+    "kafka-ingestion_health": true,
+    "llm-tagging_health": true,
+    "mcp-local-llm_health": true,
+    "mcp-package-manager_health": true,
+    "mcp-evergreen-docs_health": true,
+    "mcp-logs_health": true,
+    "mcp-training_health": true,
+    "mcp-store_health": true,
+    "mcp-registry_health": false,
+    "logging_operational": false,
+    "document_ingested": true,
+    "document_id": "doc_0a0be69e",
+    "llm_tagging_completed": true,
+    "correlation_tracked": false,
+    "package_manager_operational": true,
+    "evergreen_docs_operational": true
+  },
+  "summary": {
+    "total": 16,
+    "passed": 12,
+    "failed": 4,
+    "success_rate": "75.0%"
+  }
+}

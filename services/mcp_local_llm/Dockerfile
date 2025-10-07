@@ -14,6 +14,6 @@ COPY . .
 # Expose port
 EXPOSE 8014
 
-# Run application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8014"]
+# Run application (use simple version temporarily)
+CMD ["uvicorn", "main_simple:app", "--host", "0.0.0.0", "--port", "8014"]
 
