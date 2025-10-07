@@ -2216,3 +2216,43 @@ networks:
       - all
       - mcp
     restart: unless-stopped
+
+  # MCP Dashboard Service
+  mcp-dashboard:
+    build:
+      context: ./services/mcp-dashboard
+      dockerfile: Dockerfile
+    container_name: mcp-dashboard
+    ports:
+      - "8015:8015"
+    environment:
+      - DASHBOARD_HOST=0.0.0.0
+      - DASHBOARD_PORT=8015
+      - TRAINING_COORDINATOR_URL=http://training-coordinator:5600
+      - PROVISIONER_URL=http://mcp-provisioner:8003
+      - INTERPRETER_URL=http://mcp-interpreter:8002
+      - RETRIEVAL_URL=http://mcp-retrieval:8014
+      - ORCHESTRATOR_URL=http://mcp-orchestrator:8004
+      - MCP_STORE_URL=http://mcp-store:8008
+      - TIER_MANAGER_URL=http://mcp-tier-manager:8013
+      - PACKAGE_MANAGER_URL=http://mcp-package-manager:8012
+      - LOGS_URL=http://mcp-logs:8011
+      - PERFORMANCE_STORE_URL=http://mcp-performance-store:8009
+      - INFRASTRUCTURE_URL=http://mcp-infrastructure:8007
+      - REGISTRY_URL=http://mcp-registry:8006
+      - COMPOSER_URL=http://mcp-composer:8005
+      - GATEWAY_URL=http://mcp-gateway:8001
+      - LOGGING_URL=http://mcp-logging:8010
+    depends_on:
+      - mcp-gateway
+      - mcp-provisioner
+      - mcp-interpreter
+      - training-coordinator
+    networks:
+      - mcp_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8015/_stcore/health"\]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
