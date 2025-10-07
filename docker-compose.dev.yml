@@ -2185,3 +2185,34 @@ networks:
       driver: default
       config:
         - subnet: 172.20.0.0/16
+
+  mcp-composer:
+    build:
+      context: ./services/mcp-composer
+      dockerfile: Dockerfile
+    container_name: mcp-composer
+    ports:
+      - "5646:5646"
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_NAME=mcp-composer
+      - MCP_GATEWAY_URL=http://mcp-gateway:5641
+      - SERVICE_PORT=5646
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/mcp-composer:/app
+    networks:
+      - hackathon_default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5646/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - redis
+      - mcp-gateway
+    profiles:
+      - all
+      - mcp
+    restart: unless-stopped
