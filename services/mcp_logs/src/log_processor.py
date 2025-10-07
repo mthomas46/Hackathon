@@ -231,3 +231,54 @@ class LogProcessor:
         for log in logs:
             counts[log.service] = counts.get(log.service, 0) + 1
         return counts
+    
+    def filter_logs(
+        self,
+        logs: List[LogEntry],
+        level: Optional[LogLevel] = None,
+        service: Optional[str] = None
+    ) -> List[LogEntry]:
+        """
+        Filter logs by level and/or service.
+        
+        Args:
+            logs: List of log entries
+            level: Log level filter
+            service: Service name filter
+        
+        Returns:
+            Filtered list of log entries
+        """
+        filtered = logs
+        
+        if level:
+            filtered = [log for log in filtered if log.level == level]
+        
+        if service:
+            filtered = [log for log in filtered if log.service == service]
+        
+        return filtered
+    
+    def aggregate_logs(
+        self,
+        logs: List[LogEntry],
+        by: str = "service"
+    ) -> Dict[str, int]:
+        """
+        Aggregate logs by specified field.
+        
+        Args:
+            logs: List of log entries
+            by: Field to aggregate by ("service" or "level")
+        
+        Returns:
+            Dictionary with counts per key
+        """
+        from collections import Counter
+        
+        if by == "service":
+            return dict(Counter(log.service for log in logs))
+        elif by == "level":
+            return dict(Counter(log.level.value for log in logs))
+        else:
+            raise ValueError(f"Unsupported aggregation field: {by}")
