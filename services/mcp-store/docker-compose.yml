@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  mcp-store:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcp-store
+    ports:
+      - "5648:5648"
+    environment:
+      # Service configuration
+      SERVICE_NAME: mcp-store
+      SERVICE_VERSION: 1.0.0
+      SERVICE_PORT: 5648
+      
+      # Database configuration (SQLite)
+      DATABASE_URL: sqlite+aiosqlite:///./data/mcp_store.db
+      DATABASE_ECHO: "false"
+      
+      # Storage configuration (MinIO)
+      STORAGE_TYPE: minio
+      STORAGE_ENDPOINT: minio:9000
+      STORAGE_ACCESS_KEY: minioadmin
+      STORAGE_SECRET_KEY: minioadmin
+      STORAGE_BUCKET: mcp-packages
+      STORAGE_USE_SSL: "false"
+    volumes:
+      # Persist SQLite database
+      - mcp-store-data:/app/data
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5648/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  minio:
+    image: minio/minio:latest
+    container_name: mcp-store-minio
+    ports:
+      - "9000:9000"  # API
+      - "9001:9001"  # Console
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  mcp-store-data:
+    driver: local
+  minio-data:
+    driver: local
+
+networks:
+  mcp-network:
+    driver: bridge

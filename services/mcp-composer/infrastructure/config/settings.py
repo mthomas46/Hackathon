@@ -8,33 +8,25 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
     # Service info
-    service_name: str = "mcp-performance-store"
+    service_name: str = "mcp-composer"
     service_version: str = "1.0.0"
-    service_port: int = 5647
+    service_port: int = 5646
     
     # Redis configuration
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
     redis_password: Optional[str] = None
-    redis_key_prefix: str = "mcp-perf"
+    redis_key_prefix: str = "mcp-composer"
     redis_socket_timeout: int = 5
     redis_socket_connect_timeout: int = 5
     
-    # Optional: TimescaleDB for time-series (Phase 2)
-    timescale_enabled: bool = False
-    timescale_host: str = "localhost"
-    timescale_port: int = 5432
-    timescale_db: str = "mcp_performance"
-    timescale_user: str = "postgres"
-    timescale_password: Optional[str] = None
+    # MCP Gateway configuration
+    mcp_gateway_url: str = "http://localhost:5601"
     
     # Logging
     log_level: str = "INFO"
     log_format: str = "json"
-    
-    # Retention (days)
-    execution_retention_days: int = 30
     
     class Config:
         """Pydantic config."""

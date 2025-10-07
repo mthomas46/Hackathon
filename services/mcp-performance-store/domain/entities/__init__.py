@@ -1,6 +1,13 @@
 """Domain entities for MCP Performance Store."""
 
-from .orchestration_execution import OrchestrationExecution
-from .pattern_performance import PatternPerformance
+from services.mcp_performance_store.domain.entities.orchestration_execution import (
+    OrchestrationExecution
+)
+from services.mcp_performance_store.domain.entities.pattern_performance import (
+    PatternPerformance
+)
 
-__all__ = ["OrchestrationExecution", "PatternPerformance"]
+__all__ = [
+    "OrchestrationExecution",
+    "PatternPerformance",
+]

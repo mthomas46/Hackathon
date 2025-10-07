@@ -1,11 +1,22 @@
 """MCP Composer Service - Main FastAPI application."""
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List, Optional
 import logging
 import uvicorn
+import redis.asyncio as redis
+from contextlib import asynccontextmanager
+
+from services.mcp_composer.infrastructure.config.settings import get_settings
+from services.mcp_composer.infrastructure.repositories.redis_composition_repository import (
+    RedisCompositionRepository
+)
+from services.mcp_composer.domain.repositories.composition_repository import (
+    EntityNotFoundError,
+    DuplicateEntityError
+)
 
 # Configure logging
 logging.basicConfig(
@@ -13,6 +24,58 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Settings
+settings = get_settings()
+
+# Global repository (will be initialized on startup)
+composition_repository: Optional[RedisCompositionRepository] = None
+redis_client: Optional[redis.Redis] = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifecycle manager for FastAPI app."""
+    global composition_repository, redis_client
+    
+    # Startup
+    logger.info("Starting MCP Composer Service...")
+    
+    # Initialize Redis
+    redis_client = redis.Redis(
+        host=settings.redis_host,
+        port=settings.redis_port,
+        db=settings.redis_db,
+        password=settings.redis_password,
+        decode_responses=False,
+        socket_timeout=settings.redis_socket_timeout,
+        socket_connect_timeout=settings.redis_socket_connect_timeout,
+    )
+    
+    # Test Redis connection
+    try:
+        await redis_client.ping()
+        logger.info(f"Connected to Redis at {settings.redis_host}:{settings.redis_port}")
+    except Exception as e:
+        logger.error(f"Failed to connect to Redis: {e}")
+        raise
+    
+    # Initialize repository
+    composition_repository = RedisCompositionRepository(
+        redis_client=redis_client,
+        key_prefix=settings.redis_key_prefix
+    )
+    
+    logger.info("MCP Composer Service started successfully")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down MCP Composer Service...")
+    if redis_client:
+        await redis_client.close()
+    logger.info("MCP Composer Service stopped")
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -22,7 +85,18 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json",
     docs_url="/api/v1/docs",
     redoc_url="/api/v1/redoc",
+    lifespan=lifespan,
 )
+
+
+def get_repository() -> RedisCompositionRepository:
+    """Get the composition repository dependency."""
+    if composition_repository is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Repository not initialized"
+        )
+    return composition_repository
 
 
 # Request/Response Models
@@ -74,8 +148,11 @@ async def health_check():
 
 
 # Composition management endpoints
-@app.post("/api/v1/compositions", response_model=CompositionResponse, tags=["Compositions"])
-async def create_composition(request: CreateCompositionRequest):
+@app.post("/api/v1/compositions", response_model=CompositionResponse, tags=["Compositions"], status_code=status.HTTP_201_CREATED)
+async def create_composition(
+    request: CreateCompositionRequest,
+    repository: RedisCompositionRepository = Depends(get_repository)
+):
     """
     Create a new MCP composition from YAML.
     
@@ -92,7 +169,16 @@ async def create_composition(request: CreateCompositionRequest):
         yaml_data = yaml.safe_load(request.yaml_content)
         composition = parser.parse_dict(yaml_data)
         
-        # TODO: Save to repository
+        # Save to repository
+        try:
+            await repository.save(composition)
+        except DuplicateEntityError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Composition {composition.composition_id} already exists"
+            )
+        
+        logger.info(f"Created composition: {composition.composition_id}")
         
         return CompositionResponse(
             composition_id=composition.composition_id,
@@ -112,6 +198,8 @@ async def create_composition(request: CreateCompositionRequest):
             ]
         )
     
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to create composition: {e}")
         raise HTTPException(
@@ -121,28 +209,191 @@ async def create_composition(request: CreateCompositionRequest):
 
 
 @app.get("/api/v1/compositions/{composition_id}", response_model=CompositionResponse, tags=["Compositions"])
-async def get_composition(composition_id: str):
+async def get_composition(
+    composition_id: str,
+    repository: RedisCompositionRepository = Depends(get_repository)
+):
     """Get composition details by ID."""
-    # TODO: Implement retrieval from repository
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Not yet implemented"
-    )
+    logger.info(f"Getting composition: {composition_id}")
+    
+    try:
+        composition = await repository.get_by_id(composition_id)
+        
+        if not composition:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Composition {composition_id} not found"
+            )
+        
+        return CompositionResponse(
+            composition_id=composition.composition_id,
+            name=composition.name,
+            description=composition.description,
+            strategy=composition.strategy.value,
+            conflict_resolution=composition.conflict_resolution.value,
+            num_mcps=len(composition.mcps),
+            mcps=[
+                {
+                    "mcp_id": m.mcp_id,
+                    "tier": m.tier,
+                    "priority": m.priority,
+                    "weight": m.weight
+                }
+                for m in composition.mcps
+            ]
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get composition {composition_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve composition: {str(e)}"
+        )
 
 
 @app.get("/api/v1/compositions", tags=["Compositions"])
-async def list_compositions():
+async def list_compositions(
+    active_only: bool = False,
+    repository: RedisCompositionRepository = Depends(get_repository)
+):
     """List all compositions."""
-    # TODO: Implement listing from repository
-    return {
-        "compositions": [],
-        "count": 0
-    }
+    logger.info(f"Listing compositions (active_only={active_only})")
+    
+    try:
+        if active_only:
+            compositions = await repository.get_active()
+        else:
+            compositions = await repository.get_all()
+        
+        return {
+            "compositions": [
+                {
+                    "composition_id": c.composition_id,
+                    "name": c.name,
+                    "description": c.description,
+                    "strategy": c.strategy.value,
+                    "conflict_resolution": c.conflict_resolution.value,
+                    "num_mcps": len(c.mcps),
+                    "is_active": c.is_active,
+                    "execution_count": c.execution_count,
+                    "success_rate": c.get_success_rate(),
+                    "created_at": c.created_at.isoformat(),
+                    "updated_at": c.updated_at.isoformat()
+                }
+                for c in compositions
+            ],
+            "count": len(compositions)
+        }
+    
+    except Exception as e:
+        logger.error(f"Failed to list compositions: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list compositions: {str(e)}"
+        )
+
+
+@app.put("/api/v1/compositions/{composition_id}", response_model=CompositionResponse, tags=["Compositions"])
+async def update_composition(
+    composition_id: str,
+    request: CreateCompositionRequest,
+    repository: RedisCompositionRepository = Depends(get_repository)
+):
+    """Update an existing composition."""
+    logger.info(f"Updating composition: {composition_id}")
+    
+    try:
+        # Check if composition exists
+        existing = await repository.get_by_id(composition_id)
+        if not existing:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Composition {composition_id} not found"
+            )
+        
+        # Parse new YAML
+        from infrastructure.parsers.yaml_parser import MCPComposeYAMLParser
+        import yaml
+        
+        parser = MCPComposeYAMLParser()
+        yaml_data = yaml.safe_load(request.yaml_content)
+        composition = parser.parse_dict(yaml_data)
+        
+        # Preserve the original ID
+        composition.composition_id = composition_id
+        composition.created_at = existing.created_at
+        
+        # Update in repository
+        try:
+            await repository.update(composition)
+        except EntityNotFoundError:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Composition {composition_id} not found"
+            )
+        
+        logger.info(f"Updated composition: {composition_id}")
+        
+        return CompositionResponse(
+            composition_id=composition.composition_id,
+            name=composition.name,
+            description=composition.description,
+            strategy=composition.strategy.value,
+            conflict_resolution=composition.conflict_resolution.value,
+            num_mcps=len(composition.mcps),
+            mcps=[
+                {
+                    "mcp_id": m.mcp_id,
+                    "tier": m.tier,
+                    "priority": m.priority,
+                    "weight": m.weight
+                }
+                for m in composition.mcps
+            ]
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update composition {composition_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid composition YAML: {str(e)}"
+        )
+
+
+@app.delete("/api/v1/compositions/{composition_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Compositions"])
+async def delete_composition(
+    composition_id: str,
+    repository: RedisCompositionRepository = Depends(get_repository)
+):
+    """Delete a composition by ID."""
+    logger.info(f"Deleting composition: {composition_id}")
+    
+    try:
+        await repository.delete(composition_id)
+        logger.info(f"Deleted composition: {composition_id}")
+    except EntityNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Composition {composition_id} not found"
+        )
+    except Exception as e:
+        logger.error(f"Failed to delete composition {composition_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete composition: {str(e)}"
+        )
 
 
 # Query execution endpoints
 @app.post("/api/v1/compose/query", response_model=ComposeQueryResponse, tags=["Query"])
-async def compose_query(request: ComposeQueryRequest):
+async def compose_query(
+    request: ComposeQueryRequest,
+    repository: RedisCompositionRepository = Depends(get_repository)
+):
     """
     Execute a query across multiple MCPs using composition.
     
@@ -163,11 +414,13 @@ async def compose_query(request: ComposeQueryRequest):
             yaml_data = yaml.safe_load(request.composition_yaml)
             composition = parser.parse_dict(yaml_data)
         elif request.composition_id:
-            # TODO: Load from repository
-            raise HTTPException(
-                status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                detail="Loading saved compositions not yet implemented"
-            )
+            # Load from repository
+            composition = await repository.get_by_id(request.composition_id)
+            if not composition:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Composition {request.composition_id} not found"
+                )
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -190,6 +443,14 @@ async def compose_query(request: ComposeQueryRequest):
         )
         
         await router.close()
+        
+        # Update execution stats if composition was loaded from repository
+        if request.composition_id:
+            try:
+                composition.increment_execution(success=True)
+                await repository.update(composition)
+            except Exception as e:
+                logger.warning(f"Failed to update composition stats: {e}")
         
         return ComposeQueryResponse(
             query=request.query,

@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  mcp-performance-store:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcp-performance-store
+    ports:
+      - "5647:5647"
+    environment:
+      - SERVICE_NAME=mcp-performance-store
+      - SERVICE_VERSION=1.0.0
+      - SERVICE_PORT=5647
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_KEY_PREFIX=mcp-perf:
+      - LOG_LEVEL=INFO
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-performance-store-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+volumes:
+  redis-data:
+
+networks:
+  mcp-network:
+    driver: bridge
