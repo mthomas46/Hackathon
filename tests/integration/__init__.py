@@ -1,2 +1,1 @@
-"""Integration tests for Workflow F and Expert Finder Service."""
-
+"""Integration tests for service-to-service communication."""
