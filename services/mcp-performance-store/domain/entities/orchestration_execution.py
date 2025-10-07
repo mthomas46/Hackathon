@@ -1,114 +1,177 @@
-"""
-Orchestration Execution Entity.
+"""Orchestration Execution Entity - Domain Layer."""
 
-Represents a single execution of an MCP orchestration, including all performance
-metrics, prompts, responses, and quality indicators.
-"""
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Any
 from datetime import datetime
-from typing import Dict, List, Any, Optional
-from pydantic import BaseModel, Field
-import uuid
+from uuid import uuid4
+
+from services.mcp_performance_store.domain.value_objects.execution_status import ExecutionStatus
 
 
-class OrchestrationExecution(BaseModel):
+@dataclass
+class OrchestrationExecution:
     """
-    Entity representing a single orchestration execution.
+    Represents a single execution of an MCP orchestration.
     
-    Tracks complete execution details including performance metrics,
-    quality scores, and full audit trail of prompts and responses.
+    Tracks the complete lifecycle of executing a query through the MCP ecosystem,
+    including which MCPs were involved, patterns used, timings, and results.
     """
     
     # Identity
-    execution_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    execution_id: str = field(default_factory=lambda: str(uuid4()))
     
-    # Query Information
-    query: str = Field(..., description="The original user query")
-    mcp_id: str = Field(..., description="ID of the MCP that executed the query")
-    mcp_version: str = Field(..., description="Version of the MCP")
-    pattern_used: str = Field(..., description="LLM pattern used (e.g., 'chain-of-thought')")
-    composition_id: Optional[str] = Field(None, description="ID if part of a composition")
+    # Request info
+    query: str = ""
+    context: Dict[str, Any] = field(default_factory=dict)
     
-    # Performance Metrics
-    latency_ms: int = Field(..., ge=0, description="Execution latency in milliseconds")
-    token_usage: int = Field(..., ge=0, description="Total tokens used")
-    cost_cents: float = Field(..., ge=0.0, description="Execution cost in cents")
-    success: bool = Field(..., description="Whether execution succeeded")
-    error: Optional[str] = Field(None, description="Error message if failed")
+    # MCP composition
+    composition_id: Optional[str] = None
+    mcp_ids: List[str] = field(default_factory=list)
     
-    # Quality Metrics
-    accuracy_score: float = Field(..., ge=0.0, le=1.0, description="Accuracy score (0-1)")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0-1)")
-    hallucination_detected: bool = Field(default=False, description="Whether hallucination was detected")
-    citation_count: int = Field(default=0, ge=0, description="Number of citations provided")
-    user_satisfaction: Optional[float] = Field(None, ge=0.0, le=1.0, description="User satisfaction score")
+    # Pattern usage
+    pattern_name: Optional[str] = None
+    pattern_config: Dict[str, Any] = field(default_factory=dict)
     
-    # Context
-    prompt: str = Field(..., description="Full prompt sent to the LLM")
-    response: str = Field(..., description="Response received from the LLM")
-    context_length: int = Field(..., ge=0, description="Length of context in tokens")
-    retrieved_sources: List[Dict[str, Any]] = Field(
-        default_factory=list,
-        description="Sources retrieved for context"
-    )
+    # Timing metrics (milliseconds)
+    start_time: datetime = field(default_factory=datetime.now)
+    end_time: Optional[datetime] = None
+    total_duration_ms: float = 0.0
     
-    # Environment
-    environment: str = Field(..., description="Environment (dev, staging, prod)")
-    user_id: Optional[str] = Field(None, description="ID of the user who initiated the query")
-    session_id: Optional[str] = Field(None, description="Session ID")
+    # Breakdown timings
+    interpretation_ms: float = 0.0
+    retrieval_ms: float = 0.0
+    pattern_execution_ms: float = 0.0
+    composition_ms: float = 0.0
+    
+    # Status
+    status: ExecutionStatus = ExecutionStatus.PENDING
+    error_message: Optional[str] = None
+    error_type: Optional[str] = None
+    
+    # Results
+    confidence: float = 0.0
+    num_sources: int = 0
+    response_length: int = 0
     
     # Metadata
-    tags: List[str] = Field(default_factory=list, description="Tags for categorization")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    service: str = "mcp-orchestrator"  # Which service initiated this
+    user_id: Optional[str] = None
+    session_id: Optional[str] = None
+    tags: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
     
-    class Config:
-        """Pydantic configuration."""
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    def mark_started(self) -> None:
+        """Mark execution as started."""
+        self.status = ExecutionStatus.RUNNING
+        self.start_time = datetime.now()
+    
+    def mark_completed(
+        self,
+        confidence: float,
+        num_sources: int,
+        response_length: int
+    ) -> None:
+        """Mark execution as completed successfully."""
+        self.status = ExecutionStatus.SUCCESS
+        self.end_time = datetime.now()
+        self.confidence = confidence
+        self.num_sources = num_sources
+        self.response_length = response_length
+        self._calculate_duration()
+    
+    def mark_failed(self, error_message: str, error_type: str = "unknown") -> None:
+        """Mark execution as failed."""
+        self.status = ExecutionStatus.FAILED
+        self.end_time = datetime.now()
+        self.error_message = error_message
+        self.error_type = error_type
+        self._calculate_duration()
+    
+    def mark_timeout(self) -> None:
+        """Mark execution as timed out."""
+        self.status = ExecutionStatus.TIMEOUT
+        self.end_time = datetime.now()
+        self.error_message = "Execution timed out"
+        self.error_type = "timeout"
+        self._calculate_duration()
+    
+    def mark_cancelled(self) -> None:
+        """Mark execution as cancelled."""
+        self.status = ExecutionStatus.CANCELLED
+        self.end_time = datetime.now()
+        self._calculate_duration()
+    
+    def _calculate_duration(self) -> None:
+        """Calculate total duration."""
+        if self.end_time:
+            delta = self.end_time - self.start_time
+            self.total_duration_ms = delta.total_seconds() * 1000
+    
+    def get_duration_seconds(self) -> float:
+        """Get duration in seconds."""
+        return self.total_duration_ms / 1000.0
+    
+    def was_successful(self) -> bool:
+        """Check if execution was successful."""
+        return self.status == ExecutionStatus.SUCCESS
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for storage."""
-        return self.dict()
+        """Convert to dictionary."""
+        return {
+            "execution_id": self.execution_id,
+            "query": self.query,
+            "context": self.context,
+            "composition_id": self.composition_id,
+            "mcp_ids": self.mcp_ids,
+            "pattern_name": self.pattern_name,
+            "pattern_config": self.pattern_config,
+            "start_time": self.start_time.isoformat(),
+            "end_time": self.end_time.isoformat() if self.end_time else None,
+            "total_duration_ms": self.total_duration_ms,
+            "interpretation_ms": self.interpretation_ms,
+            "retrieval_ms": self.retrieval_ms,
+            "pattern_execution_ms": self.pattern_execution_ms,
+            "composition_ms": self.composition_ms,
+            "status": self.status.value,
+            "error_message": self.error_message,
+            "error_type": self.error_type,
+            "confidence": self.confidence,
+            "num_sources": self.num_sources,
+            "response_length": self.response_length,
+            "service": self.service,
+            "user_id": self.user_id,
+            "session_id": self.session_id,
+            "tags": self.tags,
+            "metadata": self.metadata
+        }
     
-    def calculate_quality_score(self) -> float:
-        """
-        Calculate overall quality score.
-        
-        Combines accuracy, confidence, and other quality metrics
-        into a single score (0-1).
-        """
-        # Base score from accuracy and confidence
-        base_score = (self.accuracy_score * 0.5) + (self.confidence * 0.3)
-        
-        # Penalties
-        hallucination_penalty = 0.2 if self.hallucination_detected else 0.0
-        error_penalty = 0.3 if not self.success else 0.0
-        
-        # Bonuses
-        citation_bonus = min(0.1, self.citation_count * 0.02)
-        satisfaction_bonus = (self.user_satisfaction or 0.0) * 0.1
-        
-        quality_score = base_score - hallucination_penalty - error_penalty + citation_bonus + satisfaction_bonus
-        
-        return max(0.0, min(1.0, quality_score))
-    
-    def is_anomalous(self, baseline_latency_ms: int, threshold_factor: float = 2.0) -> bool:
-        """
-        Check if this execution is anomalous based on latency.
-        
-        Args:
-            baseline_latency_ms: Expected baseline latency
-            threshold_factor: How many times the baseline to consider anomalous
-        
-        Returns:
-            True if execution latency is anomalous
-        """
-        return self.latency_ms > (baseline_latency_ms * threshold_factor)
-    
-    def __repr__(self) -> str:
-        return (
-            f"OrchestrationExecution(execution_id={self.execution_id}, "
-            f"mcp_id={self.mcp_id}, pattern={self.pattern_used}, "
-            f"latency={self.latency_ms}ms, success={self.success})"
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "OrchestrationExecution":
+        """Create from dictionary."""
+        return cls(
+            execution_id=data["execution_id"],
+            query=data["query"],
+            context=data.get("context", {}),
+            composition_id=data.get("composition_id"),
+            mcp_ids=data.get("mcp_ids", []),
+            pattern_name=data.get("pattern_name"),
+            pattern_config=data.get("pattern_config", {}),
+            start_time=datetime.fromisoformat(data["start_time"]),
+            end_time=datetime.fromisoformat(data["end_time"]) if data.get("end_time") else None,
+            total_duration_ms=data.get("total_duration_ms", 0.0),
+            interpretation_ms=data.get("interpretation_ms", 0.0),
+            retrieval_ms=data.get("retrieval_ms", 0.0),
+            pattern_execution_ms=data.get("pattern_execution_ms", 0.0),
+            composition_ms=data.get("composition_ms", 0.0),
+            status=ExecutionStatus(data["status"]),
+            error_message=data.get("error_message"),
+            error_type=data.get("error_type"),
+            confidence=data.get("confidence", 0.0),
+            num_sources=data.get("num_sources", 0),
+            response_length=data.get("response_length", 0),
+            service=data.get("service", "mcp-orchestrator"),
+            user_id=data.get("user_id"),
+            session_id=data.get("session_id"),
+            tags=data.get("tags", []),
+            metadata=data.get("metadata", {})
         )

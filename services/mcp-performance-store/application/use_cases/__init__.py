@@ -1,11 +1,17 @@
 """Use cases for MCP Performance Store."""
 
-from .record_execution_use_case import RecordExecutionUseCase
-from .query_executions_use_case import QueryExecutionsUseCase
-from .get_pattern_performance_use_case import GetPatternPerformanceUseCase
+from services.mcp_performance_store.application.use_cases.record_execution import (
+    RecordExecutionUseCase,
+    RecordExecutionError,
+)
+from services.mcp_performance_store.application.use_cases.query_performance import (
+    QueryPerformanceUseCase,
+    QueryPerformanceError,
+)
 
 __all__ = [
     "RecordExecutionUseCase",
-    "QueryExecutionsUseCase",
-    "GetPatternPerformanceUseCase"
+    "RecordExecutionError",
+    "QueryPerformanceUseCase",
+    "QueryPerformanceError",
 ]

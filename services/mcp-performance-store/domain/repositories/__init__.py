@@ -1,5 +1,19 @@
 """Repository interfaces for MCP Performance Store."""
 
-from .performance_repository import PerformanceRepository
+from services.mcp_performance_store.domain.repositories.execution_repository import (
+    ExecutionRepository,
+    RepositoryError,
+    EntityNotFoundError,
+    DuplicateEntityError,
+)
+from services.mcp_performance_store.domain.repositories.pattern_performance_repository import (
+    PatternPerformanceRepository,
+)
 
-__all__ = ["PerformanceRepository"]
+__all__ = [
+    "ExecutionRepository",
+    "PatternPerformanceRepository",
+    "RepositoryError",
+    "EntityNotFoundError",
+    "DuplicateEntityError",
+]

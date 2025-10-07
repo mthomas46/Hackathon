@@ -1,13 +1,21 @@
-"""Data Transfer Objects for MCP Performance Store."""
+"""DTOs for MCP Performance Store."""
 
-from .record_execution_request import RecordExecutionRequest
-from .execution_query_request import ExecutionQueryRequest
-from .execution_response import ExecutionResponse
-from .pattern_performance_response import PatternPerformanceResponse
+from services.mcp_performance_store.application.dto.execution_dto import (
+    RecordExecutionRequest,
+    ExecutionResponse,
+    ExecutionListResponse,
+)
+from services.mcp_performance_store.application.dto.performance_dto import (
+    PatternPerformanceResponse,
+    MetricsSummaryResponse,
+    TrendsResponse,
+)
 
 __all__ = [
     "RecordExecutionRequest",
-    "ExecutionQueryRequest",
     "ExecutionResponse",
-    "PatternPerformanceResponse"
+    "ExecutionListResponse",
+    "PatternPerformanceResponse",
+    "MetricsSummaryResponse",
+    "TrendsResponse",
 ]
