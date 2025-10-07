@@ -46,7 +46,7 @@ class MCPWorkflowValidator:
         # Service endpoints
         self.services = {
             "kafka-ingestion": "http://localhost:5700",
-            "llm-tagging": "http://localhost:8021",
+            "llm-tagging": "http://localhost:8022",
             "mcp-local-llm": "http://localhost:8014",
             "mcp-package-manager": "http://localhost:8103",
             "mcp-evergreen-docs": "http://localhost:8104",
