@@ -61,6 +61,7 @@ from pages import (
     mcp_management,
     performance_monitor,
     marketplace,
+    registry,
     query_playground,
     training_dashboard,
     system_health
@@ -81,6 +82,7 @@ def main():
                 "MCP Management",
                 "Performance Monitor",
                 "Marketplace",
+                "Registry",
                 "Query Playground",
                 "Training Dashboard",
                 "System Health"
@@ -90,6 +92,7 @@ def main():
                 "gear",
                 "speedometer",
                 "shop",
+                "book",
                 "search",
                 "graph-up",
                 "heart-pulse"
@@ -129,6 +132,8 @@ def main():
         performance_monitor.render()
     elif selected == "Marketplace":
         marketplace.render()
+    elif selected == "Registry":
+        registry.render()
     elif selected == "Query Playground":
         query_playground.render()
     elif selected == "Training Dashboard":
