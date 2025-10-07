@@ -2024,11 +2024,11 @@ services:
 
     restart: unless-stopped
 
-  training-coordinator:
-    container_name: hackathon-training-coordinator
+  mcp-training-coordinator:
+    container_name: hackathon-mcp-training-coordinator
     build:
       context: .
-      dockerfile: services/training-coordinator/Dockerfile
+      dockerfile: services/mcp-training-coordinator/Dockerfile
 
     ports:
       - "8155:5600"  # External:Internal
@@ -2036,7 +2036,7 @@ services:
     environment:
       # Service configuration
       - PYTHONPATH=/app
-      - SERVICE_NAME=training-coordinator
+      - SERVICE_NAME=mcp-training-coordinator
       - SERVICE_API_PORT=5600
       - ENVIRONMENT=development
 
@@ -2084,7 +2084,7 @@ services:
 
     volumes:
       - ./:/app:ro
-      - ./services/training-coordinator:/app/services/training-coordinator:rw
+      - ./services/mcp-training-coordinator:/app/services/mcp-training-coordinator:rw
       - ./services/shared:/app/services/shared:ro
 
     working_dir: /app
@@ -2228,7 +2228,7 @@ networks:
     environment:
       - DASHBOARD_HOST=0.0.0.0
       - DASHBOARD_PORT=8015
-      - TRAINING_COORDINATOR_URL=http://training-coordinator:5600
+      - TRAINING_COORDINATOR_URL=http://mcp-training-coordinator:5600
       - PROVISIONER_URL=http://mcp-provisioner:8003
       - INTERPRETER_URL=http://mcp-interpreter:8002
       - RETRIEVAL_URL=http://mcp-retrieval:8014
@@ -2247,7 +2247,7 @@ networks:
       - mcp-gateway
       - mcp-provisioner
       - mcp-interpreter
-      - training-coordinator
+      - mcp-training-coordinator
     networks:
       - mcp_network
     healthcheck:

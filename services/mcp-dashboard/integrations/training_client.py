@@ -17,7 +17,7 @@ class TrainingClient:
     - Training analytics
     """
     
-    def __init__(self, base_url: str = "http://training-coordinator:5600"):
+    def __init__(self, base_url: str = "http://mcp-training-coordinator:5600"):
         """
         Initialize Training Coordinator client.
         
