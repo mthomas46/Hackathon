@@ -1,0 +1,49 @@
+# Log Stream Configuration for mcp-logs
+
+log_streams:
+  - name: "kafka-ingestion"
+    service_name: "kafka-ingestion-service"
+    log_level: "INFO"
+    retention_days: 30
+    anomaly_detection: true
+    alert_on_errors: true
+    
+  - name: "llm-tagging"
+    service_name: "llm-tagging-pipeline"
+    log_level: "INFO"
+    retention_days: 30
+    anomaly_detection: true
+    alert_on_errors: true
+    
+  - name: "mcp-local-llm"
+    service_name: "mcp-local-llm"
+    log_level: "INFO"
+    retention_days: 30
+    anomaly_detection: true
+    alert_on_errors: true
+    
+  - name: "mcp-package-manager"
+    service_name: "mcp-package-manager"
+    log_level: "INFO"
+    retention_days: 30
+    anomaly_detection: false
+    alert_on_errors: true
+    
+  - name: "mcp-evergreen-docs"
+    service_name: "mcp-evergreen-docs"
+    log_level: "INFO"
+    retention_days: 30
+    anomaly_detection: false
+    alert_on_errors: true
+
+anomaly_detection:
+  enabled: true
+  sensitivity: "medium"  # low, medium, high
+  alert_threshold: 5  # Number of anomalies before alerting
+  window_minutes: 15
+
+alerts:
+  enabled: true
+  channels:
+    - type: "log"  # Just log alerts for now
+      min_severity: "warning"
