@@ -15,6 +15,14 @@ from pydantic import BaseModel
 from services.mcp_store.domain.value_objects.package_status import PackageStatus
 from services.mcp_store.domain.services.compression_service import CompressionService
 from services.mcp_store.application.use_cases.package_management import PackageManagementUseCase
+from services.mcp_store.application.use_cases.package_export_import import (
+    PackageExportImportUseCase,
+    ExportImportError,
+)
+from services.mcp_store.application.use_cases.marketplace import (
+    MarketplaceUseCase,
+    MarketplaceError,
+)
 from services.mcp_store.application.dto.package_dto import (
     CreatePackageRequest,
     UpdatePackageRequest,
@@ -522,6 +530,314 @@ async def delete_version(package_id: str, version_id: str):
     except Exception as e:
         logger.error(f"Failed to delete version: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Export/Import Endpoints
+# ============================================================================
+
+@app.post("/packages/{package_id}/export")
+async def export_package(
+    package_id: str,
+    version_id: Optional[str] = Query(None, description="Specific version to export"),
+    include_all_versions: bool = Query(False, description="Export all versions"),
+):
+    """
+    Export a package to a .mcp file.
+    
+    Creates a portable TAR archive containing:
+    - metadata.json (package + version metadata)
+    - version binaries
+    
+    Perfect for backup, sharing, or migration.
+    """
+    try:
+        db = get_database()
+        async with db.get_session() as session:
+            package_repo = SqlitePackageRepository(lambda: session)
+            storage_repo = MinioStorageRepository()
+            compression_service = CompressionService()
+            
+            export_use_case = PackageExportImportUseCase(
+                package_repo=package_repo,
+                storage_repo=storage_repo,
+                compression_service=compression_service,
+            )
+            
+            # Export package
+            mcp_file_data = await export_use_case.export_package(
+                package_id=package_id,
+                version_id=version_id,
+                include_all_versions=include_all_versions,
+            )
+            
+            # Get package name for filename
+            package = await package_repo.get_package_by_id(package_id)
+            filename = f"{package.name.replace(' ', '-')}.mcp" if package else f"package-{package_id}.mcp"
+            
+            return StreamingResponse(
+                iter([mcp_file_data]),
+                media_type="application/x-tar",
+                headers={
+                    "Content-Disposition": f"attachment; filename={filename}",
+                    "Content-Length": str(len(mcp_file_data)),
+                }
+            )
+    except ExportImportError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to export package: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.post("/packages/import")
+async def import_package(
+    file: UploadFile = File(..., description=".mcp file to import"),
+    owner_id: str = Query(..., description="Owner ID for the imported package"),
+    overwrite_existing: bool = Query(False, description="Overwrite existing package"),
+    preserve_ids: bool = Query(False, description="Preserve original IDs"),
+):
+    """
+    Import a package from a .mcp file.
+    
+    Restores a package with all its versions from a .mcp export file.
+    Can be used for:
+    - Restoring backups
+    - Migrating between environments
+    - Sharing packages
+    """
+    try:
+        # Validate file extension
+        if not file.filename.endswith('.mcp'):
+            raise HTTPException(status_code=400, detail="File must be a .mcp file")
+        
+        # Read file content
+        file_content = await file.read()
+        
+        db = get_database()
+        async with db.get_session() as session:
+            package_repo = SqlitePackageRepository(lambda: session)
+            storage_repo = MinioStorageRepository()
+            compression_service = CompressionService()
+            
+            export_use_case = PackageExportImportUseCase(
+                package_repo=package_repo,
+                storage_repo=storage_repo,
+                compression_service=compression_service,
+            )
+            
+            # Import package
+            result = await export_use_case.import_package(
+                mcp_file_data=file_content,
+                owner_id=owner_id,
+                overwrite_existing=overwrite_existing,
+                preserve_ids=preserve_ids,
+            )
+            
+            return result
+    except ExportImportError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to import package: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.post("/packages/validate")
+async def validate_mcp_file(
+    file: UploadFile = File(..., description=".mcp file to validate"),
+):
+    """
+    Validate a .mcp file without importing it.
+    
+    Checks:
+    - File format validity
+    - Metadata completeness
+    - Version count
+    
+    Useful for pre-import validation.
+    """
+    try:
+        # Validate file extension
+        if not file.filename.endswith('.mcp'):
+            raise HTTPException(status_code=400, detail="File must be a .mcp file")
+        
+        # Read file content
+        file_content = await file.read()
+        
+        db = get_database()
+        async with db.get_session() as session:
+            package_repo = SqlitePackageRepository(lambda: session)
+            storage_repo = MinioStorageRepository()
+            compression_service = CompressionService()
+            
+            export_use_case = PackageExportImportUseCase(
+                package_repo=package_repo,
+                storage_repo=storage_repo,
+                compression_service=compression_service,
+            )
+            
+            # Validate file
+            validation_result = await export_use_case.validate_mcp_file(file_content)
+            
+            return validation_result
+    except Exception as e:
+        logger.error(f"Failed to validate file: {e}", exc_info=True)
+            return {
+                "valid": False,
+                "error": str(e)
+            }
+
+
+# ============================================================================
+# Marketplace & Discovery Endpoints
+# ============================================================================
+
+@app.post("/packages/{package_id}/star")
+async def star_package(
+    package_id: str,
+    user_id: str = Query(..., description="User ID starring the package"),
+):
+    """
+    Star a package to show appreciation.
+    
+    Increments the package's star count.
+    """
+    try:
+        db = get_database()
+        async with db.get_session() as session:
+            package_repo = SqlitePackageRepository(lambda: session)
+            marketplace = MarketplaceUseCase(package_repo)
+            
+            result = await marketplace.star_package(package_id, user_id)
+            return result
+    except MarketplaceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to star package: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.delete("/packages/{package_id}/star")
+async def unstar_package(
+    package_id: str,
+    user_id: str = Query(..., description="User ID unstarring the package"),
+):
+    """
+    Unstar a package.
+    
+    Decrements the package's star count.
+    """
+    try:
+        db = get_database()
+        async with db.get_session() as session:
+            package_repo = SqlitePackageRepository(lambda: session)
+            marketplace = MarketplaceUseCase(package_repo)
+            
+            result = await marketplace.unstar_package(package_id, user_id)
+            return result
+    except MarketplaceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to unstar package: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/marketplace/trending")
+async def get_trending_packages(
+    days: int = Query(7, ge=1, le=30, description="Time window in days"),
+    sort_by: str = Query("downloads", regex="^(downloads|stars)$", description="Sort by downloads or stars"),
+    limit: int = Query(10, ge=1, le=50, description="Number of packages to return"),
+):
+    """
+    Get trending packages in the marketplace.
+    
+    Returns packages sorted by downloads or stars.
+    """
+    try:
+        db = get_database()
+        async with db.get_session() as session:
+            package_repo = SqlitePackageRepository(lambda: session)
+            marketplace = MarketplaceUseCase(package_repo)
+            
+            trending = await marketplace.get_trending(days, sort_by, limit)
+            return {"trending": trending, "count": len(trending), "sort_by": sort_by}
+    except MarketplaceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to get trending packages: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/marketplace/tags/popular")
+async def get_popular_tags(
+    limit: int = Query(20, ge=1, le=100, description="Number of tags to return"),
+):
+    """
+    Get most popular tags across all packages.
+    
+    Useful for tag-based navigation and filtering.
+    """
+    try:
+        db = get_database()
+        async with db.get_session() as session:
+            package_repo = SqlitePackageRepository(lambda: session)
+            marketplace = MarketplaceUseCase(package_repo)
+            
+            tags = await marketplace.get_popular_tags(limit)
+            return {"tags": tags, "count": len(tags)}
+    except MarketplaceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to get popular tags: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/marketplace/categories/popular")
+async def get_popular_categories(
+    limit: int = Query(10, ge=1, le=50, description="Number of categories to return"),
+):
+    """
+    Get most popular categories across all packages.
+    
+    Useful for category-based navigation.
+    """
+    try:
+        db = get_database()
+        async with db.get_session() as session:
+            package_repo = SqlitePackageRepository(lambda: session)
+            marketplace = MarketplaceUseCase(package_repo)
+            
+            categories = await marketplace.get_popular_categories(limit)
+            return {"categories": categories, "count": len(categories)}
+    except MarketplaceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to get popular categories: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/marketplace/stats")
+async def get_marketplace_stats():
+    """
+    Get overall marketplace statistics.
+    
+    Returns total packages, downloads, stars, and other metrics.
+    """
+    try:
+        db = get_database()
+        async with db.get_session() as session:
+            package_repo = SqlitePackageRepository(lambda: session)
+            marketplace = MarketplaceUseCase(package_repo)
+            
+            stats = await marketplace.get_marketplace_stats()
+            return stats
+    except MarketplaceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to get marketplace stats: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================

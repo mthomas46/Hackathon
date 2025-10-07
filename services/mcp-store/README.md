@@ -201,6 +201,65 @@ curl "http://localhost:5648/packages/pkg-abc123/versions/ver-xyz789/download" \
 curl "http://localhost:5648/packages/pkg-abc123/versions"
 ```
 
+### **6. Export a Package**
+
+```bash
+# Export latest version
+curl -X POST "http://localhost:5648/packages/pkg-abc123/export" \
+  -o my-package.mcp
+
+# Export specific version
+curl -X POST "http://localhost:5648/packages/pkg-abc123/export?version_id=ver-xyz789" \
+  -o my-package-v1.0.0.mcp
+
+# Export all versions
+curl -X POST "http://localhost:5648/packages/pkg-abc123/export?include_all_versions=true" \
+  -o my-package-complete.mcp
+```
+
+### **7. Import a Package**
+
+```bash
+curl -X POST "http://localhost:5648/packages/import" \
+  -F "file=@my-package.mcp" \
+  -F "owner_id=org-123" \
+  -F "overwrite_existing=false" \
+  -F "preserve_ids=false"
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "package_id": "pkg-new456",
+  "package_name": "my-company-mcp",
+  "versions_imported": 3,
+  "version_ids": ["ver-001", "ver-002", "ver-003"],
+  "overwritten": false
+}
+```
+
+### **8. Validate a .mcp File**
+
+```bash
+curl -X POST "http://localhost:5648/packages/validate" \
+  -F "file=@my-package.mcp"
+```
+
+**Response:**
+```json
+{
+  "valid": true,
+  "format_version": "1.0.0",
+  "package_name": "my-company-mcp",
+  "package_description": "Company-wide MCP knowledge base",
+  "version_count": 3,
+  "binaries_found": 3,
+  "exported_at": "2025-10-07T12:34:56",
+  "file_size_bytes": 1048576
+}
+```
+
 ---
 
 ## 🔧 Configuration
@@ -348,11 +407,71 @@ curl http://localhost:5648/health
 
 ---
 
+### 📦 **Export/Import** 
+```bash
+# Export a package to a .mcp file
+POST /packages/{package_id}/export
+  ?version_id={version_id}           # Optional: specific version
+  &include_all_versions=false        # Optional: export all versions
+
+# Import a package from a .mcp file
+POST /packages/import
+  file=@package.mcp                  # .mcp file upload
+  owner_id=user_123                  # Owner ID for imported package
+  overwrite_existing=false           # Optional: overwrite existing
+  preserve_ids=false                 # Optional: preserve original IDs
+
+# Validate a .mcp file
+POST /packages/validate
+  file=@package.mcp                  # .mcp file to validate
+```
+
+**Use Cases:**
+- 📁 Backup and restore packages
+- 🔄 Migrate between environments (dev → prod)
+- 🤝 Share packages between teams
+- 💾 Version control for knowledge graphs
+
+**Format:** TAR-compressed archive containing:
+- `metadata.json` - Package and version metadata
+- `versions/*.bin` - Binary data for each version
+
+---
+
+### 🏪 **Marketplace & Discovery**
+```bash
+# Star/Unstar packages
+POST /packages/{package_id}/star?user_id={user_id}
+DELETE /packages/{package_id}/star?user_id={user_id}
+
+# Get trending packages
+GET /marketplace/trending?days=7&sort_by=downloads&limit=10
+
+# Get popular tags
+GET /marketplace/tags/popular?limit=20
+
+# Get popular categories
+GET /marketplace/categories/popular?limit=10
+
+# Get marketplace stats
+GET /marketplace/stats
+```
+
+**Features:**
+- ⭐ Star packages to show appreciation
+- 🔥 Discover trending packages
+- 🏷️ Browse by popular tags
+- 📂 Explore categories
+- 📊 View marketplace statistics
+
+---
+
 ## 🔮 Future Enhancements
 
-- [ ] Export/import entire packages as `.mcp` files
 - [ ] Package dependency management
-- [ ] Package ratings and reviews
+- [ ] Package ratings and reviews (text reviews, 5-star ratings)
+- [ ] User profiles and starred packages
+- [ ] Recommendation engine
 - [ ] Usage analytics dashboard
 - [ ] Automated testing
 - [ ] CI/CD integration
