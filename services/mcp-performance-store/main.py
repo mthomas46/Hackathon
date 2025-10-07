@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from services.mcp_performance_store.infrastructure.config import Settings
 from services.mcp_performance_store.presentation.routes import router
+from services.mcp_performance_store.presentation.analytics_routes import router as analytics_router
 from services.mcp_performance_store.presentation.dependencies import get_repository
 
 
@@ -76,6 +77,7 @@ app.add_middleware(
 
 # Include routes
 app.include_router(router)
+app.include_router(analytics_router)
 
 
 # Health check endpoint
