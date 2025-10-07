@@ -14,29 +14,19 @@ from typing import List, Dict, Any
 from dataclasses import dataclass
 
 
-# These imports will fail initially - that's expected in TDD!
-# We'll implement them after writing the tests.
-try:
-    from services.mcp_retrieval.src.hierarchical_retrieval import (
-        HierarchicalRetriever,
-        RetrievalResult,
-        TierConfig,
-    )
-except ImportError:
-    # Mock classes for initial test writing
-    @dataclass
-    class RetrievalResult:
-        content: str
-        tier: str
-        score: float
-        token_count: int
-        metadata: Dict[str, Any]
-    
-    class TierConfig:
-        pass
-    
-    class HierarchicalRetriever:
-        pass
+# Import the actual implementation
+import sys
+from pathlib import Path
+
+# Add services directory to path
+services_path = Path(__file__).parent.parent.parent / "services"
+sys.path.insert(0, str(services_path))
+
+from mcp_retrieval.src.hierarchical_retrieval import (
+    HierarchicalRetriever,
+    RetrievalResult,
+    TierConfig,
+)
 
 
 # ============================================================================
