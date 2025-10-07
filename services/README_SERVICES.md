@@ -32,6 +32,75 @@ The LLM Documentation Ecosystem is a comprehensive platform for intelligent prom
 [README](./prompt_store/README.md) · [Tests](../tests/unit/prompt_store)
 **Port: 5110** | **Purpose: Intelligent Prompt Engineering Platform**
 
+### 2. 🧠 MCP Local LLM Service (`services/mcp-local-llm/`)
+[README](./mcp-local-llm/README.md)
+**Port: 8014** | **Purpose: Local Language Model Inference Platform**
+
+#### 🤖 Advanced Features:
+- ✅ **Multi-Model Support**: Concurrent management of multiple local LLMs
+- ✅ **Dynamic Loading**: On-demand model loading and unloading
+- ✅ **Privacy-First**: All inference happens locally, no external API dependencies
+- ✅ **GPU Optimization**: Resource management and CPU offloading
+- ✅ **Streaming Responses**: Real-time token streaming for interactive applications
+- ✅ **Context Management**: Intelligent context window optimization
+- ✅ **MCP Protocol**: Full compatibility with Model Context Protocol
+
+### 3. 📊 Data Dashboard Service (`services/datas-dashboard/`)
+[README](./datas-dashboard/README.md)
+**Port: 8015** | **Purpose: Real-Time Analytics & Data Visualization Platform**
+
+#### 📈 Advanced Features:
+- ✅ **Real-Time Streaming**: Live data updates from all system components
+- ✅ **Multi-Source Integration**: Aggregate data from APIs, databases, and logs
+- ✅ **Interactive Visualizations**: Drill-down capable charts and dashboards
+- ✅ **Custom Dashboards**: User-configurable views and layouts
+- ✅ **Alerting System**: Configurable thresholds and notification channels
+- ✅ **Performance Analytics**: Response times, throughput, and error tracking
+- ✅ **Business Intelligence**: ROI metrics and efficiency analysis
+
+### 4. 📝 MCP Logs Service (`services/mcp-logs/`)
+[README](./mcp-logs/README.md)
+**Port: 8016** | **Purpose: Centralized Logging & Observability Platform**
+
+#### 📊 Advanced Features:
+- ✅ **Multi-Source Aggregation**: Collect logs from files, syslog, journald, and APIs
+- ✅ **Real-Time Processing**: Live log ingestion and analysis
+- ✅ **Elasticsearch Integration**: Full-text search and time-series analysis
+- ✅ **Correlation Engine**: Link related log entries across services
+- ✅ **Anomaly Detection**: Statistical analysis for unusual patterns
+- ✅ **Alerting & Monitoring**: Log-based alerts and performance tracking
+- ✅ **Compliance Ready**: Audit trails and regulatory compliance logging
+
+### 5. 🌿 MCP Evergreen Docs Service (`services/mcp-evergreen-docs/`)
+[README](./mcp-evergreen-docs/README.md)
+**Port: 8017** | **Purpose: Automated Documentation Maintenance & Knowledge Base Management**
+
+#### 📚 Advanced Features:
+- ✅ **Automated Updates**: Sync documentation from code comments and APIs
+- ✅ **Accuracy Validation**: Cross-reference docs against actual implementations
+- ✅ **Multi-Source Sync**: Synchronize docs across Git repositories and platforms
+- ✅ **Version Control Integration**: Git-based documentation versioning
+- ✅ **Knowledge Base**: Indexed search and relationship mapping
+- ✅ **Lifecycle Management**: Automated documentation maintenance and updates
+- ✅ **Validation Engine**: Completeness and consistency checking
+
+### 6. ☁️ External Store Service (`services/external-store/`)
+[README](./external-store/README.md)
+**Port: 8018** | **Purpose: Unified Cloud Storage & Data Persistence Platform**
+
+#### 💾 Advanced Features:
+- ✅ **Multi-Cloud Support**: AWS S3, Azure Blob Storage, Google Cloud Storage
+- ✅ **Automated Backups**: Scheduled and incremental backup strategies
+- ✅ **Encryption & Security**: At-rest and in-transit data encryption
+- ✅ **CDN Integration**: Global content delivery for performance
+- ✅ **Lifecycle Management**: Automated data retention and archival
+- ✅ **Cross-Region Replication**: Disaster recovery and high availability
+- ✅ **Cost Optimization**: Intelligent tiering and storage class management
+
+### 8. 🤖 Prompt Store Service (`services/prompt_store/`)
+[README](./prompt_store/README.md) · [Tests](../tests/unit/prompt_store)
+**Port: 5110** | **Purpose: Intelligent Prompt Engineering Platform**
+
 #### 🧠 Advanced Features:
 - ✅ **Full CRUD Operations**: Create, read, update, delete prompts with validation
 - ✅ **Version Control**: Complete prompt evolution tracking with change summaries
