@@ -29,6 +29,20 @@ The Kafka Ingestion Service is a critical component of the MCP workflow, enablin
 - ✅ Scalable consumer groups
 - ✅ Guaranteed delivery with retry logic
 
+### 0. **NEW: Observability & Logging** 🔍
+- ✅ **MCP Logging Integration**: Full integration with `mcp-logs` service
+- ✅ **Correlation ID Tracking**: End-to-end request tracking across services
+- ✅ **Structured Logging**: JSON-formatted logs for analysis
+- ✅ **5 Strategic Log Points**:
+  1. Service startup with configuration
+  2. Service shutdown
+  3. HTTP request received (with correlation ID)
+  4. HTTP request completed (with status)
+  5. Event processing lifecycle
+- ✅ **Shared Logging Library**: Uses `services/shared/logging` for consistency
+- ✅ **Async Batch Logging**: Non-blocking log transmission to mcp-logs
+- ✅ **Graceful Degradation**: Falls back to local logging if mcp-logs unavailable
+
 ### 2. Document Event Types
 - **DOCUMENT_CREATED**: New document added
 - **DOCUMENT_UPDATED**: Existing document modified
@@ -64,6 +78,34 @@ Built-in metadata extractors for:
 - **Exponential Backoff**: Smart retry timing
 - **Dead-Letter Queue**: Failed events for manual review
 - **Error Tracking**: Detailed error logs and summaries
+
+---
+
+## 🔄 **MCP Workflow Integration**
+
+### Position in Workflow
+```
+Documents (docs/) 
+  → [kafka-ingestion-service] ← YOU ARE HERE
+  → llm-tagging-pipeline
+  → mcp-training-coordinator
+  → mcp-store
+  → mcp-registry
+```
+
+### Upstream Services
+- **Source Systems**: GitHub, Jira, Confluence, Local filesystems
+- **Kafka**: Event broker (port 9092)
+
+### Downstream Services
+- **llm-tagging-pipeline** (port 8021): Receives documents for LLM tagging
+- **doc_store** (port 5087): Document storage and retrieval
+- **mcp-logs** (port 8016): Centralized logging and observability
+
+### Workflow Events
+1. **Document Ingested**: Publishes to `document-events` Kafka topic
+2. **Event Processed**: Updates job status in Redis
+3. **Logging**: All operations logged to mcp-logs with correlation IDs
 
 ---
 

@@ -1,3 +1,38 @@
+---
+llm_metadata:
+  document_type: guide
+  content_focus: operational
+  platform:
+    primary: shared
+    secondary: []
+  status: active
+  created_date: '2024-09-01'
+  last_modified: '2025-10-07'
+  topics:
+  - rag
+  - ci_cd
+  - testing
+  - deployment
+  - security
+  - monitoring
+  - documentation
+  concepts: []
+  technologies: []
+  services_mentioned: []
+  semantic_summary: Guide document about operational aspects of the shared platform
+  archive_reason: n/a
+  historical_value: current
+  reference_value: high
+semantic_embedding:
+  model: text-embedding-ada-002
+  embedding_date: '2025-10-07'
+  embedding_checksum: pending
+rag_metadata:
+  chunk_strategy: semantic
+  optimal_chunk_size: 512
+  retrieval_priority: high
+---
+
 # CI/CD Pipeline Documentation
 
 This directory contains documentation for Continuous Integration and Continuous Deployment pipelines, automation, and quality gates for the LLM Documentation Ecosystem.

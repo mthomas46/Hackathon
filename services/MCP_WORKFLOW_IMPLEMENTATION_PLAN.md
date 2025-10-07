@@ -1,9 +1,86 @@
 # 🎯 MCP Creation Workflow - Implementation Plan
 
 **Date:** October 7, 2025  
+**Last Updated:** October 7, 2025 - E2E Testing Added  
 **Goal:** Implement complete MCP creation workflow using docs directory as training data  
-**Status:** Planning → Implementation  
-**Estimated Effort:** 8-10 weeks (full) OR 2-3 weeks (critical path)
+**Status:** Planning → Implementation → Logging Integration → E2E Testing  
+**Estimated Effort:** 8-10 weeks (full) OR 2-3 weeks (critical path) + 4 days (logging) + 2 weeks (E2E testing)
+
+---
+
+## 🚨 NEW: Logging & Observability Enhancement
+
+**Enhancement Document:** `MCP_WORKFLOW_LOGGING_ENHANCEMENT.md`
+
+### Key Additions
+1. **Common Logging Infrastructure** (3 files)
+   - MCPLogClient - Async log client for mcp-logs service
+   - CorrelationMiddleware - Request correlation tracking
+   - Structured logging configuration
+
+2. **Service Integration** (9 services)
+   - 43 strategic log points across workflow
+   - Correlation ID propagation
+   - Performance metrics tracking
+   - Anomaly detection integration
+
+3. **Observability Features**
+   - End-to-end workflow tracking
+   - Service health monitoring
+   - Anomaly detection & alerts
+   - Real-time dashboards
+
+**Estimated Effort:** 4 days  
+**Priority:** High - Critical for production debugging  
+**Status:** ✅ COMPLETED - 5 services integrated
+
+---
+
+## 🚨 NEW: End-to-End Testing Framework
+
+**Testing Document:** `E2E_TESTING_STRATEGY.md`
+
+### Dual-Mode Testing Philosophy
+Tests support two execution modes:
+1. **Code Mode** (CI/CD): Tests against service code with mocked dependencies
+2. **Live Mode** (Staging/Production): Tests against running Docker containers
+
+### Test Coverage (17 tests created)
+1. **Service Health Tests** (6 tests)
+   - All services operational validation
+   - Response time benchmarks
+   - Dependency health checks
+
+2. **Document Ingestion Tests** (6 tests)
+   - Single/batch/large document ingestion
+   - Invalid document handling
+   - Idempotency testing
+
+3. **Logging & Observability Tests** (5 tests)
+   - Correlation ID propagation
+   - Multi-service correlation tracking
+   - Structured logging validation
+   - Log levels respected
+
+### Test Infrastructure Created
+- `tests/e2e/conftest.py` - Pytest configuration with dual-mode support
+- `tests/e2e/test_service_health.py` - Service health validation
+- `tests/e2e/test_document_ingestion.py` - Ingestion workflow tests
+- `tests/e2e/test_logging_observability.py` - Logging integration tests
+
+### Usage
+```bash
+# Code Mode (CI/CD)
+pytest tests/e2e/ --mode=code
+
+# Live Mode (Staging/Production)
+docker-compose -f docker-compose-mcp-ecosystem.yml up -d
+pytest tests/e2e/ --mode=live
+```
+
+**Estimated Effort:** 2 weeks (8 test files planned, 4 completed)  
+**Priority:** High - Critical for production confidence  
+**Status:** In Progress - 17/~50 tests completed
 
 ---
 

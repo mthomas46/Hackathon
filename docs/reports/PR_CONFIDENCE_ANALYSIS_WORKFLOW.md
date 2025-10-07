@@ -1,3 +1,40 @@
+---
+llm_metadata:
+  document_type: report
+  content_focus: analytical
+  platform:
+    primary: mcp
+    secondary: []
+  status: active
+  created_date: '2025-10-01'
+  last_modified: '2025-10-07'
+  topics:
+  - python
+  - langgraph
+  - ollama
+  - llm_orchestration
+  - rag
+  - deployment
+  - security
+  - monitoring
+  - documentation
+  concepts: []
+  technologies: []
+  services_mentioned: []
+  semantic_summary: Report document about analytical aspects of the mcp platform
+  archive_reason: n/a
+  historical_value: current
+  reference_value: medium
+semantic_embedding:
+  model: text-embedding-ada-002
+  embedding_date: '2025-10-07'
+  embedding_checksum: pending
+rag_metadata:
+  chunk_strategy: semantic
+  optimal_chunk_size: 512
+  retrieval_priority: medium
+---
+
 # 🔍 PR Confidence Analysis Workflow - Production Documentation
 
 **Workflow Type**: AI-Powered Code Review Automation  

@@ -1,3 +1,41 @@
+---
+llm_metadata:
+  document_type: architecture
+  content_focus: technical
+  platform:
+    primary: shared
+    secondary: []
+  status: active
+  created_date: '2024-09-01'
+  last_modified: '2025-10-07'
+  topics:
+  - service_mesh
+  - fastapi
+  - python
+  - redis
+  - postgresql
+  - docker
+  - kubernetes
+  - ollama
+  - rag
+  - deployment
+  concepts: []
+  technologies: []
+  services_mentioned: []
+  semantic_summary: Architecture document about technical aspects of the shared platform
+  archive_reason: n/a
+  historical_value: current
+  reference_value: medium
+semantic_embedding:
+  model: text-embedding-ada-002
+  embedding_date: '2025-10-07'
+  embedding_checksum: pending
+rag_metadata:
+  chunk_strategy: semantic
+  optimal_chunk_size: 512
+  retrieval_priority: medium
+---
+
 # Infrastructure Documentation
 
 > Quick Guide: For local development use `docker-compose.dev.yml`. For a richer local stack (LB/metrics/tracing), use `docker-compose.infrastructure.yml`. The root `docker-compose.yml` is legacy and kept for reference.

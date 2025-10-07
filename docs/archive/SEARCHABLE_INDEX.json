@@ -1,0 +1,314 @@
+{
+  "archive_index": {
+    "version": "1.0",
+    "generated": "2025-10-07",
+    "total_documents": 239,
+    "embedding_model": "text-embedding-ada-002",
+    "embedding_dimension": 1536
+  },
+  
+  "categories": {
+    "architecture": {
+      "count": 9,
+      "retrieval_priority": "high",
+      "documents": [
+        {
+          "path": "./architecture/ECOSYSTEM_ARCHITECTURE.md",
+          "title": "Ecosystem Architecture",
+          "platform": "document_analysis",
+          "status": "superseded",
+          "topics": ["microservices", "ddd", "service_mesh"],
+          "keywords": ["orchestrator", "event_driven", "bounded_contexts"],
+          "semantic_tags": ["service_orchestration", "architecture_design", "system_structure"],
+          "embedding_id": "arch_001",
+          "chunk_count": 12,
+          "created": "2024-09-15",
+          "archived": "2025-10-07"
+        },
+        {
+          "path": "./architecture/MCP_ARCHITECTURE_COMPLETE.md",
+          "title": "MCP Architecture Complete",
+          "platform": "mcp",
+          "status": "documented",
+          "topics": ["mcp", "5_tier_system", "context_management"],
+          "keywords": ["hierarchical", "context_pruning", "hot_swapping"],
+          "semantic_tags": ["mcp_design", "tier_system", "context_orchestration"],
+          "embedding_id": "arch_002",
+          "chunk_count": 18,
+          "created": "2024-10-01",
+          "archived": "2025-10-07"
+        }
+      ]
+    },
+    
+    "future_refinements": {
+      "count": 17,
+      "retrieval_priority": "medium",
+      "documents": [
+        {
+          "path": "./future-refinements/MCP_REGISTRY_AND_PORTABILITY.md",
+          "title": "MCP Registry and Portability",
+          "platform": "mcp",
+          "status": "planned",
+          "topics": ["mcp_packages", "registry", "portability"],
+          "keywords": ["export", "import", "packaging", "versioning"],
+          "semantic_tags": ["package_management", "portability", "distribution"],
+          "embedding_id": "future_001",
+          "chunk_count": 8,
+          "created": "2024-10-05",
+          "archived": "2025-10-07"
+        },
+        {
+          "path": "./future-refinements/LOCAL_LLM_PLATFORM_ARCHITECTURE.md",
+          "title": "Local LLM Platform Architecture",
+          "platform": "both",
+          "status": "planned",
+          "topics": ["local_llm", "ollama", "privacy"],
+          "keywords": ["local_inference", "model_management", "self_hosted"],
+          "semantic_tags": ["local_deployment", "llm_platform", "privacy_focused"],
+          "embedding_id": "future_002",
+          "chunk_count": 10,
+          "created": "2024-10-04",
+          "archived": "2025-10-07"
+        }
+      ]
+    },
+    
+    "planning": {
+      "count": 6,
+      "retrieval_priority": "medium",
+      "documents": [
+        {
+          "path": "./planning/ECOSYSTEM_QUALITY_IMPROVEMENT_PLAN.md",
+          "title": "Ecosystem Quality Improvement Plan",
+          "platform": "both",
+          "status": "completed",
+          "topics": ["quality", "improvement", "testing"],
+          "keywords": ["code_quality", "testing", "documentation", "standards"],
+          "semantic_tags": ["quality_assurance", "improvement_plan", "best_practices"],
+          "embedding_id": "plan_001",
+          "chunk_count": 6,
+          "created": "2024-09-20",
+          "archived": "2025-10-07"
+        }
+      ]
+    },
+    
+    "historical_organization": {
+      "count": 8,
+      "retrieval_priority": "low",
+      "documents": [
+        {
+          "path": "./historical-organization/MASTER_INDEX.md",
+          "title": "Master Index (Original)",
+          "platform": "both",
+          "status": "superseded",
+          "superseded_by": "../MASTER_INDEX_V2.md",
+          "topics": ["documentation", "index", "navigation"],
+          "keywords": ["index", "navigation", "organization"],
+          "semantic_tags": ["documentation_structure", "navigation", "organization"],
+          "embedding_id": "hist_001",
+          "chunk_count": 4,
+          "created": "2024-09-10",
+          "archived": "2025-10-07"
+        }
+      ]
+    }
+  },
+  
+  "semantic_clusters": {
+    "cluster_1_architecture": {
+      "theme": "System Architecture & Design",
+      "documents": [
+        "./architecture/ECOSYSTEM_ARCHITECTURE.md",
+        "./architecture/MCP_ARCHITECTURE_COMPLETE.md",
+        "./architecture/DDD_MIGRATION.md"
+      ],
+      "concepts": [
+        "microservices",
+        "domain_driven_design",
+        "service_orchestration",
+        "event_driven_architecture"
+      ],
+      "use_cases": [
+        "Understanding original architecture decisions",
+        "Tracing architectural evolution",
+        "Reference for current implementations"
+      ]
+    },
+    
+    "cluster_2_mcp_planning": {
+      "theme": "MCP Platform Design & Planning",
+      "documents": [
+        "./architecture/MCP_ARCHITECTURE_COMPLETE.md",
+        "./future-refinements/HIERARCHICAL_MCP_ARCHITECTURE_ANALYSIS.md",
+        "./future-refinements/MCP_REGISTRY_AND_PORTABILITY.md",
+        "./future-refinements/MCP_CONFLUENCE_EVERGREEN_DOCS.md"
+      ],
+      "concepts": [
+        "5_tier_system",
+        "context_management",
+        "hierarchical_retrieval",
+        "package_portability"
+      ],
+      "use_cases": [
+        "Understanding MCP platform vision",
+        "Planning MCP implementation",
+        "Reference for hierarchical systems"
+      ]
+    },
+    
+    "cluster_3_implementation": {
+      "theme": "Implementation & Development",
+      "documents": [
+        "./FEATURE_IMPLEMENTATION_TRACKER.md",
+        "./phase-reports/*.md",
+        "./workflow-reports/*.md"
+      ],
+      "concepts": [
+        "feature_development",
+        "implementation_tracking",
+        "milestone_completion"
+      ],
+      "use_cases": [
+        "Tracking development progress",
+        "Understanding feature history",
+        "Learning from implementation patterns"
+      ]
+    }
+  },
+  
+  "query_patterns": {
+    "architecture_queries": {
+      "examples": [
+        "How was the microservices architecture designed?",
+        "What is the MCP 5-tier system?",
+        "Why did we choose DDD architecture?"
+      ],
+      "relevant_docs": [
+        "./architecture/ECOSYSTEM_ARCHITECTURE.md",
+        "./architecture/MCP_ARCHITECTURE_COMPLETE.md",
+        "./architecture/DDD_MIGRATION.md"
+      ],
+      "retrieval_strategy": "semantic_search + keyword_boost"
+    },
+    
+    "planning_queries": {
+      "examples": [
+        "What features are planned for MCP?",
+        "How will local LLM integration work?",
+        "What is the package registry design?"
+      ],
+      "relevant_docs": [
+        "./future-refinements/LOCAL_LLM_PLATFORM_ARCHITECTURE.md",
+        "./future-refinements/MCP_REGISTRY_AND_PORTABILITY.md"
+      ],
+      "retrieval_strategy": "semantic_search"
+    },
+    
+    "historical_queries": {
+      "examples": [
+        "How did the documentation organization evolve?",
+        "What was the original architecture?",
+        "When was feature X implemented?"
+      ],
+      "relevant_docs": [
+        "./historical-organization/*.md",
+        "./phase-reports/*.md",
+        "./FEATURE_IMPLEMENTATION_TRACKER.md"
+      ],
+      "retrieval_strategy": "temporal_search + semantic"
+    }
+  },
+  
+  "rag_configuration": {
+    "retrieval_strategy": {
+      "hybrid_search": {
+        "semantic_weight": 0.7,
+        "keyword_weight": 0.3
+      },
+      "reranking": {
+        "model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+        "top_k": 10,
+        "return_k": 5
+      },
+      "context_injection": {
+        "max_tokens": 4000,
+        "include_metadata": true,
+        "preserve_structure": true
+      }
+    },
+    
+    "priority_tiers": {
+      "tier_1_critical": {
+        "priority": "always_include",
+        "documents": [
+          "./architecture/ECOSYSTEM_ARCHITECTURE.md",
+          "./architecture/MCP_ARCHITECTURE_COMPLETE.md"
+        ]
+      },
+      "tier_2_high_value": {
+        "priority": "include_if_relevant",
+        "documents": [
+          "./architecture/DDD_MIGRATION.md",
+          "./future-refinements/MCP_REGISTRY_AND_PORTABILITY.md",
+          "./future-refinements/LOCAL_LLM_PLATFORM_ARCHITECTURE.md"
+        ]
+      },
+      "tier_3_contextual": {
+        "priority": "semantic_match_only",
+        "documents": [
+          "./planning/*.md",
+          "./workflow-reports/*.md"
+        ]
+      },
+      "tier_4_historical": {
+        "priority": "explicit_request_only",
+        "documents": [
+          "./session-summaries/*.md",
+          "./deployment-reports/*.md",
+          "./demo-reports/*.md"
+        ]
+      }
+    }
+  },
+  
+  "vector_store_config": {
+    "recommended_platform": "pinecone|weaviate|chromadb",
+    "index_name": "hackathon_archive",
+    "namespaces": {
+      "architecture": "Architecture documents",
+      "planning": "Planning and strategy",
+      "future": "Future enhancements",
+      "historical": "Historical records",
+      "reports": "Various reports"
+    },
+    "metadata_schema": {
+      "required": ["path", "platform", "status", "topics"],
+      "optional": ["services", "technologies", "superseded_by"],
+      "searchable": ["topics", "keywords", "semantic_tags"]
+    }
+  },
+  
+  "integration_examples": {
+    "langchain": {
+      "retriever": "VectorStoreRetriever",
+      "search_type": "mmr",
+      "search_kwargs": {
+        "k": 5,
+        "fetch_k": 20,
+        "lambda_mult": 0.7
+      }
+    },
+    
+    "llamaindex": {
+      "index_type": "VectorStoreIndex",
+      "service_context": {
+        "chunk_size": 512,
+        "chunk_overlap": 50
+      },
+      "query_mode": "hybrid"
+    }
+  }
+}
+

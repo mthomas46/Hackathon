@@ -1,2 +1,0 @@
-"""Package Manager source code."""
-

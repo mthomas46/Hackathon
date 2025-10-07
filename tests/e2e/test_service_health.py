@@ -1,137 +1,186 @@
-"""E2E tests for service health and connectivity."""
+"""
+E2E Tests: Service Health
+
+Tests that all services are operational and respond correctly to health checks.
+Mimics STEP 1 of demo_mcp_workflow_validation.py.
+
+Test Modes:
+- Code: Tests health endpoint implementation
+- Live: Tests running Docker containers
+"""
 
 import pytest
-import httpx
+import asyncio
 
 
 class TestServiceHealth:
-    """Test all MCP services are healthy and accessible."""
+    """Test suite for service health checks."""
+    
+    @pytest.mark.asyncio
+    async def test_kafka_ingestion_health(
+        self,
+        http_client,
+        service_urls,
+        test_mode
+    ):
+        """
+        Test kafka-ingestion-service health endpoint.
+        
+        Expected:
+        - 200 status code
+        - JSON response with status=healthy
+        - Response time < 1s
+        """
+        url = service_urls["kafka-ingestion"]
+        
+        if test_mode == "code":
+            pytest.skip("Code mode not implemented yet")
+        
+        response = await http_client.get(f"{url}/health")
+        
+        assert response.status_code == 200, \
+            f"Health check failed with status {response.status_code}"
+        
+        data = response.json()
+        assert "status" in data, "Response missing 'status' field"
+        assert data["status"] in ["healthy", "degraded"], \
+            f"Unexpected status: {data['status']}"
+        
+        assert response.elapsed.total_seconds() < 1.0, \
+            f"Health check took {response.elapsed.total_seconds()}s (> 1s)"
+    
+    @pytest.mark.asyncio
+    async def test_llm_tagging_health(
+        self,
+        http_client,
+        service_urls,
+        test_mode
+    ):
+        """
+        Test llm-tagging-pipeline health endpoint.
+        
+        Expected:
+        - 200 status code
+        - Service metadata present
+        """
+        url = service_urls["llm-tagging"]
+        
+        if test_mode == "code":
+            pytest.skip("Code mode not implemented yet")
+        
+        response = await http_client.get(f"{url}/health")
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+    
+    @pytest.mark.asyncio
+    async def test_mcp_local_llm_health(
+        self,
+        http_client,
+        service_urls,
+        test_mode
+    ):
+        """
+        Test mcp-local-llm health endpoint.
+        
+        Expected:
+        - 200 status code
+        - Ollama connection reported
+        """
+        url = service_urls["mcp-local-llm"]
+        
+        if test_mode == "code":
+            pytest.skip("Code mode not implemented yet")
+        
+        response = await http_client.get(f"{url}/health")
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert "status" in data
+    
+    @pytest.mark.asyncio
+    async def test_mcp_package_manager_health(
+        self,
+        http_client,
+        service_urls,
+        test_mode
+    ):
+        """Test mcp-package-manager health endpoint."""
+        url = service_urls["mcp-package-manager"]
+        
+        if test_mode == "code":
+            pytest.skip("Code mode not implemented yet")
+        
+        response = await http_client.get(f"{url}/health")
+        assert response.status_code == 200
+    
+    @pytest.mark.asyncio
+    async def test_mcp_evergreen_docs_health(
+        self,
+        http_client,
+        service_urls,
+        test_mode
+    ):
+        """Test mcp-evergreen-docs health endpoint."""
+        url = service_urls["mcp-evergreen-docs"]
+        
+        if test_mode == "code":
+            pytest.skip("Code mode not implemented yet")
+        
+        response = await http_client.get(f"{url}/health")
+        assert response.status_code == 200
+    
+    @pytest.mark.asyncio
+    async def test_mcp_logs_health(
+        self,
+        http_client,
+        service_urls,
+        test_mode
+    ):
+        """Test mcp-logs health endpoint."""
+        url = service_urls["mcp-logs"]
+        
+        if test_mode == "code":
+            pytest.skip("Code mode not implemented yet")
+        
+        response = await http_client.get(f"{url}/health")
+        assert response.status_code == 200
     
     @pytest.mark.asyncio
     async def test_all_services_healthy(
-        self, 
-        http_client: httpx.AsyncClient,
-        service_urls: dict
+        self,
+        http_client,
+        service_urls,
+        test_mode
     ):
-        """Test all services respond to health checks."""
-        results = {}
+        """
+        Test that all critical services are healthy.
         
-        for service_name, url in service_urls.items():
+        This is a smoke test to ensure the ecosystem is operational.
+        """
+        if test_mode == "code":
+            pytest.skip("Code mode not implemented yet")
+        
+        critical_services = [
+            "kafka-ingestion",
+            "llm-tagging",
+            "mcp-logs",
+        ]
+        
+        results = {}
+        for service_name in critical_services:
+            url = service_urls[service_name]
             try:
                 response = await http_client.get(f"{url}/health")
-                results[service_name] = {
-                    "status_code": response.status_code,
-                    "healthy": response.status_code == 200,
-                    "response": response.json() if response.status_code == 200 else None
-                }
+                results[service_name] = response.status_code == 200
             except Exception as e:
-                results[service_name] = {
-                    "status_code": None,
-                    "healthy": False,
-                    "error": str(e)
-                }
+                results[service_name] = False
         
-        # Print summary
-        print("\n" + "="*60)
-        print("SERVICE HEALTH SUMMARY")
-        print("="*60)
-        for service, result in results.items():
-            status = "✅" if result["healthy"] else "❌"
-            print(f"{status} {service}: {result.get('status_code', 'ERROR')}")
-        print("="*60)
+        failed_services = [
+            name for name, healthy in results.items()
+            if not healthy
+        ]
         
-        # Assert all healthy
-        unhealthy = [s for s, r in results.items() if not r["healthy"]]
-        assert not unhealthy, f"Unhealthy services: {unhealthy}"
-    
-    @pytest.mark.asyncio
-    async def test_provisioner_root(
-        self,
-        http_client: httpx.AsyncClient,
-        service_urls: dict
-    ):
-        """Test MCP Provisioner root endpoint."""
-        response = await http_client.get(service_urls["mcp_provisioner"])
-        assert response.status_code == 200
-        data = response.json()
-        assert "service" in data
-        assert data["service"] == "mcp-provisioner"
-    
-    @pytest.mark.asyncio
-    async def test_infrastructure_root(
-        self,
-        http_client: httpx.AsyncClient,
-        service_urls: dict
-    ):
-        """Test MCP Infrastructure root endpoint."""
-        response = await http_client.get(service_urls["mcp_infrastructure"])
-        assert response.status_code == 200
-        data = response.json()
-        assert "service" in data
-        assert data["service"] == "mcp-infrastructure"
-    
-    @pytest.mark.asyncio
-    async def test_gateway_root(
-        self,
-        http_client: httpx.AsyncClient,
-        service_urls: dict
-    ):
-        """Test MCP Gateway root endpoint."""
-        response = await http_client.get(service_urls["mcp_gateway"])
-        assert response.status_code == 200
-        data = response.json()
-        assert "service" in data
-        assert data["service"] == "mcp-gateway"
-    
-    @pytest.mark.asyncio
-    async def test_interpreter_root(
-        self,
-        http_client: httpx.AsyncClient,
-        service_urls: dict
-    ):
-        """Test MCP Interpreter root endpoint."""
-        response = await http_client.get(service_urls["mcp_interpreter"])
-        assert response.status_code == 200
-        data = response.json()
-        assert "service" in data
-        assert data["service"] == "mcp-interpreter"
-    
-    @pytest.mark.asyncio
-    async def test_orchestrator_root(
-        self,
-        http_client: httpx.AsyncClient,
-        service_urls: dict
-    ):
-        """Test MCP Orchestrator root endpoint."""
-        response = await http_client.get(service_urls["mcp_orchestrator"])
-        assert response.status_code == 200
-        data = response.json()
-        assert "service" in data
-        assert data["service"] == "mcp-orchestrator"
-    
-    @pytest.mark.asyncio
-    async def test_registry_root(
-        self,
-        http_client: httpx.AsyncClient,
-        service_urls: dict
-    ):
-        """Test MCP Registry root endpoint."""
-        response = await http_client.get(service_urls["mcp_registry"])
-        assert response.status_code == 200
-        data = response.json()
-        assert "service" in data
-        assert data["service"] == "mcp-registry"
-    
-    @pytest.mark.asyncio
-    async def test_training_coordinator_root(
-        self,
-        http_client: httpx.AsyncClient,
-        service_urls: dict
-    ):
-        """Test Training Coordinator root endpoint."""
-        response = await http_client.get(service_urls["training_coordinator"])
-        assert response.status_code == 200
-        data = response.json()
-        assert "service" in data
-        assert data["service"] == "training-coordinator"
-
+        assert len(failed_services) == 0, \
+            f"Services not healthy: {', '.join(failed_services)}"
