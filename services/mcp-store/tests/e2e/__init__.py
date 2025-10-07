@@ -1,1 +1,1 @@
-"""E2E tests for MCP Store."""
+"""End-to-end tests for MCP Store."""
