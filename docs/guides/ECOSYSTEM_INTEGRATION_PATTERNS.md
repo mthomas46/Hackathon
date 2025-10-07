@@ -1,3 +1,41 @@
+---
+llm_metadata:
+  document_type: guide
+  content_focus: technical
+  platform:
+    primary: shared
+    secondary: []
+  status: active
+  created_date: '2025-10-01'
+  last_modified: '2025-10-07'
+  topics:
+  - microservices
+  - domain_driven_design
+  - event_sourcing
+  - service_mesh
+  - bounded_contexts
+  - fastapi
+  - python
+  - redis
+  - langgraph
+  - ollama
+  concepts: []
+  technologies: []
+  services_mentioned: []
+  semantic_summary: Guide document about technical aspects of the shared platform
+  archive_reason: n/a
+  historical_value: current
+  reference_value: high
+semantic_embedding:
+  model: text-embedding-ada-002
+  embedding_date: '2025-10-07'
+  embedding_checksum: pending
+rag_metadata:
+  chunk_strategy: semantic
+  optimal_chunk_size: 512
+  retrieval_priority: high
+---
+
 # 🔗 Ecosystem Integration Patterns - LLM Documentation Ecosystem
 
 **Architecture Guide**: Enterprise patterns for service integration and development  

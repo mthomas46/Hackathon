@@ -1,3 +1,41 @@
+---
+llm_metadata:
+  document_type: guide
+  content_focus: technical
+  platform:
+    primary: shared
+    secondary: []
+  status: active
+  created_date: '2024-09-01'
+  last_modified: '2025-10-07'
+  topics:
+  - python
+  - docker
+  - langgraph
+  - ollama
+  - rag
+  - ci_cd
+  - testing
+  - deployment
+  - security
+  - monitoring
+  concepts: []
+  technologies: []
+  services_mentioned: []
+  semantic_summary: Guide document about technical aspects of the shared platform
+  archive_reason: n/a
+  historical_value: current
+  reference_value: high
+semantic_embedding:
+  model: text-embedding-ada-002
+  embedding_date: '2025-10-07'
+  embedding_checksum: pending
+rag_metadata:
+  chunk_strategy: semantic
+  optimal_chunk_size: 512
+  retrieval_priority: high
+---
+
 # 🚀 LLM Documentation Ecosystem - Comprehensive Testing Guide
 
 This document provides a complete guide to testing the LLM Documentation Ecosystem, including the new Mock Data Generator service and end-to-end workflow validation.

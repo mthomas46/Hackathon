@@ -1,3 +1,42 @@
+---
+llm_metadata:
+  document_type: guide
+  content_focus: technical
+  platform:
+    primary: document_analysis
+    secondary: []
+  status: active
+  created_date: '2024-09-01'
+  last_modified: '2025-10-07'
+  topics:
+  - domain_driven_design
+  - cqrs
+  - event_sourcing
+  - service_mesh
+  - bounded_contexts
+  - python
+  - redis
+  - postgresql
+  - docker
+  - langgraph
+  concepts: []
+  technologies: []
+  services_mentioned: []
+  semantic_summary: Guide document about technical aspects of the document analysis
+    platform
+  archive_reason: n/a
+  historical_value: current
+  reference_value: high
+semantic_embedding:
+  model: text-embedding-ada-002
+  embedding_date: '2025-10-07'
+  embedding_checksum: pending
+rag_metadata:
+  chunk_strategy: semantic
+  optimal_chunk_size: 512
+  retrieval_priority: high
+---
+
 # 🔧 Troubleshooting Index - LLM Documentation Ecosystem
 
 <!--

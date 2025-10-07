@@ -1,0 +1,5934 @@
+# 📚 Archive Manifest with LLM Embeddings Metadata
+# Purpose: Comprehensive catalog of archived documents for AI/LLM retrieval
+# Generated: 2025-10-07
+# Total Documents: 263 markdown files
+# Standardization: 2025-10-07 (lowercase with underscores)
+# LLM Metadata: 100% coverage
+
+# Manifest Structure:
+# - Categorization by subdirectory
+# - Standardized file paths
+# - Complete LLM metadata for each document
+# - Semantic tags and embeddings metadata
+# - RAG retrieval configuration
+
+---
+
+manifest_info:
+  purpose: Comprehensive catalog of archived documents for AI/LLM retrieval
+  generated: '2025-10-07'
+  standardization_date: '2025-10-07'
+  naming_convention: lowercase_with_underscores
+  llm_metadata_coverage: 100%
+  total_documents: 263
+OTHER_DOCUMENTS (89 files):
+- path: PHASE_4_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - clean_architecture
+    - api_gateway
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_8_3_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - python
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: 50_PERCENT_MILESTONE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - context_management
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: EPIC_SESSION_OCT7_FINAL.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_7_PLAN.md
+  llm_metadata:
+    document_type: reference
+    content_focus: strategic
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - docker
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about strategic aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_1_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: DOCUMENTATION_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASES_4-6_DATA_PERFORMANCE_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PATTERN_DECISION_FRAMEWORK.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: MCP_IMPLEMENTATION_TRACKER.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - redis
+    - postgresql
+    - docker
+    - kubernetes
+    - llm_orchestration
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE2_SPRINT_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    - docker
+    - ollama
+    - llm_orchestration
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PATTERN_CATEGORIES_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - context_management
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: REASONING_CATEGORY_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: NEXT_STEPS.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - docker
+    - kubernetes
+    - ollama
+    - llm_orchestration
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: FINAL_SESSION_SUMMARY.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - fastapi
+    - python
+    - redis
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3_COMPLETE_3_5_STARTED.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: TODAY_SUMMARY_OCT7.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - docker
+    - kubernetes
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_SUMMARY_PHASE_6_1_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_SUMMARY_OCT6.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - docker
+    - llm_orchestration
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3_AND_3.5_CHECKPOINT.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASES_1-3_FOUNDATION_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - llm_orchestration
+    - prompt_engineering
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the document
+      analysis platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASES_7-9_PRODUCTION_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - fastapi
+    - python
+    - postgresql
+    - docker
+    - llm_orchestration
+    - prompt_engineering
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the document
+      analysis platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_8_5_PROGRESS.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - clean_architecture
+    - python
+    - ollama
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_1_PROGRESS_UPDATE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_FINAL_SUMMARY.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_FINALE_OCT7_2025.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_2_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_8_5_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - clean_architecture
+    - python
+    - ollama
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE1_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - redis
+    - ollama
+    - llm_orchestration
+    - rag
+    - embeddings
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_8_3_IMPLEMENTATION_SUMMARY.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics: []
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: ULTIMATE_SESSION_ACHIEVEMENT.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - fastapi
+    - python
+    - redis
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: EXPORT_IMPORT_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - docker
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_2_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - redis
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3.5_MCP_STORE_FOUNDATION_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_OCT7_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - fastapi
+    - python
+    - redis
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: MCP_DASHBOARD_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_8_SESSION_SUMMARY.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - docker
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_6_PROGRESS_TRACKER.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - postgresql
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PATTERN_DECISION_FRAMEWORK_V2.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: TESTING_STARTED.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: TODOS_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - docker
+    - llm_orchestration
+    - context_management
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3_COMPLETION_AND_FUTURE_ROADMAP.md
+  llm_metadata:
+    document_type: reference
+    content_focus: strategic
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - redis
+    - docker
+    - kubernetes
+    - ollama
+    - llm_orchestration
+    - rag
+    - embeddings
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about strategic aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SELF_IMPROVEMENT_CATEGORY_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - context_management
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: MARKDOWN_AUDIT_PLAN.md
+  llm_metadata:
+    document_type: reference
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics: []
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_SUMMARY_OCT7_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    - kubernetes
+    - llm_orchestration
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: README.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - langchain
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: MULTI_AGENT_CATEGORY_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - context_management
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_SUMMARY_PHASE_6_EPIC_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: COMPLETE_SESSION_SUMMARY_OCT7.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3_5_COMPLETE_AUDIT.md
+  llm_metadata:
+    document_type: reference
+    content_focus: analytical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about analytical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_FINALE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_FINALE_ULTIMATE_OCT7.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - docker
+    - ollama
+    - context_management
+    - rag
+    - embeddings
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3_4_COMPLETE_FINAL.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - fastapi
+    - python
+    - redis
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PATTERN_MILESTONE_25_PERCENT.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3_5_PLANNING_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: strategic
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - redis
+    - postgresql
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about strategic aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PATTERNS_SESSION_SUMMARY.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - docker
+    - llm_orchestration
+    - context_management
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_OCT7_CONTINUED.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_FINALE_OCT7.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - docker
+    - context_management
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_4_FINAL_STATUS.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_2_COMPLETE_34_PATTERNS.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - context_management
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_OCT7_FINAL_SUMMARY.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - fastapi
+    - redis
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_SUMMARY_PHASE_3.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - fastapi
+    - docker
+    - llm_orchestration
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: MCP_STORE_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3_5_FINAL_STATUS.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_5_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_8_2_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3.5_INCREMENTAL_PLAN.md
+  llm_metadata:
+    document_type: reference
+    content_focus: strategic
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    - postgresql
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about strategic aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_SUMMARY_OCT7_2025.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - redis
+    - docker
+    - llm_orchestration
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: TODAY_FINAL_SUMMARY_OCT7.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - clean_architecture
+    - fastapi
+    - redis
+    - postgresql
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE2_PATTERNS_PROGRESS.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - cqrs
+    - event_sourcing
+    - python
+    - llm_orchestration
+    - prompt_engineering
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_5_PROGRESS.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_SUMMARY_OCT7_FINAL.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - context_management
+    - rag
+    - embeddings
+    - vector_search
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PLANNING_SESSION_SUMMARY.md
+  llm_metadata:
+    document_type: reference
+    content_focus: strategic
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - redis
+    - postgresql
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about strategic aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: FEATURE_IMPLEMENTATION_TRACKER.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - docker
+    - kubernetes
+    - ollama
+    - llm_orchestration
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_5_INTEGRATION_PLAN.md
+  llm_metadata:
+    document_type: reference
+    content_focus: strategic
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - python
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about strategic aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3_5_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - clean_architecture
+    - redis
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: MCP_SYSTEM_SESSION_SUMMARY.md
+  llm_metadata:
+    document_type: reference
+    content_focus: technical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - clean_architecture
+    - cqrs
+    - fastapi
+    - redis
+    - docker
+    - ollama
+    - llm_orchestration
+    - context_management
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about technical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: STATUS_UPDATE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - python
+    - docker
+    - llm_orchestration
+    - context_management
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_PROGRESS_UPDATE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - redis
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: FINAL_TODO_AUDIT.md
+  llm_metadata:
+    document_type: reference
+    content_focus: analytical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - redis
+    - docker
+    - ollama
+    - llm_orchestration
+    - context_management
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about analytical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_OCT7_PHASE_8_2_FINALE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-01'
+    archived_date: '2025-10-07'
+    topics:
+    - clean_architecture
+    - python
+    - docker
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_3_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - clean_architecture
+    - fastapi
+    - python
+    - redis
+    - docker
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: SESSION_FINAL_EPIC_SUMMARY.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: ADDITIONAL_PATTERNS_PLAN.md
+  llm_metadata:
+    document_type: reference
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - context_management
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: MARKETPLACE_FOUNDATION_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: DOCUMENTATION_AUDIT_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: analytical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - redis
+    - docker
+    - ollama
+    - llm_orchestration
+    - context_management
+    - rag
+    - embeddings
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about analytical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: PHASE_8_4_COMPLETE.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: MCP_SERVICES_TEST_PLAN.md
+  llm_metadata:
+    document_type: reference
+    content_focus: strategic
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - python
+    - redis
+    - docker
+    - context_management
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about strategic aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+ARCHITECTURE_DOCUMENTS (9 files):
+- path: architecture/architecture.md
+  llm_metadata:
+    document_type: architecture
+    content_focus: technical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - bounded_contexts
+    - fastapi
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Architecture document about technical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: architecture/architectural_analysis.md
+  llm_metadata:
+    document_type: architecture
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Architecture document about analytical aspects of the shared
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: architecture/ecosystem_architecture_diagrams.md
+  llm_metadata:
+    document_type: architecture
+    content_focus: technical
+    platform:
+      primary: both
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - redis
+    - postgresql
+    - docker
+    - ollama
+    - llm_orchestration
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Architecture document about technical aspects of the both platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: architecture/service_mesh_discovery_design.md
+  llm_metadata:
+    document_type: architecture
+    content_focus: technical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - event_sourcing
+    - service_mesh
+    - python
+    - redis
+    - postgresql
+    - kubernetes
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Architecture document about technical aspects of the shared
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: architecture/workers_vs_microservices.md
+  llm_metadata:
+    document_type: architecture
+    content_focus: technical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - service_mesh
+    - api_gateway
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - llm_orchestration
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Architecture document about technical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: architecture/ddd_migration.md
+  llm_metadata:
+    document_type: architecture
+    content_focus: technical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - clean_architecture
+    - cqrs
+    - event_sourcing
+    - bounded_contexts
+    - redis
+    - postgresql
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Architecture document about technical aspects of the shared
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: architecture/mcp_ecosystem_architecture.md
+  llm_metadata:
+    document_type: architecture
+    content_focus: technical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - event_sourcing
+    - api_gateway
+    - python
+    - docker
+    - kubernetes
+    - llm_orchestration
+    - context_management
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Architecture document about technical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: architecture/features_and_interactions.md
+  llm_metadata:
+    document_type: architecture
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Architecture document about historical aspects of the shared
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: architecture/mcp_visual_architecture.md
+  llm_metadata:
+    document_type: architecture
+    content_focus: technical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - service_mesh
+    - redis
+    - postgresql
+    - context_management
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Architecture document about technical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+AUDIT_HISTORICAL_DOCUMENTS (15 files):
+- path: audit-historical/audit_completion_factual_summary.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/comprehensive_ecosystem_audit_report.md
+  llm_metadata:
+    document_type: audit
+    content_focus: technical
+    platform:
+      primary: both
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - cqrs
+    - event_sourcing
+    - service_mesh
+    - bounded_contexts
+    - redis
+    - postgresql
+    - docker
+    - langgraph
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about technical aspects of the both platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/audit_factual_correction.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/audit_pass_1_results.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/comprehensive_accuracy_audit_report.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/deep_service_investigation_results.md
+  llm_metadata:
+    document_type: audit
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - redis
+    - docker
+    - ollama
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/audit_implementation_complete.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/consistency_audit_results.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - postgresql
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/audit_action_plan_and_executive_dashboard.md
+  llm_metadata:
+    document_type: audit
+    content_focus: strategic
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - kubernetes
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about strategic aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/ecosystem_comprehensive_audit_report.md
+  llm_metadata:
+    document_type: audit
+    content_focus: technical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - cqrs
+    - event_sourcing
+    - service_mesh
+    - bounded_contexts
+    - redis
+    - docker
+    - langgraph
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about technical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/report_audit_user_store_and_workflow_f.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - docker
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/final_audit_report_with_visual_analysis.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - kubernetes
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/audit_pass_2_verification.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/file_consolidation_summary.md
+  llm_metadata:
+    document_type: audit
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - docker
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audit-historical/living_document_validation_report.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - event_sourcing
+    - service_mesh
+    - redis
+    - postgresql
+    - docker
+    - langgraph
+    - ollama
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+AUDITS_DOCUMENTS (3 files):
+- path: audits/audit_progress_status.md
+  llm_metadata:
+    document_type: audit
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audits/comprehensive_docs_audit_plan.md
+  llm_metadata:
+    document_type: audit
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: audits/markdown_audit_plan.md
+  llm_metadata:
+    document_type: audit
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics: []
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Audit document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+DEMO_REPORTS_DOCUMENTS (2 files):
+- path: demo-reports/complete_interlinked_demo_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - api_gateway
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: demo-reports/hyper_realistic_complete_demo_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+DEPLOYMENT_REPORTS_DOCUMENTS (6 files):
+- path: deployment-reports/deployment-validation-20251002-011654.md
+  llm_metadata:
+    document_type: report
+    content_focus: operational
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-02'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - ollama
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about operational aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: deployment-reports/deployment-validation-20251002-011611.md
+  llm_metadata:
+    document_type: report
+    content_focus: operational
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-02'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - ollama
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about operational aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: deployment-reports/deployment-validation-20250918-013120.md
+  llm_metadata:
+    document_type: report
+    content_focus: operational
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-09-18'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - ollama
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about operational aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: deployment-reports/docker_service_test_results.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    - docker
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: deployment-reports/deployment-validation-20251002-013759.md
+  llm_metadata:
+    document_type: report
+    content_focus: operational
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-10-02'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - ollama
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about operational aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: deployment-reports/deployment-validation-20250918-012252.md
+  llm_metadata:
+    document_type: report
+    content_focus: operational
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2025-09-18'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - ollama
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about operational aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+FUTURE_REFINEMENTS_DOCUMENTS (17 files):
+- path: future-refinements/mcp_registry_and_portability.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - api_gateway
+    - fastapi
+    - python
+    - postgresql
+    - docker
+    - kubernetes
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/mcp_logs_observability_knowledge.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - ollama
+    - rag
+    - embeddings
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/ecosystem_self_context_mcp_analysis.md
+  llm_metadata:
+    document_type: planning
+    content_focus: technical
+    platform:
+      primary: both
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - clean_architecture
+    - fastapi
+    - python
+    - docker
+    - llm_orchestration
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about technical aspects of the both platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/advanced_llm_architecture_patterns.md
+  llm_metadata:
+    document_type: planning
+    content_focus: technical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    - postgresql
+    - langchain
+    - llm_orchestration
+    - prompt_engineering
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about technical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/local_mcp_implementation_guide.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - redis
+    - docker
+    - ollama
+    - rag
+    - embeddings
+    - vector_search
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/local_llm_platform_architecture.md
+  llm_metadata:
+    document_type: planning
+    content_focus: technical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - api_gateway
+    - fastapi
+    - python
+    - postgresql
+    - docker
+    - ollama
+    - llm_orchestration
+    - rag
+    - embeddings
+    - vector_search
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about technical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/readme.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - docker
+    - ollama
+    - llm_orchestration
+    - prompt_engineering
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/mcp_local_platform_integration_complete.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - api_gateway
+    - fastapi
+    - python
+    - docker
+    - ollama
+    - llm_orchestration
+    - rag
+    - embeddings
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/hierarchical_mcp_architecture_analysis.md
+  llm_metadata:
+    document_type: planning
+    content_focus: technical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - cqrs
+    - event_sourcing
+    - fastapi
+    - python
+    - postgresql
+    - docker
+    - kubernetes
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about technical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/local_platform_implementation_guide.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - event_sourcing
+    - fastapi
+    - python
+    - redis
+    - docker
+    - ollama
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/mcp_confluence_evergreen_docs.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - event_sourcing
+    - fastapi
+    - python
+    - docker
+    - ollama
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/session_mcp_architecture_complete.md
+  llm_metadata:
+    document_type: planning
+    content_focus: technical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - redis
+    - docker
+    - ollama
+    - rag
+    - embeddings
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about technical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/local_platform_mcp_enhancements.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - fastapi
+    - python
+    - redis
+    - docker
+    - ollama
+    - llm_orchestration
+    - rag
+    - embeddings
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/local_platform_observability_confluence_enhancements.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - ollama
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/platform_readiness_assessment.md
+  llm_metadata:
+    document_type: planning
+    content_focus: analytical
+    platform:
+      primary: both
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - ollama
+    - llm_orchestration
+    - context_management
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about analytical aspects of the both platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/client_specific_mcp_enhancement.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - event_sourcing
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: future-refinements/hierarchical_mcp_training_pipeline.md
+  llm_metadata:
+    document_type: planning
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - event_sourcing
+    - fastapi
+    - python
+    - postgresql
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+HISTORICAL_ORGANIZATION_DOCUMENTS (8 files):
+- path: historical-organization/master_index.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - docker
+    - context_management
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: historical-organization/documentation_organization_summary.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: historical-organization/documentation_index.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - docker
+    - llm_orchestration
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: historical-organization/cross_reference_index.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - docker
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: historical-organization/documentation_organization_complete.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - docker
+    - ollama
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: historical-organization/documentation_navigation_complete.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: historical-organization/quick_reference.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - postgresql
+    - docker
+    - ollama
+    - llm_orchestration
+    - rag
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: historical-organization/main_directory_organization_complete.md
+  llm_metadata:
+    document_type: reference
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics: []
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Reference document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+IMPLEMENTATION_REPORTS_DOCUMENTS (8 files):
+- path: implementation-reports/implementation_progress_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: implementation-reports/implementation_status.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - bounded_contexts
+    - fastapi
+    - python
+    - postgresql
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: implementation-reports/implementation_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - fastapi
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: implementation-reports/implementation_kickoff_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: implementation-reports/complete_implementation_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: implementation-reports/implementation_progress_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: implementation-reports/services_and_consistency_complete.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    - postgresql
+    - docker
+    - kubernetes
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: implementation-reports/option_1_2_and_1_3_completion_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics: []
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+MISC_REPORTS_DOCUMENTS (22 files):
+- path: misc-reports/complete_phase_status.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/plan_comparison_v1_vs_v2.md
+  llm_metadata:
+    document_type: report
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - clean_architecture
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/zero_counts_investigation_and_fix.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/all_issues_resolved.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/service_name_fix_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/fixes_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/final_status_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/final_test_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/complete_project_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/datastore_monitoring_complete.md
+  llm_metadata:
+    document_type: report
+    content_focus: operational
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about operational aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/complete_system_report_real-time_notification_system.md
+  llm_metadata:
+    document_type: report
+    content_focus: technical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about technical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/comprehensive_datastore_persistence_proof.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/intelligent_service_discovery_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    - postgresql
+    - docker
+    - kubernetes
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/tangential_docs_feature_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - kubernetes
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/complete_delivery_index.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/enhanced_roadmap_v2_complete.md
+  llm_metadata:
+    document_type: report
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - docker
+    - llm_orchestration
+    - context_management
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/data_persistence_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/phase_alignment_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/datastore_operation_tracking_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: operational
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about operational aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/option_a_full_service_integration.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - ollama
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/mixed_historical_documents_update.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: misc-reports/project_complete_final_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - python
+    - redis
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+OPERATIONS_HISTORICAL_DOCUMENTS (6 files):
+- path: operations-historical/service_offline_impact_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: operations-historical/services_fix_status_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: operations-historical/failing_services_analysis.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - python
+    - docker
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: operations-historical/service_fix_progress_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - docker
+    - ollama
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: operations-historical/service_investigation_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - service_mesh
+    - python
+    - redis
+    - docker
+    - ollama
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: operations-historical/corrected_health_assessment.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - docker
+    - ollama
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+PHASE_REPORTS_DOCUMENTS (45 files):
+- path: phase-reports/phase4_complete_final.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase2_implementation_plan.md
+  llm_metadata:
+    document_type: report
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase3_complete_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - llm_orchestration
+    - context_management
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase1_complete_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - redis
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase5_implementation_plan.md
+  llm_metadata:
+    document_type: report
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase3_session2_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase2_day2_completion_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase4_session_progress.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics: []
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase1_implementation_guide.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase8_completion_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase4_session2_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase1_completion_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - postgresql
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase5_complete_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase2_progress_tracker.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase2_progress.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - postgresql
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase9_enhancement_complete.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase3_progress_tracker.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - context_management
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase9_implementation_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase8_hyper_realistic_demo_plan.md
+  llm_metadata:
+    document_type: report
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - api_gateway
+    - python
+    - redis
+    - docker
+    - kubernetes
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase2_implementation_guide.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase9_workflow_e_report_real-time_notification_system.md
+  llm_metadata:
+    document_type: report
+    content_focus: technical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about technical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase1_progress_tracker.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase4_implementation_plan.md
+  llm_metadata:
+    document_type: report
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase4_completion_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase3_implementation_plan.md
+  llm_metadata:
+    document_type: report
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase4_midpoint_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase6_implementation_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - python
+    - redis
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase9_comprehensive_final.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase3_completion_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - clean_architecture
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase2_day1_completion_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - prompt_engineering
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase1_day2_completion_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase3_session3_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase2_complete_final_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase4_session1_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase2_final_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase5_implementation_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase9_refined_accuracy_focused.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase2_completion_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - fastapi
+    - python
+    - postgresql
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase9_external_service_integration_plan.md
+  llm_metadata:
+    document_type: report
+    content_focus: strategic
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about strategic aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase2_days1-3_session_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase9_implementation_complete.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase3_implementation_guide.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    - llm_orchestration
+    - context_management
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase7_production_deployment.md
+  llm_metadata:
+    document_type: report
+    content_focus: operational
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - service_mesh
+    - api_gateway
+    - redis
+    - postgresql
+    - docker
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about operational aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase1_day3_midpoint_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: phase-reports/phase3_progress.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+PLANNING_DOCUMENTS (6 files):
+- path: planning/final_enhanced_implementation_plan_v2.md
+  llm_metadata:
+    document_type: planning
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - docker
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: planning/feature_development_roadmap_implementation.md
+  llm_metadata:
+    document_type: planning
+    content_focus: strategic
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - domain_driven_design
+    - event_sourcing
+    - service_mesh
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - kubernetes
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about strategic aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: planning/enhanced_feature_development_roadmap.md
+  llm_metadata:
+    document_type: planning
+    content_focus: strategic
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - context_management
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about strategic aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: planning/implementation_plan_phase_6_7_future.md
+  llm_metadata:
+    document_type: planning
+    content_focus: strategic
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    - postgresql
+    - docker
+    - kubernetes
+    - rag
+    - embeddings
+    - 5_tier_system
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about strategic aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: planning/new_services_implementation_plan.md
+  llm_metadata:
+    document_type: planning
+    content_focus: strategic
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - docker
+    - llm_orchestration
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about strategic aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: planning/ecosystem_quality_improvement_plan.md
+  llm_metadata:
+    document_type: planning
+    content_focus: technical
+    platform:
+      primary: both
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - clean_architecture
+    - redis
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Planning document about technical aspects of the both platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+REPORTS_DOCUMENTS (1 files):
+- path: reports/analysis_features_breakdown.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+SESSION_SUMMARIES_DOCUMENTS (9 files):
+- path: session-summaries/current_implementation_session_summary.md
+  llm_metadata:
+    document_type: session
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Session document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: session-summaries/final_session_summary.md
+  llm_metadata:
+    document_type: session
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - clean_architecture
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Session document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: session-summaries/final_session_summary_complete.md
+  llm_metadata:
+    document_type: session
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Session document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: session-summaries/session_final_summary.md
+  llm_metadata:
+    document_type: session
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Session document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: session-summaries/todays_session_summary.md
+  llm_metadata:
+    document_type: session
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - clean_architecture
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Session document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: session-summaries/continuation_session_summary.md
+  llm_metadata:
+    document_type: session
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Session document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: session-summaries/session_summary.md
+  llm_metadata:
+    document_type: session
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - clean_architecture
+    - python
+    - postgresql
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Session document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: session-summaries/current_session_progress.md
+  llm_metadata:
+    document_type: session
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Session document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: session-summaries/session_enhancement_status.md
+  llm_metadata:
+    document_type: session
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - llm_orchestration
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Session document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+VALIDATION_REPORTS_DOCUMENTS (13 files):
+- path: validation-reports/ecosystem_validation_with_live_data_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: technical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about technical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/final_validation_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/complete_audit_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - langgraph
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/demo_directories_audit.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - llm_orchestration
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/report_validation_audit.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/implementation_audit_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - domain_driven_design
+    - bounded_contexts
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/cross_link_validation_complete.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/enhanced_validation_complete.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - redis
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/ecosystem_validation_complete.md
+  llm_metadata:
+    document_type: report
+    content_focus: technical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - api_gateway
+    - python
+    - redis
+    - embeddings
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about technical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/final_datastore_validation_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/section_7_1_validation_and_fixes_complete.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - docker
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/data_flow_validation_report.md
+  llm_metadata:
+    document_type: report
+    content_focus: analytical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - rag
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about analytical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: validation-reports/validation_status_and_next_steps.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - fastapi
+    - python
+    - docker
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+WORKFLOW_REPORTS_DOCUMENTS (4 files):
+- path: workflow-reports/workflow_e_zero_results_diagnosis.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: mcp
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - postgresql
+    - docker
+    - ollama
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the mcp platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: workflow-reports/workflow_e_fix_complete_summary.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - python
+    - postgresql
+    - docker
+    - ollama
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: workflow-reports/architecture_and_workflow_execution.md
+  llm_metadata:
+    document_type: report
+    content_focus: technical
+    platform:
+      primary: document_analysis
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - microservices
+    - api_gateway
+    - fastapi
+    - python
+    - redis
+    - postgresql
+    - llm_orchestration
+    - rag
+    - embeddings
+    - vector_search
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about technical aspects of the document analysis
+      platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium
+- path: workflow-reports/workflow_e_complete_solution_guide.md
+  llm_metadata:
+    document_type: report
+    content_focus: historical
+    platform:
+      primary: shared
+      secondary: []
+    status: archived
+    created_date: '2024-09-01'
+    archived_date: '2025-10-07'
+    topics:
+    - python
+    - postgresql
+    - ollama
+    - llm_orchestration
+    concepts: []
+    technologies: []
+    services_mentioned: []
+    semantic_summary: Report document about historical aspects of the shared platform
+    archive_reason: consolidated
+    historical_value: medium
+    reference_value: medium

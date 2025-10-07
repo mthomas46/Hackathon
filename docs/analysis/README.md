@@ -1,3 +1,37 @@
+---
+llm_metadata:
+  document_type: report
+  content_focus: operational
+  platform:
+    primary: document_analysis
+    secondary: []
+  status: active
+  created_date: '2024-09-01'
+  last_modified: '2025-10-07'
+  topics:
+  - microservices
+  - llm_orchestration
+  - rag
+  - monitoring
+  - documentation
+  concepts: []
+  technologies: []
+  services_mentioned: []
+  semantic_summary: Report document about operational aspects of the document analysis
+    platform
+  archive_reason: n/a
+  historical_value: current
+  reference_value: medium
+semantic_embedding:
+  model: text-embedding-ada-002
+  embedding_date: '2025-10-07'
+  embedding_checksum: pending
+rag_metadata:
+  chunk_strategy: semantic
+  optimal_chunk_size: 512
+  retrieval_priority: medium
+---
+
 # Analysis Services Documentation
 
 This directory contains documentation for the analysis services and capabilities within the LLM Documentation Ecosystem, focusing on AI-powered content analysis and intelligence features.

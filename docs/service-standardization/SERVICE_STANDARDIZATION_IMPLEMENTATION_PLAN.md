@@ -1,3 +1,41 @@
+---
+llm_metadata:
+  document_type: guide
+  content_focus: strategic
+  platform:
+    primary: both
+    secondary: []
+  status: active
+  created_date: '2025-10-01'
+  last_modified: '2025-10-07'
+  topics:
+  - domain_driven_design
+  - clean_architecture
+  - cqrs
+  - event_sourcing
+  - service_mesh
+  - python
+  - redis
+  - ollama
+  - llm_orchestration
+  - rag
+  concepts: []
+  technologies: []
+  services_mentioned: []
+  semantic_summary: Guide document about strategic aspects of the both platform
+  archive_reason: n/a
+  historical_value: current
+  reference_value: high
+semantic_embedding:
+  model: text-embedding-ada-002
+  embedding_date: '2025-10-07'
+  embedding_checksum: pending
+rag_metadata:
+  chunk_strategy: semantic
+  optimal_chunk_size: 512
+  retrieval_priority: high
+---
+
 # Service Standardization & Optimization Implementation Plan
 
 ## 📋 Executive Summary

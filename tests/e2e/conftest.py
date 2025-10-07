@@ -1,12 +1,27 @@
-"""Pytest configuration and fixtures for E2E tests."""
+"""Pytest configuration for E2E tests."""
 
-import asyncio
 import os
-from typing import AsyncGenerator, Dict
-
-import httpx
 import pytest
-import redis.asyncio as redis
+import asyncio
+import httpx
+from typing import Dict, Any
+import uuid
+
+
+def pytest_addoption(parser):
+    """Add custom pytest options."""
+    parser.addoption(
+        "--mode",
+        action="store",
+        default=os.getenv("TEST_MODE", "code"),
+        help="Test mode: code or live"
+    )
+
+
+@pytest.fixture(scope="session")
+def test_mode(request):
+    """Get test mode from command line or environment."""
+    return request.config.getoption("--mode")
 
 
 @pytest.fixture(scope="session")
@@ -18,92 +33,119 @@ def event_loop():
 
 
 @pytest.fixture(scope="session")
-def service_urls() -> Dict[str, str]:
-    """Service URLs for testing."""
-    base_port = int(os.getenv("TEST_BASE_PORT", "8150"))
-    
-    return {
-        "mcp_provisioner": f"http://localhost:{base_port}",  # 8150
-        "mcp_infrastructure": f"http://localhost:{base_port + 1}",  # 8151
-        "mcp_gateway": f"http://localhost:{base_port + 2}",  # 8152
-        "mcp_interpreter": f"http://localhost:{base_port + 3}",  # 8153
-        "mcp_orchestrator": f"http://localhost:{base_port + 4}",  # 8154
-        "training_coordinator": f"http://localhost:{base_port + 5}",  # 8155
-        "mcp_registry": f"http://localhost:{base_port + 6}",  # 8156
-    }
+def service_urls(test_mode):
+    """Service URLs based on test mode."""
+    if test_mode == "live":
+        return {
+            "kafka-ingestion": "http://localhost:5700",
+            "llm-tagging": "http://localhost:8021",
+            "mcp-local-llm": "http://localhost:8014",
+            "mcp-package-manager": "http://localhost:8103",
+            "mcp-evergreen-docs": "http://localhost:8104",
+            "mcp-logs": "http://localhost:8016",
+            "mcp-training": "http://localhost:8100",
+            "mcp-store": "http://localhost:8101",
+            "mcp-registry": "http://localhost:8102",
+        }
+    else:
+        # Code mode uses test server or mocks
+        return {
+            "kafka-ingestion": "http://test-kafka-ingestion:5700",
+            "llm-tagging": "http://test-llm-tagging:8021",
+            "mcp-local-llm": "http://test-mcp-local-llm:8014",
+            "mcp-package-manager": "http://test-mcp-package-manager:8103",
+            "mcp-evergreen-docs": "http://test-mcp-evergreen-docs:8104",
+            "mcp-logs": "http://test-mcp-logs:8016",
+        }
 
 
-@pytest.fixture(scope="session")
-async def http_client() -> AsyncGenerator[httpx.AsyncClient, None]:
-    """Shared HTTP client for tests."""
+@pytest.fixture
+async def http_client():
+    """Async HTTP client for tests."""
     async with httpx.AsyncClient(timeout=30.0) as client:
         yield client
 
 
-@pytest.fixture(scope="session")
-async def redis_client() -> AsyncGenerator[redis.Redis, None]:
-    """Shared Redis client for tests."""
-    client = redis.Redis(
-        host=os.getenv("REDIS_HOST", "localhost"),
-        port=int(os.getenv("REDIS_PORT", "6379")),
-        db=0,
-        decode_responses=True
-    )
-    
-    try:
-        await client.ping()
-        yield client
-    finally:
-        await client.close()
+@pytest.fixture
+def correlation_id():
+    """Generate unique correlation ID for request tracking."""
+    return str(uuid.uuid4())
 
 
 @pytest.fixture
-async def clean_redis(redis_client: redis.Redis):
-    """Clean Redis before each test."""
-    # Clean test keys
-    keys = await redis_client.keys("test:*")
-    if keys:
-        await redis_client.delete(*keys)
-    yield
-    # Clean after test
-    keys = await redis_client.keys("test:*")
-    if keys:
-        await redis_client.delete(*keys)
-
-
-@pytest.fixture
-def test_mcp_config() -> Dict:
-    """Test MCP configuration."""
+def sample_document():
+    """Sample document for testing."""
     return {
-        "mcp_id": "test-mcp-001",
-        "tier": "project",
-        "name": "Test MCP",
-        "description": "MCP for E2E testing",
-        "cpu_limit": "1.0",
-        "memory_limit": "512M",
+        "document_id": f"doc_{uuid.uuid4().hex[:8]}",
+        "event_type": "DOCUMENT_CREATED",
+        "source": "e2e_test",
+        "content": "This is a test document for E2E validation.",
+        "metadata": {
+            "title": "E2E Test Document",
+            "author": "E2E Tester",
+            "tags": ["test", "e2e", "validation"]
+        }
     }
 
 
 @pytest.fixture
-def test_query() -> str:
-    """Test query for interpreter."""
-    return "What are the main features of the authentication system?"
+def sample_large_document():
+    """Large document for testing."""
+    return {
+        "document_id": f"doc_large_{uuid.uuid4().hex[:8]}",
+        "event_type": "DOCUMENT_CREATED",
+        "source": "e2e_test",
+        "content": "Large document content. " * 10000,  # ~240KB
+        "metadata": {
+            "title": "Large E2E Test Document",
+            "size": "large"
+        }
+    }
 
 
 @pytest.fixture
-def test_training_job_config() -> Dict:
-    """Test training job configuration."""
-    return {
-        "mcp_id": "test-mcp-001",
-        "name": "Test Training Job",
-        "description": "E2E test training job",
-        "data_sources": ["github"],
-        "source_config": {
-            "github": {
-                "repos": ["test/repo"],
-                "include_prs": True,
-                "include_issues": True,
-            }
-        },
-    }
+async def wait_for_service():
+    """Helper to wait for service availability."""
+    async def _wait(url: str, timeout: int = 30) -> bool:
+        import time
+        start = time.time()
+        async with httpx.AsyncClient() as client:
+            while time.time() - start < timeout:
+                try:
+                    response = await client.get(f"{url}/health")
+                    if response.status_code == 200:
+                        return True
+                except:
+                    pass
+                await asyncio.sleep(1)
+        return False
+    return _wait
 
+
+@pytest.fixture
+async def wait_for_log():
+    """Helper to wait for log entry to appear."""
+    async def _wait(
+        mcp_logs_url: str,
+        correlation_id: str,
+        timeout: int = 10
+    ) -> Dict[str, Any]:
+        import time
+        start = time.time()
+        async with httpx.AsyncClient() as client:
+            while time.time() - start < timeout:
+                try:
+                    response = await client.get(
+                        f"{mcp_logs_url}/api/v1/logs",
+                        params={"correlation_id": correlation_id}
+                    )
+                    if response.status_code == 200:
+                        logs = response.json()
+                        entries = logs.get("entries", [])
+                        if len(entries) > 0:
+                            return entries
+                except:
+                    pass
+                await asyncio.sleep(0.5)
+        return []
+    return _wait

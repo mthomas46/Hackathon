@@ -1,3 +1,33 @@
+---
+llm_metadata:
+  document_type: report
+  content_focus: operational
+  platform:
+    primary: mcp
+    secondary: []
+  status: archived
+  created_date: '2025-10-02'
+  archived_date: '2025-10-07'
+  topics:
+  - redis
+  - ollama
+  concepts: []
+  technologies: []
+  services_mentioned: []
+  semantic_summary: Report document about operational aspects of the mcp platform
+  archive_reason: consolidated
+  historical_value: medium
+  reference_value: medium
+semantic_embedding:
+  model: text-embedding-ada-002
+  embedding_date: '2025-10-07'
+  embedding_checksum: pending
+rag_metadata:
+  chunk_strategy: semantic
+  optimal_chunk_size: 512
+  retrieval_priority: medium
+---
+
 # Deployment Validation Report
 
 **Timestamp**: Thu Oct  2 01:16:54 CDT 2025
