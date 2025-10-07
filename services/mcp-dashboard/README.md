@@ -102,7 +102,7 @@ services/mcp-dashboard/
 
 ## 🔗 **Service Integrations**
 
-### **1. Training Coordinator (Port 5600)** 🎓
+### **1. MCP Training Coordinator (Port 5600)** 🎓
 
 **Tight Integration - Primary Focus**
 
@@ -119,7 +119,7 @@ services/mcp-dashboard/
 **API Calls**:
 ```python
 # Create training job
-POST http://training-coordinator:5600/api/v1/jobs
+POST http://mcp-training-coordinator:5600/api/v1/jobs
 {
   "mcp_id": "mcp-123",
   "data_sources": ["GITHUB", "CONFLUENCE"],
@@ -128,16 +128,16 @@ POST http://training-coordinator:5600/api/v1/jobs
 }
 
 # Get job status with real-time updates
-GET http://training-coordinator:5600/api/v1/jobs/{job_id}
+GET http://mcp-training-coordinator:5600/api/v1/jobs/{job_id}
 
 # List all jobs with filtering
-GET http://training-coordinator:5600/api/v1/jobs?status=EXECUTING
+GET http://mcp-training-coordinator:5600/api/v1/jobs?status=EXECUTING
 
 # Cancel job
-DELETE http://training-coordinator:5600/api/v1/jobs/{job_id}
+DELETE http://mcp-training-coordinator:5600/api/v1/jobs/{job_id}
 
 # Get worker status
-GET http://training-coordinator:5600/api/v1/workers
+GET http://mcp-training-coordinator:5600/api/v1/workers
 ```
 
 **Dashboard Features**:
@@ -506,7 +506,7 @@ DASHBOARD_PORT=8015
 DASHBOARD_HOST=0.0.0.0
 
 # Service Endpoints (Critical Integrations)
-TRAINING_COORDINATOR_URL=http://training-coordinator:5600
+TRAINING_COORDINATOR_URL=http://mcp-training-coordinator:5600
 PROVISIONER_URL=http://mcp-provisioner:8003
 INTERPRETER_URL=http://mcp-interpreter:8002
 RETRIEVAL_URL=http://mcp-retrieval:8014
@@ -658,7 +658,7 @@ User (Dashboard) → Query Interface Page
 
 ## 📞 **Related Services**
 
-- **Training Coordinator**: [/services/training-coordinator/README.md](/services/training-coordinator/README.md)
+- **MCP Training Coordinator**: [/services/mcp-training-coordinator/README.md](/services/mcp-training-coordinator/README.md)
 - **MCP Provisioner**: [/services/mcp-provisioner/README.md](/services/mcp-provisioner/README.md)
 - **MCP Interpreter**: [/services/mcp-interpreter/README.md](/services/mcp-interpreter/README.md)
 - **MCP Retrieval**: [/services/mcp_retrieval/README.md](/services/mcp_retrieval/README.md)

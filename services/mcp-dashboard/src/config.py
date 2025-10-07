@@ -15,7 +15,7 @@ class DashboardConfig(BaseSettings):
     enable_websockets: bool = True
     
     # Service Endpoints - PRIMARY INTEGRATIONS
-    training_coordinator_url: str = "http://training-coordinator:5600"
+    training_coordinator_url: str = "http://mcp-training-coordinator:5600"
     provisioner_url: str = "http://mcp-provisioner:8003"
     interpreter_url: str = "http://mcp-interpreter:8002"
     retrieval_url: str = "http://mcp-retrieval:8014"
