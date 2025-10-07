@@ -210,6 +210,7 @@ class PackageManager:
         self._packages: Dict[str, MCPPackage] = {}
         self._knowledge: Dict[str, List[Dict[str, Any]]] = {}
         self._snapshots: Dict[str, List[PackageSnapshot]] = {}
+        self._imported_packages: Dict[str, str] = {}  # Track imports: {name+version: package_id}
         
         logger.info(f"PackageManager initialized (storage: {storage_dir})")
     
@@ -244,10 +245,14 @@ class PackageManager:
         if package_id not in self._packages:
             raise ValueError(f"Package not found: {package_id}")
         
-        # Check size
-        content_size_mb = len(content.encode('utf-8')) / (1024 * 1024)
-        if content_size_mb > self.MAX_PACKAGE_SIZE_MB:
-            raise ValueError(f"Content exceeds maximum size of {self.MAX_PACKAGE_SIZE_MB}MB")
+        # Check total package size
+        current_knowledge = self._knowledge.get(package_id, [])
+        current_size = sum(len(item['content'].encode('utf-8')) for item in current_knowledge)
+        new_size = len(content.encode('utf-8'))
+        total_size_mb = (current_size + new_size) / (1024 * 1024)
+        
+        if total_size_mb > self.MAX_PACKAGE_SIZE_MB:
+            raise ValueError(f"Package exceeds maximum size of {self.MAX_PACKAGE_SIZE_MB}MB")
         
         knowledge_item = {
             "content": content,
@@ -296,6 +301,8 @@ class PackageManager:
                 # Add knowledge
                 if config.include_knowledge:
                     knowledge_items = self._knowledge.get(package_id, [])
+                    # Add knowledge directory
+                    self._add_string_to_tar(tar, "knowledge/", "")
                     for idx, item in enumerate(knowledge_items):
                         item_json = json.dumps(item, indent=2)
                         self._add_string_to_tar(tar, f"knowledge/item_{idx}.json", item_json)
@@ -322,7 +329,13 @@ class PackageManager:
         data = content.encode('utf-8')
         tarinfo = tarfile.TarInfo(name=name)
         tarinfo.size = len(data)
-        tar.addfile(tarinfo, io.BytesIO(data))
+        # Set as directory if it ends with /
+        if name.endswith('/'):
+            tarinfo.type = tarfile.DIRTYPE
+            tarinfo.size = 0
+            tar.addfile(tarinfo)
+        else:
+            tar.addfile(tarinfo, io.BytesIO(data))
     
     def _compress_with_zstd(self, file_path: Path):
         """Compress file with zstandard."""
@@ -360,29 +373,34 @@ class PackageManager:
                     
                     if config.validate_metadata:
                         if 'name' not in metadata_dict or 'version' not in metadata_dict:
-                            return ImportResult(success=False, error="Invalid metadata: missing required fields")
+                            return ImportResult(success=False, error="Metadata validation failed: missing required fields")
                     
                     metadata = PackageMetadata.from_dict(metadata_dict)
                     
                 except Exception as e:
                     return ImportResult(success=False, error=f"Metadata validation failed: {str(e)}")
                 
-                # Check for duplicates
-                existing = self._find_package_by_name(metadata.name)
-                if existing and not config.overwrite_existing:
-                    return ImportResult(success=False, error=f"Package '{metadata.name}' already exists")
+                # Check for previously imported packages
+                import_key = f"{metadata.name}:{metadata.version}"
+                existing_import = self._imported_packages.get(import_key)
                 
-                # Create package
-                if existing and config.overwrite_existing:
-                    package_id = existing.package_id
+                if existing_import and not config.overwrite_existing:
+                    return ImportResult(success=False, error=f"Package '{metadata.name}' version {metadata.version} already exists")
+                
+                # Create or update package
+                if existing_import and config.overwrite_existing:
+                    package_id = existing_import
                     self._packages[package_id].metadata = metadata
+                    # Clear existing knowledge
+                    self._knowledge[package_id] = []
                 else:
                     package = self.create_package(metadata)
                     package_id = package.package_id
+                    self._imported_packages[import_key] = package_id
                 
                 # Import knowledge
                 for member in tar.getmembers():
-                    if member.name.startswith("knowledge/"):
+                    if member.name.startswith("knowledge/") and member.name.endswith('.json'):
                         knowledge_file = tar.extractfile(member)
                         if knowledge_file:
                             item_data = json.loads(knowledge_file.read().decode('utf-8'))
