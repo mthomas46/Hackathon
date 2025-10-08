@@ -8,7 +8,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from ...domain.entities import Document
-from services.shared.utilities import SqlRepository
+from services.shared.domain.repositories.base_repository import SqlRepository
 from ...db.queries import execute_query, search_documents
 
 
@@ -25,13 +25,21 @@ class DocumentRepository(SqlRepository[Document]):
     def _row_to_entity(self, row: Dict[str, Any]) -> Document:
         """Convert database row to Document entity."""
         from datetime import datetime
+        
+        # 🔍 DEBUG: Log raw row data
+        print(f"🔍 [ROW_TO_ENTITY] raw row tags: {row.get('tags')}", flush=True)
+        
+        # Parse tags
+        tags_raw = row.get("tags") or "[]"
+        tags_parsed = json.loads(tags_raw)
+        print(f"🔍 [ROW_TO_ENTITY] parsed tags: {tags_parsed}", flush=True)
 
-        return Document(
+        doc = Document(
             id=row["id"],
             content=row["content"],
             content_hash=row["content_hash"],
             metadata=json.loads(row["metadata"] or "{}"),
-            tags=json.loads(row.get("tags") or "[]"),  # ✅ CRITICAL FIX: Parse tags from JSON
+            tags=tags_parsed,  # ✅ Use parsed tags
             correlation_id=row.get("correlation_id"),
             created_at=(
                 datetime.fromisoformat(row["created_at"].replace("Z", "+00:00"))
@@ -44,15 +52,17 @@ class DocumentRepository(SqlRepository[Document]):
                 else row.get("updated_at")
             ),
         )
+        
+        print(f"🔍 [ROW_TO_ENTITY] Document.tags: {doc.tags}", flush=True)
+        return doc
 
     def _entity_to_row(self, entity: Document) -> Dict[str, Any]:
         """Convert Document entity to database row."""
         # 🔍 DEBUG: Log tags before serialization
-        from ..common import logger
-        logger.info(f"[TAGS DEBUG] Repository _entity_to_row - entity.tags: {entity.tags} (type: {type(entity.tags)})")
+        print(f"🔍 [ENTITY_TO_ROW] entity.tags: {entity.tags}", flush=True)
         
         serialized_tags = json.dumps(entity.tags)
-        logger.info(f"[TAGS DEBUG] Repository serialized tags: {serialized_tags} (len: {len(serialized_tags)})")
+        print(f"🔍 [ENTITY_TO_ROW] serialized tags: {serialized_tags}", flush=True)
         
         row = {
             "id": entity.id,
@@ -65,20 +75,32 @@ class DocumentRepository(SqlRepository[Document]):
             "updated_at": entity.updated_at.isoformat() if entity.updated_at else None,
         }
         
-        logger.info(f"[TAGS DEBUG] Repository row dict - tags value: {row.get('tags')}")
+        print(f"🔍 [ENTITY_TO_ROW] row dict tags: {row.get('tags')}", flush=True)
         return row
 
     async def find_by_id(self, document_id: str) -> Optional[Document]:
         """Find document by ID (async version for base service compatibility)."""
-        row = execute_query(
-            "SELECT * FROM documents WHERE id = ?",
-            (document_id,),
-            fetch_one=True,
-        )
-        return self._row_to_entity(row) if row else None
+        print(f"🔍 [REPOSITORY DEBUG] find_by_id called with: {document_id}", flush=True)
+        
+        try:
+            row = execute_query(
+                "SELECT * FROM documents WHERE id = ?",
+                (document_id,),
+                fetch_one=True,
+            )
+            print(f"🔍 [REPOSITORY DEBUG] execute_query returned: {type(row)}", flush=True)
+            if row:
+                print(f"🔍 [REPOSITORY DEBUG] row has tags: {row.get('tags')}", flush=True)
+            
+            result = self._row_to_entity(row) if row else None
+            print(f"🔍 [REPOSITORY DEBUG] returning Document with tags: {result.tags if result else 'None'}", flush=True)
+            return result
+        except Exception as e:
+            print(f"🔍 [REPOSITORY DEBUG] ERROR: {e}", flush=True)
+            raise
     
-    def get_by_content_hash(self, content_hash: str) -> Optional[Document]:
-        """Get document by content hash."""
+    async def find_by_content_hash(self, content_hash: str) -> Optional[Document]:
+        """Find document by content hash (async version)."""
         row = execute_query(
             "SELECT * FROM documents WHERE content_hash = ?",
             (content_hash,),

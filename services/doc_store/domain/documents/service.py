@@ -23,7 +23,7 @@ from ..exceptions.domain_exceptions import (
 from ..common.error_utils import handle_validation_error
 
 from ..entities import Document
-from ..repository import DocumentRepository
+from .repository import DocumentRepository  # ✅ FIX: Use documents/repository.py with tags support
 from ..common.validation_utils import (
     validate_required_string,
     validate_metadata,
@@ -70,13 +70,8 @@ class DocumentService(BaseService[Document]):
 
         # Calculate content hash for duplicate detection
         content_hash = self._calculate_content_hash(content)
-
-        # Check for duplicates (business rule)
-        existing = await self.repository.find_by_content_hash(content_hash)
-        if existing:
-            return existing  # Return existing document
-
-        # Validate metadata and correlation ID
+        
+        # Validate metadata and correlation ID (do this early)
         metadata = validate_metadata(data.get("metadata", {}))
         correlation_id = validate_correlation_id(data.get("correlation_id"))
         
@@ -84,6 +79,19 @@ class DocumentService(BaseService[Document]):
         tags = data.get("tags", [])
         if not isinstance(tags, list):
             tags = []
+
+        # Check for duplicates (business rule)
+        existing = await self.repository.find_by_content_hash(content_hash)
+        if existing:
+            # ✅ FIX: Merge tags from new request with existing document
+            logger.info(f"[TAGS DEBUG] Duplicate found! Merging tags. Existing: {existing.tags}, New: {tags}")
+            
+            # Merge tags (union of old and new, preserving order, removing duplicates)
+            merged_tags = list(dict.fromkeys(existing.tags + tags))
+            existing.tags = merged_tags
+            
+            logger.info(f"[TAGS DEBUG] Merged tags: {existing.tags}")
+            return existing  # Return existing document with updated tags
         
         # 🔍 DEBUG: Log tags at service level
         logger.info(f"[TAGS DEBUG] Service received data with tags: {data.get('tags')} (type: {type(data.get('tags'))})")

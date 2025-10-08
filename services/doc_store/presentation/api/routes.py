@@ -141,7 +141,11 @@ async def get_document(
     document_handlers: AbstractDocumentHandlers = Depends(get_document_handlers)
 ):
     """Get document by ID."""
+    print(f"🔍 [ROUTE DEBUG] get_document called with: {document_id}", flush=True)
     result = await document_handlers.handle_get_document(document_id)
+    print(f"🔍 [ROUTE DEBUG] handle_get_document returned: {type(result)}, hasattr id: {hasattr(result, 'id')}, hasattr tags: {hasattr(result, 'tags')}", flush=True)
+    if result:
+        print(f"🔍 [ROUTE DEBUG] result.id = {getattr(result, 'id', 'NO ATTR')}, result.tags = {getattr(result, 'tags', 'NO ATTR')}", flush=True)
     return create_success_response(
         data=result, message="Document retrieved successfully"
     )

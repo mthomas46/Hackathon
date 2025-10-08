@@ -5,7 +5,7 @@ Provides centralized dependency management and injection for all service compone
 
 from typing import Optional
 
-from services.doc_store.domain.repository import DocumentRepository
+from services.doc_store.domain.documents.repository import DocumentRepository  # ✅ FIX: Use correct repository with tags
 from services.doc_store.db.connection import get_document_connection_string
 from services.doc_store.application.handlers.document_handlers import DocumentHandlers
 from services.doc_store.domain.documents.service import DocumentService
