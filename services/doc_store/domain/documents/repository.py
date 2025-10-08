@@ -47,16 +47,26 @@ class DocumentRepository(SqlRepository[Document]):
 
     def _entity_to_row(self, entity: Document) -> Dict[str, Any]:
         """Convert Document entity to database row."""
-        return {
+        # 🔍 DEBUG: Log tags before serialization
+        from ..common import logger
+        logger.info(f"[TAGS DEBUG] Repository _entity_to_row - entity.tags: {entity.tags} (type: {type(entity.tags)})")
+        
+        serialized_tags = json.dumps(entity.tags)
+        logger.info(f"[TAGS DEBUG] Repository serialized tags: {serialized_tags} (len: {len(serialized_tags)})")
+        
+        row = {
             "id": entity.id,
             "content": entity.content,
             "content_hash": entity.content_hash,
             "metadata": json.dumps(entity.metadata),
-            "tags": json.dumps(entity.tags),  # ✅ CRITICAL FIX: Serialize tags to JSON
+            "tags": serialized_tags,  # ✅ CRITICAL FIX: Serialize tags to JSON
             "correlation_id": entity.correlation_id,
             "created_at": entity.created_at.isoformat(),
             "updated_at": entity.updated_at.isoformat() if entity.updated_at else None,
         }
+        
+        logger.info(f"[TAGS DEBUG] Repository row dict - tags value: {row.get('tags')}")
+        return row
 
     def get_by_content_hash(self, content_hash: str) -> Optional[Document]:
         """Get document by content hash."""

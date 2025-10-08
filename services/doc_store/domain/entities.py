@@ -37,16 +37,28 @@ class Document:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
         import json
-        return {
+        
+        # 🔍 DEBUG: Log tags before serialization in to_dict
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"[TAGS DEBUG] Entity to_dict - self.tags: {self.tags} (type: {type(self.tags)})")
+        
+        serialized_tags = json.dumps(self.tags)
+        logger.info(f"[TAGS DEBUG] Entity to_dict - serialized tags: {serialized_tags}")
+        
+        result = {
             "id": self.id,
             "content": self.content,
             "content_hash": self.content_hash,
             "metadata": json.dumps(self.metadata),  # Serialize for database
-            "tags": json.dumps(self.tags),  # ✅ CRITICAL FIX: Serialize tags for database
+            "tags": serialized_tags,  # ✅ CRITICAL FIX: Serialize tags for database
             "correlation_id": self.correlation_id,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+        
+        logger.info(f"[TAGS DEBUG] Entity to_dict result - tags: {result.get('tags')}")
+        return result
 
     def __hash__(self) -> int:
         """Hash based on immutable fields."""

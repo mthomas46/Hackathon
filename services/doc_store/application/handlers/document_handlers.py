@@ -5,8 +5,11 @@ Handles HTTP requests and responses for document operations.
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
+import logging
 
 from fastapi import HTTPException
+
+logger = logging.getLogger(__name__)
 
 from ...presentation.dto.models import (
     DocumentListResponse,
@@ -100,6 +103,12 @@ class DocumentHandlers(AbstractDocumentHandlers):
             
             # Process tags (ensure it's a list, handle None)
             tags = request.tags if request.tags is not None else []
+            
+            # 🔍 DEBUG: Log tags at handler level (using print for visibility)
+            print(f"[TAGS DEBUG] Handler received tags: {request.tags}", flush=True)
+            print(f"[TAGS DEBUG] Handler processed tags: {tags} (type: {type(tags)})", flush=True)
+            logger.info(f"[TAGS DEBUG] Handler received tags: {request.tags}")
+            logger.info(f"[TAGS DEBUG] Handler processed tags: {tags} (type: {type(tags)})")
 
             # Create document - using BaseService.create() method
             document = await self.service.create({
@@ -108,6 +117,10 @@ class DocumentHandlers(AbstractDocumentHandlers):
                 "metadata": metadata,
                 "tags": tags  # ✅ CRITICAL FIX: Pass tags to service
             })
+            
+            # 🔍 DEBUG: Log tags after service create
+            print(f"[TAGS DEBUG] Document after create - tags: {document.tags} (type: {type(document.tags)})", flush=True)
+            logger.info(f"[TAGS DEBUG] Document after create - tags: {document.tags} (type: {type(document.tags)})")
 
             # Return direct DocumentResponse without wrapper
             return DocumentResponse(
