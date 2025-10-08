@@ -167,6 +167,11 @@ class DocumentHandlers(AbstractDocumentHandlers):
         except DocumentNotFoundException:
             raise  # Let the global exception handler deal with it
         except Exception as e:
+            # Import EntityNotFoundError from base service
+            from services.shared.domain.services.base_service import EntityNotFoundError
+            # Check if it's an EntityNotFoundError from base service
+            if isinstance(e, EntityNotFoundError) or "not found" in str(e).lower():
+                raise DocumentNotFoundException(document_id)
             raise HTTPException(
                 status_code=500, detail=f"Failed to retrieve document: {str(e)}"
             )
