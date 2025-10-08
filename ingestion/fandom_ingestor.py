@@ -7,13 +7,18 @@ compared to standard Wikipedia. This module provides a specialized crawler.
 import asyncio
 import hashlib
 import logging
-from typing import List, Optional, Set, Dict, Tuple, Any
+from typing import List, Optional, Set, Dict, Tuple, Any, Callable
 from datetime import datetime
 import httpx
 from bs4 import BeautifulSoup
 
 from ingestion.models import NormalizedDocument, CrawlReport
 from ingestion.tagging import UniversalTaggingManager, UniversalTaggingConfig, TagCollection
+
+try:
+    from ingestion.utils.resource_monitor import ResourceMonitor
+except ImportError:
+    ResourceMonitor = None
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +34,8 @@ class FandomWikiIngestor:
     def __init__(
         self,
         tagging_config: Optional[UniversalTaggingConfig] = None,
-        enable_tagging: bool = True
+        enable_tagging: bool = True,
+        progress_callback: Optional[Callable[[str], None]] = None
     ):
         """
         Initialize Fandom wiki ingestor.
@@ -37,11 +43,13 @@ class FandomWikiIngestor:
         Args:
             tagging_config: Configuration for universal tagging
             enable_tagging: Whether to apply universal tagging to documents
+            progress_callback: Optional callback for progress updates
         """
         self.visited_pages: Set[str] = set()
         self.crawl_graph: Dict[str, Dict[str, Any]] = {}
         self.start_time: Optional[datetime] = None
         self.end_time: Optional[datetime] = None
+        self.progress_callback = progress_callback
         
         # Tagging integration
         self.enable_tagging = enable_tagging
@@ -49,6 +57,12 @@ class FandomWikiIngestor:
             tagging_config or UniversalTaggingConfig()
         ) if enable_tagging else None
         self.tag_collection: Optional[TagCollection] = None
+        
+        # Resource monitoring
+        self.resource_monitor = ResourceMonitor() if ResourceMonitor else None
+        self.pages_per_depth: Dict[int, int] = {}
+        self.current_batch_size = 10
+        self.current_concurrency = 5
     
     async def crawl_and_ingest(
         self,
@@ -152,6 +166,17 @@ class FandomWikiIngestor:
             # Log link discovery and filtering
             total_links_found = len(page_data['links'])
             links_to_follow = min(max_links_per_page, total_links_found) if current_depth < max_depth else 0
+            
+            # Track pages per depth
+            self.pages_per_depth[current_depth] = self.pages_per_depth.get(current_depth, 0) + 1
+            
+            # Progress callback
+            if self.progress_callback:
+                self.progress_callback(
+                    f"[D{current_depth}] {page_title[:40]:40s} | {len(self.visited_pages):4d} pages | "
+                    f"{total_links_found:3d} links | following {links_to_follow:2d}"
+                )
+            
             logger.info(f"  {'  ' * current_depth}[Depth {current_depth}] {page_title} → {total_links_found} links found, following {links_to_follow}")
             
             # Track in crawl graph
@@ -186,12 +211,55 @@ class FandomWikiIngestor:
                             )
                         )
                 
-                # Execute tasks concurrently
-                results = await asyncio.gather(*tasks)
-                for res in results:
-                    documents.extend(res)
+                # Dynamic batch processing with resource monitoring
+                if self.resource_monitor:
+                    metrics = self.resource_monitor.get_metrics()
+                    batch_size = metrics.suggested_batch_size
+                    
+                    if self.progress_callback:
+                        self.progress_callback(
+                            f"   └─ Resources: CPU {metrics.cpu_percent:.1f}%, "
+                            f"RAM {metrics.memory_available_gb:.1f}GB free, "
+                            f"batch={batch_size}"
+                        )
+                else:
+                    batch_size = 10
                 
-                # Rate limiting
+                # Process in adaptive batches
+                for i in range(0, len(tasks), batch_size):
+                    batch = tasks[i:i + batch_size]
+                    batch_num = (i // batch_size) + 1
+                    total_batches = (len(tasks) + batch_size - 1) // batch_size
+                    
+                    if self.progress_callback:
+                        self.progress_callback(
+                            f"   └─ Processing batch {batch_num}/{total_batches} "
+                            f"({len(batch)} tasks) at depth {current_depth}..."
+                        )
+                    
+                    results = await asyncio.gather(*batch, return_exceptions=True)
+                    
+                    success_count = 0
+                    for res in results:
+                        if isinstance(res, list):
+                            documents.extend(res)
+                            success_count += len(res)
+                        elif isinstance(res, Exception):
+                            logger.warning(f"Task failed: {res}")
+                    
+                    if self.progress_callback:
+                        self.progress_callback(
+                            f"   └─ Batch {batch_num} complete: +{success_count} pages "
+                            f"(total: {len(self.visited_pages)})"
+                        )
+                    
+                    # Adaptive rate limiting
+                    if i + batch_size < len(tasks):
+                        # Longer pause for deeper depths (more load on server)
+                        pause = min(1.0 + (current_depth * 0.5), 5.0)
+                        await asyncio.sleep(pause)
+                
+                # Depth transition pause
                 await asyncio.sleep(0.5)
         
         except Exception as e:
