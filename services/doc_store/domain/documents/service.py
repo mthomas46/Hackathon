@@ -5,8 +5,11 @@ Only contains business-specific validation and logic.
 """
 
 from typing import Any, Dict, List, Optional
+import logging
 
 from services.shared.domain.services.base_service import BaseService
+
+logger = logging.getLogger(__name__)
 from services.shared.domain.exceptions import (
     create_validation_error,
     create_duplicate_error,

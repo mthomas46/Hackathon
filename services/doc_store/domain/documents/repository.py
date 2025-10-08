@@ -7,7 +7,7 @@ import hashlib
 import json
 from typing import Any, Dict, List, Optional
 
-from ...core.entities import Document
+from ...domain.entities import Document
 from services.shared.utilities import SqlRepository
 from ...db.queries import execute_query, search_documents
 

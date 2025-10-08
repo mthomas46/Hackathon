@@ -725,6 +725,14 @@ async def shutdown_event():
 # ============================================================================
 app.include_router(api_router)
 
+# DEBUG ROUTES - Include debug routes for tags testing
+try:
+    from .presentation.api.routes_debug import router as debug_router
+    app.include_router(debug_router)
+    print("🔍 Debug routes loaded for tags testing")
+except Exception as e:
+    print(f"⚠️  Debug routes not loaded: {e}")
+
 # ============================================================================
 # DATASTORE OPERATION LOGGING - Track all operations to log-collector
 # ============================================================================
