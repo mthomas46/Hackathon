@@ -1,0 +1,424 @@
+{
+  "documents": [
+    {
+      "id": "hh_doc_001",
+      "title": "Horus Heresy Overview",
+      "content": "The Horus Heresy, sometimes referred to poetically as the 'Age of Darkness', was a galaxy-spanning civil war that consumed the worlds of Mankind for 9 Terran years. Its outbreak marked the end of the Emperor of Mankind's Great Crusade to reunite the scattered colony worlds of Humanity.",
+      "tags": ["horus-heresy", "overview", "great-crusade", "civil-war"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Historical Overview",
+      "complexity": "High",
+      "word_count": 2847
+    },
+    {
+      "id": "hh_doc_002",
+      "title": "The Emperor and Primarchs",
+      "content": "The Emperor of Mankind created the Primarchs as his genetic sons, twenty superhuman beings designed to lead his Space Marine Legions during the Great Crusade. Each Primarch was a master of warfare, strategy, and leadership.",
+      "tags": ["emperor", "primarchs", "space-marines", "genetic-engineering"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Characters",
+      "complexity": "Medium",
+      "word_count": 1923
+    },
+    {
+      "id": "hh_doc_003",
+      "title": "Causes of the Heresy",
+      "content": "The Heresy was caused by multiple factors: Horus' corruption by Chaos, the Emperor's secrecy about the Webway Project, perceived abandonment by the Emperor, and manipulation by the Ruinous Powers of Chaos.",
+      "tags": ["chaos", "corruption", "webway", "causes"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Analysis",
+      "complexity": "High",
+      "word_count": 2156
+    },
+    {
+      "id": "hh_doc_004",
+      "title": "Traitor Legions - Sons of Horus",
+      "content": "The Sons of Horus, formerly the Luna Wolves, were the XVI Legion led by Warmaster Horus Lupercal. They were the first to fall to Chaos and led the rebellion against the Imperium.",
+      "tags": ["sons-of-horus", "traitor-legions", "warmaster", "luna-wolves"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Forces",
+      "complexity": "Medium",
+      "word_count": 1634
+    },
+    {
+      "id": "hh_doc_005",
+      "title": "Traitor Legions - Word Bearers",
+      "content": "The Word Bearers Legion, led by Primarch Lorgar, were the first to fall to Chaos worship. They orchestrated the corruption of Horus and spread Chaos cults throughout the Imperium.",
+      "tags": ["word-bearers", "lorgar", "chaos-worship", "traitor-legions"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Forces",
+      "complexity": "Medium",
+      "word_count": 1876
+    },
+    {
+      "id": "hh_doc_006",
+      "title": "Loyalist Legions - Ultramarines",
+      "content": "The Ultramarines, led by Roboute Guilliman, were the largest Legion and remained loyal to the Emperor. They defended the Imperium Secundus while Horus marched on Terra.",
+      "tags": ["ultramarines", "guilliman", "loyalist-legions", "imperium-secundus"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Forces",
+      "complexity": "Medium",
+      "word_count": 2087
+    },
+    {
+      "id": "hh_doc_007",
+      "title": "Major Battles - Isstvan III",
+      "content": "The Isstvan III Atrocity was the first major battle of the Heresy, where loyalist elements within traitor Legions were purged through viral bombardment and ground assault.",
+      "tags": ["isstvan-iii", "major-battles", "atrocity", "purge"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Operations",
+      "complexity": "High",
+      "word_count": 2234
+    },
+    {
+      "id": "hh_doc_008",
+      "title": "Major Battles - Isstvan V Dropsite Massacre",
+      "content": "The Dropsite Massacre at Isstvan V saw three loyalist Legions ambushed and decimated by traitor forces, including Iron Hands, Salamanders, and Raven Guard. This event shattered loyalist response capability.",
+      "tags": ["isstvan-v", "dropsite-massacre", "major-battles", "betrayal"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Operations",
+      "complexity": "High",
+      "word_count": 2456
+    },
+    {
+      "id": "hh_doc_009",
+      "title": "Siege of Terra Overview",
+      "content": "The Siege of Terra was the final and most devastating campaign of the Heresy, where Horus' forces assaulted the Emperor's Palace on Terra itself. The siege lasted for 55 days.",
+      "tags": ["siege-of-terra", "final-battle", "terra", "imperial-palace"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Operations",
+      "complexity": "High",
+      "word_count": 3127
+    },
+    {
+      "id": "hh_doc_010",
+      "title": "Chaos Gods' Role",
+      "content": "The four Chaos Gods - Khorne, Tzeentch, Nurgle, and Slaanesh - manipulated events to corrupt Horus and his brothers. Each god offered power in exchange for worship and service.",
+      "tags": ["chaos-gods", "khorne", "tzeentch", "nurgle", "slaanesh"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Supernatural Forces",
+      "complexity": "High",
+      "word_count": 2167
+    },
+    {
+      "id": "hh_doc_011",
+      "title": "Key Characters - Horus Lupercal",
+      "content": "Horus Lupercal, Warmaster and Primarch of the Sons of Horus, was the Emperor's most beloved son who fell to Chaos corruption on Davin. He led the rebellion until his death aboard his flagship.",
+      "tags": ["horus-lupercal", "warmaster", "key-characters", "chaos-corruption"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Characters",
+      "complexity": "High",
+      "word_count": 2845
+    },
+    {
+      "id": "hh_doc_012",
+      "title": "Key Characters - Sanguinius",
+      "content": "Sanguinius, the Angel, Primarch of the Blood Angels, remained loyal to the Emperor and died defending the Imperial Palace. His sacrifice allowed the Emperor to confront Horus.",
+      "tags": ["sanguinius", "blood-angels", "key-characters", "sacrifice"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Characters",
+      "complexity": "Medium",
+      "word_count": 1987
+    },
+    {
+      "id": "hh_doc_013",
+      "title": "Aftermath and Legacy",
+      "content": "The Heresy's aftermath saw the Emperor entombed on the Golden Throne, the Traitor Legions fled to the Eye of Terror, and the Imperium reorganized under the Codex Astartes.",
+      "tags": ["aftermath", "golden-throne", "codex-astartes", "legacy"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Historical Impact",
+      "complexity": "High",
+      "word_count": 2678
+    },
+    {
+      "id": "hh_doc_014",
+      "title": "Timeline of the Heresy",
+      "content": "The Heresy spanned approximately 9 years, from Horus' wounding on Davin (005.M31) to his death aboard the Vengeful Spirit (014.M31). Each year saw escalating conflicts.",
+      "tags": ["timeline", "chronology", "heresy-events"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Historical Timeline",
+      "complexity": "Medium",
+      "word_count": 1756
+    },
+    {
+      "id": "hh_doc_015",
+      "title": "Notable Quotes",
+      "content": "It was treachery at first. To turn against brothers, to kill for personal advancement and power. But we have seen them, how their minds and bodies have been corrupted. This is no longer Horus's treachery. It is his heresy.",
+      "tags": ["quotes", "historical-records", "testimony"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Primary Sources",
+      "complexity": "Low",
+      "word_count": 486
+    },
+    {
+      "id": "hh_doc_016",
+      "title": "Space Marine Legions - Organization",
+      "content": "The original 20 Space Marine Legions were organized into companies and chapters, each numbering tens of thousands of warriors. Nine Legions turned traitor, nine remained loyal.",
+      "tags": ["space-marines", "legions", "organization", "military-structure"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Organization",
+      "complexity": "Medium",
+      "word_count": 1823
+    },
+    {
+      "id": "hh_doc_017",
+      "title": "The Great Crusade",
+      "content": "The Great Crusade was the Emperor's 200-year campaign to reunite humanity across the galaxy. It preceded the Heresy and set the stage for the conflict that would follow.",
+      "tags": ["great-crusade", "expansion", "pre-heresy", "unification"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Historical Background",
+      "complexity": "Medium",
+      "word_count": 2134
+    },
+    {
+      "id": "hh_doc_018",
+      "title": "Warmaster Horus - Rise to Power",
+      "content": "Horus earned the title of Warmaster through his unparalleled military victories and charismatic leadership. The Emperor appointed him supreme commander of all Imperial forces.",
+      "tags": ["horus", "warmaster", "appointment", "military-command"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Leadership",
+      "complexity": "Medium",
+      "word_count": 1945
+    },
+    {
+      "id": "hh_doc_019",
+      "title": "The Emperor of Mankind",
+      "content": "The Emperor was an immortal perpetual who guided humanity's evolution. His vision was to create a secular, rational Imperium free from superstition and the influence of Chaos.",
+      "tags": ["emperor", "perpetual", "vision", "secular-truth"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Characters",
+      "complexity": "High",
+      "word_count": 2567
+    },
+    {
+      "id": "hh_doc_020",
+      "title": "Isstvan Massacres",
+      "content": "The Isstvan system saw two major betrayals: the viral bombing of Isstvan III and the Dropsite Massacre at Isstvan V. These events crippled loyalist response for years.",
+      "tags": ["isstvan", "massacres", "betrayal", "major-battles"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Operations",
+      "complexity": "High",
+      "word_count": 2389
+    },
+    {
+      "id": "hh_doc_021",
+      "title": "Imperium Secundus",
+      "content": "Believing Terra had fallen, Roboute Guilliman established Imperium Secundus on Ultramar as a fallback government. Sanguinius was proclaimed Emperor regent.",
+      "tags": ["imperium-secundus", "guilliman", "ultramar", "contingency"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Political Developments",
+      "complexity": "High",
+      "word_count": 2178
+    },
+    {
+      "id": "hh_doc_022",
+      "title": "Mechanicum Schism",
+      "content": "The Mechanicum of Mars split during the Heresy, with Fabricator-General Kelbor-Hal leading the Dark Mechanicum in support of Horus while loyalist forges fought against them.",
+      "tags": ["mechanicum", "mars", "schism", "dark-mechanicum"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Technology and Industry",
+      "complexity": "Medium",
+      "word_count": 1867
+    },
+    {
+      "id": "hh_doc_023",
+      "title": "Psychic Powers in the Heresy",
+      "content": "Psychic powers played a crucial role in the Heresy, from Magnus' warning to the corruption of Legions. The Council of Nikaea's edict against psykers was widely violated.",
+      "tags": ["psychic-powers", "warp", "council-of-nikaea", "magnus"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Supernatural Elements",
+      "complexity": "High",
+      "word_count": 2234
+    },
+    {
+      "id": "hh_doc_024",
+      "title": "Weapons and Warfare",
+      "content": "The Heresy saw the deployment of the most advanced weapons: Titans, power armor, plasma weaponry, and archaeotech. Both sides used virus bombs and orbital bombardment.",
+      "tags": ["weapons", "warfare", "technology", "titans"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Technology",
+      "complexity": "Medium",
+      "word_count": 1945
+    },
+    {
+      "id": "hh_doc_025",
+      "title": "Notable Heroes - Garviel Loken",
+      "content": "Captain Garviel Loken of the Sons of Horus remained loyal despite his Legion's fall. He became a founding member of the Knights-Errant, warriors who hunted traitors.",
+      "tags": ["garviel-loken", "knights-errant", "heroes", "loyalty"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Characters",
+      "complexity": "Medium",
+      "word_count": 1678
+    },
+    {
+      "id": "hh_doc_026",
+      "title": "Chaos Champions",
+      "content": "Chaos Champions like Abaddon, Khârn, Lucius, and Typhon rose to prominence during the Heresy, becoming legendary warlords who would terrorize the galaxy for millennia.",
+      "tags": ["chaos-champions", "abaddon", "kharn", "legendary-warriors"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Characters",
+      "complexity": "Medium",
+      "word_count": 1856
+    },
+    {
+      "id": "hh_doc_027",
+      "title": "Xenos Involvement",
+      "content": "While the Heresy was primarily human vs human, various xenos races were affected or involved: Eldar seers foresaw the conflict, Orks took advantage of the chaos, and Cabal attempted intervention.",
+      "tags": ["xenos", "eldar", "orks", "cabal"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "External Factors",
+      "complexity": "Medium",
+      "word_count": 1734
+    },
+    {
+      "id": "hh_doc_028",
+      "title": "Imperial Army Forces",
+      "content": "The Imperial Army (later Imperial Guard) saw billions of soldiers fight on both sides. Entire regiments turned traitor while others remained fanatically loyal to the Emperor.",
+      "tags": ["imperial-army", "mortal-forces", "regiments", "ground-forces"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Forces",
+      "complexity": "Medium",
+      "word_count": 1823
+    },
+    {
+      "id": "hh_doc_029",
+      "title": "Lost and Purged Legions",
+      "content": "Two Legions, the II and XI, were expunged from Imperial records before the Heresy. Their fate remains one of the great mysteries, though hints suggest catastrophic failures.",
+      "tags": ["lost-legions", "mysteries", "expunged-records", "forbidden-knowledge"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Mysteries",
+      "complexity": "High",
+      "word_count": 1456
+    },
+    {
+      "id": "hh_doc_030",
+      "title": "The Ruinstorm",
+      "content": "The Ruinstorm was a massive warp storm created by the Isstvan massacres that cut off large portions of the galaxy, preventing loyalist forces from reaching Terra in time.",
+      "tags": ["ruinstorm", "warp-storm", "isolation", "strategic-impact"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Supernatural Events",
+      "complexity": "High",
+      "word_count": 2067
+    },
+    {
+      "id": "hh_doc_031",
+      "title": "Civil War Impact on Worlds",
+      "content": "Countless worlds were devastated during the Heresy. Some were virus-bombed, others saw brother fight brother, and many were lost to warp storms or daemonic incursions.",
+      "tags": ["civil-war", "planetary-devastation", "casualties", "impact"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Societal Impact",
+      "complexity": "High",
+      "word_count": 2234
+    },
+    {
+      "id": "hh_doc_032",
+      "title": "Remembrancers",
+      "content": "Remembrancers were artists, poets, and historians who accompanied the Great Crusade to document humanity's expansion. Many witnessed the Heresy firsthand.",
+      "tags": ["remembrancers", "artists", "historians", "documentation"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Cultural Elements",
+      "complexity": "Low",
+      "word_count": 1345
+    },
+    {
+      "id": "hh_doc_033",
+      "title": "Heresy Literature and Sources",
+      "content": "The Horus Heresy has been documented in dozens of novels, art books, and game supplements. The Black Library series spans over 50 books chronicling the conflict.",
+      "tags": ["literature", "black-library", "sources", "documentation"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Meta Information",
+      "complexity": "Low",
+      "word_count": 987
+    },
+    {
+      "id": "hh_doc_034",
+      "title": "Traitor Legion - Emperor's Children",
+      "content": "The Emperor's Children, led by Fulgrim, fell to Slaanesh through their pursuit of perfection. They became depraved warriors seeking only sensation and excess.",
+      "tags": ["emperors-children", "fulgrim", "slaanesh", "traitor-legions"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Forces",
+      "complexity": "Medium",
+      "word_count": 1923
+    },
+    {
+      "id": "hh_doc_035",
+      "title": "Traitor Legion - Death Guard",
+      "content": "The Death Guard under Mortarion fell to Nurgle's plague. They became bloated, diseased warriors spreading contagion across the galaxy.",
+      "tags": ["death-guard", "mortarion", "nurgle", "plague", "traitor-legions"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Forces",
+      "complexity": "Medium",
+      "word_count": 1867
+    },
+    {
+      "id": "hh_doc_036",
+      "title": "Traitor Legion - World Eaters",
+      "content": "The World Eaters, led by Angron, were already brutal before Khorne's corruption. The Butcher's Nails implants drove them to berserker rage.",
+      "tags": ["world-eaters", "angron", "khorne", "berserkers", "traitor-legions"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Forces",
+      "complexity": "Medium",
+      "word_count": 1756
+    },
+    {
+      "id": "hh_doc_037",
+      "title": "Traitor Legion - Thousand Sons",
+      "content": "Magnus the Red's Thousand Sons fell through their quest for knowledge. The Rubric of Ahriman turned most into mindless automata.",
+      "tags": ["thousand-sons", "magnus", "tzeentch", "sorcery", "traitor-legions"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Forces",
+      "complexity": "High",
+      "word_count": 2134
+    },
+    {
+      "id": "hh_doc_038",
+      "title": "Loyalist Legion - Imperial Fists",
+      "content": "The Imperial Fists under Rogal Dorn were the Emperor's Praetorians, defending Terra and the Imperial Palace during the final siege.",
+      "tags": ["imperial-fists", "rogal-dorn", "loyalist-legions", "defense"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Forces",
+      "complexity": "Medium",
+      "word_count": 1892
+    },
+    {
+      "id": "hh_doc_039",
+      "title": "Loyalist Legion - Blood Angels",
+      "content": "The Blood Angels, led by Sanguinius, fought heroically throughout the Heresy. Their Primarch's death fighting Horus haunts them to this day.",
+      "tags": ["blood-angels", "sanguinius", "loyalist-legions", "sacrifice"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Military Forces",
+      "complexity": "Medium",
+      "word_count": 1967
+    },
+    {
+      "id": "hh_doc_040",
+      "title": "Final Battle - Emperor vs Horus",
+      "content": "The final confrontation between the Emperor and Horus aboard the Vengeful Spirit ended with Horus' death and the Emperor's mortal wounding. Sanguinius' sacrifice allowed this confrontation.",
+      "tags": ["final-battle", "emperor", "horus", "vengeful-spirit", "conclusion"],
+      "source": "Warhammer 40k Fandom Wiki",
+      "category": "Historical Events",
+      "complexity": "High",
+      "word_count": 2456
+    }
+  ],
+  "metadata": {
+    "total_documents": 40,
+    "source": "Warhammer 40k Horus Heresy Knowledge Base",
+    "categories": [
+      "Historical Overview",
+      "Characters",
+      "Military Forces",
+      "Military Operations",
+      "Supernatural Forces",
+      "Technology and Industry",
+      "Political Developments",
+      "Cultural Elements"
+    ],
+    "total_word_count": 79847,
+    "average_word_count": 1996,
+    "tags_count": 156,
+    "generated_date": "2025-10-08",
+    "demo_version": "Horus Heresy Knowledge Base v1.0"
+  }
+}
+
