@@ -11,6 +11,15 @@ from ingestion.tagging.tag_collection import TagCollection, TagType
 logger = logging.getLogger(__name__)
 
 
+# Import CorpusAnalyzer conditionally to avoid circular imports
+try:
+    from ingestion.analysis import CorpusAnalyzer, CorpusAnalysisConfig
+    CORPUS_ANALYSIS_AVAILABLE = True
+except ImportError:
+    CORPUS_ANALYSIS_AVAILABLE = False
+    logger.warning("CorpusAnalyzer not available - contextual tagging will be limited")
+
+
 @dataclass
 class UniversalTaggingConfig:
     """Configuration for universal tagging."""
@@ -23,9 +32,12 @@ class UniversalTaggingConfig:
     max_tags_per_document: int = 100
     max_contextual_tags: int = 50
     
-    # Preprocessing
-    enable_preprocessing: bool = False  # Set to True when CorpusAnalyzer is available
+    # Corpus analysis / Preprocessing
+    enable_preprocessing: bool = True  # Enable intelligent contextual tagging
     preprocessing_sample_size: int = 50
+    min_entity_frequency: int = 3
+    enable_relationships: bool = True
+    enable_knowledge_graph: bool = True
     
     # Source-specific
     source_specific_prefixes: bool = True  # Use source-specific tag prefixes
@@ -122,36 +134,46 @@ class UniversalTaggingManager:
         self.tag_collection = TagCollection.empty()
         
         # Step 1: Ensure base tags exist
-        logger.info("   Step 1/4: Applying base tags...")
+        logger.info("   Step 1/5: Applying base tags...")
         documents = self._ensure_base_tags(documents, source_type)
         self._collect_tags(documents, TagType.DEFAULT)
         logger.info(f"   ✓ Base tags: {len(self.tag_collection.default_tags)} unique")
         
-        # Step 2: Apply contextual tags (if corpus analysis available)
+        # Step 2: Run corpus analysis if enabled and not provided
+        if self.config.enable_preprocessing and not corpus_analysis and CORPUS_ANALYSIS_AVAILABLE:
+            logger.info("   Step 2/5: Running corpus analysis...")
+            corpus_analysis = await self._run_corpus_analysis(documents, source_type)
+            logger.info(f"   ✓ Analysis complete: {corpus_analysis.get('total_entities', 0)} entities found")
+        elif corpus_analysis:
+            logger.info("   Step 2/5: Using provided corpus analysis...")
+        else:
+            logger.info("   Step 2/5: Skipping corpus analysis (disabled or unavailable)")
+        
+        # Step 3: Apply contextual tags (if corpus analysis available)
         if corpus_analysis:
-            logger.info("   Step 2/4: Applying contextual tags...")
+            logger.info("   Step 3/5: Applying contextual tags...")
             documents = self._apply_contextual_tags(documents, corpus_analysis, source_type)
             self._collect_tags(documents, TagType.CONTEXTUAL)
             logger.info(f"   ✓ Contextual tags: {len(self.tag_collection.contextual_tags)} unique")
         else:
-            logger.info("   Step 2/4: Skipping contextual tags (no analysis)")
+            logger.info("   Step 3/5: No contextual tags")
         
-        # Step 3: Apply user-defined tags
+        # Step 4: Apply user-defined tags
         tags_to_apply = user_tags or self.config.user_tags
         if tags_to_apply and self.config.enable_user_tags:
-            logger.info(f"   Step 3/4: Applying {len(tags_to_apply)} user-defined tags...")
+            logger.info(f"   Step 4/5: Applying {len(tags_to_apply)} user-defined tags...")
             documents = self._apply_user_tags(documents, tags_to_apply)
             self.tag_collection.user_defined_tags = tags_to_apply
             logger.info(f"   ✓ User-defined tags: {len(tags_to_apply)}")
         else:
-            logger.info("   Step 3/4: No user-defined tags")
+            logger.info("   Step 4/5: No user-defined tags")
         
-        # Step 4: Finalize tags
-        logger.info("   Step 4/4: Finalizing tags...")
+        # Step 5: Finalize tags
+        logger.info("   Step 5/5: Finalizing tags...")
         documents = self._finalize_tags(documents)
         self.tag_collection.deduplicate()
         
-        logger.info(f"✓ Tagging complete!")
+        logger.info(f"✅ Tagging complete!")
         logger.info(f"   Total unique tags: {self.tag_collection.total_count()}")
         
         return documents, self.tag_collection
@@ -340,6 +362,56 @@ class UniversalTaggingManager:
                 if not any(t.startswith(p) for p in self.DEFAULT_TAG_PREFIXES)
                 and t not in self.config.user_tags
             ]
+    
+    async def _run_corpus_analysis(
+        self,
+        documents: List[NormalizedDocument],
+        source_type: str
+    ) -> Dict:
+        """
+        Run corpus analysis on documents.
+        
+        Args:
+            documents: Documents to analyze
+            source_type: Source type for analysis
+        
+        Returns:
+            Dictionary with analysis results compatible with _apply_contextual_tags
+        """
+        if not CORPUS_ANALYSIS_AVAILABLE:
+            logger.warning("CorpusAnalyzer not available")
+            return {}
+        
+        try:
+            # Create analyzer
+            from ingestion.analysis import CorpusAnalysisConfig
+            
+            analysis_config = CorpusAnalysisConfig(
+                sample_size=self.config.preprocessing_sample_size,
+                min_entity_frequency=self.config.min_entity_frequency,
+                extract_relationships=self.config.enable_relationships,
+                build_knowledge_graph=self.config.enable_knowledge_graph,
+                max_contextual_tags=self.config.max_contextual_tags
+            )
+            
+            analyzer = CorpusAnalyzer(analysis_config)
+            
+            # Run analysis
+            result = await analyzer.analyze(documents)
+            
+            # Convert to format expected by _apply_contextual_tags
+            return {
+                'entities_by_type': result.entities_by_type,
+                'common_topics': result.common_topics,
+                'relationships': result.relationships,
+                'knowledge_graph': result.knowledge_graph,
+                'total_entities': result.total_entities,
+                'documents_analyzed': result.documents_analyzed
+            }
+        
+        except Exception as e:
+            logger.error(f"Error running corpus analysis: {e}")
+            return {}
     
     def _normalize_tag(self, text: str) -> str:
         """
