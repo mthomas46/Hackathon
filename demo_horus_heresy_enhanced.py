@@ -22,6 +22,10 @@ from typing import Dict, Any, List, Optional
 from ingestion.fandom_ingestor import FandomWikiIngestor
 from ingestion.models import NormalizedDocument
 from ingestion.tagging import UniversalTaggingConfig
+from ingestion.utils.document_processor import DocumentProcessor
+from ingestion.utils.metrics_tracker import MetricsTracker
+import subprocess
+import sys
 
 
 class Colors:
@@ -47,6 +51,7 @@ class EnhancedHorusHeresyDemo:
             "mcp-provisioner": "http://localhost:5400",
             "mcp-training-coordinator": "http://localhost:5600",
             "mcp-gateway": "http://localhost:8001",
+            "summarizer-hub": "http://localhost:5160",
         }
         
         # Create directories
@@ -62,6 +67,11 @@ class EnhancedHorusHeresyDemo:
         self.documents_ingested: List[NormalizedDocument] = []
         self.tag_collection = None
         self.service_status = {}
+        self.doc_processor = DocumentProcessor()
+        
+        # Metrics tracking
+        self.metrics = MetricsTracker()
+        self.metrics.usability.documents_target = 12  # Horus Heresy doc suite
     
     def print_header(self, text: str):
         """Print section header."""
@@ -89,10 +99,33 @@ class EnhancedHorusHeresyDemo:
         """Check if service is healthy."""
         for endpoint in ['/health', '/api/health', '/api/v1/health']:
             try:
+                start = time.time()
                 response = await self.client.get(f"{base_url}{endpoint}", timeout=2.0)
+                duration_ms = (time.time() - start) * 1000
+                
+                # Track service interaction
+                self.metrics.track_service_interaction(
+                    service=service_name,
+                    endpoint=endpoint,
+                    method="GET",
+                    duration_ms=duration_ms,
+                    status_code=response.status_code,
+                    success=response.status_code == 200
+                )
+                
                 if response.status_code == 200:
                     return True
-            except:
+            except Exception as e:
+                # Track failed interaction
+                self.metrics.track_service_interaction(
+                    service=service_name,
+                    endpoint=endpoint,
+                    method="GET",
+                    duration_ms=0,
+                    status_code=0,
+                    success=False,
+                    error=str(e)
+                )
                 continue
         return False
     
