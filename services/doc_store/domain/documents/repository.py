@@ -108,6 +108,36 @@ class DocumentRepository(SqlRepository[Document]):
         )
         return self._row_to_entity(row) if row else None
 
+    async def search_by_content(self, query: str, limit: int = 50) -> List[Document]:
+        """
+        Search documents by content using full-text search.
+        
+        Args:
+            query: Search query string
+            limit: Maximum number of results
+            
+        Returns:
+            List of matching Document entities
+        """
+        # Use the search_documents utility function (synchronous)
+        results = search_documents(query, limit)
+        
+        # Convert dict results to Document entities
+        documents = []
+        for result in results:
+            try:
+                # Get the full document by ID to ensure we have all fields
+                doc_id = result.get('id')
+                if doc_id:
+                    doc = await self.find_by_id(doc_id)
+                    if doc:
+                        documents.append(doc)
+            except Exception as e:
+                print(f"Error converting search result to Document: {e}")
+                continue
+        
+        return documents
+
     def search_documents(self, query: str, limit: int = 50) -> List[Dict[str, Any]]:
         """Full-text search documents."""
         return search_documents(query, limit)

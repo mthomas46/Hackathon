@@ -136,6 +136,9 @@ async def root():\n\
     }\n\
 ' > /app/main.py
 
+# Copy the mcp_response_generator.py file
+COPY mcp_response_generator.py /app/mcp_response_generator.py
+
 EXPOSE 8080
 EXPOSE 3000
 

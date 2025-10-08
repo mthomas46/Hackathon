@@ -71,7 +71,7 @@ class EnhancedHorusHeresyDemo:
         
         # Metrics tracking
         self.metrics = MetricsTracker()
-        self.metrics.usability.documents_target = 12  # Horus Heresy doc suite
+        self.metrics.usability.documents_target = 30  # Horus Heresy doc suite (expanded)
     
     def print_header(self, text: str):
         """Print section header."""
@@ -789,7 +789,7 @@ class EnhancedHorusHeresyDemo:
     
     async def generate_documentation_suite(self, test_query_first: bool = True):
         """
-        Generate 12-document suite by querying the trained MCP.
+        Generate 30-document suite by querying the trained MCP.
         
         Args:
             test_query_first: If True, test MCP capability before generating docs (FAIL FAST!)
@@ -822,9 +822,10 @@ class EnhancedHorusHeresyDemo:
                 self.print_error("\n" + "="*70)
                 raise RuntimeError("MCP query test failed - cannot continue demo") from e
         
-        self.print_info(f"📝 Generating 12-document suite via MCP queries...")
+        self.print_info(f"📝 Generating 30-document suite via MCP queries...")
         
         doc_specs = [
+            # Original 12 documents
             ("01_HORUS_HERESY_OVERVIEW.md", ['horus', 'heresy', 'war', 'great crusade', 'rebellion'], 
              "Provide a comprehensive overview of the Horus Heresy, including what it was, when it occurred, and its significance"),
             ("02_THE_EMPEROR_AND_PRIMARCHS.md", ['emperor', 'primarch', 'mankind', 'humanity', 'gene-seed'],
@@ -848,7 +849,45 @@ class EnhancedHorusHeresyDemo:
             ("11_TIMELINE.md", ['timeline', 'chronology', 'year', 'date', 'sequence', 'event'],
              "Provide a chronological timeline of major events during the Horus Heresy"),
             ("12_NOTABLE_QUOTES.md", ['quote', 'speech', 'said', 'words', 'declaration'],
-             "Collection of notable quotes from key moments and characters in the Horus Heresy")
+             "Collection of notable quotes from key moments and characters in the Horus Heresy"),
+            
+            # Additional 18 documents for expanded coverage
+            ("13_SPACE_MARINE_LEGIONS.md", ['space marine', 'legion', 'astartes', 'warriors', 'organization'],
+             "Describe the structure, organization, and nature of the Space Marine Legions before and during the Heresy"),
+            ("14_THE_GREAT_CRUSADE.md", ['great crusade', 'expansion', 'conquest', 'humanity', 'galaxy'],
+             "Detail the Great Crusade that preceded the Heresy, its goals, achievements, and how it set the stage for the civil war"),
+            ("15_WARMASTER_HORUS.md", ['horus', 'warmaster', 'lupercal', 'primarch', 'fall'],
+             "Profile Horus Lupercal, his rise to Warmaster, his fall to Chaos, and his role as leader of the rebellion"),
+            ("16_THE_EMPEROR.md", ['emperor', 'imperium', 'master of mankind', 'ruler', 'golden throne'],
+             "Describe the Emperor of Mankind, his vision for humanity, and his role during the Heresy"),
+            ("17_ISSTVAN_MASSACRES.md", ['isstvan', 'dropsite massacre', 'betrayal', 'ambush', 'treachery'],
+             "Detail the Isstvan III and V massacres, the first major battles of the Heresy"),
+            ("18_IMPERIUM_SECUNDUS.md", ['imperium secundus', 'ultramar', 'guilliman', 'backup imperium'],
+             "Explain Imperium Secundus, the backup empire created by Roboute Guilliman during the Heresy"),
+            ("19_MECHANICUM_SCHISM.md", ['mechanicum', 'mars', 'adeptus mechanicus', 'tech priests', 'forge worlds'],
+             "Describe the Mechanicum civil war on Mars and the role of the Adeptus Mechanicus in the Heresy"),
+            ("20_PSYCHIC_POWERS.md", ['psyker', 'warp', 'psychic', 'librarian', 'sorcery'],
+             "Discuss the role of psychic powers, the Warp, and sorcery during the Horus Heresy"),
+            ("21_WEAPONS_AND_WARFARE.md", ['weapons', 'technology', 'warfare', 'tactics', 'armor'],
+             "Detail the weapons, technology, and methods of warfare employed during the Heresy"),
+            ("22_NOTABLE_HEROES.md", ['hero', 'champion', 'warrior', 'legend', 'commander'],
+             "Profile notable heroes and champions who fought for the loyalist cause"),
+            ("23_CHAOS_CHAMPIONS.md", ['chaos champion', 'dark apostle', 'corrupted', 'daemon prince'],
+             "Profile notable Chaos champions and corrupted warriors who served the traitor cause"),
+            ("24_XENOS_INVOLVEMENT.md", ['xenos', 'alien', 'eldar', 'ork', 'other races'],
+             "Discuss the involvement of xenos races during the Horus Heresy and their impact on events"),
+            ("25_IMPERIAL_ARMY.md", ['imperial army', 'human soldiers', 'regiments', 'auxilia'],
+             "Describe the role of the Imperial Army and mortal soldiers in the Heresy"),
+            ("26_LOST_AND_PURGED.md", ['lost legions', 'purged', 'forgotten', 'expunged'],
+             "Discuss the mystery of the two lost and purged Legions and their relevance to the Heresy"),
+            ("27_RUINSTORM.md", ['ruinstorm', 'warp storm', 'immaterium', 'chaos rift'],
+             "Explain the Ruinstorm, the massive warp storm that divided the galaxy during the Heresy"),
+            ("28_CIVIL_WAR_IMPACT.md", ['civil war', 'brother war', 'internal conflict', 'division'],
+             "Analyze the impact of the civil war on the Imperium and humanity as a whole"),
+            ("29_REMEMBRANCERS.md", ['remembrancer', 'iterator', 'historian', 'artist', 'chronicler'],
+             "Describe the role of Remembrancers and Iterators in documenting the Great Crusade and Heresy"),
+            ("30_HERESY_LITERATURE.md", ['book', 'literature', 'horus heresy series', 'black library', 'novels'],
+             "Discuss the Horus Heresy book series and other literature about this pivotal period")
         ]
         
         generated = 0
@@ -925,9 +964,9 @@ class EnhancedHorusHeresyDemo:
             generated += 1
         
         # Summary
-        self.print_success(f"\n✓ Generated {generated}/12 documents")
-        self.print_info(f"   • MCP queries successful: {mcp_query_success}/12")
-        self.print_info(f"   • Fallback used: {fallback_used}/12")
+        self.print_success(f"\n✓ Generated {generated}/30 documents")
+        self.print_info(f"   • MCP queries successful: {mcp_query_success}/30")
+        self.print_info(f"   • Fallback used: {fallback_used}/30")
         self.print_info(f"   📁 Saved to: {self.docs_dir.resolve()}")
         
         return generated
@@ -1120,7 +1159,7 @@ class EnhancedHorusHeresyDemo:
             print(f"  • MCP ID: {self.mcp_id}")
             print(f"  • Pages Crawled: {len(self.documents_ingested)}")
             print(f"  • Unique Tags: {total_tags} (+ {hierarchical_tags} hierarchical)")
-            print(f"  • Documents Generated: {docs_generated}/12")
+            print(f"  • Documents Generated: {docs_generated}/30")
             print(f"  • Execution Time: {elapsed:.1f}s")
             print(f"  • Peak Memory: {self.metrics.runtime.peak_memory_mb:.1f} MB")
             print(f"  • Avg CPU: {self.metrics.runtime.avg_cpu_percent:.1f}%\n")
@@ -1250,9 +1289,9 @@ async def main():
     """Main entry point."""
     demo = EnhancedHorusHeresyDemo()
     
-    # SMALL crawl for deduplication testing
-    # Depth=1, surface=10: ~10-50 pages in ~2-3 minutes
-    await demo.run_demo(max_depth=1, max_surface_links=10)
+    # EXPANDED crawl for comprehensive coverage
+    # Depth=2, surface=20: Enhanced coverage for 30-document suite
+    await demo.run_demo(max_depth=2, max_surface_links=20)
 
 
 if __name__ == "__main__":
