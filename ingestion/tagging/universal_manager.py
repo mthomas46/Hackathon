@@ -466,7 +466,7 @@ class UniversalTaggingManager:
                 )
             
             # Check if summarizer-hub is available
-            is_healthy = await self.hierarchical_extractor.check_health()
+            is_healthy = await self.hierarchical_extractor.check_service_health()
             if not is_healthy:
                 logger.warning("Summarizer-hub not available, skipping hierarchical topics")
                 return []
