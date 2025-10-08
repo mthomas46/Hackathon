@@ -31,6 +31,7 @@ class DocumentRepository(SqlRepository[Document]):
             content=row["content"],
             content_hash=row["content_hash"],
             metadata=json.loads(row["metadata"] or "{}"),
+            tags=json.loads(row.get("tags") or "[]"),  # ✅ CRITICAL FIX: Parse tags from JSON
             correlation_id=row.get("correlation_id"),
             created_at=(
                 datetime.fromisoformat(row["created_at"].replace("Z", "+00:00"))
@@ -51,6 +52,7 @@ class DocumentRepository(SqlRepository[Document]):
             "content": entity.content,
             "content_hash": entity.content_hash,
             "metadata": json.dumps(entity.metadata),
+            "tags": json.dumps(entity.tags),  # ✅ CRITICAL FIX: Serialize tags to JSON
             "correlation_id": entity.correlation_id,
             "created_at": entity.created_at.isoformat(),
             "updated_at": entity.updated_at.isoformat() if entity.updated_at else None,
