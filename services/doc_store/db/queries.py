@@ -221,6 +221,7 @@ def insert_document(
     content: str,
     content_hash: str,
     metadata: Dict[str, Any],
+    tags: Optional[List[str]] = None,  # ✅ CRITICAL FIX: Add tags parameter
     correlation_id: Optional[str] = None,
 ) -> None:
     """Insert a new document."""
@@ -228,14 +229,15 @@ def insert_document(
 
     execute_query(
         """
-        INSERT INTO documents (id, content, content_hash, metadata, correlation_id, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO documents (id, content, content_hash, metadata, tags, correlation_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             doc_id,
             content,
             content_hash,
             json.dumps(metadata),
+            json.dumps(tags or []),  # ✅ CRITICAL FIX: Store tags as JSON
             correlation_id,
             utc_now().isoformat(),
             utc_now().isoformat(),

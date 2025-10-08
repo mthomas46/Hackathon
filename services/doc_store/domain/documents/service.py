@@ -76,12 +76,18 @@ class DocumentService(BaseService[Document]):
         # Validate metadata and correlation ID
         metadata = validate_metadata(data.get("metadata", {}))
         correlation_id = validate_correlation_id(data.get("correlation_id"))
+        
+        # Extract tags (ensure it's a list)
+        tags = data.get("tags", [])
+        if not isinstance(tags, list):
+            tags = []
 
         return Document(
             id=entity_id,
             content=content,
             content_hash=content_hash,
             metadata=metadata,
+            tags=tags,  # ✅ CRITICAL FIX: Include tags
             correlation_id=correlation_id,
         )
 

@@ -22,6 +22,7 @@ class Document:
     content: str
     content_hash: str
     metadata: Dict[str, Any] = field(default_factory=dict, hash=False)
+    tags: List[str] = field(default_factory=list, hash=False)  # ✅ CRITICAL FIX: Add tags field
     correlation_id: Optional[str] = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc), hash=False)
     updated_at: Optional[datetime] = field(default=None, hash=False)
@@ -35,11 +36,13 @@ class Document:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
+        import json
         return {
             "id": self.id,
             "content": self.content,
             "content_hash": self.content_hash,
-            "metadata": self.metadata,
+            "metadata": json.dumps(self.metadata),  # Serialize for database
+            "tags": json.dumps(self.tags),  # ✅ CRITICAL FIX: Serialize tags for database
             "correlation_id": self.correlation_id,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,

@@ -97,12 +97,16 @@ class DocumentHandlers(AbstractDocumentHandlers):
 
             # Process metadata
             metadata = request.metadata if isinstance(request.metadata, dict) else {}
+            
+            # Process tags (ensure it's a list, handle None)
+            tags = request.tags if request.tags is not None else []
 
             # Create document - using BaseService.create() method
             document = await self.service.create({
                 "id": request.id,
                 "content": request.content,
-                "metadata": metadata
+                "metadata": metadata,
+                "tags": tags  # ✅ CRITICAL FIX: Pass tags to service
             })
 
             # Return direct DocumentResponse without wrapper

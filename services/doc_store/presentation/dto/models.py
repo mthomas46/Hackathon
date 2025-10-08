@@ -16,6 +16,7 @@ class DocumentRequest(BaseModel):
     content: str
     content_hash: Optional[str] = None
     metadata: Optional[Any] = None
+    tags: Optional[List[str]] = None  # ✅ CRITICAL FIX: Default to None, not []
     correlation_id: Optional[str] = None
 
 
