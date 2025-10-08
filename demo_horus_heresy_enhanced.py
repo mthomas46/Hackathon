@@ -152,14 +152,15 @@ class EnhancedHorusHeresyDemo:
         
         return self.service_status
     
-    async def provision_mcp_with_retry(self, retries: int = 3) -> tuple[str, bool]:
+    async def provision_mcp_with_retry(self, retries: int = 3) -> tuple[str, bool, Optional[str]]:
         """
         Provision MCP with retry logic.
         
         Returns:
-            tuple[str, bool]: (mcp_id, is_deployed)
+            tuple[str, bool, Optional[str]]: (mcp_id, is_deployed, mcp_url)
                 - mcp_id: The MCP instance ID
                 - is_deployed: True if MCP container actually deployed, False otherwise
+                - mcp_url: Direct URL to query the MCP (http://localhost:PORT)
         """
         self.print_info("📦 Provisioning Tier-2 MCP (4GB RAM, 2x CPU)...")
         
@@ -167,7 +168,7 @@ class EnhancedHorusHeresyDemo:
             fallback_id = f"mcp-horus-{uuid.uuid4().hex[:8]}"
             self.print_error(f"   ❌ Provisioner offline! Cannot create real MCP.")
             self.print_error(f"   This demo requires actual MCP deployment to test query processing.")
-            return fallback_id, False
+            return fallback_id, False, None
         
         for attempt in range(retries):
             try:
@@ -201,24 +202,61 @@ class EnhancedHorusHeresyDemo:
                         is_deployed = (state.lower() in ['hot', 'warming']) and container_id is not None
                         
                         if is_deployed:
+                            # Get MCP container port using Docker
+                            mcp_url = await self._get_mcp_url(container_id)
                             self.print_success(f"✓ MCP deployed: {mcp_id} (state: {state})")
-                            return mcp_id, True
+                            if mcp_url:
+                                self.print_info(f"   MCP URL: {mcp_url}")
+                            return mcp_id, True, mcp_url
                         else:
                             self.print_warning(f"⚠️  MCP created but not deployed: {mcp_id} (state: {state})")
                             self.print_warning(f"   Container ID: {container_id or 'None'}")
                             self.print_error(f"   ❌ Demo requires actual MCP deployment to test queries!")
-                            return mcp_id, False
+                            return mcp_id, False, None
                     else:
                         mcp_id = data.get('mcp_id') or data.get('id')
                         self.print_warning(f"⚠️  MCP response missing deployment details")
-                        return mcp_id, False
+                        return mcp_id, False, None
             except Exception as e:
                 self.print_warning(f"   Attempt {attempt + 1} failed: {str(e)[:100]}")
         
         # All retries failed
         self.print_error(f"❌ Failed to provision MCP after {retries} attempts")
         self.print_error(f"   This demo requires actual MCP deployment to test query processing.")
-        return None, False
+        return None, False, None
+    
+    async def _get_mcp_url(self, container_id: str) -> Optional[str]:
+        """
+        Get the direct URL to query an MCP container.
+        
+        Args:
+            container_id: Docker container ID
+            
+        Returns:
+            URL like http://localhost:54928 or None if not found
+        """
+        try:
+            # Use docker port command to get port mapping
+            result = subprocess.run(
+                ['docker', 'port', container_id],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.returncode == 0:
+                # Parse output like "3000/tcp -> 0.0.0.0:54928"
+                for line in result.stdout.split('\n'):
+                    if '3000/tcp' in line or '8080/tcp' in line:
+                        port = line.split(':')[-1].strip()
+                        if port:
+                            return f"http://localhost:{port}"
+            
+            return None
+            
+        except Exception as e:
+            self.print_warning(f"   Could not get MCP port: {str(e)[:100]}")
+            return None
     
     async def ingest_documents_with_retry(self, documents: List[NormalizedDocument]):
         """
@@ -281,38 +319,56 @@ class EnhancedHorusHeresyDemo:
             total_prevented = deduplicated_count + skipped_duplicates
             self.print_info(f"   🛡️  Duplicate prevention: {total_prevented} duplicates blocked at ingestion")
     
-    async def query_mcp_for_document(self, query: str, max_results: int = 10) -> Optional[Dict[str, Any]]:
+    async def query_mcp_for_document(self, query: str, max_results: int = 10, fail_on_error: bool = False) -> Optional[Dict[str, Any]]:
         """
-        Query the trained MCP via gateway (NEW!).
+        Query the trained MCP DIRECTLY (bypassing gateway complexity).
         
-        This replaces keyword scoring with actual MCP semantic search.
+        Args:
+            query: Query text
+            max_results: Maximum number of results
+            fail_on_error: If True, raise exception on failure
+            
+        Returns:
+            MCP response dict or None
+            
+        Raises:
+            RuntimeError: If fail_on_error=True and query fails
         """
+        if not self.mcp_url:
+            error_msg = "MCP URL not available - cannot query MCP"
+            if fail_on_error:
+                raise RuntimeError(error_msg)
+            self.print_warning(error_msg)
+            return None
+        
         try:
+            # Query MCP directly at its container URL
             response = await self.client.post(
-                f"{self.services['mcp-gateway']}/api/v1/route",
+                f"{self.mcp_url}/api/query",
                 json={
-                    "mcp_id": self.mcp_id,
-                    "method": "POST",
-                    "path": "/api/query",
-                    "body": {
-                        "query": query,
-                        "max_results": max_results,
-                        "min_relevance": 0.3
-                    },
-                    "timeout_seconds": 30
-                }
+                    "query": query,
+                    "max_results": max_results,
+                    "min_relevance": 0.3
+                },
+                timeout=10.0
             )
             
             if response.status_code == 200:
                 result = response.json()
-                if result.get("success"):
-                    return result.get("body", {})
-            
-            self.print_warning(f"MCP query failed: {response.status_code}")
-            return None
+                # MCP returns {mcp_id, query, answer, confidence, sources}
+                return result
+            else:
+                error_msg = f"MCP query failed: {response.status_code}"
+                if fail_on_error:
+                    raise RuntimeError(error_msg)
+                self.print_warning(error_msg)
+                return None
             
         except Exception as e:
-            self.print_warning(f"MCP query error: {e}")
+            error_msg = f"MCP query error: {e}"
+            if fail_on_error:
+                raise RuntimeError(error_msg) from e
+            self.print_warning(error_msg)
             return None
     
     def deduplicate_documents(self, docs: List[NormalizedDocument]) -> List[NormalizedDocument]:
@@ -577,8 +633,41 @@ class EnhancedHorusHeresyDemo:
         
         return ''.join(content)
     
-    async def generate_documentation_suite(self):
-        """Generate 12-document suite by querying the trained MCP."""
+    async def generate_documentation_suite(self, test_query_first: bool = True):
+        """
+        Generate 12-document suite by querying the trained MCP.
+        
+        Args:
+            test_query_first: If True, test MCP capability before generating docs (FAIL FAST!)
+            
+        Raises:
+            RuntimeError: If test_query_first=True and MCP doesn't respond to queries
+        """
+        # FAIL FAST: Test MCP query capability before generating all docs
+        if test_query_first and self.mcp_url:
+            self.print_info("🧪 Testing MCP query capability...")
+            try:
+                test_response = await self.query_mcp_for_document(
+                    "What is the Horus Heresy?",
+                    max_results=1,
+                    fail_on_error=True
+                )
+                if test_response and 'answer' in test_response:
+                    self.print_success("✓ MCP query test passed!")
+                    self.print_info(f"   Response preview: {test_response['answer'][:100]}...")
+                else:
+                    raise RuntimeError("MCP returned invalid response format")
+            except RuntimeError as e:
+                self.print_error("\n" + "="*70)
+                self.print_error("❌ DEMO FAILED: MCP QUERY TEST FAILED")
+                self.print_error("="*70)
+                self.print_error(f"\nError: {str(e)}")
+                self.print_error("\nThe MCP is deployed but not responding to queries correctly.")
+                self.print_error("This demo requires functional MCP query processing.")
+                self.print_error("User requirement: 'if the mcp can not complete the query it is a failure'")
+                self.print_error("\n" + "="*70)
+                raise RuntimeError("MCP query test failed - cannot continue demo") from e
+        
         self.print_info(f"📝 Generating 12-document suite via MCP queries...")
         
         doc_specs = [
@@ -618,13 +707,17 @@ class EnhancedHorusHeresyDemo:
             # Try querying the MCP first (PRIMARY METHOD)
             mcp_response = await self.query_mcp_for_document(query, max_results=10)
             
-            if mcp_response and mcp_response.get("results"):
-                # SUCCESS: Use MCP results (deduplicated & synthesized)
-                content = self.generate_doc_from_mcp_response(
-                    filename, keywords, query, mcp_response
-                )
+            # MCP returns: {mcp_id, query, answer, confidence, sources}
+            if mcp_response and 'answer' in mcp_response:
+                # SUCCESS: Use MCP answer
+                content = f"# {filename.replace('.md', '').replace('_', ' ').title()}\n\n"
+                content += f"## Query\n{query}\n\n"
+                content += f"## Response from MCP\n\n{mcp_response['answer']}\n\n"
+                content += f"**Confidence**: {mcp_response.get('confidence', 'N/A')}\n\n"
+                content += f"**Sources**: {', '.join(mcp_response.get('sources', []))}\n"
+                
                 mcp_query_success += 1
-                self.print_success(f"      ✓ MCP query (deduplicated)")
+                self.print_success(f"      ✓ MCP query")
             else:
                 # FALLBACK: Use keyword scoring with deduplication
                 content = self.generate_doc_from_crawled_data(
@@ -670,7 +763,7 @@ class EnhancedHorusHeresyDemo:
             
             # Phase 1: Provision MCP
             self.print_header("PHASE 1: PROVISION HORUS HERESY MCP")
-            self.mcp_id, mcp_deployed = await self.provision_mcp_with_retry()
+            self.mcp_id, mcp_deployed, self.mcp_url = await self.provision_mcp_with_retry()
             
             # FAIL FAST: Demo requires actual MCP deployment
             if not mcp_deployed:
@@ -685,6 +778,16 @@ class EnhancedHorusHeresyDemo:
                 self.print_error("The demo would only test fallback mechanisms, not the real MCP.")
                 self.print_error("\n" + "="*70)
                 raise RuntimeError("MCP deployment failed - cannot continue demo")
+            
+            # FAIL FAST: Demo requires MCP to be queryable
+            if not self.mcp_url:
+                self.print_error("\n" + "="*70)
+                self.print_error("❌ DEMO FAILED: MCP URL NOT AVAILABLE")
+                self.print_error("="*70)
+                self.print_error("\nCannot determine MCP query endpoint.")
+                self.print_error("This demo requires direct MCP query access to validate functionality.")
+                self.print_error("\n" + "="*70)
+                raise RuntimeError("MCP URL unavailable - cannot continue demo")
             
             # Phase 2: Deep Crawl
             self.print_header("PHASE 2: DEEP CRAWL FANDOM WIKI")
