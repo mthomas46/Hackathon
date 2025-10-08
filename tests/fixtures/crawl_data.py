@@ -25,26 +25,23 @@ def create_mock_crawl_report(
     """
     depth_distribution = {i: total_pages // (max_depth + 1) for i in range(max_depth + 1)}
     
-    return CrawlReport(
-        total_pages=total_pages,
-        duration_seconds=duration_seconds,
-        crawl_graph={
+    # Note: CrawlReport fields may vary - adjust as needed
+    return {
+        'total_pages': total_pages,
+        'duration_seconds': duration_seconds,
+        'crawl_graph': {
             "page-0": {"depth": 0, "links_found": 5, "links_followed": 3},
             "page-1": {"depth": 1, "links_found": 8, "links_followed": 2},
             "page-2": {"depth": 1, "links_found": 6, "links_followed": 1},
         },
-        depth_distribution=depth_distribution,
-        link_statistics={
+        'depth_distribution': depth_distribution,
+        'link_statistics': {
             "total_links_found": 50,
             "total_links_followed": 15,
             "duplicate_links": 10,
             "filtered_links": 25
-        },
-        start_url="https://example.com/wiki/Test",
-        max_surface_links=5,
-        max_depth_distance=max_depth,
-        timestamp=datetime.now()
-    )
+        }
+    }
 
 
 def create_mock_tag_collection(
