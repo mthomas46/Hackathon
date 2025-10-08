@@ -8,6 +8,7 @@ from typing import List, Optional, Set, Dict, Tuple, Any
 from datetime import datetime
 import httpx
 from ingestion.models import NormalizedDocument, CrawlReport
+from ingestion.tagging import UniversalTaggingManager, UniversalTaggingConfig, TagCollection
 
 logger = logging.getLogger(__name__)
 
@@ -15,11 +16,29 @@ logger = logging.getLogger(__name__)
 class WikipediaIngestor:
     """Crawl and ingest Wikipedia pages with configurable depth."""
     
-    def __init__(self):
+    def __init__(
+        self,
+        tagging_config: Optional[UniversalTaggingConfig] = None,
+        enable_tagging: bool = True
+    ):
+        """
+        Initialize Wikipedia ingestor.
+        
+        Args:
+            tagging_config: Configuration for universal tagging
+            enable_tagging: Whether to apply universal tagging to documents
+        """
         self.visited_pages: Set[str] = set()
         self.crawl_graph: Dict[str, Dict[str, Any]] = {}
         self.start_time: Optional[datetime] = None
         self.end_time: Optional[datetime] = None
+        
+        # Tagging integration
+        self.enable_tagging = enable_tagging
+        self.tagging_manager = UniversalTaggingManager(
+            tagging_config or UniversalTaggingConfig()
+        ) if enable_tagging else None
+        self.tag_collection: Optional[TagCollection] = None
     
     async def crawl_and_ingest(
         self,
@@ -68,6 +87,17 @@ class WikipediaIngestor:
             doc.metadata['crawl_origin'] = page_title
             doc.metadata['crawl_max_depth'] = max_depth_distance
             doc.metadata['crawl_max_surface'] = max_surface_links
+        
+        # Apply universal tagging
+        if self.enable_tagging and self.tagging_manager:
+            logger.info(f"🏷️  Applying universal tagging to {len(documents)} documents...")
+            documents, self.tag_collection = await self.tagging_manager.tag_documents(
+                documents=documents,
+                source_type='wikipedia',
+                user_tags=None,  # Use config defaults
+                corpus_analysis=None  # No corpus analysis yet
+            )
+            logger.info(f"✅ Tagging complete: {self.tag_collection.total_count()} unique tags")
         
         self.end_time = datetime.now()
         logger.info(f"✅ Crawled {len(documents)} Wikipedia pages")
@@ -315,11 +345,20 @@ This page contains {len(page_data['links'])} links to other Wikipedia articles.
         # https://en.wikipedia.org/wiki/Machine_learning → Machine learning
         return url.split('/wiki/')[-1].replace('_', ' ')
     
+    def get_tag_collection(self) -> Optional[TagCollection]:
+        """
+        Get the tag collection from the last crawl.
+        
+        Returns:
+            TagCollection if tagging was enabled, None otherwise
+        """
+        return self.tag_collection
+    
     def generate_crawl_report(self) -> CrawlReport:
         """Generate report of crawl graph."""
         duration = (self.end_time - self.start_time).total_seconds() if self.end_time and self.start_time else 0
         
-        return CrawlReport(
+        report = CrawlReport(
             total_pages=len(self.visited_pages),
             crawl_graph=self.crawl_graph,
             depth_distribution=self._calculate_depth_distribution(),
@@ -328,6 +367,12 @@ This page contains {len(page_data['links'])} links to other Wikipedia articles.
             end_time=self.end_time or datetime.now(),
             duration_seconds=duration
         )
+        
+        # Add tag collection if available
+        if self.tag_collection:
+            report.tag_collection = self.tag_collection.to_dict()
+        
+        return report
     
     def _calculate_depth_distribution(self) -> Dict[int, int]:
         """Calculate how many pages at each depth."""
