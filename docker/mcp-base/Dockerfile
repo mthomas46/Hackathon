@@ -59,10 +59,9 @@ async def query(body: Dict[str, Any]):\n\
         # Query doc_store for relevant training documents\n\
         async with httpx.AsyncClient(timeout=10.0) as client:\n\
             search_response = await client.post(\n\
-                f"{doc_store_url}/search",\n\
+                f"{doc_store_url}/api/v1/search",\n\
                 json={\n\
                     "query": query_text,\n\
-                    "mcp_id": mcp_id,\n\
                     "limit": max_results\n\
                 }\n\
             )\n\
