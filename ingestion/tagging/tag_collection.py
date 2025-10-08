@@ -11,6 +11,7 @@ class TagType(Enum):
     DEFAULT = "default"         # Built-in tags (source, file_type, etc.)
     CONTEXTUAL = "contextual"   # From corpus analysis
     USER_DEFINED = "user_defined"  # Manually added
+    HIERARCHICAL = "hierarchical"  # From AI topic extraction
 
 
 @dataclass
@@ -25,6 +26,7 @@ class TagCollection:
     default_tags: List[str] = field(default_factory=list)
     contextual_tags: List[str] = field(default_factory=list)
     user_defined_tags: List[str] = field(default_factory=list)
+    hierarchical_tags: List[str] = field(default_factory=list)  # AI-generated topic hierarchy
     
     def all_tags(self) -> List[str]:
         """
@@ -33,7 +35,7 @@ class TagCollection:
         Returns:
             Combined list of all tags from all sources
         """
-        return self.default_tags + self.contextual_tags + self.user_defined_tags
+        return self.default_tags + self.contextual_tags + self.user_defined_tags + self.hierarchical_tags
     
     def unique_tags(self) -> Set[str]:
         """
@@ -64,6 +66,7 @@ class TagCollection:
             "default": len(set(self.default_tags)),
             "contextual": len(set(self.contextual_tags)),
             "user_defined": len(set(self.user_defined_tags)),
+            "hierarchical": len(set(self.hierarchical_tags)),
             "total": self.total_count()
         }
     
@@ -107,6 +110,8 @@ class TagCollection:
             return list(set(self.contextual_tags))
         elif tag_type == TagType.USER_DEFINED:
             return list(set(self.user_defined_tags))
+        elif tag_type == TagType.HIERARCHICAL:
+            return list(set(self.hierarchical_tags))
         else:
             return []
     
@@ -136,6 +141,8 @@ class TagCollection:
             self.contextual_tags.extend(tags)
         elif tag_type == TagType.USER_DEFINED:
             self.user_defined_tags.extend(tags)
+        elif tag_type == TagType.HIERARCHICAL:
+            self.hierarchical_tags.extend(tags)
     
     def merge(self, other: 'TagCollection'):
         """
@@ -147,12 +154,14 @@ class TagCollection:
         self.default_tags.extend(other.default_tags)
         self.contextual_tags.extend(other.contextual_tags)
         self.user_defined_tags.extend(other.user_defined_tags)
+        self.hierarchical_tags.extend(other.hierarchical_tags)
     
     def deduplicate(self):
         """Remove duplicate tags within each type."""
         self.default_tags = list(set(self.default_tags))
         self.contextual_tags = list(set(self.contextual_tags))
         self.user_defined_tags = list(set(self.user_defined_tags))
+        self.hierarchical_tags = list(set(self.hierarchical_tags))
     
     def to_dict(self) -> Dict:
         """
@@ -165,6 +174,7 @@ class TagCollection:
             "default": list(set(self.default_tags)),
             "contextual": list(set(self.contextual_tags)),
             "user_defined": list(set(self.user_defined_tags)),
+            "hierarchical": list(set(self.hierarchical_tags)),
             "breakdown": self.breakdown(),
             "by_prefix": self.tags_by_prefix()
         }
@@ -183,6 +193,7 @@ class TagCollection:
             f"  Default tags: {breakdown['default']}",
             f"  Contextual tags: {breakdown['contextual']}",
             f"  User-defined tags: {breakdown['user_defined']}",
+            f"  Hierarchical tags: {breakdown['hierarchical']}",
             f"",
             f"Tag prefixes:"
         ]
@@ -206,7 +217,8 @@ class TagCollection:
         return cls(
             default_tags=data.get('default', []),
             contextual_tags=data.get('contextual', []),
-            user_defined_tags=data.get('user_defined', [])
+            user_defined_tags=data.get('user_defined', []),
+            hierarchical_tags=data.get('hierarchical', [])
         )
     
     @classmethod
@@ -220,6 +232,7 @@ class TagCollection:
         return cls(
             default_tags=[],
             contextual_tags=[],
-            user_defined_tags=[]
+            user_defined_tags=[],
+            hierarchical_tags=[]
         )
 
