@@ -1,0 +1,23 @@
+[run]
+source = 
+    ingestion
+    services
+omit =
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */venv/*
+    */demo_venv/*
+    */test_env/*
+    */.pytest_cache/*
+    */htmlcov/*
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+
+[html]
+directory = htmlcov
+title = MCP Ecosystem Test Coverage Report
+

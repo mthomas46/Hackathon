@@ -1,0 +1,87 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, mcp-maker, develop ]
+  pull_request:
+    branches: [ main, mcp-maker ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r ingestion/requirements.txt
+        pip install pytest pytest-cov pytest-asyncio pytest-httpx
+    
+    - name: Download spaCy model
+      run: |
+        python -m spacy download en_core_web_sm
+    
+    - name: Run unit tests
+      run: |
+        pytest tests/unit/ -v --cov=ingestion --cov-report=xml --cov-report=term
+    
+    - name: Run integration tests (fast only)
+      run: |
+        pytest tests/integration/ -v -m "integration and not slow" --cov=ingestion --cov-append --cov-report=xml
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+    
+    - name: Run flake8
+      run: |
+        flake8 ingestion tests --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 ingestion tests --count --max-complexity=15 --max-line-length=120 --statistics || true
+    
+    - name: Check black formatting
+      run: |
+        black --check ingestion tests || true
+    
+    - name: Check import sorting
+      run: |
+        isort --check-only ingestion tests || true
+
