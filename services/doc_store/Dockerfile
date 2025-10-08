@@ -32,6 +32,10 @@ COPY services/doc_store/requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Install sentence-transformers for RAG/semantic search capabilities
+# Note: This is a large package (~2GB) but essential for embeddings
+RUN pip install --no-cache-dir sentence-transformers torch
+
 # Copy service code
 COPY services/doc_store/ ./services/doc_store/
 COPY services/shared/ ./services/shared/
