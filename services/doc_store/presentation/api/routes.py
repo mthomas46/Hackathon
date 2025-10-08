@@ -949,3 +949,243 @@ async def get_document_tags_debug(doc_id: str):
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+# ============================================================================
+# VECTORIZATION & RAG ENDPOINTS
+# ============================================================================
+
+# Import embedding and synthesis services
+from ...domain.embeddings.service import get_embedding_service
+from ...domain.synthesis.service import get_synthesis_service
+
+@router.get(
+    "/embeddings/stats",
+    tags=["embeddings", "vectorization"],
+    summary="Get Embedding Statistics"
+)
+async def get_embedding_stats():
+    """Get statistics about document vectorization coverage."""
+    import logging
+    logger = logging.getLogger("doc_store.embeddings")
+    
+    try:
+        from ...db.queries import get_document_count, get_documents_without_vectors
+        
+        logger.info("📊 Fetching embedding statistics...")
+        total_docs = get_document_count()  # Not async
+        docs_without_vectors = get_documents_without_vectors(limit=99999)  # Not async
+        vectorized = total_docs - len(docs_without_vectors)
+        coverage = (vectorized / total_docs * 100) if total_docs > 0 else 0
+        
+        logger.info(f"✅ Stats: {total_docs} total, {vectorized} vectorized ({coverage:.1f}%)")
+        
+        return create_success_response(
+            data={
+                "total_documents": total_docs,
+                "vectorized_documents": vectorized,
+                "coverage_percentage": round(coverage, 2)
+            },
+            message="Embedding statistics retrieved successfully"
+        )
+    except Exception as e:
+        logger.error(f"❌ Error getting embedding stats: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+
+@router.post(
+    "/embeddings/generate",
+    tags=["embeddings", "vectorization"],
+    summary="Generate Document Embedding"
+)
+async def generate_document_embedding(document_id: str = Query(...)):
+    """Generate vector embedding for a specific document."""
+    import logging
+    logger = logging.getLogger("doc_store.embeddings")
+    
+    try:
+        logger.info(f"🔄 Generating embedding for document: {document_id}")
+        embedding_service = get_embedding_service()
+        result = await embedding_service.embed_document(document_id)
+        logger.info(f"✅ Embedding generated successfully for {document_id}")
+        
+        return create_success_response(
+            data=result,
+            message=f"Embedding generated for document {document_id}"
+        )
+    except Exception as e:
+        logger.error(f"❌ Failed to generate embedding for {document_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Embedding generation failed: {str(e)}")
+
+@router.post(
+    "/embeddings/generate-batch",
+    tags=["embeddings", "vectorization"],
+    summary="Generate Embeddings in Batch"
+)
+async def generate_embeddings_batch(limit: int = Query(100, ge=1, le=1000)):
+    """Generate embeddings for documents without vectors."""
+    import logging
+    import sys
+    logger = logging.getLogger("doc_store.embeddings")
+    
+    # Enhanced logging for systematic debugging
+    logger.info("=" * 70)
+    logger.info("🔬 EMBEDDING BATCH GENERATION - DETAILED LOGGING")
+    logger.info("=" * 70)
+    logger.info(f"📥 Request: limit={limit}")
+    
+    try:
+        # Step 1: Check documents
+        logger.info(f"\n📊 Step 1: Checking documents without vectors...")
+        from ...db.queries import get_documents_without_vectors
+        
+        logger.info(f"   🔍 Querying database...")
+        documents = get_documents_without_vectors(limit=limit)
+        logger.info(f"   ✅ Query complete: Found {len(documents)} documents")
+        
+        if not documents:
+            logger.info("   ℹ️  All documents already have embeddings")
+            return create_success_response(
+                data={"successful": 0, "failed": 0, "already_vectorized": True},
+                message="All documents already have embeddings"
+            )
+        
+        logger.info(f"   📄 Sample document IDs: {[d.get('id', 'unknown')[:20] for d in documents[:3]]}")
+        
+        # Step 2: Initialize embedding service
+        logger.info(f"\n🤖 Step 2: Initializing embedding service...")
+        logger.info(f"   🔍 Checking for sentence-transformers...")
+        
+        try:
+            import sentence_transformers
+            logger.info(f"   ✅ sentence-transformers found: {sentence_transformers.__version__}")
+        except ImportError as ie:
+            logger.error(f"   ❌ sentence-transformers NOT FOUND")
+            logger.error(f"   📦 This package is required for embeddings")
+            logger.error(f"   💡 Install: pip install sentence-transformers")
+            logger.error(f"   💡 Or add to Dockerfile: RUN pip install sentence-transformers")
+            raise Exception("Embedding generation requires sentence-transformers. Install with: pip install sentence-transformers") from ie
+        
+        logger.info(f"   🔧 Getting embedding service instance...")
+        embedding_service = get_embedding_service()
+        logger.info(f"   ✅ Embedding service initialized: {type(embedding_service).__name__}")
+        
+        # Step 3: Generate embeddings
+        logger.info(f"\n⚙️  Step 3: Generating embeddings...")
+        logger.info(f"   📊 Batch size: 32")
+        logger.info(f"   📄 Documents to process: {len(documents)}")
+        logger.info(f"   🚀 Starting batch generation...")
+        
+        result = await embedding_service.embed_documents_batch(documents=documents, batch_size=32)
+        
+        logger.info(f"   ✅ Generation complete!")
+        logger.info(f"   📊 Results: {len(result)} embeddings generated")
+        
+        # Step 4: Success
+        logger.info(f"\n✅ BATCH EMBEDDING COMPLETE")
+        logger.info(f"   • Documents processed: {len(documents)}")
+        logger.info(f"   • Embeddings generated: {len(result)}")
+        logger.info(f"   • Success rate: 100%")
+        logger.info("=" * 70)
+        
+        return create_success_response(
+            data={"successful": len(result), "failed": 0, "documents_processed": len(documents)},
+            message=f"Batch embedding completed: {len(result)} successful"
+        )
+        
+    except Exception as e:
+        # Enhanced error logging
+        logger.error("=" * 70)
+        logger.error("❌ BATCH EMBEDDING FAILED")
+        logger.error("=" * 70)
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error message: {str(e)}")
+        logger.error(f"Python version: {sys.version}")
+        
+        # Check if it's the expected import error
+        if "sentence-transformers" in str(e):
+            logger.error("\n🔍 ROOT CAUSE: Missing dependency")
+            logger.error("   Package: sentence-transformers")
+            logger.error("   Status: NOT INSTALLED")
+            logger.error("\n💡 SOLUTION:")
+            logger.error("   1. Temporary: docker exec doc_store pip install sentence-transformers")
+            logger.error("   2. Permanent: Add to Dockerfile + rebuild")
+        
+        logger.error("=" * 70)
+        
+        raise HTTPException(status_code=500, detail=f"Batch embedding failed: {str(e)}")
+
+@router.post(
+    "/search/semantic",
+    tags=["search", "vectorization"],
+    summary="Semantic Similarity Search"
+)
+async def semantic_search(
+    query: str = Query(...),
+    limit: int = Query(10, ge=1, le=100),
+    min_similarity: float = Query(0.3, ge=0.0, le=1.0)
+):
+    """Search documents by semantic similarity."""
+    import logging
+    logger = logging.getLogger("doc_store.semantic_search")
+    
+    try:
+        logger.info(f"🔍 Semantic search: '{query[:50]}...' (limit={limit}, min_sim={min_similarity})")
+        embedding_service = get_embedding_service()
+        results = await embedding_service.semantic_search(
+            query=query,
+            limit=limit,
+            min_similarity=min_similarity
+        )
+        logger.info(f"✅ Found {len(results)} semantically similar documents")
+        
+        return create_success_response(
+            data={
+                "query": query,
+                "results": results,
+                "count": len(results)
+            },
+            message=f"Found {len(results)} semantically similar documents"
+        )
+    except Exception as e:
+        logger.error(f"❌ Semantic search failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Semantic search failed: {str(e)}")
+
+@router.post(
+    "/synthesis/generate",
+    tags=["synthesis", "rag"],
+    summary="Generate Answer with RAG"
+)
+async def synthesize_answer(
+    query: str = Query(...),
+    semantic_weight: float = Query(0.7, ge=0.0, le=1.0),
+    temperature: float = Query(0.3, ge=0.0, le=1.0),
+    max_tokens: int = Query(500, ge=50, le=2000),
+    llm_model: str = Query("llama3.2:3b")
+):
+    """Generate intelligent answer using RAG (Retrieval-Augmented Generation)."""
+    import logging
+    logger = logging.getLogger("doc_store.rag")
+    
+    try:
+        logger.info(f"🤖 RAG synthesis: '{query[:50]}...' (model={llm_model}, temp={temperature})")
+        synthesis_service = get_synthesis_service(llm_model=llm_model)
+        
+        result = await synthesis_service.synthesize_with_search(
+            query=query,
+            semantic_weight=semantic_weight,
+            min_similarity=0.3,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+        
+        docs_used = result.get("context_documents_used", 0)
+        method = result.get("synthesis_method", "unknown")
+        logger.info(f"✅ RAG complete: {docs_used} docs, method={method}")
+        
+        return create_success_response(
+            data=result,
+            message="Answer synthesized successfully"
+        )
+    except Exception as e:
+        logger.error(f"❌ RAG synthesis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"RAG synthesis failed: {str(e)}")
+

@@ -1,0 +1,19 @@
+{
+  "query": "What is the Horus Heresy and why is it significant?",
+  "answer": "Based on the most relevant document: # Horus Heresy\n\n**Source**: Fandom Wiki  \n**URL**: https://warhammer40k.fandom.com/wiki/Horus_Heresy  \n**Last Modified**: Unknown  \n**Crawl Depth**: 0  \n**Parent Page**: N/A (origin)\n\n---\n\n## Content\n\n\"It was treachery at first. To turn against brothers, to kill for personal advancement and power. But we have seen them, how their minds and bodies have been corrupted. Their very belief systems have been warped. This is no longer Horus's treachery. It is his heresy.\"\n\n\"Of all the conflicts that ha...",
+  "model": "fallback",
+  "sources": [
+    "fandom-3b3ca041",
+    "fandom-dc222116",
+    "fandom-a8abf6bb",
+    "fandom-7586f781",
+    "fandom-068a5323"
+  ],
+  "method": "fallback",
+  "search_metadata": {
+    "documents_found": 6,
+    "semantic_weight": 0.7,
+    "min_similarity": 0.3,
+    "search_time_ms": 29.72
+  }
+}

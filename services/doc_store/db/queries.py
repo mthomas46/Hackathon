@@ -4,7 +4,9 @@ Provides reusable query functions to reduce code duplication.
 """
 
 import json
+import struct
 from typing import Any, Dict, List, Optional, Tuple, Union
+import numpy as np
 
 from .connection import doc_store_db_connection
 
@@ -391,3 +393,204 @@ def list_bulk_operations(
             (limit,),
             fetch_all=True,
         )
+
+
+# Vector/Embedding Functions
+
+def serialize_vector(vector: List[float]) -> bytes:
+    """Serialize a vector to bytes for storage."""
+    return struct.pack(f'{len(vector)}f', *vector)
+
+
+def deserialize_vector(data: bytes) -> List[float]:
+    """Deserialize bytes back to vector."""
+    num_floats = len(data) // 4
+    return list(struct.unpack(f'{num_floats}f', data))
+
+
+def insert_document_vector(
+    document_id: str,
+    embedding: List[float],
+    vector_model: str = "sentence-transformers/all-MiniLM-L6-v2",
+    metadata: Optional[Dict[str, Any]] = None,
+) -> str:
+    """Insert or update document vector embedding."""
+    import uuid
+    from datetime import datetime, timezone
+    
+    def utc_now():
+        return datetime.now(timezone.utc)
+    
+    vector_id = str(uuid.uuid4())
+    embedding_blob = serialize_vector(embedding)
+    
+    # Check if vector already exists for this document and model
+    existing = execute_query(
+        "SELECT id FROM document_vectors WHERE document_id = ? AND vector_model = ?",
+        (document_id, vector_model),
+        fetch_one=True,
+    )
+    
+    if existing:
+        # Update existing
+        execute_query(
+            """
+            UPDATE document_vectors 
+            SET embedding = ?, embedding_dimension = ?, metadata = ?
+            WHERE id = ?
+            """,
+            (embedding_blob, len(embedding), json.dumps(metadata) if metadata else None, existing["id"]),
+        )
+        return existing["id"]
+    else:
+        # Insert new
+        execute_query(
+            """
+            INSERT INTO document_vectors (id, document_id, vector_model, embedding_dimension, embedding, metadata, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                vector_id,
+                document_id,
+                vector_model,
+                len(embedding),
+                embedding_blob,
+                json.dumps(metadata) if metadata else None,
+                utc_now().isoformat(),
+            ),
+        )
+        return vector_id
+
+
+def get_document_vector(document_id: str, vector_model: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """Get vector embedding for a document."""
+    if vector_model:
+        result = execute_query(
+            "SELECT * FROM document_vectors WHERE document_id = ? AND vector_model = ?",
+            (document_id, vector_model),
+            fetch_one=True,
+        )
+    else:
+        result = execute_query(
+            "SELECT * FROM document_vectors WHERE document_id = ? ORDER BY created_at DESC LIMIT 1",
+            (document_id,),
+            fetch_one=True,
+        )
+    
+    if result and result.get("embedding"):
+        result["embedding"] = deserialize_vector(result["embedding"])
+    
+    return result
+
+
+def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
+    """Calculate cosine similarity between two vectors."""
+    v1 = np.array(vec1)
+    v2 = np.array(vec2)
+    
+    # Normalize
+    v1_norm = v1 / (np.linalg.norm(v1) + 1e-10)
+    v2_norm = v2 / (np.linalg.norm(v2) + 1e-10)
+    
+    # Dot product
+    similarity = float(np.dot(v1_norm, v2_norm))
+    
+    return max(0.0, min(1.0, similarity))  # Clamp to [0, 1]
+
+
+def semantic_search_documents(
+    query_embedding: List[float],
+    limit: int = 50,
+    vector_model: Optional[str] = None,
+    min_similarity: float = 0.3,
+) -> List[Dict[str, Any]]:
+    """
+    Perform semantic search using vector similarity.
+    
+    Args:
+        query_embedding: Query vector embedding
+        limit: Maximum results to return
+        vector_model: Specific model to use (None = any model)
+        min_similarity: Minimum similarity threshold
+    
+    Returns:
+        List of documents with similarity scores
+    """
+    # Get all document vectors
+    if vector_model:
+        vectors = execute_query(
+            "SELECT * FROM document_vectors WHERE vector_model = ?",
+            (vector_model,),
+            fetch_all=True,
+        )
+    else:
+        vectors = execute_query(
+            "SELECT * FROM document_vectors",
+            fetch_all=True,
+        )
+    
+    if not vectors:
+        return []
+    
+    # Calculate similarities
+    similarities = []
+    for vec_record in vectors:
+        doc_embedding = deserialize_vector(vec_record["embedding"])
+        similarity = cosine_similarity(query_embedding, doc_embedding)
+        
+        if similarity >= min_similarity:
+            similarities.append({
+                "document_id": vec_record["document_id"],
+                "similarity": similarity,
+                "vector_model": vec_record["vector_model"],
+            })
+    
+    # Sort by similarity (descending)
+    similarities.sort(key=lambda x: x["similarity"], reverse=True)
+    
+    # Get top documents
+    top_similarities = similarities[:limit]
+    
+    if not top_similarities:
+        return []
+    
+    # Fetch full document data
+    doc_ids = [s["document_id"] for s in top_similarities]
+    placeholders = ",".join("?" for _ in doc_ids)
+    documents = execute_query(
+        f"SELECT * FROM documents WHERE id IN ({placeholders})",
+        tuple(doc_ids),
+        fetch_all=True,
+    )
+    
+    # Add similarity scores to documents
+    similarity_map = {s["document_id"]: s["similarity"] for s in top_similarities}
+    for doc in documents:
+        doc["semantic_similarity"] = similarity_map.get(doc["id"], 0.0)
+    
+    # Sort by similarity
+    documents.sort(key=lambda d: d.get("semantic_similarity", 0.0), reverse=True)
+    
+    return documents
+
+
+def get_documents_without_vectors(limit: int = 100) -> List[Dict[str, Any]]:
+    """Get documents that don't have vector embeddings yet."""
+    return execute_query(
+        """
+        SELECT d.* FROM documents d
+        LEFT JOIN document_vectors dv ON d.id = dv.document_id
+        WHERE dv.id IS NULL
+        LIMIT ?
+        """,
+        (limit,),
+        fetch_all=True,
+    )
+
+def get_document_count() -> int:
+    """Get total count of documents."""
+    result = execute_query(
+        "SELECT COUNT(*) as count FROM documents",
+        fetch_one=True
+    )
+    return result["count"] if result else 0

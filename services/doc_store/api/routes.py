@@ -16,7 +16,7 @@ from services.shared.presentation.api.responses import (
     APIResponse,
 )
 
-from ..core.models import (
+from ..presentation.dto.models import (
     BulkDocumentRequest,
     CacheInvalidationRequest,
     CacheStatsResponse,
@@ -46,6 +46,12 @@ from ..domain.notifications.handlers import NotificationsHandlers
 from ..domain.relationships.handlers import RelationshipsHandlers
 from ..domain.tagging.handlers import TaggingHandlers
 from ..domain.versioning.handlers import VersioningHandlers
+
+# Import embedding service
+from ..domain.embeddings.service import get_embedding_service
+
+# Import synthesis service
+from ..domain.synthesis.service import get_synthesis_service
 
 # Dependency injection container
 from ..infrastructure.di.container import container
@@ -275,8 +281,14 @@ async def delete_document(
 @router.post(
     "/search",
     tags=["search"],
-    summary="Search Documents",
-    description="Perform advanced search across documents using full-text search, filters, and semantic similarity.",
+    summary="Search Documents (Hybrid Search)",
+    description="""Perform advanced hybrid search across documents combining:
+    - Full-text search (FTS5)
+    - Semantic similarity search (vector embeddings)
+    - Tag-based search
+    - Metadata filtering
+    
+    Results are intelligently merged and ranked by relevance.""",
     response_description="Search results with relevance scoring and metadata",
     response_model=SearchResponse,
     responses={
@@ -289,11 +301,14 @@ async def delete_document(
                         "message": "Search completed successfully",
                         "data": {
                             "query": "machine learning",
+                            "search_mode": "hybrid",
                             "total_results": 25,
                             "results": [
                                 {
                                     "document_id": "doc-123",
                                     "score": 0.95,
+                                    "semantic_similarity": 0.87,
+                                    "keyword_score": 0.92,
                                     "title": "ML Algorithms Guide",
                                     "snippet": "...machine learning algorithms...",
                                     "metadata": {"tags": ["ml", "algorithms"]}
@@ -312,10 +327,165 @@ async def delete_document(
 )
 async def search_documents(
     request: SearchRequest,
+    use_semantic: bool = Query(True, description="Enable semantic (vector) search"),
+    semantic_weight: float = Query(0.5, ge=0.0, le=1.0, description="Weight for semantic vs keyword (0=keyword only, 1=semantic only)"),
     document_handlers: AbstractDocumentHandlers = Depends(get_document_handlers)
 ):
-    """Search documents by content."""
-    return await document_handlers.handle_search_documents(request)
+    """
+    Search documents using hybrid approach (keyword + semantic).
+    
+    The search combines:
+    1. Traditional keyword search (tags, metadata, FTS)
+    2. Semantic similarity search (if enabled and embeddings available)
+    3. Intelligent result merging with configurable weighting
+    """
+    import time
+    from ..db.queries import search_documents as keyword_search
+    
+    start_time = time.time()
+    
+    # Get keyword search results
+    keyword_results = keyword_search(request.query, limit=request.limit)
+    
+    # Get semantic search results if enabled
+    semantic_results = []
+    if use_semantic:
+        try:
+            embedding_service = get_embedding_service()
+            semantic_results = await embedding_service.semantic_search(
+                query=request.query,
+                limit=request.limit,
+                min_similarity=0.3
+            )
+        except Exception as e:
+            # Gracefully degrade to keyword-only search
+            logger = __import__('logging').getLogger(__name__)
+            logger.warning(f"Semantic search failed, using keyword-only: {e}")
+    
+    # Merge and rank results
+    merged_results = _merge_search_results(
+        keyword_results=keyword_results,
+        semantic_results=semantic_results,
+        semantic_weight=semantic_weight,
+        limit=request.limit
+    )
+    
+    duration_ms = (time.time() - start_time) * 1000
+    
+    # Extract facets
+    facets = _extract_facets(merged_results)
+    
+    search_mode = "hybrid" if use_semantic and semantic_results else "keyword"
+    
+    return create_success_response(
+        data={
+            "query": request.query,
+            "search_mode": search_mode,
+            "total_results": len(merged_results),
+            "results": merged_results,
+            "facets": facets,
+            "took_ms": round(duration_ms, 2)
+        },
+        message="Search completed successfully"
+    )
+
+
+def _merge_search_results(
+    keyword_results: List[Dict[str, Any]],
+    semantic_results: List[Dict[str, Any]],
+    semantic_weight: float,
+    limit: int
+) -> List[Dict[str, Any]]:
+    """
+    Merge keyword and semantic search results with weighted scoring.
+    
+    Args:
+        keyword_results: Results from keyword search
+        semantic_results: Results from semantic search
+        semantic_weight: Weight for semantic score (0-1)
+        limit: Maximum results to return
+    
+    Returns:
+        Merged and ranked results
+    """
+    keyword_weight = 1.0 - semantic_weight
+    
+    # Index results by document ID
+    results_by_id = {}
+    
+    # Add keyword results
+    for idx, doc in enumerate(keyword_results):
+        doc_id = doc.get("id")
+        keyword_score = doc.get("relevance_score", 0.0)
+        if keyword_score == 0.0:
+            # Inverse rank scoring if no explicit score
+            keyword_score = 1.0 / (idx + 1)
+        
+        results_by_id[doc_id] = {
+            **doc,
+            "keyword_score": keyword_score,
+            "semantic_similarity": 0.0
+        }
+    
+    # Add/merge semantic results
+    for idx, doc in enumerate(semantic_results):
+        doc_id = doc.get("id")
+        semantic_score = doc.get("semantic_similarity", 0.0)
+        
+        if doc_id in results_by_id:
+            # Merge scores
+            results_by_id[doc_id]["semantic_similarity"] = semantic_score
+        else:
+            # Add new result
+            results_by_id[doc_id] = {
+                **doc,
+                "keyword_score": 0.0,
+                "semantic_similarity": semantic_score
+            }
+    
+    # Calculate combined scores
+    for doc in results_by_id.values():
+        keyword_score = doc.get("keyword_score", 0.0)
+        semantic_score = doc.get("semantic_similarity", 0.0)
+        
+        # Normalize scores to [0, 1]
+        keyword_norm = min(1.0, keyword_score)
+        semantic_norm = min(1.0, semantic_score)
+        
+        # Combined weighted score
+        combined_score = (keyword_weight * keyword_norm) + (semantic_weight * semantic_norm)
+        doc["score"] = combined_score
+    
+    # Sort by combined score
+    sorted_results = sorted(
+        results_by_id.values(),
+        key=lambda x: x.get("score", 0.0),
+        reverse=True
+    )
+    
+    return sorted_results[:limit]
+
+
+def _extract_facets(results: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+    """Extract facets (tags) from search results."""
+    import json
+    
+    tag_counts = {}
+    
+    for doc in results:
+        tags_str = doc.get("tags", "[]")
+        try:
+            tags = json.loads(tags_str) if isinstance(tags_str, str) else tags_str
+            if isinstance(tags, list):
+                for tag in tags:
+                    tag_counts[tag] = tag_counts.get(tag, 0) + 1
+        except:
+            pass
+    
+    # Return top tags
+    sorted_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)
+    return {"tags": [tag for tag, _ in sorted_tags[:10]]}
+
 
 
 # Quality endpoints
@@ -820,3 +990,429 @@ async def optimize_cache():
     """Optimize cache performance."""
     # TODO: Implement cache handlers
     raise HTTPException(status_code=501, detail="Cache management not yet implemented")
+
+
+# Embedding/Semantic Search endpoints
+@router.post(
+    "/embeddings/generate",
+    tags=["embeddings"],
+    summary="Generate Document Embedding",
+    description="Generate vector embedding for a single document to enable semantic search.",
+    response_description="Successfully generated embedding with metadata",
+    responses={
+        200: {
+            "description": "Embedding generated successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Embedding generated successfully",
+                        "data": {
+                            "vector_id": "vec-123",
+                            "document_id": "doc-123",
+                            "vector_model": "sentence-transformers/all-MiniLM-L6-v2",
+                            "embedding_dimension": 384
+                        }
+                    }
+                }
+            }
+        },
+        404: {"description": "Document not found"},
+        500: {"description": "Error generating embedding"}
+    }
+)
+async def generate_document_embedding(
+    document_id: str = Query(..., description="Document ID to generate embedding for")
+):
+    """Generate embedding for a specific document."""
+    from ..db.queries import get_document_by_id
+    
+    # Get document
+    document = get_document_by_id(document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Generate embedding
+    embedding_service = get_embedding_service()
+    result = await embedding_service.embed_document(
+        document_id=document_id,
+        content=document.get("content", ""),
+        metadata={"document_metadata": document.get("metadata")}
+    )
+    
+    return create_success_response(
+        data=result,
+        message="Embedding generated successfully"
+    )
+
+
+@router.post(
+    "/embeddings/generate-batch",
+    tags=["embeddings"],
+    summary="Generate Embeddings in Batch",
+    description="Generate vector embeddings for multiple documents in batch for improved performance.",
+    response_description="Batch embedding generation results",
+    responses={
+        202: {
+            "description": "Batch embedding generation completed",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Batch embeddings generated",
+                        "data": {
+                            "total": 50,
+                            "successful": 48,
+                            "failed": 2,
+                            "results": []
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid batch request"},
+        500: {"description": "Error during batch embedding generation"}
+    }
+)
+async def generate_embeddings_batch(
+    document_ids: List[str] = Query(None, description="List of document IDs"),
+    limit: int = Query(100, ge=1, le=1000, description="Auto-embed documents without vectors")
+):
+    """Generate embeddings for multiple documents."""
+    from ..db.queries import get_document_by_id, get_documents_without_vectors
+    
+    # Get documents
+    if document_ids:
+        documents = []
+        for doc_id in document_ids:
+            doc = get_document_by_id(doc_id)
+            if doc:
+                documents.append(doc)
+    else:
+        # Auto-generate for documents without vectors
+        documents = get_documents_without_vectors(limit=limit)
+    
+    if not documents:
+        return create_success_response(
+            data={"total": 0, "successful": 0, "failed": 0, "results": []},
+            message="No documents to process"
+        )
+    
+    # Generate embeddings
+    embedding_service = get_embedding_service()
+    results = await embedding_service.embed_documents_batch(documents)
+    
+    successful = sum(1 for r in results if r.get("success"))
+    failed = len(results) - successful
+    
+    return create_success_response(
+        data={
+            "total": len(results),
+            "successful": successful,
+            "failed": failed,
+            "results": results
+        },
+        message=f"Batch embeddings generated: {successful} successful, {failed} failed"
+    )
+
+
+@router.post(
+    "/search/semantic",
+    tags=["search", "embeddings"],
+    summary="Semantic Search",
+    description="Perform semantic similarity search using vector embeddings to find contextually similar documents.",
+    response_description="Semantically similar documents with similarity scores",
+    responses={
+        200: {
+            "description": "Semantic search completed successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Semantic search completed",
+                        "data": {
+                            "query": "machine learning algorithms",
+                            "total_results": 15,
+                            "results": [
+                                {
+                                    "id": "doc-123",
+                                    "content": "Deep learning neural networks...",
+                                    "semantic_similarity": 0.87,
+                                    "metadata": {}
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid search query"},
+        500: {"description": "Error during semantic search"}
+    }
+)
+async def semantic_search(
+    query: str = Query(..., description="Search query text"),
+    limit: int = Query(50, ge=1, le=200, description="Maximum results"),
+    min_similarity: float = Query(0.3, ge=0.0, le=1.0, description="Minimum similarity threshold")
+):
+    """Perform semantic search using vector similarity."""
+    embedding_service = get_embedding_service()
+    
+    results = await embedding_service.semantic_search(
+        query=query,
+        limit=limit,
+        min_similarity=min_similarity
+    )
+    
+    return create_success_response(
+        data={
+            "query": query,
+            "total_results": len(results),
+            "results": results
+        },
+        message="Semantic search completed"
+    )
+
+
+@router.get(
+    "/embeddings/model-info",
+    tags=["embeddings"],
+    summary="Get Embedding Model Info",
+    description="Retrieve information about the current embedding model including dimensions and capabilities.",
+    response_description="Embedding model metadata",
+    responses={
+        200: {
+            "description": "Model information retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Model information retrieved",
+                        "data": {
+                            "name": "sentence-transformers/all-MiniLM-L6-v2",
+                            "dimensions": 384,
+                            "max_sequence_length": 256,
+                            "model_size_mb": 90.5,
+                            "language": "en"
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
+async def get_embedding_model_info():
+    """Get embedding model information."""
+    embedding_service = get_embedding_service()
+    model_info = embedding_service.get_model_info()
+    
+    return create_success_response(
+        data=model_info,
+        message="Model information retrieved"
+    )
+
+
+@router.get(
+    "/embeddings/stats",
+    tags=["embeddings"],
+    summary="Get Embedding Statistics",
+    description="Retrieve statistics about vectorized documents and coverage.",
+    response_description="Embedding coverage statistics",
+    responses={
+        200: {
+            "description": "Statistics retrieved successfully"
+        }
+    }
+)
+async def get_embedding_stats():
+    """Get embedding statistics."""
+    from ..db.queries import execute_query
+    
+    # Get total documents
+    total_docs = execute_query(
+        "SELECT COUNT(*) as count FROM documents",
+        fetch_one=True
+    )
+    
+    # Get vectorized documents
+    vectorized_docs = execute_query(
+        "SELECT COUNT(DISTINCT document_id) as count FROM document_vectors",
+        fetch_one=True
+    )
+    
+    # Get vector models
+    models = execute_query(
+        """
+        SELECT vector_model, COUNT(*) as count 
+        FROM document_vectors 
+        GROUP BY vector_model
+        """,
+        fetch_all=True
+    )
+    
+    total = total_docs.get("count", 0) if total_docs else 0
+    vectorized = vectorized_docs.get("count", 0) if vectorized_docs else 0
+    coverage = (vectorized / total * 100) if total > 0 else 0
+    
+    return create_success_response(
+        data={
+            "total_documents": total,
+            "vectorized_documents": vectorized,
+            "coverage_percentage": round(coverage, 2),
+            "models": models or []
+        },
+        message="Embedding statistics retrieved"
+    )
+
+
+# RAG/Synthesis endpoints
+@router.post(
+    "/synthesis/generate",
+    tags=["synthesis", "rag"],
+    summary="Generate Answer with RAG",
+    description="""Generate an intelligent answer using Retrieval-Augmented Generation (RAG).
+    
+    This endpoint:
+    1. Performs hybrid search (semantic + keyword) to find relevant documents
+    2. Retrieves top K most relevant documents as context
+    3. Uses LLM to synthesize a comprehensive answer from the context
+    4. Returns answer with source citations and confidence
+    
+    This provides better answers than simple search by:
+    - Understanding the question semantically
+    - Combining information from multiple documents
+    - Generating natural, coherent responses
+    - Citing sources for verification""",
+    response_description="Synthesized answer with sources and metadata",
+    responses={
+        200: {
+            "description": "Answer generated successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Answer synthesized successfully",
+                        "data": {
+                            "answer": "Machine learning algorithms include supervised learning (classification, regression), unsupervised learning (clustering), and reinforcement learning...",
+                            "query": "What are machine learning algorithms?",
+                            "context_documents_used": 5,
+                            "model": "llama3.2:3b",
+                            "sources": ["doc-123", "doc-456", "doc-789"],
+                            "synthesis_method": "rag",
+                            "temperature": 0.3,
+                            "search_metadata": {
+                                "documents_found": 15,
+                                "semantic_weight": 0.7,
+                                "search_time_ms": 250
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid request"},
+        500: {"description": "Error during synthesis"}
+    }
+)
+async def synthesize_answer(
+    query: str = Query(..., description="User's question"),
+    semantic_weight: float = Query(0.7, ge=0.0, le=1.0, description="Weight for semantic vs keyword search"),
+    min_similarity: float = Query(0.3, ge=0.0, le=1.0, description="Minimum similarity threshold"),
+    temperature: float = Query(0.3, ge=0.0, le=1.0, description="LLM temperature for generation"),
+    max_tokens: int = Query(500, ge=50, le=2000, description="Maximum tokens to generate"),
+    llm_model: str = Query("llama3.2:3b", description="LLM model to use")
+):
+    """
+    Generate answer using RAG (Retrieval-Augmented Generation).
+    
+    Combines semantic search with LLM generation for intelligent answers.
+    """
+    synthesis_service = get_synthesis_service(llm_model=llm_model)
+    
+    result = await synthesis_service.synthesize_with_search(
+        query=query,
+        semantic_weight=semantic_weight,
+        min_similarity=min_similarity,
+        temperature=temperature,
+        max_tokens=max_tokens
+    )
+    
+    return create_success_response(
+        data=result,
+        message="Answer synthesized successfully"
+    )
+
+
+@router.post(
+    "/synthesis/batch",
+    tags=["synthesis", "rag"],
+    summary="Batch Answer Generation",
+    description="Generate answers for multiple questions in batch using RAG.",
+    response_description="Batch synthesis results",
+    responses={
+        202: {
+            "description": "Batch synthesis completed",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Batch synthesis completed",
+                        "data": {
+                            "total": 10,
+                            "successful": 9,
+                            "failed": 1,
+                            "results": []
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
+async def synthesize_batch(
+    queries: List[str] = Query(..., description="List of questions"),
+    semantic_weight: float = Query(0.7, ge=0.0, le=1.0),
+    temperature: float = Query(0.3, ge=0.0, le=1.0),
+    max_tokens: int = Query(500, ge=50, le=2000)
+):
+    """Generate answers for multiple questions in batch."""
+    import asyncio
+    
+    synthesis_service = get_synthesis_service()
+    
+    # Process queries concurrently
+    tasks = [
+        synthesis_service.synthesize_with_search(
+            query=q,
+            semantic_weight=semantic_weight,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+        for q in queries
+    ]
+    
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    # Count successes and failures
+    successful = []
+    failed = []
+    
+    for idx, result in enumerate(results):
+        if isinstance(result, Exception):
+            failed.append({
+                "query": queries[idx],
+                "error": str(result)
+            })
+        else:
+            successful.append(result)
+    
+    return create_success_response(
+        data={
+            "total": len(queries),
+            "successful": len(successful),
+            "failed": len(failed),
+            "results": successful,
+            "errors": failed
+        },
+        message=f"Batch synthesis completed: {len(successful)} successful, {len(failed)} failed"
+    )

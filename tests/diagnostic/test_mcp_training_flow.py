@@ -116,13 +116,13 @@ class TestMCPTrainingDocumentFlow:
         async with httpx.AsyncClient(timeout=30.0) as client:
             # First ensure document exists
             await client.post(
-            "http://localhost:5087/api/v1/documents",
-            json={
-                "id": sample_document["document_id"],
-                "content": sample_document["content"],
-                "metadata": sample_document["metadata"]
-            }
-        )
+                "http://localhost:5087/api/v1/documents",
+                json={
+                    "id": sample_document["document_id"],
+                    "content": sample_document["content"],
+                    "metadata": sample_document["metadata"]
+                }
+            )
         
             await asyncio.sleep(1)
             
@@ -168,13 +168,13 @@ class TestMCPTrainingDocumentFlow:
         async with httpx.AsyncClient(timeout=30.0) as client:
             # First provision an MCP
             mcp_response = await client.post(
-            "http://localhost:5400/api/v1/mcps",
-            json={
-                "name": "test-mcp-diagnostic",
-                "tier": 2,
-                "image_name": "mcp-base:latest"
-            }
-        )
+                "http://localhost:5400/api/v1/mcps",
+                json={
+                    "name": "test-mcp-diagnostic",
+                    "tier": 2,
+                    "image_name": "mcp-base:latest"
+                }
+            )
         
             print(f"📦 Provision MCP: {mcp_response.status_code}")
             
@@ -188,14 +188,14 @@ class TestMCPTrainingDocumentFlow:
             
             # Create training job
             training_response = await client.post(
-            "http://localhost:5600/api/v1/jobs",
-            params={
-                "mcp_id": mcp_id,
-                "name": "diagnostic_training",
-                "description": "Diagnostic test training job"
-            },
-            json=["github", "confluence"]
-        )
+                "http://localhost:5600/api/v1/jobs",
+                params={
+                    "mcp_id": mcp_id,
+                    "name": "diagnostic_training",
+                    "description": "Diagnostic test training job"
+                },
+                json=["github", "confluence"]
+            )
         
             print(f"🎓 Create Training Job: {training_response.status_code}")
             
@@ -244,127 +244,127 @@ class TestMCPTrainingDocumentFlow:
             # Step 1: Ingest document
             print("\n📤 Step 1: Ingesting document to doc_store...")
             doc_response = await client.post(
-            "http://localhost:5087/api/v1/documents",
-            json={
-                "id": sample_document["document_id"],
-                "content": sample_document["content"],
-                "metadata": sample_document["metadata"]
-            }
-        )
+                "http://localhost:5087/api/v1/documents",
+                json={
+                    "id": sample_document["document_id"],
+                    "content": sample_document["content"],
+                    "metadata": sample_document["metadata"]
+                }
+            )
             print(f"   Status: {doc_response.status_code}")
             
             # Step 2: Provision MCP
             print("\n📦 Step 2: Provisioning MCP...")
             mcp_response = await client.post(
-            "http://localhost:5400/api/v1/mcps",
-            json={
-                "name": f"test-mcp-{uuid.uuid4().hex[:8]}",
-                "tier": 2,
-                "image_name": "mcp-base:latest"
-            }
-        )
-        print(f"   Status: {mcp_response.status_code}")
-        
-        if mcp_response.status_code not in [200, 201]:
-            pytest.skip(f"MCP provisioning failed: {mcp_response.status_code}")
-        
-        mcp_data = mcp_response.json()
-        mcp_id = mcp_data.get("mcp_id") or mcp_data.get("id")
-        container_id = mcp_data.get("container_id")
-        
-        print(f"   MCP ID: {mcp_id}")
-        print(f"   Container ID: {container_id}")
-        
-        # Step 3: Create and execute training job
-        print("\n🎓 Step 3: Creating training job...")
-        training_response = await client.post(
-            "http://localhost:5600/api/v1/jobs",
-            params={
-                "mcp_id": mcp_id,
-                "name": "diagnostic_training",
-                "description": "Test training with documents"
-            },
-            json=["github", "confluence"]
-        )
-        print(f"   Status: {training_response.status_code}")
-        
-        if training_response.status_code in [200, 201]:
-            training_data = training_response.json()
-            job_id = training_data.get("job_id")
-            print(f"   Job ID: {job_id}")
-            
-            # Execute training
-            print("\n▶️  Step 4: Executing training job...")
-            execute_response = await client.post(
-                f"http://localhost:5600/api/v1/jobs/{job_id}/execute"
+                "http://localhost:5400/api/v1/mcps",
+                json={
+                    "name": f"test-mcp-{uuid.uuid4().hex[:8]}",
+                    "tier": 2,
+                    "image_name": "mcp-base:latest"
+                }
             )
-            print(f"   Status: {execute_response.status_code}")
+            print(f"   Status: {mcp_response.status_code}")
             
-            # Wait for training to process
-            print("\n⏳ Step 5: Waiting for training to complete...")
-            await asyncio.sleep(5)
-        
-        # Step 6: Query MCP directly (bypassing gateway)
-        print("\n🔍 Step 6: Querying MCP for documents...")
-        
-        # Try to get MCP container port
-        import subprocess
-        try:
-            result = subprocess.run(
-                ['docker', 'port', container_id],
-                capture_output=True,
-                text=True,
-                timeout=5
+            if mcp_response.status_code not in [200, 201]:
+                pytest.skip(f"MCP provisioning failed: {mcp_response.status_code}")
+            
+            mcp_data = mcp_response.json()
+            mcp_id = mcp_data.get("mcp_id") or mcp_data.get("id")
+            container_id = mcp_data.get("container_id")
+            
+            print(f"   MCP ID: {mcp_id}")
+            print(f"   Container ID: {container_id}")
+            
+            # Step 3: Create and execute training job
+            print("\n🎓 Step 3: Creating training job...")
+            training_response = await client.post(
+                "http://localhost:5600/api/v1/jobs",
+                params={
+                    "mcp_id": mcp_id,
+                    "name": "diagnostic_training",
+                    "description": "Test training with documents"
+                },
+                json=["github", "confluence"]
             )
+            print(f"   Status: {training_response.status_code}")
             
-            mcp_port = None
-            if result.returncode == 0:
-                for line in result.stdout.split('\n'):
-                    if '3000/tcp' in line or '8080/tcp' in line:
-                        mcp_port = line.split(':')[-1].strip()
-                        break
-            
-            if mcp_port:
-                mcp_url = f"http://localhost:{mcp_port}"
-                print(f"   MCP URL: {mcp_url}")
+            if training_response.status_code in [200, 201]:
+                training_data = training_response.json()
+                job_id = training_data.get("job_id")
+                print(f"   Job ID: {job_id}")
                 
-                # Query the MCP
-                query_response = await client.post(
-                    f"{mcp_url}/query",
-                    json={
-                        "query": "Tell me about the Horus Heresy",
-                        "max_results": 10
-                    },
-                    timeout=10.0
+                # Execute training
+                print("\n▶️  Step 4: Executing training job...")
+                execute_response = await client.post(
+                    f"http://localhost:5600/api/v1/jobs/{job_id}/execute"
+                )
+                print(f"   Status: {execute_response.status_code}")
+                
+                # Wait for training to process
+                print("\n⏳ Step 5: Waiting for training to complete...")
+                await asyncio.sleep(5)
+            
+            # Step 6: Query MCP directly (bypassing gateway)
+            print("\n🔍 Step 6: Querying MCP for documents...")
+            
+            # Try to get MCP container port
+            import subprocess
+            try:
+                result = subprocess.run(
+                    ['docker', 'port', container_id],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
                 )
                 
-                print(f"   Query Status: {query_response.status_code}")
+                mcp_port = None
+                if result.returncode == 0:
+                    for line in result.stdout.split('\n'):
+                        if '3000/tcp' in line or '8080/tcp' in line:
+                            mcp_port = line.split(':')[-1].strip()
+                            break
                 
-                if query_response.status_code == 200:
-                    query_data = query_response.json()
-                    print(f"   Response: {json.dumps(query_data, indent=2)[:500]}")
+                if mcp_port:
+                    mcp_url = f"http://localhost:{mcp_port}"
+                    print(f"   MCP URL: {mcp_url}")
                     
-                    # Check for the error message
-                    response_text = json.dumps(query_data)
-                    has_error = "Error accessing training documents: 0" in response_text
+                    # Query the MCP
+                    query_response = await client.post(
+                        f"{mcp_url}/query",
+                        json={
+                            "query": "Tell me about the Horus Heresy",
+                            "max_results": 10
+                        },
+                        timeout=10.0
+                    )
                     
-                    if has_error:
-                        print(f"\n❌ ISSUE CONFIRMED: MCP cannot access training documents")
-                        print(f"   This is the root cause we need to fix!")
+                    print(f"   Query Status: {query_response.status_code}")
+                    
+                    if query_response.status_code == 200:
+                        query_data = query_response.json()
+                        print(f"   Response: {json.dumps(query_data, indent=2)[:500]}")
+                        
+                        # Check for the error message
+                        response_text = json.dumps(query_data)
+                        has_error = "Error accessing training documents: 0" in response_text
+                        
+                        if has_error:
+                            print(f"\n❌ ISSUE CONFIRMED: MCP cannot access training documents")
+                            print(f"   This is the root cause we need to fix!")
+                        else:
+                            print(f"\n✅ MCP returned a response (not an error)")
+                        
+                        # Assert that documents are accessible
+                        assert not has_error, \
+                            "MCP should be able to access training documents"
                     else:
-                        print(f"\n✅ MCP returned a response (not an error)")
-                    
-                    # Assert that documents are accessible
-                    assert not has_error, \
-                        "MCP should be able to access training documents"
+                        print(f"   Error: {query_response.text[:200]}")
                 else:
-                    print(f"   Error: {query_response.text[:200]}")
-            else:
-                pytest.skip("Could not determine MCP container port")
-                
-        except Exception as e:
-            print(f"   Error querying MCP: {str(e)}")
-            pytest.skip(f"Could not query MCP: {str(e)}")
+                    pytest.skip("Could not determine MCP container port")
+                    
+            except Exception as e:
+                print(f"   Error querying MCP: {str(e)}")
+                pytest.skip(f"Could not query MCP: {str(e)}")
     
     # =================================================================
     # PHASE 4: Service Integration Audit
@@ -392,7 +392,7 @@ class TestMCPTrainingDocumentFlow:
         async with httpx.AsyncClient(timeout=30.0) as client:
             for name, url in services.items():
                 try:
-                        response = await client.get(url, timeout=5.0)
+                    response = await client.get(url, timeout=5.0)
                     status = "✅ ONLINE" if response.status_code == 200 else f"⚠️ {response.status_code}"
                     results[name] = (response.status_code, status)
                     print(f"{status} - {name} ({url})")

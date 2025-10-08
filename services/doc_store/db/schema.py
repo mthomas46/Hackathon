@@ -136,6 +136,22 @@ def create_semantic_metadata_table() -> str:
     """
 
 
+def create_document_vectors_table() -> str:
+    """Create document vectors table for semantic search."""
+    return """
+        CREATE TABLE IF NOT EXISTS document_vectors (
+        id TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL,
+        vector_model TEXT NOT NULL,
+        embedding_dimension INTEGER NOT NULL,
+        embedding BLOB NOT NULL,
+        metadata TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
+        )
+    """
+
+
 def create_tag_taxonomy_table() -> str:
     """Create tag taxonomy table schema."""
     return """
@@ -290,6 +306,7 @@ def get_all_table_schemas() -> list[str]:
         create_document_relationships_table(),
         create_document_tags_table(),
         create_semantic_metadata_table(),
+        create_document_vectors_table(),
         create_tag_taxonomy_table(),
         create_lifecycle_policies_table(),
         create_document_lifecycle_table(),
@@ -321,6 +338,8 @@ def create_indexes() -> list[str]:
         "CREATE INDEX IF NOT EXISTS idx_document_tags_tag ON document_tags(tag)",
         "CREATE INDEX IF NOT EXISTS idx_semantic_metadata_document_id ON semantic_metadata(document_id)",
         "CREATE INDEX IF NOT EXISTS idx_semantic_metadata_entity_type ON semantic_metadata(entity_type)",
+        "CREATE INDEX IF NOT EXISTS idx_document_vectors_document_id ON document_vectors(document_id)",
+        "CREATE INDEX IF NOT EXISTS idx_document_vectors_model ON document_vectors(vector_model)",
         "CREATE INDEX IF NOT EXISTS idx_tag_taxonomy_parent ON tag_taxonomy(parent_tag)",
         "CREATE INDEX IF NOT EXISTS idx_lifecycle_policies_enabled ON lifecycle_policies(enabled)",
         "CREATE INDEX IF NOT EXISTS idx_document_lifecycle_document_id ON document_lifecycle(document_id)",
