@@ -5,8 +5,8 @@ Detail the climactic Siege of Terra, the final battle of the Horus Heresy
 
 ## Response from MCP
 
-No relevant training documents found for query: Detail the climactic Siege of Terra, the final battle of the Horus Heresy
+Error accessing training documents: 0
 
 **Confidence**: 0.0
 
-**Sources**: 
+**Sources**: error

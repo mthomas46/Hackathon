@@ -203,6 +203,7 @@ class ProvisionMCPUseCase:
                 "MCP_PORT": str(mcp_instance.config.port),
                 "CHROMADB_PATH": mcp_instance.config.chromadb_path,
                 "NEO4J_URI": mcp_instance.config.neo4j_uri,
+                "DOC_STORE_URL": "http://doc_store:5010",  # Enable MCP to query doc_store for training documents
             })
             
             container_config = {

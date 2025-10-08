@@ -5,8 +5,8 @@ Collection of notable quotes from key moments and characters in the Horus Heresy
 
 ## Response from MCP
 
-No relevant training documents found for query: Collection of notable quotes from key moments and characters in the Horus Heresy
+Error accessing training documents: 0
 
 **Confidence**: 0.0
 
-**Sources**: 
+**Sources**: error

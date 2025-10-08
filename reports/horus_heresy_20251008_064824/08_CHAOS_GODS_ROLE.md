@@ -5,8 +5,8 @@ Explain the role of the Chaos Gods in corrupting the traitors and influencing th
 
 ## Response from MCP
 
-No relevant training documents found for query: Explain the role of the Chaos Gods in corrupting the traitors and influencing the Heresy
+Error accessing training documents: 0
 
 **Confidence**: 0.0
 
-**Sources**: 
+**Sources**: error

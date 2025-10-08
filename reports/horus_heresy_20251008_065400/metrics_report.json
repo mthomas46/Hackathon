@@ -1,0 +1,205 @@
+{
+  "generated_at": "2025-10-08T06:54:10.575574",
+  "runtime": {
+    "start_time": 1759924440.029813,
+    "end_time": 1759924450.575479,
+    "total_duration_s": 10.545665979385376,
+    "phase_timings": {},
+    "initial_memory_mb": 53.1875,
+    "peak_memory_mb": 170.40625,
+    "avg_cpu_percent": 0.05,
+    "peak_cpu_percent": 0.1,
+    "disk_read_mb": 0,
+    "disk_write_mb": 0
+  },
+  "usability": {
+    "documents_crawled": 11,
+    "documents_ingested": 11,
+    "documents_generated": 12,
+    "documents_target": 12,
+    "success_rate": 1.0,
+    "errors_count": 0,
+    "warnings_count": 0,
+    "service_health": {}
+  },
+  "mcp_training": null,
+  "service_interactions": {
+    "total_interactions": 9,
+    "by_service": {
+      "kafka-ingestion-service": {
+        "total_requests": 1,
+        "successful": 1,
+        "failed": 0,
+        "success_rate": 1.0,
+        "avg_duration_ms": 8.005857467651367,
+        "total_request_size": 0,
+        "total_response_size": 0,
+        "endpoints": [
+          "/health"
+        ]
+      },
+      "mcp-provisioner": {
+        "total_requests": 3,
+        "successful": 1,
+        "failed": 2,
+        "success_rate": 0.3333333333333333,
+        "avg_duration_ms": 2.103726069132487,
+        "total_request_size": 0,
+        "total_response_size": 0,
+        "endpoints": [
+          "/health",
+          "/api/v1/health",
+          "/api/health"
+        ]
+      },
+      "mcp-training-coordinator": {
+        "total_requests": 1,
+        "successful": 1,
+        "failed": 0,
+        "success_rate": 1.0,
+        "avg_duration_ms": 1.8281936645507812,
+        "total_request_size": 0,
+        "total_response_size": 0,
+        "endpoints": [
+          "/health"
+        ]
+      },
+      "mcp-gateway": {
+        "total_requests": 1,
+        "successful": 1,
+        "failed": 0,
+        "success_rate": 1.0,
+        "avg_duration_ms": 2.4051666259765625,
+        "total_request_size": 0,
+        "total_response_size": 0,
+        "endpoints": [
+          "/health"
+        ]
+      },
+      "summarizer-hub": {
+        "total_requests": 3,
+        "successful": 0,
+        "failed": 3,
+        "success_rate": 0.0,
+        "avg_duration_ms": 0.0,
+        "total_request_size": 0,
+        "total_response_size": 0,
+        "endpoints": [
+          "/health",
+          "/api/v1/health",
+          "/api/health"
+        ]
+      }
+    },
+    "timeline": [
+      {
+        "service": "kafka-ingestion-service",
+        "endpoint": "/health",
+        "method": "GET",
+        "timestamp": 1759924440.140011,
+        "duration_ms": 8.005857467651367,
+        "status_code": 200,
+        "success": true,
+        "error": null,
+        "request_size": 0,
+        "response_size": 0
+      },
+      {
+        "service": "mcp-provisioner",
+        "endpoint": "/health",
+        "method": "GET",
+        "timestamp": 1759924440.142163,
+        "duration_ms": 2.1409988403320312,
+        "status_code": 404,
+        "success": false,
+        "error": null,
+        "request_size": 0,
+        "response_size": 0
+      },
+      {
+        "service": "mcp-provisioner",
+        "endpoint": "/api/health",
+        "method": "GET",
+        "timestamp": 1759924440.1431098,
+        "duration_ms": 0.9431838989257812,
+        "status_code": 404,
+        "success": false,
+        "error": null,
+        "request_size": 0,
+        "response_size": 0
+      },
+      {
+        "service": "mcp-provisioner",
+        "endpoint": "/api/v1/health",
+        "method": "GET",
+        "timestamp": 1759924440.146338,
+        "duration_ms": 3.2269954681396484,
+        "status_code": 200,
+        "success": true,
+        "error": null,
+        "request_size": 0,
+        "response_size": 0
+      },
+      {
+        "service": "mcp-training-coordinator",
+        "endpoint": "/health",
+        "method": "GET",
+        "timestamp": 1759924440.1481721,
+        "duration_ms": 1.8281936645507812,
+        "status_code": 200,
+        "success": true,
+        "error": null,
+        "request_size": 0,
+        "response_size": 0
+      },
+      {
+        "service": "mcp-gateway",
+        "endpoint": "/health",
+        "method": "GET",
+        "timestamp": 1759924440.150583,
+        "duration_ms": 2.4051666259765625,
+        "status_code": 200,
+        "success": true,
+        "error": null,
+        "request_size": 0,
+        "response_size": 0
+      },
+      {
+        "service": "summarizer-hub",
+        "endpoint": "/health",
+        "method": "GET",
+        "timestamp": 1759924440.151679,
+        "duration_ms": 0,
+        "status_code": 0,
+        "success": false,
+        "error": "All connection attempts failed",
+        "request_size": 0,
+        "response_size": 0
+      },
+      {
+        "service": "summarizer-hub",
+        "endpoint": "/api/health",
+        "method": "GET",
+        "timestamp": 1759924440.1525939,
+        "duration_ms": 0,
+        "status_code": 0,
+        "success": false,
+        "error": "All connection attempts failed",
+        "request_size": 0,
+        "response_size": 0
+      },
+      {
+        "service": "summarizer-hub",
+        "endpoint": "/api/v1/health",
+        "method": "GET",
+        "timestamp": 1759924440.153471,
+        "duration_ms": 0,
+        "status_code": 0,
+        "success": false,
+        "error": "All connection attempts failed",
+        "request_size": 0,
+        "response_size": 0
+      }
+    ]
+  }
+}

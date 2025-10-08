@@ -5,8 +5,8 @@ Describe the major battles and campaigns of the Horus Heresy
 
 ## Response from MCP
 
-No relevant training documents found for query: Describe the major battles and campaigns of the Horus Heresy
+Error accessing training documents: 0
 
 **Confidence**: 0.0
 
-**Sources**: 
+**Sources**: error

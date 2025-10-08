@@ -192,9 +192,21 @@ class DocumentHandlers(AbstractDocumentHandlers):
         try:
             result = await self.service.search_documents(request.query, request.limit or 50)
 
+            # Convert Document objects to dictionaries for JSON serialization
+            items_as_dicts = []
+            for item in result["items"]:
+                if hasattr(item, 'to_dict'):
+                    items_as_dicts.append(item.to_dict())
+                elif hasattr(item, 'dict'):
+                    items_as_dicts.append(item.dict())
+                elif hasattr(item, '__dict__'):
+                    items_as_dicts.append({k: v for k, v in item.__dict__.items() if not k.startswith('_')})
+                else:
+                    items_as_dicts.append(dict(item) if isinstance(item, dict) else str(item))
+
             return SearchResponse(
                 query=request.query,
-                items=result["items"],
+                items=items_as_dicts,
                 total=result["total"],
                 has_more=result["has_more"],
                 search_time=result.get("search_time", 0.0),
