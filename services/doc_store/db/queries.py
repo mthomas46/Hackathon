@@ -54,28 +54,36 @@ def get_documents_list(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]
 
 
 def search_documents(query: str, limit: int = 50) -> List[Dict[str, Any]]:
-    """Improved full-text search with keyword extraction and fallback."""
+    """
+    Enhanced multi-tier search with query expansion and relevance scoring.
+    
+    Search strategy:
+    1. Tag-based search (FAST, HIGH PRECISION)
+    2. Metadata search (MEDIUM SPEED, GOOD PRECISION)
+    3. FTS search with OR logic (FAST, MEDIUM PRECISION)
+    4. Content LIKE search (SLOW, LOW PRECISION but comprehensive)
+    """
     import re
+    from .query_expansion import extract_keywords_with_synonyms
     
-    # Extract meaningful keywords (remove common words, keep important terms)
-    stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
-                  'of', 'with', 'by', 'from', 'about', 'as', 'into', 'through', 'during',
-                  'what', 'when', 'where', 'who', 'which', 'why', 'how', 'tell', 'me', 
-                  'is', 'are', 'was', 'were', 'been', 'being', 'have', 'has', 'had',
-                  'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might',
-                  'provide', 'give', 'describe', 'explain', 'including', 'comprehensive'}
-    
-    # Extract words (alphanumeric sequences)
-    words = re.findall(r'\b\w+\b', query.lower())
-    
-    # Filter out stop words and short words
-    keywords = [w for w in words if w not in stop_words and len(w) > 2]
+    # Extract keywords with synonym expansion
+    keywords = extract_keywords_with_synonyms(query)
     
     if not keywords:
         # If no keywords, return empty (query was all stop words)
         return []
     
-    # Try FTS with OR'd keywords for flexible matching
+    # TIER 1: Tag-based search (FASTEST)
+    tag_results = _search_by_tags(keywords[:5], limit)
+    if tag_results:
+        return _fetch_documents_with_score(tag_results, limit)
+    
+    # TIER 2: Metadata search
+    metadata_results = _search_by_metadata(keywords[:5], limit)
+    if metadata_results:
+        return _fetch_documents_with_score(metadata_results, limit)
+    
+    # TIER 3: FTS search with OR'd keywords for flexible matching
     fts_query = ' OR '.join(keywords[:5])  # Use top 5 keywords
     
     fts_results = execute_query(
@@ -84,37 +92,128 @@ def search_documents(query: str, limit: int = 50) -> List[Dict[str, Any]]:
         fetch_all=True,
     )
 
-    if not fts_results:
-        # Fallback: Try simple LIKE search with each keyword
-        like_conditions = []
-        params = []
-        for keyword in keywords[:3]:  # Try top 3 keywords
-            like_conditions.append("content LIKE ?")
-            params.append(f"%{keyword}%")
+    if fts_results:
+        doc_ids = [str(row["rowid"]) for row in fts_results]
+        placeholders = ",".join("?" for _ in doc_ids)
+        return execute_query(
+            f"SELECT * FROM documents WHERE rowid IN ({placeholders})",
+            tuple(doc_ids),
+            fetch_all=True,
+        )
+    
+    # TIER 4: Fallback to content LIKE search
+    like_conditions = []
+    params = []
+    for keyword in keywords[:3]:  # Try top 3 keywords
+        like_conditions.append("content LIKE ?")
+        params.append(f"%{keyword}%")
+    
+    if like_conditions:
+        like_query = f"SELECT rowid FROM documents WHERE {' OR '.join(like_conditions)} LIMIT ?"
+        params.append(limit)
         
-        if like_conditions:
-            like_query = f"SELECT rowid FROM documents WHERE {' OR '.join(like_conditions)} LIMIT ?"
-            params.append(limit)
-            
-            fts_results = execute_query(
-                like_query,
-                tuple(params),
+        fallback_results = execute_query(
+            like_query,
+            tuple(params),
+            fetch_all=True,
+        )
+        
+        if fallback_results:
+            doc_ids = [str(row["rowid"]) for row in fallback_results]
+            placeholders = ",".join("?" for _ in doc_ids)
+            return execute_query(
+                f"SELECT * FROM documents WHERE rowid IN ({placeholders})",
+                tuple(doc_ids),
                 fetch_all=True,
             )
     
-    if not fts_results:
+    return []
+
+
+def _search_by_tags(keywords: List[str], limit: int) -> List[Dict[str, Any]]:
+    """Search documents by tags with relevance scoring."""
+    if not keywords:
         return []
+    
+    # Build tag search query with scoring
+    conditions = []
+    params = []
+    
+    for idx, keyword in enumerate(keywords[:5]):
+        # Give higher weight to earlier keywords (more relevant)
+        weight = 10 - (idx * 2)
+        conditions.append(f"(CASE WHEN tags LIKE ? THEN {weight} ELSE 0 END)")
+        params.append(f"%{keyword}%")
+    
+    scoring_sql = " + ".join(conditions)
+    
+    query_sql = f"""
+        SELECT rowid, ({scoring_sql}) as relevance_score
+        FROM documents
+        WHERE tags IS NOT NULL AND tags != '[]'
+        HAVING relevance_score > 0
+        ORDER BY relevance_score DESC
+        LIMIT ?
+    """
+    
+    params.append(limit)
+    
+    return execute_query(query_sql, tuple(params), fetch_all=True)
 
-    # Get document IDs from results
-    doc_ids = [str(row["rowid"]) for row in fts_results]
 
-    # Fetch actual documents
+def _search_by_metadata(keywords: List[str], limit: int) -> List[Dict[str, Any]]:
+    """Search documents by metadata with relevance scoring."""
+    if not keywords:
+        return []
+    
+    # Build metadata search query with scoring
+    conditions = []
+    params = []
+    
+    for idx, keyword in enumerate(keywords[:5]):
+        weight = 7 - (idx * 1)  # Lower weight than tags
+        conditions.append(f"(CASE WHEN metadata LIKE ? THEN {weight} ELSE 0 END)")
+        params.append(f"%{keyword}%")
+    
+    scoring_sql = " + ".join(conditions)
+    
+    query_sql = f"""
+        SELECT rowid, ({scoring_sql}) as relevance_score
+        FROM documents
+        WHERE metadata IS NOT NULL
+        HAVING relevance_score > 0
+        ORDER BY relevance_score DESC
+        LIMIT ?
+    """
+    
+    params.append(limit)
+    
+    return execute_query(query_sql, tuple(params), fetch_all=True)
+
+
+def _fetch_documents_with_score(scored_results: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]:
+    """Fetch full documents from scored search results."""
+    if not scored_results:
+        return []
+    
+    doc_ids = [str(row["rowid"]) for row in scored_results[:limit]]
+    
     placeholders = ",".join("?" for _ in doc_ids)
-    return execute_query(
+    documents = execute_query(
         f"SELECT * FROM documents WHERE rowid IN ({placeholders})",
         tuple(doc_ids),
         fetch_all=True,
     )
+    
+    # Add relevance scores to documents
+    score_map = {str(row["rowid"]): row.get("relevance_score", 0) for row in scored_results}
+    for doc in documents:
+        doc["relevance_score"] = score_map.get(str(doc.get("rowid", "")), 0)
+    
+    # Sort by relevance score
+    documents.sort(key=lambda d: d.get("relevance_score", 0), reverse=True)
+    
+    return documents
 
 
 def insert_document(
