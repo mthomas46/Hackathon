@@ -190,7 +190,7 @@ class DocumentHandlers(AbstractDocumentHandlers):
     async def handle_search_documents(self, request: SearchRequest) -> SearchResponse:
         """Handle document search."""
         try:
-            result = self.service.search_documents(request.query, request.limit or 50)
+            result = await self.service.search_documents(request.query, request.limit or 50)
 
             return SearchResponse(
                 query=request.query,
