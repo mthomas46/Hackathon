@@ -707,10 +707,10 @@ class EnhancedHorusHeresyDemo:
 async def main():
     """Main entry point."""
     demo = EnhancedHorusHeresyDemo()
-    # Deep crawl with intelligent resource management
-    # Depth=3 is the sweet spot: comprehensive without rate limiting
-    # Expected: 1,000-3,000 unique pages in 10-20 minutes
-    await demo.run_demo(max_depth=3, max_surface_links=40)
+    # Moderate crawl for validation with enhanced rate limiting
+    # Depth=2, surface=20: ~200-500 pages in 8-12 minutes
+    # Enhanced throttling prevents rate limiting issues
+    await demo.run_demo(max_depth=2, max_surface_links=20)
 
 
 if __name__ == "__main__":
