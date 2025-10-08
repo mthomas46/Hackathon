@@ -33,7 +33,7 @@ app = FastAPI(title="MCP Instance")\n\
 # Configuration from environment\n\
 mcp_id = os.getenv("MCP_ID", "unknown")\n\
 mcp_tier = os.getenv("MCP_TIER", "0")\n\
-doc_store_url = os.getenv("DOC_STORE_URL", "http://doc_store:8007")\n\
+doc_store_url = os.getenv("DOC_STORE_URL", "http://doc_store:5010")\n\
 \n\
 # Health check endpoint\n\
 @app.get("/health")\n\

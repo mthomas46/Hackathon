@@ -5,8 +5,8 @@ Detail the Loyalist Legions who remained faithful to the Emperor and fought agai
 
 ## Response from MCP
 
-Document store unavailable (status 404). Cannot access training documents.
+Cannot connect to document store. MCP mcp-horus-heresy-75f6d6df cannot access training documents.
 
 **Confidence**: 0.0
 
-**Sources**: doc_store_error
+**Sources**: connection_error
