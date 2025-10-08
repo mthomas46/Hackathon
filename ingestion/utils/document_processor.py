@@ -6,9 +6,10 @@ Handles:
 - Deduplication of similar content
 - Content summarization
 - Section organization
+- Hierarchical topic-based organization (NEW!)
 """
 import re
-from typing import List, Dict, Set, Tuple
+from typing import List, Dict, Set, Tuple, Optional
 from dataclasses import dataclass
 
 
@@ -19,6 +20,7 @@ class ProcessedSection:
     content: str
     sources: List[str]
     relevance_score: float
+    topic_hierarchy: Optional[Dict[str, List[str]]] = None  # NEW: main, sub, related topics
 
 
 class DocumentProcessor:
@@ -240,4 +242,125 @@ class DocumentProcessor:
                 content_parts.append(f"- {source}")
         
         return '\n'.join(content_parts)
+    
+    def organize_by_hierarchical_topics(
+        self,
+        sections: List[Tuple[str, str, str, float]],
+        hierarchical_tags: Optional[List[str]] = None
+    ) -> Dict[str, List[Tuple[str, str, str, float]]]:
+        """
+        Organize sections using hierarchical topic structure (NEW!).
+        
+        Uses AI-extracted hierarchical tags to intelligently group content:
+        - Main topics get top priority
+        - Sub-topics are grouped under main topics
+        - Related topics create connections
+        
+        Args:
+            sections: List of (title, content, source, score) tuples
+            hierarchical_tags: List of hierarchical tags (e.g., 'topic:main:imperial-palace')
+        
+        Returns:
+            Dict with 'main', 'sub', 'related' keys, each containing organized sections
+        """
+        if not hierarchical_tags:
+            # Fallback to simple topic organization
+            return {'main': sections, 'sub': [], 'related': []}
+        
+        # Extract and categorize hierarchical topics
+        main_topics = []
+        sub_topics = []
+        related_topics = []
+        
+        for tag in hierarchical_tags:
+            if ':main:' in tag:
+                topic = tag.replace('topic:main:', '').replace('-', ' ').title()
+                main_topics.append(topic)
+            elif ':sub:' in tag:
+                topic = tag.replace('topic:sub:', '').replace('topic:main:', '').replace('-', ' ').title()
+                sub_topics.append(topic)
+            elif ':related:' in tag or ':tangential:' in tag:
+                topic = tag.replace('topic:related:', '').replace('topic:tangential:', '').replace('-', ' ').title()
+                related_topics.append(topic)
+        
+        # Organize sections by hierarchy
+        organized = {
+            'main': [],
+            'sub': [],
+            'related': []
+        }
+        
+        for section in sections:
+            title, content, source, score = section
+            combined_text = (title + ' ' + content).lower()
+            
+            # Check which hierarchy level this section belongs to
+            main_matches = sum(1 for t in main_topics if t.lower() in combined_text)
+            sub_matches = sum(1 for t in sub_topics if t.lower() in combined_text)
+            related_matches = sum(1 for t in related_topics if t.lower() in combined_text)
+            
+            # Assign to the hierarchy level with most matches
+            if main_matches > 0 and main_matches >= sub_matches and main_matches >= related_matches:
+                organized['main'].append(section)
+            elif sub_matches > 0 and sub_matches >= related_matches:
+                organized['sub'].append(section)
+            elif related_matches > 0:
+                organized['related'].append(section)
+            else:
+                # No clear match, default to main
+                organized['main'].append(section)
+        
+        return organized
+    
+    def create_hierarchical_document_structure(
+        self,
+        main_sections: List[Tuple[str, str, str, float]],
+        sub_sections: List[Tuple[str, str, str, float]],
+        related_sections: List[Tuple[str, str, str, float]]
+    ) -> str:
+        """
+        Create a well-structured document using hierarchical sections (NEW!).
+        
+        Args:
+            main_sections: Primary topic sections (highest priority)
+            sub_sections: Supporting detail sections
+            related_sections: Contextual/tangential sections
+        
+        Returns:
+            Formatted markdown document structure
+        """
+        document_parts = []
+        
+        # Main Topics Section
+        if main_sections:
+            document_parts.append("## Primary Topics\n")
+            document_parts.append("*Core subjects covered in depth:*\n\n")
+            
+            for title, content, source, score in main_sections[:5]:  # Top 5
+                excerpt = self.extract_key_info(content, max_length=400)
+                document_parts.append(f"### {title}\n")
+                document_parts.append(f"{excerpt}\n")
+                document_parts.append(f"*Source: {source}*\n\n")
+        
+        # Sub-Topics Section
+        if sub_sections:
+            document_parts.append("## Supporting Details\n")
+            document_parts.append("*Additional information and specifics:*\n\n")
+            
+            for title, content, source, score in sub_sections[:8]:  # Top 8
+                excerpt = self.extract_key_info(content, max_length=200)
+                document_parts.append(f"### {title}\n")
+                document_parts.append(f"{excerpt}\n\n")
+        
+        # Related Topics Section
+        if related_sections:
+            document_parts.append("## Related Context\n")
+            document_parts.append("*Broader connections and background:*\n\n")
+            
+            for title, content, source, score in related_sections[:3]:  # Top 3
+                excerpt = self.extract_key_info(content, max_length=150)
+                document_parts.append(f"### {title}\n")
+                document_parts.append(f"{excerpt}\n\n")
+        
+        return ''.join(document_parts)
 
