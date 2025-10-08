@@ -56,7 +56,8 @@ class RedisMCPRepository(MCPRepository):
     
     def _state_key(self, state: MCPState) -> str:
         """Get Redis key for state index."""
-        return f"{self.prefix}state:{state.value}"
+        # MCPState has state.state.value, not state.value
+        return f"{self.prefix}state:{state.state.value}"
     
     def _tier_key(self, tier: int) -> str:
         """Get Redis key for tier index."""
@@ -69,7 +70,8 @@ class RedisMCPRepository(MCPRepository):
     async def save(self, instance: MCPInstance) -> None:
         """Save an MCP instance to Redis."""
         try:
-            mcp_id = instance.id
+            # Entity uses mcp_id, not id
+            mcp_id = instance.mcp_id
             instance_key = self._instance_key(mcp_id)
             
             # Serialize instance
@@ -82,9 +84,14 @@ class RedisMCPRepository(MCPRepository):
             await self.redis.sadd(self._all_key(), mcp_id)
             await self.redis.sadd(self._state_key(instance.state), mcp_id)
             
-            # Update tier index if tier exists in metadata
-            if "tier" in instance.metadata:
+            # Update tier index - check both config and metadata
+            tier = None
+            if instance.config and hasattr(instance.config, 'tier'):
+                tier = instance.config.tier
+            elif hasattr(instance, 'metadata') and instance.metadata and "tier" in instance.metadata:
                 tier = instance.metadata["tier"]
+            
+            if tier is not None:
                 await self.redis.sadd(self._tier_key(tier), mcp_id)
             
             logger.debug(f"Saved MCP instance: {mcp_id}")

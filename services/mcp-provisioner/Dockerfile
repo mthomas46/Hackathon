@@ -40,11 +40,14 @@ COPY --from=dependencies /usr/local/lib/python3.11/site-packages /usr/local/lib/
 COPY --from=dependencies /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY services/mcp-provisioner /app/services/mcp-provisioner
-COPY services/shared /app/services/shared
+COPY ./services/mcp-provisioner /app/services/mcp_provisioner
+COPY ./services/shared /app/services/shared
 
 # Set Python path
 ENV PYTHONPATH=/app
+
+# Set working directory to app root
+WORKDIR /app
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
