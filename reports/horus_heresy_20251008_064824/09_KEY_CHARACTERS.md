@@ -5,8 +5,8 @@ Profile key characters who played crucial roles in the Horus Heresy
 
 ## Response from MCP
 
-No relevant training documents found for query: Profile key characters who played crucial roles in the Horus Heresy
+Error accessing training documents: 0
 
 **Confidence**: 0.0
 
-**Sources**: 
+**Sources**: error

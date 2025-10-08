@@ -5,8 +5,8 @@ Explain the causes and events that led to the Horus Heresy and the fall of the W
 
 ## Response from MCP
 
-No relevant training documents found for query: Explain the causes and events that led to the Horus Heresy and the fall of the Warmaster
+Error accessing training documents: 0
 
 **Confidence**: 0.0
 
-**Sources**: 
+**Sources**: error

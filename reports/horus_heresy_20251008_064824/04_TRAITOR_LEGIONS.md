@@ -5,8 +5,8 @@ Detail the Traitor Legions, who they were, why they turned, and their roles in t
 
 ## Response from MCP
 
-No relevant training documents found for query: Detail the Traitor Legions, who they were, why they turned, and their roles in the Heresy
+Error accessing training documents: 0
 
 **Confidence**: 0.0
 
-**Sources**: 
+**Sources**: error

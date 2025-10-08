@@ -5,8 +5,8 @@ Describe the Emperor of Mankind and the Primarchs, their creation, purpose, and 
 
 ## Response from MCP
 
-No relevant training documents found for query: Describe the Emperor of Mankind and the Primarchs, their creation, purpose, and relationships
+Error accessing training documents: 0
 
 **Confidence**: 0.0
 
-**Sources**: 
+**Sources**: error

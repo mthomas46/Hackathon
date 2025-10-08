@@ -221,6 +221,7 @@ class DockerServiceImpl:
             "MCP_API_PORT": str(instance.mcp_config.api_port),
             "CHROMADB_PATH": instance.mcp_config.chromadb_path,
             "NEO4J_URI": instance.mcp_config.neo4j_uri,
+            "DOC_STORE_URL": "http://doc_store:5010",  # Enable MCP to query doc_store for training documents
             **instance.mcp_config.environment_vars,
         }
         

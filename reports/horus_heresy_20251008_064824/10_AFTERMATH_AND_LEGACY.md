@@ -5,8 +5,8 @@ Discuss the aftermath of the Heresy, its consequences, and lasting impact on the
 
 ## Response from MCP
 
-No relevant training documents found for query: Discuss the aftermath of the Heresy, its consequences, and lasting impact on the Imperium
+Error accessing training documents: 0
 
 **Confidence**: 0.0
 
-**Sources**: 
+**Sources**: error

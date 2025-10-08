@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     
     # Docker Configuration
     docker_socket: str = "unix:///var/run/docker.sock"
-    docker_network: str = "hackathon_default"
+    docker_network: str = "ams"  # Changed from "hackathon_default" to match docker-compose network
     docker_mcp_image_prefix: str = "client-mcp"
     
     # Port Allocation

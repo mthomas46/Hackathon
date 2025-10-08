@@ -5,8 +5,8 @@ Detail the Loyalist Legions who remained faithful to the Emperor and fought agai
 
 ## Response from MCP
 
-No relevant training documents found for query: Detail the Loyalist Legions who remained faithful to the Emperor and fought against the traitors
+Error accessing training documents: 0
 
 **Confidence**: 0.0
 
-**Sources**: 
+**Sources**: error

@@ -67,7 +67,13 @@ async def query(body: Dict[str, Any]):\n\
             )\n\
             \n\
             if search_response.status_code == 200:\n\
-                docs = search_response.json()\n\
+                response_data = search_response.json()\n\
+                \n\
+                # Handle both old format (list) and new format (dict with items)\n\
+                if isinstance(response_data, dict):\n\
+                    docs = response_data.get("items", [])\n\
+                else:\n\
+                    docs = response_data\n\
                 \n\
                 if docs and len(docs) > 0:\n\
                     # Use actual document content from training data\n\
