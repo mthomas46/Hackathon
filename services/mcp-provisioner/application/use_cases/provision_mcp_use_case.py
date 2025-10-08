@@ -6,6 +6,7 @@ This use case handles the business logic for provisioning new MCP instances.
 import logging
 import uuid
 import asyncio
+import subprocess
 from typing import Optional
 
 import docker
@@ -19,6 +20,7 @@ from services.mcp_provisioner.domain.value_objects.resource_limits import Resour
 from services.mcp_provisioner.application.dto.provision_request_dto import ProvisionRequestDTO
 from services.mcp_provisioner.application.dto.mcp_status_dto import MCPStatusDTO
 from services.mcp_provisioner.application.dto.operation_result_dto import OperationResultDTO
+from services.mcp_provisioner.infrastructure.external_services.gateway_client import GatewayClient
 
 
 logger = logging.getLogger(__name__)
@@ -32,11 +34,14 @@ class ProvisionMCPUseCase:
     1. Validation of provision request
     2. Creation of MCP configuration
     3. Creation of MCP entity
-    4. Persistence via repository
+    4. Docker container deployment
+    5. Gateway registration
+    6. Persistence via repository
     """
     
-    def __init__(self, repository: MCPRepository):
+    def __init__(self, repository: MCPRepository, gateway_client: Optional[GatewayClient] = None):
         self.repository = repository
+        self.gateway_client = gateway_client or GatewayClient()
     
     async def execute(self, request: ProvisionRequestDTO) -> OperationResultDTO:
         """
@@ -100,12 +105,42 @@ class ProvisionMCPUseCase:
                 mcp_instance.metadata["container_id"] = container_id
                 mcp_instance.metadata["status"] = "deployed"
                 mcp_instance.metadata["deployment_time"] = asyncio.get_event_loop().time()
+                
+                # Step 4.6: Get container port for gateway registration
+                mcp_port = await self._get_container_port(container_id)
+                if mcp_port:
+                    logger.info(f"Container {container_id[:12]} mapped to host port {mcp_port}")
+                    
+                    # Step 4.7: Register with Gateway
+                    gateway_success = await self.gateway_client.register_mcp(
+                        mcp_id=mcp_id,
+                        host="localhost",  # TODO: Make this configurable for multi-host deployments
+                        port=mcp_port,
+                        name=f"{request.client_id} MCP (Tier {request.tier})",
+                        tier=request.tier,
+                        health_check_url=f"http://localhost:{mcp_port}/health",
+                        tags=[request.client_id, f"tier-{request.tier}", "auto-provisioned"],
+                        metadata=mcp_instance.metadata
+                    )
+                    
+                    if gateway_success:
+                        logger.info(f"✅ MCP {mcp_id} registered with gateway")
+                        mcp_instance.metadata["gateway_registered"] = True
+                        mcp_instance.metadata["gateway_port"] = mcp_port
+                    else:
+                        logger.warning(f"⚠️ Failed to register MCP {mcp_id} with gateway")
+                        mcp_instance.metadata["gateway_registered"] = False
+                else:
+                    logger.warning(f"Could not determine host port for container {container_id[:12]}")
+                    mcp_instance.metadata["gateway_registered"] = False
+                
                 # Transition to HOT state since container is running
                 object.__setattr__(mcp_instance, 'state', hot_state())
                 logger.info(f"MCP {mcp_id} transitioned to HOT state")
             else:
                 logger.warning(f"Failed to deploy container for MCP {mcp_id}, keeping in COLD state")
                 mcp_instance.metadata["status"] = "deployment_failed"
+                mcp_instance.metadata["gateway_registered"] = False
             
             # Step 5: Persist the instance
             await self.repository.save(mcp_instance)
@@ -257,6 +292,58 @@ class ProvisionMCPUseCase:
             return None
         except Exception as e:
             logger.error(f"❌ Unexpected error deploying MCP {mcp_instance.mcp_id}: {e}", exc_info=True)
+            return None
+    
+    async def _get_container_port(self, container_id: str) -> Optional[int]:
+        """
+        Get the dynamically assigned host port for an MCP container.
+        
+        Uses `docker port` command to retrieve the host port mapping for the container's
+        exposed MCP_PORT (default 8080 or 3000).
+        
+        Args:
+            container_id: Docker container ID
+        
+        Returns:
+            Host port number if found, None otherwise
+        """
+        try:
+            # Use docker port command to get port mapping
+            result = subprocess.run(
+                ['docker', 'port', container_id],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.returncode == 0:
+                # Parse output for port mappings
+                # Example output:
+                # 3000/tcp -> 0.0.0.0:54321
+                # 8080/tcp -> 0.0.0.0:54322
+                for line in result.stdout.split('\n'):
+                    if '3000/tcp' in line or '8080/tcp' in line:
+                        # Extract port from "0.0.0.0:PORT" or ":::PORT"
+                        port_str = line.split(':')[-1].strip()
+                        if port_str and port_str.isdigit():
+                            port = int(port_str)
+                            logger.debug(f"Found port mapping: {port} for container {container_id[:12]}")
+                            return port
+                
+                logger.warning(f"No port mapping found in output: {result.stdout}")
+                return None
+            else:
+                logger.error(f"docker port command failed: {result.stderr}")
+                return None
+        
+        except subprocess.TimeoutExpired:
+            logger.error(f"Timeout while getting port for container {container_id[:12]}")
+            return None
+        except FileNotFoundError:
+            logger.error("docker command not found in PATH")
+            return None
+        except Exception as e:
+            logger.error(f"Error getting container port: {e}")
             return None
     
     def _parse_resource_limits(self, request: ProvisionRequestDTO) -> ResourceLimits:
