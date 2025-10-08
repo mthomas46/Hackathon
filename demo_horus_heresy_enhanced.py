@@ -95,38 +95,59 @@ class EnhancedHorusHeresyDemo:
         """Print error message."""
         print(f"{Colors.RED}❌ {text}{Colors.RESET}")
     
-    async def check_service_health(self, service_name: str, base_url: str) -> bool:
-        """Check if service is healthy."""
-        for endpoint in ['/health', '/api/health', '/api/v1/health']:
-            try:
-                start = time.time()
-                response = await self.client.get(f"{base_url}{endpoint}", timeout=2.0)
-                duration_ms = (time.time() - start) * 1000
-                
-                # Track service interaction
-                self.metrics.track_service_interaction(
-                    service=service_name,
-                    endpoint=endpoint,
-                    method="GET",
-                    duration_ms=duration_ms,
-                    status_code=response.status_code,
-                    success=response.status_code == 200
-                )
-                
-                if response.status_code == 200:
-                    return True
-            except Exception as e:
-                # Track failed interaction
-                self.metrics.track_service_interaction(
-                    service=service_name,
-                    endpoint=endpoint,
-                    method="GET",
-                    duration_ms=0,
-                    status_code=0,
-                    success=False,
-                    error=str(e)
-                )
-                continue
+    async def check_service_health(self, service_name: str, base_url: str, max_retries: int = 3) -> bool:
+        """
+        Check if service is healthy with retry logic and exponential backoff.
+        
+        Args:
+            service_name: Name of the service
+            base_url: Base URL of the service
+            max_retries: Maximum number of retry attempts
+            
+        Returns:
+            True if service is healthy, False otherwise
+        """
+        endpoints = ['/health', '/api/health', '/api/v1/health']
+        
+        for retry in range(max_retries):
+            # Exponential backoff: 0s, 0.5s, 1s, 2s, 4s...
+            if retry > 0:
+                backoff = 0.5 * (2 ** (retry - 1))
+                await asyncio.sleep(backoff)
+            
+            for endpoint in endpoints:
+                try:
+                    start = time.time()
+                    response = await self.client.get(f"{base_url}{endpoint}", timeout=2.0)
+                    duration_ms = (time.time() - start) * 1000
+                    
+                    # Track service interaction
+                    self.metrics.track_service_interaction(
+                        service=service_name,
+                        endpoint=endpoint,
+                        method="GET",
+                        duration_ms=duration_ms,
+                        status_code=response.status_code,
+                        success=response.status_code == 200
+                    )
+                    
+                    if response.status_code == 200:
+                        if retry > 0:
+                            self.print_info(f"      ✓ {service_name} healthy (after {retry} retries)")
+                        return True
+                except Exception as e:
+                    # Track failed interaction
+                    self.metrics.track_service_interaction(
+                        service=service_name,
+                        endpoint=endpoint,
+                        method="GET",
+                        duration_ms=0,
+                        status_code=0,
+                        success=False,
+                        error=str(e)
+                    )
+                    continue
+        
         return False
     
     async def check_all_services(self) -> Dict[str, bool]:
@@ -151,6 +172,39 @@ class EnhancedHorusHeresyDemo:
             self.print_warning(f"No services online (demo will use simulation mode)")
         
         return self.service_status
+    
+    def validate_critical_services(self, critical_services: List[str]) -> None:
+        """
+        Validate that all critical services are online.
+        
+        Args:
+            critical_services: List of service names that MUST be online
+            
+        Raises:
+            RuntimeError: If any critical service is offline
+        """
+        offline_critical = []
+        
+        for service_name in critical_services:
+            if not self.service_status.get(service_name, False):
+                offline_critical.append(service_name)
+        
+        if offline_critical:
+            self.print_error("\n" + "="*70)
+            self.print_error("❌ DEMO FAILED: CRITICAL SERVICES OFFLINE")
+            self.print_error("="*70)
+            self.print_error(f"\nThe following critical services are offline:")
+            for service in offline_critical:
+                self.print_error(f"  • {service}")
+            self.print_error(f"\nThis demo requires all critical services to be operational.")
+            self.print_error(f"Without these services, the demo will produce degraded results")
+            self.print_error(f"with fallback error messages (e.g., 'error_500') instead of real content.")
+            self.print_error(f"\nPlease start the missing services and try again:")
+            for service in offline_critical:
+                base_url = self.services.get(service, "unknown")
+                self.print_error(f"  docker-compose up -d {service.replace('-', '_')}")
+            self.print_error("\n" + "="*70)
+            raise RuntimeError(f"Critical services offline: {', '.join(offline_critical)}")
     
     async def provision_mcp_with_retry(self, retries: int = 3) -> tuple[str, bool, Optional[str]]:
         """
@@ -809,15 +863,53 @@ class EnhancedHorusHeresyDemo:
             
             # MCP returns: {mcp_id, query, answer, confidence, sources}
             if mcp_response and 'answer' in mcp_response:
-                # SUCCESS: Use MCP answer
+                answer = mcp_response['answer']
+                
+                # ✅ CRITICAL: Detect MCP error responses
+                # If MCP returns system error messages, this means underlying services failed
+                error_indicators = [
+                    "Unable to access training documents",
+                    "system issues",
+                    "error_500",
+                    "error_404",
+                    "service unavailable",
+                    "connection refused"
+                ]
+                
+                has_error = any(indicator in answer for indicator in error_indicators)
+                confidence = mcp_response.get('confidence', 1.0)
+                
+                if has_error or confidence == 0.0:
+                    # ❌ MCP returned an error response, not real content
+                    self.print_error(f"      ❌ MCP returned error response")
+                    self.print_error(f"         Answer preview: {answer[:100]}...")
+                    self.print_error(f"         Confidence: {confidence}")
+                    
+                    # FAIL FAST: Don't generate documents with error content
+                    self.print_error("\n" + "="*70)
+                    self.print_error("❌ DEMO FAILED: MCP QUERIES RETURNING ERRORS")
+                    self.print_error("="*70)
+                    self.print_error(f"\nThe MCP is responding but returning error messages instead of content.")
+                    self.print_error(f"This indicates underlying service failures (e.g., doc_store offline).")
+                    self.print_error(f"\nError detected in MCP response:")
+                    self.print_error(f"  • File: {filename}")
+                    self.print_error(f"  • Query: {query}")
+                    self.print_error(f"  • Response: {answer[:200]}...")
+                    self.print_error(f"  • Confidence: {confidence}")
+                    self.print_error(f"\nGenerating documents with error messages is not acceptable.")
+                    self.print_error(f"This demo requires functional end-to-end MCP query processing.")
+                    self.print_error("\n" + "="*70)
+                    raise RuntimeError(f"MCP returned error response for {filename}")
+                
+                # SUCCESS: Use MCP answer (verified non-error)
                 content = f"# {filename.replace('.md', '').replace('_', ' ').title()}\n\n"
                 content += f"## Query\n{query}\n\n"
-                content += f"## Response from MCP\n\n{mcp_response['answer']}\n\n"
-                content += f"**Confidence**: {mcp_response.get('confidence', 'N/A')}\n\n"
+                content += f"## Response from MCP\n\n{answer}\n\n"
+                content += f"**Confidence**: {confidence}\n\n"
                 content += f"**Sources**: {', '.join(mcp_response.get('sources', []))}\n"
                 
                 mcp_query_success += 1
-                self.print_success(f"      ✓ MCP query")
+                self.print_success(f"      ✓ MCP query (confidence: {confidence})")
             else:
                 # FALLBACK: Use keyword scoring with deduplication
                 content = self.generate_doc_from_crawled_data(
@@ -860,6 +952,23 @@ class EnhancedHorusHeresyDemo:
             # Phase 0: Health Check
             self.print_header("PHASE 0: SERVICE HEALTH CHECK")
             await self.check_all_services()
+            
+            # CRITICAL SERVICE VALIDATION
+            # These services MUST be online, or demo will produce degraded results
+            critical_services = [
+                "mcp-provisioner",       # Required to create MCP instances
+                "summarizer-hub",        # Required for hierarchical topic extraction
+                "kafka-ingestion-service",  # Required for document ingestion
+                "mcp-training-coordinator"  # Required for MCP training
+            ]
+            
+            self.print_info("\n🔒 Validating critical services...")
+            try:
+                self.validate_critical_services(critical_services)
+                self.print_success("✓ All critical services online!")
+            except RuntimeError as e:
+                # Re-raise the error to fail the demo
+                raise
             
             # Phase 1: Provision MCP
             self.print_header("PHASE 1: PROVISION HORUS HERESY MCP")
