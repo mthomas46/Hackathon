@@ -1,0 +1,95 @@
+# Testing Makefile for MCP Ecosystem
+# Provides convenient commands for running tests
+
+.PHONY: help test test-unit test-integration test-e2e test-functional test-all coverage coverage-html coverage-report lint format clean
+
+help:
+	@echo "MCP Ecosystem Testing Commands"
+	@echo "==============================="
+	@echo ""
+	@echo "Testing:"
+	@echo "  make test           - Run all tests (fast)"
+	@echo "  make test-unit      - Run unit tests only"
+	@echo "  make test-integration - Run integration tests"
+	@echo "  make test-e2e       - Run E2E tests"
+	@echo "  make test-functional - Run functional tests"
+	@echo "  make test-all       - Run all tests including slow ones"
+	@echo ""
+	@echo "Coverage:"
+	@echo "  make coverage       - Run tests with coverage report"
+	@echo "  make coverage-html  - Generate HTML coverage report"
+	@echo "  make coverage-report - Display coverage report"
+	@echo ""
+	@echo "Code Quality:"
+	@echo "  make lint           - Run linters (flake8)"
+	@echo "  make format         - Format code (black, isort)"
+	@echo ""
+	@echo "Cleanup:"
+	@echo "  make clean          - Remove test artifacts"
+
+# Run fast tests
+test:
+	pytest tests/ -v -m "not slow" --tb=short
+
+# Run unit tests
+test-unit:
+	pytest tests/unit/ -v --tb=short
+
+# Run integration tests
+test-integration:
+	pytest tests/integration/ -v -m "integration and not slow" --tb=short
+
+# Run E2E tests
+test-e2e:
+	pytest tests/e2e/ -v --tb=short
+
+# Run functional tests
+test-functional:
+	pytest tests/functional/ -v --tb=short
+
+# Run all tests including slow ones
+test-all:
+	pytest tests/ -v --tb=short
+
+# Run tests with coverage
+coverage:
+	pytest tests/ -v --cov=ingestion --cov-report=term-missing --cov-report=html
+
+# Generate HTML coverage report
+coverage-html:
+	pytest tests/ --cov=ingestion --cov-report=html
+	@echo "Coverage report generated in htmlcov/index.html"
+
+# Display coverage report
+coverage-report:
+	@if [ -f .coverage ]; then \
+		coverage report --show-missing; \
+	else \
+		echo "No coverage data found. Run 'make coverage' first."; \
+	fi
+
+# Run linters
+lint:
+	@echo "Running flake8..."
+	flake8 ingestion tests --count --select=E9,F63,F7,F82 --show-source --statistics
+	@echo "Running flake8 (full)..."
+	flake8 ingestion tests --count --max-complexity=15 --max-line-length=120 --statistics || true
+
+# Format code
+format:
+	@echo "Running black..."
+	black ingestion tests
+	@echo "Running isort..."
+	isort ingestion tests
+
+# Clean test artifacts
+clean:
+	rm -rf .pytest_cache
+	rm -rf htmlcov
+	rm -rf .coverage
+	rm -rf **/__pycache__
+	rm -rf **/*.pyc
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete
+	@echo "Test artifacts cleaned"
+
