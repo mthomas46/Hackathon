@@ -381,14 +381,15 @@ services:
 
   doc_store:
     build:
-      context: ./services/doc_store
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/doc_store/Dockerfile
     container_name: doc_store
     ports:
-      - "5087:5087"
+      - "5087:5010"
     environment:
       - SERVICE_NAME=doc_store
-      - SERVICE_PORT=5087
+      - SERVICE_PORT=5010
+      - DOCSTORE_PORT=5010
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - STORAGE_DIR=/data/documents

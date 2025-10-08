@@ -916,8 +916,9 @@ if __name__ == "__main__":
     # Load service configuration (Pydantic validation already done at module level)
     config = load_service_config("doc_store")
 
-    # Get port from configuration (Pydantic config uses config.server.port)
-    port = config.server.port
+    # Get port from environment variable or configuration
+    import os
+    port = int(os.getenv("DOCSTORE_PORT", os.getenv("SERVICE_PORT", str(config.server.port))))
 
     # Register cleanup function
     import atexit
