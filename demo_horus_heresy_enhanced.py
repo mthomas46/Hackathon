@@ -384,13 +384,17 @@ class EnhancedHorusHeresyDemo:
         """Run the complete enhanced demo."""
         start_time = time.time()
         
+        # Update resource metrics baseline
+        self.metrics.update_resource_metrics()
+        
         self.print_header("ENHANCED HORUS HERESY KNOWLEDGE BASE DEMO")
         print(f"Configuration:")
         print(f"  • Crawl Depth: {max_depth}")
         print(f"  • Surface Links: {max_surface_links}")
         print(f"  • Reports: {self.run_dir.resolve()}")
         print(f"  • Documentation: {self.docs_dir.resolve()}")
-        print(f"  • Correlation ID: {self.correlation_id}\n")
+        print(f"  • Correlation ID: {self.correlation_id}")
+        print(f"  • Metrics Tracking: Enabled\n")
         
         try:
             # Phase 0: Health Check
@@ -491,33 +495,156 @@ class EnhancedHorusHeresyDemo:
             self.print_header("PHASE 5: GENERATE DOCUMENTATION SUITE")
             docs_generated = await self.generate_documentation_suite()
             
-            # Summary
+            # Summary with Metrics
             elapsed = time.time() - start_time
             
+            # Finalize metrics
+            self.metrics.usability.documents_crawled = len(self.documents_ingested)
+            self.metrics.usability.documents_generated = docs_generated
+            self.metrics.update_resource_metrics()
+            self.metrics.finalize()
+            
             self.print_header("DEMO COMPLETE")
+            
             # Calculate total tags
             total_tags = 0
+            hierarchical_tags = 0
             if self.tag_collection:
                 breakdown = self.tag_collection.to_dict()
-                total_tags = len(breakdown.get('default', [])) + len(breakdown.get('contextual', [])) + len(breakdown.get('user_defined', []))
+                total_tags = (len(breakdown.get('default', [])) + 
+                            len(breakdown.get('contextual', [])) + 
+                            len(breakdown.get('user_defined', [])) +
+                            len(breakdown.get('hierarchical', [])))
+                hierarchical_tags = len(breakdown.get('hierarchical', []))
             
             print(f"Summary:")
             print(f"  • MCP ID: {self.mcp_id}")
             print(f"  • Pages Crawled: {len(self.documents_ingested)}")
-            print(f"  • Unique Tags: {total_tags}")
+            print(f"  • Unique Tags: {total_tags} (+ {hierarchical_tags} hierarchical)")
             print(f"  • Documents Generated: {docs_generated}/12")
-            print(f"  • Execution Time: {elapsed:.1f}s\n")
+            print(f"  • Execution Time: {elapsed:.1f}s")
+            print(f"  • Peak Memory: {self.metrics.runtime.peak_memory_mb:.1f} MB")
+            print(f"  • Avg CPU: {self.metrics.runtime.avg_cpu_percent:.1f}%\n")
             
-            print(f"Artifacts:")
+            # Generate comprehensive reports
+            self.print_header("GENERATING REPORTS")
+            await self.generate_comprehensive_reports()
+            
+            print(f"\nArtifacts:")
             print(f"  📁 Run Directory: {self.run_dir}")
             print(f"  📚 Documentation Suite: {self.docs_dir}")
             print(f"  📊 Crawl Report: {self.run_dir / 'crawl_report.json'}")
+            print(f"  📈 Metrics Report (JSON): {self.run_dir / 'metrics_report.json'}")
+            print(f"  📄 Metrics Report (MD): {self.run_dir / 'metrics_report.md'}")
+            print(f"  🎯 MCP Training Report: {self.run_dir / 'mcp_training_report.md'}")
             
             self.print_success("")
             self.print_success("✨ Horus Heresy Knowledge Base Demo Complete!")
             
         finally:
             await self.client.aclose()
+    
+    async def generate_comprehensive_reports(self):
+        """Generate all comprehensive reports."""
+        self.print_info("📊 Generating comprehensive metrics reports...")
+        
+        try:
+            # 1. Export metrics to JSON
+            json_path = self.run_dir / "metrics_report.json"
+            self.metrics.export_to_json(json_path)
+            self.print_success(f"   ✓ JSON report: {json_path.name}")
+            
+            # 2. Export metrics to Markdown
+            md_path = self.run_dir / "metrics_report.md"
+            self.metrics.export_to_markdown(md_path)
+            self.print_success(f"   ✓ Markdown report: {md_path.name}")
+            
+            # 3. Generate MCP Training Report
+            mcp_report_path = self.run_dir / "mcp_training_report.md"
+            await self.generate_mcp_training_report(mcp_report_path)
+            self.print_success(f"   ✓ MCP training report: {mcp_report_path.name}")
+            
+            # 4. Generate Service Interaction Report
+            interaction_report_path = self.run_dir / "service_interactions.json"
+            interaction_report = self.metrics.generate_service_interaction_report()
+            with open(interaction_report_path, 'w') as f:
+                json.dump(interaction_report, f, indent=2)
+            self.print_success(f"   ✓ Service interactions: {interaction_report_path.name}")
+            
+            self.print_success("✅ All reports generated successfully!")
+            
+        except Exception as e:
+            self.print_warning(f"⚠️  Error generating reports: {e}")
+    
+    async def generate_mcp_training_report(self, output_path: Path):
+        """Generate detailed MCP training and performance report."""
+        lines = []
+        
+        lines.append("# MCP Training & Performance Report\n")
+        lines.append(f"**Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        lines.append(f"**MCP ID**: {self.mcp_id}\n")
+        lines.append(f"**Correlation ID**: {self.correlation_id}\n\n")
+        
+        # MCP Configuration
+        lines.append("## MCP Configuration\n\n")
+        lines.append("| Parameter | Value |\n")
+        lines.append("|-----------|-------|\n")
+        lines.append(f"| Tier | 2 (Production) |\n")
+        lines.append(f"| Memory Limit | 4096 MB |\n")
+        lines.append(f"| CPU Shares | 2048 |\n")
+        lines.append(f"| Client ID | horus-heresy-demo |\n\n")
+        
+        # Training Data
+        lines.append("## Training Data\n\n")
+        lines.append(f"- **Documents Crawled**: {len(self.documents_ingested)}\n")
+        lines.append(f"- **Documents Ingested**: {self.metrics.usability.documents_ingested}\n")
+        if self.tag_collection:
+            breakdown = self.tag_collection.to_dict().get('breakdown', {})
+            lines.append(f"- **Total Tags**: {breakdown.get('total', 0)}\n")
+            lines.append(f"  - Default: {breakdown.get('default', 0)}\n")
+            lines.append(f"  - Contextual: {breakdown.get('contextual', 0)}\n")
+            lines.append(f"  - Hierarchical: {breakdown.get('hierarchical', 0)}\n")
+            lines.append(f"  - User-Defined: {breakdown.get('user_defined', 0)}\n")
+        lines.append("\n")
+        
+        # Performance Metrics
+        if self.metrics.mcp_lifecycle:
+            lines.append("## Performance Metrics\n\n")
+            mcp_report = self.metrics.generate_mcp_training_report()
+            
+            if mcp_report:
+                lines.append("### Provisioning\n")
+                lines.append(f"- **Duration**: {mcp_report['provisioning']['duration_s']:.2f}s\n")
+                lines.append(f"- **Container**: {mcp_report['provisioning']['container_id'] or 'N/A'}\n\n")
+                
+                if mcp_report.get('training'):
+                    lines.append("### Training\n")
+                    lines.append(f"- **Duration**: {mcp_report['training']['duration_s'] or 0:.2f}s\n")
+                    lines.append(f"- **Documents**: {mcp_report['training']['documents_ingested']}\n\n")
+                
+                if mcp_report.get('scalability'):
+                    lines.append("### Scalability Estimates\n")
+                    scalability = mcp_report['scalability']
+                    lines.append(f"- **Concurrent MCPs**: {scalability['mcp_capacity']['concurrent_mcps_estimate']}\n")
+                    lines.append(f"- **Total QPS**: {scalability['throughput_estimates']['total_qps_capacity']:.2f}\n")
+                    lines.append(f"- **Daily Capacity**: {scalability['throughput_estimates']['daily_query_capacity']:,} queries\n\n")
+        
+        # Resource Usage
+        lines.append("## Resource Usage\n\n")
+        lines.append(f"- **Peak Memory**: {self.metrics.runtime.peak_memory_mb:.2f} MB\n")
+        lines.append(f"- **Average CPU**: {self.metrics.runtime.avg_cpu_percent:.1f}%\n")
+        lines.append(f"- **Peak CPU**: {self.metrics.runtime.peak_cpu_percent:.1f}%\n\n")
+        
+        # Service Health
+        lines.append("## Service Health\n\n")
+        for service, healthy in self.metrics.usability.service_health.items():
+            status = "✅ Online" if healthy else "❌ Offline"
+            lines.append(f"- **{service}**: {status}\n")
+        lines.append("\n")
+        
+        # Write report
+        with open(output_path, 'w') as f:
+            f.writelines(lines)
 
 
 async def main():
