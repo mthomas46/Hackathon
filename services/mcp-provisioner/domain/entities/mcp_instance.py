@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict
 from uuid import uuid4
 
-from domain.value_objects.mcp_state import MCPState, MCPStateEnum, cold_state
-from domain.value_objects.mcp_config import MCPConfig
-from domain.value_objects.resource_limits import ResourceLimits, medium_resources
+from services.mcp_provisioner.domain.value_objects.mcp_state import MCPState, MCPStateEnum, cold_state
+from services.mcp_provisioner.domain.value_objects.mcp_config import MCPConfig
+from services.mcp_provisioner.domain.value_objects.resource_limits import ResourceLimits, medium_resources
 
 
 @dataclass
@@ -34,7 +34,10 @@ class MCPInstance:
     endpoint: Optional[str] = None  # http://container:port
     host_port: Optional[int] = None  # External port mapping
     
-    # Metadata
+    # Metadata and additional information
+    metadata: Dict[str, any] = field(default_factory=dict)
+    
+    # Timestamps
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
     last_health_check: Optional[datetime] = None
