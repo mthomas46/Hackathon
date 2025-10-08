@@ -128,6 +128,7 @@ class DocumentHandlers(AbstractDocumentHandlers):
                 content=document.content,
                 content_hash=document.content_hash,
                 metadata=document.metadata,
+                tags=document.tags,  # ✅ CRITICAL FIX: Include tags
                 created_at=document.created_at.isoformat(),
             )
 
@@ -154,6 +155,7 @@ class DocumentHandlers(AbstractDocumentHandlers):
                 content=document.content,
                 content_hash=document.content_hash,
                 metadata=document.metadata,
+                tags=document.tags,  # ✅ CRITICAL FIX: Include tags
                 created_at=document.created_at.isoformat(),
             )
 
