@@ -147,18 +147,19 @@ def _search_by_tags(keywords: List[str], limit: int) -> List[Dict[str, Any]]:
     
     scoring_sql = " + ".join(conditions)
     
+    # We use scoring_sql 3 times, so we need params 3 times
+    all_params = params + params + params + [limit]
+    
     query_sql = f"""
         SELECT rowid, ({scoring_sql}) as relevance_score
         FROM documents
         WHERE tags IS NOT NULL AND tags != '[]'
-        HAVING relevance_score > 0
-        ORDER BY relevance_score DESC
+          AND ({scoring_sql}) > 0
+        ORDER BY ({scoring_sql}) DESC
         LIMIT ?
     """
     
-    params.append(limit)
-    
-    return execute_query(query_sql, tuple(params), fetch_all=True)
+    return execute_query(query_sql, tuple(all_params), fetch_all=True)
 
 
 def _search_by_metadata(keywords: List[str], limit: int) -> List[Dict[str, Any]]:
@@ -177,18 +178,19 @@ def _search_by_metadata(keywords: List[str], limit: int) -> List[Dict[str, Any]]
     
     scoring_sql = " + ".join(conditions)
     
+    # We use scoring_sql 3 times, so we need params 3 times
+    all_params = params + params + params + [limit]
+    
     query_sql = f"""
         SELECT rowid, ({scoring_sql}) as relevance_score
         FROM documents
         WHERE metadata IS NOT NULL
-        HAVING relevance_score > 0
-        ORDER BY relevance_score DESC
+          AND ({scoring_sql}) > 0
+        ORDER BY ({scoring_sql}) DESC
         LIMIT ?
     """
     
-    params.append(limit)
-    
-    return execute_query(query_sql, tuple(params), fetch_all=True)
+    return execute_query(query_sql, tuple(all_params), fetch_all=True)
 
 
 def _fetch_documents_with_score(scored_results: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]:

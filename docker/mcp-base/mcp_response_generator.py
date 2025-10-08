@@ -124,11 +124,21 @@ def generate_intent_based_intro(intent: str, topic: str) -> str:
 
 def extract_relevant_snippets(query: str, docs: List[Dict], max_snippets: int = 3) -> List[Dict]:
     """Extract most relevant snippets from documents."""
+    import json
+    
     key_terms = extract_key_terms(query)
     snippets = []
     
     for doc in docs:
         content = doc.get('content', '')
+        
+        # Parse metadata if it's a string
+        metadata = doc.get('metadata', {})
+        if isinstance(metadata, str):
+            try:
+                metadata = json.loads(metadata)
+            except (json.JSONDecodeError, TypeError):
+                metadata = {}
         
         # Split into paragraphs
         paragraphs = content.split('\n\n')
@@ -142,7 +152,7 @@ def extract_relevant_snippets(query: str, docs: List[Dict], max_snippets: int = 
                     'doc_id': doc.get('id', 'unknown'),
                     'content': snippet_text,
                     'relevance': keyword_count,
-                    'source': doc.get('metadata', {}).get('source_url', 'unknown')
+                    'source': metadata.get('source_url', 'unknown')
                 })
         
         if len(snippets) >= max_snippets * 3:  # Get extras for sorting
