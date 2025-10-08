@@ -62,13 +62,13 @@ async def ingest_document(document: dict):
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             # Prepare document payload for doc_store
-            # Note: doc_store expects content and optional metadata/id
+            # Note: doc_store expects content and optional metadata/id/tags
             doc_payload = {
                 "content": document.get("content", ""),
+                "tags": document.get("tags", []),  # ✅ ENHANCEMENT: Tags at top level for search
                 "metadata": {
                     "title": document.get("title", doc_id),
                     "source_url": document.get("source_url", ""),
-                    "tags": document.get("tags", []),
                     "categories": document.get("categories", []),
                     "correlation_id": document.get("correlation_id", ""),
                     **document.get("metadata", {})

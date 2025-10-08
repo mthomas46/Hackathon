@@ -1,0 +1,133 @@
+# MCP Base Image - Enhanced with Contextual Responses
+# This is a production-ready MCP that queries actual training documents
+# and generates intelligent, contextual responses
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages
+RUN pip install --no-cache-dir \
+    fastapi==0.104.1 \
+    uvicorn[standard]==0.24.0 \
+    httpx==0.25.2 \
+    pydantic==2.5.0
+
+# Copy response generator module
+COPY docker/mcp-base/mcp_response_generator.py /app/mcp_response_generator.py
+
+# Create enhanced MCP server with contextual responses
+RUN echo 'from fastapi import FastAPI, HTTPException\n\
+import os\n\
+import httpx\n\
+import logging\n\
+import asyncio\n\
+from typing import Dict, Any, List, Optional\n\
+from mcp_response_generator import generate_contextual_response\n\
+\n\
+logging.basicConfig(level=logging.INFO)\n\
+logger = logging.getLogger(__name__)\n\
+\n\
+app = FastAPI(title="MCP Instance - Enhanced")\n\
+\n\
+# Configuration from environment\n\
+mcp_id = os.getenv("MCP_ID", "unknown")\n\
+mcp_tier = os.getenv("MCP_TIER", "0")\n\
+doc_store_url = os.getenv("DOC_STORE_URL", "http://doc_store:5010")\n\
+\n\
+# Health check endpoint\n\
+@app.get("/health")\n\
+async def health():\n\
+    """Health check endpoint for gateway monitoring."""\n\
+    return {\n\
+        "status": "healthy",\n\
+        "mcp_id": mcp_id,\n\
+        "tier": mcp_tier,\n\
+        "doc_store": doc_store_url,\n\
+        "features": ["contextual_responses", "query_expansion", "intent_classification"]\n\
+    }\n\
+\n\
+# Main query endpoint\n\
+@app.post("/api/query")\n\
+async def query(body: Dict[str, Any]):\n\
+    """Query the MCP using training documents from doc_store with contextual responses."""\n\
+    query_text = body.get("query", "")\n\
+    max_results = body.get("max_results", 5)\n\
+    \n\
+    logger.info(f"MCP {mcp_id} received query: {query_text[:100]}...")\n\
+    \n\
+    docs = []\n\
+    doc_store_status = "available"\n\
+    \n\
+    try:\n\
+        # Query doc_store for relevant training documents\n\
+        async with httpx.AsyncClient(timeout=10.0) as client:\n\
+            search_response = await client.post(\n\
+                f"{doc_store_url}/api/v1/search",\n\
+                json={\n\
+                    "query": query_text,\n\
+                    "limit": max_results\n\
+                }\n\
+            )\n\
+            \n\
+            if search_response.status_code == 200:\n\
+                response_data = search_response.json()\n\
+                \n\
+                # Handle both old format (list) and new format (dict with items)\n\
+                if isinstance(response_data, dict):\n\
+                    docs = response_data.get("items", [])\n\
+                else:\n\
+                    docs = response_data\n\
+                \n\
+                logger.info(f"✅ MCP {mcp_id} found {len(docs)} relevant documents")\n\
+            else:\n\
+                doc_store_status = f"error_{search_response.status_code}"\n\
+                logger.error(f"❌ doc_store returned {search_response.status_code}")\n\
+    \n\
+    except httpx.ConnectError as e:\n\
+        doc_store_status = "connection_error"\n\
+        logger.error(f"❌ Cannot connect to doc_store at {doc_store_url}: {e}")\n\
+    \n\
+    except httpx.TimeoutException as e:\n\
+        doc_store_status = "timeout"\n\
+        logger.error(f"❌ Timeout querying doc_store: {e}")\n\
+    \n\
+    except Exception as e:\n\
+        doc_store_status = "unknown_error"\n\
+        logger.error(f"❌ Error querying doc_store: {e}", exc_info=True)\n\
+    \n\
+    # Generate contextual response\n\
+    response_data = generate_contextual_response(query_text, docs, doc_store_status)\n\
+    \n\
+    # Add MCP metadata\n\
+    response_data["mcp_id"] = mcp_id\n\
+    response_data["tier"] = mcp_tier\n\
+    response_data["documents_found"] = len(docs)\n\
+    \n\
+    return response_data\n\
+\n\
+# Root endpoint\n\
+@app.get("/")\n\
+async def root():\n\
+    """Root endpoint with MCP information."""\n\
+    return {\n\
+        "mcp_id": mcp_id,\n\
+        "tier": mcp_tier,\n\
+        "status": "running",\n\
+        "doc_store": doc_store_url,\n\
+        "endpoints": ["/health", "/api/query"],\n\
+        "features": ["contextual_responses", "query_expansion", "intent_classification"]\n\
+    }\n\
+' > /app/main.py
+
+EXPOSE 8080
+EXPOSE 3000
+
+# Use MCP_PORT environment variable or default to 8080
+CMD python -m uvicorn main:app --host 0.0.0.0 --port ${MCP_PORT:-8080}
+
