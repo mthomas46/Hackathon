@@ -95,7 +95,8 @@ class ProvisionMCPUseCase:
             container_id = await self._deploy_docker_container(mcp_instance)
             if container_id:
                 logger.info(f"Successfully deployed container {container_id[:12]} for MCP {mcp_id}")
-                # Update metadata with container info
+                # Update entity with container info (IMPORTANT: Set on entity, not just metadata!)
+                mcp_instance.container_id = container_id
                 mcp_instance.metadata["container_id"] = container_id
                 mcp_instance.metadata["status"] = "deployed"
                 mcp_instance.metadata["deployment_time"] = asyncio.get_event_loop().time()

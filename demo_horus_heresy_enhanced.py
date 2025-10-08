@@ -152,14 +152,22 @@ class EnhancedHorusHeresyDemo:
         
         return self.service_status
     
-    async def provision_mcp_with_retry(self, retries: int = 3) -> str:
-        """Provision MCP with retry logic."""
+    async def provision_mcp_with_retry(self, retries: int = 3) -> tuple[str, bool]:
+        """
+        Provision MCP with retry logic.
+        
+        Returns:
+            tuple[str, bool]: (mcp_id, is_deployed)
+                - mcp_id: The MCP instance ID
+                - is_deployed: True if MCP container actually deployed, False otherwise
+        """
         self.print_info("📦 Provisioning Tier-2 MCP (4GB RAM, 2x CPU)...")
         
         if not self.service_status.get('mcp-provisioner'):
             fallback_id = f"mcp-horus-{uuid.uuid4().hex[:8]}"
-            self.print_info(f"   Provisioner offline, using fallback: {fallback_id}")
-            return fallback_id
+            self.print_error(f"   ❌ Provisioner offline! Cannot create real MCP.")
+            self.print_error(f"   This demo requires actual MCP deployment to test query processing.")
+            return fallback_id, False
         
         for attempt in range(retries):
             try:
@@ -179,17 +187,38 @@ class EnhancedHorusHeresyDemo:
                     }
                 )
                 
-                if response.status_code == 200:
+                if response.status_code in [200, 201]:
                     data = response.json()
-                    mcp_id = data.get('mcp_id') or data.get('id')
-                    self.print_success(f"✓ MCP provisioned: {mcp_id}")
-                    return mcp_id
-            except:
-                pass
+                    
+                    # Extract MCP details
+                    if 'data' in data:
+                        mcp_data = data['data']
+                        mcp_id = mcp_data.get('mcp_id') or mcp_data.get('id')
+                        state = mcp_data.get('state', 'unknown')
+                        container_id = mcp_data.get('container_id')
+                        
+                        # Check if actually deployed (not just created)
+                        is_deployed = (state.lower() in ['hot', 'warming']) and container_id is not None
+                        
+                        if is_deployed:
+                            self.print_success(f"✓ MCP deployed: {mcp_id} (state: {state})")
+                            return mcp_id, True
+                        else:
+                            self.print_warning(f"⚠️  MCP created but not deployed: {mcp_id} (state: {state})")
+                            self.print_warning(f"   Container ID: {container_id or 'None'}")
+                            self.print_error(f"   ❌ Demo requires actual MCP deployment to test queries!")
+                            return mcp_id, False
+                    else:
+                        mcp_id = data.get('mcp_id') or data.get('id')
+                        self.print_warning(f"⚠️  MCP response missing deployment details")
+                        return mcp_id, False
+            except Exception as e:
+                self.print_warning(f"   Attempt {attempt + 1} failed: {str(e)[:100]}")
         
-        fallback_id = f"mcp-horus-{uuid.uuid4().hex[:8]}"
-        self.print_info(f"   Using fallback MCP ID: {fallback_id}")
-        return fallback_id
+        # All retries failed
+        self.print_error(f"❌ Failed to provision MCP after {retries} attempts")
+        self.print_error(f"   This demo requires actual MCP deployment to test query processing.")
+        return None, False
     
     async def ingest_documents_with_retry(self, documents: List[NormalizedDocument]):
         """
@@ -641,7 +670,21 @@ class EnhancedHorusHeresyDemo:
             
             # Phase 1: Provision MCP
             self.print_header("PHASE 1: PROVISION HORUS HERESY MCP")
-            self.mcp_id = await self.provision_mcp_with_retry()
+            self.mcp_id, mcp_deployed = await self.provision_mcp_with_retry()
+            
+            # FAIL FAST: Demo requires actual MCP deployment
+            if not mcp_deployed:
+                self.print_error("\n" + "="*70)
+                self.print_error("❌ DEMO FAILED: MCP NOT DEPLOYED")
+                self.print_error("="*70)
+                self.print_error("\nThis demo validates end-to-end MCP workflow including:")
+                self.print_error("  • Document ingestion")
+                self.print_error("  • MCP training")
+                self.print_error("  • MCP query processing (REQUIRES DEPLOYED MCP!)")
+                self.print_error("\nWithout a deployed MCP, we cannot test actual query processing.")
+                self.print_error("The demo would only test fallback mechanisms, not the real MCP.")
+                self.print_error("\n" + "="*70)
+                raise RuntimeError("MCP deployment failed - cannot continue demo")
             
             # Phase 2: Deep Crawl
             self.print_header("PHASE 2: DEEP CRAWL FANDOM WIKI")
