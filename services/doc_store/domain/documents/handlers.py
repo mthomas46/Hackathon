@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import HTTPException
 
-from ...core.models import (
+from ...presentation.dto.models import (
     DocumentListResponse,
     DocumentRequest,
     DocumentResponse,
@@ -97,14 +97,36 @@ class DocumentHandlers(AbstractDocumentHandlers):
 
             # Process metadata
             metadata = request.metadata if isinstance(request.metadata, dict) else {}
+            
+            # Process tags (extract from request)
+            tags = request.tags if hasattr(request, 'tags') and request.tags is not None else []
+            
+            # 🔍 DEBUG: Write to file for visibility
+            with open("/tmp/tags_debug.log", "a") as f:
+                f.write(f"[{request.id}] request.tags: {getattr(request, 'tags', 'NO ATTR')}\n")
+                f.write(f"[{request.id}] processed tags: {tags}\n")
+                f.flush()
+            
+            # 🔍 DEBUG: Print tags (CRITICAL FIX LOCATION)
+            print(f"[TAGS DEBUG] DOMAIN Handler - request.tags: {getattr(request, 'tags', 'NO ATTR')}", flush=True)
+            print(f"[TAGS DEBUG] DOMAIN Handler - processed tags: {tags}", flush=True)
 
-            # Create document
-            document = self.service.create_document(
-                content=request.content,
-                metadata=metadata,
-                document_id=request.id,
-                correlation_id=request.correlation_id,
-            )
+            # Create document using BaseService.create() method
+            document = await self.service.create({
+                "id": request.id,
+                "content": request.content,
+                "metadata": metadata,
+                "tags": tags,  # ✅ CRITICAL FIX: Pass tags to service!
+                "correlation_id": request.correlation_id,
+            })
+            
+            # 🔍 DEBUG: Write to file after creation
+            with open("/tmp/tags_debug.log", "a") as f:
+                f.write(f"[{request.id}] document.tags after create: {document.tags}\n")
+                f.flush()
+            
+            # 🔍 DEBUG: Print document after creation
+            print(f"[TAGS DEBUG] Document created - tags: {document.tags}", flush=True)
 
             # Return direct DocumentResponse without wrapper
             return DocumentResponse(

@@ -81,8 +81,12 @@ class DocumentService(BaseService[Document]):
         tags = data.get("tags", [])
         if not isinstance(tags, list):
             tags = []
+        
+        # 🔍 DEBUG: Log tags at service level
+        logger.info(f"[TAGS DEBUG] Service received data with tags: {data.get('tags')} (type: {type(data.get('tags'))})")
+        logger.info(f"[TAGS DEBUG] Service processed tags: {tags} (type: {type(tags)})")
 
-        return Document(
+        doc = Document(
             id=entity_id,
             content=content,
             content_hash=content_hash,
@@ -90,6 +94,11 @@ class DocumentService(BaseService[Document]):
             tags=tags,  # ✅ CRITICAL FIX: Include tags
             correlation_id=correlation_id,
         )
+        
+        # 🔍 DEBUG: Log tags in created Document entity
+        logger.info(f"[TAGS DEBUG] Document entity created - tags: {doc.tags} (type: {type(doc.tags)})")
+        
+        return doc
 
     async def _check_duplicates(self, entity: Document) -> None:
         """Check for duplicate content (business rule)."""
