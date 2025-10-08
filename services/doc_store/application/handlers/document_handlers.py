@@ -145,8 +145,13 @@ class DocumentHandlers(AbstractDocumentHandlers):
 
     async def handle_get_document(self, document_id: str) -> DocumentResponse:
         """Handle document retrieval."""
+        print(f"🔍 [HANDLER DEBUG] handle_get_document called with: {document_id}", flush=True)
         try:
+            print(f"🔍 [HANDLER DEBUG] Calling service.get_by_id...", flush=True)
             document = await self.service.get_by_id(document_id)  # ✅ FIX: Correct method + await
+            print(f"🔍 [HANDLER DEBUG] service.get_by_id returned: {type(document)}", flush=True)
+            if document:
+                print(f"🔍 [HANDLER DEBUG] document.tags = {getattr(document, 'tags', 'NO ATTR')}", flush=True)
             if not document:
                 raise DocumentNotFoundException(document_id)
 

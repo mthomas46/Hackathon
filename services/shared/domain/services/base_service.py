@@ -140,8 +140,19 @@ class BaseService(Generic[T], ABC):
             EntityNotFoundError: If entity not found
             ServiceError: If retrieval fails
         """
+        print(f"🔍 [BASESERVICE DEBUG] get_by_id called with: {entity_id}", flush=True)
+        print(f"🔍 [BASESERVICE DEBUG] Repository type: {type(self.repository)}", flush=True)
+        
         try:
+            print(f"🔍 [BASESERVICE DEBUG] Calling repository.find_by_id...", flush=True)
             entity = await self.repository.find_by_id(entity_id)
+            print(f"🔍 [BASESERVICE DEBUG] repository.find_by_id returned: {type(entity)}", flush=True)
+            
+            if entity:
+                print(f"🔍 [BASESERVICE DEBUG] Entity has tags: {hasattr(entity, 'tags')}", flush=True)
+                if hasattr(entity, 'tags'):
+                    print(f"🔍 [BASESERVICE DEBUG] Entity.tags = {entity.tags}", flush=True)
+            
             if not entity:
                 raise EntityNotFoundError(
                     f"{self.entity_class.__name__} with ID {entity_id} not found"
