@@ -149,7 +149,10 @@ class FandomWikiIngestor:
             )
             documents.append(doc)
             
-            logger.info(f"  {'  ' * current_depth}[Depth {current_depth}] {page_title} → {len(page_data['links'])} links found")
+            # Log link discovery and filtering
+            total_links_found = len(page_data['links'])
+            links_to_follow = min(max_links_per_page, total_links_found) if current_depth < max_depth else 0
+            logger.info(f"  {'  ' * current_depth}[Depth {current_depth}] {page_title} → {total_links_found} links found, following {links_to_follow}")
             
             # Track in crawl graph
             self.crawl_graph[page_title] = {

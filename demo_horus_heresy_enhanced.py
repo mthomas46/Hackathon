@@ -374,7 +374,8 @@ class EnhancedHorusHeresyDemo:
 async def main():
     """Main entry point."""
     demo = EnhancedHorusHeresyDemo()
-    await demo.run_demo(max_depth=2, max_surface_links=10)
+    # Use 50 links per page for better coverage (Horus Heresy page has 594 links!)
+    await demo.run_demo(max_depth=2, max_surface_links=50)
 
 
 if __name__ == "__main__":
