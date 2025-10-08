@@ -167,12 +167,14 @@ class EnhancedHorusHeresyDemo:
                     self.print_info(f"   Retry {attempt + 1}/{retries}...")
                     await asyncio.sleep(1)
                 
+                # FIX: Correct endpoint is /api/v1/mcps (not /api/v1/provision)
                 response = await self.client.post(
-                    f"{self.services['mcp-provisioner']}/api/v1/provision",
+                    f"{self.services['mcp-provisioner']}/api/v1/mcps",
                     json={
                         "client_id": "horus-heresy",
-                        "tier": 2,
-                        "memory_limit": "4096m",
+                        "tier": 2,  # Integer tier: 1=standard, 2=production, 3=enterprise
+                        "image_name": "mcp-base:latest",
+                        "memory_limit": "4096M",  # String format
                         "cpu_shares": 2048
                     }
                 )
@@ -226,8 +228,9 @@ class EnhancedHorusHeresyDemo:
                 continue
             
             try:
+                # FIX: Correct endpoint is /api/v1/ingestion/ingest (main_simple.py)
                 response = await self.client.post(
-                    f"{self.services['kafka-ingestion-service']}/api/v1/ingest",
+                    f"{self.services['kafka-ingestion-service']}/api/v1/ingestion/ingest",
                     json={
                         "document_id": doc.document_id,
                         "title": doc.title,
