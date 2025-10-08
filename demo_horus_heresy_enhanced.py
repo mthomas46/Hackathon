@@ -190,17 +190,40 @@ class EnhancedHorusHeresyDemo:
         return fallback_id
     
     async def ingest_documents_with_retry(self, documents: List[NormalizedDocument]):
-        """Ingest documents with retry logic."""
-        self.print_info(f"📥 Ingesting {len(documents)} documents...")
+        """
+        Ingest documents with retry logic AND deduplication at the source.
+        
+        This ensures only unique documents are sent to the MCP for training,
+        solving the duplication problem at the root.
+        """
+        # DEDUPLICATION AT SOURCE: Remove duplicates before ingestion
+        original_count = len(documents)
+        unique_documents = self.deduplicate_documents(documents)
+        deduplicated_count = original_count - len(unique_documents)
+        
+        if deduplicated_count > 0:
+            self.print_info(f"🧹 Pre-ingestion deduplication: {original_count} → {len(unique_documents)} docs")
+            self.print_info(f"   Removed {deduplicated_count} duplicates before training MCP")
+        
+        self.print_info(f"📥 Ingesting {len(unique_documents)} unique documents...")
         
         if not self.service_status.get('kafka-ingestion-service'):
             self.print_info(f"   Kafka offline, skipping ingestion (documents stored locally)")
             return
         
+        # Track ingested document IDs to prevent double-ingestion in batches
+        ingested_ids = set()
         success = 0
-        for idx, doc in enumerate(documents, 1):
+        skipped_duplicates = 0
+        
+        for idx, doc in enumerate(unique_documents, 1):
             if idx % 10 == 0:
-                self.print_info(f"   Progress: {idx}/{len(documents)} (✓ {success})")
+                self.print_info(f"   Progress: {idx}/{len(unique_documents)} (✓ {success}, skipped {skipped_duplicates})")
+            
+            # Additional protection: Skip if already ingested in this batch
+            if doc.document_id in ingested_ids:
+                skipped_duplicates += 1
+                continue
             
             try:
                 response = await self.client.post(
@@ -216,10 +239,15 @@ class EnhancedHorusHeresyDemo:
                 )
                 if response.status_code in [200, 201, 202]:
                     success += 1
+                    ingested_ids.add(doc.document_id)  # Track successful ingestion
             except:
                 pass
         
-        self.print_success(f"✓ Ingested {success}/{len(documents)} documents")
+        self.print_success(f"✓ Ingested {success}/{len(unique_documents)} documents")
+        
+        if deduplicated_count > 0 or skipped_duplicates > 0:
+            total_prevented = deduplicated_count + skipped_duplicates
+            self.print_info(f"   🛡️  Duplicate prevention: {total_prevented} duplicates blocked at ingestion")
     
     async def query_mcp_for_document(self, query: str, max_results: int = 10) -> Optional[Dict[str, Any]]:
         """
@@ -257,20 +285,28 @@ class EnhancedHorusHeresyDemo:
     
     def deduplicate_documents(self, docs: List[NormalizedDocument]) -> List[NormalizedDocument]:
         """
-        Remove duplicate documents based on content similarity (FALLBACK).
+        Remove duplicate documents based on content similarity AND document ID.
         
-        Used when MCP is unavailable to prevent duplicate sections.
+        This prevents:
+        1. Multiple URLs with identical content (content hash check)
+        2. Same document appearing multiple times (document_id check)
         """
         unique_docs = []
         seen_content_hashes = set()
+        seen_document_ids = set()
         
         for doc in docs:
-            # Create content hash from first 500 chars
+            # Check 1: Skip if we've seen this exact document ID before
+            if doc.document_id in seen_document_ids:
+                continue
+            
+            # Check 2: Skip if we've seen this content before
             content_sample = doc.content_md[:500].strip()
             content_hash = hash(content_sample)
             
             if content_hash not in seen_content_hashes:
                 seen_content_hashes.add(content_hash)
+                seen_document_ids.add(doc.document_id)
                 unique_docs.append(doc)
         
         return unique_docs
@@ -362,7 +398,13 @@ class EnhancedHorusHeresyDemo:
         
         # DEDUPLICATION: Remove duplicate content (NEW!)
         if use_deduplication:
+            before_dedup = len(relevant_docs)
             relevant_docs = self.deduplicate_documents(relevant_docs)
+            after_dedup = len(relevant_docs)
+            
+            if before_dedup != after_dedup:
+                removed = before_dedup - after_dedup
+                self.print_info(f"      🧹 Deduplication: {before_dedup} → {after_dedup} docs (removed {removed} duplicates)")
         
         # Build document similar to docs-evergreen format
         title = filename.replace('.md', '').replace('_', ' ').title()
@@ -846,10 +888,10 @@ class EnhancedHorusHeresyDemo:
 async def main():
     """Main entry point."""
     demo = EnhancedHorusHeresyDemo()
-    # Moderate crawl for validation with enhanced rate limiting
-    # Depth=2, surface=20: ~200-500 pages in 8-12 minutes
-    # Enhanced throttling prevents rate limiting issues
-    await demo.run_demo(max_depth=2, max_surface_links=20)
+    
+    # SMALL crawl for deduplication testing
+    # Depth=1, surface=10: ~10-50 pages in ~2-3 minutes
+    await demo.run_demo(max_depth=1, max_surface_links=10)
 
 
 if __name__ == "__main__":
