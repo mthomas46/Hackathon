@@ -213,10 +213,17 @@ class HierarchicalTopicExtractor:
             batch = documents[i:i + self.batch_size]
             
             # Create tasks for parallel processing
-            tasks = [
-                self.extract_topics_single(text, title, taxonomy)
-                for text, title in batch
-            ]
+            tasks = []
+            for doc in batch:
+                # Handle both tuple format (text, title) and NormalizedDocument objects
+                if isinstance(doc, tuple):
+                    text, title = doc
+                else:
+                    # Extract from NormalizedDocument object
+                    text = getattr(doc, 'content_md', None) or getattr(doc, 'content', '')
+                    title = getattr(doc, 'title', 'Untitled')
+                
+                tasks.append(self.extract_topics_single(text, title, taxonomy))
             
             # Execute batch concurrently
             batch_results = await asyncio.gather(*tasks, return_exceptions=True)

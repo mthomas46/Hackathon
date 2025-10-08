@@ -1,14 +1,14 @@
-# 08 Chaos Gods Role
+# 16 The Emperor
 
 ## Query
-Explain the role of the Chaos Gods in corrupting the traitors and influencing the Heresy
+Describe the Emperor of Mankind, his vision for humanity, and his role during the Heresy
 
 ## Response from MCP
 
 # Forces of Chaos
 
 **Source**: Fandom Wiki  
-**URL**: https://warhammer40k.fandom.com/wiki/Traitors  
+**URL**: https://warhammer40k.fandom.com/wiki/Forces_of_Chaos  
 **Last Modified**: Unknown  
 **Crawl Depth**: 1  
 **Parent Page**: Horus Heresy
