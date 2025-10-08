@@ -1,0 +1,39 @@
+{
+  "correlation_id": "e367a9b0-84e4-4fb0-a3ea-d8b03d2970ae",
+  "mcp_id": "mcp_bb43d11ee0d2",
+  "mcp_name": "hackathon-docs-mcp",
+  "timestamp": "2025-10-07T19:05:11.113805",
+  "results": {
+    "kafka-ingestion_health": true,
+    "llm-tagging_health": false,
+    "mcp-local-llm_health": true,
+    "mcp-package-manager_health": true,
+    "mcp-evergreen-docs_health": true,
+    "mcp-logs_health": true,
+    "mcp-provisioner_health": false,
+    "training-coordinator_health": false,
+    "mcp-store_health": true,
+    "mcp-registry_health": false,
+    "mcp-gateway_health": false,
+    "mcp-interpreter_health": false,
+    "mcp-orchestrator_health": false,
+    "doc_store_health": false,
+    "mock-data-generator_health": false,
+    "documents_ingested": 10,
+    "documents_tagged": 0,
+    "mcp_created": "simulated",
+    "mcp_trained": "simulated",
+    "mcp_registered": "simulated",
+    "queries_successful": 0,
+    "mcp_exported": "simulated",
+    "mcp_imported": "simulated",
+    "mcp_hotswap": "simulated",
+    "evergreen_docs_generated": 5
+  },
+  "statistics": {
+    "total_checks": 25,
+    "successful_checks": 12,
+    "success_rate": 48.0,
+    "documents_processed": 10
+  }
+}

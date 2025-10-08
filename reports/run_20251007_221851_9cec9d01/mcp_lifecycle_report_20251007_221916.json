@@ -1,0 +1,41 @@
+{
+  "correlation_id": "ebba77b9-b36f-4bdb-967f-ea423ba7d059",
+  "mcp_id": "mcp_a7255abb",
+  "mcp_name": "hackathon-docs-mcp",
+  "timestamp": "2025-10-07T22:19:16.755186",
+  "results": {
+    "kafka-ingestion-service_health": true,
+    "llm-tagging-pipeline_health": true,
+    "mcp-local-llm_health": true,
+    "mcp-package-manager_health": true,
+    "mcp-evergreen-docs_health": true,
+    "mcp-logs_health": true,
+    "mcp-provisioner_health": false,
+    "mcp-training-coordinator_health": true,
+    "mcp-store_health": true,
+    "mcp-registry_health": true,
+    "mcp-gateway_health": true,
+    "mcp-interpreter_health": false,
+    "mcp-orchestrator_health": false,
+    "doc_store_health": false,
+    "mock-data-generator_health": false,
+    "documents_ingested": 10,
+    "documents_tagged": 3,
+    "mcp_created": true,
+    "mcp_id": "mcp_a7255abb",
+    "mcp_trained": true,
+    "training_job_id": "job-c3f145bcef5a",
+    "mcp_registered": "pending_import",
+    "queries_successful": 3,
+    "mcp_exported": "simulated",
+    "mcp_imported": "simulated",
+    "mcp_hotswap": "simulated",
+    "evergreen_docs_generated": 5
+  },
+  "statistics": {
+    "total_checks": 27,
+    "successful_checks": 15,
+    "success_rate": 55.55555555555556,
+    "documents_processed": 10
+  }
+}

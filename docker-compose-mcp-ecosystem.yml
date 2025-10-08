@@ -244,42 +244,83 @@ services:
       retries: 3
 
   # ========================================
-  # Optional: Existing MCP Services
+  # MCP Lifecycle Services
   # ========================================
 
+  mcp-provisioner:
+    build:
+      context: .
+      dockerfile: ./services/mcp-provisioner/Dockerfile
+    container_name: mcp-provisioner
+    ports:
+      - "5400:5400"
+    environment:
+      - SERVICE_NAME=mcp-provisioner
+      - SERVICE_API_PORT=5400
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DOCKER_NETWORK=ams
+      - LOG_LEVEL=INFO
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    depends_on:
+      - redis
+      - mcp-logs
+    networks:
+      - ams
+    user: root  # Required for Docker socket access
+    privileged: true  # Required to manage Docker containers
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5400/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   mcp-training-coordinator:
-    image: mcp-training-coordinator:latest
+    build:
+      context: .
+      dockerfile: ./services/mcp-training-coordinator/Dockerfile
     container_name: mcp-training-coordinator
     ports:
-      - "8100:8100"
+      - "5600:5600"
     environment:
-      - SERVICE_PORT=8100
-      - REDIS_URL=redis://redis:6379
+      - SERVICE_NAME=training-coordinator
+      - SERVICE_API_PORT=5600
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CELERY_BROKER_URL=redis://redis:6379/8
+      - CELERY_RESULT_BACKEND=redis://redis:6379/8
+      - LOG_LEVEL=INFO
     depends_on:
       - redis
       - mcp-logs
     networks:
       - ams
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5600/health"]
       interval: 10s
       timeout: 5s
       retries: 3
-    profiles:
-      - full
 
   mcp-store:
-    image: mcp-store:latest
+    build:
+      context: ./services/mcp-store
+      dockerfile: Dockerfile
     container_name: mcp-store
     ports:
       - "8101:8101"
     environment:
+      - SERVICE_NAME=mcp-store
       - SERVICE_PORT=8101
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - STORAGE_BACKEND=local
       - STORAGE_DIR=/data/mcps
+      - LOG_LEVEL=INFO
     volumes:
       - mcp-store-data:/data/mcps
     depends_on:
+      - redis
       - mcp-logs
     networks:
       - ams
@@ -288,17 +329,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    profiles:
-      - full
 
   mcp-registry:
-    image: mcp-registry:latest
+    build:
+      context: .
+      dockerfile: ./services/mcp-registry/Dockerfile
     container_name: mcp-registry
     ports:
       - "8102:8102"
     environment:
-      - SERVICE_PORT=8102
-      - REDIS_URL=redis://redis:6379
+      - SERVICE_NAME=mcp-registry
+      - SERVICE_API_PORT=8102
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_LEVEL=INFO
     depends_on:
       - redis
       - mcp-logs
@@ -309,20 +353,50 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    profiles:
-      - full
+
+  mcp-gateway:
+    build:
+      context: .
+      dockerfile: ./services/mcp-gateway/Dockerfile
+    container_name: mcp-gateway
+    ports:
+      - "8001:8001"
+    environment:
+      - SERVICE_NAME=mcp-gateway
+      - SERVICE_API_PORT=8001
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_LEVEL=INFO
+    depends_on:
+      - redis
+      - mcp-logs
+      - mcp-registry
+    networks:
+      - ams
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   doc_store:
-    image: doc_store:latest
+    build:
+      context: ./services/doc_store
+      dockerfile: Dockerfile
     container_name: doc_store
     ports:
       - "5087:5087"
     environment:
+      - SERVICE_NAME=doc_store
       - SERVICE_PORT=5087
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - STORAGE_DIR=/data/documents
+      - LOG_LEVEL=INFO
     volumes:
       - doc-store-data:/data/documents
     depends_on:
+      - redis
       - mcp-logs
     networks:
       - ams
@@ -331,8 +405,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    profiles:
-      - full
 
 # ========================================
 # Volumes
