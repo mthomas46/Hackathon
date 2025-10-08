@@ -1,14 +1,14 @@
 # Demo Execution Metrics Report
-**Generated**: 2025-10-08 03:32:20
+**Generated**: 2025-10-08 04:16:11
 
 ## Runtime Metrics
-- **Total Duration**: 23.15s
-- **Peak Memory**: 577.31 MB
-- **Average CPU**: 0.0%
-- **Peak CPU**: 0.0%
+- **Total Duration**: 5.17s
+- **Peak Memory**: 191.50 MB
+- **Average CPU**: 0.1%
+- **Peak CPU**: 0.1%
 
 ## Usability Metrics
-- **Documents Crawled**: 207
+- **Documents Crawled**: 11
 - **Documents Ingested**: 0
 - **Documents Generated**: 12/12
 - **Success Rate**: 100.0%
@@ -21,30 +21,30 @@
 ### kafka-ingestion-service
 - **Requests**: 1
 - **Success Rate**: 100.0%
-- **Avg Duration**: 9.18ms
+- **Avg Duration**: 14.55ms
 - **Endpoints**: /health
 
 ### mcp-provisioner
 - **Requests**: 3
 - **Success Rate**: 33.3%
-- **Avg Duration**: 2.01ms
-- **Endpoints**: /health, /api/health, /api/v1/health
+- **Avg Duration**: 4.43ms
+- **Endpoints**: /api/health, /health, /api/v1/health
 
 ### mcp-training-coordinator
 - **Requests**: 1
 - **Success Rate**: 100.0%
-- **Avg Duration**: 3.04ms
+- **Avg Duration**: 6.42ms
 - **Endpoints**: /health
 
 ### mcp-gateway
 - **Requests**: 1
 - **Success Rate**: 100.0%
-- **Avg Duration**: 4.95ms
+- **Avg Duration**: 3.31ms
 - **Endpoints**: /health
 
 ### summarizer-hub
 - **Requests**: 3
 - **Success Rate**: 0.0%
 - **Avg Duration**: 0.00ms
-- **Endpoints**: /health, /api/health, /api/v1/health
+- **Endpoints**: /api/health, /health, /api/v1/health
 
