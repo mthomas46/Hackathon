@@ -26,21 +26,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements files
-COPY services/requirements.base.txt ./
-COPY services/shared/requirements.txt ./shared_requirements.txt
-COPY docker-requirements.txt ./
+COPY services/doc_store/requirements.txt ./
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.base.txt && \
-    pip install --no-cache-dir -r shared_requirements.txt && \
-    pip install --no-cache-dir -r docker-requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy service code
 COPY services/doc_store/ ./services/doc_store/
 COPY services/shared/ ./services/shared/
-COPY config/config.yml ./config.yml/
-COPY config/ ./config/
 
 # Set Python path and environment
 ENV PYTHONPATH=/app
