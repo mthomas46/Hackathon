@@ -152,7 +152,7 @@ class DocumentHandlers(AbstractDocumentHandlers):
     async def handle_get_document(self, document_id: str) -> DocumentResponse:
         """Handle document retrieval."""
         try:
-            document = await self.service.get_entity(document_id)  # ✅ FIX: Added await
+            document = await self.service.get_by_id(document_id)  # ✅ FIX: Correct method name
             if not document:
                 raise DocumentNotFoundException(document_id)
 
