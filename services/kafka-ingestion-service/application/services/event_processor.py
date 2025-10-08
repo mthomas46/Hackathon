@@ -1,7 +1,8 @@
 """Event Processor Service."""
 
 import logging
-from typing import Optional
+from typing import Optional, Any
+import httpx
 
 from ...domain.entities.document_event import DocumentEvent
 from ...domain.value_objects.event_status import EventStatus
@@ -21,6 +22,7 @@ class EventProcessorService:
     def __init__(
         self,
         event_repository: EventRepository,
+        doc_store_url: str = "http://doc_store:5087",
         doc_store_client: Optional[Any] = None  # Will be injected
     ):
         """
@@ -28,9 +30,11 @@ class EventProcessorService:
         
         Args:
             event_repository: Event repository
+            doc_store_url: URL for doc_store service
             doc_store_client: Optional doc_store client
         """
         self.event_repository = event_repository
+        self.doc_store_url = doc_store_url
         self.doc_store_client = doc_store_client
     
     async def process_event(self, event: DocumentEvent) -> bool:
@@ -108,18 +112,52 @@ class EventProcessorService:
         Args:
             event: Event to process
         """
-        if self.doc_store_client:
-            # Send to doc_store
-            # TODO: Implement doc_store client integration
-            logger.info(f"Would send event {event.event_id} to doc_store")
-        else:
-            logger.warning("doc_store client not configured")
-        
-        # For now, just validate content
+        # Validate content
         if not event.content:
             raise ValueError("Content is required for content event")
         
-        # TODO: Add normalization, validation, etc.
+        # Send to doc_store
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                # Prepare document payload
+                doc_payload = {
+                    "id": event.document_id,
+                    "content": event.content,
+                    "metadata": {
+                        "title": event.title or event.document_id,
+                        "source_url": event.source_url or "",
+                        "tags": event.tags or [],
+                        "categories": event.categories or [],
+                        "correlation_id": event.correlation_id,
+                        "event_id": event.event_id,
+                        "content_type": event.content_type,
+                        **(event.metadata or {})
+                    }
+                }
+                
+                logger.info(f"Sending document {event.document_id} to doc_store at {self.doc_store_url}")
+                
+                response = await client.post(
+                    f"{self.doc_store_url}/api/v1/documents",
+                    json=doc_payload
+                )
+                
+                if response.status_code in [200, 201]:
+                    logger.info(f"✅ Successfully sent document {event.document_id} to doc_store")
+                else:
+                    error_msg = f"doc_store returned {response.status_code}: {response.text[:200]}"
+                    logger.error(f"❌ {error_msg}")
+                    raise Exception(error_msg)
+                    
+        except httpx.ConnectError as e:
+            logger.error(f"❌ Cannot connect to doc_store at {self.doc_store_url}: {e}")
+            raise Exception(f"doc_store connection failed: {e}")
+        except httpx.TimeoutException as e:
+            logger.error(f"❌ Timeout connecting to doc_store: {e}")
+            raise Exception(f"doc_store timeout: {e}")
+        except Exception as e:
+            logger.error(f"❌ Failed to send to doc_store: {e}")
+            raise
     
     async def _process_metadata_event(self, event: DocumentEvent) -> None:
         """

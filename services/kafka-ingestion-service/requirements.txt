@@ -12,6 +12,9 @@ aiokafka==0.10.0
 # Redis
 redis[hiredis]==5.0.1
 
+# HTTP Client
+httpx>=0.24.0
+
 # Utilities
 python-dotenv==1.0.0
 
