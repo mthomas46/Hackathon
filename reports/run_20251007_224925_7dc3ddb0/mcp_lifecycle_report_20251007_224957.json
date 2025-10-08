@@ -1,0 +1,135 @@
+{
+  "correlation_id": "bfd611ca-1722-47d9-bcd1-acd9dc1bc230",
+  "mcp_id": "mcp_b9c833ea",
+  "mcp_name": "hackathon-docs-mcp",
+  "timestamp": "2025-10-07T22:49:57.052082",
+  "results": {
+    "kafka-ingestion-service_health": true,
+    "llm-tagging-pipeline_health": true,
+    "mcp-local-llm_health": true,
+    "mcp-package-manager_health": true,
+    "mcp-evergreen-docs_health": true,
+    "mcp-logs_health": true,
+    "mcp-provisioner_health": false,
+    "mcp-training-coordinator_health": true,
+    "mcp-store_health": true,
+    "mcp-registry_health": true,
+    "mcp-gateway_health": true,
+    "mcp-interpreter_health": false,
+    "mcp-orchestrator_health": false,
+    "doc_store_health": false,
+    "mock-data-generator_health": false,
+    "documents_ingested": 50,
+    "documents_tagged": 3,
+    "mcp_created": true,
+    "mcp_id": "mcp_b9c833ea",
+    "mcp_trained": true,
+    "training_job_id": "job-4a6101f8068c",
+    "mcp_registered": "pending_import",
+    "queries_successful": 5,
+    "queries_total": 5,
+    "average_relevance": 0.0,
+    "average_topic_coverage": 0.0,
+    "mcp_exported": "simulated",
+    "mcp_imported": "simulated",
+    "mcp_hotswap": "simulated",
+    "evergreen_docs_generated": 0,
+    "evergreen_docs_generation_time": 0.063775
+  },
+  "query_results": [
+    {
+      "query": "What is the MCP ecosystem and what are its main components?",
+      "response": "{'success': False, 'status_code': 503, 'body': None, 'headers': {}, 'instance_id': '', 'instance_url': '', 'response_time_ms': 0.0, 'strategy_used': '', 'error_message': 'No available instances for mcp_b9c833ea', 'error_type': 'NO_INSTANCES_AVAILABLE'}",
+      "expected_topics": [
+        "services",
+        "architecture",
+        "ecosystem",
+        "components"
+      ],
+      "topics_found": [],
+      "topic_coverage": 0.0,
+      "relevance_score": 0.0,
+      "status": "success"
+    },
+    {
+      "query": "How does the document ingestion workflow work?",
+      "response": "{'success': False, 'status_code': 503, 'body': None, 'headers': {}, 'instance_id': '', 'instance_url': '', 'response_time_ms': 0.0, 'strategy_used': '', 'error_message': 'No available instances for mcp_b9c833ea', 'error_type': 'NO_INSTANCES_AVAILABLE'}",
+      "expected_topics": [
+        "kafka",
+        "ingestion",
+        "workflow",
+        "documents"
+      ],
+      "topics_found": [],
+      "topic_coverage": 0.0,
+      "relevance_score": 0.0,
+      "status": "success"
+    },
+    {
+      "query": "What services are part of the MCP architecture?",
+      "response": "{'success': False, 'status_code': 503, 'body': None, 'headers': {}, 'instance_id': '', 'instance_url': '', 'response_time_ms': 0.0, 'strategy_used': '', 'error_message': 'No available instances for mcp_b9c833ea', 'error_type': 'NO_INSTANCES_AVAILABLE'}",
+      "expected_topics": [
+        "services",
+        "gateway",
+        "registry",
+        "provisioner"
+      ],
+      "topics_found": [],
+      "topic_coverage": 0.0,
+      "relevance_score": 0.0,
+      "status": "success"
+    },
+    {
+      "query": "Explain the deployment guide and infrastructure setup",
+      "response": "{'success': False, 'status_code': 503, 'body': None, 'headers': {}, 'instance_id': '', 'instance_url': '', 'response_time_ms': 0.0, 'strategy_used': '', 'error_message': 'No available instances for mcp_b9c833ea', 'error_type': 'NO_INSTANCES_AVAILABLE'}",
+      "expected_topics": [
+        "deployment",
+        "docker",
+        "infrastructure",
+        "setup"
+      ],
+      "topics_found": [],
+      "topic_coverage": 0.0,
+      "relevance_score": 0.0,
+      "status": "success"
+    },
+    {
+      "query": "What are the key patterns and best practices?",
+      "response": "{'success': False, 'status_code': 503, 'body': None, 'headers': {}, 'instance_id': '', 'instance_url': '', 'response_time_ms': 0.0, 'strategy_used': '', 'error_message': 'No available instances for mcp_b9c833ea', 'error_type': 'NO_INSTANCES_AVAILABLE'}",
+      "expected_topics": [
+        "patterns",
+        "practices",
+        "standards",
+        "guidelines"
+      ],
+      "topics_found": [],
+      "topic_coverage": 0.0,
+      "relevance_score": 0.0,
+      "status": "success"
+    }
+  ],
+  "training_documents": {
+    "count": 50,
+    "total_size": 690157,
+    "sample_titles": [
+      "DIRECTORY_CONSOLIDATION_PROGRESS",
+      "CONSOLIDATION_RESULTS_OCT7",
+      "CONSOLIDATION_PASS_2_PLAN",
+      "FINAL_CONSOLIDATION_REPORT",
+      "IMPLEMENTATION_STATUS",
+      "CHANGELOG",
+      "PLATFORM_OVERVIEW",
+      "REORGANIZATION_COMPLETE",
+      "COMPREHENSIVE_AUDIT_REPORT",
+      "COMPLETE_CONSOLIDATION_SUMMARY"
+    ]
+  },
+  "statistics": {
+    "total_checks": 31,
+    "successful_checks": 15,
+    "success_rate": 48.38709677419355,
+    "documents_processed": 50,
+    "average_relevance": 0.0,
+    "average_topic_coverage": 0.0
+  }
+}

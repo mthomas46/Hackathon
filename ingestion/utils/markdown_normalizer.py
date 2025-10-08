@@ -137,10 +137,10 @@ class MarkdownNormalizer:
         
         text = rst
         
-        # Convert headers (underline style)
-        text = re.sub(r'(.+)\n=+\n', r'# \1\n\n', text)
-        text = re.sub(r'(.+)\n-+\n', r'## \1\n\n', text)
-        text = re.sub(r'(.+)\n~+\n', r'### \1\n\n', text)
+        # Convert headers (underline style) - must match full lines
+        text = re.sub(r'^(.+)\n=+$', r'# \1\n', text, flags=re.MULTILINE)
+        text = re.sub(r'^(.+)\n-+$', r'## \1\n', text, flags=re.MULTILINE)
+        text = re.sub(r'^(.+)\n~+$', r'### \1\n', text, flags=re.MULTILINE)
         
         # Convert inline formatting
         text = re.sub(r'\*\*(.+?)\*\*', r'**\1**', text)  # Bold
@@ -150,8 +150,8 @@ class MarkdownNormalizer:
         # Convert code blocks
         text = re.sub(r'::\s*\n\n((?:    .+\n)+)', lambda m: f'\n```\n{m.group(1)}\n```\n', text)
         
-        # Convert links
-        text = re.sub(r'`([^<]+)<([^>]+)>`_', r'[\1](\2)', text)
+        # Convert links (trim whitespace)
+        text = re.sub(r'`([^<]+?)\s*<([^>]+)>`_', r'[\1](\2)', text)
         
         return text.strip()
     
@@ -202,9 +202,9 @@ class MarkdownNormalizer:
         # Remove excessive blank lines
         text = re.sub(r'\n{4,}', '\n\n\n', text)
         
-        # Standardize list formatting
-        text = re.sub(r'\n\s*-\s+', '\n- ', text)
-        text = re.sub(r'\n\s*\*\s+', '\n* ', text)
+        # Standardize list formatting (preserve leading dash)
+        text = re.sub(r'\n\s*-\s\s+', '\n- ', text)  # Multiple spaces after dash
+        text = re.sub(r'\n\s*\*\s\s+', '\n* ', text)  # Multiple spaces after asterisk
         
         # Remove trailing whitespace
         lines = [line.rstrip() for line in text.split('\n')]

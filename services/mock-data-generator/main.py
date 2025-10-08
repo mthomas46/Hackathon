@@ -38,6 +38,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
 class MockDataType(str, Enum):
     """Types of mock data that can be generated."""
+    WEBSOCKET_EVENT = "websocket_event"
 
     CONFLUENCE_PAGE = "confluence_page"
     GITHUB_REPO = "github_repo"
@@ -401,6 +402,22 @@ class MockDataGenerator:
                 "request_id": "req_abcdef",
                 "duration_ms": 150,
             },
+            MockDataType.WEBSOCKET_EVENT: {
+                "event_id": str(uuid.uuid4()),
+                "event_type": "DOCUMENT_UPDATED",
+                "source": "confluence",
+                "timestamp": datetime.now().isoformat(),
+                "payload": {
+                    "document_id": f"doc_{uuid.uuid4().hex[:8]}",
+                    "title": "Sample Documentation",
+                    "path": "/docs/sample.md",
+                    "content_type": ".md",
+                    "space": "engineering",
+                    "author": "system",
+                    "version": 1,
+                    "url": "https://confluence.example.com/display/ENG/sample"
+                }
+            },
         }
 
     async def generate_with_llm(
@@ -464,8 +481,44 @@ class MockDataGenerator:
             template["user_id"] = f"user_{uuid.uuid4().hex[:8]}"
         elif data_type == MockDataType.LOG_ENTRY:
             template["log_id"] = f"log_{uuid.uuid4().hex[:12]}"
+        elif data_type == MockDataType.WEBSOCKET_EVENT:
+            template["event_id"] = str(uuid.uuid4())
+            template["timestamp"] = datetime.now().isoformat()
+            template["payload"]["document_id"] = f"doc_{uuid.uuid4().hex[:8]}"
 
         return template
+    
+    def generate_websocket_events_for_documents(
+        self, document_paths: List[str], correlation_id: str = None
+    ) -> List[Dict[str, Any]]:
+        """Generate realistic websocket events for document paths."""
+        events = []
+        for doc_path in document_paths:
+            from pathlib import Path
+            path_obj = Path(doc_path)
+            
+            event = {
+                "event_id": str(uuid.uuid4()),
+                "event_type": "DOCUMENT_UPDATED",
+                "source": "confluence",
+                "timestamp": datetime.now().isoformat(),
+                "correlation_id": correlation_id or str(uuid.uuid4()),
+                "payload": {
+                    "document_id": f"doc_{uuid.uuid4().hex[:8]}",
+                    "title": path_obj.stem.replace('_', ' ').title(),
+                    "path": str(doc_path),
+                    "content_type": path_obj.suffix,
+                    "space": "hackathon-docs",
+                    "author": "mcp-system",
+                    "version": 1,
+                    "url": f"https://confluence.example.com/display/HACK/{path_obj.stem}",
+                    "last_modified": datetime.now().isoformat(),
+                    "size_bytes": 0
+                }
+            }
+            events.append(event)
+        
+        return events
 
     async def generate_bulk_collection(
         self, request: BulkCollectionRequest
@@ -2647,8 +2700,35 @@ async def generate_phase_documents(request: SimulationPhaseDocumentsRequest):
         )
 
 
+@app.post("/websocket/events")
+async def generate_websocket_events(
+    document_paths: List[str],
+    correlation_id: Optional[str] = None
+):
+    """Generate realistic websocket events for document ingestion."""
+    try:
+        generator = MockDataGenerator()
+        events = generator.generate_websocket_events_for_documents(
+            document_paths,
+            correlation_id
+        )
+        
+        return {
+            "success": True,
+            "event_count": len(events),
+            "events": events,
+            "correlation_id": correlation_id or events[0]["correlation_id"] if events else None,
+            "generated_at": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate websocket events: {str(e)}"
+        )
+
+
 @app.post("/simulation/ecosystem-scenario", response_model=SimulationResponse)
-async def generate_ecosystem_scenario(request: SimulationEcosystemScenarioRequest):
+async def generate_ecosystem_scenario_endpoint(request: SimulationEcosystemScenarioRequest):
     """Generate a complete ecosystem scenario with all services."""
     start_time = time.time()
 

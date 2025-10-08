@@ -1,0 +1,172 @@
+[
+  {
+    "event_id": "0510b535-9734-4ba4-b3c6-fa3111cf87bb",
+    "event_type": "DOCUMENT_UPDATED",
+    "source": "confluence",
+    "timestamp": "2025-10-07T21:46:20.775517",
+    "correlation_id": "ebb854f9-9fcd-4ee1-a6b9-5458f6056017",
+    "payload": {
+      "document_id": "doc_299e1093",
+      "title": "DIRECTORY_CONSOLIDATION_PROGRESS",
+      "path": "docs/DIRECTORY_CONSOLIDATION_PROGRESS.md",
+      "content_type": ".md",
+      "space": "hackathon-docs",
+      "author": "mcp-system",
+      "version": 1,
+      "url": "https://confluence.example.com/display/HACK/DIRECTORY_CONSOLIDATION_PROGRESS"
+    }
+  },
+  {
+    "event_id": "04ab68bc-de96-461c-9259-4609807d0fc3",
+    "event_type": "DOCUMENT_UPDATED",
+    "source": "confluence",
+    "timestamp": "2025-10-07T21:46:20.775592",
+    "correlation_id": "ebb854f9-9fcd-4ee1-a6b9-5458f6056017",
+    "payload": {
+      "document_id": "doc_89f8946b",
+      "title": "CONSOLIDATION_RESULTS_OCT7",
+      "path": "docs/CONSOLIDATION_RESULTS_OCT7.md",
+      "content_type": ".md",
+      "space": "hackathon-docs",
+      "author": "mcp-system",
+      "version": 1,
+      "url": "https://confluence.example.com/display/HACK/CONSOLIDATION_RESULTS_OCT7"
+    }
+  },
+  {
+    "event_id": "3492f5c0-9f52-4900-8855-6869c14b71ee",
+    "event_type": "DOCUMENT_UPDATED",
+    "source": "confluence",
+    "timestamp": "2025-10-07T21:46:20.775615",
+    "correlation_id": "ebb854f9-9fcd-4ee1-a6b9-5458f6056017",
+    "payload": {
+      "document_id": "doc_bf4a00b7",
+      "title": "CONSOLIDATION_PASS_2_PLAN",
+      "path": "docs/CONSOLIDATION_PASS_2_PLAN.md",
+      "content_type": ".md",
+      "space": "hackathon-docs",
+      "author": "mcp-system",
+      "version": 1,
+      "url": "https://confluence.example.com/display/HACK/CONSOLIDATION_PASS_2_PLAN"
+    }
+  },
+  {
+    "event_id": "d40b48d1-259c-487a-a999-b2751e26249f",
+    "event_type": "DOCUMENT_UPDATED",
+    "source": "confluence",
+    "timestamp": "2025-10-07T21:46:20.775631",
+    "correlation_id": "ebb854f9-9fcd-4ee1-a6b9-5458f6056017",
+    "payload": {
+      "document_id": "doc_64d6da76",
+      "title": "FINAL_CONSOLIDATION_REPORT",
+      "path": "docs/FINAL_CONSOLIDATION_REPORT.md",
+      "content_type": ".md",
+      "space": "hackathon-docs",
+      "author": "mcp-system",
+      "version": 1,
+      "url": "https://confluence.example.com/display/HACK/FINAL_CONSOLIDATION_REPORT"
+    }
+  },
+  {
+    "event_id": "de2ba4f4-cd05-4721-bbff-cc75121eaec2",
+    "event_type": "DOCUMENT_UPDATED",
+    "source": "confluence",
+    "timestamp": "2025-10-07T21:46:20.775645",
+    "correlation_id": "ebb854f9-9fcd-4ee1-a6b9-5458f6056017",
+    "payload": {
+      "document_id": "doc_d8a10b49",
+      "title": "IMPLEMENTATION_STATUS",
+      "path": "docs/IMPLEMENTATION_STATUS.md",
+      "content_type": ".md",
+      "space": "hackathon-docs",
+      "author": "mcp-system",
+      "version": 1,
+      "url": "https://confluence.example.com/display/HACK/IMPLEMENTATION_STATUS"
+    }
+  },
+  {
+    "event_id": "0f29f8d1-4cf2-47eb-a274-d38787d8447f",
+    "event_type": "DOCUMENT_UPDATED",
+    "source": "confluence",
+    "timestamp": "2025-10-07T21:46:20.775660",
+    "correlation_id": "ebb854f9-9fcd-4ee1-a6b9-5458f6056017",
+    "payload": {
+      "document_id": "doc_0a7c2ba8",
+      "title": "CHANGELOG",
+      "path": "docs/CHANGELOG.md",
+      "content_type": ".md",
+      "space": "hackathon-docs",
+      "author": "mcp-system",
+      "version": 1,
+      "url": "https://confluence.example.com/display/HACK/CHANGELOG"
+    }
+  },
+  {
+    "event_id": "981bf7d4-58a4-4f1c-96be-b0d843f716e3",
+    "event_type": "DOCUMENT_UPDATED",
+    "source": "confluence",
+    "timestamp": "2025-10-07T21:46:20.775677",
+    "correlation_id": "ebb854f9-9fcd-4ee1-a6b9-5458f6056017",
+    "payload": {
+      "document_id": "doc_0e8f5504",
+      "title": "PLATFORM_OVERVIEW",
+      "path": "docs/PLATFORM_OVERVIEW.md",
+      "content_type": ".md",
+      "space": "hackathon-docs",
+      "author": "mcp-system",
+      "version": 1,
+      "url": "https://confluence.example.com/display/HACK/PLATFORM_OVERVIEW"
+    }
+  },
+  {
+    "event_id": "ee6e7854-f56e-4019-afe3-d948b5a7004f",
+    "event_type": "DOCUMENT_UPDATED",
+    "source": "confluence",
+    "timestamp": "2025-10-07T21:46:20.775695",
+    "correlation_id": "ebb854f9-9fcd-4ee1-a6b9-5458f6056017",
+    "payload": {
+      "document_id": "doc_7b48badb",
+      "title": "REORGANIZATION_COMPLETE",
+      "path": "docs/REORGANIZATION_COMPLETE.md",
+      "content_type": ".md",
+      "space": "hackathon-docs",
+      "author": "mcp-system",
+      "version": 1,
+      "url": "https://confluence.example.com/display/HACK/REORGANIZATION_COMPLETE"
+    }
+  },
+  {
+    "event_id": "b5ad155b-08c7-4f45-b141-b2260a6dd000",
+    "event_type": "DOCUMENT_UPDATED",
+    "source": "confluence",
+    "timestamp": "2025-10-07T21:46:20.775711",
+    "correlation_id": "ebb854f9-9fcd-4ee1-a6b9-5458f6056017",
+    "payload": {
+      "document_id": "doc_45fc7360",
+      "title": "COMPREHENSIVE_AUDIT_REPORT",
+      "path": "docs/COMPREHENSIVE_AUDIT_REPORT.md",
+      "content_type": ".md",
+      "space": "hackathon-docs",
+      "author": "mcp-system",
+      "version": 1,
+      "url": "https://confluence.example.com/display/HACK/COMPREHENSIVE_AUDIT_REPORT"
+    }
+  },
+  {
+    "event_id": "67e5c39b-b4b5-44d4-8ee3-3a7a49be1591",
+    "event_type": "DOCUMENT_UPDATED",
+    "source": "confluence",
+    "timestamp": "2025-10-07T21:46:20.775724",
+    "correlation_id": "ebb854f9-9fcd-4ee1-a6b9-5458f6056017",
+    "payload": {
+      "document_id": "doc_e415d2cf",
+      "title": "COMPLETE_CONSOLIDATION_SUMMARY",
+      "path": "docs/COMPLETE_CONSOLIDATION_SUMMARY.md",
+      "content_type": ".md",
+      "space": "hackathon-docs",
+      "author": "mcp-system",
+      "version": 1,
+      "url": "https://confluence.example.com/display/HACK/COMPLETE_CONSOLIDATION_SUMMARY"
+    }
+  }
+]
