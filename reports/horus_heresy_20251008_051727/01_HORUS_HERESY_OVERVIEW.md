@@ -5,8 +5,8 @@ Provide a comprehensive overview of the Horus Heresy, including what it was, whe
 
 ## Response from MCP
 
-Document store unavailable (status 404). Cannot access training documents.
+Cannot connect to document store. MCP mcp-horus-heresy-75f6d6df cannot access training documents.
 
 **Confidence**: 0.0
 
-**Sources**: doc_store_error
+**Sources**: connection_error
