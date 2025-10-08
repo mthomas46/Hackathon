@@ -65,10 +65,11 @@ class CrawlReport:
     start_time: datetime
     end_time: datetime
     duration_seconds: float
+    tag_collection: Optional[Dict[str, Any]] = None
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        return {
+        data = {
             'total_pages': self.total_pages,
             'crawl_graph': self.crawl_graph,
             'depth_distribution': self.depth_distribution,
@@ -77,4 +78,9 @@ class CrawlReport:
             'end_time': self.end_time.isoformat(),
             'duration_seconds': self.duration_seconds,
         }
+        
+        if self.tag_collection:
+            data['tag_collection'] = self.tag_collection
+        
+        return data
 
