@@ -1,0 +1,50 @@
+{
+  "crawl_report": {
+    "total_pages": 1932,
+    "duration": 128.397401,
+    "depth_distribution": {
+      "0": 1,
+      "1": 21,
+      "2": 291,
+      "3": 1328
+    },
+    "link_statistics": {
+      "total_links_followed": 2356,
+      "average_links_per_page": 1.44,
+      "max_children": 40
+    }
+  },
+  "tag_collection": {
+    "default": [
+      "file_type:document",
+      "source:fandom-wiki"
+    ],
+    "contextual": [],
+    "user_defined": [
+      "project:horus-heresy",
+      "domain:warhammer-40k",
+      "source:fandom"
+    ],
+    "breakdown": {
+      "default": 2,
+      "contextual": 0,
+      "user_defined": 3,
+      "total": 5
+    },
+    "by_prefix": {
+      "project": [
+        "project:horus-heresy"
+      ],
+      "source": [
+        "source:fandom-wiki",
+        "source:fandom"
+      ],
+      "domain": [
+        "domain:warhammer-40k"
+      ],
+      "file_type": [
+        "file_type:document"
+      ]
+    }
+  }
+}

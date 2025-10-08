@@ -253,10 +253,16 @@ class FandomWikiIngestor:
                             f"(total: {len(self.visited_pages)})"
                         )
                     
-                    # Adaptive rate limiting
+                    # Adaptive rate limiting with feedback
                     if i + batch_size < len(tasks):
                         # Longer pause for deeper depths (more load on server)
                         pause = min(1.0 + (current_depth * 0.5), 5.0)
+                        
+                        if self.progress_callback:
+                            self.progress_callback(
+                                f"   └─ ⏸️  Rate limit pause: {pause:.1f}s (preventing overload)"
+                            )
+                        
                         await asyncio.sleep(pause)
                 
                 # Depth transition pause

@@ -8,6 +8,12 @@ import logging
 from ingestion.models import NormalizedDocument
 from ingestion.tagging.tag_collection import TagCollection, TagType
 
+try:
+    from ingestion.tagging.hierarchical_topics import HierarchicalTopicExtractor
+    HIERARCHICAL_TOPICS_AVAILABLE = True
+except ImportError:
+    HIERARCHICAL_TOPICS_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,6 +44,12 @@ class UniversalTaggingConfig:
     min_entity_frequency: int = 3
     enable_relationships: bool = True
     enable_knowledge_graph: bool = True
+    
+    # Hierarchical topics (AI-powered)
+    enable_hierarchical_topics: bool = True
+    hierarchical_topic_confidence: float = 0.5
+    summarizer_url: str = "http://localhost:5160"
+    hierarchical_batch_size: int = 10
     
     # Source-specific
     source_specific_prefixes: bool = True  # Use source-specific tag prefixes
@@ -107,6 +119,7 @@ class UniversalTaggingManager:
         self.config = config or UniversalTaggingConfig()
         self.tag_collection = TagCollection.empty()
         self.corpus_analyzer = None  # Set later when CorpusAnalyzer is available
+        self.hierarchical_extractor = None  # Initialize when needed
     
     async def tag_documents(
         self,
@@ -134,42 +147,54 @@ class UniversalTaggingManager:
         self.tag_collection = TagCollection.empty()
         
         # Step 1: Ensure base tags exist
-        logger.info("   Step 1/5: Applying base tags...")
+        logger.info("   Step 1/6: Applying base tags...")
         documents = self._ensure_base_tags(documents, source_type)
         self._collect_tags(documents, TagType.DEFAULT)
         logger.info(f"   ✓ Base tags: {len(self.tag_collection.default_tags)} unique")
         
         # Step 2: Run corpus analysis if enabled and not provided
         if self.config.enable_preprocessing and not corpus_analysis and CORPUS_ANALYSIS_AVAILABLE:
-            logger.info("   Step 2/5: Running corpus analysis...")
+            logger.info("   Step 2/6: Running corpus analysis...")
             corpus_analysis = await self._run_corpus_analysis(documents, source_type)
             logger.info(f"   ✓ Analysis complete: {corpus_analysis.get('total_entities', 0)} entities found")
         elif corpus_analysis:
-            logger.info("   Step 2/5: Using provided corpus analysis...")
+            logger.info("   Step 2/6: Using provided corpus analysis...")
         else:
-            logger.info("   Step 2/5: Skipping corpus analysis (disabled or unavailable)")
+            logger.info("   Step 2/6: Skipping corpus analysis (disabled or unavailable)")
         
         # Step 3: Apply contextual tags (if corpus analysis available)
         if corpus_analysis:
-            logger.info("   Step 3/5: Applying contextual tags...")
+            logger.info("   Step 3/6: Applying contextual tags...")
             documents = self._apply_contextual_tags(documents, corpus_analysis, source_type)
             self._collect_tags(documents, TagType.CONTEXTUAL)
             logger.info(f"   ✓ Contextual tags: {len(self.tag_collection.contextual_tags)} unique")
         else:
-            logger.info("   Step 3/5: No contextual tags")
+            logger.info("   Step 3/6: No contextual tags")
+        
+        # Step 3.5: Extract hierarchical topics (AI-powered)
+        if self.config.enable_hierarchical_topics and HIERARCHICAL_TOPICS_AVAILABLE:
+            logger.info("   Step 4/6: Extracting hierarchical topics (AI)...")
+            hierarchical_tags = await self._extract_hierarchical_topics(documents, source_type)
+            if hierarchical_tags:
+                self.tag_collection.hierarchical_tags = hierarchical_tags
+                logger.info(f"   ✓ Hierarchical tags: {len(hierarchical_tags)} unique")
+            else:
+                logger.info("   ⚠️  Hierarchical extraction failed, falling back to keyword-based")
+        else:
+            logger.info("   Step 4/6: Hierarchical topics disabled or unavailable")
         
         # Step 4: Apply user-defined tags
         tags_to_apply = user_tags or self.config.user_tags
         if tags_to_apply and self.config.enable_user_tags:
-            logger.info(f"   Step 4/5: Applying {len(tags_to_apply)} user-defined tags...")
+            logger.info(f"   Step 5/6: Applying {len(tags_to_apply)} user-defined tags...")
             documents = self._apply_user_tags(documents, tags_to_apply)
             self.tag_collection.user_defined_tags = tags_to_apply
             logger.info(f"   ✓ User-defined tags: {len(tags_to_apply)}")
         else:
-            logger.info("   Step 4/5: No user-defined tags")
+            logger.info("   Step 5/6: No user-defined tags")
         
         # Step 5: Finalize tags
-        logger.info("   Step 5/5: Finalizing tags...")
+        logger.info("   Step 6/6: Finalizing tags...")
         documents = self._finalize_tags(documents)
         self.tag_collection.deduplicate()
         
@@ -412,6 +437,68 @@ class UniversalTaggingManager:
         except Exception as e:
             logger.error(f"Error running corpus analysis: {e}")
             return {}
+    
+    async def _extract_hierarchical_topics(
+        self,
+        documents: List[NormalizedDocument],
+        source_type: str
+    ) -> List[str]:
+        """
+        Extract hierarchical topics using AI-powered analysis.
+        
+        Args:
+            documents: Documents to analyze
+            source_type: Source type for context
+        
+        Returns:
+            List of hierarchical tags (topic:*, topic:main:*, topic:sub:*, topic:related:*)
+        """
+        if not HIERARCHICAL_TOPICS_AVAILABLE:
+            logger.warning("HierarchicalTopicExtractor not available")
+            return []
+        
+        try:
+            # Initialize extractor if needed
+            if not self.hierarchical_extractor:
+                from ingestion.tagging.hierarchical_topics import HierarchicalTopicExtractor
+                self.hierarchical_extractor = HierarchicalTopicExtractor(
+                    summarizer_url=self.config.summarizer_url
+                )
+            
+            # Check if summarizer-hub is available
+            is_healthy = await self.hierarchical_extractor.check_health()
+            if not is_healthy:
+                logger.warning("Summarizer-hub not available, skipping hierarchical topics")
+                return []
+            
+            # Extract topics in batches
+            all_hierarchical_tags = []
+            batch_size = self.config.hierarchical_batch_size
+            
+            for i in range(0, len(documents), batch_size):
+                batch = documents[i:i + batch_size]
+                
+                # Extract topics for batch
+                batch_topics = await self.hierarchical_extractor.extract_topics_batch(batch)
+                
+                # Generate hierarchical tags for each document's topics
+                for doc_topics in batch_topics:
+                    if doc_topics:
+                        tags = self.hierarchical_extractor.generate_hierarchical_tags(
+                            doc_topics,
+                            min_confidence=self.config.hierarchical_topic_confidence
+                        )
+                        all_hierarchical_tags.extend(tags)
+            
+            # Deduplicate and return
+            unique_tags = list(set(all_hierarchical_tags))
+            logger.info(f"   Extracted {len(unique_tags)} hierarchical tags from {len(documents)} documents")
+            
+            return unique_tags
+            
+        except Exception as e:
+            logger.error(f"Hierarchical topic extraction failed: {e}", exc_info=True)
+            return []
     
     def _normalize_tag(self, text: str) -> str:
         """
