@@ -27,6 +27,7 @@ class DocumentResponse(BaseModel):
     content: str
     content_hash: str
     metadata: Dict[str, Any]
+    tags: Optional[List[str]] = None  # ✅ CRITICAL FIX: Add tags field
     created_at: str
 
 

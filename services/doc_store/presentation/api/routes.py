@@ -824,3 +824,124 @@ async def optimize_cache():
     """Optimize cache performance."""
     # TODO: Implement cache handlers
     raise HTTPException(status_code=501, detail="Cache management not yet implemented")
+
+
+# =============================================================================
+# DEBUG ROUTES - Tags Testing (Added for systematic debugging)
+# =============================================================================
+
+@router.post("/debug/documents/direct-sql", tags=["debug"])
+async def create_document_direct_sql(body: dict):
+    """Create document with DIRECT SQL - bypasses ALL layers."""
+    import sqlite3
+    import json
+    from datetime import datetime
+    
+    try:
+        db_path = "/app/services/doc_store/data/doc_store.db"
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        tags = body.get('tags', [])
+        tags_json = json.dumps(tags)
+        
+        cursor.execute(
+            """
+            INSERT INTO documents (id, content, content_hash, metadata, tags, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                body['id'],
+                body['content'],
+                "direct-sql-hash",
+                "{}",
+                tags_json,
+                datetime.utcnow().isoformat(),
+                datetime.utcnow().isoformat()
+            )
+        )
+        conn.commit()
+        
+        cursor.execute("SELECT id, tags FROM documents WHERE id = ?", (body['id'],))
+        result = cursor.fetchone()
+        conn.close()
+        
+        return {
+            "success": True,
+            "method": "direct-sql",
+            "tags_sent": tags,
+            "tags_json": tags_json,
+            "tags_stored": result[1] if result else None,
+            "message": "✅ Direct SQL insert successful"
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@router.post("/debug/documents/via-service", tags=["debug"])
+async def create_document_via_service_debug(body: dict):
+    """Create document using Service layer."""
+    try:
+        from services.doc_store.domain.documents.service import DocumentService
+        
+        tags = body.get('tags', [])
+        
+        service = DocumentService()
+        doc = await service.create({
+            "id": body['id'],
+            "content": body['content'],
+            "metadata": {},
+            "tags": tags,
+            "correlation_id": None
+        })
+        
+        return {
+            "success": True,
+            "method": "via-service",
+            "tags_sent": tags,
+            "tags_in_doc": doc.tags,
+            "message": "✅ Insert via service successful"
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
+@router.get("/debug/documents/{doc_id}/tags-debug", tags=["debug"])
+async def get_document_tags_debug(doc_id: str):
+    """Get document with detailed tags debugging info."""
+    import sqlite3
+    import json
+    
+    try:
+        db_path = "/app/services/doc_store/data/doc_store.db"
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "SELECT id, content, tags, metadata FROM documents WHERE id = ?",
+            (doc_id,)
+        )
+        result = cursor.fetchone()
+        conn.close()
+        
+        if not result:
+            return {"success": False, "message": "Document not found"}
+        
+        tags_raw = result[2]
+        
+        return {
+            "success": True,
+            "id": result[0],
+            "tags_raw": tags_raw,
+            "tags_type": str(type(tags_raw)),
+            "tags_length": len(tags_raw) if tags_raw else 0,
+            "tags_parsed": json.loads(tags_raw) if tags_raw else None,
+            "is_empty_array": tags_raw == "[]"
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}

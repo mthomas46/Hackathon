@@ -225,7 +225,11 @@ def insert_document(
     correlation_id: Optional[str] = None,
 ) -> None:
     """Insert a new document."""
-    from services.shared.utilities import utc_now
+    from datetime import datetime, timezone
+    
+    def utc_now():
+        """Get current UTC time."""
+        return datetime.now(timezone.utc)
 
     execute_query(
         """
