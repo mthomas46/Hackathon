@@ -68,6 +68,15 @@ class DocumentRepository(SqlRepository[Document]):
         logger.info(f"[TAGS DEBUG] Repository row dict - tags value: {row.get('tags')}")
         return row
 
+    async def find_by_id(self, document_id: str) -> Optional[Document]:
+        """Find document by ID (async version for base service compatibility)."""
+        row = execute_query(
+            "SELECT * FROM documents WHERE id = ?",
+            (document_id,),
+            fetch_one=True,
+        )
+        return self._row_to_entity(row) if row else None
+    
     def get_by_content_hash(self, content_hash: str) -> Optional[Document]:
         """Get document by content hash."""
         row = execute_query(
