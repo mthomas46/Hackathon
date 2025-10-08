@@ -54,17 +54,58 @@ def get_documents_list(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]
 
 
 def search_documents(query: str, limit: int = 50) -> List[Dict[str, Any]]:
-    """Full-text search documents."""
+    """Improved full-text search with keyword extraction and fallback."""
+    import re
+    
+    # Extract meaningful keywords (remove common words, keep important terms)
+    stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+                  'of', 'with', 'by', 'from', 'about', 'as', 'into', 'through', 'during',
+                  'what', 'when', 'where', 'who', 'which', 'why', 'how', 'tell', 'me', 
+                  'is', 'are', 'was', 'were', 'been', 'being', 'have', 'has', 'had',
+                  'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might',
+                  'provide', 'give', 'describe', 'explain', 'including', 'comprehensive'}
+    
+    # Extract words (alphanumeric sequences)
+    words = re.findall(r'\b\w+\b', query.lower())
+    
+    # Filter out stop words and short words
+    keywords = [w for w in words if w not in stop_words and len(w) > 2]
+    
+    if not keywords:
+        # If no keywords, return empty (query was all stop words)
+        return []
+    
+    # Try FTS with OR'd keywords for flexible matching
+    fts_query = ' OR '.join(keywords[:5])  # Use top 5 keywords
+    
     fts_results = execute_query(
         "SELECT rowid FROM documents_fts WHERE content MATCH ? LIMIT ?",
-        (query, limit),
+        (fts_query, limit),
         fetch_all=True,
     )
 
     if not fts_results:
+        # Fallback: Try simple LIKE search with each keyword
+        like_conditions = []
+        params = []
+        for keyword in keywords[:3]:  # Try top 3 keywords
+            like_conditions.append("content LIKE ?")
+            params.append(f"%{keyword}%")
+        
+        if like_conditions:
+            like_query = f"SELECT rowid FROM documents WHERE {' OR '.join(like_conditions)} LIMIT ?"
+            params.append(limit)
+            
+            fts_results = execute_query(
+                like_query,
+                tuple(params),
+                fetch_all=True,
+            )
+    
+    if not fts_results:
         return []
 
-    # Get document IDs from FTS results
+    # Get document IDs from results
     doc_ids = [str(row["rowid"]) for row in fts_results]
 
     # Fetch actual documents
