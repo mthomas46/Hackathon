@@ -253,10 +253,15 @@ class FandomWikiIngestor:
                             f"(total: {len(self.visited_pages)})"
                         )
                     
-                    # Adaptive rate limiting with feedback
+                    # Enhanced adaptive rate limiting with feedback
                     if i + batch_size < len(tasks):
                         # Longer pause for deeper depths (more load on server)
-                        pause = min(1.0 + (current_depth * 0.5), 5.0)
+                        # Increased from 1.0 to 2.0 base, and max from 5.0 to 10.0
+                        pause = min(2.0 + (current_depth * 1.0), 10.0)
+                        
+                        # Add extra pause for larger batches
+                        if batch_size > 15:
+                            pause += 1.0
                         
                         if self.progress_callback:
                             self.progress_callback(
@@ -265,8 +270,8 @@ class FandomWikiIngestor:
                         
                         await asyncio.sleep(pause)
                 
-                # Depth transition pause
-                await asyncio.sleep(0.5)
+                # Depth transition pause (increased from 0.5 to 1.5)
+                await asyncio.sleep(1.5)
         
         except Exception as e:
             logger.warning(f"Failed to crawl {page_url}: {e}")
