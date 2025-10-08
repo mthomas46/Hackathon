@@ -153,7 +153,7 @@ class DocumentHandlers(AbstractDocumentHandlers):
     ) -> DocumentListResponse:
         """Handle document listing."""
         try:
-            result = self.service.list_entities(limit, offset)
+            result = await self.service.list_entities(limit, offset)
 
             # Return DocumentListResponse directly
             return DocumentListResponse(

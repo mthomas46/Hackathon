@@ -189,12 +189,16 @@ async def list_documents(
 ):
     """List documents with pagination."""
     result = await document_handlers.handle_list_documents(limit, offset)
-    return create_paginated_response(
-        items=result.get("items", []),
-        total=result.get("total", 0),
-        page=(offset // limit) + 1,
-        page_size=limit,
-        message="Documents retrieved successfully",
+    # result is already a DocumentListResponse, return it directly
+    return create_success_response(
+        data={
+            "items": result.items,
+            "total": result.total,
+            "has_more": result.has_more,
+            "page": (offset // limit) + 1,
+            "page_size": limit
+        },
+        message="Documents retrieved successfully"
     )
 
 
