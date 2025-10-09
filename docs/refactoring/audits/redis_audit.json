@@ -1,0 +1,89 @@
+{
+  "service_name": "redis",
+  "audit_date": "2025-10-08T16:43:26.247939",
+  "basic_info": {
+    "exists": true,
+    "path": "/Users/mykalthomas/Documents/work/Hackathon/services/redis",
+    "primary_language": "Python",
+    "lines_of_code": "N/A",
+    "has_main": false,
+    "has_readme": true,
+    "last_updated": "2025-10-02 01:08:58 -0500"
+  },
+  "structure": {
+    "ddd_layers": {
+      "domain": {
+        "exists": false,
+        "files": 0
+      },
+      "application": {
+        "exists": false,
+        "files": 0
+      },
+      "infrastructure": {
+        "exists": false,
+        "files": 0
+      },
+      "presentation": {
+        "exists": false,
+        "files": 0
+      }
+    },
+    "has_tests": false,
+    "has_config": true,
+    "has_docs": false
+  },
+  "dependencies": {
+    "requirements_file": true,
+    "total_dependencies": 22,
+    "dependencies": [
+      "fastapi>=0.104.1",
+      "uvicorn[standard]>=0.24.0",
+      "pydantic>=2.8.0",
+      "httpx>=0.25.2",
+      "redis>=5.0.1",
+      "aioredis>=2.0.1",
+      "aiohttp>=3.12.0",
+      "aiofiles>=23.0.0",
+      "requests>=2.32.0",
+      "pyyaml>=6.0.0"
+    ]
+  },
+  "api_endpoints": {
+    "total_endpoints": 0,
+    "has_openapi": false,
+    "endpoints": []
+  },
+  "code_metrics": {
+    "complexity": "N/A",
+    "duplication": "N/A",
+    "type_hints": "N/A"
+  },
+  "test_coverage": {
+    "has_tests": false,
+    "test_files": 0,
+    "coverage": "N/A"
+  },
+  "documentation": {
+    "has_readme": true,
+    "readme_sections": [
+      "\ud83d\udd34 Redis - Distributed Caching & Session Store",
+      "\ud83c\udfaf **Overview & Purpose**",
+      "\ud83d\ude80 **Key Features & Capabilities**",
+      "**\u26a1 High-Performance Caching**",
+      "**\ud83d\udcbe Advanced Data Structures**",
+      "**\ud83d\udce1 Pub/Sub Messaging**",
+      "**\ud83d\udd04 Session Management**",
+      "\ud83d\udce1 **API Reference**",
+      "**\ud83d\udd27 Core Redis Commands**",
+      "**\ud83d\udd0d Common Operations**"
+    ],
+    "has_architecture": false,
+    "has_api_docs": false
+  },
+  "docker": {
+    "has_dockerfile": true,
+    "has_compose": true,
+    "has_health_check": true
+  }
+}

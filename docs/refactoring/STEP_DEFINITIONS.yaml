@@ -1,0 +1,182 @@
+# Step Definitions with Acceptance Criteria
+# PRIORITY 2 FIX #9 - Precise, programmatically testable step definitions
+# Version: 1.0.0
+
+phase_1:
+  name: "Audit & Analysis"
+  steps:
+    - id: "1.1"
+      name: "Service Audit"
+      acceptance_criteria:
+        files_exist:
+          - "reports/{service}_audit.json"
+        file_content_checks:
+          - file: "reports/{service}_audit.json"
+            must_contain: ["metrics", "service_name"]
+            min_size_bytes: 500
+        validation_command: "python3 scripts/refactoring/audit_service.py {service}"
+      
+    - id: "1.2"
+      name: "Dependency Analysis"
+      acceptance_criteria:
+        files_exist:
+          - "services/{service}/dependency_map.json"
+        file_content_checks:
+          - file: "services/{service}/dependency_map.json"
+            must_contain: ["providers", "consumers"]
+      
+    - id: "1.3"
+      name: "Gap Analysis"
+      acceptance_criteria:
+        files_exist:
+          - "services/{service}/gap_analysis.md"
+        file_content_checks:
+          - file: "services/{service}/gap_analysis.md"
+            min_size_bytes: 1000
+            must_contain: ["test coverage", "logging"]
+
+phase_2:
+  name: "Design & Planning"
+  steps:
+    - id: "2.1"
+      name: "Domain Modeling"
+      acceptance_criteria:
+        files_exist:
+          - "services/{service}/design/domain_model.md"
+        file_content_checks:
+          - file: "services/{service}/design/domain_model.md"
+            must_contain: ["entities", "value objects"]
+            min_size_bytes: 1000
+      
+    - id: "2.2"
+      name: "API Design"
+      acceptance_criteria:
+        files_exist:
+          - "services/{service}/design/openapi_v2.yaml"
+        validation_command: "python3 -c 'import yaml; yaml.safe_load(open(\"services/{service}/design/openapi_v2.yaml\"))'"
+        file_content_checks:
+          - file: "services/{service}/design/openapi_v2.yaml"
+            must_contain: ["/api/v2/", "openapi"]
+      
+    - id: "2.3"
+      name: "Test Planning"
+      acceptance_criteria:
+        files_exist:
+          - "services/{service}/design/test_plan.md"
+        file_content_checks:
+          - file: "services/{service}/design/test_plan.md"
+            must_contain: ["80%", "unit", "integration"]
+
+phase_3:
+  name: "TDD Implementation"
+  steps:
+    - id: "3.1"
+      name: "Set Up Testing Infrastructure"
+      acceptance_criteria:
+        files_exist:
+          - "services/{service}/tests/pytest.ini"
+          - "services/{service}/tests/conftest.py"
+        directories_exist:
+          - "services/{service}/tests/unit"
+          - "services/{service}/tests/integration"
+      
+    - id: "3.2"
+      name: "Red Phase - Write Failing Tests"
+      acceptance_criteria:
+        test_count_min: 10
+        validation_command: "cd services/{service} && pytest --collect-only | grep -c 'test_'"
+      
+    - id: "3.3"
+      name: "Green Phase - Implement Features"
+      acceptance_criteria:
+        directories_exist:
+          - "services/{service}/domain"
+          - "services/{service}/application"
+          - "services/{service}/infrastructure"
+          - "services/{service}/presentation"
+        test_pass: true
+        validation_command: "cd services/{service} && pytest"
+        min_entity_count: 2
+        validation_command_2: "find services/{service}/domain/entities -name '*.py' | wc -l"
+      
+    - id: "3.4"
+      name: "Refactor Phase - Optimize Code"
+      acceptance_criteria:
+        test_pass: true
+        no_todos: true
+        validation_command: "cd services/{service} && pytest && ! grep -r 'TODO:' ."
+      
+    - id: "3.5"
+      name: "Validate Testing & Logging"
+      acceptance_criteria:
+        test_coverage_min: 80
+        validation_command: "cd services/{service} && pytest --cov --cov-fail-under=80"
+        logging_valid: true
+        validation_command_2: "python3 scripts/refactoring/validate_logging.py {service}"
+
+phase_4:
+  name: "Integration Testing"
+  steps:
+    - id: "4.1"
+      name: "Service Integration Tests"
+      acceptance_criteria:
+        directories_exist:
+          - "services/{service}/tests/integration"
+        test_count_min: 5
+        test_pass: true
+      
+    - id: "4.2"
+      name: "Workflow Tests"
+      acceptance_criteria:
+        directories_exist:
+          - "services/{service}/tests/workflows"
+        test_count_min: 3
+
+phase_5:
+  name: "Documentation"
+  steps:
+    - id: "5.1"
+      name: "Generate Service README"
+      acceptance_criteria:
+        files_exist:
+          - "services/{service}/README.md"
+        file_content_checks:
+          - file: "services/{service}/README.md"
+            min_size_bytes: 5000
+            must_contain: ["## Overview", "## Architecture", "## API Endpoints"]
+        diagram_count_min: 2
+      
+    - id: "5.2"
+      name: "Implement Standard Endpoints"
+      acceptance_criteria:
+        endpoints_implemented:
+          - "/health"
+          - "/about-me"
+          - "/endpoints"
+          - "/provider-consumer"
+        validation_command: "curl -f http://localhost:{port}/health"
+      
+    - id: "5.3"
+      name: "Validate Documentation"
+      acceptance_criteria:
+        validation_command: "python3 scripts/refactoring/validate_service_documentation.py {service}"
+        documentation_score_min: 80
+
+phase_6:
+  name: "Deployment & Monitoring"
+  steps:
+    - id: "6.1"
+      name: "Quality Gates Check"
+      acceptance_criteria:
+        validation_command: "python3 scripts/refactoring/check_quality_gates.py {service}"
+        all_gates_pass: true
+      
+    - id: "6.2"
+      name: "Update Progress Tracker"
+      acceptance_criteria:
+        files_exist:
+          - "docs/refactoring/LIVING_PROGRESS_TRACKER.md"
+        file_content_checks:
+          - file: "docs/refactoring/LIVING_PROGRESS_TRACKER.md"
+            must_contain: ["{service}", "100%"]
+
