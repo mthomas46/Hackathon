@@ -1,0 +1,549 @@
+openapi: 3.0.3
+info:
+  title: Code Analyzer Service API
+  description: |
+    Comprehensive code analysis service providing structural analysis, complexity metrics, 
+    security scanning, and pattern detection for multiple programming languages.
+    
+    Part of the Hackathon Microservices Ecosystem.
+  version: 2.0.0
+  contact:
+    name: Hackathon Team
+    email: team@hackathon.dev
+  license:
+    name: MIT
+    
+servers:
+  - url: http://localhost:8003/api/v2
+    description: Local development
+  - url: https://code-analyzer.hackathon.dev/api/v2
+    description: Production
+
+tags:
+  - name: analysis
+    description: Code analysis operations
+  - name: health
+    description: Service health and monitoring
+  - name: metadata
+    description: Service metadata and discovery
+
+paths:
+  # ===== STANDARD ENDPOINTS =====
+  
+  /health:
+    get:
+      tags: [health]
+      summary: Health check endpoint
+      description: Returns service health status and version information
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+  /about-me:
+    get:
+      tags: [metadata]
+      summary: Service descriptor
+      description: Returns detailed information about this service and its role in the ecosystem
+      operationId: getAboutMe
+      responses:
+        '200':
+          description: Service information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AboutMeResponse'
+                
+  /endpoints:
+    get:
+      tags: [metadata]
+      summary: List all endpoints
+      description: Returns a JSON list of all available API endpoints
+      operationId: getEndpoints
+      responses:
+        '200':
+          description: List of endpoints
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EndpointsResponse'
+                
+  /provider-consumer:
+    get:
+      tags: [metadata]
+      summary: Service relationships
+      description: Returns service dependency relationships (providers and consumers)
+      operationId: getProviderConsumer
+      responses:
+        '200':
+          description: Service relationships
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderConsumerResponse'
+  
+  # ===== CORE ANALYSIS ENDPOINTS =====
+  
+  /analyze:
+    post:
+      tags: [analysis]
+      summary: Analyze code
+      description: |
+        Performs comprehensive analysis of provided source code including:
+        - Structural analysis (functions, classes, modules)
+        - Complexity metrics (cyclomatic, cognitive)
+        - Style checking
+        - Security scanning
+        - Pattern detection
+      operationId: analyzeCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeCodeRequest'
+            examples:
+              pythonFunction:
+                summary: Analyze Python function
+                value:
+                  code: |
+                    def calculate_total(items):
+                        total = 0
+                        for item in items:
+                            total += item.price
+                        return total
+                  language: python
+                  options:
+                    include_complexity: true
+                    include_security: true
+      responses:
+        '200':
+          description: Analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '400':
+          description: Invalid request (malformed code, unsupported language)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable entity (analysis failed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /analyze/structure:
+    post:
+      tags: [analysis]
+      summary: Extract code structure only
+      description: Lightweight endpoint that only extracts functions, classes, and modules without full analysis
+      operationId: extractStructure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtractStructureRequest'
+      responses:
+        '200':
+          description: Structure extraction successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructureResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /analyze/complexity:
+    post:
+      tags: [analysis]
+      summary: Calculate complexity metrics only
+      description: Focused endpoint for complexity analysis
+      operationId: calculateComplexity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComplexityRequest'
+      responses:
+        '200':
+          description: Complexity calculation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplexityResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /analyze/security:
+    post:
+      tags: [analysis]
+      summary: Security scan only
+      description: Focused security vulnerability scanning
+      operationId: scanSecurity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecurityScanRequest'
+      responses:
+        '200':
+          description: Security scan completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /languages:
+    get:
+      tags: [metadata]
+      summary: List supported languages
+      description: Returns list of programming languages supported for analysis
+      operationId: listLanguages
+      responses:
+        '200':
+          description: List of supported languages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LanguagesResponse'
+
+# ===== COMPONENTS =====
+
+components:
+  schemas:
+    # Standard Responses
+    
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        service:
+          type: string
+          example: code-analyzer
+        version:
+          type: string
+          example: 2.0.0
+        timestamp:
+          type: string
+          format: date-time
+          
+    AboutMeResponse:
+      type: object
+      properties:
+        service_name:
+          type: string
+          example: code-analyzer
+        description:
+          type: string
+          example: "Provides code analysis capabilities for the ecosystem"
+        capabilities:
+          type: array
+          items:
+            type: string
+          example: ["structure_analysis", "complexity_metrics", "security_scanning"]
+        consumers:
+          type: array
+          items:
+            type: string
+          example: ["prompt-store"]
+        version:
+          type: string
+          example: 2.0.0
+          
+    EndpointsResponse:
+      type: object
+      properties:
+        endpoints:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              method:
+                type: string
+              description:
+                type: string
+                
+    ProviderConsumerResponse:
+      type: object
+      properties:
+        service:
+          type: string
+        relationships:
+          type: array
+          items:
+            type: object
+            properties:
+              service:
+                type: string
+              relationship:
+                type: string
+                enum: [provider, consumer, provide-consume]
+    
+    # Analysis Request/Response
+    
+    AnalyzeCodeRequest:
+      type: object
+      required: [code, language]
+      properties:
+        code:
+          type: string
+          description: Source code to analyze
+          example: "def hello(): return 'world'"
+        language:
+          type: string
+          enum: [python, javascript, typescript, java, go, rust]
+          description: Programming language
+          example: python
+        options:
+          type: object
+          properties:
+            include_structures:
+              type: boolean
+              default: true
+            include_complexity:
+              type: boolean
+              default: true
+            include_style:
+              type: boolean
+              default: true
+            include_security:
+              type: boolean
+              default: true
+            include_patterns:
+              type: boolean
+              default: true
+              
+    AnalysisResponse:
+      type: object
+      properties:
+        analysis_id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        language:
+          type: string
+        structures:
+          type: array
+          items:
+            $ref: '#/components/schemas/CodeStructure'
+        complexity:
+          $ref: '#/components/schemas/ComplexityMetrics'
+        style_issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/StyleIssue'
+        security_findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecurityFinding'
+        patterns:
+          type: array
+          items:
+            type: string
+            
+    CodeStructure:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [function, class, module, method]
+        name:
+          type: string
+        line_start:
+          type: integer
+        line_end:
+          type: integer
+        parameters:
+          type: array
+          items:
+            type: string
+        docstring:
+          type: string
+          nullable: true
+        complexity:
+          type: integer
+          nullable: true
+          
+    ComplexityMetrics:
+      type: object
+      properties:
+        cyclomatic_complexity:
+          type: integer
+          description: Number of decision points
+        cognitive_complexity:
+          type: integer
+          description: Mental load metric
+        maintainability_index:
+          type: number
+          format: float
+          description: 0-100 score
+          minimum: 0
+          maximum: 100
+        lines_of_code:
+          type: integer
+        comment_ratio:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          
+    StyleIssue:
+      type: object
+      properties:
+        severity:
+          type: string
+          enum: [error, warning, info]
+        line_number:
+          type: integer
+        message:
+          type: string
+        rule_id:
+          type: string
+          example: "E501"
+          
+    SecurityFinding:
+      type: object
+      properties:
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        vulnerability_type:
+          type: string
+          example: "SQL Injection"
+        line_number:
+          type: integer
+        description:
+          type: string
+        recommendation:
+          type: string
+          
+    ExtractStructureRequest:
+      type: object
+      required: [code, language]
+      properties:
+        code:
+          type: string
+        language:
+          type: string
+          
+    StructureResponse:
+      type: object
+      properties:
+        structures:
+          type: array
+          items:
+            $ref: '#/components/schemas/CodeStructure'
+            
+    ComplexityRequest:
+      type: object
+      required: [code, language]
+      properties:
+        code:
+          type: string
+        language:
+          type: string
+          
+    ComplexityResponse:
+      type: object
+      properties:
+        metrics:
+          $ref: '#/components/schemas/ComplexityMetrics'
+          
+    SecurityScanRequest:
+      type: object
+      required: [code, language]
+      properties:
+        code:
+          type: string
+        language:
+          type: string
+        scan_level:
+          type: string
+          enum: [basic, thorough]
+          default: basic
+          
+    SecurityResponse:
+      type: object
+      properties:
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecurityFinding'
+        summary:
+          type: object
+          properties:
+            critical_count:
+              type: integer
+            high_count:
+              type: integer
+            medium_count:
+              type: integer
+            low_count:
+              type: integer
+              
+    LanguagesResponse:
+      type: object
+      properties:
+        languages:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              extensions:
+                type: array
+                items:
+                  type: string
+                  
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+          example: "ANALYSIS_FAILED"
+        timestamp:
+          type: string
+          format: date-time
+

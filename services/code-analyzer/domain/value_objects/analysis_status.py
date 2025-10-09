@@ -70,10 +70,10 @@ class AnalysisStatus(Enum):
 
     def can_transition_to(self, new_status: 'AnalysisStatus') -> bool:
         """Check if transition to new status is allowed."""
-        # Define valid transitions
+        # Define valid transitions (supports both simple and complex workflows)
         valid_transitions = {
             self.PENDING: [self.ANALYZING, self.FAILED],
-            self.ANALYZING: [self.EXTRACTING_ENDPOINTS, self.FAILED],
+            self.ANALYZING: [self.EXTRACTING_ENDPOINTS, self.COMPLETED, self.FAILED],  # Allow direct completion
             self.EXTRACTING_ENDPOINTS: [self.CHECKING_SECURITY, self.FAILED],
             self.CHECKING_SECURITY: [self.VALIDATING_STYLE, self.FAILED],
             self.VALIDATING_STYLE: [self.CALCULATING_METRICS, self.FAILED],

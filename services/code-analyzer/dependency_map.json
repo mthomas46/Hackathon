@@ -1,0 +1,62 @@
+{
+  "service": "code-analyzer",
+  "role": "provider",
+  "description": "Provides code analysis capabilities for the ecosystem",
+  
+  "providers": [],
+  
+  "consumers": [
+    {
+      "service": "prompt-store",
+      "relationship": "consumer",
+      "usage": "Uses code analysis for generating prompts from code repositories",
+      "endpoints_consumed": [
+        "POST /analyze"
+      ]
+    }
+  ],
+  
+  "shared_dependencies": [
+    "services.shared.infrastructure.config",
+    "services.shared.utilities.resource_monitor",
+    "services.shared.infrastructure.utilities.middleware",
+    "services.shared.presentation.api.responses",
+    "services.shared.infrastructure.monitoring.health"
+  ],
+  
+  "external_dependencies": [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "httpx",
+    "redis",
+    "aioredis"
+  ],
+  
+  "provides_apis": [
+    {
+      "endpoint": "POST /analyze",
+      "purpose": "Analyze code and extract structural information",
+      "consumers": ["prompt-store"]
+    },
+    {
+      "endpoint": "GET /health",
+      "purpose": "Health check",
+      "consumers": ["all"]
+    },
+    {
+      "endpoint": "GET /docs",
+      "purpose": "API documentation (Swagger)",
+      "consumers": ["developers"]
+    }
+  ],
+  
+  "analysis": {
+    "provider_count": 0,
+    "consumer_count": 1,
+    "service_type": "provider",
+    "complexity": "low",
+    "dependencies_risk": "low"
+  }
+}
+
