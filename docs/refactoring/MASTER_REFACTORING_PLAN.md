@@ -24,13 +24,25 @@ ai_metadata:
 
 # 🏗️ Master Refactoring and Standardization Plan
 
-**Version**: 1.2.0  
+**Version**: 1.3.0  
 **Created**: October 8, 2025  
 **Last Updated**: October 9, 2025  
 **Status**: Active  
 **Owner**: Hackathon Team
 
 ## 📝 Changelog
+
+### v1.3.0 (October 9, 2025)
+- 🔀 **Integrated Git Checkpoints into All Phases** - Mandatory commits at phase boundaries
+  - Added **Git Checkpoint** steps after each phase (1-6)
+  - Detailed commit message templates for each phase
+  - Alternative commit strategies for Phase 3 (split into 2 commits for large services)
+  - Enforcement: AI agents MUST commit after each phase
+  - Recovery: Git commits create rollback points
+  - Quality: Meaningful, tangible commits (not micro-commits)
+- 📋 Updated Git Commit Strategy enforcement
+- ✅ Validated: 4 commits made for code-analyzer (recovered from 0)
+- 🎯 Prevents data loss and enables rollback
 
 ### v1.2.0 (October 9, 2025)
 - 🔧 **Added Configuration Management System** - Comprehensive config tracking and validation
@@ -392,6 +404,24 @@ Each service refactoring follows a 7-phase methodology (with Phase 7 being optio
 - Gap Analysis Document
 - Refactoring Scope Statement
 
+**Git Checkpoint** 🔀 *Required*:
+```bash
+# AI Agent MUST commit after Phase 1 completion
+git add services/<service>/{audit_report,dependency_map,gap_analysis}.{md,json}
+git commit -m "feat(<service>): Complete Phase 1 - Audit & Analysis
+
+- Service structure audit
+- Configuration audit (ports, credentials)
+- Dependency mapping (providers/consumers)
+- Gap analysis vs DDD standards
+- Refactoring scope defined
+
+Deliverables: 5
+Status: Phase 1 complete"
+```
+
+---
+
 #### Phase 2: Design & Planning (1 day)
 **Objective**: Create detailed refactoring plan
 
@@ -451,6 +481,27 @@ Each service refactoring follows a 7-phase methodology (with Phase 7 being optio
 - Test Plan Document
 - Migration Strategy Document
 
+**Git Checkpoint** 🔀 *Required*:
+```bash
+# AI Agent MUST commit after Phase 2 completion
+git add services/<service>/design/ services/<service>/CONFIG.md
+git commit -m "feat(<service>): Complete Phase 2 - Design & Planning
+
+- Domain model with DDD architecture
+- OpenAPI specification
+- Configuration planning (ports, profiles, secrets)
+- Service CONFIG.md generated
+- Test plan defined
+- Migration strategy documented
+
+Config: Ports allocated, validated
+Registry: Updated with service
+Deliverables: 6
+Status: Phase 2 complete"
+```
+
+---
+
 #### Phase 3: TDD Implementation (3-5 days)
 **Objective**: Implement refactored service following TDD
 
@@ -492,6 +543,76 @@ Each service refactoring follows a 7-phase methodology (with Phase 7 being optio
 - Test coverage report
 - Logging validation report
 
+**Git Checkpoint** 🔀 *Required*:
+```bash
+# AI Agent MUST commit after Phase 3 completion
+# Note: Phase 3 is long - consider 2 commits:
+#   Commit 3a: After Green Phase (domain layer complete)
+#   Commit 3b: After Refactor Phase (code quality improved)
+
+# Commit after full Phase 3 (recommended):
+git add services/<service>/domain/ \
+        services/<service>/tests/ \
+        services/<service>/pytest.ini \
+        services/<service>/requirements-test.txt
+
+git commit -m "feat(<service>): Complete Phase 3 - TDD Implementation
+
+Phase 3.1: Testing Infrastructure
+- pytest configuration with custom markers
+- Test fixtures and conftest
+- requirements-test.txt
+
+Phase 3.2: Red Phase
+- XX unit tests written (TDD Red)
+- Test coverage structure defined
+
+Phase 3.3: Green Phase
+- Complete domain layer implementation
+- Entities, value objects, services
+- Domain exceptions
+- All tests passing
+
+Phase 3.4: Refactor Phase
+- Code quality improvements (DRY, KISS, SOLID)
+- Reduced duplication
+- Enhanced maintainability
+
+Phase 3.5: Validation
+- Logging integration validated
+- Test coverage XX% (target: 80%+)
+
+Tests: XX/XX passing (100%)
+Coverage: XX%
+Status: Domain layer complete, production-ready"
+```
+
+**Alternative: Split Phase 3 into 2 Commits** (for very large services):
+```bash
+# Commit 3a: After Green Phase
+git add services/<service>/domain/ services/<service>/tests/unit/
+git commit -m "feat(<service>): Complete Phase 3.3 - Domain Layer (TDD Green)
+
+- Complete domain layer with XX tests passing
+- Entities, value objects, domain services
+
+Tests: XX/XX passing
+Coverage: XX%"
+
+# Commit 3b: After Refactor Phase  
+git add services/<service>/domain/ services/<service>/tests/
+git commit -m "refactor(<service>): Complete Phase 3.4 - Code Quality
+
+- Improved code quality (DRY, KISS, SOLID)
+- Enhanced test suite
+- Validated logging
+
+Tests: XX/XX passing
+Coverage: XX%"
+```
+
+---
+
 #### Phase 4: Integration Testing (1-2 days)
 **Objective**: Ensure service integrates with ecosystem
 
@@ -519,6 +640,31 @@ Each service refactoring follows a 7-phase methodology (with Phase 7 being optio
 - Docker validation report
 - Ecosystem compatibility report
 - Performance benchmarks
+
+**Git Checkpoint** 🔀 *Required*:
+```bash
+# AI Agent MUST commit after Phase 4 completion
+git add services/<service>/tests/integration/ \
+        services/<service>/tests/workflows/
+
+git commit -m "test(<service>): Complete Phase 4 - Integration Testing
+
+- XX integration tests (100% passing)
+- XX workflow tests (real-world scenarios)
+- Docker integration validated
+- Ecosystem compatibility confirmed
+- Performance benchmarks established
+
+Tests: XX total (100% passing)
+  - XX unit tests
+  - XX integration tests
+  - XX workflow tests
+Coverage: XX%
+Performance: Within targets
+Status: Integration complete"
+```
+
+---
 
 #### Phase 5: Documentation (1 day)
 **Objective**: Complete comprehensive documentation with AI optimization
@@ -582,6 +728,37 @@ Each service refactoring follows a 7-phase methodology (with Phase 7 being optio
 - Integration guides
 - AI-enriched documentation with metadata and tags ⭐
 
+**Git Checkpoint** 🔀 *Required*:
+```bash
+# AI Agent MUST commit after Phase 5 completion
+git add services/<service>/README.md \
+        services/<service>/CONFIG.md \
+        services/<service>/docs/ \
+        services/<service>/*.md
+
+git commit -m "docs(<service>): Complete Phase 5 - Documentation
+
+- Comprehensive README (XXX+ lines)
+  * Service overview and features
+  * Architecture diagrams
+  * Installation and usage
+  * Testing guide
+  * API reference
+  * Troubleshooting
+- Complete CONFIG.md
+  * Ports, credentials, profiles
+  * Configuration files
+  * Validation commands
+- API documentation (OpenAPI/Swagger)
+- Visual documentation (diagrams)
+- AI-enriched with metadata and tags
+
+Documentation: Production-ready
+Status: Phase 5 complete"
+```
+
+---
+
 #### Phase 6: Deployment & Monitoring (1 day)
 **Objective**: Deploy and validate in target environment
 
@@ -627,6 +804,46 @@ Each service refactoring follows a 7-phase methodology (with Phase 7 being optio
 - Monitoring configuration
 - Alert definitions
 - Runbook documentation
+
+**Git Checkpoint** 🔀 *Required*:
+```bash
+# AI Agent MUST commit after Phase 6 completion
+git add services/<service>/docker-compose.yml \
+        services/<service>/Dockerfile \
+        services/<service>/.github/ \
+        services/<service>/Makefile
+
+git commit -m "deploy(<service>): Complete Phase 6 - Deployment & Monitoring
+
+- Pre-deployment validation passed
+  * Port conflicts: None
+  * Configuration validated
+  * YAML syntax validated
+  * Docker best practices confirmed
+- Deployed to [environment]
+- Health checks validated
+- Monitoring configured
+- Alerts established
+- Runbook documented
+
+Deployment: Successful
+Health: Passing
+Monitoring: Active
+Status: Service deployed and operational"
+```
+
+**Service Refactoring Complete!** 🎉
+
+The service is now:
+- ✅ Deployed and operational
+- ✅ Fully tested (80%+ coverage)
+- ✅ Comprehensively documented
+- ✅ Monitored and observable
+- ✅ Production-ready
+
+**Next**: Optionally proceed to Phase 7 for enhancements, or move to the next service.
+
+---
 
 #### Phase 7: Enhancement & Optional Work (1-2 days, as needed)
 **Objective**: Complete optional/skipped steps and enhancements
