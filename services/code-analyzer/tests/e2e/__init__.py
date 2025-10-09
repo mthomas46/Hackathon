@@ -1,1 +1,1 @@
-"""Tests for code-analyzer e2e layer."""
+"""End-to-end tests package for code-analyzer service."""

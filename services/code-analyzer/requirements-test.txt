@@ -9,6 +9,7 @@ pytest-mock>=3.11.1
 # HTTP testing
 httpx>=0.25.0
 requests-mock>=1.11.0
+fastapi>=0.104.1  # For TestClient in API tests
 
 # Test data generation
 faker>=19.0.0

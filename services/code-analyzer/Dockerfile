@@ -38,6 +38,7 @@ ENV PATH=/root/.local/bin:$PATH
 # Copy application code
 COPY domain/ ./domain/
 COPY tests/ ./tests/
+COPY main.py .
 COPY pytest.ini .
 COPY README.md .
 COPY CONFIG.md .
@@ -63,15 +64,14 @@ ENV SERVICE_NAME=code-analyzer \
 # Expose ports
 EXPOSE 6000 6001
 
-# Health check
+# Health check (checks if FastAPI is responding)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD python -c "import sys; sys.exit(0)" || exit 1
+  CMD curl -f http://localhost:6000/health || exit 1
 
 # Run as non-root user for security
 RUN useradd -m -u 1000 analyzer && \
     chown -R analyzer:analyzer /app
 USER analyzer
 
-# Default command (can be overridden)
-# Note: Actual application layer with FastAPI will be added in future
-CMD ["python", "-c", "print('code-analyzer service ready - domain layer loaded'); import time; time.sleep(3600)"]
+# Default command - Run FastAPI with uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "6000", "--log-level", "info"]
