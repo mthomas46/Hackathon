@@ -1,57 +1,83 @@
+# Docker Compose configuration for code-analyzer service
+# Can run standalone or as part of the ecosystem
+# Last Updated: October 9, 2025
+
+version: "3.8"
+
 services:
   code-analyzer:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-    - ./:/app:ro
-    - code-analyzer_code:/app:rw
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: code-analyzer
+    
+    # Ports
+    ports:
+      - "6000:6000"  # HTTP API
+      - "6001:6001"  # Internal communication
+    
+    # Environment variables
     environment:
-    - REDIS_API_HOST=redis
-    - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis httpx
-      && python services/code-analyzer/main.py"
-    ports:
-    - 8085:5085
-    depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test:
-      - CMD
-      - curl
-      - -f
-      - http://localhost:5085/health
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - SERVICE_NAME=code-analyzer
+      - SERVICE_PORT=6000
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - PROFILE=${PROFILE:-development}
+      - ENABLE_METRICS=true
+      - ENABLE_TRACING=false
+      - WORKERS=4
+    
+    # Networks
     networks:
-    - hackathon_default
-  redis:
-    image: redis:7-alpine
-    ports:
-    - 6379:6379
+      - hackathon_analysis
+      - hackathon_default
+    
+    # Volumes (for development)
     volumes:
-    - ./:/app:ro
-    - redis_code:/app:rw
-    - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+      - ./domain:/app/domain:ro
+      - ./tests:/app/tests:ro
+      - ./logs:/app/logs
+    
+    # Health check
     healthcheck:
-      test:
-      - CMD
-      - redis-cli
-      - ping
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
       interval: 30s
       timeout: 10s
       retries: 3
-    networks:
-    - hackathon_default
-volumes:
-  redis_data:
-    driver: local
-  code-analyzer_code:
-    driver: local
-  redis_code:
-    driver: local
+      start_period: 40s
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # Labels
+    labels:
+      - "service=code-analyzer"
+      - "tier=analysis"
+      - "version=1.0.0"
+      - "architecture=DDD"
+      - "profile=analysis,dev,prod"
+
+# Networks
 networks:
-  hackathon_default:
+  hackathon_analysis:
+    name: hackathon_analysis
     driver: bridge
+  
+  hackathon_default:
+    name: hackathon_default
+    external: true
+
+# Volumes
+volumes:
+  code_analyzer_logs:
+    name: code_analyzer_logs
