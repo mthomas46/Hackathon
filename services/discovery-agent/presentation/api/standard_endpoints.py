@@ -13,11 +13,30 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any
 import time
 
+from .constants import (
+    SERVICE_NAME,
+    SERVICE_VERSION,
+    SERVICE_DESCRIPTION,
+    HTTP_PORT,
+    INTERNAL_PORT,
+    ECOSYSTEM_ROLE,
+    ECOSYSTEM_TIER,
+    API_VERSION,
+    API_BASE_PATH
+)
+
 # Track service start time for uptime calculation
 SERVICE_START_TIME = time.time()
-SERVICE_VERSION = "1.0.0"
 
 router = APIRouter(tags=["standard"])
+
+
+def _get_base_response() -> Dict[str, Any]:
+    """Get base response fields common to all standard endpoints."""
+    return {
+        "service": SERVICE_NAME,
+        "version": SERVICE_VERSION
+    }
 
 
 @router.get("/health")
@@ -31,9 +50,8 @@ async def health_check() -> Dict[str, Any]:
     uptime_seconds = int(time.time() - SERVICE_START_TIME)
     
     return {
+        **_get_base_response(),
         "status": "healthy",
-        "service": "discovery-agent",
-        "version": SERVICE_VERSION,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "uptime_seconds": uptime_seconds
     }
@@ -48,9 +66,8 @@ async def about_me() -> Dict[str, Any]:
     including capabilities, features, dependencies, and architecture.
     """
     return {
-        "service": "discovery-agent",
-        "version": SERVICE_VERSION,
-        "description": "Automated service discovery and LangGraph tool generation service",
+        **_get_base_response(),
+        "description": SERVICE_DESCRIPTION,
         
         "capabilities": [
             "OpenAPI specification discovery",
@@ -81,8 +98,8 @@ async def about_me() -> Dict[str, Any]:
             }
         },
         
-        "ecosystem_role": "integration",
-        "tier": 3,
+        "ecosystem_role": ECOSYSTEM_ROLE,
+        "tier": ECOSYSTEM_TIER,
         
         "dependencies": {
             "providers": [
@@ -136,16 +153,16 @@ async def about_me() -> Dict[str, Any]:
         },
         
         "api": {
-            "version": "v1",
-            "base_path": "/api/v1",
+            "version": API_VERSION,
+            "base_path": API_BASE_PATH,
             "documentation": "/docs",
             "openapi_spec": "/openapi.json"
         },
         
         "configuration": {
             "ports": {
-                "http": 5050,
-                "internal": 5051
+                "http": HTTP_PORT,
+                "internal": INTERNAL_PORT
             },
             "timeouts": {
                 "discovery": 30,
@@ -261,13 +278,12 @@ async def list_endpoints() -> Dict[str, Any]:
         categories[category] = categories.get(category, 0) + 1
     
     return {
-        "service": "discovery-agent",
-        "version": SERVICE_VERSION,
-        "base_url": "http://discovery-agent:5050",
+        **_get_base_response(),
+        "base_url": f"http://{SERVICE_NAME}:{HTTP_PORT}",
         "endpoints": endpoints_data,
         "total_endpoints": len(endpoints_data),
         "categories": categories,
-        "api_version": "v1"
+        "api_version": API_VERSION
     }
 
 
@@ -280,8 +296,7 @@ async def provider_consumer_relationships() -> Dict[str, Any]:
     with other services in the ecosystem.
     """
     return {
-        "service": "discovery-agent",
-        "version": SERVICE_VERSION,
+        **_get_base_response(),
         
         "relationships": {
             "providers": [
