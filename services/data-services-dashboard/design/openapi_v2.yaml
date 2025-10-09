@@ -1,0 +1,173 @@
+# OpenAPI Specification - NOT APPLICABLE for data-services-dashboard
+#
+# This service is a Streamlit Dashboard (Web UI), not a REST API service.
+# Therefore, OpenAPI specification is not applicable.
+#
+# Service Type: Streamlit Dashboard (Human-facing web UI)
+# Access Method: Browser at http://localhost:8501
+# API Consumers: None (dashboard is for human operators, not programmatic access)
+#
+# Instead, this file documents the dashboard's external interface and metadata.
+
+---
+# Dashboard Metadata (non-OpenAPI format)
+
+dashboard:
+  name: data-services-dashboard
+  version: "1.0.0"
+  type: streamlit
+  description: "Real-time monitoring dashboard for datastore operations across the ecosystem"
+  
+  access:
+    protocol: HTTP
+    port: 8501
+    url: "http://localhost:8501"
+    interface: "Web UI (Browser)"
+    consumers: "Human operators"
+    
+  features:
+    - name: "Overview Tab"
+      description: "Service health and operation distribution"
+      visualizations:
+        - "Pie chart: Operations by service"
+        - "Bar chart: Operation type distribution"
+        - "Scatter plot: Recent activity timeline"
+        
+    - name: "Performance Tab"
+      description: "Response time trends and duration analysis"
+      visualizations:
+        - "Line chart: Response time trends"
+        - "Histogram: Duration distribution"
+        - "Box plot: Duration by operation type"
+        - "Table: Performance statistics"
+        
+    - name: "Operations Tab"
+      description: "Detailed operation log"
+      features:
+        - "Searchable data table"
+        - "Filters: operation type, success status, time range"
+        - "CSV export"
+        - "Pagination controls"
+        
+    - name: "Workflows Tab"
+      description: "Cross-service workflow tracing"
+      visualizations:
+        - "Workflow selector"
+        - "Service flow timeline"
+        - "Workflow metrics"
+        - "Gantt chart: Call timeline"
+        
+    - name: "Errors Tab"
+      description: "Error analysis and alerting"
+      visualizations:
+        - "Bar chart: Errors by service"
+        - "Pie chart: Status code distribution"
+        - "Table: Detailed error log"
+        - "Error rate indicators"
+        
+  dependencies:
+    external_apis:
+      - name: "log-collector"
+        url: "http://localhost:8104"
+        endpoints:
+          - method: GET
+            path: "/logs"
+            params:
+              - name: "service"
+                type: "string"
+                required: false
+                description: "Filter by service name"
+              - name: "limit"
+                type: "integer"
+                required: false
+                default: 100
+                description: "Maximum number of logs to fetch"
+            response:
+              type: "application/json"
+              schema:
+                type: "object"
+                properties:
+                  items:
+                    type: "array"
+                    items:
+                      type: "object"
+                      properties:
+                        timestamp:
+                          type: "string"
+                          format: "date-time"
+                        service:
+                          type: "string"
+                        level:
+                          type: "string"
+                        message:
+                          type: "string"
+                        context:
+                          type: "object"
+                          properties:
+                            operation_type:
+                              type: "string"
+                            method:
+                              type: "string"
+                            path:
+                              type: "string"
+                            status_code:
+                              type: "integer"
+                            duration_ms:
+                              type: "number"
+                            success:
+                              type: "boolean"
+                            phase:
+                              type: "string"
+                            workflow_id:
+                              type: "string"
+                              
+  configuration:
+    environment_variables:
+      - name: "DASHBOARD_LOG_COLLECTOR_URL"
+        type: "string"
+        default: "http://localhost:8104"
+        description: "URL of log-collector service"
+        
+      - name: "DASHBOARD_CACHE_TTL"
+        type: "integer"
+        default: 5
+        min: 0
+        max: 300
+        description: "Cache TTL in seconds"
+        
+    streamlit_config:
+      server:
+        port: 8501
+        address: "0.0.0.0"
+        enableCORS: false
+        enableXsrfProtection: false
+      browser:
+        gatherUsageStats: false
+        
+  deployment:
+    docker:
+      image: "data-services-dashboard:latest"
+      port: 8501
+      healthcheck:
+        endpoint: "/_stcore/health"
+        interval: "30s"
+        timeout: "10s"
+        retries: 3
+        
+  monitored_services:
+    - name: "doc_store"
+      port: 5087
+      
+    - name: "prompt_store"
+      port: 5110
+      
+    - name: "external-service-store"
+      port: 5140
+      
+    - name: "memory-agent"
+      port: 5090
+      
+# Note: This dashboard does NOT provide a REST API.
+# It consumes the log-collector API and displays data via Streamlit web UI.
+# For API documentation of log-collector, see: services/log-collector/openapi.yaml
+
