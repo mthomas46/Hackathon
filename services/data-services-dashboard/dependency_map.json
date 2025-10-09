@@ -1,0 +1,70 @@
+{
+  "service": "data-services-dashboard",
+  "version": "1.0.0",
+  "type": "dashboard",
+  "technology": "streamlit",
+  "port": 8501,
+  
+  "providers": [
+    {
+      "service": "log-collector",
+      "relationship": "provider",
+      "criticality": "critical",
+      "purpose": "Provides operation logs and metrics data",
+      "endpoints_used": [
+        "GET /logs"
+      ],
+      "fallback": "none - dashboard unusable without log-collector"
+    }
+  ],
+  
+  "consumers": [
+    {
+      "service": "human-operators",
+      "relationship": "consumer",
+      "criticality": "n/a",
+      "purpose": "Dashboard users viewing operational metrics",
+      "interface": "web-ui",
+      "note": "Dashboard is for human consumption, not programmatic access"
+    }
+  ],
+  
+  "provide_consume": [],
+  
+  "datastore_services_monitored": [
+    {
+      "service": "doc_store",
+      "port": 5087,
+      "note": "Monitored via log-collector"
+    },
+    {
+      "service": "prompt_store",
+      "port": 5110,
+      "note": "Monitored via log-collector"
+    },
+    {
+      "service": "external-service-store",
+      "port": 5140,
+      "note": "Monitored via log-collector"
+    },
+    {
+      "service": "memory-agent",
+      "port": 5090,
+      "note": "Monitored via log-collector"
+    }
+  ],
+  
+  "integration_pattern": "pull-based",
+  "integration_notes": "Dashboard polls log-collector HTTP API every 5-10 seconds for latest operation logs. No push notifications or websockets.",
+  
+  "self_contained": false,
+  "requires_ecosystem": true,
+  
+  "dependencies_summary": {
+    "critical_dependencies": 1,
+    "optional_dependencies": 0,
+    "monitored_services": 4,
+    "total_integration_points": 1
+  }
+}
+
