@@ -3,7 +3,7 @@
 This module defines the core domain entities for the service discovery system.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 
@@ -108,14 +108,14 @@ class Service(BaseEntity):
         """Add an endpoint to this service."""
         endpoint.service_id = self.id
         self.endpoints.append(endpoint)
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     def remove_endpoint(self, endpoint_id: str) -> bool:
         """Remove an endpoint from this service."""
         for i, endpoint in enumerate(self.endpoints):
             if endpoint.id == endpoint_id:
                 self.endpoints.pop(i)
-                self.updated_at = datetime.utcnow()
+                self.updated_at = datetime.now(timezone.utc)
                 return True
         return False
 
@@ -169,7 +169,7 @@ class DiscoveryResult:
     service: Service
     success: bool
     error_message: Optional[str] = None
-    discovered_at: datetime = field(default_factory=lambda: datetime.utcnow())
+    discovered_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property
     def endpoint_count(self) -> int:

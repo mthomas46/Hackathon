@@ -4,7 +4,7 @@ This module contains all FastAPI route handlers for the discovery agent.
 """
 
 import httpx
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from fastapi import APIRouter
@@ -173,7 +173,7 @@ async def discover_service(request: DiscoverRequest):
             "tools_count": len(endpoints),  # Simple mapping for now
             "endpoints": endpoints,
             "dry_run": request.dry_run,
-            "discovery_timestamp": datetime.utcnow().isoformat() + "Z",
+            "discovery_timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
 
         return create_success_response(discovery_data)
@@ -411,7 +411,7 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                     "failed_discoveries": failed_discoveries,
                     "discovery_results": discovery_results,
                     "registry_updated": not request.dry_run,
-                    "discovery_timestamp": datetime.utcnow().isoformat() + "Z",
+                    "discovery_timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
             }
         )
@@ -476,7 +476,7 @@ async def get_registry_stats():
         stats = {
             "total_services": 0,
             "total_tools": 0,
-            "last_discovery": datetime.utcnow().isoformat() + "Z",
+            "last_discovery": datetime.now(timezone.utc).isoformat() + "Z",
             "discovery_runs": 1,
             "service_types": [
                 "orchestrator",
@@ -848,7 +848,7 @@ async def health_check() -> Dict[str, Any]:
             "status": "healthy",
             "service": "discovery-agent",
             "version": config.service_version,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "uptime": "operational"
         }
         return create_success_response(health_status, "Service is healthy")

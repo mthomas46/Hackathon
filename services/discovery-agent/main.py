@@ -18,7 +18,7 @@ sys.path.insert(0, str(shared_path))
 SERVICE_NAME = "discovery-agent"
 SERVICE_TITLE = "Discovery Agent Service"
 SERVICE_VERSION = "1.0.0"
-DEFAULT_API_PORT = int(os.environ.get('SERVICE_API_PORT', '5045'))
+DEFAULT_API_PORT = int(os.environ.get('SERVICE_API_PORT', '5050'))
 
 try:
     from services.shared.infrastructure.config import load_service_config
@@ -43,6 +43,7 @@ try:
     from .infrastructure.events import register_startup_events
     from .presentation.api.models import BulkDiscoverRequest, DiscoverRequest
     from .presentation.api.routes import router
+    from .presentation.api.standard_endpoints import router as standard_router
 except ImportError:
     # Fallback for when running as script
     import os
@@ -55,6 +56,7 @@ except ImportError:
         from infrastructure.events import register_startup_events
         from presentation.api.models import BulkDiscoverRequest, DiscoverRequest
         from presentation.api.routes import router
+        from presentation.api.standard_endpoints import router as standard_router
     except ImportError:
         # Mock implementations for local testing
         def register_startup_events(app):
@@ -68,6 +70,7 @@ except ImportError:
 
         from fastapi import APIRouter
         router = APIRouter()
+        standard_router = APIRouter()
 
 # ============================================================================
 # STANDARDIZED CONFIGURATION
@@ -126,6 +129,12 @@ app = FastAPI(
 setup_common_middleware(app, service_name=config.service_name)
 
 # ============================================================================
+# STANDARD ENDPOINTS (Root level)
+# ============================================================================
+
+app.include_router(standard_router)
+
+# ============================================================================
 # HEALTH ENDPOINTS
 # ============================================================================
 
@@ -149,7 +158,7 @@ if __name__ == "__main__":
     import os
 
     # Get port from config or environment
-    port = getattr(config.server, 'port', None) or int(os.getenv('SERVICE_API_PORT', '5045'))
+    port = getattr(config.server, 'port', None) or int(os.getenv('SERVICE_API_PORT', '5050'))
     host = getattr(config.server, 'host', '0.0.0.0')
 
     uvicorn.run(app, host=host, port=port)

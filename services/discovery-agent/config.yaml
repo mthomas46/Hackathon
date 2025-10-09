@@ -3,7 +3,8 @@
 
 # Override server port for discovery-agent
 server:
-  port: 5045
+  port: 5050
+  internal_port: 5051  # Internal port for inter-service communication
   host: ${SERVER_API_HOST:-0.0.0.0}
 
 # Discovery-agent specific settings
