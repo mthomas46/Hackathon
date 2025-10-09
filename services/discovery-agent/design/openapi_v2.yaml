@@ -1,0 +1,415 @@
+openapi: 3.0.3
+info:
+  title: Discovery Agent API
+  description: |
+    Service discovery and tool registration API with LangGraph integration.
+    
+    The Discovery Agent automatically discovers services, analyzes OpenAPI specifications,
+    and generates LangGraph tools for AI-powered workflow automation.
+  version: 1.0.0
+  contact:
+    name: Hackathon Team
+    email: team@hackathon.local
+
+servers:
+  - url: http://localhost:5050
+    description: Local development server
+  - url: http://discovery-agent:5050
+    description: Docker container
+
+tags:
+  - name: standard
+    description: Standard ecosystem endpoints
+  - name: discovery
+    description: Service discovery operations
+  - name: tools
+    description: Tool generation and registration
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check service health and availability
+      tags:
+        - standard
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /about-me:
+    get:
+      summary: Service Descriptor
+      description: Get comprehensive service information
+      tags:
+        - standard
+      responses:
+        '200':
+          description: Service information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AboutMeResponse'
+
+  /endpoints:
+    get:
+      summary: List Endpoints
+      description: Get list of all available API endpoints
+      tags:
+        - standard
+      responses:
+        '200':
+          description: Endpoint list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EndpointsResponse'
+
+  /provider-consumer:
+    get:
+      summary: Service Relationships
+      description: Get service dependencies and relationships
+      tags:
+        - standard
+      responses:
+        '200':
+          description: Service relationships
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderConsumerResponse'
+
+  /api/v1/discover:
+    post:
+      summary: Discover Service
+      description: Discover service endpoints from OpenAPI specification
+      tags:
+        - discovery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoverRequest'
+      responses:
+        '200':
+          description: Discovery completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Discovery failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/discover/tools:
+    post:
+      summary: Discover LangGraph Tools
+      description: Generate LangGraph tools from service OpenAPI specification
+      tags:
+        - tools
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolDiscoveryRequest'
+      responses:
+        '200':
+          description: Tool discovery completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolDiscoveryResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Tool discovery failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - version
+      properties:
+        status:
+          type: string
+          example: healthy
+        service:
+          type: string
+          example: discovery-agent
+        version:
+          type: string
+          example: 1.0.0
+        timestamp:
+          type: string
+          format: date-time
+        uptime_seconds:
+          type: integer
+
+    AboutMeResponse:
+      type: object
+      required:
+        - service
+        - version
+        - description
+      properties:
+        service:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+        features:
+          type: object
+        ecosystem_role:
+          type: string
+        tier:
+          type: integer
+        architecture:
+          type: object
+        quality_metrics:
+          type: object
+
+    EndpointsResponse:
+      type: object
+      required:
+        - service
+        - endpoints
+      properties:
+        service:
+          type: string
+        version:
+          type: string
+        base_url:
+          type: string
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/EndpointInfo'
+        total_endpoints:
+          type: integer
+        categories:
+          type: object
+
+    EndpointInfo:
+      type: object
+      required:
+        - path
+        - methods
+        - category
+      properties:
+        path:
+          type: string
+        methods:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        authentication:
+          type: boolean
+        category:
+          type: string
+
+    ProviderConsumerResponse:
+      type: object
+      required:
+        - service
+        - relationships
+      properties:
+        service:
+          type: string
+        version:
+          type: string
+        relationships:
+          type: object
+          properties:
+            providers:
+              type: array
+              items:
+                $ref: '#/components/schemas/ServiceRelationship'
+            consumers:
+              type: array
+              items:
+                $ref: '#/components/schemas/ServiceRelationship'
+        dependencies:
+          type: object
+        provides_data_to:
+          type: array
+          items:
+            type: string
+        consumes_data_from:
+          type: array
+          items:
+            type: string
+
+    ServiceRelationship:
+      type: object
+      required:
+        - service
+        - relationship
+      properties:
+        service:
+          type: string
+        relationship:
+          type: string
+          enum: [provider, consumer, bidirectional]
+        purpose:
+          type: string
+        endpoints_used:
+          type: array
+          items:
+            type: string
+        data_consumed:
+          type: array
+          items:
+            type: string
+
+    DiscoverRequest:
+      type: object
+      required:
+        - service_name
+        - service_url
+      properties:
+        service_name:
+          type: string
+          example: analysis-service
+        service_url:
+          type: string
+          example: http://analysis-service:5020
+        openapi_url:
+          type: string
+          example: http://analysis-service:5020/openapi.json
+
+    DiscoveryResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            service_name:
+              type: string
+            endpoints_discovered:
+              type: integer
+            registration_status:
+              type: string
+
+    ToolDiscoveryRequest:
+      type: object
+      required:
+        - service_name
+        - service_url
+      properties:
+        service_name:
+          type: string
+        service_url:
+          type: string
+        openapi_url:
+          type: string
+        tool_categories:
+          type: array
+          items:
+            type: string
+        dry_run:
+          type: boolean
+          default: false
+
+    ToolDiscoveryResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            service_name:
+              type: string
+            tools_discovered:
+              type: integer
+            categories:
+              type: array
+              items:
+                type: string
+            registration_status:
+              type: string
+            tools:
+              type: array
+              items:
+                $ref: '#/components/schemas/Tool'
+
+    Tool:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+        service_name:
+          type: string
+        service_url:
+          type: string
+        http_method:
+          type: string
+        path:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
