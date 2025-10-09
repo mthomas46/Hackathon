@@ -19,8 +19,8 @@ from ..domain.exceptions.domain_exceptions import (
 class ToolSecurityScanner:
     """Security scanner for discovered LangGraph tools using secure-analyzer service"""
 
-    def __init__(self, secure-analyzer_url: str = "http://localhost:5070"):
-        self.secure-analyzer_url = secure-analyzer_url
+    def __init__(self, secure_analyzer_url: str = "http://localhost:5070"):
+        self.secure_analyzer_url = secure_analyzer_url
         self.service_client = safe_service_clients_call()
 
         # Security risk categories
@@ -66,8 +66,8 @@ class ToolSecurityScanner:
         vulnerabilities.extend(self._analyze_file_operation_risks(tool))
 
         # Use secure-analyzer service for advanced scanning
-        secure-analyzer_result = await self._scan_with_secure-analyzer(tool)
-        security_analysis["secure-analyzer_result"] = secure-analyzer_result
+        secure_analyzer_result = await self._scan_with_secure_analyzer(tool)
+        security_analysis["secure-analyzer_result"] = secure_analyzer_result
 
         # Combine vulnerabilities
         security_analysis["vulnerabilities"] = vulnerabilities
@@ -292,7 +292,7 @@ class ToolSecurityScanner:
 
         return vulnerabilities
 
-    async def _scan_with_secure-analyzer(self, tool: Dict[str, Any]) -> Dict[str, Any]:
+    async def _scan_with_secure_analyzer(self, tool: Dict[str, Any]) -> Dict[str, Any]:
         """Use the secure-analyzer service for advanced security scanning"""
 
         try:
@@ -310,7 +310,7 @@ class ToolSecurityScanner:
 
             async with self.service_client.session() as session:
                 # Use secure-analyzer's detect-content endpoint
-                url = f"{self.secure-analyzer_url}/detect-content"
+                url = f"{self.secure_analyzer_url}/detect-content"
 
                 async with session.post(url, json=scan_data, timeout=TIMEOUT_OPENAPI_FETCH) as response:
                     if response.status == 200:
@@ -333,7 +333,7 @@ class ToolSecurityScanner:
             raise SecurityScanException(tool_name, f"Failed to connect to secure-analyzer: {str(e)}")
 
     def _calculate_risk_level(
-        self, vulnerabilities: List[Dict], secure-analyzer_result: Dict
+        self, vulnerabilities: List[Dict], secure_analyzer_result: Dict
     ) -> str:
         """Calculate overall risk level for a tool"""
 
@@ -345,8 +345,8 @@ class ToolSecurityScanner:
         low_count = len([v for v in vulnerabilities if v.get("severity") == "low"])
 
         # Factor in secure-analyzer results
-        if secure-analyzer_result.get("success"):
-            analyzer_data = secure-analyzer_result.get("analysis", {})
+        if secure_analyzer_result.get("success"):
+            analyzer_data = secure_analyzer_result.get("analysis", {})
             # This would depend on the actual secure-analyzer response format
             if analyzer_data.get("risk_level") == "high":
                 high_count += 1

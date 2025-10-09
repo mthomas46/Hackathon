@@ -139,7 +139,7 @@ class DiscoveryAgentMonitoring:
         # Extract security metrics
         risk_level = scan_result.get("risk_level", "unknown")
         vulnerabilities_count = len(scan_result.get("vulnerabilities", []))
-        secure-analyzer_success = scan_result.get("secure-analyzer_result", {}).get(
+        secure_analyzer_success = scan_result.get("secure-analyzer_result", {}).get(
             "success", False
         )
 

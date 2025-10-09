@@ -1,0 +1,139 @@
+{
+  "service": "discovery-agent",
+  "version": "1.0.0",
+  "audit_date": "2025-10-09",
+  "dependencies": {
+    "providers": [
+      {
+        "service": "orchestrator",
+        "purpose": "Service registration and tool registry management",
+        "url_pattern": "http://orchestrator:5099",
+        "required": true,
+        "endpoints_used": [
+          "POST /registry/services",
+          "POST /tools/register",
+          "GET /registry/services/{service_name}"
+        ],
+        "data_consumed": [],
+        "data_provided": [
+          "service_metadata",
+          "tool_definitions",
+          "endpoint_catalog"
+        ]
+      },
+      {
+        "service": "log-collector",
+        "purpose": "Structured logging and monitoring",
+        "url_pattern": "http://log-collector:5040",
+        "required": false,
+        "endpoints_used": [
+          "POST /logs"
+        ],
+        "data_consumed": [],
+        "data_provided": [
+          "discovery_logs",
+          "error_logs",
+          "performance_metrics"
+        ]
+      },
+      {
+        "service": "target-services",
+        "purpose": "Services to discover and analyze",
+        "url_pattern": "http://<service>:<port>",
+        "required": true,
+        "endpoints_used": [
+          "GET /openapi.json",
+          "GET /health"
+        ],
+        "data_consumed": [
+          "openapi_specification",
+          "health_status"
+        ],
+        "data_provided": []
+      }
+    ],
+    "consumers": [
+      {
+        "service": "orchestrator",
+        "purpose": "Receives discovered services and tools",
+        "relationship": "bidirectional",
+        "data_consumed": [
+          "service_metadata",
+          "tool_definitions",
+          "endpoint_catalog"
+        ],
+        "endpoints_provided": [
+          "POST /api/v1/discover",
+          "POST /api/v1/discover/tools"
+        ]
+      },
+      {
+        "service": "all-services",
+        "purpose": "Services that need self-registration",
+        "relationship": "unidirectional",
+        "data_consumed": [],
+        "endpoints_provided": [
+          "POST /api/v1/discover",
+          "POST /api/v1/discover/tools"
+        ],
+        "notes": "Any service in the ecosystem can use discovery-agent for self-registration"
+      }
+    ]
+  },
+  "service_type": "integration",
+  "tier": 3,
+  "criticality": "high",
+  "notes": [
+    "Enables dynamic service coordination across ecosystem",
+    "Critical for AI-powered workflow automation",
+    "Tight coupling with orchestrator service",
+    "Acts as bridge between static services and dynamic workflows"
+  ],
+  "data_flows": {
+    "inbound": [
+      {
+        "source": "target-services",
+        "type": "OpenAPI specifications",
+        "format": "JSON",
+        "volume": "low",
+        "frequency": "on-demand"
+      },
+      {
+        "source": "API requests",
+        "type": "Discovery requests",
+        "format": "JSON (FastAPI)",
+        "volume": "low-medium",
+        "frequency": "periodic"
+      }
+    ],
+    "outbound": [
+      {
+        "destination": "orchestrator",
+        "type": "Service metadata and tools",
+        "format": "JSON",
+        "volume": "low",
+        "frequency": "on-demand"
+      },
+      {
+        "destination": "log-collector",
+        "type": "Structured logs",
+        "format": "JSON",
+        "volume": "low",
+        "frequency": "continuous"
+      }
+    ]
+  },
+  "integration_patterns": [
+    "Pull-based discovery (on-demand API calls)",
+    "Push-based registration (automatic registration with orchestrator)",
+    "Event broadcasting (discovery events)",
+    "Health monitoring (continuous availability checking)"
+  ],
+  "circular_dependencies": [],
+  "dependency_graph": {
+    "direct_dependencies": 2,
+    "transitive_dependencies": 0,
+    "depth": 1
+  }
+}
+
