@@ -1,1 +1,1 @@
-"""Tests for discovery_agent e2e layer."""
+"""End-to-end tests."""
