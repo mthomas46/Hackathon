@@ -45,14 +45,14 @@ This living document tracks all services in the ecosystem, their capabilities, r
 
 ### Refactored Services
 
-| Service | Version | Refactor Status | Coverage | Capabilities | Future Workflows | Last Updated |
-|---------|---------|----------------|----------|--------------|-----------------|--------------|
-| **code-analyzer** | 1.0.0 | ✅ **COMPLETE** | 95% | Code analysis, AST parsing, metrics calculation, language detection | Code Quality Workflow, Architecture Analysis Workflow | Oct 10, 2025 |
-| **discovery-agent** | 1.0.0 | ✅ **COMPLETE** | 88% | Service discovery, capability mapping, LangGraph integration, autonomous agent | Service Health Monitoring Workflow, Auto-Documentation Workflow | Oct 10, 2025 |
-| **data-services-dashboard** | 1.0.0 | ✅ **COMPLETE** | 92% | Streamlit UI, service metrics visualization, real-time monitoring | Service Monitoring Workflow, Health Dashboard Workflow | Oct 10, 2025 |
-| **bedrock-proxy** | 1.0.0 | ✅ **COMPLETE** | 85% | AWS Bedrock integration, LLM proxy, template management | AI Code Review Workflow, Documentation Generation Workflow | Oct 10, 2025 |
-| **analysis-service** | 1.0.0 | ✅ **COMPLETE** | 91% | Code analysis, architecture detection, pattern recognition, CQRS | Architecture Digitization Workflow, Code Quality Workflow | Oct 10, 2025 |
-| **architecture-digitizer** | 1.0.0 | ✅ **COMPLETE** | 48% | Diagram normalization (Miro, FigJam, Lucid, Confluence), file processing | Architecture Documentation Workflow, Diagram Analysis Workflow | Oct 10, 2025 |
+| Service | Version | Refactor Status | Coverage | Demos | Capabilities | Future Workflows | Last Updated |
+|---------|---------|----------------|----------|-------|--------------|-----------------|--------------|
+| **code-analyzer** | 1.0.0 | ✅ **COMPLETE** | 95% | ⏳ Planned | Code analysis, AST parsing, metrics calculation, language detection | Code Quality Workflow, Architecture Analysis Workflow | Oct 10, 2025 |
+| **discovery-agent** | 1.0.0 | ✅ **COMPLETE** | 88% | ⏳ Planned | Service discovery, capability mapping, LangGraph integration, autonomous agent | Service Health Monitoring Workflow, Auto-Documentation Workflow | Oct 10, 2025 |
+| **data-services-dashboard** | 1.0.0 | ✅ **COMPLETE** | 92% | N/A | Streamlit UI, service metrics visualization, real-time monitoring | Service Monitoring Workflow, Health Dashboard Workflow | Oct 10, 2025 |
+| **bedrock-proxy** | 1.0.0 | ✅ **COMPLETE** | 85% | ⏳ Planned | AWS Bedrock integration, LLM proxy, template management | AI Code Review Workflow, Documentation Generation Workflow | Oct 10, 2025 |
+| **analysis-service** | 1.0.0 | ✅ **COMPLETE** | 91% | ⏳ Planned | Code analysis, architecture detection, pattern recognition, CQRS | Architecture Digitization Workflow, Code Quality Workflow | Oct 10, 2025 |
+| **architecture-digitizer** | 1.0.0 | ✅ **COMPLETE** | 48% | ⏳ Planned | Diagram normalization (Miro, FigJam, Lucid, Confluence), file processing | Architecture Documentation Workflow, Diagram Analysis Workflow | Oct 10, 2025 |
 
 ### Services In Progress
 
@@ -303,10 +303,23 @@ Legend:
 - Target: 80%+ (Phase 5 mandatory)
 - Focus areas: Normalizer logic, file processing, API endpoints
 
-**Demo Scenarios**:
-1. **Multi-Format Demo**: Upload diagrams from Miro, FigJam, Lucid → Normalize all
-2. **Integration Demo**: Normalize → Store in doc-store → Analyze architecture
-3. **AI Enhancement Demo**: Normalize → Generate documentation via bedrock-proxy
+**Demo Endpoints** (NEW - Phase 9 Enhancement):
+1. **GET /demos** - Lists 3 executable demos
+2. **POST /run-demo** - Executes demos with tangible artifacts
+
+**Planned Demos**:
+1. **normalize-miro-sample** (Self-Contained, 2s)
+   - Normalizes canned Miro board JSON
+   - Produces: normalization report, normalized JSON, components, connections
+
+2. **multi-format-processing** (Self-Contained, 5s)
+   - Processes Miro, FigJam, Lucid samples
+   - Produces: comparison report, normalized outputs, format analysis
+
+3. **architecture-documentation-workflow** (Ecosystem, 10s)
+   - Full workflow: normalize → analyze → generate docs
+   - Requires: analysis-service, bedrock-proxy
+   - Produces: architecture analysis, documentation, workflow report
 
 ---
 

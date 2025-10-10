@@ -368,7 +368,36 @@ Status: Phase 5 complete"
 
 **Quality Gate**: E2E test plan for each workflow
 
-#### 9.4 Functional Demo Planning
+#### 9.4 Implement Demo Endpoints ⚡ **NEW**
+- **Implement `/demos` endpoint**: Lists all executable demos
+- **Implement `/run-demo` endpoint**: Executes demos programmatically
+- **Create demo data**: Canned data for each demo
+- **Create 2-3 self-contained demos**: No external dependencies
+- **Create 1-2 ecosystem demos**: Integrate with other services
+
+**Demo Types**:
+- **Self-Contained**: Uses canned data, always available, < 5s execution
+- **Ecosystem**: Integrates with other services, may have blockers, 5-30s execution
+- **Hybrid**: Works standalone but enhanced with ecosystem
+
+**Demo Endpoint Specifications**:
+```
+GET /demos
+- Returns list of all available demos
+- Shows requirements, produces, status
+
+POST /run-demo
+- Executes specific demo by ID
+- Returns results with reports and artifacts
+```
+
+See [DEMO_ENDPOINTS_ENHANCEMENT.md](./DEMO_ENDPOINTS_ENHANCEMENT.md) for full specification.
+
+**Quality Gate**: 2-3 demos executable via `/run-demo` with tangible results
+
+---
+
+#### 9.5 Functional Demo Planning
 - **For each workflow**: Plan functional demo
 - **Prepare canned data**: Realistic test data
 - **Document demo script**: Step-by-step demo flow
@@ -409,7 +438,7 @@ detect patterns, and bedrock-proxy will generate documentation."
 
 **Quality Gate**: Functional demo plan for each workflow
 
-#### 9.5 Update Service README
+#### 9.6 Update Service README
 - **Add "Future Expansion" section** to service README.md
 - **Document planned workflows**: Link to workflow plans
 - **List integration opportunities**: Future enhancements
@@ -456,7 +485,7 @@ See [MASTER_SERVICE_MATRIX.md](link) for complete ecosystem view.
 
 **Quality Gate**: README updated with Future Expansion section
 
-#### 9.6 Update Master Service Matrix
+#### 9.7 Update Master Service Matrix
 - **UPDATE** [MASTER_SERVICE_MATRIX.md](./MASTER_SERVICE_MATRIX.md)
 - **Move service** from "Pending" to "Refactored Services"
 - **Add service capabilities** to matrix
@@ -474,30 +503,41 @@ See [MASTER_SERVICE_MATRIX.md](link) for complete ecosystem view.
 ### Deliverables
 1. ✅ 3-5 workflows documented
 2. ✅ E2E test plans for each workflow
-3. ✅ Functional demo plans for each workflow
-4. ✅ README updated with Future Expansion section
-5. ✅ MASTER_SERVICE_MATRIX.md updated
+3. ✅ `/demos` and `/run-demo` endpoints implemented ⚡ **NEW**
+4. ✅ 2-3 demos functional via API ⚡ **NEW**
+5. ✅ Functional demo plans for each workflow
+6. ✅ README updated with Future Expansion section
+7. ✅ MASTER_SERVICE_MATRIX.md updated
 
 ### Quality Gates
 - [ ] Minimum 3 workflows documented
 - [ ] E2E test plan for each workflow
+- [ ] `/demos` endpoint functional ⚡ **NEW**
+- [ ] `/run-demo` endpoint functional ⚡ **NEW**
+- [ ] 2-3 demos executable via API ⚡ **NEW**
 - [ ] Demo plan for each workflow
 - [ ] README Future Expansion section complete
 - [ ] MASTER_SERVICE_MATRIX.md updated
 
 ### Git Checkpoint
 ```bash
-git add services/<service>/README.md docs/refactoring/MASTER_SERVICE_MATRIX.md
+git add services/<service>/README.md \
+        services/<service>/presentation/routes/demo_routes.py \
+        services/<service>/demo_data/ \
+        docs/refactoring/MASTER_SERVICE_MATRIX.md
 git commit -m "plan(<service>): Phase 9 - Future Expansion Planning Complete
 
 - Documented 3-5 workflows involving this service
 - Created E2E test plans for each workflow
+- Implemented /demos and /run-demo endpoints ⚡ NEW
+- Created 2-3 executable demos with canned data ⚡ NEW
 - Created functional demo plans with canned data
 - Updated README with Future Expansion section
 - Updated MASTER_SERVICE_MATRIX.md
 
 Workflows: X documented
 E2E Plans: X created
+Demos Implemented: X (self-contained: X, ecosystem: X) ⚡ NEW
 Demo Plans: X created
 Status: Phase 9 complete"
 ```
