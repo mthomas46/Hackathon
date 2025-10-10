@@ -1,6 +1,23 @@
 """AI domain exceptions."""
 
-from services.shared.domain.exceptions.exceptions import DomainError
+
+class DomainError(Exception):
+    """Base exception for domain errors.
+    
+    All domain-level exceptions should inherit from this class to maintain
+    clean separation between domain and infrastructure concerns.
+    """
+    
+    def __init__(self, message: str, details: dict = None):
+        """Initialize domain error.
+        
+        Args:
+            message: Human-readable error message
+            details: Optional dictionary with additional context
+        """
+        super().__init__(message)
+        self.message = message
+        self.details = details or {}
 
 
 class AIRequestException(DomainError):
