@@ -79,8 +79,10 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
 # Expose ports
-EXPOSE 8501  # Streamlit UI
-EXPOSE 8080  # FastAPI REST API
+# - 8501: Streamlit UI
+# - 8080: FastAPI REST API
+EXPOSE 8501
+EXPOSE 8080
 
 # Start command - Run Streamlit (which also starts FastAPI in background thread)
 CMD ["streamlit", "run", "app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]

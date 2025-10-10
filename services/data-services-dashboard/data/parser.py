@@ -1,4 +1,4 @@
-    """
+"""
 Log parsing and validation.
 
 Parses raw log dictionaries into validated LogEntry models.
