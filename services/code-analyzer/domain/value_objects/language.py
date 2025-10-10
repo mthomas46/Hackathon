@@ -36,4 +36,34 @@ class Language(Enum):
             if extension in language.extensions:
                 return language
         raise UnsupportedLanguageError(f"Unsupported file extension: {extension}")
+    
+    @classmethod
+    def from_string(cls, language_str: str) -> 'Language':
+        """Create Language enum from string representation.
+        
+        Args:
+            language_str: Language name (e.g., 'python', 'PYTHON', 'Python')
+            
+        Returns:
+            Language enum instance
+            
+        Raises:
+            UnsupportedLanguageError: If language string is not recognized
+            
+        Example:
+            >>> Language.from_string("python")
+            Language.PYTHON
+            >>> Language.from_string("JAVASCRIPT")
+            Language.JAVASCRIPT
+        """
+        try:
+            # Try uppercase first (standard enum format)
+            return cls[language_str.upper()]
+        except KeyError:
+            # If not found, provide helpful error message
+            valid_languages = [lang.name.lower() for lang in cls]
+            raise UnsupportedLanguageError(
+                f"Unsupported language: '{language_str}'. "
+                f"Valid languages: {', '.join(valid_languages)}"
+            )
 
