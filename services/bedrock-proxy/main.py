@@ -48,33 +48,22 @@ app = FastAPI(
 
 
 # ============================================================================
-# HEALTH CHECK ENDPOINT
-# ============================================================================
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint for Docker health checks and monitoring.
-    
-    Returns:
-        Health status with service information
-    """
-    return {
-        "status": "healthy",
-        "service": SERVICE_NAME,
-        "version": SERVICE_VERSION
-    }
-
-
-# ============================================================================
 # INCLUDE ROUTERS
 # ============================================================================
 
-# Include API routes from presentation layer
+# Include standard endpoints (health, about-me, endpoints, provider-consumer)
+try:
+    from presentation.api.standard_endpoints import router as standard_router
+    app.include_router(standard_router)
+except ImportError as e:
+    print(f"Warning: Could not load standard endpoints: {e}")
+
+# Include API routes from presentation layer (core business logic)
 try:
     from presentation.api.routes import router as api_router
     app.include_router(api_router)
 except ImportError as e:
-    # Log error but don't fail startup - allows service to run with just health endpoint
+    # Log error but don't fail startup
     print(f"Warning: Could not load API routes: {e}")
 
 
