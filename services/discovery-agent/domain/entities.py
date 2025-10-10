@@ -6,25 +6,29 @@ This module defines the core domain entities for the service discovery system.
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
+import uuid
 
-try:
-    from services.shared.domain.repositories.base_repository import BaseEntity
-except ImportError:
-    # Fallback for test environments or different working directories
-    import sys
-    from pathlib import Path
-    current_dir = Path(__file__).parent
-    while current_dir.parent != current_dir:
-        shared_path = current_dir.parent / "shared" / "domain" / "repositories" / "base_repository.py"
-        if shared_path.exists():
-            sys.path.insert(0, str(shared_path.parent.parent.parent.parent))
-            break
-        current_dir = current_dir.parent
-    from services.shared.domain.repositories.base_repository import BaseEntity
+
+# Simple BaseEntity implementation (removed dependency on shared infrastructure)
+@dataclass
+class BaseEntity:
+    """Base class for all domain entities."""
+    
+    id: Optional[str] = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: Optional[datetime] = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.id == other.id
+    
+    def __hash__(self):
+        return hash(self.id)
 
 
 @dataclass
-class Endpoint(BaseEntity):
+class Endpoint:
     """Represents a discovered API endpoint."""
 
     path: str
@@ -35,6 +39,10 @@ class Endpoint(BaseEntity):
     responses: Dict[str, Any] = field(default_factory=dict)
     tags: List[str] = field(default_factory=list)
     service_id: Optional[str] = None
+    # BaseEntity fields
+    id: Optional[str] = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: Optional[datetime] = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property
     def operation_id(self) -> str:
@@ -82,7 +90,7 @@ class Endpoint(BaseEntity):
 
 
 @dataclass
-class Service(BaseEntity):
+class Service:
     """Represents a discovered service with its endpoints."""
 
     name: str
@@ -93,6 +101,10 @@ class Service(BaseEntity):
     endpoints: List[Endpoint] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     status: str = "discovered"  # discovered, active, inactive, error
+    # BaseEntity fields
+    id: Optional[str] = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: Optional[datetime] = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property
     def endpoint_count(self) -> int:
@@ -118,6 +130,13 @@ class Service(BaseEntity):
                 self.updated_at = datetime.now(timezone.utc)
                 return True
         return False
+
+    def find_endpoint(self, path: str, method: str) -> Optional[Endpoint]:
+        """Find an endpoint by path and method."""
+        for endpoint in self.endpoints:
+            if endpoint.path == path and endpoint.method.upper() == method.upper():
+                return endpoint
+        return None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert service to dictionary representation."""
@@ -170,18 +189,40 @@ class DiscoveryResult:
     success: bool
     error_message: Optional[str] = None
     discovered_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    discovery_duration_ms: Optional[float] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def is_successful(self) -> bool:
+        """Check if discovery was successful."""
+        return self.success
 
     @property
     def endpoint_count(self) -> int:
         """Get the number of discovered endpoints."""
         return len(self.service.endpoints) if self.success else 0
 
+    def summary(self) -> str:
+        """Get a human-readable summary of the discovery result."""
+        if self.success:
+            return (
+                f"Successfully discovered service '{self.service.name}' "
+                f"with {self.endpoint_count} endpoints"
+                + (f" in {self.discovery_duration_ms:.2f}ms" if self.discovery_duration_ms else "")
+            )
+        else:
+            return f"Failed to discover service: {self.error_message or 'Unknown error'}"
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert result to dictionary."""
         return {
             "service": self.service.to_dict(),
             "success": self.success,
+            "is_successful": self.is_successful,
             "error_message": self.error_message,
             "endpoint_count": self.endpoint_count,
+            "discovery_duration_ms": self.discovery_duration_ms,
+            "metadata": self.metadata,
             "discovered_at": self.discovered_at.isoformat(),
+            "summary": self.summary(),
         }
