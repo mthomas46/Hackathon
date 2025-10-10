@@ -24,13 +24,34 @@ ai_metadata:
 
 # 🏗️ Master Refactoring and Standardization Plan
 
-**Version**: 1.6.0  
+**Version**: 1.7.0  
 **Created**: October 8, 2025  
 **Last Updated**: October 10, 2025  
 **Status**: Active  
 **Owner**: Hackathon Team
 
 ## 📝 Changelog
+
+### v1.7.0 (October 10, 2025)
+- 📚 **NEW: Phase 2.7 - Library Consolidation Analysis** (MANDATORY, 20-30 min)
+  - Systematic identification of library opportunities
+  - Decision framework for custom code vs libraries
+  - Replace custom retry, HTTP, config, logging with standard libraries
+  - Document recommendations by priority (Phase 3, 8, or 11)
+- 📊 **NEW: MASTER_TECHNOLOGY_MATRIX.md** - Living document tracking all Python libraries
+  - Tracks libraries across all services
+  - Standardizes library choices
+  - Identifies consolidation opportunities
+  - Provides recommendations by use case
+- 🎯 **Library Standards Defined**:
+  - HTTP Client: `httpx` (replaces `requests`)
+  - Retry: `tenacity` (replaces custom retry)
+  - Config: `pydantic-settings` (replaces manual env loading)
+  - Logging: `structlog` (replaces print/basic logging)
+  - Testing: `pytest` + `faker` + `factory-boy`
+- 🔧 **Phase 3 Impact**: Services now implemented with standard libraries from the start
+- 📚 **Documentation**: See [LIBRARY_CONSOLIDATION_ENHANCEMENT.md](./LIBRARY_CONSOLIDATION_ENHANCEMENT.md)
+- 📈 **Goal**: 90%+ services using standard libraries after refactoring
 
 ### v1.6.0 (October 10, 2025)
 - ⚡ **MAJOR: Added Optimization & Tuning to ALL Phases** - Iterative improvement at every step
@@ -603,6 +624,176 @@ Status: Phase 1 complete"
 - **Service Makefile with validation** 🔧 *New*
 - Test Plan Document
 - Migration Strategy Document
+
+---
+
+### 2.7: Library Consolidation Analysis ⚡ **NEW in v1.7.0**
+
+**Duration**: 20-30 minutes
+
+**Objective**: Identify opportunities to simplify code by leveraging Python libraries instead of custom implementations
+
+**Note**: This step was added in v1.7.0 to systematically identify where well-tested libraries can replace custom code, reducing maintenance burden and improving code quality.
+
+**Activities**:
+
+#### Step 1: Read MASTER_TECHNOLOGY_MATRIX.md
+
+**Action**:
+```bash
+# AI Agent: Read the technology matrix
+READ: docs/refactoring/MASTER_TECHNOLOGY_MATRIX.md
+```
+
+**Purpose**:
+- Understand standard library choices across ecosystem
+- Learn what other services are using
+- See consolidation opportunities already identified
+
+#### Step 2: Audit Current Service Technology
+
+**For Existing Services**:
+- Review `requirements.txt` or `pyproject.toml`
+- Identify custom implementations:
+  - Retry logic
+  - Configuration loading
+  - HTTP clients
+  - Caching mechanisms
+  - Logging
+- Note use of outdated libraries (`requests` vs `httpx`)
+
+**For New Services**:
+- List planned functionality
+- Check if libraries exist for each area
+
+**Document in**: `PHASE_2_LIBRARY_AUDIT.md`
+
+#### Step 3: Apply Decision Framework
+
+**For each functionality, ask**:
+
+1. **Is there custom code?**
+   - NO → Check if using standard library ✅
+   - YES → Continue to #2
+
+2. **Is it domain-specific?**
+   - YES → Keep custom code ✅ (e.g., scoring algorithms, normalizers)
+   - NO → Continue to #3
+
+3. **Does a good library exist?**
+   - NO → Keep custom code, document why
+   - YES → Continue to #4
+
+4. **Is the library**:
+   - Well-maintained? (updates within 6 months)
+   - Widely used? (high downloads, active community)
+   - Better than custom code? (features, performance, testing)
+   
+   **ALL YES** → Recommend library
+   **ANY NO** → Keep custom code
+
+5. **What's the migration effort?**
+   - **LOW** (< 1 hour) → Implement in Phase 3
+   - **MEDIUM** (1-4 hours) → Implement in Phase 8
+   - **HIGH** (> 4 hours) → Mark as Phase 11 (optional)
+
+**Common Categories**:
+
+| Functionality | Custom Code | Standard Library | Effort |
+|---------------|-------------|------------------|--------|
+| HTTP Client | Manual `requests` | `httpx.AsyncClient` | LOW |
+| Retry Logic | Custom decorators | `tenacity.retry` | LOW |
+| Configuration | Manual `os.getenv()` | `pydantic-settings` | LOW |
+| Logging | `print`, basic `logging` | `structlog` | MEDIUM |
+| Caching | Manual dicts | `lru_cache`, `cachetools` | LOW |
+| Validation | Manual checks | `pydantic.BaseModel` | LOW |
+| Test Data | Hardcoded | `faker`, `factory-boy` | MEDIUM |
+
+#### Step 4: Document Recommendations
+
+**Create**: `PHASE_2_LIBRARY_RECOMMENDATIONS.md`
+
+**Format for each recommendation**:
+```markdown
+### [Priority Level]: [Custom Code] → [Library Name]
+
+**Current State**: [What exists now]
+
+**Recommended Library**: [Library name + version]
+
+**Benefits**:
+- [Benefit 1]
+- [Benefit 2]
+- [Benefit 3]
+
+**Effort**: [LOW/MEDIUM/HIGH] ([time estimate])
+
+**Decision**: 
+- ✅ Implement in Phase 3 (if LOW effort)
+- ⚠️ Implement in Phase 8 (if MEDIUM effort)
+- ⏸️ Mark as Phase 11 optional (if HIGH effort)
+- ❌ Keep custom code (if domain-specific)
+
+**Rationale**: [Why this decision]
+
+**Code Example**: [Before/After code snippet]
+```
+
+#### Step 5: Update Requirements
+
+**Action**: Update `requirements.txt` with recommended libraries
+
+**Example additions**:
+```txt
+# Standard Libraries (Phase 2.7 recommendations)
+httpx==0.25.2          # Async HTTP client (replaces requests)
+tenacity==8.2.3        # Retry with backoff (replaces custom retry)
+pydantic-settings==2.1.0  # Config management (replaces manual env loading)
+structlog==23.2.0      # Structured logging (replaces print statements)
+faker==20.1.0          # Test data generation (Phase 8)
+factory-boy==3.3.0     # Test fixtures (Phase 8)
+```
+
+#### Step 6: Update MASTER_TECHNOLOGY_MATRIX.md
+
+**Action**: Add service entry to technology matrix
+
+**Example**:
+```markdown
+### Service: {service-name}
+
+| Category | Technology | Version | Purpose | Consolidation Opportunity |
+|----------|-----------|---------|---------|---------------------------|
+| Framework | FastAPI | 0.104+ | REST API | ✅ Standard |
+| HTTP Client | httpx | 0.25+ | External calls | ✅ Standard (new) |
+| Validation | Pydantic | 2.4+ | Data validation | ✅ Standard |
+| Config | pydantic-settings | 2.0+ | Configuration | ✅ Standard (new) |
+| Retry | tenacity | 8.2+ | Retry logic | ✅ Standard (new) |
+| Logging | structlog | 23.2+ | JSON logging | ✅ Standard (new) |
+| Testing | pytest + faker | 7.4+ | Tests | ✅ Standard |
+| Domain Logic | Custom | N/A | [Description] | ✅ Appropriate (domain-specific) |
+
+**Custom Code to Consolidate**: [List any remaining custom code]
+
+**Library Opportunities**: [Note any Phase 11 opportunities]
+```
+
+**Deliverables**:
+1. ✅ `PHASE_2_LIBRARY_AUDIT.md` - Current technology audit
+2. ✅ `PHASE_2_LIBRARY_RECOMMENDATIONS.md` - Library recommendations with decisions
+3. ✅ Updated `requirements.txt` - With new libraries added
+4. ✅ Updated `MASTER_TECHNOLOGY_MATRIX.md` - Service entry added
+
+**Quality Gates**:
+- [ ] All custom code identified and evaluated
+- [ ] Library recommendations documented with effort estimates
+- [ ] HIGH priority (LOW effort) libraries marked for Phase 3
+- [ ] MEDIUM priority (MEDIUM effort) libraries marked for Phase 8
+- [ ] LOW priority (HIGH effort) libraries marked for Phase 11
+- [ ] Domain-specific custom code marked to keep (with rationale)
+- [ ] MASTER_TECHNOLOGY_MATRIX.md updated
+
+**Reference**: [LIBRARY_CONSOLIDATION_ENHANCEMENT.md](./LIBRARY_CONSOLIDATION_ENHANCEMENT.md)
 
 ---
 
