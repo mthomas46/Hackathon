@@ -1,0 +1,42 @@
+[run]
+# Coverage configuration for data-services-dashboard
+
+source = .
+
+omit =
+    # Standard exclusions
+    */__init__.py
+    */tests/*
+    */conftest.py
+    
+    # Streamlit UI (hard to unit test, validated via Phase 7)
+    */app.py
+    */visualization/*
+    
+    # Standalone API app (tested via Phase 7 validation)
+    */api_app.py
+    
+    # Shell scripts
+    */start.sh
+    
+    # Test generators
+    */test_generate_operations.py
+
+[report]
+# Report configuration
+precision = 2
+show_missing = True
+skip_covered = False
+
+exclude_lines =
+    # Standard exclusions
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    @abc.abstractmethod
+    pass
+    \.\.\.
