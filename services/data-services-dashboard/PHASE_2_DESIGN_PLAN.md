@@ -9,19 +9,25 @@
 
 ## 🎯 Design Philosophy
 
-### **Approach**: Modular by Feature (NOT DDD Layers)
+### **Approach**: Hybrid - Streamlit UI + REST API
+
+**Key Innovation**: Dashboard provides BOTH:
+1. **Streamlit Web UI** - For human operators (port 8501)
+2. **FastAPI REST API** - For programmatic access and monitoring (port 8080)
 
 **Rationale**: 
-- Streamlit dashboards are **visualization-centric**, not business-logic-centric
-- Code organization should match the **execution model** (script re-runs)
-- **Practical modularity** beats artificial layer separation
+- Streamlit for rich visualization
+- REST API for ecosystem integration and monitoring
+- **"Modular by Feature"** organization (NOT DDD layers)
+- Practical modularity over artificial layer separation
 
 **Key Principles**:
 1. ✅ Organize by **feature** (data fetching, metrics, visualization)
-2. ✅ Keep functions **small and testable**
-3. ✅ **Separate concerns** without over-engineering
-4. ✅ Maintain **Streamlit idioms** (caching, session state)
-5. ✅ **Testable** data processing, **visual** UI components
+2. ✅ **Standard REST endpoints** (health, about-me, endpoints, provider-consumer)
+3. ✅ **Retry logic** for all external calls
+4. ✅ **Input validation** with Pydantic
+5. ✅ **Logging** to log-collector
+6. ✅ **Testable** data processing and API endpoints
 
 ---
 
@@ -33,25 +39,36 @@ data-services-dashboard/
 └── app.py (868 lines)  # Everything in one file
 ```
 
-### **Proposed** (Modular by Feature)
+### **Proposed** (Hybrid: Streamlit UI + REST API)
 ```
 data-services-dashboard/
-├── app.py (100 lines)                    # Main entry point
+├── app.py (150 lines)                    # Main entry point
+│   ├── Starts both Streamlit UI (8501) and FastAPI (8080)
 │   └── Imports, page config, main() function
 │
 ├── config.py (50 lines)                  # Configuration management
-│   ├── DashboardConfig class
+│   ├── DashboardConfig class (Pydantic Settings)
 │   ├── Load from env vars
 │   └── Default values
 │
-├── data/ (250 lines total)
+├── api/ (250 lines total)                # REST API (FastAPI)
 │   ├── __init__.py
-│   ├── fetcher.py (100 lines)           # Log fetching
-│   │   └── fetch_logs() with caching
-│   ├── parser.py (100 lines)            # Data parsing
+│   ├── router.py (150 lines)            # Standard endpoints
+│   │   ├── GET /health
+│   │   ├── GET /about-me
+│   │   ├── GET /endpoints
+│   │   ├── GET /provider-consumer
+│   │   └── GET /openapi.json
+│   └── models.py (100 lines)            # API request/response models
+│
+├── data/ (300 lines total)
+│   ├── __init__.py
+│   ├── fetcher.py (100 lines)           # Log fetching with retry
+│   │   └── fetch_logs() with @with_retry decorator
+│   ├── parser.py (100 lines)            # Data parsing & validation
 │   │   └── parse_log_entry(), validate_log()
-│   └── models.py (50 lines)             # Pydantic models
-│       └── LogEntry, MetricsSummary
+│   └── models.py (100 lines)            # Pydantic models
+│       └── LogEntry, MetricsSummary, DashboardFilter
 │
 ├── metrics/ (100 lines total)
 │   ├── __init__.py
@@ -66,43 +83,57 @@ data-services-dashboard/
 │   ├── workflows.py (120 lines)         # Workflows tab (complex)
 │   └── errors.py (80 lines)             # Errors tab
 │
-├── utils/ (50 lines total)
+├── utils/ (200 lines total)              # NEW: Enhanced utilities
 │   ├── __init__.py
-│   └── formatting.py (50 lines)         # Helper utilities
-│       └── format_duration(), truncate_workflow_id()
+│   ├── formatting.py (50 lines)         # Display formatting
+│   ├── retry.py (50 lines)              # NEW: @with_retry decorator
+│   ├── logging_client.py (80 lines)     # NEW: Log to log-collector
+│   └── validators.py (20 lines)         # NEW: Input validators
 │
-├── tests/ (500+ lines total)
+├── tests/ (600+ lines total)
 │   ├── __init__.py
 │   ├── conftest.py (100 lines)          # Shared fixtures
 │   ├── unit/
 │   │   ├── test_data_fetcher.py
 │   │   ├── test_data_parser.py
 │   │   ├── test_metrics_calculator.py
-│   │   └── test_utils_formatting.py
+│   │   ├── test_utils_formatting.py
+│   │   ├── test_utils_retry.py          # NEW
+│   │   └── test_utils_logging.py        # NEW
 │   ├── integration/
-│   │   └── test_log_collector_integration.py
+│   │   ├── test_log_collector_integration.py
+│   │   └── test_api_endpoints.py        # NEW: Test REST API
 │   └── functional/
 │       └── test_dashboard_rendering.py
 │
-├── requirements.txt (10 deps)           # Streamlined
+├── requirements.txt (12 deps)           # Streamlined + FastAPI
 ├── requirements-test.txt                # Test dependencies
-├── Dockerfile                           # NEW: Streamlit container
+├── Dockerfile                           # NEW: Hybrid container (both ports)
 ├── docker-compose.yml (updated)         # Proper dependencies
 ├── .dockerignore                        # NEW: Exclude unnecessary files
 ├── config.yaml (updated)                # Dashboard-specific config
 ├── pytest.ini                           # NEW: Test configuration
 ├── README.md (updated)                  # Enhanced documentation
+├── CONFIG.md                            # NEW: Configuration reference
 └── DEPLOYMENT_GUIDE.md                  # NEW: How to deploy
 ```
 
 **Lines of Code Breakdown**:
-- app.py: 100 (from 868) → -768 lines ✅
-- data/: 250
+- app.py: 150 (from 868) → -718 lines ✅
+- api/: 250 (NEW - REST endpoints)
+- data/: 300 (enhanced with validation)
 - metrics/: 100
 - visualization/: 400
-- utils/: 50
-- tests/: 500+
-- **Total**: ~1,400 lines (including 500+ test lines)
+- utils/: 200 (NEW - retry, logging, validators)
+- tests/: 600+ (includes API tests)
+- **Total**: ~2,000 lines (including 600+ test lines)
+
+**Hybrid Architecture Benefits**:
+- ✅ Streamlit UI for human operators
+- ✅ REST API for monitoring systems
+- ✅ Standardized endpoints for ecosystem
+- ✅ Retry logic for resilience
+- ✅ Centralized logging
 
 **Quality Improvement**:
 - Separation of concerns ✅
