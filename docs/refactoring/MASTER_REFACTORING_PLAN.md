@@ -24,13 +24,64 @@ ai_metadata:
 
 # 🏗️ Master Refactoring and Standardization Plan
 
-**Version**: 1.4.0  
+**Version**: 1.6.0  
 **Created**: October 8, 2025  
 **Last Updated**: October 10, 2025  
 **Status**: Active  
 **Owner**: Hackathon Team
 
 ## 📝 Changelog
+
+### v1.6.0 (October 10, 2025)
+- ⚡ **MAJOR: Added Optimization & Tuning to ALL Phases** - Iterative improvement at every step
+  - **Phase-Level Optimization** added to Phases 1-7 (15-30 min per phase)
+  - Critical evaluation of work completed in each phase
+  - Service-specific optimization based on service characteristics
+  - Hardening (error handling, validation, logging)
+  - Iteration and improvement before moving forward
+- 🔧 **NEW: Phase 8 - Service Optimization & Hardening** (MANDATORY, 2-4 hours)
+  - Configuration optimization (externalize all hardcoded values)
+  - Quick wins implementation (3-5 per service: caching, retry, metrics)
+  - Service-specific optimization strategies
+  - Production hardening (validation, error handling, security)
+  - Regression protection (test all optimizations)
+  - Performance benchmarking (before/after)
+- 🎯 **NEW: Phase 10 - Future Expansion Planning** (MANDATORY, from v1.5.0)
+  - Workflow planning with E2E test plans
+  - Functional demo plans with canned data
+  - Demo endpoints (`/demos`, `/run-demo`)
+  - MASTER_SERVICE_MATRIX.md updates
+- 📊 **Phase Renumbering**:
+  - Phase 5: Added Comprehensive Testing & Coverage (from v1.5.0)
+  - Phase 8: Service Optimization & Hardening (NEW)
+  - Phase 9: Service Validation (was Phase 7, still MANDATORY)
+  - Phase 10: Future Expansion Planning (NEW, MANDATORY)
+  - Phase 11: Enhancement & Optional Work (was Phase 8, still optional)
+- ⏱️ **Timeline Updated**: 12-20 hours per service (was 10-16h)
+  - +2-4h for phase-level optimizations
+  - +2-4h for Phase 8 (Service Optimization)
+- 📚 **Documentation**: See [OPTIMIZATION_AND_TUNING_ENHANCEMENT.md](./OPTIMIZATION_AND_TUNING_ENHANCEMENT.md)
+- 🎁 **20+ Quick Wins Library** with code examples
+- 🏗️ **ROI**: Additional time pays for itself through fewer production issues, better performance
+
+### v1.5.0 (October 10, 2025)
+- 🧪 **Added Phase 5: Comprehensive Testing & Coverage** (MANDATORY)
+  - 50%+ code coverage required (target 80%+)
+  - 100% happy-path coverage
+  - Common edge cases covered
+  - Service-specific TESTING_GUIDE.md
+- 🚀 **Added Phase 9: Future Expansion Planning** (MANDATORY)
+  - Audit MASTER_SERVICE_MATRIX.md
+  - Plan workflows with E2E testing
+  - Plan functional demos
+  - Update service README with future expansion section
+- 🎬 **Added Demo Endpoints** - Services must implement:
+  - `GET /demos` - List executable demos
+  - `POST /run-demo` - Execute demos programmatically
+  - 3 demo types: self-contained, ecosystem, hybrid
+- 📊 **Created MASTER_SERVICE_MATRIX.md** - Living document tracking all services
+- 📚 **Documentation**: See [PLAN_ENRICHMENT_TESTING_AND_FUTURE_EXPANSION.md](./PLAN_ENRICHMENT_TESTING_AND_FUTURE_EXPANSION.md)
+- 📚 **Documentation**: See [DEMO_ENDPOINTS_ENHANCEMENT.md](./DEMO_ENDPOINTS_ENHANCEMENT.md)
 
 ### v1.4.0 (October 10, 2025)
 - 🚨 **CRITICAL: Added Mandatory Phase 7 - Service Validation** - Prevents shipping broken services
@@ -115,13 +166,19 @@ This document outlines a comprehensive, methodical approach to refactor and stan
 - Inconsistent configuration management
 - Varying levels of documentation
 - Scripts and demos scattered across directories
+- Suboptimal configurations (hardcoded values, no profiles)
+- Missing quick wins (caching, retry, monitoring)
 
 ### Target State
 - **Unified Architecture**: All services following DDD and REST principles
 - **Consistent Standards**: Shared naming conventions and directory structures
-- **High Quality**: Comprehensive test coverage with TDD approach
+- **High Quality**: Comprehensive test coverage with TDD approach + optimization at every phase
 - **Well Documented**: Standardized documentation across all services
 - **Organized Codebase**: Scripts integrated as utilities, demos as dedicated services
+- **Production-Ready**: Fully optimized, hardened, and validated services
+- **Observable**: Request tracking, metrics, comprehensive logging
+- **Resilient**: Retry logic, circuit breakers, graceful degradation
+- **Future-Proof**: Workflow planning, E2E tests, executable demos
 
 ---
 
@@ -379,7 +436,17 @@ async def create_resource(resource: ResourceCreate):
 
 ### Phase-Based Approach
 
-Each service refactoring follows a 7-phase methodology (with Phase 7 being optional):
+Each service refactoring follows an **11-phase methodology** with:
+- **Phases 1-10**: MANDATORY (cannot skip)
+- **Phase 11**: OPTIONAL (enhancements)
+
+**Key Features**:
+- ⚡ **Optimization at Every Phase** (Phases 1-7): Critical evaluation, service-specific tuning, hardening
+- 🔧 **Dedicated Optimization Phase** (Phase 8): Configuration optimization, quick wins, production hardening
+- ✅ **Comprehensive Validation** (Phase 9): Docker + endpoint + test validation before marking complete
+- 🚀 **Future Planning** (Phase 10): Workflow planning, E2E tests, executable demos
+
+**Timeline**: 12-20 hours per service (10 mandatory phases + 1 optional)
 
 #### Phase 1: Audit & Analysis (1-2 days)
 **Objective**: Understand current state and dependencies
@@ -419,6 +486,46 @@ Each service refactoring follows a 7-phase methodology (with Phase 7 being optio
 - Dependency Map
 - Gap Analysis Document
 - Refactoring Scope Statement
+
+---
+
+### 1.N: Phase 1 Optimization & Critical Evaluation ⚡
+
+**Duration**: 15-30 minutes
+
+**Objective**: Ensure audit is complete and accurate
+
+**Critical Questions**:
+- [ ] Have we identified ALL dependencies (including hidden ones)?
+- [ ] Have we checked for port conflicts thoroughly?
+- [ ] Is the complexity assessment accurate?
+- [ ] Are there hidden configuration files we missed?
+- [ ] Is the refactoring scope realistic?
+
+**Service-Specific Optimization**:
+- **Data-Intensive Services**: Check database connections, query patterns, indexes
+- **API Services**: Check rate limiting, timeout configurations, circuit breakers
+- **Integration Services**: Check retry logic, fallback mechanisms, error handling
+- **Real-Time Services**: Check WebSocket configurations, latency requirements
+- **Background Workers**: Check queue configurations, batch sizes, worker pools
+
+**Hardening**:
+- Double-check all configuration sources (env vars, config files, Docker)
+- Verify port conflicts with [MASTER_CONFIGURATION_REGISTRY.md](./MASTER_CONFIGURATION_REGISTRY.md)
+- Re-scan codebase for missed dependencies
+- Identify service-specific risks (data loss, security, performance)
+
+**Iteration**:
+- Update audit with any missed items
+- Refine complexity assessment if needed
+- Adjust refactoring scope based on findings
+- Document service-specific considerations
+
+**Quality Gate**: Audit is comprehensive, accurate, and service-specific
+
+**Reference**: [OPTIMIZATION_AND_TUNING_ENHANCEMENT.md - Phase 1 Optimization](./OPTIMIZATION_AND_TUNING_ENHANCEMENT.md#phase-1-optimization-audit--analysis)
+
+---
 
 **Git Checkpoint** 🔀 *Required*:
 ```bash
@@ -497,6 +604,50 @@ Status: Phase 1 complete"
 - Test Plan Document
 - Migration Strategy Document
 
+---
+
+### 2.N: Phase 2 Optimization & Critical Evaluation ⚡
+
+**Duration**: 15-30 minutes
+
+**Objective**: Ensure design is optimal for THIS specific service
+
+**Critical Questions**:
+- [ ] Is this the best architecture for THIS service's needs?
+- [ ] Are we over-engineering or under-engineering?
+- [ ] Does the design leverage the service's strengths?
+- [ ] Are there simpler approaches we're missing?
+- [ ] Have we considered performance implications?
+- [ ] Is the API design optimal for expected use cases?
+
+**Service-Specific Optimization**:
+- **Stateless Services**: Optimize for horizontal scaling, minimal per-request state
+- **Stateful Services**: Design proper state management, persistence strategies
+- **Heavy I/O Services**: Design for async/await patterns, connection pooling
+- **Compute-Heavy Services**: Consider worker pools, batch processing
+- **Real-Time Services**: Optimize for low latency, WebSocket design
+- **Integration Services**: Plan circuit breakers, retry strategies, fallbacks
+
+**Hardening**:
+- Review domain model for simplicity (avoid over-abstraction)
+- Validate repository patterns match service needs
+- Optimize API design for service's primary use cases
+- Identify potential performance bottlenecks in design
+- Ensure error handling strategy is comprehensive
+
+**Iteration**:
+- Simplify domain model if over-complex
+- Refine API design based on use cases
+- Optimize config strategy for service needs
+- Update test plan to cover identified risks
+- Adjust migration strategy if needed
+
+**Quality Gate**: Design is optimal, simple, and service-specific
+
+**Reference**: [OPTIMIZATION_AND_TUNING_ENHANCEMENT.md - Phase 2 Optimization](./OPTIMIZATION_AND_TUNING_ENHANCEMENT.md#phase-2-optimization-design--planning)
+
+---
+
 **Git Checkpoint** 🔀 *Required*:
 ```bash
 # AI Agent MUST commit after Phase 2 completion
@@ -558,6 +709,51 @@ Status: Phase 2 complete"
 - Migration scripts (if needed)
 - Test coverage report
 - Logging validation report
+
+---
+
+### 3.N: Phase 3 Optimization & Critical Evaluation ⚡
+
+**Duration**: 15-30 minutes
+
+**Objective**: Ensure code quality and performance are optimal
+
+**Critical Questions**:
+- [ ] Is the code as simple as possible (KISS)?
+- [ ] Are there unnecessary abstractions?
+- [ ] Is error handling comprehensive?
+- [ ] Are there performance issues in hot paths?
+- [ ] Is the code testable and maintainable?
+- [ ] Are we following SOLID principles?
+
+**Service-Specific Optimization**:
+- **API Services**: Optimize request/response handling, middleware chains
+- **Background Workers**: Optimize batch processing, queue management
+- **Real-Time Services**: Optimize for low latency, minimize blocking operations
+- **Data Services**: Optimize query patterns, caching strategies
+- **Integration Services**: Optimize external API calls, connection pooling
+
+**Hardening**:
+- Refactor complex functions (> 50 lines or cyclomatic complexity > 10)
+- Remove unnecessary abstractions (premature optimization)
+- Add comprehensive error handling (try/except, custom exceptions)
+- Optimize hot paths (profile and fix bottlenecks)
+- Improve logging for debugging (add context, correlation IDs)
+- Validate all inputs at boundaries
+
+**Iteration**:
+- Run profiler on key operations
+- Identify and fix performance bottlenecks
+- Add missing error handling
+- Improve test coverage for edge cases
+- Enhance logging messages with context
+- Re-run tests to ensure no regressions
+
+**Quality Gate**: Code is simple, performant, well-tested, and maintainable
+
+**Reference**: [OPTIMIZATION_AND_TUNING_ENHANCEMENT.md - Phase 3 Optimization](./OPTIMIZATION_AND_TUNING_ENHANCEMENT.md#phase-3-optimization-tdd-implementation)
+
+---
 
 **Git Checkpoint** 🔀 *Required*:
 ```bash
@@ -657,6 +853,51 @@ Coverage: XX%"
 - Ecosystem compatibility report
 - Performance benchmarks
 
+---
+
+### 4.N: Phase 4 Optimization & Critical Evaluation ⚡
+
+**Duration**: 15-30 minutes
+
+**Objective**: Ensure integration tests are comprehensive and fast
+
+**Critical Questions**:
+- [ ] Do tests cover all integration points?
+- [ ] Are tests fast enough (< 5 minutes total)?
+- [ ] Are mocks realistic?
+- [ ] Do we test failure scenarios?
+- [ ] Are tests maintainable?
+- [ ] Do tests catch real integration issues?
+
+**Service-Specific Optimization**:
+- **Services with Many Dependencies**: Test each integration separately
+- **Services with External APIs**: Mock API responses realistically
+- **Services with Databases**: Use test databases or efficient mocks
+- **Services with Message Queues**: Test message handling thoroughly
+- **Services with File I/O**: Test with temporary files/directories
+
+**Hardening**:
+- Optimize test fixtures (reduce setup time)
+- Parallelize tests where possible
+- Add missing integration test cases (failure scenarios)
+- Improve test clarity and maintainability
+- Add timeout assertions for async operations
+- Test retry logic and circuit breakers
+
+**Iteration**:
+- Profile test suite to find slow tests
+- Optimize or parallelize slow tests
+- Add tests for error conditions
+- Improve test documentation
+- Verify Docker configuration works correctly
+- Test with real dependencies (if safe)
+
+**Quality Gate**: Fast, comprehensive integration tests that catch real issues
+
+**Reference**: [OPTIMIZATION_AND_TUNING_ENHANCEMENT.md - Phase 4 Optimization](./OPTIMIZATION_AND_TUNING_ENHANCEMENT.md#phase-4-optimization-integration-testing)
+
+---
+
 **Git Checkpoint** 🔀 *Required*:
 ```bash
 # AI Agent MUST commit after Phase 4 completion
@@ -682,7 +923,143 @@ Status: Integration complete"
 
 ---
 
-#### Phase 5: Documentation (1 day)
+#### Phase 5: Comprehensive Testing & Coverage (2-3 hours) **MANDATORY** 🧪
+
+**Objective**: Achieve comprehensive test coverage with quality, not just quantity
+
+**Note**: This phase was added in v1.5.0 to address insufficient testing standards. Services MUST achieve 50%+ coverage (target 80%+) with 100% happy-path coverage before proceeding.
+
+**Activities**:
+1. **Coverage Analysis**
+   - Run coverage report: `pytest --cov=./ --cov-report=html --cov-report=term-missing`
+   - Identify untested code paths
+   - Prioritize critical paths (business logic, error handling)
+   - Target: 50% minimum, 80% ideal
+
+2. **Happy-Path Testing (100% Coverage)**
+   - Test ALL primary use cases
+   - Test ALL API endpoints (basic success case)
+   - Test ALL domain operations (core business logic)
+   - Verify ALL expected outputs
+
+3. **Edge Case Testing**
+   - Boundary conditions (min/max values, empty inputs)
+   - Error conditions (invalid inputs, missing data)
+   - Concurrent operations (if applicable)
+   - State transitions (if stateful)
+   - Network failures (timeouts, retries)
+
+4. **Test Quality Review**
+   - Tests are meaningful (not just hitting lines)
+   - Tests catch real bugs
+   - Tests are maintainable
+   - Test code quality is good
+   - Tests run fast (< 5 minutes total)
+
+5. **Create TESTING_GUIDE.md**
+   - Service-specific testing strategy
+   - How to run tests (unit, integration, E2E)
+   - How to add new tests
+   - Test fixtures and helpers
+   - Common testing patterns
+   - Troubleshooting test failures
+
+**Deliverables**:
+- Test coverage >= 50% (measured with pytest --cov)
+- 100% happy-path coverage
+- Edge cases covered for critical paths
+- TESTING_GUIDE.md created
+- Coverage report (HTML + XML)
+- All tests passing
+
+**Quality Gates**:
+- [ ] Coverage >= 50% (target 80%+)
+- [ ] All happy paths tested
+- [ ] All API endpoints tested
+- [ ] Critical edge cases covered
+- [ ] TESTING_GUIDE.md complete
+- [ ] All tests passing (0 failures)
+- [ ] Test suite runs in < 5 minutes
+
+---
+
+### 5.N: Phase 5 Optimization & Critical Evaluation ⚡
+
+**Duration**: 15-30 minutes
+
+**Objective**: Maximize test quality, not just coverage percentage
+
+**Critical Questions**:
+- [ ] Are tests meaningful or just hitting lines?
+- [ ] Do tests catch real bugs?
+- [ ] Are edge cases well-covered?
+- [ ] Is test code quality good?
+- [ ] Are tests maintainable?
+- [ ] Are tests fast enough?
+
+**Service-Specific Optimization**:
+- **Services with Complex Logic**: Focus on logic tests, decision tables
+- **Services with Many States**: Test state transitions thoroughly
+- **Services with Concurrency**: Test race conditions, deadlocks
+- **Services with External APIs**: Test failure modes, retries
+- **Services with Data Processing**: Test data transformations, validation
+
+**Hardening**:
+- Review tests for quality (not just coverage)
+- Add mutation testing (if applicable)
+- Optimize test performance (parallelize, optimize fixtures)
+- Improve test documentation (docstrings, comments)
+- Add property-based tests for complex logic (hypothesis)
+- Test error messages are helpful
+
+**Iteration**:
+- Add tests for critical uncovered paths
+- Refactor duplicated test code
+- Optimize slow tests
+- Improve test clarity
+- Add missing edge cases
+- Verify tests actually fail when code breaks
+
+**Quality Gate**: High-quality, comprehensive test suite that catches real bugs
+
+**Reference**: [OPTIMIZATION_AND_TUNING_ENHANCEMENT.md - Phase 5 Optimization](./OPTIMIZATION_AND_TUNING_ENHANCEMENT.md#phase-5-optimization-comprehensive-testing--coverage)
+
+---
+
+**Git Checkpoint** 🔀 *Required*:
+```bash
+# AI Agent MUST commit after Phase 5 completion
+git add services/<service>/tests/ \
+        services/<service>/TESTING_GUIDE.md \
+        services/<service>/pytest.ini \
+        services/<service>/htmlcov/
+
+git commit -m "test(<service>): Complete Phase 5 - Comprehensive Testing & Coverage
+
+- Test coverage: XX% (target: 50%+ minimum, 80%+ ideal)
+- Happy-path coverage: 100% ✅
+- Edge cases: Common scenarios covered
+- TESTING_GUIDE.md created
+
+Test Breakdown:
+- XX unit tests (domain, application, infrastructure, presentation)
+- XX integration tests
+- XX E2E tests
+
+Coverage Highlights:
+- Business logic: XX%
+- API endpoints: XX%
+- Error handling: XX%
+
+All tests passing: XX/XX (100%)
+Test execution time: X.XXs
+
+Status: Comprehensive testing complete"
+```
+
+---
+
+#### Phase 6: Documentation (1 day)
 **Objective**: Complete comprehensive documentation with AI optimization
 
 **Activities**:
@@ -744,15 +1121,62 @@ Status: Integration complete"
 - Integration guides
 - AI-enriched documentation with metadata and tags ⭐
 
+---
+
+### 6.N: Phase 6 Optimization & Critical Evaluation ⚡
+
+**Duration**: 15-30 minutes
+
+**Objective**: Ensure documentation is clear, complete, and helpful
+
+**Critical Questions**:
+- [ ] Is documentation clear and accurate?
+- [ ] Are examples realistic and helpful?
+- [ ] Is configuration well-documented?
+- [ ] Are common issues addressed?
+- [ ] Is documentation discoverable?
+- [ ] Are diagrams up-to-date and clear?
+
+**Service-Specific Optimization**:
+- **Public-Facing Services**: Focus on API docs, usage examples
+- **Internal Services**: Focus on integration docs, dependencies
+- **Complex Services**: Add architecture diagrams, sequence diagrams
+- **Data Services**: Document data models, query patterns
+- **Integration Services**: Document external API contracts
+
+**Hardening**:
+- Review documentation for clarity (remove jargon)
+- Add missing examples (common use cases)
+- Improve troubleshooting section (common errors)
+- Add diagrams where helpful (architecture, data flow)
+- Verify all links work (internal and external)
+- Ensure API examples are tested and work
+- Check spelling and grammar
+
+**Iteration**:
+- Read documentation from user perspective
+- Add missing sections (found during review)
+- Improve confusing explanations
+- Add more examples for complex features
+- Update diagrams if outdated
+- Verify OpenAPI spec matches implementation
+- Test all code examples
+
+**Quality Gate**: Documentation is clear, comprehensive, and user-friendly
+
+**Reference**: [OPTIMIZATION_AND_TUNING_ENHANCEMENT.md - Phase 6 Optimization](./OPTIMIZATION_AND_TUNING_ENHANCEMENT.md#phase-6-optimization-documentation)
+
+---
+
 **Git Checkpoint** 🔀 *Required*:
 ```bash
-# AI Agent MUST commit after Phase 5 completion
+# AI Agent MUST commit after Phase 6 completion
 git add services/<service>/README.md \
         services/<service>/CONFIG.md \
         services/<service>/docs/ \
         services/<service>/*.md
 
-git commit -m "docs(<service>): Complete Phase 5 - Documentation
+git commit -m "docs(<service>): Complete Phase 6 - Documentation
 
 - Comprehensive README (XXX+ lines)
   * Service overview and features
@@ -770,12 +1194,12 @@ git commit -m "docs(<service>): Complete Phase 5 - Documentation
 - AI-enriched with metadata and tags
 
 Documentation: Production-ready
-Status: Phase 5 complete"
+Status: Phase 6 complete"
 ```
 
 ---
 
-#### Phase 6: Deployment & Monitoring (1 day)
+#### Phase 7: Deployment & Monitoring (1 day)
 **Objective**: Deploy and validate in target environment
 
 **Activities**:
@@ -821,15 +1245,62 @@ Status: Phase 5 complete"
 - Alert definitions
 - Runbook documentation
 
+---
+
+### 7.N: Phase 7 Optimization & Critical Evaluation ⚡
+
+**Duration**: 15-30 minutes
+
+**Objective**: Ensure deployment is smooth and monitoring is effective
+
+**Critical Questions**:
+- [ ] Is deployment automated?
+- [ ] Are rollback procedures clear?
+- [ ] Is monitoring comprehensive?
+- [ ] Are alerts actionable?
+- [ ] Are logs useful for debugging?
+- [ ] Are health checks responsive?
+
+**Service-Specific Optimization**:
+- **Critical Services**: Add health checks, circuit breakers, redundancy
+- **High-Traffic Services**: Add performance monitoring, rate limiting
+- **Stateful Services**: Add data validation, backup procedures
+- **Integration Services**: Add dependency health checks
+- **Background Workers**: Add queue monitoring, worker health
+
+**Hardening**:
+- Optimize health check response time (< 100ms)
+- Add missing metrics (request count, latency, errors)
+- Improve log messages for debugging (add context, IDs)
+- Test deployment procedure (dry run)
+- Document rollback process (step-by-step)
+- Verify alerts fire correctly (test alert conditions)
+- Check monitoring dashboard usability
+
+**Iteration**:
+- Run deployment in staging environment
+- Test rollback procedure
+- Verify alerts trigger on real issues
+- Improve runbook based on deployment
+- Add missing monitoring metrics
+- Test health check under load
+- Verify logs are searchable and useful
+
+**Quality Gate**: Production-ready deployment with comprehensive monitoring
+
+**Reference**: [OPTIMIZATION_AND_TUNING_ENHANCEMENT.md - Phase 7 Optimization](./OPTIMIZATION_AND_TUNING_ENHANCEMENT.md#phase-7-optimization-deployment--monitoring)
+
+---
+
 **Git Checkpoint** 🔀 *Required*:
 ```bash
-# AI Agent MUST commit after Phase 6 completion
+# AI Agent MUST commit after Phase 7 completion
 git add services/<service>/docker-compose.yml \
         services/<service>/Dockerfile \
         services/<service>/.github/ \
         services/<service>/Makefile
 
-git commit -m "deploy(<service>): Complete Phase 6 - Deployment & Monitoring
+git commit -m "deploy(<service>): Complete Phase 7 - Deployment & Monitoring
 
 - Pre-deployment validation passed
   * Port conflicts: None
@@ -848,11 +1319,178 @@ Monitoring: Active
 Status: Service deployed and operational"
 ```
 
-**⚠️ DO NOT MARK COMPLETE YET! Proceed to Phase 7 for mandatory validation.**
+**⚠️ DO NOT MARK COMPLETE YET! Proceed to Phase 8 (Service Optimization & Hardening) then Phase 9 (Service Validation).**
 
 ---
 
-#### Phase 7: Service Validation ⚠️ **MANDATORY** (1-2 hours)
+#### Phase 8: Service Optimization & Hardening (2-4 hours) ⚠️ **MANDATORY** 🔧
+
+**Objective**: Holistically optimize service configuration, implement quick wins, and harden for production
+
+**Note**: This phase was added in v1.6.0 to ensure all services are fully optimized and production-ready before validation. This phase takes all learnings from Phases 1-7 and applies comprehensive optimization.
+
+**Duration**: 2-4 hours
+
+**Key Focus Areas**:
+1. Configuration optimization (externalize hardcoded values)
+2. Quick wins implementation (3-5 per service)
+3. Service-specific optimization
+4. Production hardening
+5. Regression protection
+6. Performance benchmarking
+
+**For complete Phase 8 specification**, see [OPTIMIZATION_AND_TUNING_ENHANCEMENT.md - Phase 8](./OPTIMIZATION_AND_TUNING_ENHANCEMENT.md#phase-8-service-optimization--hardening-new)
+
+**Activities Summary**:
+
+### 8.1: Configuration Optimization
+- Externalize all hardcoded values to environment variables
+- Create configuration profiles (dev, test, staging, prod)
+- Add sensible defaults
+- Document all configuration options in CONFIG.md
+- Add configuration validation
+
+### 8.2: Quick Wins Implementation (3-5 Required)
+
+**Quick Win Categories**:
+- **Performance**: Caching, connection pooling, compression
+- **Reliability**: Retry logic, circuit breakers, timeouts
+- **Observability**: Request ID tracking, metrics, enhanced logging
+- **Security**: Input validation, rate limiting, error sanitization
+- **Developer Experience**: Better errors, debug endpoints
+
+**Examples**:
+```python
+# Quick Win 1: Connection pooling
+client = httpx.AsyncClient(
+    limits=httpx.Limits(max_keepalive_connections=20, max_connections=100)
+)
+
+# Quick Win 2: Retry with backoff
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=1, max=10))
+async def call_external_api():
+    ...
+
+# Quick Win 3: Request ID tracking
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    request_id = request.headers.get('X-Request-ID', str(uuid.uuid4()))
+    request_id_var.set(request_id)
+    response = await call_next(request)
+    response.headers['X-Request-ID'] = request_id
+    return response
+```
+
+### 8.3: Service-Specific Optimization
+
+**By Service Type**:
+- **Stateless APIs**: Horizontal scaling, connection pooling, caching
+- **Data-Intensive**: Query optimization, caching, batch operations
+- **Integration Services**: Circuit breakers, retry strategies, fallbacks
+- **Real-Time Services**: Low latency optimization, WebSockets
+- **Background Workers**: Batch sizes, worker pools, queue management
+
+### 8.4: Hardening & Error Handling
+
+**Checklist**:
+- [ ] All endpoints validate input
+- [ ] All exceptions caught appropriately
+- [ ] All external calls have timeouts
+- [ ] Retry logic for transient failures
+- [ ] Circuit breakers for failing services
+- [ ] Request size limits enforced
+- [ ] Rate limiting configured
+- [ ] Security headers set
+- [ ] Secrets not in code
+
+### 8.5: Regression Protection
+
+**Required**:
+- Run full test suite after each optimization
+- Add tests for new functionality (caching, retry, etc.)
+- Verify performance improvements (benchmark)
+- Integration testing
+- Smoke testing all endpoints
+- Configuration testing (different profiles)
+
+### 8.6: Update CONFIG.md
+
+**Add sections**:
+- Configuration Options (with defaults and production values)
+- Configuration Profiles (dev vs prod settings)
+- Quick Wins Implemented (list with impact)
+- Optimizations Applied (performance, reliability, observability)
+- Performance Metrics (before/after)
+
+**Deliverables**:
+1. ✅ Configuration fully optimized and externalized
+2. ✅ 3-5 quick wins implemented and tested
+3. ✅ Service-specific optimizations applied
+4. ✅ Service hardened (validation, error handling, security)
+5. ✅ All tests passing (regression protected)
+6. ✅ CONFIG.md updated with optimizations
+7. ✅ Performance benchmarks (before/after measurements)
+
+**Quality Gates**:
+- [ ] All configuration externalized (no hardcoded values)
+- [ ] Minimum 3 quick wins implemented
+- [ ] Service-specific optimizations applied
+- [ ] All tests passing (0 failures)
+- [ ] No performance regressions
+- [ ] CONFIG.md comprehensive and up-to-date
+
+**Git Checkpoint** 🔀 *Required*:
+```bash
+# AI Agent MUST commit after Phase 8 completion
+git add services/<service>/ \
+        services/<service>/CONFIG.md
+
+git commit -m "optimize(<service>): Complete Phase 8 - Service Optimization & Hardening
+
+🔧 Configuration Optimization:
+- Externalized X hardcoded values → env vars
+- Created config profiles (dev, test, staging, prod)
+- Added configuration validation
+- Documented all options in CONFIG.md
+
+⚡ Quick Wins Implemented:
+1. [Quick win 1] - [Impact description]
+2. [Quick win 2] - [Impact description]
+3. [Quick win 3] - [Impact description]
+4. [Quick win 4] - [Impact description] (optional)
+5. [Quick win 5] - [Impact description] (optional)
+
+🎯 Service-Specific Optimizations:
+- [Optimization 1 specific to service type]
+- [Optimization 2 specific to service type]
+
+🛡️ Hardening:
+- Input validation enhanced
+- Error handling comprehensive
+- Timeouts and retries configured
+- Security checks implemented
+- Resource limits set
+
+📊 Performance Metrics:
+- Before: X req/s, Y ms avg latency
+- After: X req/s (+Z%), Y ms avg latency (-Z%)
+- Memory: X MB → Y MB
+- [Other relevant metrics]
+
+✅ Regression Protection:
+- All tests passing: XX/XX (100%)
+- Coverage maintained: XX%
+- Integration tests: PASSING
+- Performance: NO REGRESSIONS
+
+Status: Phase 8 complete, service optimized and hardened"
+```
+
+**⚠️ DO NOT MARK COMPLETE YET! Proceed to Phase 9 (Service Validation).**
+
+---
+
+#### Phase 9: Service Validation ⚠️ **MANDATORY** (1-2 hours)
 
 **Objective**: **Validate that the refactored service actually works** before marking it complete.
 
@@ -1260,7 +1898,7 @@ The service has been validated and is confirmed to be:
 
 ---
 
-**7.10: Git Commit** 🔀 *Required*
+**9.10: Git Commit** 🔀 *Required*
 
 **AI Agent Instructions**:
 1. Stage all validation-related files
@@ -1268,24 +1906,24 @@ The service has been validated and is confirmed to be:
 3. Include validation results in commit
 
 ```bash
-# AI Agent MUST commit after Phase 7 completion
-git add services/<service>/PHASE_7_VALIDATION_REPORT.md \\
+# AI Agent MUST commit after Phase 9 completion
+git add services/<service>/PHASE_9_VALIDATION_REPORT.md \\
         services/<service>/validation_results/ \\
         services/<service>/ # Any fixes made during validation
 
-git commit -m "validate(<service>): Complete Phase 7 - Service Validation ✅
+git commit -m "validate(<service>): Complete Phase 9 - Service Validation ✅
 
-Phase 7: Service Validation - PASSED
+Phase 9: Service Validation - PASSED
 ================================================================================
 
-✅ 7.1: Build Docker Image - PASSED
-✅ 7.2: Start Container - PASSED
-✅ 7.3: Test Health Endpoint - PASSED (XXX ms)
-✅ 7.4: Test About-Me Endpoint - PASSED (XXX ms)
-✅ 7.5: Test All Standard Endpoints - PASSED (5/5)
-✅ 7.6: Container Teardown - PASSED
-✅ 7.7: Run Full Test Suite - PASSED (XXX tests, XX.X% coverage)
-✅ 7.8: Integration Test - PASSED / N/A
+✅ 9.1: Build Docker Image - PASSED
+✅ 9.2: Start Container - PASSED
+✅ 9.3: Test Health Endpoint - PASSED (XXX ms)
+✅ 9.4: Test About-Me Endpoint - PASSED (XXX ms)
+✅ 9.5: Test All Standard Endpoints - PASSED (5/5)
+✅ 9.6: Container Teardown - PASSED
+✅ 9.7: Run Full Test Suite - PASSED (XXX tests, XX.X% coverage)
+✅ 9.8: Integration Test - PASSED / N/A
 
 Issues Fixed During Validation:
 - [List any issues discovered and fixed]
@@ -1299,7 +1937,7 @@ Service is confirmed working and ready for deployment."
 ---
 
 **Deliverables**:
-- ✅ **PHASE_7_VALIDATION_REPORT.md** - Comprehensive validation report
+- ✅ **PHASE_9_VALIDATION_REPORT.md** - Comprehensive validation report
 - ✅ **validation_results/** - Test results, coverage reports, logs
 - ✅ **Working service** - Confirmed functional in Docker container
 - ✅ **Passing tests** - 0 failures, >= 80% coverage (measured)
@@ -1338,27 +1976,260 @@ Service is confirmed working and ready for deployment."
 
 ---
 
+**Service Validation Complete!** ✅
+
+**Only after Phase 9 (Service Validation) passes**, proceed to Phase 10.
+
+**⚠️ DO NOT SKIP Phase 10! It is MANDATORY.**
+
+---
+
+#### Phase 10: Future Expansion Planning (2-4 hours) ⚠️ **MANDATORY** 🚀
+
+**Objective**: Plan workflows, E2E tests, and executable demos for future ecosystem integration
+
+**Note**: This phase was added in v1.5.0 to ensure services are not just working in isolation but are planned for ecosystem-wide workflows and have executable demos for validation.
+
+**Duration**: 2-4 hours
+
+**Key Focus Areas**:
+1. Audit MASTER_SERVICE_MATRIX.md
+2. Plan workflows involving this service
+3. Create E2E test plans for workflows
+4. Plan functional demos with canned data
+5. Implement demo endpoints (`/demos`, `/run-demo`)
+6. Update service README with future expansion section
+7. Update MASTER_SERVICE_MATRIX.md
+
+**For complete Phase 10 specification**, see [PLAN_ENRICHMENT_TESTING_AND_FUTURE_EXPANSION.md - Phase 9](./PLAN_ENRICHMENT_TESTING_AND_FUTURE_EXPANSION.md)
+
+**Activities Summary**:
+
+### 10.1: Audit MASTER_SERVICE_MATRIX.md
+
+**Objective**: Understand the ecosystem and this service's role
+
+**Activities**:
+- Read [MASTER_SERVICE_MATRIX.md](./MASTER_SERVICE_MATRIX.md)
+- Identify services this service depends on (providers)
+- Identify services that depend on this service (consumers)
+- Understand current ecosystem workflows
+- Identify gaps where this service could participate
+
+### 10.2: Plan Workflows Involving This Service
+
+**Objective**: Design realistic workflows that leverage this service
+
+**Activities**:
+- Identify 3-5 workflows that involve this service
+- For each workflow:
+  - Document participating services
+  - Document data flow
+  - Document expected outcomes
+  - Document failure scenarios
+- Prioritize workflows by business value
+
+**Example Workflows**:
+- **Code Analysis Workflow**: `code-analyzer` → `doc-store` → `llm-gateway` → `prompt-store`
+- **Expert Finding Workflow**: `expert-finder-service` → `user-store` → `doc-store`
+- **Architecture Digitization Workflow**: `architecture-digitizer` → `doc-store` → `analysis-service`
+
+### 10.3: Create E2E Test Plans
+
+**Objective**: Plan comprehensive E2E tests for each workflow
+
+**Activities**:
+- For each workflow planned in 10.2:
+  - Define test scenarios (happy path + failure modes)
+  - Define test data requirements
+  - Define expected outcomes
+  - Define validation criteria
+  - Document test automation strategy
+
+**Deliverable**: `E2E_TEST_PLAN.md` in service directory
+
+### 10.4: Plan Functional Demos
+
+**Objective**: Design executable demos that showcase service capabilities
+
+**Activities**:
+- Plan 3-5 demos (mix of self-contained and ecosystem-based)
+- For each demo:
+  - Define demo objective
+  - Define required canned data
+  - Define service interactions
+  - Define expected output/reports
+  - Document demo execution steps
+
+**Demo Types**:
+1. **Self-Contained**: Service operates independently with mock data
+2. **Ecosystem**: Service interacts with real ecosystem services
+3. **Hybrid**: Service uses mix of real and mock services
+
+**Deliverable**: `DEMO_PLAN.md` in service directory
+
+### 10.5: Implement Demo Endpoints
+
+**Objective**: Add `/demos` and `/run-demo` endpoints to service
+
+**Note**: Required for all services (not dashboards), per [DEMO_ENDPOINTS_ENHANCEMENT.md](./DEMO_ENDPOINTS_ENHANCEMENT.md)
+
+**Implementation**:
+```python
+# GET /demos - List available demos
+@app.get("/demos")
+async def list_demos():
+    return {
+        "demos": [
+            {
+                "id": "demo-1",
+                "name": "Basic Analysis Demo",
+                "description": "Analyzes sample code and returns metrics",
+                "type": "self-contained",
+                "estimated_duration_seconds": 30
+            },
+            # ... more demos
+        ]
+    }
+
+# POST /run-demo - Execute demo
+@app.post("/run-demo")
+async def run_demo(demo_id: str):
+    # Execute demo, return results
+    pass
+```
+
+**Deliverable**: Endpoints implemented and tested
+
+### 10.6: Update Service README
+
+**Objective**: Document future expansion plans
+
+**Activities**:
+- Add "Future Expansion" section to README.md
+- Document planned workflows
+- Document E2E test plans
+- Document planned demos
+- Document potential enhancements
+
+**Example Section**:
+```markdown
+## Future Expansion
+
+### Planned Workflows
+1. **Code Analysis Workflow** - Integration with doc-store and llm-gateway
+2. **Expert Recommendation** - Enhanced team formation recommendations
+
+### E2E Testing Plans
+- See [E2E_TEST_PLAN.md](./E2E_TEST_PLAN.md) for comprehensive test scenarios
+
+### Executable Demos
+- Basic Analysis Demo (self-contained)
+- Ecosystem Integration Demo
+- Performance Benchmark Demo
+
+See `/demos` endpoint for full list of executable demos.
+
+### Potential Enhancements
+- Real-time analysis streaming
+- Multi-language support expansion
+- Integration with CI/CD pipelines
+```
+
+### 10.7: Update MASTER_SERVICE_MATRIX.md
+
+**Objective**: Record this service's capabilities and workflows
+
+**Activities**:
+- Add service to matrix (if not already there)
+- Update "Refactor Status" to "Phase 10 Complete"
+- List key capabilities
+- List planned workflows
+- List available demos
+
+**Deliverables**:
+1. ✅ MASTER_SERVICE_MATRIX.md audited
+2. ✅ 3-5 workflows planned and documented
+3. ✅ E2E_TEST_PLAN.md created
+4. ✅ DEMO_PLAN.md created
+5. ✅ Demo endpoints implemented (`/demos`, `/run-demo`)
+6. ✅ README.md updated with Future Expansion section
+7. ✅ MASTER_SERVICE_MATRIX.md updated
+
+**Quality Gates**:
+- [ ] At least 3 workflows planned
+- [ ] E2E test plan comprehensive (happy path + failures)
+- [ ] At least 3 demos planned (mix of types)
+- [ ] Demo endpoints functional and tested
+- [ ] README Future Expansion section complete
+- [ ] MASTER_SERVICE_MATRIX.md updated
+
+**Git Checkpoint** 🔀 *Required*:
+```bash
+# AI Agent MUST commit after Phase 10 completion
+git add services/<service>/E2E_TEST_PLAN.md \
+        services/<service>/DEMO_PLAN.md \
+        services/<service>/README.md \
+        services/<service>/main.py \
+        docs/refactoring/MASTER_SERVICE_MATRIX.md
+
+git commit -m "plan(<service>): Complete Phase 10 - Future Expansion Planning
+
+🚀 Workflow Planning:
+- Workflow 1: [Name] - [Brief description]
+- Workflow 2: [Name] - [Brief description]
+- Workflow 3: [Name] - [Brief description]
+- [Additional workflows...]
+
+🧪 E2E Test Planning:
+- Created E2E_TEST_PLAN.md
+- X test scenarios defined
+- Happy path + failure modes covered
+
+🎬 Demo Planning:
+- Created DEMO_PLAN.md
+- X demos planned (self-contained, ecosystem, hybrid)
+- Demo endpoints implemented: /demos, /run-demo
+
+📊 Demos Available:
+1. [Demo 1] - [Type] - [Duration]
+2. [Demo 2] - [Type] - [Duration]
+3. [Demo 3] - [Type] - [Duration]
+- [Additional demos...]
+
+📖 Documentation:
+- README.md: Added Future Expansion section
+- MASTER_SERVICE_MATRIX.md: Updated service entry
+
+Status: Phase 10 complete, service future-ready"
+```
+
+---
+
 **Service Refactoring Complete!** 🎉
 
-**Only after Phase 7 passes**, the service is now:
+**After completing Phase 10**, the service is now:
 - ✅ Deployed and operational
 - ✅ Fully tested (80%+ coverage **measured**)
 - ✅ Comprehensively documented
 - ✅ Monitored and observable
+- ✅ **Optimized and hardened**
 - ✅ **Validated and confirmed working**
-- ✅ **Production-ready**
+- ✅ **Workflows planned with E2E tests**
+- ✅ **Executable demos available**
+- ✅ **Production-ready and future-proof**
 
-**Next**: Optionally proceed to Phase 8 for enhancements, or move to the next service.
+**Next**: Optionally proceed to Phase 11 for enhancements, or move to the next service.
 
 ---
 
-#### Phase 8: Enhancement & Optional Work (1-2 days, as needed)
+#### Phase 11: Enhancement & Optional Work (1-2 days, as needed)
 **Objective**: Complete optional/skipped steps and enhancements
 
-**Note**: This phase is **optional** and can be performed at any time after Phase 7, or even after multiple services are complete. It captures work that was skipped during initial phases because it was non-critical or time could be better spent moving to the next service.
+**Note**: This phase is **optional** and can be performed at any time after Phase 10, or even after multiple services are complete. It captures work that was skipped during initial phases because it was non-critical or time could be better spent moving to the next service.
 
 **When to Use**:
-- After completing initial 7 phases for a service (including mandatory validation)
+- After completing initial 10 mandatory phases for a service
 - When returning to polish a "complete" service
 - During maintenance/enhancement sprints
 - When resources are available for optimization
@@ -1440,13 +2311,13 @@ Service is confirmed working and ready for deployment."
 - Technical debt reduction report
 
 **Decision Criteria for Skipping**:
-Skip Phase 7 initially if:
-- ✅ Phases 1-6 are complete and validated
+Skip Phase 11 initially if:
+- ✅ Phases 1-10 are complete and validated
 - ✅ Service is production-ready for core features
 - ✅ Moving to next service provides more value
 - ✅ No critical issues identified
 
-Return to Phase 7 later if:
+Return to Phase 11 later if:
 - ⏸️ Performance issues arise in production
 - ⏸️ Security concerns identified
 - ⏸️ Developer friction with service
