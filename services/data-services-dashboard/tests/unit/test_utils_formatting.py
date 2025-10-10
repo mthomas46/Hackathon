@@ -71,7 +71,8 @@ class TestWorkflowIdFormatting:
         
         assert len(result) == 12
         assert result.endswith("...")
-        assert result == "very_long_w..."
+        # max_length=12, so take 9 chars + "..." = 12 total
+        assert result == "very_long..."
     
     def test_truncate_none_workflow_id(self):
         """Test truncating None workflow ID."""

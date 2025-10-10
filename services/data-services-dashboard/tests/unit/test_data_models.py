@@ -143,17 +143,19 @@ class TestMetricsSummary:
     
     def test_error_rate_validation(self):
         """Test error rate validation (0-100)."""
+        from pydantic import ValidationError
+        
         # Valid error rates
         for rate in [0.0, 50.0, 100.0]:
             metrics = MetricsSummary(error_rate=rate)
             assert 0.0 <= metrics.error_rate <= 100.0
         
-        # Invalid error rates (should be clamped)
-        metrics = MetricsSummary(error_rate=-5.0)
-        assert metrics.error_rate == 0.0
+        # Invalid error rates (should raise ValidationError)
+        with pytest.raises(ValidationError):
+            MetricsSummary(error_rate=-5.0)
         
-        metrics = MetricsSummary(error_rate=150.0)
-        assert metrics.error_rate == 100.0
+        with pytest.raises(ValidationError):
+            MetricsSummary(error_rate=150.0)
     
     def test_negative_operations_validation(self):
         """Test that operation counts must be non-negative."""
