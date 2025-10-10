@@ -12,6 +12,10 @@ from domain.services.service_discovery import (
     discover_service,
     discover_multiple_services,
 )
+from domain.services.tool_generation import (
+    generate_tools_from_service,
+    generate_tool_summary,
+)
 
 # Create router
 router = APIRouter()
@@ -112,17 +116,52 @@ async def discover_and_generate_tools(request: DiscoverRequest) -> Dict[str, Any
     """
     Discover service and generate LangGraph tools.
     
-    NOTE: This is a stub implementation. Full tool generation logic is being refactored.
+    First discovers the service, then generates tool definitions from endpoints.
     """
-    return create_success_response(
-        data={
-            "service_name": request.name,
-            "tools_generated": 0,
-            "status": "stub_implementation",
-            "message": "Tool generation endpoint is being refactored"
-        },
-        message="Stub implementation - tool generation logic being refactored"
-    )
+    try:
+        # First, discover the service
+        result = await discover_service(
+            service_name=request.name,
+            base_url=request.base_url,
+            openapi_url=request.openapi_url,
+            openapi_content=request.spec,
+        )
+        
+        if not result.success:
+            return create_error_response(
+                error="DiscoveryFailed",
+                message=result.error_message or "Failed to discover service",
+                details={
+                    "service_name": request.name,
+                    "base_url": request.base_url,
+                }
+            )
+        
+        # Generate tools from discovered service
+        tools = generate_tools_from_service(result.service)
+        summary = generate_tool_summary(tools)
+        
+        return create_success_response(
+            data={
+                "service_name": result.service.name,
+                "base_url": result.service.base_url,
+                "version": result.service.version,
+                "endpoints_discovered": result.endpoint_count,
+                "tools_generated": summary["total_tools"],
+                "discovery_duration_ms": result.discovery_duration_ms,
+                "tools": tools[:10],  # Limit to first 10 in response
+                "summary": summary,
+                "status": "completed",
+            },
+            message=f"Generated {summary['total_tools']} tools from {result.endpoint_count} endpoints"
+        )
+        
+    except Exception as e:
+        return create_error_response(
+            error="InternalError",
+            message=f"Tool generation failed: {str(e)}",
+            details={"service_name": request.name}
+        )
 
 
 @router.get(
