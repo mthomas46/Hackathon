@@ -104,6 +104,8 @@ Aggregate and analyze team capabilities:
 | `/endpoints` | GET | List all endpoints |
 | `/provider-consumer` | GET | Service dependencies |
 | `/openapi.json` | GET | OpenAPI specification |
+| `/demos` | GET | List available demos |
+| `/run-demo` | POST | Execute a demo |
 
 ### **Business Endpoints** (v1)
 
@@ -218,6 +220,156 @@ POST /api/v1/aggregate-team-expertise
     "avg_experience_level": 0.82
   }
 }
+```
+
+---
+
+## 🎪 Demo Endpoints
+
+The service provides interactive demonstrations to showcase its capabilities.
+
+### **List Available Demos**
+```http
+GET /demos
+```
+
+**Response**:
+```json
+{
+  "service": "expert-finder-service",
+  "version": "1.0.0",
+  "available_demos": [
+    {
+      "id": "scoring-algorithm",
+      "name": "Relevance Scoring Algorithm Demo",
+      "description": "Demonstrates the multi-factor scoring algorithm with sample data",
+      "type": "self-contained",
+      "duration": "< 1 second",
+      "requires_dependencies": false
+    },
+    {
+      "id": "expert-matching",
+      "name": "Expert Matching Demo",
+      "description": "Shows how experts are matched based on various criteria",
+      "type": "self-contained",
+      "duration": "< 1 second",
+      "requires_dependencies": false
+    },
+    {
+      "id": "sme-identification",
+      "name": "SME Identification Demo",
+      "description": "Identifies subject matter experts using contribution thresholds",
+      "type": "self-contained",
+      "duration": "< 1 second",
+      "requires_dependencies": false
+    },
+    {
+      "id": "ecosystem-expert-search",
+      "name": "Ecosystem Expert Search",
+      "description": "Live search for experts using actual ecosystem data",
+      "type": "ecosystem",
+      "duration": "1-3 seconds",
+      "requires_dependencies": true,
+      "dependencies": ["user-store"]
+    },
+    {
+      "id": "ecosystem-sme-discovery",
+      "name": "Ecosystem SME Discovery",
+      "description": "Live SME identification using ecosystem data",
+      "type": "ecosystem",
+      "duration": "2-5 seconds",
+      "requires_dependencies": true,
+      "dependencies": ["user-store", "doc-store"]
+    },
+    {
+      "id": "performance-benchmark",
+      "name": "Performance Benchmark",
+      "description": "Benchmarks scoring performance with various dataset sizes",
+      "type": "self-contained",
+      "duration": "2-5 seconds",
+      "requires_dependencies": false
+    }
+  ],
+  "total_demos": 6
+}
+```
+
+### **Execute a Demo**
+```http
+POST /run-demo?demo_id=scoring-algorithm
+```
+
+**Response**:
+```json
+{
+  "demo_id": "scoring-algorithm",
+  "demo_name": "Relevance Scoring Algorithm Demo",
+  "executed_at": "2025-10-10T12:00:00Z",
+  "execution_time_seconds": 0.001,
+  "status": "success",
+  "data": {
+    "query": "Python backend developer with FastAPI experience",
+    "scoring_weights": {
+      "role": 0.3,
+      "topic": 0.4,
+      "service": 0.2,
+      "document": 0.1
+    },
+    "candidates_scored": 5,
+    "results": [
+      {
+        "rank": 1,
+        "expert": {
+          "user_id": "user_001",
+          "name": "Alice Smith",
+          "role": "Backend Developer",
+          "topics": ["Python", "FastAPI", "PostgreSQL"]
+        },
+        "scores": {
+          "overall": 0.730,
+          "role": 0.800,
+          "topic": 1.000,
+          "service": 0.500,
+          "document": 0.830
+        },
+        "match_quality": "good",
+        "explanation": "Moderate role match: Backend Developer; Strong topic overlap (100%); Significant contributions (25 docs)"
+      }
+    ]
+  }
+}
+```
+
+### **Demo Types**
+
+**Self-Contained Demos** (no dependencies required):
+- `scoring-algorithm` - Interactive scoring demonstration with sample data
+- `expert-matching` - Shows matching strategies and criteria
+- `sme-identification` - Demonstrates SME identification process
+- `performance-benchmark` - Benchmarks performance across dataset sizes
+
+**Ecosystem Demos** (require running services):
+- `ecosystem-expert-search` - Live expert search using actual data
+- `ecosystem-sme-discovery` - Live SME discovery from ecosystem
+
+### **Running Demos**
+
+**Via cURL**:
+```bash
+# List all demos
+curl http://localhost:5160/demos
+
+# Run scoring algorithm demo
+curl -X POST "http://localhost:5160/run-demo?demo_id=scoring-algorithm"
+
+# Run performance benchmark
+curl -X POST "http://localhost:5160/run-demo?demo_id=performance-benchmark"
+```
+
+**Via Python**:
+```bash
+cd services/expert-finder-service
+python3 test_demos.py
 ```
 
 ---
