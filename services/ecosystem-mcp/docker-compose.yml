@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecosystem-mcp-postgres
+    environment:
+      POSTGRES_DB: ecosystem_mcp
+      POSTGRES_USER: ecosystem
+      POSTGRES_PASSWORD: ecosystem_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgresql:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecosystem"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecosystem-mcp
+
+  # Redis (Queue & Cache)
+  redis:
+    image: redis:7-alpine
+    container_name: ecosystem-mcp-redis
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecosystem-mcp
+
+  # MCP Service (commented out - run locally for development)
+  # ecosystem-mcp:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile
+  #   container_name: ecosystem-mcp-service
+  #   environment:
+  #     DATABASE_URL: postgresql://ecosystem:ecosystem_password@postgres:5432/ecosystem_mcp
+  #     REDIS_URL: redis://redis:6379/0
+  #     CHROMA_PATH: /app/data/chroma_db
+  #     OLLAMA_BASE_URL: http://host.docker.internal:11434
+  #   ports:
+  #     - "8000:8000"
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./data/chroma_db:/app/data/chroma_db
+  #     - ./data/backups:/app/data/backups
+  #     - /Users/mykalthomas/Documents/work/Hackathon:/repo:ro
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - ecosystem-mcp
+
+networks:
+  ecosystem-mcp:
+    name: ecosystem-mcp
+    driver: bridge
+
