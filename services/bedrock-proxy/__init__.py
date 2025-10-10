@@ -1,2 +1,1 @@
-# Bedrock Proxy Service
-# AWS Bedrock API proxy and caching layer
+"""Bedrock Proxy Service Package"""

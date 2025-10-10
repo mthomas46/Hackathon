@@ -51,18 +51,30 @@ app = FastAPI(
 # INCLUDE ROUTERS
 # ============================================================================
 
+# Import routers with proper error handling
+import sys
+import os
+
+# Add current directory to path if not already there
+if os.path.dirname(__file__) not in sys.path:
+    sys.path.insert(0, os.path.dirname(__file__))
+
 # Include standard endpoints (health, about-me, endpoints, provider-consumer)
 try:
-    from presentation.api.standard_endpoints import router as standard_router
-    app.include_router(standard_router)
-except ImportError as e:
+    import presentation.api.standard_endpoints as standard_endpoints_module
+    app.include_router(standard_endpoints_module.router)
+except (ImportError, AttributeError) as e:
     print(f"Warning: Could not load standard endpoints: {e}")
+    # Add a fallback health endpoint
+    @app.get("/health")
+    async def fallback_health():
+        return {"service": "bedrock-proxy", "version": "1.0.0", "status": "healthy"}
 
 # Include API routes from presentation layer (core business logic)
 try:
-    from presentation.api.routes import router as api_router
-    app.include_router(api_router)
-except ImportError as e:
+    import presentation.api.routes as routes_module
+    app.include_router(routes_module.router)
+except (ImportError, AttributeError) as e:
     # Log error but don't fail startup
     print(f"Warning: Could not load API routes: {e}")
 

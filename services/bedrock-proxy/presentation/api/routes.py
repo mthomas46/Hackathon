@@ -5,8 +5,8 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from ...infrastructure.processor import process_invoke_request
-from .models import InvokeRequest
+from infrastructure.processor import process_invoke_request
+from presentation.api.models import InvokeRequest
 
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["bedrock-proxy"])

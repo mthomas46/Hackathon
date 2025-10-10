@@ -49,12 +49,15 @@ COPY --chown=bedrock:bedrock . .
 
 # Set environment variables
 ENV PATH=/home/bedrock/.local/bin:$PATH \
+    PYTHONPATH=/app \
     PYTHONUNBUFFERED=1 \
     SERVICE_API_PORT=7090 \
     BEDROCK_MOCK_MODE=true
 
-# Create logs directory
-RUN mkdir -p logs && chown -R bedrock:bedrock logs
+# Create logs directory and make startup script executable
+RUN mkdir -p logs && \
+    chown -R bedrock:bedrock logs && \
+    chmod +x start.sh
 
 # Switch to non-root user
 USER bedrock
@@ -66,5 +69,5 @@ EXPOSE 7090
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:7090/health || exit 1
 
-# Run the service
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7090"]
+# Run the service using startup script
+CMD ["./start.sh"]
