@@ -317,38 +317,63 @@ This living document tracks:
 
 ---
 
-### Service: expert-finder-service
+### Service: expert-finder-service ⚡ UPDATED
+
+**Status**: Phase 2.7 Complete (Library Consolidation Analysis)  
+**Date**: October 10, 2025
 
 | Category | Technology | Version | Purpose | Consolidation Opportunity |
 |----------|-----------|---------|---------|---------------------------|
-| Framework | FastAPI | 0.104+ | REST API (planned) | ✅ Standard |
-| HTTP Client | httpx | 0.25+ | External calls (planned) | ✅ Standard |
-| Validation | Pydantic | 2.4+ | Data validation (planned) | ✅ Standard |
-| Config | pydantic-settings | 2.0+ | Configuration (planned) | ✅ Standard |
-| Retry | tenacity | 8.2+ | Retry logic (planned) | ✅ Standard |
-| Caching | lru_cache | Built-in | In-memory cache (planned) | ✅ Standard |
-| Testing | pytest | 7.4+ | Tests (planned) | ✅ Standard |
+| Framework | FastAPI | 0.104+ | REST API | ✅ Standard (Phase 3) |
+| HTTP Client | httpx | 0.25+ | External calls | ✅ Standard (Phase 3) |
+| Validation | Pydantic | 2.5+ | Data validation | ✅ Standard (Phase 3) |
+| Config | pydantic-settings | 2.1+ | Configuration | ✅ Standard (Phase 3) |
+| Retry | tenacity | 8.2.3 | Retry logic | ✅ Standard (Phase 3) |
+| Logging | structlog | 23.2+ | JSON logging | ✅ Standard (Phase 8) |
+| Testing | pytest + faker + factory-boy | 7.4+ | Tests | ✅ Standard (Phase 8) |
+| Caching | lru_cache | Built-in | In-memory cache | ✅ Standard (Phase 3) |
 | Scoring | Custom | N/A | Relevance scoring | ✅ Appropriate (domain-specific) |
 
-**Current State**: Monolithic 1,286-line `main.py` with custom implementations
+**Current State**: Monolithic 1,286-line `main.py` (Phase 1 audit)
 
-**Custom Code to Consolidate**:
-- ⚠️ Manual retry logic → Use `tenacity.retry`
-- ⚠️ Custom HTTP calls → Use `httpx.AsyncClient` with connection pooling
-- ⚠️ Manual config loading → Use `pydantic-settings.BaseSettings`
-- ⚠️ Print statements → Use `structlog` for structured logging
+**Phase 2.7 Analysis Complete**: ✅
+- ✅ PHASE_2_LIBRARY_AUDIT.md created
+- ✅ PHASE_2_LIBRARY_RECOMMENDATIONS.md created
+- ✅ requirements.txt updated with standard libraries
+- ✅ All custom code evaluated
 
-**Library Opportunities**:
-1. **tenacity** - Replace manual retry logic with exponential backoff
-2. **httpx** - Replace `requests` with async HTTP client
-3. **pydantic-settings** - Replace manual env var loading
-4. **structlog** - Replace print statements with structured JSON logs
-5. **cachetools** - Consider for advanced caching strategies (LRU, TTL)
-6. **faker** + **factory-boy** - For generating test data
+**Custom Code to Replace (Phase 3 - HIGH PRIORITY)**:
+1. ✅ Manual `requests` calls → `httpx.AsyncClient` (30 lines eliminated)
+2. ✅ Manual retry logic → `tenacity.retry` (15 lines eliminated)
+3. ✅ Manual `os.getenv()` → `pydantic-settings.BaseSettings` (30 lines eliminated)
 
-**Recommendation**: 
-- **Phase 3**: Implement with `httpx`, `pydantic-settings`, `tenacity`, `structlog` from the start
-- **Phase 11**: Consider `cachetools` for advanced caching (if simple `lru_cache` insufficient)
+**Custom Code to Replace (Phase 8 - MEDIUM PRIORITY)**:
+4. ⚠️ Print statements → `structlog` (20 lines eliminated)
+5. ⚠️ Hardcoded test data → `faker` + `factory-boy` (50 lines eliminated)
+
+**Custom Code to Keep (Domain-Specific)**:
+- ❌ Relevance Scoring Algorithm - Core domain logic (30/40/20/10 weighting)
+  - Keep in `domain/services/relevance_scoring_service.py`
+  - Rationale: Business-specific, no generic library exists
+
+**Library Opportunities (Phase 11 - LOW PRIORITY)**:
+- ⏸️ **cachetools** - TTL caching (if `lru_cache` insufficient)
+
+**Expected Impact**:
+- **Before**: 1,286 lines (monolithic)
+- **After**: ~600-800 lines (DDD with libraries)
+- **Code Eliminated**: ~145 lines of custom infrastructure code
+- **Reduction**: ~40-50% fewer lines
+
+**Quality Improvements**:
+- ✅ Async/await support (httpx)
+- ✅ Connection pooling (httpx)
+- ✅ Configurable retry with backoff (tenacity)
+- ✅ Type-safe configuration (pydantic-settings)
+- ✅ Structured JSON logging (structlog - Phase 8)
+- ✅ Realistic test data (faker - Phase 8)
+
+**Consistency**: ✅ Now matches code-analyzer, discovery-agent, bedrock-proxy library choices
 
 ---
 
