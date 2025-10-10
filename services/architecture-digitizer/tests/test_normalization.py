@@ -4,14 +4,17 @@ import pytest
 from unittest.mock import patch, MagicMock
 import json
 
-from ..main import (
-    normalize_aws_architecture,
-    normalize_azure_architecture,
-    normalize_gcp_architecture,
-    detect_system_type,
-    validate_architecture_data,
-    ArchitectureNormalizationError,
-)
+# Import functions using test utilities
+from .test_utils import load_module_functions
+
+# Load all required functions
+funcs = load_module_functions()
+normalize_aws_architecture = funcs['normalize_aws_architecture']
+normalize_azure_architecture = funcs['normalize_azure_architecture']
+normalize_gcp_architecture = funcs['normalize_gcp_architecture']
+detect_system_type = funcs['detect_system_type']
+validate_architecture_data = funcs['validate_architecture_data']
+ArchitectureNormalizationError = funcs['ArchitectureNormalizationError']
 
 
 class TestAWSSNormalization:

@@ -5,8 +5,10 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 import json
 
-# Import the FastAPI app
-from ..main import app
+# Import app using test utilities
+from .test_utils import load_app
+
+app = load_app()
 
 # Create test client
 client = TestClient(app)
