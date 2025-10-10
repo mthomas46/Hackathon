@@ -3,19 +3,40 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from domain.value_objects import ComplexityMetrics, StyleIssue, SecurityFinding
+from domain.value_objects import ComplexityMetrics, StyleIssue, SecurityFinding, EntityType
 
 
 @dataclass
 class CodeStructure:
     """Represents a code structure (function, class, etc.)."""
     
-    type: str  # 'function', 'class', 'method', etc.
+    type: str  # 'function', 'class', 'method', etc. (kept for backward compatibility)
     name: str
     line_start: int
     line_end: int
     complexity: Optional[int] = None
     docstring: Optional[str] = None
+    
+    @property
+    def entity_type(self) -> EntityType:
+        """Get entity type as EntityType enum.
+        
+        Converts the string type to EntityType enum for API compatibility.
+        Falls back to EntityType.FUNCTION if conversion fails.
+        """
+        try:
+            return EntityType(self.type.lower())
+        except (ValueError, AttributeError):
+            # Default to FUNCTION if type is invalid
+            return EntityType.FUNCTION
+    
+    @property
+    def line_number(self) -> int:
+        """Get starting line number.
+        
+        Alias for line_start to match API expectations.
+        """
+        return self.line_start
 
 
 @dataclass

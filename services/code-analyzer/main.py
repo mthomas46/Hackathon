@@ -343,6 +343,13 @@ async def analyze_code(request: AnalyzeRequest) -> AnalyzeResponse:
                 detail=f"Unsupported language: {request.language}. Supported: python"
             ) from e
         
+        # Currently only Python is implemented
+        if language != Language.PYTHON:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported language: {request.language}. Only Python is currently supported."
+            )
+        
         # Create analysis options
         options = None
         if request.options:
@@ -350,7 +357,7 @@ async def analyze_code(request: AnalyzeRequest) -> AnalyzeResponse:
                 include_complexity=request.options.get("include_complexity", True),
                 include_security=request.options.get("include_security", True),
                 include_style=request.options.get("include_style", True),
-                max_complexity_threshold=request.options.get("max_complexity_threshold", 10)
+                include_structure=request.options.get("include_structure", True)
             )
         
         # Perform analysis using domain service
@@ -364,7 +371,7 @@ async def analyze_code(request: AnalyzeRequest) -> AnalyzeResponse:
         response_data = {
             "analysis_id": analysis.analysis_id,
             "status": analysis.status.value,
-            "language": language.value
+            "language": language.name.lower()  # Use name instead of value (auto() returns int)
         }
         
         # Add results if analysis succeeded

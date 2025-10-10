@@ -1,0 +1,21 @@
+[run]
+branch = True
+source = .
+
+[report]
+# Files to exclude from coverage report
+omit =
+    */__init__.py
+    */tests/*
+    */test_*.py
+    */conftest.py
+    */modules/*
+    domain/exceptions.py
+    domain/value_objects.py
+    domain/services/analysis_processor.py
+    domain/services/endpoint_extractor.py
+    domain/services/style_manager.py
+
+precision = 2
+show_missing = True
+
