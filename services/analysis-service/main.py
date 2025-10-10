@@ -199,6 +199,35 @@ register_health_endpoints(app, ServiceNames.ANALYSIS_SERVICE, SERVICE_VERSION)
 # Auto-register with orchestrator
 attach_self_register(app, ServiceNames.ANALYSIS_SERVICE)
 
+# ============================================================================
+# Include All Route Modules
+# ============================================================================
+# Import all route routers from the presentation.routes package
+from .presentation.routes import (
+    status_router,
+    findings_router,
+    remediation_router,
+    workflow_router,
+    repository_router,
+    pr_confidence_router,
+    integration_router,
+    report_router,
+    distributed_router,
+    analysis_router,
+)
+
+# Include all routers in the FastAPI app
+app.include_router(status_router, tags=["Status"])
+app.include_router(findings_router, tags=["Findings"])
+app.include_router(remediation_router, tags=["Remediation"])
+app.include_router(workflow_router, tags=["Workflows"])
+app.include_router(repository_router, tags=["Cross-Repository"])
+app.include_router(pr_confidence_router, tags=["PR Confidence"])
+app.include_router(integration_router, tags=["Integrations"])
+app.include_router(report_router, tags=["Reports"])
+app.include_router(distributed_router, tags=["Distributed Processing"])
+app.include_router(analysis_router, tags=["Core Analysis"])
+
 # Import shared utilities for consistency
 from .modules.shared_utils import (
     handle_analysis_error,
