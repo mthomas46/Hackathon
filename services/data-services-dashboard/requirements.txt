@@ -1,62 +1,70 @@
-# Base requirements shared across all services
-fastapi>=0.104.1
-uvicorn[standard]>=0.24.0
-pydantic>=2.8.0
-httpx>=0.25.2
-redis>=5.0.1
-aioredis>=2.0.1
+# Production dependencies for data-services-dashboard
+# Last Updated: October 9, 2025
+# Hybrid Architecture: Streamlit UI + FastAPI REST API
 
-# HTTP client and async support
-aiohttp>=3.12.0
-aiofiles>=23.0.0
-requests>=2.32.0
+# ============================================================================
+# WEB FRAMEWORKS
+# ============================================================================
 
-# Configuration and utilities
-pyyaml>=6.0.0
-python-dotenv>=1.0.0
-
-# Monitoring and health
-prometheus-client>=0.20.0
-psutil>=5.9.0
-
-# CLI and interactive features
-questionary>=2.0.0
-prompt-toolkit>=3.0.0
-rich>=13.0.0
-
-# Logging and error handling
-structlog>=23.0.0
-
-# Data processing
-pandas>=2.0.0
-numpy>=1.24.0
-
-# Dashboard and visualization
+# Streamlit - Web UI for human operators (port 8501)
 streamlit>=1.28.0
 streamlit-autorefresh>=1.0.0
+
+# FastAPI - REST API for ecosystem integration (port 8080)
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# ============================================================================
+# DATA & VALIDATION
+# ============================================================================
+
+# Pydantic - Type-safe models and validation
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+
+# Pandas - Data processing
+pandas>=2.0.0
+
+# ============================================================================
+# VISUALIZATION
+# ============================================================================
+
+# Plotly - Interactive charts
 plotly>=5.17.0
-altair>=5.1.0
 
-# Testing framework (essential for all services)
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
-pytest-mock>=3.12.0
+# ============================================================================
+# HTTP CLIENT
+# ============================================================================
 
-# Optional dependencies (install as needed)
-# boto3>=1.34.0
-# botocore>=1.34.0
-# ollama>=0.1.7
-# openai>=1.3.0
-# anthropic>=0.7.0
-# sentence-transformers>=2.0.0
-# transformers>=4.0.0
-# torch>=2.0.0
-# faiss-cpu>=1.7.0
-# textblob>=0.17.0
-# cryptography>=41.0.0
-# cachetools>=5.3.0
-# diskcache>=5.6.0
-# sse-starlette>=1.6.0
-# python-jose[cryptography]>=3.3.0
-# passlib[bcrypt]>=1.7.4
-# sentry-sdk>=1.39.0
+# httpx - Async HTTP client with connection pooling
+httpx>=0.27.0
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+# PyYAML - YAML configuration
+PyYAML>=6.0
+
+# python-dotenv - Environment variables
+python-dotenv>=1.0.0
+
+# ============================================================================
+# REMOVED DEPENDENCIES (Not needed for dashboard)
+# ============================================================================
+
+# ❌ redis, aioredis - No caching beyond Streamlit's built-in cache
+# ❌ aiohttp, aiofiles - Using httpx for HTTP, no async file operations
+# ❌ requests - Using httpx instead
+# ❌ prometheus-client - Not implementing Prometheus metrics
+# ❌ psutil - Not monitoring system resources
+# ❌ questionary, prompt-toolkit, rich - No CLI interface
+# ❌ structlog - Simple logging sufficient
+# ❌ numpy - Included with pandas
+# ❌ altair - Using Plotly for all visualizations
+# ❌ pytest* - Moved to requirements-test.txt
+
+# ============================================================================
+# TOTAL: 10 core dependencies (vs 26 before)
+# ============================================================================
+# Benefit: Faster installs, smaller container, fewer security updates
