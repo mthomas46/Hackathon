@@ -1,6 +1,11 @@
+# Core Framework
 fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
 pydantic>=2.5.0
-httpx>=0.25.0
 python-multipart>=0.0.6
+
+# Standard Libraries (Phase 2.7 - MANDATORY)
+httpx>=0.25.2          # Async HTTP client (replaces requests)
+tenacity>=8.2.3        # Retry with exponential backoff (replaces custom retry)
+pydantic-settings>=2.1.0  # Type-safe configuration (replaces manual env loading)
 
