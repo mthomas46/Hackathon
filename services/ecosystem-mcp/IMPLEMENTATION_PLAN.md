@@ -538,17 +538,23 @@ class Worker:
 
 ---
 
-#### Phase 1.6: MCP Server Implementation
-**Duration**: 8 hours  
+#### Phase 1.6: MCP Server + REST API Implementation
+**Duration**: 10 hours (increased from 8)  
 **Status**: 🔴 Not Started
 
 **Tasks**:
-- [ ] Implement MCP protocol handlers
-- [ ] Create tools (analyze, compare, search, suggest)
-- [ ] Create resources (docs, patterns, metrics)
-- [ ] Create prompts (optimization guides)
+- [ ] Implement MCP protocol handlers (stdio-based)
+- [ ] Create MCP tools (analyze, compare, search, suggest)
+- [ ] Create MCP resources (docs, patterns, metrics)
+- [ ] Create MCP prompts (optimization guides)
+- [ ] **NEW**: Setup FastAPI REST API server
+- [ ] **NEW**: Implement OpenAPI/Swagger documentation
+- [ ] **NEW**: Create admin endpoints (job management, stats)
+- [ ] **NEW**: Create search API endpoints
+- [ ] **NEW**: Create health & metrics endpoints
 - [ ] Add Cursor IDE configuration
 - [ ] Test MCP integration
+- [ ] **NEW**: Test REST API via Swagger UI
 
 **MCP Server Implementation**:
 ```python
