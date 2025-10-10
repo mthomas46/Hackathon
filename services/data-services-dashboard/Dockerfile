@@ -38,7 +38,12 @@ COPY metrics/ ./metrics/
 COPY visualization/ ./visualization/
 COPY utils/ ./utils/
 COPY app.py .
+COPY api_app.py .
+COPY start.sh .
 COPY config.py .
+
+# Make start script executable
+RUN chmod +x start.sh
 
 # Copy documentation
 COPY README.md .
@@ -84,6 +89,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 EXPOSE 8501
 EXPOSE 8080
 
-# Start command - Run Streamlit (which also starts FastAPI in background thread)
-CMD ["streamlit", "run", "app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+# Start command - Run both FastAPI and Streamlit using start script
+CMD ["./start.sh"]
 

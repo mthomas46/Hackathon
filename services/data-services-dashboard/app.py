@@ -1,16 +1,18 @@
 """
-Data Services Dashboard - Main Application
+Data Services Dashboard - Streamlit UI
 
 Hybrid Architecture:
-- Streamlit Web UI (port 8501) - For human operators
-- FastAPI REST API (port 8080) - For ecosystem integration
+- This file: Streamlit Web UI (port 8501) - For human operators
+- api_app.py: FastAPI REST API (port 8080) - For ecosystem integration
 
-Run: streamlit run app.py
+Run Streamlit: streamlit run app.py --server.port 8501
+Run FastAPI: uvicorn api_app:app --host 0.0.0.0 --port 8080
+
+In Docker: Both are started by start.sh script
 """
 
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
-import threading
 from typing import Optional
 
 # Configure page FIRST (must be first Streamlit command)
@@ -33,59 +35,6 @@ from visualization import (
 )
 from utils.logging_client import dashboard_logger
 from utils.formatting import format_uptime
-
-# Import FastAPI for REST API
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-from api import router as api_router
-
-
-# ============================================================================
-# FASTAPI REST API (runs in background thread)
-# ============================================================================
-
-def create_fastapi_app() -> FastAPI:
-    """Create and configure FastAPI application."""
-    app = FastAPI(
-        title="Data Services Dashboard API",
-        description="REST API for programmatic access to dashboard data",
-        version=config.service_version,
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url="/openapi.json"
-    )
-    
-    # CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"]
-    )
-    
-    # Include API router
-    app.include_router(api_router)
-    
-    return app
-
-
-def start_fastapi_server():
-    """Start FastAPI server in background thread."""
-    app = create_fastapi_app()
-    
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=config.api_port,
-        log_level="info"
-    )
-
-
-# Start FastAPI in background thread
-api_thread = threading.Thread(target=start_fastapi_server, daemon=True)
-api_thread.start()
 
 
 # ============================================================================
