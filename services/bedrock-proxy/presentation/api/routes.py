@@ -3,108 +3,30 @@
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 from ...infrastructure.processor import process_invoke_request
-from ...infrastructure.validation_utils.validation import (
-    validate_model,
-    validate_region,
-    validate_template,
-    validate_format,
-    validate_title,
-)
+from .models import InvokeRequest
 
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["bedrock-proxy"])
 
-# Import shared response models
-try:
-    from services.shared.presentation.api.responses import (
-        create_success_response,
-        create_error_response,
-        APIResponse,
-    )
-except ImportError:
-    # Fallback implementations
-    class APIResponse(BaseModel):
-        success: bool
-        message: Optional[str] = None
-        data: Optional[Any] = None
-
-    def create_success_response(data):
-        return {"success": True, "data": data}
-
-    def create_error_response(message, **kwargs):
-        return {"success": False, "message": message, **kwargs}
+# Simple response helpers
+class APIResponse(BaseModel):
+    """Standard API response model."""
+    success: bool
+    message: Optional[str] = None
+    data: Optional[Any] = None
 
 
-class InvokeRequest(BaseModel):
-    """Request model for AI invoke endpoint with structured response generation.
+def create_success_response(data):
+    """Create a success response."""
+    return {"success": True, "data": data}
 
-    Supports template-based response formatting for consistent AI outputs.
-    All fields are optional to allow flexible usage patterns.
-    """
 
-    model: Optional[str] = None
-    """AI model identifier (e.g., 'claude-3-sonnet', 'gpt-4')."""
-
-    region: Optional[str] = None
-    """AWS region for model deployment (e.g., 'us-east-1')."""
-
-    prompt: Optional[str] = None
-    """Input prompt for AI processing."""
-
-    template: Optional[str] = None
-    """Response template to use (summary, risks, decisions, pr_confidence, life_of_ticket)."""
-
-    format: Optional[str] = None
-    """Output format (md, txt, json)."""
-
-    title: Optional[str] = None
-    """Custom title for the response."""
-
-    @field_validator("prompt")
-    @classmethod
-    def validate_prompt(cls, v):
-        """Validate that prompt is a string if provided."""
-        try:
-            from ...infrastructure.validation_utils.validation import validate_prompt
-            return validate_prompt(v)
-        except ImportError:
-            # Fallback validation
-            if v is not None and not isinstance(v, str):
-                raise ValueError("Prompt must be a string value")
-            return v
-
-    @field_validator("model")
-    @classmethod
-    def validate_model_field(cls, v):
-        """Validate model field."""
-        return validate_model(v)
-
-    @field_validator("region")
-    @classmethod
-    def validate_region_field(cls, v):
-        """Validate region field."""
-        return validate_region(v)
-
-    @field_validator("template")
-    @classmethod
-    def validate_template_field(cls, v):
-        """Validate template field."""
-        return validate_template(v)
-
-    @field_validator("format")
-    @classmethod
-    def validate_format_field(cls, v):
-        """Validate format field."""
-        return validate_format(v)
-
-    @field_validator("title")
-    @classmethod
-    def validate_title_field(cls, v):
-        """Validate title field."""
-        return validate_title(v)
+def create_error_response(message, **kwargs):
+    """Create an error response."""
+    return {"success": False, "message": message, **kwargs}
 
 
 class InvokeResponse(BaseModel):
