@@ -29,11 +29,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from builder
-COPY --from=builder /root/.local /root/.local
+# Create user first (before copying files)
+RUN useradd -m -u 1000 analyzer
+
+# Copy Python packages from builder to analyzer user home
+COPY --from=builder /root/.local /home/analyzer/.local
 
 # Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+ENV PATH=/home/analyzer/.local/bin:$PATH
+
+# Set ownership
+RUN chown -R analyzer:analyzer /home/analyzer/.local
 
 # Copy application code
 COPY domain/ ./domain/
@@ -69,8 +75,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:6000/health || exit 1
 
 # Run as non-root user for security
-RUN useradd -m -u 1000 analyzer && \
-    chown -R analyzer:analyzer /app
+RUN chown -R analyzer:analyzer /app
 USER analyzer
 
 # Default command - Run FastAPI with uvicorn
