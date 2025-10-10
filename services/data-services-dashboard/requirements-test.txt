@@ -1,0 +1,36 @@
+# Test dependencies for data-services-dashboard
+# Last Updated: October 9, 2025
+
+# Core Testing Frameworks
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+
+# HTTP Testing
+httpx>=0.27.0
+requests-mock>=1.11.0
+
+# FastAPI Testing
+fastapi>=0.109.0  # For TestClient
+
+# Data Generation & Mocking
+Faker>=18.0.0
+factory-boy>=3.0.0
+
+# Code Quality & Linting
+mypy>=1.0.0
+pylint>=2.15.0
+black>=23.0.0
+flake8>=6.0.0
+radon>=5.0.0
+bandit>=1.7.0
+
+# Utilities
+pytest-xdist>=3.0.0  # Parallel test execution
+pytest-timeout>=2.0.0  # Test timeouts
+pytest-clarity>=1.0.0  # Better test output
+
+# Streamlit Testing (for UI logic)
+# Note: Streamlit doesn't have official testing library, we test logic not UI
+
