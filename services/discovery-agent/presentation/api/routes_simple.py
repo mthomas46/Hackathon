@@ -1,6 +1,6 @@
-"""Simplified API Routes for Discovery Agent
+"""API Routes for Discovery Agent
 
-Stub implementations to allow service to start while discovery logic is being fixed.
+Real implementations using domain services.
 """
 
 from datetime import datetime, timezone
@@ -8,6 +8,10 @@ from typing import Any, Dict
 from fastapi import APIRouter, HTTPException
 
 from .models import BulkDiscoverRequest, DiscoverRequest
+from domain.services.service_discovery import (
+    discover_service,
+    discover_multiple_services,
+)
 
 # Create router
 router = APIRouter()
@@ -43,22 +47,58 @@ def create_error_response(error: str, message: str, details: Any = None) -> Dict
     description="Discover and analyze a single service by fetching its OpenAPI specification.",
     tags=["discovery"],
 )
-async def discover_service(request: DiscoverRequest) -> Dict[str, Any]:
+async def discover_service_endpoint(request: DiscoverRequest) -> Dict[str, Any]:
     """
     Discover a service from its OpenAPI specification.
     
-    NOTE: This is a stub implementation. Full discovery logic is being refactored.
+    Fetches the OpenAPI spec, parses endpoints, and returns discovery results.
     """
-    return create_success_response(
-        data={
-            "service_name": request.name,
-            "base_url": request.base_url or "http://unknown",
-            "status": "stub_implementation",
-            "message": "Discovery endpoint is being refactored",
-            "endpoints_discovered": 0
-        },
-        message="Stub implementation - discovery logic being refactored"
-    )
+    try:
+        # Call domain service
+        result = await discover_service(
+            service_name=request.name,
+            base_url=request.base_url,
+            openapi_url=request.openapi_url,
+            openapi_content=request.spec,  # Model uses 'spec' not 'openapi_content'
+        )
+        
+        if result.success:
+            return create_success_response(
+                data={
+                    "service_name": result.service.name,
+                    "base_url": result.service.base_url,
+                    "version": result.service.version,
+                    "description": result.service.description,
+                    "endpoints_discovered": result.endpoint_count,
+                    "discovery_duration_ms": result.discovery_duration_ms,
+                    "endpoints": [
+                        {
+                            "path": ep.path,
+                            "method": ep.method,
+                            "summary": ep.summary,
+                        }
+                        for ep in result.service.endpoints[:10]  # Limit to first 10 for response
+                    ],
+                    "status": "discovered",
+                },
+                message=result.summary()
+            )
+        else:
+            return create_error_response(
+                error="DiscoveryFailed",
+                message=result.error_message or "Failed to discover service",
+                details={
+                    "service_name": request.name,
+                    "base_url": request.base_url,
+                    "duration_ms": result.discovery_duration_ms,
+                }
+            )
+    except Exception as e:
+        return create_error_response(
+            error="InternalError",
+            message=f"Discovery failed with error: {str(e)}",
+            details={"service_name": request.name}
+        )
 
 
 @router.post(
@@ -118,16 +158,43 @@ async def get_service(service_name: str) -> Dict[str, Any]:
 async def bulk_discover(request: BulkDiscoverRequest) -> Dict[str, Any]:
     """
     Discover multiple services concurrently.
-    
-    NOTE: This is a stub implementation.
     """
-    return create_success_response(
-        data={
-            "services_requested": len(request.services) if hasattr(request, 'services') else 0,
-            "services_discovered": 0,
-            "status": "stub_implementation",
-            "message": "Bulk discovery endpoint is being refactored"
-        },
-        message="Stub implementation - bulk discovery being refactored"
-    )
+    try:
+        services = request.services if hasattr(request, 'services') else []
+        
+        if not services:
+            return create_error_response(
+                error="InvalidRequest",
+                message="No services provided for discovery"
+            )
+        
+        # Call domain service
+        results = await discover_multiple_services(services)
+        
+        successful = [r for r in results if r.success]
+        failed = [r for r in results if not r.success]
+        
+        return create_success_response(
+            data={
+                "services_requested": len(services),
+                "services_discovered": len(successful),
+                "services_failed": len(failed),
+                "total_endpoints": sum(r.endpoint_count for r in successful),
+                "results": [
+                    {
+                        "service_name": r.service.name,
+                        "success": r.success,
+                        "endpoints_discovered": r.endpoint_count,
+                        "error_message": r.error_message,
+                    }
+                    for r in results
+                ]
+            },
+            message=f"Discovered {len(successful)}/{len(services)} services successfully"
+        )
+    except Exception as e:
+        return create_error_response(
+            error="InternalError",
+            message=f"Bulk discovery failed: {str(e)}"
+        )
 
