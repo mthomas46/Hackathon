@@ -246,7 +246,7 @@ def mock_connection_error(mocker):
 def test_client():
     """Create FastAPI test client."""
     from fastapi.testclient import TestClient
-    from api.router import router
+    from api.router import api_router as router
     from fastapi import FastAPI
     
     app = FastAPI()

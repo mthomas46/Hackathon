@@ -19,7 +19,7 @@ import httpx
 SERVICE_START_TIME = time.time()
 
 # Create router
-router = APIRouter(tags=["standard"])
+api_router = APIRouter(tags=["standard"])
 
 
 def get_uptime() -> int:
@@ -43,7 +43,7 @@ def check_log_collector_health() -> str:
     return "unavailable"
 
 
-@router.get("/health")
+@api_router.get("/health")
 async def health_check() -> Dict[str, Any]:
     """
     Health check endpoint.
@@ -76,7 +76,7 @@ async def health_check() -> Dict[str, Any]:
     }
 
 
-@router.get("/about-me")
+@api_router.get("/about-me")
 async def about_me() -> Dict[str, Any]:
     """
     Service descriptor endpoint.
@@ -212,7 +212,7 @@ async def about_me() -> Dict[str, Any]:
     }
 
 
-@router.get("/endpoints")
+@api_router.get("/endpoints")
 async def list_endpoints() -> Dict[str, Any]:
     """
     List all API endpoints.
@@ -293,7 +293,7 @@ async def list_endpoints() -> Dict[str, Any]:
     }
 
 
-@router.get("/provider-consumer")
+@api_router.get("/provider-consumer")
 async def provider_consumer_relationships() -> Dict[str, Any]:
     """
     Service relationship matrix.
