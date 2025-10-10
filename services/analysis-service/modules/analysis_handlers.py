@@ -403,3 +403,72 @@ class AnalysisHandlers:
         else:
             logger.error("No distributed analysis handler available")
             return {"error": "Handler not available", "analysis_id": f"get-config-{id({})}"}
+
+    @staticmethod
+    async def handle_get_findings(limit: int = 100, severity: str = None, finding_type_filter: str = None):
+        """Get analysis findings with optional filtering."""
+        from ..modules.shared_utils import create_analysis_success_response
+        
+        # Mock findings for now - in production, this would query a findings store
+        mock_findings = [
+            {
+                "id": f"finding-{i}",
+                "type": "consistency",
+                "severity": "medium" if i % 2 == 0 else "low",
+                "message": f"Sample finding {i}",
+                "document_id": f"doc-{i}",
+                "timestamp": "2025-10-10T00:00:00Z"
+            }
+            for i in range(min(5, limit))
+        ]
+        
+        # Filter by severity if provided
+        if severity:
+            mock_findings = [f for f in mock_findings if f["severity"] == severity]
+        
+        # Filter by type if provided
+        if finding_type_filter:
+            mock_findings = [f for f in mock_findings if f["type"] == finding_type_filter]
+        
+        return create_analysis_success_response(
+            "Findings retrieved successfully",
+            {
+                "findings": mock_findings,
+                "total": len(mock_findings),
+                "limit": limit,
+                "severity_filter": severity,
+                "type_filter": finding_type_filter
+            },
+            total_findings=len(mock_findings)
+        )
+
+    @staticmethod
+    def handle_list_detectors():
+        """List available analysis detectors and their capabilities."""
+        from ..modules.shared_utils import create_analysis_success_response
+        
+        detectors = [
+            "semantic_similarity",
+            "sentiment_analysis",
+            "tone_analysis",
+            "quality_assessment",
+            "trend_analysis",
+            "risk_assessment",
+            "maintenance_forecast",
+            "quality_degradation",
+            "change_impact"
+        ]
+        
+        return create_analysis_success_response(
+            "Detectors listed successfully",
+            {
+                "detectors": detectors,
+                "total": len(detectors)
+            },
+            total_detectors=len(detectors)
+        )
+
+    @staticmethod
+    async def handle_content_quality_analysis(req):
+        """Handle content quality analysis (alias for quality assessment)."""
+        return await AnalysisHandlers.handle_content_quality_assessment(req)
