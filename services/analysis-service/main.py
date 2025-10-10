@@ -214,9 +214,12 @@ from .presentation.routes import (
     report_router,
     distributed_router,
     analysis_router,
+    standard_router,
 )
 
 # Include all routers in the FastAPI app
+# Standard endpoints first for API discovery
+app.include_router(standard_router, tags=["Standard Endpoints"])
 app.include_router(status_router, tags=["Status"])
 app.include_router(findings_router, tags=["Findings"])
 app.include_router(remediation_router, tags=["Remediation"])

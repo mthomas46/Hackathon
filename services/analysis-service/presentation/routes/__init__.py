@@ -15,6 +15,7 @@ from .integration_routes import router as integration_router
 from .report_routes import router as report_router
 from .distributed_routes import router as distributed_router
 from .analysis_routes import router as analysis_router
+from .standard_endpoints import router as standard_router
 
 __all__ = [
     "status_router",
@@ -27,4 +28,5 @@ __all__ = [
     "report_router",
     "distributed_router",
     "analysis_router",
+    "standard_router",
 ]
