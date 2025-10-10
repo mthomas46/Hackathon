@@ -10,7 +10,7 @@ LABEL maintainer="LLM Documentation Ecosystem Team"
 LABEL service="architecture-digitizer"
 LABEL version="1.0.0"
 LABEL description="System architecture analysis and digitization service"
-LABEL port="5022"
+LABEL port="5105"
 LABEL dependencies="redis"
 LABEL profile="development"
 
@@ -42,7 +42,7 @@ COPY config/ ./config/
 # Set Python path and environment
 ENV PYTHONPATH=/app
 ENV SERVICE_NAME=architecture-digitizer
-ENV SERVICE_PORT=5022
+ENV SERVICE_PORT=5105
 ENV REDIS_HOST=redis
 ENV ENVIRONMENT=development
 
@@ -51,10 +51,10 @@ RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5022/health || exit 1
+    CMD curl -f http://localhost:5105/health || exit 1
 
 # Expose port
-EXPOSE 5022
+EXPOSE 5105
 
 USER appuser
 
