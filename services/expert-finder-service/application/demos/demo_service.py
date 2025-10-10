@@ -218,7 +218,7 @@ class DemoService:
         ]
         
         # Score all experts
-        matches = self.scoring_service.score_experts(experts, query)
+        matches = [self.scoring_service.calculate_score(expert, query) for expert in experts]
         
         # Sort by score
         matches.sort(key=lambda m: m.overall_score, reverse=True)
@@ -244,12 +244,12 @@ class DemoService:
                     },
                     "scores": {
                         "overall": round(m.overall_score, 3),
-                        "role": round(m.scores.role_score, 3),
-                        "topic": round(m.scores.topic_score, 3),
-                        "service": round(m.scores.service_score, 3),
-                        "document": round(m.scores.document_score, 3)
+                        "role": round(m.role_score, 3),
+                        "topic": round(m.topic_score, 3),
+                        "service": round(m.service_score, 3),
+                        "document": round(m.document_score, 3)
                     },
-                    "match_quality": m.match_quality,
+                    "match_quality": m.match_quality(),
                     "explanation": m.explanation
                 }
                 for idx, m in enumerate(matches[:3])  # Top 3 results
@@ -412,7 +412,7 @@ class DemoService:
                             "topics": m.expert.topics[:5]
                         },
                         "overall_score": round(m.overall_score, 3),
-                        "match_quality": m.match_quality
+                        "match_quality": m.match_quality()
                     }
                     for m in matches[:5]
                 ]
@@ -475,7 +475,7 @@ class DemoService:
                             "document_count": sme.expert.document_count
                         },
                         "overall_score": round(sme.overall_score, 3),
-                        "match_quality": sme.match_quality
+                        "match_quality": sme.match_quality()
                     }
                     for sme in smes[:3]
                 ]
@@ -521,7 +521,7 @@ class DemoService:
             
             # Benchmark scoring
             start = time.perf_counter()
-            matches = self.scoring_service.score_experts(experts, query)
+            matches = [self.scoring_service.calculate_score(expert, query) for expert in experts]
             end = time.perf_counter()
             
             duration_ms = (end - start) * 1000
