@@ -88,6 +88,27 @@ class Endpoint:
             updated_at=datetime.fromisoformat(updated_at) if updated_at else None,
         )
 
+    def __eq__(self, other: object) -> bool:
+        """
+        Endpoints are equal if they have the same path and method.
+        
+        This is a domain-specific equality - two endpoints with the same path
+        and HTTP method are considered the same logical endpoint, even if
+        their descriptions or other metadata differ.
+        """
+        if not isinstance(other, Endpoint):
+            return NotImplemented
+        return self.path == other.path and self.method.upper() == other.method.upper()
+
+    def __hash__(self) -> int:
+        """
+        Hash based on path and method for use in sets/dicts.
+        
+        Must be consistent with __eq__ - endpoints with same path and method
+        must have the same hash.
+        """
+        return hash((self.path, self.method.upper()))
+
 
 @dataclass
 class Service:
@@ -117,15 +138,41 @@ class Service:
         return f"{self.base_url.rstrip('/')}/health"
 
     def add_endpoint(self, endpoint: Endpoint) -> None:
-        """Add an endpoint to this service."""
+        """
+        Add an endpoint to this service.
+        
+        If an endpoint with the same path and method already exists,
+        it will be replaced (preventing duplicates).
+        """
         endpoint.service_id = self.id
-        self.endpoints.append(endpoint)
+        
+        # Check for duplicates (same path and method)
+        existing = self.find_endpoint(endpoint.path, endpoint.method)
+        if existing:
+            # Replace existing endpoint
+            for i, ep in enumerate(self.endpoints):
+                if ep == existing:
+                    self.endpoints[i] = endpoint
+                    break
+        else:
+            # Add new endpoint
+            self.endpoints.append(endpoint)
+        
         self.updated_at = datetime.now(timezone.utc)
 
-    def remove_endpoint(self, endpoint_id: str) -> bool:
-        """Remove an endpoint from this service."""
+    def remove_endpoint(self, path: str, method: str) -> bool:
+        """
+        Remove an endpoint from this service by path and method.
+        
+        Args:
+            path: The endpoint path (e.g., "/api/v1/test")
+            method: The HTTP method (e.g., "GET")
+            
+        Returns:
+            True if endpoint was removed, False if not found
+        """
         for i, endpoint in enumerate(self.endpoints):
-            if endpoint.id == endpoint_id:
+            if endpoint.path == path and endpoint.method.upper() == method.upper():
                 self.endpoints.pop(i)
                 self.updated_at = datetime.now(timezone.utc)
                 return True
@@ -137,6 +184,30 @@ class Service:
             if endpoint.path == path and endpoint.method.upper() == method.upper():
                 return endpoint
         return None
+
+    def get_endpoints_by_tag(self, tag: str) -> List[Endpoint]:
+        """
+        Get all endpoints with a specific tag.
+        
+        Args:
+            tag: The tag to filter by
+            
+        Returns:
+            List of endpoints that have the specified tag
+        """
+        return [ep for ep in self.endpoints if tag in ep.tags]
+
+    def get_endpoints_by_method(self, method: str) -> List[Endpoint]:
+        """
+        Get all endpoints with a specific HTTP method.
+        
+        Args:
+            method: The HTTP method (e.g., "GET", "POST")
+            
+        Returns:
+            List of endpoints with the specified method
+        """
+        return [ep for ep in self.endpoints if ep.method.upper() == method.upper()]
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert service to dictionary representation."""
@@ -154,6 +225,26 @@ class Service:
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+    def __eq__(self, other: object) -> bool:
+        """
+        Services are equal if they have the same name.
+        
+        This is a domain-specific equality - service name is the unique identifier
+        for services in the discovery system, regardless of version or base_url.
+        """
+        if not isinstance(other, Service):
+            return NotImplemented
+        return self.name == other.name
+
+    def __hash__(self) -> int:
+        """
+        Hash based on service name for use in sets/dicts.
+        
+        Must be consistent with __eq__ - services with same name
+        must have the same hash.
+        """
+        return hash(self.name)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Service':
@@ -202,6 +293,7 @@ class DiscoveryResult:
         """Get the number of discovered endpoints."""
         return len(self.service.endpoints) if self.success else 0
 
+    @property
     def summary(self) -> str:
         """Get a human-readable summary of the discovery result."""
         if self.success:
@@ -224,5 +316,5 @@ class DiscoveryResult:
             "discovery_duration_ms": self.discovery_duration_ms,
             "metadata": self.metadata,
             "discovered_at": self.discovered_at.isoformat(),
-            "summary": self.summary(),
+            "summary": self.summary,
         }

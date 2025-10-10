@@ -63,9 +63,18 @@ def sample_service():
 @pytest.fixture
 def sample_service_with_endpoints(sample_service, sample_endpoint):
     """Create a service with multiple endpoints."""
-    endpoint2 = sample_endpoint
-    endpoint2.path = "/health"
-    endpoint2.method = "GET"
+    from domain.entities import Endpoint
+    
+    # Create a second, different endpoint
+    endpoint2 = Endpoint(
+        path="/health",
+        method="GET",
+        summary="Health check endpoint",
+        description="Check service health",
+        parameters=[],
+        responses={"200": {"description": "Healthy"}},
+        tags=["monitoring"]
+    )
     
     sample_service.add_endpoint(sample_endpoint)
     sample_service.add_endpoint(endpoint2)
