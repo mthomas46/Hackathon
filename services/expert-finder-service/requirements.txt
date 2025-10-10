@@ -9,3 +9,7 @@ httpx>=0.25.2          # Async HTTP client (replaces requests)
 tenacity>=8.2.3        # Retry with exponential backoff (replaces custom retry)
 pydantic-settings>=2.1.0  # Type-safe configuration (replaces manual env loading)
 
+# Observability (Phase 8 - HIGH Priority)
+structlog>=23.2.0      # Structured logging for better observability
+prometheus_client>=0.19.0  # Metrics collection for monitoring
+
