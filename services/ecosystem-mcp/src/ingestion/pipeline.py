@@ -1,0 +1,340 @@
+"""
+Main ingestion pipeline orchestrator.
+
+Coordinates scanning, parsing, normalizing, and storing documents.
+"""
+
+import asyncio
+import hashlib
+import logging
+from pathlib import Path
+from typing import Optional
+from uuid import UUID
+from datetime import datetime
+
+from ..config import settings
+from ..models import IngestionMode, IngestionStatus, IngestionJob, IngestionResult
+from ..storage import get_database
+from ..storage.repositories import DocumentRepository
+from ..utils import get_redis_client
+from .scanner import DocumentScanner
+from .parser import DocumentParser
+from .normalizer import DocumentNormalizer
+from .metadata_extractor import MetadataExtractor
+
+logger = logging.getLogger(__name__)
+
+
+class IngestionPipeline:
+    """
+    Complete document ingestion pipeline.
+    
+    Orchestrates:
+    1. Scanning for files
+    2. Queueing documents
+    3. Parallel processing
+    4. Embedding generation
+    5. Storage
+    """
+    
+    def __init__(self):
+        """Initialize ingestion pipeline."""
+        self.scanner = None  # Initialized per job
+        self.parser = DocumentParser()
+        self.normalizer = DocumentNormalizer()
+        self.metadata_extractor = MetadataExtractor()
+        self.redis = get_redis_client()
+        self.db = get_database()
+        
+        logger.info("Ingestion pipeline initialized")
+    
+    async def ingest_mode_1(
+        self,
+        repo_path: Optional[str] = None
+    ) -> IngestionResult:
+        """
+        Mode 1: Quick ingestion (current .md only).
+        
+        Duration: ~1-2 minutes
+        Files: ~100-200 .md files
+        Cost: ~$0.10-0.20
+        
+        Args:
+            repo_path: Repository path (uses settings if None)
+        
+        Returns:
+            Ingestion result
+        """
+        repo_path = repo_path or str(settings.git_repo_path)
+        logger.info(f"Starting Mode 1 ingestion: {repo_path}")
+        
+        # Create job
+        job = await self._create_job(IngestionMode.QUICK)
+        
+        try:
+            # Scan for markdown files
+            self.scanner = DocumentScanner(repo_path)
+            files = self.scanner.scan_markdown_only()
+            
+            logger.info(f"Found {len(files)} markdown files")
+            
+            # Update job with total
+            await self._update_job_total(job.id, len(files))
+            
+            # Queue documents
+            for file_path in files:
+                await self._queue_document(file_path, job.id)
+            
+            # Process queue
+            result = await self._process_queue(job.id)
+            
+            # Complete job
+            await self._complete_job(job.id, result)
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Mode 1 ingestion failed: {e}")
+            await self._fail_job(job.id, str(e))
+            raise
+    
+    async def ingest_mode_2(
+        self,
+        repo_path: Optional[str] = None
+    ) -> IngestionResult:
+        """
+        Mode 2: Standard ingestion (current code + .md).
+        
+        Duration: ~5-10 minutes
+        Files: All current files
+        Cost: ~$0.50-1.00
+        
+        Args:
+            repo_path: Repository path (uses settings if None)
+        
+        Returns:
+            Ingestion result
+        """
+        repo_path = repo_path or str(settings.git_repo_path)
+        logger.info(f"Starting Mode 2 ingestion: {repo_path}")
+        
+        # Create job
+        job = await self._create_job(IngestionMode.STANDARD)
+        
+        try:
+            # Scan for all supported files
+            self.scanner = DocumentScanner(repo_path)
+            files = self.scanner.scan_all_supported()
+            
+            logger.info(f"Found {len(files)} files")
+            
+            # Update job with total
+            await self._update_job_total(job.id, len(files))
+            
+            # Queue documents
+            for file_path in files:
+                await self._queue_document(file_path, job.id)
+            
+            # Process queue
+            result = await self._process_queue(job.id)
+            
+            # Complete job
+            await self._complete_job(job.id, result)
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Mode 2 ingestion failed: {e}")
+            await self._fail_job(job.id, str(e))
+            raise
+    
+    async def _create_job(self, mode: IngestionMode) -> IngestionJob:
+        """Create ingestion job record."""
+        # TODO: Store in database
+        job = IngestionJob(
+            mode=mode,
+            status=IngestionStatus.RUNNING
+        )
+        
+        logger.info(f"Created ingestion job: {job.id}")
+        return job
+    
+    async def _update_job_total(self, job_id: UUID, total: int):
+        """Update job with total document count."""
+        # TODO: Update in database
+        logger.info(f"Job {job_id}: {total} documents to process")
+    
+    async def _queue_document(self, file_path: Path, job_id: UUID):
+        """Queue document for processing."""
+        await self.redis.add_to_stream(
+            self.redis.INGESTION_STREAM,
+            {
+                "job_id": str(job_id),
+                "file_path": str(file_path),
+                "queued_at": datetime.utcnow().isoformat()
+            }
+        )
+    
+    async def _process_queue(self, job_id: UUID) -> IngestionResult:
+        """
+        Process documents from queue.
+        
+        Uses multiple workers for parallel processing.
+        """
+        # Start workers
+        num_workers = min(settings.max_workers, 8)
+        logger.info(f"Starting {num_workers} workers")
+        
+        workers = [
+            self._worker(worker_id=i, job_id=job_id)
+            for i in range(num_workers)
+        ]
+        
+        # Wait for all workers to complete
+        await asyncio.gather(*workers)
+        
+        # Get statistics
+        # TODO: Query from database
+        result = IngestionResult(
+            job_id=job_id,
+            mode=IngestionMode.QUICK,
+            success=True,
+            documents_processed=0,
+            documents_failed=0,
+            embeddings_generated=0,
+            total_cost_usd=0.0,
+            duration_seconds=0.0,
+            summary="Ingestion complete"
+        )
+        
+        return result
+    
+    async def _worker(self, worker_id: int, job_id: UUID):
+        """
+        Worker process for document ingestion.
+        
+        Reads from Redis queue and processes documents.
+        """
+        worker_name = f"worker-{worker_id}"
+        logger.info(f"{worker_name} started")
+        
+        processed = 0
+        
+        while True:
+            # Read from queue
+            messages = await self.redis.read_from_stream(
+                self.redis.INGESTION_STREAM,
+                consumer_name=worker_name,
+                count=1,
+                block=1000
+            )
+            
+            if not messages:
+                # Queue empty, done
+                break
+            
+            for message_id, data in messages:
+                try:
+                    # Process document
+                    await self._process_document(data)
+                    
+                    # Acknowledge
+                    await self.redis.ack_message(
+                        self.redis.INGESTION_STREAM,
+                        message_id
+                    )
+                    
+                    processed += 1
+                    
+                except Exception as e:
+                    logger.error(f"{worker_name} error processing document: {e}")
+                    
+                    # Move to DLQ after max retries
+                    await self.redis.move_to_dlq(
+                        self.redis.INGESTION_STREAM,
+                        message_id,
+                        data,
+                        str(e)
+                    )
+        
+        logger.info(f"{worker_name} completed: {processed} documents")
+    
+    async def _process_document(self, data: dict):
+        """
+        Process a single document.
+        
+        1. Parse file
+        2. Normalize to markdown
+        3. Extract metadata
+        4. Calculate hash
+        5. Store in database
+        6. Queue for embedding
+        """
+        file_path = Path(data["file_path"])
+        
+        # Parse
+        parsed = self.parser.parse(file_path)
+        
+        # Normalize
+        normalized = self.normalizer.normalize(parsed)
+        
+        # Extract metadata
+        service_name = self.scanner.extract_service_name(file_path)
+        metadata = self.metadata_extractor.extract(
+            file_path=file_path,
+            content=parsed["content"],
+            normalized_content=normalized,
+            parsed_metadata=parsed.get("metadata", {}),
+            service_name=service_name
+        )
+        
+        # Calculate content hash
+        content_hash = hashlib.sha256(
+            parsed["content"].encode()
+        ).hexdigest()
+        
+        # Store in database
+        async with self.db.session() as session:
+            repo = DocumentRepository(session)
+            
+            # Check if already exists
+            existing = await repo.get_by_content_hash(content_hash)
+            if existing:
+                logger.debug(f"Document already exists: {file_path}")
+                return
+            
+            # Create document
+            doc = await repo.create(
+                service_name=service_name,
+                file_path=self.scanner.get_relative_path(file_path),
+                original_format=parsed["format"],
+                original_content=parsed["content"],
+                normalized_content=normalized,
+                content_hash=content_hash,
+                metadata=metadata.model_dump()
+            )
+            
+            await session.commit()
+            
+            logger.info(f"Stored document: {file_path}")
+            
+            # Queue for embedding
+            await self.redis.add_to_stream(
+                self.redis.EMBEDDING_STREAM,
+                {
+                    "document_id": str(doc.id),
+                    "content": normalized[:5000],  # Limit size in queue
+                    "service_name": service_name
+                }
+            )
+    
+    async def _complete_job(self, job_id: UUID, result: IngestionResult):
+        """Mark job as complete."""
+        # TODO: Update in database
+        logger.info(f"Job {job_id} completed successfully")
+    
+    async def _fail_job(self, job_id: UUID, error: str):
+        """Mark job as failed."""
+        # TODO: Update in database
+        logger.error(f"Job {job_id} failed: {error}")
+
