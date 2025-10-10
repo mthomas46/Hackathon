@@ -61,10 +61,10 @@ class TestFindExpertsUseCase:
     @pytest.mark.asyncio
     async def test_find_experts_by_role(self, use_case, mock_user_repo, mock_scoring_service):
         """Test finding experts by role."""
-        # Setup mocks
+        # Setup mocks - Return Expert objects, not dicts
         mock_users = [
-            {"user_id": "1", "name": "Alice", "role": "Backend Developer"},
-            {"user_id": "2", "name": "Bob", "role": "Backend Developer"}
+            Expert(user_id="1", name="Alice", role="Backend Developer"),
+            Expert(user_id="2", name="Bob", role="Backend Developer")
         ]
         mock_user_repo.get_users_by_role.return_value = mock_users
         
@@ -97,9 +97,9 @@ class TestFindExpertsUseCase:
     @pytest.mark.asyncio
     async def test_find_experts_by_topics(self, use_case, mock_user_repo, mock_scoring_service):
         """Test finding experts by topics."""
-        # Setup mocks
+        # Setup mocks - Return Expert objects
         mock_users = [
-            {"user_id": "1", "name": "Alice", "topics": ["Python", "FastAPI"]}
+            Expert(user_id="1", name="Alice", topics=["Python", "FastAPI"])
         ]
         mock_user_repo.get_users_by_topics.return_value = mock_users
         
@@ -133,9 +133,9 @@ class TestFindExpertsUseCase:
         self, use_case, mock_user_repo, mock_doc_repo, mock_scoring_service
     ):
         """Test that experts are enriched with document counts."""
-        # Setup mocks
+        # Setup mocks - Return Expert objects
         mock_users = [
-            {"user_id": "1", "name": "Alice"}
+            Expert(user_id="1", name="Alice")
         ]
         mock_user_repo.get_users_by_role.return_value = mock_users
         
@@ -167,9 +167,9 @@ class TestFindExpertsUseCase:
         self, use_case, mock_user_repo, mock_service_repo, mock_scoring_service
     ):
         """Test that experts are enriched with service contributions."""
-        # Setup mocks
+        # Setup mocks - Return Expert objects
         mock_users = [
-            {"user_id": "1", "name": "Alice"}
+            Expert(user_id="1", name="Alice")
         ]
         mock_user_repo.get_users_by_role.return_value = mock_users
         
@@ -219,9 +219,9 @@ class TestFindExpertsUseCase:
         self, use_case, mock_user_repo, mock_scoring_service
     ):
         """Test that result limit is respected."""
-        # Setup mocks
+        # Setup mocks - Return Expert objects
         mock_users = [
-            {"user_id": str(i), "name": f"User{i}"}
+            Expert(user_id=str(i), name=f"User{i}")
             for i in range(20)
         ]
         mock_user_repo.get_users_by_role.return_value = mock_users
@@ -251,10 +251,10 @@ class TestFindExpertsUseCase:
         self, use_case, mock_user_repo, mock_scoring_service
     ):
         """Test that minimum score filter is applied."""
-        # Setup mocks
+        # Setup mocks - Return Expert objects
         mock_users = [
-            {"user_id": "1", "name": "Alice"},
-            {"user_id": "2", "name": "Bob"}
+            Expert(user_id="1", name="Alice"),
+            Expert(user_id="2", name="Bob")
         ]
         mock_user_repo.get_users_by_role.return_value = mock_users
         
@@ -291,8 +291,8 @@ class TestFindExpertsUseCase:
         """Test that duplicate experts are deduplicated."""
         # Setup mocks - same user returned from multiple sources
         mock_users = [
-            {"user_id": "1", "name": "Alice"},
-            {"user_id": "1", "name": "Alice"}  # Duplicate
+            Expert(user_id="1", name="Alice"),
+            Expert(user_id="1", name="Alice")  # Duplicate
         ]
         mock_user_repo.get_users_by_role.return_value = mock_users
         

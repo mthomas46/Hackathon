@@ -98,9 +98,9 @@ class FindExpertsUseCase:
             query
         )
         
+        top_score_msg = f"(top score: {matches[0].overall_score:.2f})" if matches else "(top score: N/A)"
         logger.info(
-            f"Returning {len(matches)} matches "
-            f"(top score: {matches[0].overall_score:.2f if matches else 0})"
+            f"Returning {len(matches)} matches {top_score_msg}"
         )
         
         return matches
