@@ -85,7 +85,7 @@ async def discover_service_endpoint(request: DiscoverRequest) -> Dict[str, Any]:
                     ],
                     "status": "discovered",
                 },
-                message=result.summary()
+                message=result.summary
             )
         else:
             return create_error_response(
