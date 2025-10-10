@@ -11,6 +11,7 @@ pytest-mock>=3.11.0
 faker>=20.1.0          # Realistic test data generation
 factory-boy>=3.3.0     # Test fixture factories
 httpx>=0.25.2          # For testing async HTTP (already in main requirements)
+respx>=0.20.2          # HTTP mocking for httpx
 
 # Code Quality
 pylint>=3.0.0
