@@ -7,31 +7,36 @@ import httpx
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.infrastructure.config import load_service_config
-from services.shared.presentation.api.responses import (
-    create_error_response,
-    create_success_response,
-)
-
-from ...domain.services import discovery_service
 from .models import BulkDiscoverRequest, DiscoverRequest
-from ..utils.discovery_utils import (
-    extract_endpoints_from_spec,
-    fetch_openapi_spec_with_fallback,
-    normalize_service_url,
-)
-
-# Load configuration using standardized system
-config = load_service_config(
-    service_type="discovery-agent",
-    config_file="./config.yaml",  # Optional config file override
-)
 
 # Create router
 router = APIRouter()
+
+
+# Simple helper functions (removed dependencies on shared infrastructure)
+def create_success_response(data: Any, message: str = "Success") -> Dict[str, Any]:
+    """Create standardized success response."""
+    return {
+        "success": True,
+        "message": message,
+        "data": data,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+def create_error_response(error: str, message: str, details: Any = None) -> Dict[str, Any]:
+    """Create standardized error response."""
+    response = {
+        "success": False,
+        "error": error,
+        "message": message,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    if details:
+        response["details"] = details
+    return response
 
 
 @router.post(

@@ -39,38 +39,18 @@ except ImportError:
     def setup_common_middleware(app, **kwargs):
         pass
 
-try:
-    from .infrastructure.events import register_startup_events
-    from .presentation.api.models import BulkDiscoverRequest, DiscoverRequest
-    from .presentation.api.routes import router
-    from .presentation.api.standard_endpoints import router as standard_router
-except ImportError:
-    # Fallback for when running as script
-    import os
-    import sys
+# Import routers directly - these work and have no broken dependencies
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))
 
-    # Add current directory to path for relative imports
-    sys.path.insert(0, os.path.dirname(__file__))
+from presentation.api.standard_endpoints import router as standard_router
+from presentation.api.routes_simple import router
 
-    try:
-        from infrastructure.events import register_startup_events
-        from presentation.api.models import BulkDiscoverRequest, DiscoverRequest
-        from presentation.api.routes import router
-        from presentation.api.standard_endpoints import router as standard_router
-    except ImportError:
-        # Mock implementations for local testing
-        def register_startup_events(app):
-            pass
-
-        class BulkDiscoverRequest:
-            pass
-
-        class DiscoverRequest:
-            pass
-
-        from fastapi import APIRouter
-        router = APIRouter()
-        standard_router = APIRouter()
+# Stub for register_startup_events (not critical for Phase 7)
+def register_startup_events(app):
+    """Startup events - stubbed for now."""
+    pass
 
 # ============================================================================
 # STANDARDIZED CONFIGURATION
@@ -157,8 +137,9 @@ if __name__ == "__main__":
     import uvicorn
     import os
 
-    # Get port from config or environment
-    port = getattr(config.server, 'port', None) or int(os.getenv('SERVICE_API_PORT', '5050'))
-    host = getattr(config.server, 'host', '0.0.0.0')
+    # Get port from environment or use default
+    port = int(os.getenv('SERVICE_API_PORT', '5050'))
+    host = os.getenv('SERVICE_HOST', '0.0.0.0')
 
+    print(f"🚀 Starting discovery-agent on {host}:{port}")
     uvicorn.run(app, host=host, port=port)
