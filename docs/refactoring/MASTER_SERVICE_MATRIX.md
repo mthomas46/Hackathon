@@ -53,18 +53,18 @@ This living document tracks all services in the ecosystem, their capabilities, r
 | **bedrock-proxy** | 1.0.0 | ✅ **COMPLETE** | 85% | ⏳ Planned | AWS Bedrock integration, LLM proxy, template management | AI Code Review Workflow, Documentation Generation Workflow | Oct 10, 2025 |
 | **analysis-service** | 1.0.0 | ✅ **COMPLETE** | 91% | ⏳ Planned | Code analysis, architecture detection, pattern recognition, CQRS | Architecture Digitization Workflow, Code Quality Workflow | Oct 10, 2025 |
 | **architecture-digitizer** | 1.0.0 | ✅ **COMPLETE** | 48% | ⏳ Planned | Diagram normalization (Miro, FigJam, Lucid, Confluence), file processing | Architecture Documentation Workflow, Diagram Analysis Workflow | Oct 10, 2025 |
+| **expert-finder-service** | 1.0.0 | ✅ **COMPLETE** | 43% (80%+ core) | ⏳ Planned | Expert discovery, SME identification, relevance scoring, teammate finding | Expert Finding Workflow, Team Formation Workflow | Oct 10, 2025 |
 
 ### Services In Progress
 
 | Service | Version | Refactor Status | Current Phase | Estimated Completion | Next Steps |
 |---------|---------|----------------|---------------|---------------------|------------|
-| *(None currently in progress)* | - | - | - | - | - |
+| **doc-store** | - | 🔄 **IN PROGRESS** | Phase 1 (Assessment) | Oct 10, 2025 | Complete assessment, analyze architecture |
 
 ### Services Pending Refactoring
 
 | Service | Priority | Estimated Effort | Dependencies | Rationale |
 |---------|----------|------------------|--------------|-----------|
-| **doc-store** | High | 8-12h | Redis, shared modules | Core document storage, used by multiple services |
 | **embedding-service** | High | 8-12h | doc-store, shared modules | Core embedding generation for RAG |
 | **qdrant-service** | High | 8-12h | doc-store, embedding-service | Vector database integration |
 | **log-collector-service** | Medium | 6-8h | Redis, shared modules | Centralized logging for ecosystem |
