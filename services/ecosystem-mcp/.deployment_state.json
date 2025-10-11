@@ -1,5 +1,8 @@
 {
-  "state": "stopped",
-  "timestamp": 1760218508.273704,
-  "metadata": {}
+  "state": "running",
+  "timestamp": 1760218786.249484,
+  "metadata": {
+    "pid": 26620,
+    "started_at": 1760218786.249483
+  }
 }

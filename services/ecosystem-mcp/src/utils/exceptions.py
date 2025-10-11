@@ -59,3 +59,8 @@ class IngestionError(EcosystemMCPError):
     """Document ingestion failed."""
     pass
 
+
+class ConfigError(EcosystemMCPError):
+    """Configuration error."""
+    pass
+

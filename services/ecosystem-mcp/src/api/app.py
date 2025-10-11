@@ -28,6 +28,7 @@ from ..utils.log_rotation import setup_log_rotation
 
 from .routes import health, admin, search, documents, query, logs, ollama
 from .middleware import RequestIDMiddleware
+from .exception_handlers import register_exception_handlers
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +240,9 @@ def create_app() -> FastAPI:
     
     # Attach rate limiter to app state
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    
+    # Register exception handlers (includes rate limit handler)
+    register_exception_handlers(app)
     
     # Request ID middleware (for distributed tracing)
     app.add_middleware(RequestIDMiddleware)
@@ -290,18 +293,6 @@ def create_app() -> FastAPI:
             "docs": "/docs",
             "openapi": "/openapi.json"
         }
-    
-    # Global exception handler
-    @app.exception_handler(Exception)
-    async def global_exception_handler(request, exc):
-        logger.error(f"Unhandled exception: {exc}", exc_info=True)
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": "Internal server error",
-                "message": str(exc)
-            }
-        )
     
     return app
 
