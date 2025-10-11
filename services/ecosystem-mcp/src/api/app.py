@@ -260,6 +260,10 @@ def create_app() -> FastAPI:
     # 3. Request ID (for distributed tracing)
     app.add_middleware(RequestIDMiddleware)
     
+    # Response compression for better performance
+    from fastapi.middleware.gzip import GZipMiddleware
+    app.add_middleware(GZipMiddleware, minimum_size=1000)  # Compress responses > 1KB
+    
     # CORS middleware - Configured for security
     # In production, restrict origins to specific domains
     allowed_origins = [
