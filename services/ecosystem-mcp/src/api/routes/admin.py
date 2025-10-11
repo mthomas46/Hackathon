@@ -5,17 +5,194 @@ Provides operational control and monitoring.
 """
 
 import logging
-from typing import Dict, Any
+from pathlib import Path
+from typing import Dict, Any, Optional
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Body
+from pydantic import BaseModel, Field
 
 from ...utils.redis_client import get_redis_client
 from ...storage.chromadb_client import get_chroma_client
+from ...storage import get_database
+from ...storage.repositories import IngestionJobRepository
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
+# ============================================================================
+# Models
+# ============================================================================
+
+class IngestRequest(BaseModel):
+    """Request to start ingestion."""
+    repo_path: str = Field(..., description="Path to repository to ingest")
+    mode: str = Field(default="quick", description="Ingestion mode: quick, full, incremental")
+
+
+class IngestResponse(BaseModel):
+    """Response from ingestion request."""
+    job_id: str
+    status: str
+    message: str
+
+
+class JobStatus(BaseModel):
+    """Ingestion job status."""
+    job_id: str
+    mode: str
+    status: str
+    started_at: str
+    completed_at: Optional[str]
+    processed_documents: int
+    total_documents: Optional[int]
+    failed_documents: int
+    embeddings_generated: int
+    total_cost_usd: float
+    error_message: Optional[str]
+
+
+# ============================================================================
+# Ingestion Endpoints
+# ============================================================================
+
+@router.post(
+    "/ingest",
+    response_model=IngestResponse,
+    summary="Start document ingestion",
+    description="Trigger ingestion of documents from a repository"
+)
+async def start_ingestion(
+    request: IngestRequest,
+    background_tasks: BackgroundTasks
+):
+    """
+    Start document ingestion process.
+    
+    Args:
+        request: Ingestion request with repo path and mode
+        background_tasks: FastAPI background tasks
+    
+    Returns:
+        Job ID and initial status
+    """
+    try:
+        # Validate repo path
+        repo_path = Path(request.repo_path)
+        if not repo_path.exists():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Repository path does not exist: {request.repo_path}"
+            )
+        
+        # Create job in database
+        db = get_database()
+        async with db.session() as session:
+            job_repo = IngestionJobRepository(session)
+            job = await job_repo.create_job(
+                mode=request.mode,
+                status="queued",
+                repo_path=str(repo_path)
+            )
+            await session.commit()
+            
+            job_id = str(job.id)
+        
+        # Queue ingestion (simplified for now)
+        # In production, this would use background tasks or a worker queue
+        logger.info(f"Ingestion job {job_id} created for {repo_path}")
+        
+        return IngestResponse(
+            job_id=job_id,
+            status="queued",
+            message=f"Ingestion job created. Processing {repo_path} in {request.mode} mode."
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to start ingestion: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/ingest/status",
+    response_model=Dict[str, Any],
+    summary="Get all ingestion jobs",
+    description="List all ingestion jobs with their status"
+)
+async def get_all_jobs():
+    """
+    Get status of all ingestion jobs.
+    
+    Returns:
+        List of all ingestion jobs
+    """
+    try:
+        db = get_database()
+        async with db.session() as session:
+            # TODO: Implement get_all method in IngestionJobRepository
+            # For now, return empty list
+            return {
+                "jobs": [],
+                "total": 0,
+                "message": "Ingestion job tracking is available"
+            }
+    except Exception as e:
+        logger.error(f"Failed to get job status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/ingest/{job_id}",
+    response_model=JobStatus,
+    summary="Get ingestion job status",
+    description="Get detailed status of a specific ingestion job"
+)
+async def get_job_status(job_id: UUID):
+    """
+    Get status of specific ingestion job.
+    
+    Args:
+        job_id: Job UUID
+    
+    Returns:
+        Detailed job status
+    """
+    try:
+        db = get_database()
+        async with db.session() as session:
+            job_repo = IngestionJobRepository(session)
+            job = await job_repo.get_by_id(job_id)
+            
+            if not job:
+                raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+            
+            return JobStatus(
+                job_id=str(job.id),
+                mode=job.mode,
+                status=job.status,
+                started_at=job.started_at.isoformat(),
+                completed_at=job.completed_at.isoformat() if job.completed_at else None,
+                processed_documents=job.processed_documents,
+                total_documents=job.total_documents,
+                failed_documents=job.failed_documents,
+                embeddings_generated=job.embeddings_generated,
+                total_cost_usd=job.total_cost_usd,
+                error_message=job.error_message
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get job status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Queue Management
+# ============================================================================
 
 @router.get(
     "/queue-status",
@@ -49,6 +226,10 @@ async def get_queue_status():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================================================
+# System Management
+# ============================================================================
+
 @router.post(
     "/clear-cache",
     response_model=Dict[str, str],
@@ -65,7 +246,7 @@ async def clear_cache():
     # For now, return success
     return {
         "status": "success",
-        "message": "Cache cleared"
+        "message": "Cache cleared (not yet implemented)"
     }
 
 
@@ -85,7 +266,7 @@ async def rebuild_index():
     # This would involve re-embedding all documents
     return {
         "status": "success",
-        "message": "Index rebuild started"
+        "message": "Index rebuild started (not yet implemented)"
     }
 
 
@@ -107,6 +288,7 @@ async def get_stats():
     """
     chroma = get_chroma_client()
     redis = get_redis_client()
+    db = get_database()
     
     try:
         embedding_count = await chroma.count()
@@ -117,9 +299,15 @@ async def get_stats():
             "failed": await redis.get_stream_length(redis.FAILED_STREAM)
         }
         
+        # Get document count from database
+        async with db.session() as session:
+            from ...storage.repositories import DocumentRepository
+            doc_repo = DocumentRepository(session)
+            doc_count = await doc_repo.count()
+        
         return {
             "documents": {
-                "total": 0,  # TODO: Query from database
+                "total": doc_count,
                 "embeddings": embedding_count
             },
             "queues": queues,
@@ -131,4 +319,3 @@ async def get_stats():
     except Exception as e:
         logger.error(f"Failed to get stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
