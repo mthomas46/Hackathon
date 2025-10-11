@@ -1,6 +1,8 @@
-"""API middleware."""
+"""
+API middleware components.
+"""
 
-from .request_id import RequestIDMiddleware, get_request_id
+from .request_id import RequestIDMiddleware
+from .timeout import TimeoutMiddleware
 
-__all__ = ["RequestIDMiddleware", "get_request_id"]
-
+__all__ = ["RequestIDMiddleware", "TimeoutMiddleware"]
