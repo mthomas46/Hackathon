@@ -304,19 +304,38 @@ class IngestionPipeline:
     
     async def _create_job(self, mode: IngestionMode) -> IngestionJob:
         """Create ingestion job record."""
-        # TODO: Store in database
-        job = IngestionJob(
-            mode=mode,
-            status=IngestionStatus.RUNNING
-        )
-        
-        logger.info(f"Created ingestion job: {job.id}")
-        return job
+        # Persist to database
+        async with self.db.session() as session:
+            from ..storage.repositories import IngestionJobRepository
+            repo = IngestionJobRepository(session)
+            
+            job_model = await repo.create_job(
+                mode=mode.value,
+                status="running"
+            )
+            await session.commit()
+            
+            # Convert to domain model
+            job = IngestionJob(
+                id=job_model.id,
+                mode=mode,
+                status=IngestionStatus.RUNNING
+            )
+            
+            logger.info(f"Created ingestion job: {job.id}")
+            return job
     
     async def _update_job_total(self, job_id: UUID, total: int):
         """Update job with total document count."""
-        # TODO: Update in database
-        logger.info(f"Job {job_id}: {total} documents to process")
+        # Persist to database
+        async with self.db.session() as session:
+            from ..storage.repositories import IngestionJobRepository
+            repo = IngestionJobRepository(session)
+            
+            await repo.update_total(job_id, total)
+            await session.commit()
+            
+            logger.info(f"Job {job_id}: {total} documents to process")
     
     async def _queue_document(self, file_path: Path, job_id: UUID):
         """Queue document for processing."""
@@ -347,21 +366,31 @@ class IngestionPipeline:
         # Wait for all workers to complete
         await asyncio.gather(*workers)
         
-        # Get statistics
-        # TODO: Query from database
-        result = IngestionResult(
-            job_id=job_id,
-            mode=IngestionMode.QUICK,
-            success=True,
-            documents_processed=0,
-            documents_failed=0,
-            embeddings_generated=0,
-            total_cost_usd=0.0,
-            duration_seconds=0.0,
-            summary="Ingestion complete"
-        )
-        
-        return result
+        # Get statistics from database
+        async with self.db.session() as session:
+            from ..storage.repositories import IngestionJobRepository
+            repo = IngestionJobRepository(session)
+            
+            job_model = await repo.get_by_id(job_id)
+            if not job_model:
+                raise ValueError(f"Job {job_id} not found in database")
+            
+            # Calculate duration
+            duration = (datetime.utcnow() - job_model.started_at).total_seconds()
+            
+            result = IngestionResult(
+                job_id=job_id,
+                mode=IngestionMode(job_model.mode),
+                success=job_model.status == "completed",
+                documents_processed=job_model.processed_documents,
+                documents_failed=job_model.failed_documents,
+                embeddings_generated=job_model.embeddings_generated,
+                total_cost_usd=job_model.total_cost_usd,
+                duration_seconds=duration,
+                summary=job_model.error_message or "Ingestion complete"
+            )
+            
+            return result
     
     async def _worker(self, worker_id: int, job_id: UUID):
         """
@@ -390,7 +419,7 @@ class IngestionPipeline:
             for message_id, data in messages:
                 try:
                     # Process document
-                    await self._process_document(data)
+                    await self._process_document(data, job_id)
                     
                     # Acknowledge
                     await self.redis.ack_message(
@@ -403,6 +432,13 @@ class IngestionPipeline:
                 except Exception as e:
                     logger.error(f"{worker_name} error processing document: {e}")
                     
+                    # Update failure count in database
+                    async with self.db.session() as session:
+                        from ..storage.repositories import IngestionJobRepository
+                        repo = IngestionJobRepository(session)
+                        await repo.increment_failed(job_id)
+                        await session.commit()
+                    
                     # Move to DLQ after max retries
                     await self.redis.move_to_dlq(
                         self.redis.INGESTION_STREAM,
@@ -413,7 +449,7 @@ class IngestionPipeline:
         
         logger.info(f"{worker_name} completed: {processed} documents")
     
-    async def _process_document(self, data: dict):
+    async def _process_document(self, data: dict, job_id: UUID):
         """
         Process a single document.
         
@@ -423,6 +459,7 @@ class IngestionPipeline:
         4. Calculate hash
         5. Store in database
         6. Queue for embedding
+        7. Update job progress
         """
         file_path = Path(data["file_path"])
         
@@ -472,6 +509,13 @@ class IngestionPipeline:
             
             logger.info(f"Stored document: {file_path}")
             
+            # Update job progress
+            async with self.db.session() as session:
+                from ..storage.repositories import IngestionJobRepository
+                repo = IngestionJobRepository(session)
+                await repo.increment_processed(job_id)
+                await session.commit()
+            
             # Queue for embedding
             await self.redis.add_to_stream(
                 self.redis.EMBEDDING_STREAM,
@@ -484,11 +528,27 @@ class IngestionPipeline:
     
     async def _complete_job(self, job_id: UUID, result: IngestionResult):
         """Mark job as complete."""
-        # TODO: Update in database
-        logger.info(f"Job {job_id} completed successfully")
+        # Persist to database
+        async with self.db.session() as session:
+            from ..storage.repositories import IngestionJobRepository
+            repo = IngestionJobRepository(session)
+            
+            await repo.complete_job(
+                job_id=job_id,
+                total_cost=result.total_cost_usd,
+                summary=result.summary
+            )
+            
+            logger.info(f"Job {job_id} completed successfully")
     
     async def _fail_job(self, job_id: UUID, error: str):
         """Mark job as failed."""
-        # TODO: Update in database
-        logger.error(f"Job {job_id} failed: {error}")
+        # Persist to database
+        async with self.db.session() as session:
+            from ..storage.repositories import IngestionJobRepository
+            repo = IngestionJobRepository(session)
+            
+            await repo.fail_job(job_id=job_id, error=error)
+            
+            logger.error(f"Job {job_id} failed: {error}")
 

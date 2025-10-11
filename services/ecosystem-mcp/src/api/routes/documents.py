@@ -9,7 +9,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, validator, Field
 
 from ...storage import get_database
 from ...storage.repositories import DocumentRepository
@@ -35,6 +35,10 @@ class DocumentListResponse(BaseModel):
     """Document list response."""
     documents: List[DocumentResponse]
     total: int
+    limit: int
+    offset: int
+    has_next: bool
+    has_previous: bool
 
 
 @router.get(
@@ -44,9 +48,9 @@ class DocumentListResponse(BaseModel):
     description="Query and list documents with filters"
 )
 async def list_documents(
-    service: Optional[str] = Query(None, description="Filter by service name"),
-    limit: int = Query(50, ge=1, le=200, description="Maximum results"),
-    offset: int = Query(0, ge=0, description="Pagination offset")
+    service: Optional[str] = Query(None, description="Filter by service name", max_length=100),
+    limit: int = Query(50, ge=1, le=500, description="Maximum results"),
+    offset: int = Query(0, ge=0, le=10000, description="Pagination offset")
 ):
     """
     List documents with optional filtering.
@@ -61,6 +65,14 @@ async def list_documents(
     """
     db = get_database()
     
+    # Validate service name if provided
+    if service:
+        from ...utils.validation import validate_service_name
+        try:
+            service = validate_service_name(service)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+    
     async with db.session() as session:
         repo = DocumentRepository(session)
         
@@ -70,6 +82,9 @@ async def list_documents(
         else:
             documents = await repo.get_all(limit=limit, offset=offset)
             total = await repo.count()
+        
+        has_next = (offset + limit) < total
+        has_previous = offset > 0
         
         return DocumentListResponse(
             documents=[
@@ -85,7 +100,11 @@ async def list_documents(
                 )
                 for doc in documents
             ],
-            total=total
+            total=total,
+            limit=limit,
+            offset=offset,
+            has_next=has_next,
+            has_previous=has_previous
         )
 
 

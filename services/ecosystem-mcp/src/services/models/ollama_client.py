@@ -130,12 +130,12 @@ class OllamaClient:
         
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
-                f"{self.base_url}/api/embeddings",
+                f"{self.base_url}/api/embed",
                 json=payload
             )
             response.raise_for_status()
             data = response.json()
-            return data["embedding"]
+            return data["embeddings"][0]  # Ollama returns list of embeddings
     
     async def list_models(self) -> list[str]:
         """

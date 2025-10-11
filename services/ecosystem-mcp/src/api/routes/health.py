@@ -6,18 +6,23 @@ Provides service health status and dependency checks.
 
 import logging
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from enum import Enum
 
 from fastapi import APIRouter, status
+from pydantic import BaseModel, Field
 
 from ...storage import get_database
 from ...storage.chromadb_client import get_chroma_client
 from ...utils.redis_client import get_redis_client
+from ...services.models.ollama_client import get_ollama_client
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Service startup time
+_startup_time = datetime.utcnow()
 
 
 class HealthStatus(Enum):
@@ -32,9 +37,47 @@ class HealthStatus(Enum):
 CRITICAL_SERVICES = ["database", "redis"]
 
 
+class ComponentHealth(BaseModel):
+    """Health status for a single component."""
+    status: str = Field(..., description="Component status (healthy/degraded/unhealthy)")
+    message: Optional[str] = Field(None, description="Status message or error")
+    response_time_ms: Optional[float] = Field(None, description="Health check response time")
+
+
+class HealthResponse(BaseModel):
+    """Complete health check response."""
+    status: str = Field(..., description="Overall service status")
+    version: str = Field(..., description="Service version")
+    timestamp: str = Field(..., description="Health check timestamp (ISO 8601)")
+    uptime_seconds: float = Field(..., description="Service uptime in seconds")
+    components: Dict[str, ComponentHealth] = Field(..., description="Individual component health")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "status": "healthy",
+                "version": "0.1.0",
+                "timestamp": "2025-10-11T16:20:00.000Z",
+                "uptime_seconds": 3600.5,
+                "components": {
+                    "database": {
+                        "status": "healthy",
+                        "message": "Connected",
+                        "response_time_ms": 2.5
+                    },
+                    "redis": {
+                        "status": "healthy",
+                        "message": "Connected",
+                        "response_time_ms": 1.2
+                    }
+                }
+            }
+        }
+
+
 @router.get(
     "/health",
-    response_model=Dict[str, Any],
+    response_model=HealthResponse,
     summary="Health check",
     description="Check service health and dependencies",
     responses={
@@ -44,88 +87,130 @@ CRITICAL_SERVICES = ["database", "redis"]
 )
 async def health_check():
     """
-    Comprehensive health check with accurate status reporting.
+    Comprehensive health check with component details.
     
     Checks:
     - Service status
     - Database connectivity (CRITICAL)
     - Redis connectivity (CRITICAL)
     - ChromaDB connectivity (optional)
+    - Ollama connectivity (optional)
     
     Returns:
         - HEALTHY: All systems operational
-        - DEGRADED: Non-critical systems down (e.g., ChromaDB)
+        - DEGRADED: Non-critical systems down (ChromaDB, Ollama)
         - UNHEALTHY: Critical systems down (database, redis)
     """
+    import time
+    components = {}
+    
     # Check database
-    db_healthy = False
-    db_error = None
+    start = time.time()
     try:
         db = get_database()
         db_healthy = await db.health_check()
+        response_time = (time.time() - start) * 1000
+        components["database"] = ComponentHealth(
+            status="healthy" if db_healthy else "unhealthy",
+            message="Connected" if db_healthy else "Connection failed",
+            response_time_ms=round(response_time, 2)
+        )
     except Exception as e:
-        db_error = str(e)
+        response_time = (time.time() - start) * 1000
+        components["database"] = ComponentHealth(
+            status="unhealthy",
+            message=str(e),
+            response_time_ms=round(response_time, 2)
+        )
         logger.error(f"Database health check failed: {e}")
     
-    # Check ChromaDB
-    chroma_healthy = False
-    chroma_error = None
-    try:
-        chroma = get_chroma_client()
-        chroma_healthy = await chroma.health_check()
-    except Exception as e:
-        chroma_error = str(e)
-        logger.warning(f"ChromaDB health check failed: {e}")
-    
     # Check Redis
-    redis_healthy = False
-    redis_error = None
+    start = time.time()
     try:
         redis = get_redis_client()
         redis_healthy = await redis.health_check()
+        response_time = (time.time() - start) * 1000
+        components["redis"] = ComponentHealth(
+            status="healthy" if redis_healthy else "unhealthy",
+            message="Connected" if redis_healthy else "Connection failed",
+            response_time_ms=round(response_time, 2)
+        )
     except Exception as e:
-        redis_error = str(e)
+        response_time = (time.time() - start) * 1000
+        components["redis"] = ComponentHealth(
+            status="unhealthy",
+            message=str(e),
+            response_time_ms=round(response_time, 2)
+        )
         logger.error(f"Redis health check failed: {e}")
     
-    # Collect service statuses
-    services_info = {
-        "database": {"healthy": db_healthy, "critical": True, "error": db_error},
-        "chromadb": {"healthy": chroma_healthy, "critical": False, "error": chroma_error},
-        "redis": {"healthy": redis_healthy, "critical": True, "error": redis_error},
-    }
+    # Check ChromaDB (non-critical)
+    start = time.time()
+    try:
+        chroma = get_chroma_client()
+        chroma_healthy = await chroma.health_check()
+        response_time = (time.time() - start) * 1000
+        components["chromadb"] = ComponentHealth(
+            status="healthy" if chroma_healthy else "degraded",
+            message="Connected" if chroma_healthy else "Connection failed",
+            response_time_ms=round(response_time, 2)
+        )
+    except Exception as e:
+        response_time = (time.time() - start) * 1000
+        components["chromadb"] = ComponentHealth(
+            status="degraded",
+            message=str(e),
+            response_time_ms=round(response_time, 2)
+        )
+        logger.warning(f"ChromaDB health check failed: {e}")
+    
+    # Check Ollama (non-critical)
+    start = time.time()
+    try:
+        ollama = get_ollama_client()
+        ollama_healthy = await ollama.is_available()
+        response_time = (time.time() - start) * 1000
+        components["ollama"] = ComponentHealth(
+            status="healthy" if ollama_healthy else "degraded",
+            message="Connected" if ollama_healthy else "Not available",
+            response_time_ms=round(response_time, 2)
+        )
+    except Exception as e:
+        response_time = (time.time() - start) * 1000
+        components["ollama"] = ComponentHealth(
+            status="degraded",
+            message=str(e),
+            response_time_ms=round(response_time, 2)
+        )
+        logger.warning(f"Ollama health check failed: {e}")
     
     # Determine overall status
-    critical_down = [name for name, info in services_info.items() if info["critical"] and not info["healthy"]]
-    non_critical_down = [name for name, info in services_info.items() if not info["critical"] and not info["healthy"]]
+    critical_unhealthy = (
+        components["database"].status == "unhealthy" or 
+        components["redis"].status == "unhealthy"
+    )
+    non_critical_down = (
+        components.get("chromadb", ComponentHealth(status="healthy", message="")).status == "degraded" or
+        components.get("ollama", ComponentHealth(status="healthy", message="")).status == "degraded"
+    )
     
-    if critical_down:
-        health_status = HealthStatus.UNHEALTHY
+    if critical_unhealthy:
+        overall_status = "unhealthy"
     elif non_critical_down:
-        health_status = HealthStatus.DEGRADED
+        overall_status = "degraded"
     else:
-        health_status = HealthStatus.HEALTHY
+        overall_status = "healthy"
     
-    # Build response
-    response = {
-        "status": health_status.value,
-        "timestamp": datetime.utcnow().isoformat(),
-        "critical_services": CRITICAL_SERVICES,
-        "services": {
-            name: info["healthy"] for name, info in services_info.items()
-        },
-        "details": {
-            "all_healthy": not (critical_down or non_critical_down),
-            "degraded_services": non_critical_down if health_status == HealthStatus.DEGRADED else [],
-            "failed_services": critical_down if health_status == HealthStatus.UNHEALTHY else [],
-        }
-    }
+    # Calculate uptime
+    uptime = (datetime.utcnow() - _startup_time).total_seconds()
     
-    # Add error details if any
-    errors = {name: info["error"] for name, info in services_info.items() if info["error"]}
-    if errors:
-        response["errors"] = errors
-    
-    return response
+    return HealthResponse(
+        status=overall_status,
+        version="0.1.0",
+        timestamp=datetime.utcnow().isoformat(),
+        uptime_seconds=round(uptime, 2),
+        components=components
+    )
 
 
 @router.get(

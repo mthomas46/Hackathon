@@ -6,7 +6,7 @@ import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -32,9 +32,23 @@ class SearchResult(BaseModel):
 
 class SearchRequest(BaseModel):
     """Search request model."""
-    query: str = Field(..., description="Search query", min_length=1)
-    service_name: Optional[str] = Field(None, description="Filter by service name")
+    query: str = Field(..., description="Search query", min_length=1, max_length=500)
+    service_name: Optional[str] = Field(None, description="Filter by service name", max_length=100)
     limit: int = Field(10, ge=1, le=100, description="Maximum results")
+    
+    @validator('query')
+    def sanitize_query(cls, v):
+        """Sanitize and validate query."""
+        from ...utils.validation import sanitize_and_validate_query
+        return sanitize_and_validate_query(v)
+    
+    @validator('service_name')
+    def validate_service(cls, v):
+        """Validate service name."""
+        if v is None:
+            return v
+        from ...utils.validation import validate_service_name
+        return validate_service_name(v)
 
 
 class SearchResponse(BaseModel):
@@ -51,15 +65,15 @@ class SearchResponse(BaseModel):
     description="Search across all documents using semantic similarity"
 )
 @limiter.limit("10/minute")  # ✅ Rate limit: 10 searches per minute
-async def search_documents(http_request: Request, request: SearchRequest):
+async def search_documents(search_request: SearchRequest, request: Request):
     """
     Perform semantic search across documents.
     
     Uses Ollama for embedding generation and ChromaDB for vector similarity search.
     
     Args:
-        http_request: FastAPI request (for rate limiting)
-        request: Search request with query and filters
+        request: FastAPI request (for rate limiting) - must be named 'request' for slowapi
+        search_request: Search request with query and filters
     
     Returns:
         Search results with relevance scores and metadata
@@ -69,7 +83,7 @@ async def search_documents(http_request: Request, request: SearchRequest):
     """
     try:
         # Step 1: Generate embedding for query using Ollama
-        logger.info(f"Generating embedding for query: {request.query[:50]}...")
+        logger.info(f"Generating embedding for query: {search_request.query[:50]}...")
         ollama = get_ollama_client()
         
         if not await ollama.is_available():
@@ -79,32 +93,31 @@ async def search_documents(http_request: Request, request: SearchRequest):
             )
         
         # Generate query embedding
-        query_embedding = await ollama.generate_embedding(
-            request.query,
-            model=None  # Uses default embedding model
+        query_embedding = await ollama.embed(
+            search_request.query
         )
-        
+
         if not query_embedding:
             raise HTTPException(
                 status_code=500,
                 detail="Failed to generate query embedding"
             )
-        
+
         logger.info(f"Query embedding generated: {len(query_embedding)} dimensions")
-        
+
         # Step 2: Search ChromaDB for similar vectors
-        logger.info(f"Searching ChromaDB for {request.limit} similar documents...")
+        logger.info(f"Searching ChromaDB for {search_request.limit} similar documents...")
         chroma = get_chroma_client()
-        
+
         # Build where filter if service filter provided
         where_filter = None
-        if request.service_name:
-            where_filter = {"service_name": request.service_name}
-        
+        if search_request.service_name:
+            where_filter = {"service_name": search_request.service_name}
+
         # Query ChromaDB
         search_results = await chroma.query(
             query_embeddings=[query_embedding],
-            n_results=request.limit,
+            n_results=search_request.limit,
             where=where_filter,
             include=["metadatas", "documents", "distances"]
         )
@@ -175,7 +188,7 @@ async def search_documents(http_request: Request, request: SearchRequest):
         
         return SearchResponse(
             results=results,
-            query=request.query,
+            query=search_request.query,
             total_results=len(results)
         )
         

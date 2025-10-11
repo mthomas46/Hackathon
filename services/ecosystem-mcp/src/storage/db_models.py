@@ -43,7 +43,7 @@ class DocumentModel(Base):
     
     # Relationships
     commit = relationship("GitCommitModel", back_populates="documents")
-    embedding = relationship("EmbeddingModel", back_populates="document", uselist=False)
+    embedding = relationship("EmbeddingModel", back_populates="document", uselist=False, foreign_keys="[EmbeddingModel.document_id]")
     versions = relationship("DocumentVersionModel", back_populates="document", cascade="all, delete-orphan")
     
     # Constraints
@@ -104,7 +104,7 @@ class EmbeddingModel(Base):
     extra_metadata = Column(JSONB)
     
     # Relationships
-    document = relationship("DocumentModel", back_populates="embedding")
+    document = relationship("DocumentModel", back_populates="embedding", foreign_keys=[document_id])
     
     # Constraints
     __table_args__ = (
@@ -154,9 +154,10 @@ class IngestionJobModel(Base):
     status = Column(String(50), nullable=False, index=True)
     started_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
     completed_at = Column(DateTime)
-    documents_processed = Column(Integer, nullable=False, default=0)
-    documents_total = Column(Integer)
-    documents_failed = Column(Integer, nullable=False, default=0)
+    processed_documents = Column(Integer, nullable=False, default=0)
+    total_documents = Column(Integer)
+    failed_documents = Column(Integer, nullable=False, default=0)
+    repo_path = Column(Text)
     embeddings_generated = Column(Integer, nullable=False, default=0)
     total_cost_usd = Column(Float, nullable=False, default=0.0)
     error_message = Column(Text)

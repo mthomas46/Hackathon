@@ -9,7 +9,7 @@ from typing import Optional, List
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -24,14 +24,31 @@ limiter = Limiter(key_func=get_remote_address)
 
 class DocumentQuery(BaseModel):
     """Document query parameters."""
-    service_name: Optional[str] = Field(None, description="Filter by service name")
-    file_path: Optional[str] = Field(None, description="Filter by file path (partial match)")
-    phase: Optional[str] = Field(None, description="Filter by phase")
+    service_name: Optional[str] = Field(None, description="Filter by service name", max_length=100)
+    file_path: Optional[str] = Field(None, description="Filter by file path (partial match)", max_length=500)
+    phase: Optional[str] = Field(None, description="Filter by phase", max_length=50)
     tags: Optional[List[str]] = Field(None, description="Filter by tags (any match)")
-    min_word_count: Optional[int] = Field(None, description="Minimum word count")
+    min_word_count: Optional[int] = Field(None, description="Minimum word count", ge=0)
     has_diagrams: Optional[bool] = Field(None, description="Filter by diagram presence")
     limit: int = Field(50, ge=1, le=500, description="Maximum results")
-    offset: int = Field(0, ge=0, description="Pagination offset")
+    offset: int = Field(0, ge=0, le=10000, description="Pagination offset")
+    
+    @validator('service_name')
+    def validate_service(cls, v):
+        """Validate service name."""
+        if v is None:
+            return v
+        from ...utils.validation import validate_service_name
+        return validate_service_name(v)
+    
+    @validator('file_path')
+    def validate_path(cls, v):
+        """Validate file path."""
+        if v is None:
+            return v
+        # Just sanitize HTML, don't validate against filesystem
+        from ...utils.validation import sanitize_html
+        return sanitize_html(v)
 
 
 class DocumentResult(BaseModel):
@@ -54,6 +71,8 @@ class QueryResponse(BaseModel):
     total: int
     limit: int
     offset: int
+    has_next: bool
+    has_previous: bool
 
 
 class DocumentValidation(BaseModel):
@@ -127,11 +146,16 @@ async def query_documents(request: Request, query: DocumentQuery):
             for doc in documents
         ]
         
+        has_next = (query.offset + query.limit) < total
+        has_previous = query.offset > 0
+        
         return QueryResponse(
             documents=results,
             total=total,
             limit=query.limit,
-            offset=query.offset
+            offset=query.offset,
+            has_next=has_next,
+            has_previous=has_previous
         )
 
 
