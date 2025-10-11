@@ -39,7 +39,7 @@ class DocumentModel(Base):
     git_commit_sha = Column(String(40), ForeignKey("git_commits.sha"), index=True)
     is_latest = Column(Boolean, nullable=False, default=True, index=True)
     embedding_id = Column(UUID(as_uuid=True), ForeignKey("embeddings.id"))
-    metadata = Column(JSONB, nullable=False, default=dict)
+    doc_metadata = Column(JSONB, nullable=False, default=dict)
     
     # Relationships
     commit = relationship("GitCommitModel", back_populates="documents")
@@ -101,7 +101,7 @@ class EmbeddingModel(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     token_count = Column(Integer, nullable=False, default=0)
     cost_usd = Column(Float, nullable=False, default=0.0)
-    metadata = Column(JSONB)
+    extra_metadata = Column(JSONB)
     
     # Relationships
     document = relationship("DocumentModel", back_populates="embedding")
@@ -129,7 +129,7 @@ class GitCommitModel(Base):
     author_email = Column(String(255), nullable=False)
     date = Column(DateTime, nullable=False, index=True)
     message = Column(Text, nullable=False)
-    metadata = Column(JSONB)
+    commit_metadata = Column(JSONB)
     
     # Relationships
     documents = relationship("DocumentModel", back_populates="commit")
@@ -160,7 +160,7 @@ class IngestionJobModel(Base):
     embeddings_generated = Column(Integer, nullable=False, default=0)
     total_cost_usd = Column(Float, nullable=False, default=0.0)
     error_message = Column(Text)
-    metadata = Column(JSONB, default=dict)
+    job_metadata = Column(JSONB, default=dict)
     
     # Constraints
     __table_args__ = (

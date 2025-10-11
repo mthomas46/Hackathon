@@ -12,9 +12,8 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..config import settings
-from ..storage import init_database, close_database
-from ..storage.chromadb_client import init_chroma, close_chroma
-from ..utils.redis_client import init_redis, close_redis
+from ..storage import init_database, close_database, init_chroma, close_chroma
+from ..utils import init_redis, close_redis
 
 from .routes import health, admin, search, documents, query, logs, ollama
 

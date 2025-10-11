@@ -9,7 +9,8 @@ import sys
 
 import uvicorn
 
-from .utils.logging_config import setup_logging, print_banner, console
+from .utils.logging_config import setup_logging, console
+from .utils.terminal_feedback import print_banner
 from .utils.preflight import run_preflight_checks
 
 
