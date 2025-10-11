@@ -26,8 +26,8 @@ from ..utils.redis_client import get_redis_client
 from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
-from .routes import health, admin, search, documents, query, logs, ollama
-from .middleware import RequestIDMiddleware, TimeoutMiddleware
+from .routes import health, admin, search, documents, query, logs, ollama, metrics
+from .middleware import RequestIDMiddleware, TimeoutMiddleware, MetricsMiddleware
 from .exception_handlers import register_exception_handlers
 
 logger = logging.getLogger(__name__)
@@ -172,6 +172,12 @@ async def lifespan(app: FastAPI):
         logger.info("  ✅ Redis initialized")
         
         logger.info("\n✅ ALL SERVICES INITIALIZED SUCCESSFULLY")
+        
+        # Initialize metrics
+        from ..utils.metrics import init_service_metrics
+        init_service_metrics(version="0.1.0", environment=settings.environment)
+        logger.info("  ✅ Metrics initialized")
+        
         logger.info("=" * 80)
     except Exception as e:
         logger.error(f"\n❌ Failed to initialize services: {e}")
@@ -245,10 +251,13 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     
     # Middleware stack (order matters - last added = first executed)
-    # 1. Request timeout (outermost - applies to entire request)
+    # 1. Metrics (outermost - tracks everything)
+    app.add_middleware(MetricsMiddleware)
+    
+    # 2. Request timeout (applies to entire request)
     app.add_middleware(TimeoutMiddleware, default_timeout=30.0)
     
-    # 2. Request ID (for distributed tracing)
+    # 3. Request ID (for distributed tracing)
     app.add_middleware(RequestIDMiddleware)
     
     # CORS middleware - Configured for security
@@ -285,6 +294,7 @@ def create_app() -> FastAPI:
     app.include_router(query.router, prefix="/api/v1/query", tags=["Query"])
     app.include_router(logs.router, prefix="/api/v1/logs", tags=["Logs"])
     app.include_router(ollama.router, prefix="/api/v1/ollama", tags=["Ollama"])
+    app.include_router(metrics.router, tags=["Metrics"])
     
     # Root endpoint
     @app.get("/", include_in_schema=False)
