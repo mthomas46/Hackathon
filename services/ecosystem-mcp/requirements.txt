@@ -67,9 +67,6 @@ bandit>=1.7.0,<2.0.0              # Security linting
 # Retry Logic
 tenacity>=8.2.0,<9.0.0            # Retry with exponential backoff
 
-# Structured Logging
-structlog>=24.0.0,<25.0.0         # Structured logging for observability
-
 # Development Tools
 ipython>=8.20.0,<9.0.0            # Interactive Python shell
 ipdb>=0.13.0,<0.14.0              # IPython debugger
