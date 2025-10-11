@@ -8,8 +8,10 @@ import logging
 from typing import Optional, List
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from ...storage import get_database
 from ...storage.repositories import DocumentRepository
@@ -17,6 +19,7 @@ from ...storage.repositories import DocumentRepository
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 class DocumentQuery(BaseModel):
@@ -69,7 +72,8 @@ class DocumentValidation(BaseModel):
     summary="Query documents",
     description="Query documents with filters for external validation"
 )
-async def query_documents(query: DocumentQuery):
+@limiter.limit("20/minute")  # ✅ Rate limit: 20 queries per minute
+async def query_documents(request: Request, query: DocumentQuery):
     """
     Query documents from database.
     
@@ -137,7 +141,8 @@ async def query_documents(query: DocumentQuery):
     summary="Get document by ID",
     description="Retrieve complete document by ID for validation"
 )
-async def get_document_by_id(document_id: UUID):
+@limiter.limit("30/minute")  # ✅ Rate limit: 30 gets per minute
+async def get_document_by_id(request: Request, document_id: UUID):
     """
     Get complete document by ID.
     
@@ -176,7 +181,8 @@ async def get_document_by_id(document_id: UUID):
     summary="Validate document",
     description="Validate document completeness and integrity"
 )
-async def validate_document(document_id: UUID):
+@limiter.limit("20/minute")  # ✅ Rate limit: 20 validations per minute
+async def validate_document(request: Request, document_id: UUID):
     """
     Validate document completeness.
     
