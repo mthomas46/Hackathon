@@ -96,6 +96,49 @@ class DeploymentManager:
                 self.logger.warning(f"Failed to load state: {e}")
         return None
     
+    def acquire_lock(self) -> bool:
+        """
+        Acquire exclusive lock on PID file.
+        
+        Returns:
+            True if lock acquired, False if already locked
+        """
+        import fcntl
+        
+        try:
+            # Open PID file for writing
+            self.lock_fd = open(self.pid_file, 'w')
+            # Try to acquire exclusive lock (non-blocking)
+            fcntl.flock(self.lock_fd.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True
+        except (IOError, OSError) as e:
+            # Lock already held or other error
+            if self.lock_fd:
+                self.lock_fd.close()
+                self.lock_fd = None
+            return False
+    
+    def release_lock(self):
+        """Release lock on PID file."""
+        import fcntl
+        
+        if self.lock_fd:
+            try:
+                fcntl.flock(self.lock_fd.fileno(), fcntl.LOCK_UN)
+                self.lock_fd.close()
+            except Exception:
+                pass
+            finally:
+                self.lock_fd = None
+    
+    def write_pid(self, pid: int):
+        """Write PID to locked file."""
+        if self.lock_fd:
+            self.lock_fd.seek(0)
+            self.lock_fd.truncate()
+            self.lock_fd.write(str(pid))
+            self.lock_fd.flush()
+    
     def get_server_pid(self) -> Optional[int]:
         """Get server PID if running."""
         if self.pid_file.exists():
@@ -112,7 +155,10 @@ class DeploymentManager:
                     return pid
                 else:
                     # Process not running, clean up stale PID file
-                    self.pid_file.unlink()
+                    try:
+                        self.pid_file.unlink()
+                    except Exception:
+                        pass
                     return None
             except Exception:
                 return None
@@ -123,19 +169,35 @@ class DeploymentManager:
         return self.get_server_pid() is not None
     
     def check_service_health(self, timeout: int = 10) -> bool:
-        """Check if service is healthy."""
+        """
+        Check if service is healthy with retry logic.
+        
+        Args:
+            timeout: Total timeout in seconds
+        
+        Returns:
+            True if service is healthy within timeout
+        """
         import httpx
+        from tenacity import retry, stop_after_delay, wait_fixed, retry_if_exception_type
         
-        for i in range(timeout):
-            try:
-                response = httpx.get("http://localhost:8000/health", timeout=2)
-                if response.status_code == 200:
-                    return True
-            except Exception:
-                pass
-            time.sleep(1)
+        # Create retry wrapper for health check
+        @retry(
+            stop=stop_after_delay(timeout),
+            wait=wait_fixed(1),
+            retry=retry_if_exception_type((httpx.ConnectError, httpx.TimeoutException, ConnectionError)),
+            reraise=False
+        )
+        def _check_health():
+            response = httpx.get("http://localhost:8000/health", timeout=2)
+            if response.status_code == 200:
+                return True
+            raise Exception(f"Health check returned {response.status_code}")
         
-        return False
+        try:
+            return _check_health() or False
+        except Exception:
+            return False
     
     def stop_service(self, graceful: bool = True) -> bool:
         """Stop the service gracefully or forcefully."""
@@ -248,14 +310,22 @@ class DeploymentManager:
             return False
     
     def start_service(self, background: bool = True) -> bool:
-        """Start the MCP service."""
+        """Start the MCP service with exclusive lock."""
         self.print_section("🚀 Starting MCP Service")
         
-        if self.is_service_running():
-            self.print_warning("Service is already running")
-            return True
+        # Try to acquire lock before checking if running
+        if not self.acquire_lock():
+            self.print_error("Could not acquire PID file lock - another instance may be starting")
+            return False
         
-        self.save_state(DeploymentState.STARTING)
+        try:
+            # Double-check if service is running (after acquiring lock)
+            if self.is_service_running():
+                self.print_warning("Service is already running")
+                self.release_lock()
+                return True
+            
+            self.save_state(DeploymentState.STARTING)
         
         venv_python = self.service_root / "venv" / "bin" / "python"
         if not venv_python.exists():
