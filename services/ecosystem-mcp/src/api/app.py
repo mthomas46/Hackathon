@@ -29,25 +29,50 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown of services.
     """
     # Startup
-    logger.info("Starting Ecosystem MCP Service...")
+    logger.info("=" * 80)
+    logger.info("ECOSYSTEM MCP SERVICE STARTING")
+    logger.info("=" * 80)
     
+    # Run preflight checks
+    logger.info("\n🔍 Running preflight checks...")
+    from ..utils.preflight import run_preflight_checks
+    try:
+        await run_preflight_checks(fail_fast=True)
+    except SystemExit:
+        # Preflight checks failed, already logged
+        raise RuntimeError("Preflight checks failed - service cannot start")
+    
+    logger.info("\n🚀 Initializing services...")
     try:
         await init_database()
+        logger.info("  ✅ Database initialized")
+        
         await init_chroma()
+        logger.info("  ✅ ChromaDB initialized")
+        
         await init_redis()
-        logger.info("All services initialized successfully")
+        logger.info("  ✅ Redis initialized")
+        
+        logger.info("\n✅ ALL SERVICES INITIALIZED SUCCESSFULLY")
+        logger.info("=" * 80)
     except Exception as e:
-        logger.error(f"Failed to initialize services: {e}")
+        logger.error(f"\n❌ Failed to initialize services: {e}")
         raise
     
     yield
     
     # Shutdown
-    logger.info("Shutting down services...")
+    logger.info("\n" + "=" * 80)
+    logger.info("SHUTTING DOWN SERVICES")
+    logger.info("=" * 80)
     await close_redis()
+    logger.info("  ✅ Redis closed")
     await close_chroma()
+    logger.info("  ✅ ChromaDB closed")
     await close_database()
-    logger.info("Shutdown complete")
+    logger.info("  ✅ Database closed")
+    logger.info("✅ SHUTDOWN COMPLETE")
+    logger.info("=" * 80)
 
 
 def create_app() -> FastAPI:
