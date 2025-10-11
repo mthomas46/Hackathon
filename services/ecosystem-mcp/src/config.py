@@ -96,11 +96,27 @@ class Settings(BaseSettings):
     @model_validator(mode='after')
     def validate_environment(self):
         """Validate environment is one of the allowed values."""
-        from .utils.environment import validate_environment as _validate_env
+        # Import here to avoid circular import
+        # (utils.__init__ imports redis_client which imports settings)
+        import sys
+        from pathlib import Path
+        
+        # Add utils directly to avoid __init__ import
+        utils_path = Path(__file__).parent / "utils"
+        sys.path.insert(0, str(utils_path.parent))
+        
+        # Import just the environment module, not the package
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "environment", 
+            utils_path / "environment.py"
+        )
+        env_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(env_module)
         
         # Validate environment
         try:
-            _validate_env(self.environment)
+            env_module.validate_environment(self.environment)
         except ValueError as e:
             raise ValueError(f"Configuration error: {e}") from e
         
