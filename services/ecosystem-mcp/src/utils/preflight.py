@@ -9,7 +9,8 @@ import sys
 import asyncio
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum
 
 import psycopg
 import redis
@@ -21,12 +22,20 @@ from ..config import settings
 logger = logging.getLogger(__name__)
 
 
+class CheckCategory(Enum):
+    """Categorizes checks by criticality."""
+    CRITICAL = "critical"    # Must pass for service to start
+    HIGH = "high"            # Warn but allow start in lenient mode
+    OPTIONAL = "optional"    # Info only, never blocks startup
+
+
 @dataclass
 class CheckResult:
     """Result of a preflight check."""
     name: str
     passed: bool
     message: str
+    category: CheckCategory = field(default=CheckCategory.CRITICAL)
     details: Optional[Dict[str, Any]] = None
 
 
@@ -428,17 +437,17 @@ class PreflightChecker:
 
 async def run_preflight_checks(fail_fast: bool = True, mode: str = "strict") -> bool:
     """
-    Run preflight checks with strict or lenient modes.
+    Run preflight checks with strict or lenient modes and graceful degradation.
     
     Args:
-        fail_fast: Stop on first failure
-        mode: "strict" (all checks must pass) or "lenient" (warnings only, continue anyway)
+        fail_fast: Stop on first CRITICAL failure
+        mode: "strict" (CRITICAL must pass) or "lenient" (warnings only, continue anyway)
     
     Returns:
-        True if all checks passed (or if in lenient mode)
+        True if CRITICAL checks passed (or if in lenient mode)
     
     Raises:
-        RuntimeError: If checks fail in strict mode
+        RuntimeError: If CRITICAL checks fail in strict mode
     """
     import os
     
@@ -448,17 +457,29 @@ async def run_preflight_checks(fail_fast: bool = True, mode: str = "strict") -> 
     checker = PreflightChecker()
     passed = await checker.run_all_checks(fail_fast=fail_fast)
     
-    if not passed:
-        if mode == "lenient":
-            logger.warning("\n⚠️  SOME PREFLIGHT CHECKS FAILED")
-            logger.warning("Running in LENIENT mode - continuing anyway")
-            logger.warning("Service may not function correctly!\n")
-            return True  # Continue despite failures
-        else:
-            logger.error("\n⚠️  PREFLIGHT CHECKS FAILED - SERVICE WILL NOT START")
-            logger.error("Please fix the issues above and try again.")
-            logger.error("(Set PREFLIGHT_MODE=lenient to bypass this check)\n")
-            raise RuntimeError("Preflight checks failed")
+    # Get critical failures
+    critical_failed = [r for r in checker.results if r.category == CheckCategory.CRITICAL and not r.passed]
     
+    if critical_failed:
+        if mode == "lenient":
+            logger.warning("\n⚠️  CRITICAL PREFLIGHT CHECKS FAILED")
+            logger.warning("Running in LENIENT mode - continuing anyway")
+            logger.warning("Service WILL NOT FUNCTION CORRECTLY!")
+            logger.warning(f"Failed: {', '.join(r.name for r in critical_failed)}\n")
+            return True  # Continue despite critical failures
+        else:
+            logger.error("\n🔴 CRITICAL PREFLIGHT CHECKS FAILED - SERVICE CANNOT START")
+            logger.error(f"Failed checks: {', '.join(r.name for r in critical_failed)}")
+            logger.error("Please fix the critical issues above and try again.")
+            logger.error("(Set PREFLIGHT_MODE=lenient to bypass - NOT RECOMMENDED)\n")
+            raise RuntimeError(f"Critical preflight checks failed: {', '.join(r.name for r in critical_failed)}")
+    
+    # Warn about non-critical failures
+    high_failed = [r for r in checker.results if r.category == CheckCategory.HIGH and not r.passed]
+    if high_failed:
+        logger.warning(f"\n⚠️  {len(high_failed)} HIGH priority checks failed - service may be degraded")
+        logger.warning(f"Failed: {', '.join(r.name for r in high_failed)}")
+    
+    logger.info("\n✅ All CRITICAL preflight checks passed - service can start")
     return True
 
