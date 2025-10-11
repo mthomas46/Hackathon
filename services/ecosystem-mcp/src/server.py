@@ -5,28 +5,41 @@ Provides both MCP protocol (stdio) and REST API (HTTP) interfaces.
 """
 
 import asyncio
-import logging
 import sys
 
 import uvicorn
 
+from .utils.logging_config import setup_logging, print_banner, console
 from .utils.preflight import run_preflight_checks
-
-logger = logging.getLogger(__name__)
 
 
 async def main():
     """Main server entry point."""
-    logger.info("=" * 80)
-    logger.info("ECOSYSTEM MCP SERVER")
-    logger.info("=" * 80)
+    # Setup comprehensive logging
+    setup_logging(enable_rich=True)
+    
+    # Print startup banner
+    print_banner(
+        "ECOSYSTEM MCP SERVER",
+        "Intelligent Refactoring Knowledge Base with MCP Integration"
+    )
+    
+    console.print("\n[bold cyan]🔍 Running Preflight Checks[/bold cyan]")
+    console.print("=" * 80)
     
     # Run preflight checks
-    logger.info("\n🔍 Running preflight checks...")
     await run_preflight_checks(fail_fast=True)
     
+    console.print("\n[bold green]✅ All Preflight Checks Passed[/bold green]")
+    console.print("=" * 80)
+    
     # Start REST API server
-    logger.info("\n🚀 Starting REST API server...")
+    console.print("\n[bold cyan]🚀 Starting REST API Server[/bold cyan]")
+    console.print(f"[dim]Host:[/dim] 0.0.0.0")
+    console.print(f"[dim]Port:[/dim] 8000")
+    console.print(f"[dim]Docs:[/dim] http://localhost:8000/docs")
+    console.print("=" * 80 + "\n")
+    
     config = uvicorn.Config(
         "src.api.app:create_app",
         factory=True,
@@ -40,26 +53,17 @@ async def main():
     try:
         await server.serve()
     except KeyboardInterrupt:
-        logger.info("\n🛑 Shutting down...")
+        console.print("\n[bold yellow]🛑 Shutting down...[/bold yellow]")
 
 
 if __name__ == "__main__":
-    # Setup logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[
-            logging.StreamHandler(sys.stdout)
-        ]
-    )
-    
     # Run server
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n✅ Shutdown complete")
+        console.print("\n[bold green]✅ Shutdown complete[/bold green]")
         sys.exit(0)
     except Exception as e:
-        logger.error(f"❌ Server failed to start: {e}", exc_info=True)
+        console.print(f"\n[bold red]❌ Server failed to start: {e}[/bold red]")
         sys.exit(1)
 
