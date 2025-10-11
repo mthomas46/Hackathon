@@ -304,13 +304,19 @@ class RedisClient:
         Returns:
             True if healthy, False otherwise
         """
-        try:
+        from .retry import retry_health_check
+        
+        @retry_health_check
+        async def _check():
             if not self._connected:
                 await self.connect()
             await self.client.ping()
             return True
+        
+        try:
+            return await _check()
         except Exception as e:
-            logger.error(f"Redis health check failed: {e}")
+            logger.error(f"Redis health check failed after retries: {e}")
             return False
     
     async def clear_stream(self, stream: str) -> None:

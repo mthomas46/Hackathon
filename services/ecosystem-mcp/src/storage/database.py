@@ -132,13 +132,19 @@ class Database:
         Returns:
             True if database is healthy, False otherwise
         """
-        try:
+        from ..utils.retry import retry_database_operation
+        
+        @retry_database_operation
+        async def _check():
             from sqlalchemy import text
             async with self.session() as session:
                 await session.execute(text("SELECT 1"))
             return True
+        
+        try:
+            return await _check()
         except Exception as e:
-            logger.error(f"Database health check failed: {e}")
+            logger.error(f"Database health check failed after retries: {e}")
             return False
 
 

@@ -229,11 +229,17 @@ class ChromaDBClient:
         Returns:
             True if healthy, False otherwise
         """
-        try:
+        from ..utils.retry import retry_health_check
+        
+        @retry_health_check
+        async def _check():
             await self.count()
             return True
+        
+        try:
+            return await _check()
         except Exception as e:
-            logger.error(f"ChromaDB health check failed: {e}")
+            logger.error(f"ChromaDB health check failed after retries: {e}")
             return False
 
 
