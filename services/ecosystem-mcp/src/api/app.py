@@ -27,7 +27,7 @@ from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
 from .routes import health, admin, search, documents, query, logs, ollama
-from .middleware import RequestIDMiddleware
+from .middleware import RequestIDMiddleware, TimeoutMiddleware
 from .exception_handlers import register_exception_handlers
 
 logger = logging.getLogger(__name__)
@@ -244,7 +244,11 @@ def create_app() -> FastAPI:
     # Register exception handlers (includes rate limit handler)
     register_exception_handlers(app)
     
-    # Request ID middleware (for distributed tracing)
+    # Middleware stack (order matters - last added = first executed)
+    # 1. Request timeout (outermost - applies to entire request)
+    app.add_middleware(TimeoutMiddleware, default_timeout=30.0)
+    
+    # 2. Request ID (for distributed tracing)
     app.add_middleware(RequestIDMiddleware)
     
     # CORS middleware - Configured for security
