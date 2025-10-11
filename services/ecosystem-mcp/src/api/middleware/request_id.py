@@ -8,6 +8,7 @@ import uuid
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
+import structlog
 
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
@@ -19,6 +20,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
     - Accepts existing X-Request-ID from client
     - Adds X-Request-ID to response headers
     - Makes request_id available in request.state
+    - Binds request_id to structlog context for distributed tracing
     
     Usage:
         app.add_middleware(RequestIDMiddleware)
@@ -34,13 +36,22 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         # Store in request state for access in handlers
         request.state.request_id = request_id
         
-        # Process request
-        response = await call_next(request)
+        # Bind request_id to structlog context for distributed tracing
+        # This makes request_id appear in ALL log statements during this request
+        structlog.contextvars.clear_contextvars()  # Clear any stale context
+        structlog.contextvars.bind_contextvars(request_id=request_id)
         
-        # Add request ID to response headers
-        response.headers["X-Request-ID"] = request_id
-        
-        return response
+        try:
+            # Process request
+            response = await call_next(request)
+            
+            # Add request ID to response headers
+            response.headers["X-Request-ID"] = request_id
+            
+            return response
+        finally:
+            # Clear context after request completes
+            structlog.contextvars.clear_contextvars()
 
 
 def get_request_id(request: Request) -> str:

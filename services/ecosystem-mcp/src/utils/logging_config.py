@@ -41,6 +41,8 @@ def configure_structured_logging(
     
     # Build processor chain
     processors = [
+        # Merge context vars (includes request_id from middleware)
+        structlog.contextvars.merge_contextvars,
         # Add log level
         structlog.stdlib.add_log_level,
         # Add logger name
