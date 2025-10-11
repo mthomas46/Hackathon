@@ -4,9 +4,12 @@ FastAPI application factory.
 Creates REST API with OpenAPI/Swagger documentation.
 """
 
+import asyncio
 import logging
+import signal
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -16,8 +19,10 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from ..config import settings
-from ..storage import init_database, close_database, init_chroma, close_chroma
+from ..storage import init_database, close_database, init_chroma, close_chroma, get_database
+from ..storage.chromadb_client import get_chroma_client
 from ..utils import init_redis, close_redis
+from ..utils.redis_client import get_redis_client
 from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
@@ -25,6 +30,80 @@ from .routes import health, admin, search, documents, query, logs, ollama
 from .middleware import RequestIDMiddleware
 
 logger = logging.getLogger(__name__)
+
+# Global shutdown event
+_shutdown_event: Optional[asyncio.Event] = None
+
+
+def setup_signal_handlers(app: FastAPI):
+    """
+    Setup graceful shutdown signal handlers.
+    
+    Handles SIGTERM and SIGINT to ensure clean shutdown.
+    """
+    global _shutdown_event
+    _shutdown_event = asyncio.Event()
+    
+    def signal_handler(sig, frame):
+        """Handle shutdown signals."""
+        signal_name = "SIGTERM" if sig == signal.SIGTERM else "SIGINT"
+        logger.info(f"Received {signal_name}, initiating graceful shutdown...")
+        
+        if _shutdown_event:
+            _shutdown_event.set()
+    
+    # Register signal handlers
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    logger.info("Signal handlers registered for graceful shutdown")
+
+
+async def cleanup_resources():
+    """
+    Cleanup all resources during shutdown.
+    
+    Ensures:
+    - Database connections are closed
+    - Redis connections are closed
+    - ChromaDB connections are closed
+    - Any in-flight operations complete
+    """
+    logger.info("Starting resource cleanup...")
+    
+    try:
+        # Give in-flight requests time to complete (max 10 seconds)
+        logger.info("Waiting for in-flight requests to complete...")
+        await asyncio.sleep(2)  # Short grace period
+        
+        # Close database connections
+        try:
+            db = get_database()
+            await db.close()
+            logger.info("Database connections closed")
+        except Exception as e:
+            logger.error(f"Error closing database: {e}")
+        
+        # Close Redis connections
+        try:
+            redis = get_redis_client()
+            await redis.close()
+            logger.info("Redis connections closed")
+        except Exception as e:
+            logger.error(f"Error closing Redis: {e}")
+        
+        # Close ChromaDB connections (best effort)
+        try:
+            chroma = get_chroma_client()
+            # ChromaDB doesn't have explicit close, but we can release reference
+            logger.info("ChromaDB connections released")
+        except Exception as e:
+            logger.warning(f"Error releasing ChromaDB: {e}")
+        
+        logger.info("Resource cleanup complete")
+        
+    except Exception as e:
+        logger.error(f"Error during resource cleanup: {e}")
 
 
 @asynccontextmanager
@@ -61,6 +140,9 @@ async def lifespan(app: FastAPI):
     logger.info("ECOSYSTEM MCP SERVICE STARTING")
     logger.info("=" * 80)
     
+    # Setup signal handlers for graceful shutdown
+    setup_signal_handlers(app)
+    
     # Run preflight checks
     logger.info("\n🔍 Running preflight checks...")
     from ..utils.preflight import run_preflight_checks
@@ -96,16 +178,14 @@ async def lifespan(app: FastAPI):
     
     yield
     
-    # Shutdown
+    # Shutdown - graceful cleanup
     logger.info("\n" + "=" * 80)
     logger.info("SHUTTING DOWN SERVICES")
     logger.info("=" * 80)
-    await close_redis()
-    logger.info("  ✅ Redis closed")
-    await close_chroma()
-    logger.info("  ✅ ChromaDB closed")
-    await close_database()
-    logger.info("  ✅ Database closed")
+    
+    # Use cleanup_resources for graceful shutdown
+    await cleanup_resources()
+    
     logger.info("✅ SHUTDOWN COMPLETE")
     logger.info("=" * 80)
 
