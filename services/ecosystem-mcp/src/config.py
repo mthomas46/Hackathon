@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -88,9 +88,23 @@ class Settings(BaseSettings):
     cache_ttl_seconds: int = Field(default=3600, ge=60, le=86400)
 
     # Monitoring
+    environment: str = Field(default="development", description="Deployment environment")
     log_level: str = Field(default="INFO")
     sentry_dsn: Optional[str] = Field(default=None)
     metrics_port: int = Field(default=9090, ge=1024, le=65535)
+    
+    @model_validator(mode='after')
+    def validate_environment(self):
+        """Validate environment is one of the allowed values."""
+        from .utils.environment import validate_environment as _validate_env
+        
+        # Validate environment
+        try:
+            _validate_env(self.environment)
+        except ValueError as e:
+            raise ValueError(f"Configuration error: {e}") from e
+        
+        return self
 
     # MCP Server
     mcp_host: str = Field(default="127.0.0.1")

@@ -6,6 +6,7 @@ Creates REST API with OpenAPI/Swagger documentation.
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
@@ -14,8 +15,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from ..config import settings
 from ..storage import init_database, close_database, init_chroma, close_chroma
 from ..utils import init_redis, close_redis
+from ..utils.logging_config import configure_structured_logging
+from ..utils.log_rotation import setup_log_rotation
 
 from .routes import health, admin, search, documents, query, logs, ollama
+from .middleware import RequestIDMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +31,28 @@ async def lifespan(app: FastAPI):
     
     Handles startup and shutdown of services.
     """
+    # Configure structured logging FIRST (before any logging calls)
+    json_logs = settings.environment != "development"
+    configure_structured_logging(
+        log_level=settings.log_level,
+        json_logs=json_logs,
+        include_timestamp=True
+    )
+    
+    # Add log rotation for persistent logs
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
+    log_handler = setup_log_rotation(
+        log_file=log_dir / "mcp.log",
+        max_bytes=10 * 1024 * 1024,  # 10MB
+        backup_count=5,
+        log_level=settings.log_level
+    )
+    logging.getLogger().addHandler(log_handler)
+    
+    logger.info("✅ Structured logging configured (JSON: %s)", json_logs)
+    logger.info("✅ Log rotation configured (10MB, 5 backups)")
+    
     # Startup
     logger.info("=" * 80)
     logger.info("ECOSYSTEM MCP SERVICE STARTING")
@@ -43,7 +69,7 @@ async def lifespan(app: FastAPI):
     
     try:
         await run_preflight_checks(fail_fast=fail_fast, mode=mode)
-    except RuntimeError as e:
+    except Exception as e:
         # Preflight checks failed, already logged
         logger.error(f"Preflight check error: {e}")
         raise
@@ -117,6 +143,9 @@ def create_app() -> FastAPI:
         openapi_url="/openapi.json",
         lifespan=lifespan
     )
+    
+    # Request ID middleware (for distributed tracing)
+    app.add_middleware(RequestIDMiddleware)
     
     # CORS middleware
     app.add_middleware(

@@ -12,12 +12,13 @@ async def init_database():
     """Initialize database connection and create tables.
     
     Raises:
-        RuntimeError: If database connection fails during initialization
+        DatabaseError: If database connection fails during initialization
     """
     import logging
     from sqlalchemy import create_engine
     from .db_models import Base
     from ..config import settings
+    from ..utils.exceptions import DatabaseError
     
     logger = logging.getLogger(__name__)
     
@@ -32,7 +33,7 @@ async def init_database():
         logger.info("✅ Database tables created successfully")
     except Exception as e:
         logger.error(f"❌ Failed to create database tables: {e}")
-        raise RuntimeError(f"Database table creation failed: {e}") from e
+        raise DatabaseError(f"Database table creation failed: {e}") from e
     finally:
         engine.dispose()  # Clean up sync engine
     
@@ -42,11 +43,13 @@ async def init_database():
     try:
         is_healthy = await db.health_check()
         if not is_healthy:
-            raise RuntimeError("Database health check failed - connection unreachable")
+            raise DatabaseError("Database health check failed - connection unreachable")
         logger.info("✅ Database connection validated successfully")
+    except DatabaseError:
+        raise
     except Exception as e:
         logger.error(f"❌ Database connection validation failed: {e}")
-        raise RuntimeError(f"Database connection failed during initialization: {e}") from e
+        raise DatabaseError(f"Database connection failed during initialization: {e}") from e
 
 async def close_database():
     """Close database connection."""

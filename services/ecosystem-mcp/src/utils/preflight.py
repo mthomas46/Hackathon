@@ -447,9 +447,10 @@ async def run_preflight_checks(fail_fast: bool = True, mode: str = "strict") -> 
         True if CRITICAL checks passed (or if in lenient mode)
     
     Raises:
-        RuntimeError: If CRITICAL checks fail in strict mode
+        ValidationError: If CRITICAL checks fail in strict mode
     """
     import os
+    from ..utils.exceptions import ValidationError
     
     # Allow override via environment variable
     mode = os.getenv("PREFLIGHT_MODE", mode).lower()
@@ -472,7 +473,7 @@ async def run_preflight_checks(fail_fast: bool = True, mode: str = "strict") -> 
             logger.error(f"Failed checks: {', '.join(r.name for r in critical_failed)}")
             logger.error("Please fix the critical issues above and try again.")
             logger.error("(Set PREFLIGHT_MODE=lenient to bypass - NOT RECOMMENDED)\n")
-            raise RuntimeError(f"Critical preflight checks failed: {', '.join(r.name for r in critical_failed)}")
+            raise ValidationError(f"Critical preflight checks failed: {', '.join(r.name for r in critical_failed)}")
     
     # Warn about non-critical failures
     high_failed = [r for r in checker.results if r.category == CheckCategory.HIGH and not r.passed]
