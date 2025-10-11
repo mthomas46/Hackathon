@@ -16,7 +16,7 @@ from ..storage import init_database, close_database
 from ..storage.chromadb_client import init_chroma, close_chroma
 from ..utils.redis_client import init_redis, close_redis
 
-from .routes import health, admin, search, documents
+from .routes import health, admin, search, documents, query, logs, ollama
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +126,9 @@ def create_app() -> FastAPI:
     app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
     app.include_router(search.router, prefix="/api/v1", tags=["Search"])
     app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
+    app.include_router(query.router, prefix="/api/v1/query", tags=["Query"])
+    app.include_router(logs.router, prefix="/api/v1/logs", tags=["Logs"])
+    app.include_router(ollama.router, prefix="/api/v1/ollama", tags=["Ollama"])
     
     # Root endpoint
     @app.get("/", include_in_schema=False)
