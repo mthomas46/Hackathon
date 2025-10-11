@@ -65,6 +65,80 @@ class SystemValidator:
             self.print_error(f"Python 3.10+ required, found {version.major}.{version.minor}.{version.micro}")
             return False
     
+    def check_port_conflicts(self) -> bool:
+        """Check for port conflicts before starting services."""
+        print("\n🔍 Checking for Port Conflicts...")
+        
+        required_ports = {
+            5432: "PostgreSQL",
+            6379: "Redis",
+            11434: "Ollama",
+            8000: "API Server"
+        }
+        
+        conflicts = []
+        
+        for port, service in required_ports.items():
+            try:
+                result = subprocess.run(
+                    ["lsof", "-i", f":{port}"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                
+                if result.returncode == 0 and result.stdout.strip():
+                    # Port is in use
+                    lines = result.stdout.strip().split('\n')
+                    if len(lines) > 1:
+                        # Get process info from first data line
+                        process_line = lines[1]
+                        parts = process_line.split()
+                        process_name = parts[0] if parts else "unknown"
+                        pid = parts[1] if len(parts) > 1 else "unknown"
+                        
+                        # Check if it's a Docker container (these are OK)
+                        # Docker processes will have "com.docke" (truncated) or "docker" in the line
+                        # For Ollama, we allow both docker and local ollama process
+                        is_docker = (
+                            "com.docke" in process_name.lower() or 
+                            "docker" in process_line.lower() or
+                            (port == 11434 and "ollama" in process_name.lower())  # Allow Ollama on its port
+                        )
+                        
+                        # Only report conflicts for non-Docker/non-service processes
+                        if not is_docker:
+                            conflicts.append({
+                                "port": port,
+                                "service": service,
+                                "process": process_name,
+                                "pid": pid
+                            })
+            except Exception as e:
+                self.print_warning(f"Could not check port {port}: {e}")
+        
+        if conflicts:
+            self.print_error(f"Found {len(conflicts)} port conflicts:")
+            for conflict in conflicts:
+                self.print_error(
+                    f"  Port {conflict['port']} ({conflict['service']}): "
+                    f"{conflict['process']} (PID: {conflict['pid']})"
+                )
+            
+            self.print_info("\nTo fix port conflicts:")
+            for conflict in conflicts:
+                if "postgres" in conflict['process'].lower():
+                    self.print_info(f"  • Stop local PostgreSQL: brew services stop postgresql@14")
+                elif "redis" in conflict['process'].lower():
+                    self.print_info(f"  • Stop local Redis: brew services stop redis")
+                else:
+                    self.print_info(f"  • Kill process: kill {conflict['pid']}")
+            
+            return False
+        else:
+            self.print_success("No port conflicts detected")
+            return True
+    
     def check_docker(self) -> bool:
         """Check if Docker is running."""
         print("\n🐳 Checking Docker...")
@@ -200,7 +274,7 @@ class SystemValidator:
             return False
     
     def check_configuration(self) -> bool:
-        """Check configuration files."""
+        """Check configuration files and validate consistency."""
         print("\n⚙️  Checking Configuration...")
         
         env_file = self.service_root / ".env"
@@ -211,15 +285,15 @@ class SystemValidator:
                 self.print_warning(".env file not found")
                 self.print_info("Creating .env from template...")
                 try:
-                    # Create basic .env
+                    # Create basic .env matching docker-compose.yml
                     env_content = """# Ecosystem MCP Configuration
 
 # Service
 SERVICE_NAME=ecosystem-mcp
 LOG_LEVEL=INFO
 
-# PostgreSQL
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ecosystem_mcp
+# PostgreSQL (matches docker-compose.yml)
+DATABASE_URL=postgresql://ecosystem:ecosystem_password@localhost:5432/ecosystem_mcp
 
 # Redis
 REDIS_URL=redis://localhost:6379/0
@@ -245,14 +319,26 @@ BATCH_SIZE=100
 """
                     env_file.write_text(env_content)
                     self.print_fix("Created .env file with defaults")
-                    return True
                 except Exception as e:
                     self.print_error(f"Failed to create .env: {e}")
                     return False
-            else:
-                self.print_error(".env and env.template not found")
+        
+        # Validate configuration consistency
+        try:
+            from .config_validator import ConfigValidator
+            
+            validator = ConfigValidator(self.service_root)
+            if not validator.validate():
+                self.print_error("Configuration validation failed")
+                for issue in validator.issues:
+                    self.print_error(f"  • {issue}")
                 return False
-        else:
+            
+            self.print_success("Configuration validated successfully")
+            return True
+        except Exception as e:
+            self.print_warning(f"Could not validate config: {e}")
+            # Don't fail if validator has issues, just warn
             self.print_success(".env file exists")
             return True
     
@@ -346,6 +432,7 @@ BATCH_SIZE=100
         
         checks = [
             ("Python Version", self.check_python_version()),
+            ("Port Conflicts", self.check_port_conflicts()),
             ("Docker", self.check_docker()),
             ("Virtual Environment", self.check_virtual_environment()),
             ("Dependencies", self.check_dependencies()),

@@ -361,7 +361,15 @@ class PreflightChecker:
         
         try:
             import git
-            
+        except ImportError:
+            return CheckResult(
+                name="Git Repository",
+                passed=False,
+                message="GitPython not installed (pip install gitpython)",
+                details={"error": "ImportError"}
+            )
+        
+        try:
             repo_path = Path(settings.git_repo_path)
             
             if not repo_path.exists():
@@ -418,23 +426,39 @@ class PreflightChecker:
                     logger.info(f"  - {result.name}: {result.message}")
 
 
-async def run_preflight_checks(fail_fast: bool = True) -> bool:
+async def run_preflight_checks(fail_fast: bool = True, mode: str = "strict") -> bool:
     """
-    Run preflight checks.
+    Run preflight checks with strict or lenient modes.
     
     Args:
         fail_fast: Stop on first failure
+        mode: "strict" (all checks must pass) or "lenient" (warnings only, continue anyway)
     
     Returns:
-        True if all checks passed, False otherwise
+        True if all checks passed (or if in lenient mode)
+    
+    Raises:
+        RuntimeError: If checks fail in strict mode
     """
+    import os
+    
+    # Allow override via environment variable
+    mode = os.getenv("PREFLIGHT_MODE", mode).lower()
+    
     checker = PreflightChecker()
     passed = await checker.run_all_checks(fail_fast=fail_fast)
     
     if not passed:
-        logger.error("\n⚠️  PREFLIGHT CHECKS FAILED - SERVICE WILL NOT START")
-        logger.error("Please fix the issues above and try again.\n")
-        raise RuntimeError("Preflight checks failed")
+        if mode == "lenient":
+            logger.warning("\n⚠️  SOME PREFLIGHT CHECKS FAILED")
+            logger.warning("Running in LENIENT mode - continuing anyway")
+            logger.warning("Service may not function correctly!\n")
+            return True  # Continue despite failures
+        else:
+            logger.error("\n⚠️  PREFLIGHT CHECKS FAILED - SERVICE WILL NOT START")
+            logger.error("Please fix the issues above and try again.")
+            logger.error("(Set PREFLIGHT_MODE=lenient to bypass this check)\n")
+            raise RuntimeError("Preflight checks failed")
     
     return True
 

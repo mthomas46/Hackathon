@@ -14,18 +14,21 @@ async def init_database():
     from .db_models import Base
     from ..config import settings
     
-    # Create tables if they don't exist
-    engine = create_engine(str(settings.database_url))
+    # Create tables using sync engine (one-time operation)
+    # Convert async URL to sync for table creation
+    sync_url = str(settings.database_url).replace('postgresql+asyncpg://', 'postgresql://')
+    engine = create_engine(sync_url, echo=False)
     Base.metadata.create_all(engine)
+    engine.dispose()  # Clean up sync engine
     
-    # Then connect normally
-    db = get_database()
-    await db.connect()
+    # Database is already initialized via get_database()
+    # No need to call connect() - async engine handles connections automatically
 
 async def close_database():
     """Close database connection."""
     db = get_database()
-    await db.disconnect()
+    # Dispose of the engine to close all connections
+    await db.engine.dispose()
 
 async def init_chroma():
     """Initialize ChromaDB."""

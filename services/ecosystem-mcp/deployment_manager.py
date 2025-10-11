@@ -102,12 +102,18 @@ class DeploymentManager:
             try:
                 pid = int(self.pid_file.read_text().strip())
                 # Check if process is actually running
-                subprocess.run(
+                result = subprocess.run(
                     ["ps", "-p", str(pid)],
                     capture_output=True,
                     timeout=5
                 )
-                return pid
+                # Only return PID if process actually exists
+                if result.returncode == 0:
+                    return pid
+                else:
+                    # Process not running, clean up stale PID file
+                    self.pid_file.unlink()
+                    return None
             except Exception:
                 return None
         return None

@@ -35,8 +35,14 @@ async def lifespan(app: FastAPI):
     # Run preflight checks
     logger.info("\n🔍 Running preflight checks...")
     from ..utils.preflight import run_preflight_checks
+    import os
+    
+    # Support lenient mode for development
+    mode = os.getenv("PREFLIGHT_MODE", "strict")
+    fail_fast = os.getenv("PREFLIGHT_FAIL_FAST", "false").lower() == "true"
+    
     try:
-        await run_preflight_checks(fail_fast=True)
+        await run_preflight_checks(fail_fast=fail_fast, mode=mode)
     except RuntimeError as e:
         # Preflight checks failed, already logged
         logger.error(f"Preflight check error: {e}")

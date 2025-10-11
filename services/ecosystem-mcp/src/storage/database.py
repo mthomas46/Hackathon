@@ -46,12 +46,12 @@ class Database:
             )
         
         # Create async engine with connection pooling
+        # Note: Don't specify poolclass for async engines - SQLAlchemy uses AsyncAdaptedQueuePool by default
         self.engine: AsyncEngine = create_async_engine(
             self.database_url,
             echo=settings.mcp_debug,
             pool_size=settings.database_pool_size,
             max_overflow=settings.database_max_overflow,
-            poolclass=QueuePool,
             pool_pre_ping=True,  # Verify connections before using
             pool_recycle=3600,   # Recycle connections after 1 hour
         )
