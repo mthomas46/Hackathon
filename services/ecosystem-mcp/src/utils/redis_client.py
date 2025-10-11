@@ -348,7 +348,8 @@ async def init_redis():
     await redis_client.connect()
     healthy = await redis_client.health_check()
     if not healthy:
-        raise RuntimeError("Redis is not accessible")
+        from .exceptions import StorageError
+        raise StorageError("Redis is not accessible")
     logger.info("Redis initialized successfully")
 
 

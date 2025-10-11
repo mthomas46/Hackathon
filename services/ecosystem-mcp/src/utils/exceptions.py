@@ -44,3 +44,18 @@ class ValidationError(EcosystemMCPError):
     """Validation failed."""
     pass
 
+
+class StorageError(EcosystemMCPError):
+    """Storage operation failed (Redis, ChromaDB, etc)."""
+    pass
+
+
+class ModelError(EcosystemMCPError):
+    """AI Model operation failed."""
+    pass
+
+
+class IngestionError(EcosystemMCPError):
+    """Document ingestion failed."""
+    pass
+

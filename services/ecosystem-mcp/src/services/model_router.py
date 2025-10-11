@@ -158,7 +158,8 @@ class ModelRouter:
                 # Use Mistral for more complex tasks, Llama3 for simpler
                 return ModelType.OLLAMA_MISTRAL_7B if complexity > 0.5 else ModelType.OLLAMA_LLAMA3_8B
             else:
-                raise RuntimeError("Ollama not available in ollama-only mode")
+                from ..utils.exceptions import ModelError
+        raise ModelError("Ollama not available in ollama-only mode")
         
         # CLOUD-FIRST MODE: Prefer cloud models
         if settings.model_strategy == "cloud-first":
@@ -207,7 +208,8 @@ class ModelRouter:
         elif self.claude and self.claude.is_available():
             return ModelType.CLAUDE_SONNET
         
-        raise RuntimeError("No AI models available")
+        from ..utils.exceptions import ModelError
+        raise ModelError("No AI models available")
     
     def _calculate_complexity(self, task: Task) -> float:
         """
@@ -332,7 +334,8 @@ class ModelRouter:
             )
         
         else:
-            raise ValueError(f"Unknown model type: {model}")
+            from ..utils.exceptions import ModelError
+            raise ModelError(f"Unknown model type: {model}")
     
     def _get_fallback(self, model: ModelType) -> Optional[ModelType]:
         """Get fallback model if primary fails."""

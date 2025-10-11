@@ -66,7 +66,8 @@ class ClaudeClient:
             Response dict with 'content', 'usage', etc.
         """
         if not self.is_available():
-            raise RuntimeError("Claude is not available (no API key)")
+            from ...utils.exceptions import ModelError
+            raise ModelError("Claude is not available (no API key)")
         
         messages = [{"role": "user", "content": prompt}]
         

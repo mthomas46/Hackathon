@@ -117,7 +117,9 @@ class Settings(BaseSettings):
         # Validate environment
         try:
             env_module.validate_environment(self.environment)
-        except ValueError as e:
+        except Exception as e:
+            # Wrap any validation error as a configuration error
+            # Can't import ConfigurationError directly due to circular imports
             raise ValueError(f"Configuration error: {e}") from e
         
         return self

@@ -245,7 +245,8 @@ class VersionManager:
             v2 = await self._get_version_by_number(session, document_id, to_version)
             
             if not v1 or not v2:
-                raise ValueError("Version not found")
+                from ...utils.exceptions import ValidationError
+                raise ValidationError("Version not found")
             
             # Generate unified diff
             import difflib

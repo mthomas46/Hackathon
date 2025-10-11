@@ -258,7 +258,8 @@ async def init_chroma():
     chroma = get_chroma_client()
     healthy = await chroma.health_check()
     if not healthy:
-        raise RuntimeError("ChromaDB is not accessible")
+        from ..utils.exceptions import StorageError
+        raise StorageError("ChromaDB is not accessible")
     count = await chroma.count()
     logger.info(f"ChromaDB initialized successfully ({count} embeddings)")
 

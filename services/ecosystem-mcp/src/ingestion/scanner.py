@@ -55,7 +55,8 @@ class DocumentScanner:
         self.repo_path = Path(repo_path)
         
         if not self.repo_path.exists():
-            raise ValueError(f"Repository path does not exist: {self.repo_path}")
+            from ..utils.exceptions import IngestionError
+            raise IngestionError(f"Repository path does not exist: {self.repo_path}")
         
         logger.info(f"Document scanner initialized: {self.repo_path}")
     

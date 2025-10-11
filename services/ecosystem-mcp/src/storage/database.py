@@ -160,10 +160,12 @@ def get_database() -> Database:
 
 async def init_database():
     """Initialize database on application startup."""
+    from ..utils.exceptions import DatabaseError
+    
     db = get_database()
     healthy = await db.health_check()
     if not healthy:
-        raise RuntimeError("Database is not accessible")
+        raise DatabaseError("Database is not accessible")
     logger.info("Database initialized successfully")
 
 

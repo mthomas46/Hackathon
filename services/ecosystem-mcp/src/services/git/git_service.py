@@ -39,7 +39,8 @@ class GitService:
             logger.info(f"Git service initialized: {self.repo_path}")
         except git.InvalidGitRepositoryError:
             logger.error(f"Invalid git repository: {self.repo_path}")
-            raise ValueError(f"Not a git repository: {self.repo_path}")
+            from ...utils.exceptions import ValidationError
+            raise ValidationError(f"Not a git repository: {self.repo_path}")
     
     async def get_file_history(
         self,

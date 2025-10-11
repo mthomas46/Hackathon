@@ -142,8 +142,10 @@ class GitCommit(BaseModel):
     def validate_sha(cls, v: str) -> str:
         """Validate git SHA format."""
         if len(v) != 40:
-            raise ValueError("Git SHA must be exactly 40 characters")
+            from ..utils.exceptions import ValidationError
+            raise ValidationError("Git SHA must be exactly 40 characters")
         if not all(c in '0123456789abcdef' for c in v.lower()):
-            raise ValueError("Git SHA must be hexadecimal")
+            from ..utils.exceptions import ValidationError
+            raise ValidationError("Git SHA must be hexadecimal")
         return v.lower()
 

@@ -36,6 +36,8 @@ def validate_environment(environment: str) -> bool:
         >>> validate_environment("production")  # OK
         >>> validate_environment("invalid")  # Raises ValueError
     """
+    #  Note: Using ValueError instead of ValidationError here to avoid circular import
+    # when this is called during Settings model validation
     if environment.lower() not in ALLOWED_ENVIRONMENTS:
         raise ValueError(
             f"Invalid environment: '{environment}'. "

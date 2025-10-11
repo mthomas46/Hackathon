@@ -117,6 +117,7 @@ class TestEnvironmentValidation:
         """Test that invalid environments are rejected."""
         from src.utils.environment import validate_environment
         
+        # Note: environment.py uses ValueError to avoid circular import
         with pytest.raises(ValueError) as exc_info:
             validate_environment("invalid_env")
         

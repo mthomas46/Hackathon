@@ -54,7 +54,8 @@ class CursorClient:
             Response dict
         """
         if not self.is_available():
-            raise RuntimeError("Cursor models not available")
+            from ...utils.exceptions import ModelError
+            raise ModelError("Cursor models not available")
         
         # TODO: Implement actual Cursor API integration
         # This is a placeholder that should be replaced with real implementation

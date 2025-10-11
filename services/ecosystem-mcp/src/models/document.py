@@ -177,7 +177,8 @@ class Document(BaseModel):
     def validate_git_sha(cls, v: Optional[str]) -> Optional[str]:
         """Validate git commit SHA format."""
         if v is not None and len(v) != 40:
-            raise ValueError("Git commit SHA must be exactly 40 characters")
+            from ..utils.exceptions import ValidationError
+            raise ValidationError("Git commit SHA must be exactly 40 characters")
         return v
 
 

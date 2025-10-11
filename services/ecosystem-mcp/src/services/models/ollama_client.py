@@ -77,7 +77,8 @@ class OllamaClient:
             Response dict with 'response', 'model', 'tokens', etc.
         """
         if not await self.is_available():
-            raise RuntimeError("Ollama is not available")
+            from ...utils.exceptions import ModelError
+            raise ModelError("Ollama is not available")
         
         payload = {
             "model": model,
