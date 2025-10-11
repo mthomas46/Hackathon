@@ -22,6 +22,12 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+    # Model Strategy
+    model_strategy: str = Field(
+        default="auto",
+        description="Model selection strategy: 'auto' (intelligent), 'ollama-only' (local only), 'cloud-first' (prefer cloud)"
+    )
+
     # Database
     database_url: str = Field(
         default="postgresql://ecosystem:ecosystem_password@localhost:5432/ecosystem_mcp",
@@ -114,6 +120,11 @@ class Settings(BaseSettings):
     def anthropic_available(self) -> bool:
         """Check if Anthropic is configured."""
         return bool(self.anthropic_api_key)
+
+    @property
+    def is_ollama_only(self) -> bool:
+        """Check if running in ollama-only mode."""
+        return self.model_strategy == "ollama-only"
 
 
 # Global settings instance

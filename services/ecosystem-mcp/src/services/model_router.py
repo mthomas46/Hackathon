@@ -56,11 +56,21 @@ class ModelRouter:
     
     def __init__(self):
         """Initialize model router."""
-        self.ollama = get_ollama_client()
-        self.claude = get_claude_client()
-        self.cursor = get_cursor_client()
+        from ..config import settings
         
-        logger.info("Model router initialized")
+        self.strategy = settings.model_strategy
+        self.ollama = get_ollama_client()
+        
+        # Only initialize cloud clients if not in ollama-only mode
+        if not settings.is_ollama_only:
+            self.claude = get_claude_client()
+            self.cursor = get_cursor_client()
+        else:
+            self.claude = None
+            self.cursor = None
+            logger.info("🔒 Running in OLLAMA-ONLY mode - no external API calls")
+        
+        logger.info(f"Model router initialized (strategy: {self.strategy})")
     
     async def route_task(self, task: Task) -> ModelResponse:
         """
@@ -137,8 +147,35 @@ class ModelRouter:
         4. Pattern recognition → Claude Sonnet
         5. Complex refactoring → Claude Opus
         """
+        from ..config import settings
+        
         complexity = self._calculate_complexity(task)
         
+        # OLLAMA-ONLY MODE: Always use Ollama regardless of complexity
+        if settings.is_ollama_only:
+            logger.debug(f"Ollama-only mode: Using Ollama (complexity: {complexity:.2f})")
+            if self.ollama.is_available():
+                # Use Mistral for more complex tasks, Llama3 for simpler
+                return ModelType.OLLAMA_MISTRAL_7B if complexity > 0.5 else ModelType.OLLAMA_LLAMA3_8B
+            else:
+                raise RuntimeError("Ollama not available in ollama-only mode")
+        
+        # CLOUD-FIRST MODE: Prefer cloud models
+        if settings.model_strategy == "cloud-first":
+            if complexity < 0.5:
+                if self.claude and self.claude.is_available():
+                    return ModelType.CLAUDE_HAIKU
+            elif complexity < 0.8:
+                if self.claude and self.claude.is_available():
+                    return ModelType.CLAUDE_SONNET
+            else:
+                if self.claude and self.claude.is_available():
+                    return ModelType.CLAUDE_OPUS
+            # Fallback to Ollama if cloud not available
+            if self.ollama.is_available():
+                return ModelType.OLLAMA_LLAMA3_8B
+        
+        # AUTO MODE: Intelligent routing (free-first)
         # Simple tasks → Local Ollama (if available)
         if complexity < 0.3:
             if self.ollama.is_available():
@@ -146,28 +183,28 @@ class ModelRouter:
         
         # Medium tasks → Cursor (if available) or Claude Haiku
         if complexity < 0.5:
-            if self.cursor.is_available():
+            if self.cursor and self.cursor.is_available():
                 return ModelType.CURSOR_FREE_SMART
-            elif self.claude.is_available():
+            elif self.claude and self.claude.is_available():
                 return ModelType.CLAUDE_HAIKU
             elif self.ollama.is_available():
                 return ModelType.OLLAMA_MISTRAL_7B
         
         # High complexity → Claude Sonnet
         if complexity < 0.8:
-            if self.claude.is_available():
+            if self.claude and self.claude.is_available():
                 return ModelType.CLAUDE_SONNET
             elif self.ollama.is_available():
                 return ModelType.OLLAMA_LLAMA3_8B
         
         # Highest complexity → Claude Opus
-        if self.claude.is_available():
+        if self.claude and self.claude.is_available():
             return ModelType.CLAUDE_OPUS
         
         # Fallback to whatever is available
         if self.ollama.is_available():
             return ModelType.OLLAMA_LLAMA3_8B
-        elif self.claude.is_available():
+        elif self.claude and self.claude.is_available():
             return ModelType.CLAUDE_SONNET
         
         raise RuntimeError("No AI models available")
@@ -299,6 +336,12 @@ class ModelRouter:
     
     def _get_fallback(self, model: ModelType) -> Optional[ModelType]:
         """Get fallback model if primary fails."""
+        from ..config import settings
+        
+        # OLLAMA-ONLY MODE: No fallback (Ollama is the only option)
+        if settings.is_ollama_only:
+            logger.warning("Ollama-only mode: No fallback available")
+            return None
         
         # Claude → Ollama
         if model in [ModelType.CLAUDE_OPUS, ModelType.CLAUDE_SONNET]:
@@ -307,12 +350,12 @@ class ModelRouter:
         
         # Ollama → Claude
         if model in [ModelType.OLLAMA_LLAMA3_8B, ModelType.OLLAMA_MISTRAL_7B]:
-            if self.claude.is_available():
+            if self.claude and self.claude.is_available():
                 return ModelType.CLAUDE_SONNET
         
         # Cursor → Claude or Ollama
         if model in [ModelType.CURSOR_FREE_FAST, ModelType.CURSOR_FREE_SMART]:
-            if self.claude.is_available():
+            if self.claude and self.claude.is_available():
                 return ModelType.CLAUDE_HAIKU
             elif self.ollama.is_available():
                 return ModelType.OLLAMA_LLAMA3_8B
