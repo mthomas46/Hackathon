@@ -326,13 +326,13 @@ class DeploymentManager:
                 return True
             
             self.save_state(DeploymentState.STARTING)
-        
-        venv_python = self.service_root / "venv" / "bin" / "python"
-        if not venv_python.exists():
-            self.print_error("Virtual environment not found")
-            return False
-        
-        try:
+            
+            venv_python = self.service_root / "venv" / "bin" / "python"
+            if not venv_python.exists():
+                self.print_error("Virtual environment not found")
+                self.release_lock()
+                return False
+            
             if background:
                 # Start in background
                 log_file = self.service_root / "server.log"
@@ -366,6 +366,7 @@ class DeploymentManager:
                     self.print_error("Service health check failed")
                     self.print_info("Check server.log for details")
                     self.save_state(DeploymentState.FAILED)
+                    self.release_lock()
                     return False
             else:
                 # Start in foreground
@@ -383,7 +384,10 @@ class DeploymentManager:
         except Exception as e:
             self.print_error(f"Failed to start service: {e}")
             self.save_state(DeploymentState.FAILED)
+            self.release_lock()
             return False
+        
+        # Note: Lock is kept until service stops (intentional)
     
     def deploy(self, skip_validation: bool = False) -> bool:
         """Full deployment process."""
