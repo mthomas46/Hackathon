@@ -148,6 +148,159 @@ class IngestionPipeline:
             await self._fail_job(job.id, str(e))
             raise
     
+    async def ingest_mode_3(
+        self,
+        repo_path: Optional[str] = None
+    ) -> IngestionResult:
+        """
+        Mode 3: Historical docs (current + .md history).
+        
+        Duration: ~15-30 minutes
+        Files: Current + all .md versions
+        Cost: ~$2-5
+        
+        Args:
+            repo_path: Repository path (uses settings if None)
+        
+        Returns:
+            Ingestion result
+        """
+        repo_path = repo_path or str(settings.git_repo_path)
+        logger.info(f"Starting Mode 3 ingestion: {repo_path}")
+        
+        # Create job
+        job = await self._create_job(IngestionMode.HISTORICAL)
+        
+        try:
+            # Step 1: Ingest all current files (Mode 2)
+            logger.info("Step 1/2: Ingesting current files")
+            await self.ingest_mode_2(repo_path)
+            
+            # Step 2: Get history of all .md files
+            logger.info("Step 2/2: Processing .md file history")
+            from ..services.git import get_git_service
+            git_service = get_git_service()
+            
+            self.scanner = DocumentScanner(repo_path)
+            md_files = self.scanner.scan_markdown_only()
+            
+            total_versions = 0
+            for md_file in md_files:
+                # Get history for this file
+                file_path_str = self.scanner.get_relative_path(md_file)
+                history = await git_service.get_file_history(file_path_str, max_commits=50)
+                
+                total_versions += len(history)
+                
+                # Queue each historical version
+                for commit in history:
+                    await self.redis.add_to_stream(
+                        self.redis.INGESTION_STREAM,
+                        {
+                            "job_id": str(job.id),
+                            "file_path": str(md_file),
+                            "git_commit_sha": commit.sha,
+                            "is_historical": "true"
+                        }
+                    )
+            
+            logger.info(f"Queued {total_versions} historical versions")
+            
+            # Process queue
+            result = await self._process_queue(job.id)
+            
+            # Complete job
+            await self._complete_job(job.id, result)
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Mode 3 ingestion failed: {e}")
+            await self._fail_job(job.id, str(e))
+            raise
+    
+    async def ingest_mode_4(
+        self,
+        repo_path: Optional[str] = None
+    ) -> IngestionResult:
+        """
+        Mode 4: Full history (everything).
+        
+        Duration: ~1-3 hours
+        Files: Complete git history
+        Cost: ~$10-50
+        
+        ⚠️ WARNING: Only run once, then use incremental!
+        
+        Args:
+            repo_path: Repository path (uses settings if None)
+        
+        Returns:
+            Ingestion result
+        """
+        repo_path = repo_path or str(settings.git_repo_path)
+        logger.info(f"Starting Mode 4 ingestion (FULL HISTORY): {repo_path}")
+        
+        # Create job
+        job = await self._create_job(IngestionMode.FULL)
+        
+        try:
+            from ..services.git import get_git_service
+            git_service = get_git_service()
+            
+            # Get all commits
+            logger.info("Step 1/3: Analyzing git history...")
+            commits = await git_service.get_all_commits(max_count=1000)  # Limit for safety
+            logger.info(f"Found {len(commits)} commits")
+            
+            # Process commits in chronological order (oldest first)
+            logger.info("Step 2/3: Processing commits...")
+            commits.reverse()  # Oldest first
+            
+            processed_files = set()
+            
+            for i, commit in enumerate(commits):
+                if i % 10 == 0:
+                    logger.info(f"Processing commit {i+1}/{len(commits)}")
+                
+                # Get files at this commit
+                files = await git_service.get_files_at_commit(commit.sha)
+                
+                # Filter for supported types
+                supported_extensions = {".md", ".py", ".yaml", ".yml", ".json", ".txt"}
+                for file_path in files:
+                    ext = Path(file_path).suffix.lower()
+                    if ext in supported_extensions:
+                        # Queue this file at this commit
+                        file_commit_key = f"{file_path}:{commit.sha}"
+                        if file_commit_key not in processed_files:
+                            await self.redis.add_to_stream(
+                                self.redis.INGESTION_STREAM,
+                                {
+                                    "job_id": str(job.id),
+                                    "file_path": file_path,
+                                    "git_commit_sha": commit.sha,
+                                    "is_historical": "true"
+                                }
+                            )
+                            processed_files.add(file_commit_key)
+            
+            logger.info(f"Queued {len(processed_files)} file versions")
+            
+            # Process queue
+            logger.info("Step 3/3: Processing documents...")
+            result = await self._process_queue(job.id)
+            
+            # Complete job
+            await self._complete_job(job.id, result)
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Mode 4 ingestion failed: {e}")
+            await self._fail_job(job.id, str(e))
+            raise
+    
     async def _create_job(self, mode: IngestionMode) -> IngestionJob:
         """Create ingestion job record."""
         # TODO: Store in database
