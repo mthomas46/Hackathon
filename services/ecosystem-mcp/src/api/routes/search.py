@@ -127,7 +127,7 @@ async def search_documents(search_request: SearchRequest, request: Request):
             logger.info("No results found")
             return SearchResponse(
                 results=[],
-                query=request.query,
+                query=search_request.query,  # Fixed: use search_request
                 total_results=0
             )
         
