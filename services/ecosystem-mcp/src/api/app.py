@@ -37,9 +37,10 @@ async def lifespan(app: FastAPI):
     from ..utils.preflight import run_preflight_checks
     try:
         await run_preflight_checks(fail_fast=True)
-    except SystemExit:
+    except RuntimeError as e:
         # Preflight checks failed, already logged
-        raise RuntimeError("Preflight checks failed - service cannot start")
+        logger.error(f"Preflight check error: {e}")
+        raise
     
     logger.info("\n🚀 Initializing services...")
     try:

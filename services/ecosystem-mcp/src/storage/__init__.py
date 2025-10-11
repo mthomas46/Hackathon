@@ -9,7 +9,16 @@ from .chromadb_client import ChromaDBClient, get_chroma_client
 
 # Placeholder functions for lifecycle management
 async def init_database():
-    """Initialize database connection."""
+    """Initialize database connection and create tables."""
+    from sqlalchemy import create_engine
+    from .db_models import Base
+    from ..config import settings
+    
+    # Create tables if they don't exist
+    engine = create_engine(str(settings.database_url))
+    Base.metadata.create_all(engine)
+    
+    # Then connect normally
     db = get_database()
     await db.connect()
 

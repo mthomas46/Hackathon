@@ -167,7 +167,7 @@ class PreflightChecker:
             return CheckResult(
                 name="Environment",
                 passed=True,
-                message=f"Environment: {settings.environment}",
+                message="Environment variables validated",
                 details=env_vars
             )
         except Exception as e:
@@ -282,13 +282,19 @@ class PreflightChecker:
         logger.info("Checking ChromaDB...")
         
         try:
-            # Initialize ChromaDB client
-            chroma_settings = ChromaSettings(
-                anonymized_telemetry=False,
-                allow_reset=True
-            )
+            import chromadb
             
-            client = ChromaClient(chroma_settings)
+            # Ensure path exists
+            settings.chroma_path.mkdir(parents=True, exist_ok=True)
+            
+            # Initialize ChromaDB with persistent client
+            client = chromadb.PersistentClient(
+                path=str(settings.chroma_path),
+                settings=ChromaSettings(
+                    anonymized_telemetry=False,
+                    allow_reset=True
+                )
+            )
             
             # Try to list collections (should work even if empty)
             collections = client.list_collections()
@@ -428,7 +434,7 @@ async def run_preflight_checks(fail_fast: bool = True) -> bool:
     if not passed:
         logger.error("\n⚠️  PREFLIGHT CHECKS FAILED - SERVICE WILL NOT START")
         logger.error("Please fix the issues above and try again.\n")
-        sys.exit(1)
+        raise RuntimeError("Preflight checks failed")
     
     return True
 
