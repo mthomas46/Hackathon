@@ -39,6 +39,32 @@ services:
     networks:
       - ecosystem-mcp
 
+  # Ollama (Local LLM)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ecosystem-mcp-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./data/ollama:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ecosystem-mcp
+    # Uncomment for NVIDIA GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
   # MCP Service (commented out - run locally for development)
   # ecosystem-mcp:
   #   build:
@@ -49,7 +75,8 @@ services:
   #     DATABASE_URL: postgresql://ecosystem:ecosystem_password@postgres:5432/ecosystem_mcp
   #     REDIS_URL: redis://redis:6379/0
   #     CHROMA_PATH: /app/data/chroma_db
-  #     OLLAMA_BASE_URL: http://host.docker.internal:11434
+  #     OLLAMA_BASE_URL: http://ollama:11434
+  #     MODEL_STRATEGY: ollama-only
   #   ports:
   #     - "8000:8000"
   #     - "9090:9090"
@@ -62,6 +89,8 @@ services:
   #       condition: service_healthy
   #     redis:
   #       condition: service_healthy
+  #     ollama:
+  #       condition: service_started
   #   networks:
   #     - ecosystem-mcp
 
