@@ -118,12 +118,8 @@ class PreflightChecker:
         try:
             # Check required settings
             required = [
-                ("postgres_user", settings.postgres_user),
-                ("postgres_password", settings.postgres_password),
-                ("postgres_db", settings.postgres_db),
                 ("database_url", str(settings.database_url)),
-                ("redis_host", settings.redis_host),
-                ("redis_port", settings.redis_port),
+                ("redis_url", str(settings.redis_url)),
             ]
             
             missing = []
@@ -144,9 +140,9 @@ class PreflightChecker:
                 passed=True,
                 message="All required settings present",
                 details={
-                    "postgres_db": settings.postgres_db,
-                    "redis_host": settings.redis_host,
-                    "environment": settings.environment
+                    "database_url": str(settings.database_url),
+                    "redis_url": str(settings.redis_url),
+                    "model_strategy": settings.model_strategy
                 }
             )
         except Exception as e:
@@ -163,10 +159,9 @@ class PreflightChecker:
         
         try:
             env_vars = {
-                "POSTGRES_USER": settings.postgres_user,
-                "POSTGRES_DB": settings.postgres_db,
-                "REDIS_HOST": settings.redis_host,
-                "ENVIRONMENT": settings.environment,
+                "DATABASE_URL": str(settings.database_url),
+                "REDIS_URL": str(settings.redis_url),
+                "OLLAMA_BASE_URL": settings.ollama_base_url,
             }
             
             return CheckResult(
@@ -209,7 +204,7 @@ class PreflightChecker:
                 message="Connection successful",
                 details={
                     "version": version[0] if version else "unknown",
-                    "database": settings.postgres_db
+                    "database_url": str(settings.database_url)
                 }
             )
         except asyncio.TimeoutError:
@@ -232,10 +227,16 @@ class PreflightChecker:
         logger.info("Checking Redis connection...")
         
         try:
+            # Parse Redis URL
+            from urllib.parse import urlparse
+            parsed = urlparse(settings.redis_url)
+            host = parsed.hostname or "localhost"
+            port = parsed.port or 6379
+            
             # Try to connect with timeout
             client = redis.Redis(
-                host=settings.redis_host,
-                port=settings.redis_port,
+                host=host,
+                port=port,
                 socket_connect_timeout=5,
                 socket_timeout=5,
                 decode_responses=True
@@ -255,8 +256,7 @@ class PreflightChecker:
                 passed=True,
                 message=f"Connection successful (v{version})",
                 details={
-                    "host": settings.redis_host,
-                    "port": settings.redis_port,
+                    "redis_url": str(settings.redis_url),
                     "version": version
                 }
             )
@@ -266,8 +266,7 @@ class PreflightChecker:
                 passed=False,
                 message=f"Connection failed: {e}",
                 details={
-                    "host": settings.redis_host,
-                    "port": settings.redis_port
+                    "redis_url": str(settings.redis_url)
                 }
             )
         except Exception as e:

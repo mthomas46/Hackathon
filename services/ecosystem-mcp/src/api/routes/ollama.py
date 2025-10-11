@@ -7,7 +7,7 @@ Provides direct access to Ollama for testing and validation.
 import logging
 from typing import Optional, List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query, Body
 from pydantic import BaseModel, Field
 
 from ...services.models.ollama_client import get_ollama_client
@@ -168,7 +168,7 @@ async def list_ollama_models():
     description="Pull a model from Ollama library"
 )
 async def pull_ollama_model(
-    model: str = Field(..., description="Model name to pull")
+    model: str = Query(..., description="Model name to pull")
 ):
     """
     Pull a model from Ollama library.
@@ -200,8 +200,8 @@ async def pull_ollama_model(
     description="Generate embeddings using Ollama"
 )
 async def generate_embedding(
-    text: str = Field(..., description="Text to embed"),
-    model: Optional[str] = Field(None, description="Embedding model")
+    text: str = Body(..., description="Text to embed"),
+    model: Optional[str] = Body(None, description="Embedding model")
 ):
     """
     Generate embeddings using Ollama.

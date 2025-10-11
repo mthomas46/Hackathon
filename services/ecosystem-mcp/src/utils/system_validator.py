@@ -324,8 +324,11 @@ BATCH_SIZE=100
         try:
             content = db_models_file.read_text()
             
-            # Check for reserved 'metadata' attribute
-            if 'metadata: Mapped[Dict]' in content or 'metadata = Column' in content:
+            # Check for reserved 'metadata' attribute (but exclude renamed versions)
+            # Look for exact pattern: metadata = Column (without prefix like doc_, extra_, etc.)
+            import re
+            pattern = r'^\s+metadata\s*=\s*Column'
+            if re.search(pattern, content, re.MULTILINE):
                 self.print_warning("Found reserved 'metadata' attribute in SQLAlchemy model")
                 self.print_info("This should be renamed to avoid conflicts")
                 self.print_info("Suggestion: Rename 'metadata' to 'doc_metadata'")
