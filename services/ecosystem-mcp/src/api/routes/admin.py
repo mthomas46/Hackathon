@@ -17,6 +17,7 @@ from ...storage.chromadb_client import get_chroma_client
 from ...storage import get_database
 from ...storage.repositories import IngestionJobRepository
 from ...utils.cache_decorator import get_cache_stats, clear_cache_prefix, clear_all_cache
+from ...services.models.ollama_client import get_ollama_client
 
 logger = logging.getLogger(__name__)
 
@@ -268,6 +269,33 @@ async def rebuild_index():
     return {
         "status": "success",
         "message": "Index rebuild started (not yet implemented)"
+    }
+
+
+@router.get(
+    "/circuit-breakers",
+    response_model=Dict[str, Any],
+    summary="Get circuit breaker status",
+    description="Get status of all circuit breakers"
+)
+async def get_circuit_breaker_status():
+    """
+    Get circuit breaker status for all protected services.
+    
+    Returns:
+    - State (CLOSED, OPEN, HALF_OPEN)
+    - Failure counts
+    - Recovery time remaining
+    """
+    ollama = get_ollama_client()
+    chroma = get_chroma_client()
+    
+    return {
+        "circuit_breakers": {
+            "ollama": ollama.circuit_breaker.get_state(),
+            "chromadb": chroma.circuit_breaker.get_state()
+        },
+        "message": "Circuit breakers protect against cascading failures"
     }
 
 

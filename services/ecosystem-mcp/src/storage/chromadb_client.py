@@ -15,6 +15,7 @@ from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
 from ..config import settings
+from ..utils.circuit_breaker import CircuitBreaker, CircuitBreakerError
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,15 @@ class ChromaDBClient:
         # Single writer lock - CRITICAL for data integrity
         self._write_lock = asyncio.Lock()
         
+        # Circuit breaker for resilience
+        self.circuit_breaker = CircuitBreaker(
+            name="chromadb",
+            failure_threshold=5,      # 5 failures before opening
+            recovery_timeout=30.0,    # Test recovery after 30s (faster than Ollama)
+            half_open_max_calls=3,    # Allow 3 test calls
+            success_threshold=2       # 2 successes to close
+        )
+        
         # Initialize ChromaDB client
         self.client = chromadb.PersistentClient(
             path=self.path,
@@ -64,7 +74,8 @@ class ChromaDBClient:
         logger.info(
             f"ChromaDB initialized: path={self.path}, "
             f"collection={self.collection_name}, "
-            f"count={self.collection.count()}"
+            f"count={self.collection.count()} "
+            f"(with circuit breaker)"
         )
     
     async def add_embeddings(
@@ -75,27 +86,32 @@ class ChromaDBClient:
         documents: Optional[List[str]] = None
     ) -> None:
         """
-        Add embeddings to collection.
+        Add embeddings to collection (CIRCUIT PROTECTED).
         
         ⚠️ Uses write lock to prevent concurrent writes.
+        Protected by circuit breaker to prevent cascading failures.
         
         Args:
             embeddings: List of embedding vectors
             metadatas: List of metadata dicts
             ids: List of unique IDs
             documents: Optional list of original documents
-        """
-        async with self._write_lock:
-            # Run in thread pool to avoid blocking
-            await asyncio.to_thread(
-                self.collection.add,
-                embeddings=embeddings,
-                metadatas=metadatas,
-                ids=ids,
-                documents=documents
-            )
         
-        logger.info(f"Added {len(embeddings)} embeddings to ChromaDB")
+        Raises:
+            CircuitBreakerError: If circuit is open (ChromaDB failing)
+        """
+        async with self.circuit_breaker:
+            async with self._write_lock:
+                # Run in thread pool to avoid blocking
+                await asyncio.to_thread(
+                    self.collection.add,
+                    embeddings=embeddings,
+                    metadatas=metadatas,
+                    ids=ids,
+                    documents=documents
+                )
+            
+            logger.info(f"Added {len(embeddings)} embeddings to ChromaDB")
     
     async def update_embeddings(
         self,
@@ -143,9 +159,10 @@ class ChromaDBClient:
         include: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
-        Query similar embeddings.
+        Query similar embeddings (CIRCUIT PROTECTED).
         
         Queries are read-only and safe to run concurrently.
+        Protected by circuit breaker to prevent cascading failures.
         
         Args:
             query_embeddings: Query vectors
@@ -156,21 +173,25 @@ class ChromaDBClient:
         
         Returns:
             Query results with IDs, distances, metadatas, documents
+        
+        Raises:
+            CircuitBreakerError: If circuit is open (ChromaDB failing)
         """
         if include is None:
             include = ["metadatas", "documents", "distances"]
         
-        # Queries don't need the write lock
-        results = await asyncio.to_thread(
-            self.collection.query,
-            query_embeddings=query_embeddings,
-            n_results=n_results,
-            where=where,
-            where_document=where_document,
-            include=include
-        )
-        
-        return results
+        # Queries don't need the write lock but need circuit breaker
+        async with self.circuit_breaker:
+            results = await asyncio.to_thread(
+                self.collection.query,
+                query_embeddings=query_embeddings,
+                n_results=n_results,
+                where=where,
+                where_document=where_document,
+                include=include
+            )
+            
+            return results
     
     async def get_by_ids(
         self,

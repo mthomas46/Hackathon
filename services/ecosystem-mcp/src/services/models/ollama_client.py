@@ -110,10 +110,13 @@ class OllamaClient:
         model: Optional[str] = None
     ) -> list[float]:
         """
-        Generate embeddings using Ollama (CACHED: 1 hour TTL).
+        Generate embeddings using Ollama (CACHED: 1 hour TTL, CIRCUIT PROTECTED).
         
         Embeddings are expensive to compute but deterministic,
         so we cache them aggressively with a 1-hour TTL.
+        
+        Protected by circuit breaker to prevent cascading failures
+        if Ollama service is down.
         
         Args:
             text: Text to embed
@@ -121,29 +124,35 @@ class OllamaClient:
         
         Returns:
             Embedding vector (cached if available)
+        
+        Raises:
+            CircuitBreakerError: If circuit is open (Ollama failing)
+            RuntimeError: If Ollama is unavailable
         """
-        if not await self.is_available():
-            raise RuntimeError("Ollama is not available")
-        
-        embedding_model = model or settings.ollama_embedding_model
-        
-        payload = {
-            "model": embedding_model,
-            "input": text  # Fixed: Ollama embed API uses "input" not "prompt"
-        }
-        
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(
-                f"{self.base_url}/api/embed",
-                json=payload
-            )
-            response.raise_for_status()
-            data = response.json()
-            # Ollama returns "embeddings" (plural) array - get first one
-            embeddings = data.get("embeddings", [])
-            if not embeddings:
-                raise RuntimeError(f"No embeddings returned for text: {text[:50]}...")
-            return embeddings[0]
+        # Circuit breaker protection
+        async with self.circuit_breaker:
+            if not await self.is_available():
+                raise RuntimeError("Ollama is not available")
+            
+            embedding_model = model or settings.ollama_embedding_model
+            
+            payload = {
+                "model": embedding_model,
+                "input": text  # Fixed: Ollama embed API uses "input" not "prompt"
+            }
+            
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}/api/embed",
+                    json=payload
+                )
+                response.raise_for_status()
+                data = response.json()
+                # Ollama returns "embeddings" (plural) array - get first one
+                embeddings = data.get("embeddings", [])
+                if not embeddings:
+                    raise RuntimeError(f"No embeddings returned for text: {text[:50]}...")
+                return embeddings[0]
     
     async def list_models(self) -> list[str]:
         """
