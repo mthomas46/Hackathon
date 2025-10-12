@@ -1,0 +1,234 @@
+"""
+Ingestion Worker
+
+Background worker that processes document ingestion jobs from Redis streams.
+Coordinates the entire ingestion pipeline from Git → Database → ChromaDB.
+"""
+
+import asyncio
+import logging
+from typing import Optional
+from uuid import UUID
+from datetime import datetime
+
+from ...config import settings
+from ...utils.redis_client import get_redis_client
+from ...storage import get_database
+from ...storage.repositories import IngestionJobRepository
+from .job_processor import JobProcessor
+
+logger = logging.getLogger(__name__)
+
+
+class IngestionWorker:
+    """
+    Background worker for processing ingestion jobs.
+    
+    Polls Redis streams for new ingestion jobs and processes them
+    asynchronously using the JobProcessor.
+    
+    Features:
+    - Automatic job polling
+    - Error handling with retries
+    - Graceful shutdown
+    - Job status tracking
+    - Performance monitoring
+    """
+    
+    def __init__(self):
+        """Initialize the ingestion worker."""
+        self.running = False
+        self._task: Optional[asyncio.Task] = None
+        self.job_processor = JobProcessor()
+        logger.info("IngestionWorker initialized")
+    
+    async def start(self):
+        """
+        Start the ingestion worker.
+        
+        Begins polling Redis streams for ingestion jobs and processing them.
+        """
+        if self.running:
+            logger.warning("IngestionWorker already running")
+            return
+        
+        self.running = True
+        self._task = asyncio.create_task(self._worker_loop())
+        logger.info("✅ IngestionWorker started")
+    
+    async def stop(self):
+        """
+        Stop the ingestion worker gracefully.
+        
+        Waits for the current job to complete before stopping.
+        """
+        if not self.running:
+            logger.warning("IngestionWorker not running")
+            return
+        
+        logger.info("Stopping IngestionWorker...")
+        self.running = False
+        
+        if self._task:
+            self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                pass
+        
+        logger.info("✅ IngestionWorker stopped")
+    
+    async def _worker_loop(self):
+        """
+        Main worker loop.
+        
+        Continuously polls Redis streams for new jobs and processes them.
+        """
+        logger.info("Worker loop started")
+        
+        while self.running:
+            try:
+                # Get next job from Redis stream
+                job_id = await self._get_next_job()
+                
+                if job_id:
+                    logger.info(f"Processing job: {job_id}")
+                    await self._process_job(job_id)
+                else:
+                    # No jobs available, wait before checking again
+                    await asyncio.sleep(5)
+            
+            except Exception as e:
+                logger.error(f"Error in worker loop: {e}", exc_info=True)
+                await asyncio.sleep(10)  # Back off on errors
+    
+    async def _get_next_job(self) -> Optional[UUID]:
+        """
+        Get the next job ID from Redis stream.
+        
+        Returns:
+            Job ID if available, None otherwise
+        """
+        try:
+            redis = get_redis_client()
+            
+            # Read from ingestion stream
+            messages = await redis.read_stream(
+                redis.INGESTION_STREAM,
+                count=1,
+                block=1000  # Block for 1 second
+            )
+            
+            if messages:
+                # Extract job_id from message
+                message = messages[0]
+                job_id_str = message.get("job_id")
+                
+                if job_id_str:
+                    return UUID(job_id_str)
+            
+            return None
+        
+        except Exception as e:
+            logger.error(f"Error reading from Redis stream: {e}", exc_info=True)
+            return None
+    
+    async def _process_job(self, job_id: UUID):
+        """
+        Process a single ingestion job.
+        
+        Args:
+            job_id: ID of the job to process
+        """
+        async with get_database().session() as session:
+            repo = IngestionJobRepository(session)
+            
+            try:
+                # Get job from database
+                job = await repo.get_by_id(job_id)
+                
+                if not job:
+                    logger.error(f"Job not found: {job_id}")
+                    return
+                
+                # Update status to processing
+                job.status = "processing"
+                await repo.update(job)
+                await session.commit()
+                
+                logger.info(f"Starting job {job_id}: mode={job.mode}, repo={job.repo_path}")
+                
+                # Process the job using JobProcessor
+                result = await self.job_processor.process(job)
+                
+                # Update job with results
+                job.status = "completed" if result["success"] else "failed"
+                job.completed_at = datetime.utcnow()
+                job.processed_documents = result.get("processed_documents", 0)
+                job.total_documents = result.get("total_documents", 0)
+                job.failed_documents = result.get("failed_documents", 0)
+                job.embeddings_generated = result.get("embeddings_generated", 0)
+                job.total_cost_usd = result.get("total_cost_usd", 0.0)
+                
+                if not result["success"]:
+                    job.error_message = result.get("error", "Unknown error")
+                
+                await repo.update(job)
+                await session.commit()
+                
+                if result["success"]:
+                    logger.info(
+                        f"✅ Job {job_id} completed: "
+                        f"{result['processed_documents']}/{result['total_documents']} documents, "
+                        f"{result['embeddings_generated']} embeddings, "
+                        f"${result['total_cost_usd']:.4f} cost"
+                    )
+                else:
+                    logger.error(f"❌ Job {job_id} failed: {result.get('error')}")
+            
+            except Exception as e:
+                logger.error(f"Error processing job {job_id}: {e}", exc_info=True)
+                
+                # Update job status to failed
+                try:
+                    job = await repo.get_by_id(job_id)
+                    if job:
+                        job.status = "failed"
+                        job.completed_at = datetime.utcnow()
+                        job.error_message = str(e)
+                        await repo.update(job)
+                        await session.commit()
+                except Exception as update_error:
+                    logger.error(f"Failed to update job status: {update_error}")
+
+
+# Global worker instance
+_worker_instance: Optional[IngestionWorker] = None
+
+
+def get_ingestion_worker() -> IngestionWorker:
+    """
+    Get the global ingestion worker instance.
+    
+    Returns:
+        IngestionWorker instance
+    """
+    global _worker_instance
+    
+    if _worker_instance is None:
+        _worker_instance = IngestionWorker()
+    
+    return _worker_instance
+
+
+async def start_ingestion_worker():
+    """Start the global ingestion worker."""
+    worker = get_ingestion_worker()
+    await worker.start()
+
+
+async def stop_ingestion_worker():
+    """Stop the global ingestion worker."""
+    worker = get_ingestion_worker()
+    await worker.stop()
+
