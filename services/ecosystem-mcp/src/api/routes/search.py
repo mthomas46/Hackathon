@@ -14,6 +14,7 @@ from ...storage import get_database
 from ...storage.chromadb_client import get_chroma_client
 from ...storage.repositories import DocumentRepository
 from ...services.models.ollama_client import get_ollama_client
+from ...utils.cache_decorator import cache
 
 logger = logging.getLogger(__name__)
 
@@ -65,18 +66,20 @@ class SearchResponse(BaseModel):
     description="Search across all documents using semantic similarity"
 )
 @limiter.limit("10/minute")  # ✅ Rate limit: 10 searches per minute
+@cache(ttl=300, key_prefix="search")
 async def search_documents(search_request: SearchRequest, request: Request):
     """
-    Perform semantic search across documents.
+    Perform semantic search across documents (CACHED: 5 min TTL).
     
     Uses Ollama for embedding generation and ChromaDB for vector similarity search.
+    Search results are cached for 5 minutes to improve performance.
     
     Args:
         request: FastAPI request (for rate limiting) - must be named 'request' for slowapi
         search_request: Search request with query and filters
     
     Returns:
-        Search results with relevance scores and metadata
+        Search results with relevance scores and metadata (cached if available)
     
     Raises:
         HTTPException: If embedding generation or search fails

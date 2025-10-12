@@ -330,6 +330,70 @@ class RedisClient:
         
         await self.client.xtrim(stream, maxlen=0, approximate=False)
         logger.warning(f"Cleared stream: {stream}")
+    
+    # Cache operations (for response caching)
+    
+    async def get(self, key: str) -> Optional[str]:
+        """
+        Get value from cache.
+        
+        Args:
+            key: Cache key
+        
+        Returns:
+            Value if exists, None otherwise
+        """
+        if not self._connected:
+            await self.connect()
+        
+        return await self.client.get(key)
+    
+    async def set(self, key: str, value: str, ex: Optional[int] = None) -> None:
+        """
+        Set value in cache with optional TTL.
+        
+        Args:
+            key: Cache key
+            value: Value to store
+            ex: Expiration time in seconds (None = no expiration)
+        """
+        if not self._connected:
+            await self.connect()
+        
+        await self.client.set(key, value, ex=ex)
+    
+    async def delete(self, *keys: str) -> int:
+        """
+        Delete one or more keys.
+        
+        Args:
+            *keys: Keys to delete
+        
+        Returns:
+            Number of keys deleted
+        """
+        if not self._connected:
+            await self.connect()
+        
+        return await self.client.delete(*keys)
+    
+    async def keys(self, pattern: str) -> List[str]:
+        """
+        Find keys matching pattern.
+        
+        Args:
+            pattern: Pattern to match (e.g., "cache:*")
+        
+        Returns:
+            List of matching keys
+        
+        Note:
+            For production use with large datasets, use SCAN instead.
+        """
+        if not self._connected:
+            await self.connect()
+        
+        return await self.client.keys(pattern)
 
 
 # Global Redis instance

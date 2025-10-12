@@ -103,20 +103,24 @@ class OllamaClient:
             response.raise_for_status()
             return response.json()
     
+    @cache(ttl=3600, key_prefix="embedding")
     async def embed(
         self,
         text: str,
         model: Optional[str] = None
     ) -> list[float]:
         """
-        Generate embeddings using Ollama.
+        Generate embeddings using Ollama (CACHED: 1 hour TTL).
+        
+        Embeddings are expensive to compute but deterministic,
+        so we cache them aggressively with a 1-hour TTL.
         
         Args:
             text: Text to embed
             model: Embedding model (uses settings default if None)
         
         Returns:
-            Embedding vector
+            Embedding vector (cached if available)
         """
         if not await self.is_available():
             raise RuntimeError("Ollama is not available")
