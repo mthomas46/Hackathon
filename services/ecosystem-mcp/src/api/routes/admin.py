@@ -9,13 +9,14 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Body
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Body, Query
 from pydantic import BaseModel, Field
 
 from ...utils.redis_client import get_redis_client
 from ...storage.chromadb_client import get_chroma_client
 from ...storage import get_database
 from ...storage.repositories import IngestionJobRepository
+from ...utils.cache_decorator import get_cache_stats, clear_cache_prefix, clear_all_cache
 
 logger = logging.getLogger(__name__)
 
