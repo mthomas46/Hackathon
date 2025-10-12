@@ -271,6 +271,76 @@ async def rebuild_index():
 
 
 @router.get(
+    "/cache-stats",
+    response_model=Dict[str, Any],
+    summary="Get cache statistics",
+    description="Get cache hit/miss rates and performance metrics"
+)
+async def get_cache_statistics():
+    """
+    Get cache statistics.
+    
+    Returns:
+    - Cache hits/misses
+    - Hit rate percentage
+    - Total cached operations
+    """
+    stats = get_cache_stats()
+    
+    return {
+        "cache_hits": stats["cache_hits"],
+        "cache_misses": stats["cache_misses"],
+        "total_requests": stats["total_requests"],
+        "hit_rate_percent": stats["hit_rate_percent"],
+        "message": f"Cache is {'performing well' if stats['hit_rate_percent'] > 50 else 'warming up'}"
+    }
+
+
+@router.post(
+    "/clear-cache",
+    response_model=Dict[str, str],
+    summary="Clear cache by prefix",
+    description="Clear cached data for a specific prefix"
+)
+async def clear_cache_by_prefix(prefix: str = Query("cache", description="Cache prefix to clear")):
+    """
+    Clear cache for a specific prefix.
+    
+    Args:
+        prefix: Cache prefix (e.g., "embedding", "search", "cache")
+    
+    Returns:
+        Status message with number of keys deleted
+    """
+    deleted = await clear_cache_prefix(prefix)
+    
+    return {
+        "status": "success",
+        "message": f"Cleared {deleted} cache keys with prefix '{prefix}'"
+    }
+
+
+@router.post(
+    "/clear-all-cache",
+    response_model=Dict[str, str],
+    summary="Clear all cache",
+    description="Clear ALL cached data (use with caution)"
+)
+async def clear_entire_cache():
+    """
+    Clear ALL cache.
+    
+    ⚠️ Use with caution - this clears all cached data.
+    """
+    deleted = await clear_all_cache()
+    
+    return {
+        "status": "success",
+        "message": f"Cleared ALL cache: {deleted} keys deleted"
+    }
+
+
+@router.get(
     "/stats",
     response_model=Dict[str, Any],
     summary="Get system statistics",

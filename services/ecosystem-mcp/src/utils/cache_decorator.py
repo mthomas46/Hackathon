@@ -15,7 +15,15 @@ from ..utils.redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)
 
-# Cache metrics (will be exposed via Prometheus)
+# Import Prometheus metrics
+try:
+    from ..utils.metrics import CACHE_HIT_COUNTER, CACHE_MISS_COUNTER
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+    logger.warning("Prometheus metrics not available for cache decorator")
+
+# Cache metrics (in-memory tracking)
 CACHE_HITS = 0
 CACHE_MISSES = 0
 
@@ -99,6 +107,8 @@ def cache(
                     cached = await redis.get(cache_key)
                     if cached:
                         CACHE_HITS += 1
+                        if PROMETHEUS_AVAILABLE:
+                            CACHE_HIT_COUNTER.labels(prefix=key_prefix).inc()
                         logger.debug(f"Cache HIT: {cache_key}")
                         return json.loads(cached)
                 except Exception as e:
@@ -107,6 +117,8 @@ def cache(
                 
                 # Cache miss - compute result
                 CACHE_MISSES += 1
+                if PROMETHEUS_AVAILABLE:
+                    CACHE_MISS_COUNTER.labels(prefix=key_prefix).inc()
                 logger.debug(f"Cache MISS: {cache_key}")
                 result = await func(*args, **kwargs)
                 
