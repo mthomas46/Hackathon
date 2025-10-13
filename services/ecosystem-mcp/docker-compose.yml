@@ -19,8 +19,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     networks:
       - ecosystem-mcp
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Redis (Queue & Cache)
   redis:
@@ -36,8 +43,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 5s
     networks:
       - ecosystem-mcp
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Ollama (Local LLM)
   ollama:
@@ -61,12 +75,19 @@ services:
     mem_limit: 30g  # 30GB for multiple LLaMA models
     mem_reservation: 8g  # Reserve 8GB minimum
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 60s
+      timeout: 15s
+      retries: 5
+      start_period: 120s  # Give Ollama 2 minutes to start
     networks:
       - ecosystem-mcp
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
     # Uncomment for NVIDIA GPU support
     # deploy:
     #   resources:
@@ -76,7 +97,7 @@ services:
     #           count: 1
     #           capabilities: [gpu]
 
-  # Ecosystem MCP Service
+  # Ecosystem MCP Service (API)
   ecosystem-mcp:
     build:
       context: .
@@ -92,6 +113,8 @@ services:
       ENABLE_CACHE: "true"
       CACHE_TTL: 3600
       RATE_LIMIT_ENABLED: "false"  # Disable for local dev
+      # Preflight settings
+      PREFLIGHT_MODE: "lenient"  # Allow startup even if Ollama is slow
     ports:
       - "8000:8000"  # API
       - "9090:9090"  # Metrics
@@ -106,15 +129,21 @@ services:
       redis:
         condition: service_healthy
       ollama:
-        condition: service_started
+        condition: service_started  # Don't wait for healthy, just started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 60s
+      retries: 5
+      start_period: 90s  # Give API 90 seconds to start
     networks:
       - ecosystem-mcp
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   # Ecosystem MCP Dashboard
   dashboard:
@@ -123,18 +152,27 @@ services:
       dockerfile: Dockerfile
     container_name: ecosystem-mcp-dashboard
     environment:
-      - API_BASE_URL=http://host.docker.internal:8000
+      # 🔧 FIXED: Use service name instead of host.docker.internal
+      - API_BASE_URL=http://ecosystem-mcp:8000
     ports:
       - "8501:8501"
+    depends_on:
+      ecosystem-mcp:
+        condition: service_healthy  # Wait for API to be healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s  # Give Streamlit time to start
     networks:
       - ecosystem-mcp
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
 
 networks:
   ecosystem-mcp:
