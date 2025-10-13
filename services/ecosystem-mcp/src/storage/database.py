@@ -1,7 +1,8 @@
 """
 Database connection and session management for Ecosystem MCP Service.
 
-Provides async PostgreSQL connections using SQLAlchemy with connection pooling.
+Provides async PostgreSQL connections using SQLAlchemy with connection pooling
+and circuit breaker protection.
 """
 
 import logging
@@ -18,8 +19,16 @@ from sqlalchemy.pool import NullPool, QueuePool
 
 from ..config import settings
 from .db_models import Base
+from ..utils.circuit_breaker import get_circuit_breaker, CircuitBreakerOpenError
 
 logger = logging.getLogger(__name__)
+
+# Circuit breaker for database operations
+_db_breaker = get_circuit_breaker(
+    name="database",
+    failure_threshold=5,
+    timeout=30.0  # Try again after 30 seconds
+)
 
 
 class Database:
@@ -127,13 +136,14 @@ class Database:
     
     async def health_check(self) -> bool:
         """
-        Check if database is accessible.
+        Check if database is accessible with circuit breaker protection.
         
         Returns:
             True if database is healthy, False otherwise
         """
         from ..utils.retry import retry_database_operation
         
+        @_db_breaker
         @retry_database_operation
         async def _check():
             from sqlalchemy import text
@@ -143,6 +153,9 @@ class Database:
         
         try:
             return await _check()
+        except CircuitBreakerOpenError as e:
+            logger.warning(f"Database health check skipped - circuit breaker open: {e}")
+            return False
         except Exception as e:
             logger.error(f"Database health check failed after retries: {e}")
             return False

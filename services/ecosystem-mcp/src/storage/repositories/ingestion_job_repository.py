@@ -24,7 +24,7 @@ class IngestionJobRepository(BaseRepository[IngestionJobModel]):
     
     def __init__(self, session: AsyncSession):
         """Initialize repository with database session."""
-        super().__init__(IngestionJobModel, session)
+        super().__init__(session, IngestionJobModel)
     
     async def create_job(
         self,
@@ -43,16 +43,17 @@ class IngestionJobRepository(BaseRepository[IngestionJobModel]):
         Returns:
             Created job model
         """
-        job = await self.create(
+        job = IngestionJobModel(
             mode=mode,
             status=status,
             repo_path=repo_path,
             total_documents=0,
             processed_documents=0,
             failed_documents=0,
+            embeddings_generated=0,
             total_cost_usd=0.0
         )
-        return job
+        return await self.create(job)
     
     async def update_total(self, job_id: UUID, total: int) -> bool:
         """

@@ -1,0 +1,1674 @@
+{
+  "section": "Features",
+  "summary": {
+    "duration_seconds": 287.9044141769409,
+    "total_queries": 14,
+    "cache_hits": 0,
+    "output_size_bytes": 20919
+  },
+  "passes": [
+    {
+      "pass_name": "Pass 1: Initial Overview",
+      "duration_seconds": 58.94616079330444,
+      "total_queries": 3,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "List and describe all major features of ecosystem-mcp.",
+          "timestamp": 1760309935.934931,
+          "duration_seconds": 19.594799041748047,
+          "answer_length": 1276,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/mcp-provisioner/domain/entities/mcp_instance.py",
+              "score": 0.369
+            },
+            {
+              "id": 2,
+              "file_path": "docs-evergreen/11_MONITORING_OBSERVABILITY.md",
+              "score": 0.369
+            },
+            {
+              "id": 3,
+              "file_path": "scripts/generate_mcp_reports.py",
+              "score": 0.369
+            },
+            {
+              "id": 4,
+              "file_path": "services/ecosystem-mcp/src/services/models/__init__.py",
+              "score": 0.369
+            },
+            {
+              "id": 5,
+              "file_path": "services/mcp-orchestrator/domain/value_objects/mcp_selection_criteria.py",
+              "score": 0.369
+            },
+            {
+              "id": 6,
+              "file_path": "services/ecosystem-mcp/src/api/__init__.py",
+              "score": 0.368
+            },
+            {
+              "id": 7,
+              "file_path": "docs-evergreen/20_GLOSSARY.md",
+              "score": 0.367
+            },
+            {
+              "id": 8,
+              "file_path": "docs-evergreen/10_SECURITY_HARDENING.md",
+              "score": 0.367
+            },
+            {
+              "id": 9,
+              "file_path": "docs-evergreen/01_ECOSYSTEM_OVERVIEW.md",
+              "score": 0.367
+            },
+            {
+              "id": 10,
+              "file_path": "docs-evergreen/04_DEPLOYMENT_GUIDE.md",
+              "score": 0.367
+            },
+            {
+              "id": 11,
+              "file_path": "services/ecosystem-mcp/src/models/__init__.py",
+              "score": 0.367
+            },
+            {
+              "id": 12,
+              "file_path": "docs-evergreen/API_REFERENCE.md",
+              "score": 0.367
+            },
+            {
+              "id": 13,
+              "file_path": "docs-evergreen/13_TROUBLESHOOTING.md",
+              "score": 0.366
+            },
+            {
+              "id": 14,
+              "file_path": "services/mcp-infrastructure/domain/value_objects/mcp_context_type.py",
+              "score": 0.366
+            },
+            {
+              "id": 15,
+              "file_path": "docs-evergreen/15_TESTING_STRATEGY.md",
+              "score": 0.365
+            },
+            {
+              "id": 16,
+              "file_path": "docs-evergreen/21_ROADMAP.md",
+              "score": 0.365
+            },
+            {
+              "id": 17,
+              "file_path": "docs-evergreen/22_CASE_STUDIES.md",
+              "score": 0.364
+            },
+            {
+              "id": 18,
+              "file_path": "docs-evergreen/08_QUERY_PATTERNS.md",
+              "score": 0.364
+            },
+            {
+              "id": 19,
+              "file_path": "docs-evergreen/12_PERFORMANCE_TUNING.md",
+              "score": 0.364
+            },
+            {
+              "id": 20,
+              "file_path": "services/mcp-infrastructure/domain/entities/mcp_context.py",
+              "score": 0.364
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "What capabilities does the document ingestion system provide?",
+          "timestamp": 1760309955.830891,
+          "duration_seconds": 15.765130043029785,
+          "answer_length": 1126,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "tests/unit/ingestion/test_wikipedia_ingestor.py",
+              "score": 0.415
+            },
+            {
+              "id": 2,
+              "file_path": "services/orchestrator/modules/workflows/document_analysis.py",
+              "score": 0.415
+            },
+            {
+              "id": 3,
+              "file_path": "services/doc_store/infrastructure/repositories/document_repository.py",
+              "score": 0.412
+            },
+            {
+              "id": 4,
+              "file_path": "services/orchestrator/application/ingestion/queries.py",
+              "score": 0.41
+            },
+            {
+              "id": 5,
+              "file_path": "services/analysis-service/presentation/routes/documents.py",
+              "score": 0.41
+            },
+            {
+              "id": 6,
+              "file_path": "services/summarizer-hub/domain/repositories/document_repository.py",
+              "score": 0.409
+            },
+            {
+              "id": 7,
+              "file_path": "services/analysis-service/domain/services/document_service.py",
+              "score": 0.405
+            },
+            {
+              "id": 8,
+              "file_path": "services/source-agent/application/use_cases/fetch_document_use_case.py",
+              "score": 0.404
+            },
+            {
+              "id": 9,
+              "file_path": "services/doc_store/application/commands/document_commands.py",
+              "score": 0.404
+            },
+            {
+              "id": 10,
+              "file_path": "services/user-store/domain/services/document_user_extraction_service.py",
+              "score": 0.404
+            },
+            {
+              "id": 11,
+              "file_path": "services/doc_store/application/handlers/document_handlers.py",
+              "score": 0.403
+            },
+            {
+              "id": 12,
+              "file_path": "services/source-agent/domain/entities/document.py",
+              "score": 0.403
+            },
+            {
+              "id": 13,
+              "file_path": "services/ecosystem-mcp/src/storage/repositories/document_repository.py",
+              "score": 0.402
+            },
+            {
+              "id": 14,
+              "file_path": "services/doc_store/tests/integration/test_document_persistence_demo.py",
+              "score": 0.401
+            },
+            {
+              "id": 15,
+              "file_path": "services/ecosystem-mcp/src/models/document.py",
+              "score": 0.4
+            },
+            {
+              "id": 16,
+              "file_path": "services/ecosystem-mcp/src/ingestion/metadata_extractor.py",
+              "score": 0.397
+            },
+            {
+              "id": 17,
+              "file_path": "ingestion/wikipedia_ingestor.py",
+              "score": 0.393
+            },
+            {
+              "id": 18,
+              "file_path": "ingestion/models.py",
+              "score": 0.392
+            },
+            {
+              "id": 19,
+              "file_path": "services/ecosystem-mcp/src/ingestion/parser.py",
+              "score": 0.392
+            },
+            {
+              "id": 20,
+              "file_path": "ingestion/fandom_ingestor.py",
+              "score": 0.391
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "What search and retrieval features are available?",
+          "timestamp": 1760309971.8976572,
+          "duration_seconds": 22.682549953460693,
+          "answer_length": 2048,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/user-store/domain/services/document_user_extraction_service.py",
+              "score": 0.414
+            },
+            {
+              "id": 2,
+              "file_path": "services/orchestrator/application/infrastructure/queries.py",
+              "score": 0.414
+            },
+            {
+              "id": 3,
+              "file_path": "services/analysis-service/infrastructure/repositories/finding_repository.py",
+              "score": 0.413
+            },
+            {
+              "id": 4,
+              "file_path": "services/cli/modules/adapters/doc_store_adapter.py",
+              "score": 0.413
+            },
+            {
+              "id": 5,
+              "file_path": "services/mcp-orchestrator/domain/value_objects/mcp_selection_criteria.py",
+              "score": 0.413
+            },
+            {
+              "id": 6,
+              "file_path": "services/discovery-agent/domain/services/tool_registry.py",
+              "score": 0.412
+            },
+            {
+              "id": 7,
+              "file_path": "services/doc_store/infrastructure/repositories/document_repository.py",
+              "score": 0.411
+            },
+            {
+              "id": 8,
+              "file_path": "services/cli/infrastructure/adapters/doc_store_adapter.py",
+              "score": 0.411
+            },
+            {
+              "id": 9,
+              "file_path": "services/doc_store/infrastructure/services/resource_monitor_service.py",
+              "score": 0.41
+            },
+            {
+              "id": 10,
+              "file_path": "services/ecosystem-mcp/src/ingestion/scanner.py",
+              "score": 0.41
+            },
+            {
+              "id": 11,
+              "file_path": "services/discovery-agent/application/queries/__init__.py",
+              "score": 0.41
+            },
+            {
+              "id": 12,
+              "file_path": "services/user-store/domain/repositories/user_repository.py",
+              "score": 0.409
+            },
+            {
+              "id": 13,
+              "file_path": "services/expert-finder-service/application/use_cases/find_experts_use_case.py",
+              "score": 0.407
+            },
+            {
+              "id": 14,
+              "file_path": "services/expert-finder-service/domain/services/relevance_scoring_service.py",
+              "score": 0.407
+            },
+            {
+              "id": 15,
+              "file_path": "services/mcp-orchestrator/application/patterns/corrective_rag.py",
+              "score": 0.405
+            },
+            {
+              "id": 16,
+              "file_path": "RAG_DEMO_SHOWCASE.md",
+              "score": 0.405
+            },
+            {
+              "id": 17,
+              "file_path": "services/discovery-agent/domain/services/tool_registry_adapter.py",
+              "score": 0.404
+            },
+            {
+              "id": 18,
+              "file_path": "services/orchestrator/application/reporting/queries.py",
+              "score": 0.402
+            },
+            {
+              "id": 19,
+              "file_path": "services/discovery-agent/application/handlers/ai_tool_selector.py",
+              "score": 0.401
+            },
+            {
+              "id": 20,
+              "file_path": "services/analysis-service/modules/change_impact/feature_extractor.py",
+              "score": 0.397
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 20,
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pass_name": "Pass 2: Deep Dive",
+      "duration_seconds": 138.83378219604492,
+      "total_queries": 6,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "How does semantic search work? What algorithms and techniques are used?",
+          "timestamp": 1760309994.8811462,
+          "duration_seconds": 34.46766686439514,
+          "answer_length": 3337,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/analysis-service/presentation/models/common.py",
+              "score": 0.421
+            },
+            {
+              "id": 2,
+              "file_path": "services/mcp-interpreter/infrastructure/repositories/redis_query_cache_repository.py",
+              "score": 0.42
+            },
+            {
+              "id": 3,
+              "file_path": "services/doc_store/domain/tagging/service.py",
+              "score": 0.42
+            },
+            {
+              "id": 4,
+              "file_path": "services/cli/infrastructure/services/services/docstore_manager.py",
+              "score": 0.42
+            },
+            {
+              "id": 5,
+              "file_path": "services/project-planning-service/domain/services/external_service_discovery_engine.py",
+              "score": 0.419
+            },
+            {
+              "id": 6,
+              "file_path": "services/mcp-orchestrator/application/patterns/hyde.py",
+              "score": 0.419
+            },
+            {
+              "id": 7,
+              "file_path": "services/mcp-interpreter/application/dto/parse_query_request.py",
+              "score": 0.416
+            },
+            {
+              "id": 8,
+              "file_path": "services/analysis-service/infrastructure/repositories/finding_repository.py",
+              "score": 0.416
+            },
+            {
+              "id": 9,
+              "file_path": "services/doc_store/tests/unit/domains/test_tagging.py",
+              "score": 0.416
+            },
+            {
+              "id": 10,
+              "file_path": "services/orchestrator/application/query_processing/use_cases.py",
+              "score": 0.415
+            },
+            {
+              "id": 11,
+              "file_path": "services/orchestrator/application/ingestion/queries.py",
+              "score": 0.414
+            },
+            {
+              "id": 12,
+              "file_path": "services/llm-tagging-pipeline/domain/entities/tagging_job.py",
+              "score": 0.414
+            },
+            {
+              "id": 13,
+              "file_path": "services/mcp-interpreter/domain/entities/parsed_query.py",
+              "score": 0.412
+            },
+            {
+              "id": 14,
+              "file_path": "services/discovery-agent/application/queries/__init__.py",
+              "score": 0.411
+            },
+            {
+              "id": 15,
+              "file_path": "services/mcp-orchestrator/application/patterns/parent_document_retriever.py",
+              "score": 0.411
+            },
+            {
+              "id": 16,
+              "file_path": "services/analysis-service/domain/factories/finding_factory.py",
+              "score": 0.41
+            },
+            {
+              "id": 17,
+              "file_path": "RAG_SYSTEM_COMPLETE.md",
+              "score": 0.409
+            },
+            {
+              "id": 18,
+              "file_path": "services/analysis-service/domain/entities/finding.py",
+              "score": 0.408
+            },
+            {
+              "id": 19,
+              "file_path": "services/analysis-service/application/handlers/queries.py",
+              "score": 0.408
+            },
+            {
+              "id": 20,
+              "file_path": "services/analysis-service/application/handlers/query_handlers.py",
+              "score": 0.408
+            },
+            {
+              "id": 21,
+              "file_path": "services/mcp-interpreter/domain/repositories/query_cache_repository.py",
+              "score": 0.408
+            },
+            {
+              "id": 22,
+              "file_path": "services/analysis-service/application/use_cases/get_findings_use_case.py",
+              "score": 0.406
+            },
+            {
+              "id": 23,
+              "file_path": "services/mcp-orchestrator/application/patterns/adaptive_selection.py",
+              "score": 0.406
+            },
+            {
+              "id": 24,
+              "file_path": "ingestion/wikipedia_ingestor.py",
+              "score": 0.4
+            },
+            {
+              "id": 25,
+              "file_path": "services/doc_store/tests/unit/api/test_tagging.py",
+              "score": 0.398
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "Describe the RAG implementation: retrieval, ranking, and generation.",
+          "timestamp": 1760310029.65001,
+          "duration_seconds": 9.280786991119385,
+          "answer_length": 199,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/discovery-agent/domain/services/tool_registry_adapter.py",
+              "score": 0.42
+            },
+            {
+              "id": 2,
+              "file_path": "services/mcp-interpreter/domain/repositories/query_cache_repository.py",
+              "score": 0.42
+            },
+            {
+              "id": 3,
+              "file_path": "services/kafka-ingestion-service/domain/repositories/job_repository.py",
+              "score": 0.419
+            },
+            {
+              "id": 4,
+              "file_path": "services/project-planning-service/domain/services/external_service_cataloger.py",
+              "score": 0.419
+            },
+            {
+              "id": 5,
+              "file_path": "services/summarizer-hub/modules/categorizer.py",
+              "score": 0.418
+            },
+            {
+              "id": 6,
+              "file_path": "services/project-planning-service/infrastructure/repositories/task_repository.py",
+              "score": 0.418
+            },
+            {
+              "id": 7,
+              "file_path": "services/user-store/domain/repositories/user_repository.py",
+              "score": 0.418
+            },
+            {
+              "id": 8,
+              "file_path": "services/llm-gateway/domain/repositories/llm_request_repository.py",
+              "score": 0.418
+            },
+            {
+              "id": 9,
+              "file_path": "services/summarizer-hub/infrastructure/repositories/in_memory_category_repository.py",
+              "score": 0.417
+            },
+            {
+              "id": 10,
+              "file_path": "services/llm-tagging-pipeline/domain/entities/tagging_job.py",
+              "score": 0.417
+            },
+            {
+              "id": 11,
+              "file_path": "services/doc_store/application/handlers/tagging_handlers.py",
+              "score": 0.416
+            },
+            {
+              "id": 12,
+              "file_path": "services/llm-tagging-pipeline/application/services/tagging_service.py",
+              "score": 0.416
+            },
+            {
+              "id": 13,
+              "file_path": "services/kafka-ingestion-service/infrastructure/persistence/redis_job_repository.py",
+              "score": 0.415
+            },
+            {
+              "id": 14,
+              "file_path": "services/project-planning-service/infrastructure/repositories/feature_repository.py",
+              "score": 0.415
+            },
+            {
+              "id": 15,
+              "file_path": "services/project-simulation/domain/recommendations/recommendation.py",
+              "score": 0.414
+            },
+            {
+              "id": 16,
+              "file_path": "services/unified-api-dashboard/modules/performance.py",
+              "score": 0.414
+            },
+            {
+              "id": 17,
+              "file_path": "services/summarizer-hub/domain/repositories/recommendation_repository.py",
+              "score": 0.414
+            },
+            {
+              "id": 18,
+              "file_path": "services/mcp-orchestrator/application/patterns/ensemble_orchestration.py",
+              "score": 0.413
+            },
+            {
+              "id": 19,
+              "file_path": "services/summarizer-hub/infrastructure/repositories/in_memory_recommendation_repository.py",
+              "score": 0.411
+            },
+            {
+              "id": 20,
+              "file_path": "services/mcp-performance-store/infrastructure/repositories/redis_performance_repository.py",
+              "score": 0.411
+            },
+            {
+              "id": 21,
+              "file_path": "services/memory-agent/domain/repositories/memory_repository.py",
+              "score": 0.41
+            },
+            {
+              "id": 22,
+              "file_path": "services/user-store/infrastructure/repositories/in_memory_user_repository.py",
+              "score": 0.41
+            },
+            {
+              "id": 23,
+              "file_path": "services/code-analyzer/infrastructure/repositories/analysis_result_repository.py",
+              "score": 0.41
+            },
+            {
+              "id": 24,
+              "file_path": "tests/integration/ingestion/test_wikipedia_tagging.py",
+              "score": 0.41
+            },
+            {
+              "id": 25,
+              "file_path": "services/mcp-registry/infrastructure/repositories/redis_registry_repository.py",
+              "score": 0.41
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "What caching strategies are implemented? List all cache layers.",
+          "timestamp": 1760310039.231931,
+          "duration_seconds": 19.144532918930054,
+          "answer_length": 1094,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/user-store/infrastructure/repositories/in_memory_user_repository.py",
+              "score": 0.489
+            },
+            {
+              "id": 2,
+              "file_path": "services/kafka-ingestion-service/infrastructure/kafka/kafka_consumer.py",
+              "score": 0.489
+            },
+            {
+              "id": 3,
+              "file_path": "services/analysis-service/infrastructure/events/event_router.py",
+              "score": 0.487
+            },
+            {
+              "id": 4,
+              "file_path": "services/analysis-service/infrastructure/repositories/finding_repository.py",
+              "score": 0.485
+            },
+            {
+              "id": 5,
+              "file_path": "services/discovery-agent/infrastructure/repositories/__init__.py",
+              "score": 0.485
+            },
+            {
+              "id": 6,
+              "file_path": "services/doc_store/presentation/dto/models.py",
+              "score": 0.483
+            },
+            {
+              "id": 7,
+              "file_path": "services/mcp-infrastructure/infrastructure/repositories/redis_mcp_context_repository.py",
+              "score": 0.483
+            },
+            {
+              "id": 8,
+              "file_path": "services/shared/infrastructure/auth/owners.py",
+              "score": 0.483
+            },
+            {
+              "id": 9,
+              "file_path": "services/mcp-provisioner/infrastructure/repositories/redis_mcp_repository.py",
+              "score": 0.483
+            },
+            {
+              "id": 10,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/dry_principles_analyzer.py",
+              "score": 0.482
+            },
+            {
+              "id": 11,
+              "file_path": "services/ecosystem-mcp/src/ingestion/scanner.py",
+              "score": 0.482
+            },
+            {
+              "id": 12,
+              "file_path": "services/mcp-performance-store/infrastructure/repositories/redis_pattern_performance_repository.py",
+              "score": 0.481
+            },
+            {
+              "id": 13,
+              "file_path": "services/mcp-provisioner/infrastructure/config/settings.py",
+              "score": 0.481
+            },
+            {
+              "id": 14,
+              "file_path": "services/mcp-infrastructure/application/dto/store_context_request.py",
+              "score": 0.481
+            },
+            {
+              "id": 15,
+              "file_path": "services/mcp-orchestrator/application/patterns/adaptive_selection.py",
+              "score": 0.48
+            },
+            {
+              "id": 16,
+              "file_path": "services/mcp-infrastructure/infrastructure/config/settings.py",
+              "score": 0.48
+            },
+            {
+              "id": 17,
+              "file_path": "services/memory-agent/domain/services/context_search.py",
+              "score": 0.479
+            },
+            {
+              "id": 18,
+              "file_path": "services/project-simulation/simulation/domain/repositories.py",
+              "score": 0.478
+            },
+            {
+              "id": 19,
+              "file_path": "services/mcp-store/infrastructure/repositories/minio_storage_repository.py",
+              "score": 0.475
+            },
+            {
+              "id": 20,
+              "file_path": "services/mcp-registry/infrastructure/config/settings.py",
+              "score": 0.473
+            },
+            {
+              "id": 21,
+              "file_path": "status/all_running_services.txt",
+              "score": 0.473
+            },
+            {
+              "id": 22,
+              "file_path": "services/mcp-performance-store/infrastructure/repositories/redis_performance_repository.py",
+              "score": 0.473
+            },
+            {
+              "id": 23,
+              "file_path": "services/mcp-infrastructure/application/use_cases/store_context_use_case.py",
+              "score": 0.47
+            },
+            {
+              "id": 24,
+              "file_path": "services/doc_store/infrastructure/config/settings.py",
+              "score": 0.468
+            },
+            {
+              "id": 25,
+              "file_path": "services/mcp-provisioner/application/use_cases/list_mcps_use_case.py",
+              "score": 0.467
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "How does the 3-tier LLM routing work (Cursor, Desktop Ollama, Docker)?",
+          "timestamp": 1760310058.677681,
+          "duration_seconds": 23.7903790473938,
+          "answer_length": 1838,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/analysis-service/presentation/api/routers/distributed_router.py",
+              "score": 0.47
+            },
+            {
+              "id": 2,
+              "file_path": "services/mcp-evergreen-docs/presentation/api/documentation_routes.py",
+              "score": 0.469
+            },
+            {
+              "id": 3,
+              "file_path": "services/analysis-service/presentation/api/routes/analysis_routes.py",
+              "score": 0.469
+            },
+            {
+              "id": 4,
+              "file_path": "services/analysis-service/infrastructure/connections/pool_manager.py",
+              "score": 0.468
+            },
+            {
+              "id": 5,
+              "file_path": "services/llm-gateway/infrastructure/services/rate_limiter.py",
+              "score": 0.467
+            },
+            {
+              "id": 6,
+              "file_path": "services/llm-tagging-pipeline/domain/entities/llm_metadata.py",
+              "score": 0.467
+            },
+            {
+              "id": 7,
+              "file_path": "services/llm-gateway/infrastructure/services/metrics_collector.py",
+              "score": 0.466
+            },
+            {
+              "id": 8,
+              "file_path": "services/summarizer-hub/presentation/routes/document_routes.py",
+              "score": 0.466
+            },
+            {
+              "id": 9,
+              "file_path": "docs/MASTER_INDEX_V2.md",
+              "score": 0.466
+            },
+            {
+              "id": 10,
+              "file_path": "services/analysis-service/presentation/routes/__init__.py",
+              "score": 0.464
+            },
+            {
+              "id": 11,
+              "file_path": "services/cli/infrastructure/services/services/deployment_manager.py",
+              "score": 0.463
+            },
+            {
+              "id": 12,
+              "file_path": "services/discovery-agent/presentation/api/routes_simple.py",
+              "score": 0.463
+            },
+            {
+              "id": 13,
+              "file_path": "services/meta-orchestrator/tests/unit/test_docker_manager.py",
+              "score": 0.462
+            },
+            {
+              "id": 14,
+              "file_path": "services/mcp_local_llm/infrastructure/external_services/ollama_adapter.py",
+              "score": 0.461
+            },
+            {
+              "id": 15,
+              "file_path": "services/architecture-digitizer/presentation/routes/normalization_routes.py",
+              "score": 0.459
+            },
+            {
+              "id": 16,
+              "file_path": "services/llm-tagging-pipeline/tests/integration/test_ollama_integration.py",
+              "score": 0.458
+            },
+            {
+              "id": 17,
+              "file_path": "services/llm-gateway/infrastructure/services/cache_manager.py",
+              "score": 0.458
+            },
+            {
+              "id": 18,
+              "file_path": "services/mcp-orchestrator/application/patterns/llm_as_judge.py",
+              "score": 0.456
+            },
+            {
+              "id": 19,
+              "file_path": "services/analysis-service/presentation/routes/repository_routes.py",
+              "score": 0.453
+            },
+            {
+              "id": 20,
+              "file_path": "services/memory-agent/presentation/api/routes.py",
+              "score": 0.452
+            },
+            {
+              "id": 21,
+              "file_path": "services/mcp-logs/presentation/api/log_routes.py",
+              "score": 0.451
+            },
+            {
+              "id": 22,
+              "file_path": "services/architecture-digitizer/presentation/routes/systems_routes.py",
+              "score": 0.451
+            },
+            {
+              "id": 23,
+              "file_path": "services/mcp-gateway/application/dto/routing_response.py",
+              "score": 0.45
+            },
+            {
+              "id": 24,
+              "file_path": "services/architecture-digitizer/presentation/routes/standard_routes.py",
+              "score": 0.45
+            },
+            {
+              "id": 25,
+              "file_path": "services/doc_store/presentation/api/routes.py",
+              "score": 0.45
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "What monitoring and observability features exist?",
+          "timestamp": 1760310082.7692668,
+          "duration_seconds": 20.521714210510254,
+          "answer_length": 1411,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/analysis-service/tests/coverage/coverage_analyzer.py",
+              "score": 0.446
+            },
+            {
+              "id": 2,
+              "file_path": "services/ecosystem-mcp/src/api/middleware/metrics.py",
+              "score": 0.446
+            },
+            {
+              "id": 3,
+              "file_path": "services/orchestrator/application/health_monitoring/commands.py",
+              "score": 0.446
+            },
+            {
+              "id": 4,
+              "file_path": "services/meta-orchestrator/tests/integration/test_monitoring_api.py",
+              "score": 0.446
+            },
+            {
+              "id": 5,
+              "file_path": "services/cli/modules/adapters/analysis_service_adapter.py",
+              "score": 0.445
+            },
+            {
+              "id": 6,
+              "file_path": "services/cli/infrastructure/adapters/analysis_service_adapter.py",
+              "score": 0.445
+            },
+            {
+              "id": 7,
+              "file_path": "services/source-agent/domain/value_objects/document_status.py",
+              "score": 0.445
+            },
+            {
+              "id": 8,
+              "file_path": "services/mcp-performance-store/domain/services/analytics_service.py",
+              "score": 0.445
+            },
+            {
+              "id": 9,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/documentation_analyzer.py",
+              "score": 0.444
+            },
+            {
+              "id": 10,
+              "file_path": "services/simulation_dashboard/pages/simulation_monitor.py",
+              "score": 0.444
+            },
+            {
+              "id": 11,
+              "file_path": "services/orchestrator/domain/value_objects/workflow_status.py",
+              "score": 0.443
+            },
+            {
+              "id": 12,
+              "file_path": "services/meta-orchestrator/tests/integration/test_audit_features.py",
+              "score": 0.443
+            },
+            {
+              "id": 13,
+              "file_path": "services/project-planning-service/tests/unit/test_feature_entity.py",
+              "score": 0.443
+            },
+            {
+              "id": 14,
+              "file_path": "services/mcp-logs/domain/repositories/alert_repository.py",
+              "score": 0.443
+            },
+            {
+              "id": 15,
+              "file_path": "services/mcp-orchestrator/domain/value_objects/workflow_state.py",
+              "score": 0.442
+            },
+            {
+              "id": 16,
+              "file_path": "services/shared/infrastructure/monitoring/metrics.py",
+              "score": 0.441
+            },
+            {
+              "id": 17,
+              "file_path": "services/mcp-gateway/domain/value_objects/mcp_instance_status.py",
+              "score": 0.44
+            },
+            {
+              "id": 18,
+              "file_path": "services/cli/infrastructure/services/monitoring/alerting_manager.py",
+              "score": 0.439
+            },
+            {
+              "id": 19,
+              "file_path": "scripts/audit-framework/infrastructure/external_services/third_party_tool_service.py",
+              "score": 0.438
+            },
+            {
+              "id": 20,
+              "file_path": "services/mcp-store/domain/value_objects/package_status.py",
+              "score": 0.438
+            },
+            {
+              "id": 21,
+              "file_path": "services/mcp-performance-store/domain/value_objects/execution_status.py",
+              "score": 0.437
+            },
+            {
+              "id": 22,
+              "file_path": "services/notification-service/domain/value_objects/notification_status.py",
+              "score": 0.437
+            },
+            {
+              "id": 23,
+              "file_path": "services/mcp-logs/infrastructure/anomaly/detector.py",
+              "score": 0.436
+            },
+            {
+              "id": 24,
+              "file_path": "services/mcp-performance-store/domain/services/anomaly_detection_service.py",
+              "score": 0.435
+            },
+            {
+              "id": 25,
+              "file_path": "services/analysis-service/modules/change_impact/feature_extractor.py",
+              "score": 0.433
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "What API endpoints are available and what do they do?",
+          "timestamp": 1760310103.591182,
+          "duration_seconds": 29.82248616218567,
+          "answer_length": 2915,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/analysis-service/presentation/api/routers/workflows_router.py",
+              "score": 0.369
+            },
+            {
+              "id": 2,
+              "file_path": "services/architecture-digitizer/presentation/routes/standard_routes.py",
+              "score": 0.369
+            },
+            {
+              "id": 3,
+              "file_path": "services/discovery-agent/application/handlers/discovery_handler.py",
+              "score": 0.369
+            },
+            {
+              "id": 4,
+              "file_path": "services/analysis-service/presentation/middleware/metrics.py",
+              "score": 0.367
+            },
+            {
+              "id": 5,
+              "file_path": "services/ecosystem-mcp/src/api/__init__.py",
+              "score": 0.367
+            },
+            {
+              "id": 6,
+              "file_path": "services/prompt_store/domain/lifecycle/handlers.py",
+              "score": 0.365
+            },
+            {
+              "id": 7,
+              "file_path": "services/analysis-service/presentation/api/routers/distributed_router.py",
+              "score": 0.365
+            },
+            {
+              "id": 8,
+              "file_path": "services/ecosystem-mcp/src/api/middleware/metrics.py",
+              "score": 0.363
+            },
+            {
+              "id": 9,
+              "file_path": "services/analysis-service/presentation/api/handlers/__init__.py",
+              "score": 0.362
+            },
+            {
+              "id": 10,
+              "file_path": "services/prompt_store/domain/relationships/handlers.py",
+              "score": 0.362
+            },
+            {
+              "id": 11,
+              "file_path": "services/prompt_store/domain/notifications/handlers.py",
+              "score": 0.361
+            },
+            {
+              "id": 12,
+              "file_path": "services/mcp-store/tests/e2e/test_api_basic.py",
+              "score": 0.36
+            },
+            {
+              "id": 13,
+              "file_path": "services/prompt_store/domain/refinement/handlers.py",
+              "score": 0.36
+            },
+            {
+              "id": 14,
+              "file_path": "services/prompt_store/domain/prompts/handlers.py",
+              "score": 0.358
+            },
+            {
+              "id": 15,
+              "file_path": "services/source-agent/domain/services/code_analyzer.py",
+              "score": 0.357
+            },
+            {
+              "id": 16,
+              "file_path": "services/frontend/modules/ui_handlers/discovery_agent_handlers.py",
+              "score": 0.357
+            },
+            {
+              "id": 17,
+              "file_path": "services/prompt_store/domain/bulk/handlers.py",
+              "score": 0.356
+            },
+            {
+              "id": 18,
+              "file_path": "services/doc_store/tests/unit/api/test_core.py",
+              "score": 0.355
+            },
+            {
+              "id": 19,
+              "file_path": "docs-evergreen/API_REFERENCE.md",
+              "score": 0.354
+            },
+            {
+              "id": 20,
+              "file_path": "services/mcp-logs/presentation/api/__init__.py",
+              "score": 0.353
+            },
+            {
+              "id": 21,
+              "file_path": "services/prompt_store/domain/analytics/handlers.py",
+              "score": 0.351
+            },
+            {
+              "id": 22,
+              "file_path": "services/kafka-ingestion-service/presentation/api/ingestion.py",
+              "score": 0.351
+            },
+            {
+              "id": 23,
+              "file_path": "services/discovery-agent/presentation/api/constants.py",
+              "score": 0.35
+            },
+            {
+              "id": 24,
+              "file_path": "services/analysis-service/presentation/api/routers/analysis_router.py",
+              "score": 0.35
+            },
+            {
+              "id": 25,
+              "file_path": "services/mcp-evergreen-docs/presentation/api/__init__.py",
+              "score": 0.349
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pass_name": "Pass 3: Practical Examples",
+      "duration_seconds": 90.11554598808289,
+      "total_queries": 4,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "Provide examples of search queries and expected results.",
+          "timestamp": 1760310133.714924,
+          "duration_seconds": 26.664349794387817,
+          "answer_length": 1688,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/simulation-dashboard/components/charts/prediction_charts.py",
+              "score": 0.438
+            },
+            {
+              "id": 2,
+              "file_path": "services/doc_store/tests/unit/api/test_tagging.py",
+              "score": 0.437
+            },
+            {
+              "id": 3,
+              "file_path": "services/cli/domain/entities/command_result.py",
+              "score": 0.436
+            },
+            {
+              "id": 4,
+              "file_path": "services/interpreter/domain/services/query_interpreter_service.py",
+              "score": 0.436
+            },
+            {
+              "id": 5,
+              "file_path": "services/mcp-infrastructure/application/dto/operation_result.py",
+              "score": 0.435
+            },
+            {
+              "id": 6,
+              "file_path": "data/service_test_results.txt",
+              "score": 0.434
+            },
+            {
+              "id": 7,
+              "file_path": "services/user-store/application/use_cases/query_users_by_relationship_use_case.py",
+              "score": 0.434
+            },
+            {
+              "id": 8,
+              "file_path": "services/expert-finder-service/domain/value_objects/expert_match.py",
+              "score": 0.431
+            },
+            {
+              "id": 9,
+              "file_path": "services/orchestrator/application/reporting/queries.py",
+              "score": 0.43
+            },
+            {
+              "id": 10,
+              "file_path": "scripts/audit-framework/domain/entities/analysis_result.py",
+              "score": 0.43
+            },
+            {
+              "id": 11,
+              "file_path": "services/orchestrator/application/health_monitoring/queries.py",
+              "score": 0.429
+            },
+            {
+              "id": 12,
+              "file_path": "scripts/audit-framework/application/queries/get_audit_trends_query.py",
+              "score": 0.428
+            },
+            {
+              "id": 13,
+              "file_path": "services/source-agent/domain/entities/ingestion_result.py",
+              "score": 0.426
+            },
+            {
+              "id": 14,
+              "file_path": "services/analysis-service/application/handlers/query_handlers.py",
+              "score": 0.426
+            },
+            {
+              "id": 15,
+              "file_path": "services/orchestrator/shared/domain/domain_result.py",
+              "score": 0.425
+            },
+            {
+              "id": 16,
+              "file_path": "services/mcp-orchestrator/application/patterns/corrective_rag.py",
+              "score": 0.425
+            },
+            {
+              "id": 17,
+              "file_path": "services/code-analyzer/domain/entities/analysis_result.py",
+              "score": 0.421
+            },
+            {
+              "id": 18,
+              "file_path": "services/orchestrator/application/infrastructure/queries.py",
+              "score": 0.42
+            },
+            {
+              "id": 19,
+              "file_path": "services/orchestrator/application/ingestion/queries.py",
+              "score": 0.418
+            },
+            {
+              "id": 20,
+              "file_path": "services/orchestrator/application/query_processing/use_cases.py",
+              "score": 0.416
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "Provide examples of RAG questions with sample responses.",
+          "timestamp": 1760310160.679544,
+          "duration_seconds": 16.867220163345337,
+          "answer_length": 647,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/interpreter/tests/unit/test_utils.py",
+              "score": 0.464
+            },
+            {
+              "id": 2,
+              "file_path": "tests/test_tags_systematically.py",
+              "score": 0.463
+            },
+            {
+              "id": 3,
+              "file_path": "services/doc_store/tests/unit/api/test_tagging.py",
+              "score": 0.463
+            },
+            {
+              "id": 4,
+              "file_path": "services/analysis-service/application/handlers/queries.py",
+              "score": 0.463
+            },
+            {
+              "id": 5,
+              "file_path": "services/summarizer-hub/modules/response_processor.py",
+              "score": 0.463
+            },
+            {
+              "id": 6,
+              "file_path": "services/expert-finder-service/tests/integration/test_user_repository_integration.py",
+              "score": 0.463
+            },
+            {
+              "id": 7,
+              "file_path": "services/mcp-orchestrator/application/patterns/self_critique.py",
+              "score": 0.46
+            },
+            {
+              "id": 8,
+              "file_path": "services/mcp_local_llm/domain/entities/inference_request.py",
+              "score": 0.46
+            },
+            {
+              "id": 9,
+              "file_path": "services/analysis-service/application/use_cases/get_findings_use_case.py",
+              "score": 0.46
+            },
+            {
+              "id": 10,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/dry_principles_analyzer.py",
+              "score": 0.46
+            },
+            {
+              "id": 11,
+              "file_path": "services/llm-tagging-pipeline/tests/unit/test_tag_extractor.py",
+              "score": 0.458
+            },
+            {
+              "id": 12,
+              "file_path": "services/kafka-ingestion-service/tests/unit/application/test_ingest_document_service.py",
+              "score": 0.458
+            },
+            {
+              "id": 13,
+              "file_path": "services/analysis-service/tests/unit/test_utils.py",
+              "score": 0.458
+            },
+            {
+              "id": 14,
+              "file_path": "services/doc_store/tests/unit/test_quality_service.py",
+              "score": 0.457
+            },
+            {
+              "id": 15,
+              "file_path": "services/doc_store/tests/unit/test_utils.py",
+              "score": 0.455
+            },
+            {
+              "id": 16,
+              "file_path": "services/mcp-performance-store/application/use_cases/query_executions_use_case.py",
+              "score": 0.455
+            },
+            {
+              "id": 17,
+              "file_path": "services/expert-finder-service/tests/unit/test_domain_scoring_service.py",
+              "score": 0.455
+            },
+            {
+              "id": 18,
+              "file_path": "scripts/audit-framework/application/queries/get_audit_trends_query.py",
+              "score": 0.454
+            },
+            {
+              "id": 19,
+              "file_path": "services/doc_store/tests/unit/domains/test_tagging.py",
+              "score": 0.454
+            },
+            {
+              "id": 20,
+              "file_path": "tests/test_search_analysis.py",
+              "score": 0.453
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "Show example API calls with curl commands.",
+          "timestamp": 1760310177.847945,
+          "duration_seconds": 19.31326198577881,
+          "answer_length": 1394,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/shared/presentation/web/envelopes.py",
+              "score": 0.448
+            },
+            {
+              "id": 2,
+              "file_path": "services/frontend/modules/ui_handlers/services_overview_handlers.py",
+              "score": 0.448
+            },
+            {
+              "id": 3,
+              "file_path": "services/ecosystem-mcp/src/api/models/__init__.py",
+              "score": 0.448
+            },
+            {
+              "id": 4,
+              "file_path": "services/architecture-digitizer/presentation/api/models.py",
+              "score": 0.447
+            },
+            {
+              "id": 5,
+              "file_path": "services/cli/application/handlers/actions/orchestrator.py",
+              "score": 0.446
+            },
+            {
+              "id": 6,
+              "file_path": "services/prompt_store/domain/relationships/handlers.py",
+              "score": 0.446
+            },
+            {
+              "id": 7,
+              "file_path": "services/cli/application/handlers/actions/frontend.py",
+              "score": 0.446
+            },
+            {
+              "id": 8,
+              "file_path": "services/shared/infrastructure/utilities/logging_utils.py",
+              "score": 0.446
+            },
+            {
+              "id": 9,
+              "file_path": "services/mcp-logs/presentation/api/stream_routes.py",
+              "score": 0.445
+            },
+            {
+              "id": 10,
+              "file_path": "services/ecosystem-mcp/tests/integration/test_api_endpoints.py",
+              "score": 0.445
+            },
+            {
+              "id": 11,
+              "file_path": "services/bedrock-proxy/presentation/api/routes.py",
+              "score": 0.444
+            },
+            {
+              "id": 12,
+              "file_path": "services/mcp-infrastructure/tests/integration/test_api.py",
+              "score": 0.443
+            },
+            {
+              "id": 13,
+              "file_path": "services/kafka-ingestion-service/tests/functional/test_api_endpoints.py",
+              "score": 0.443
+            },
+            {
+              "id": 14,
+              "file_path": "services/doc_store/application/handlers/handlers.py",
+              "score": 0.442
+            },
+            {
+              "id": 15,
+              "file_path": "services/meta-orchestrator/tests/integration/test_api_integration.py",
+              "score": 0.442
+            },
+            {
+              "id": 16,
+              "file_path": "services/cli/application/handlers/actions/analysis_service.py",
+              "score": 0.441
+            },
+            {
+              "id": 17,
+              "file_path": "services/ecosystem-mcp/tests/integration/test_request_id_logging.py",
+              "score": 0.441
+            },
+            {
+              "id": 18,
+              "file_path": "services/ecosystem-mcp/src/api/exception_handlers.py",
+              "score": 0.44
+            },
+            {
+              "id": 19,
+              "file_path": "services/ecosystem-mcp/src/api/middleware/request_id.py",
+              "score": 0.44
+            },
+            {
+              "id": 20,
+              "file_path": "services/frontend/modules/ui_handlers/notification_service_handlers.py",
+              "score": 0.44
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "What are the performance characteristics of each feature?",
+          "timestamp": 1760310197.462425,
+          "duration_seconds": 26.06690502166748,
+          "answer_length": 1841,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/prompt_store/domain/analytics/entities.py",
+              "score": 0.455
+            },
+            {
+              "id": 2,
+              "file_path": "services/code-analyzer/tests/performance/__init__.py",
+              "score": 0.455
+            },
+            {
+              "id": 3,
+              "file_path": "services/llm-gateway/infrastructure/services/metrics_collector.py",
+              "score": 0.455
+            },
+            {
+              "id": 4,
+              "file_path": "services/shared/infrastructure/monitoring/metrics.py",
+              "score": 0.454
+            },
+            {
+              "id": 5,
+              "file_path": "services/memory-agent/tests/performance/__init__.py",
+              "score": 0.453
+            },
+            {
+              "id": 6,
+              "file_path": "services/doc_store/domain/services/quality_service.py",
+              "score": 0.453
+            },
+            {
+              "id": 7,
+              "file_path": "services/user-store/domain/services/velocity_tracker.py",
+              "score": 0.452
+            },
+            {
+              "id": 8,
+              "file_path": "services/ecosystem-mcp/src/utils/metrics.py",
+              "score": 0.451
+            },
+            {
+              "id": 9,
+              "file_path": "services/mcp-performance-store/infrastructure/config/settings.py",
+              "score": 0.45
+            },
+            {
+              "id": 10,
+              "file_path": "services/mcp-performance-store/domain/repositories/pattern_performance_repository.py",
+              "score": 0.448
+            },
+            {
+              "id": 11,
+              "file_path": "services/github-mcp/tests/performance/__init__.py",
+              "score": 0.448
+            },
+            {
+              "id": 12,
+              "file_path": "services/project-planning-service/tests/unit/test_feature_entity.py",
+              "score": 0.448
+            },
+            {
+              "id": 13,
+              "file_path": "services/cli/tests/performance/__init__.py",
+              "score": 0.446
+            },
+            {
+              "id": 14,
+              "file_path": "services/frontend/tests/performance/__init__.py",
+              "score": 0.445
+            },
+            {
+              "id": 15,
+              "file_path": "services/project-simulation/tests/integration/test_cicd_pipeline.py",
+              "score": 0.444
+            },
+            {
+              "id": 16,
+              "file_path": "services/project-planning-service/domain/services/feature_decomposer.py",
+              "score": 0.444
+            },
+            {
+              "id": 17,
+              "file_path": "services/mcp-performance-store/infrastructure/analytics/trend_analyzer.py",
+              "score": 0.442
+            },
+            {
+              "id": 18,
+              "file_path": "services/analysis-service/modules/change_impact/feature_extractor.py",
+              "score": 0.441
+            },
+            {
+              "id": 19,
+              "file_path": "services/user-store/domain/models/team_capacity.py",
+              "score": 0.433
+            },
+            {
+              "id": 20,
+              "file_path": "services/project-simulation/tests/integration/test_event_broadcasting_integration.py",
+              "score": 0.432
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pass_name": "Pass 4: Synthesis",
+      "duration_seconds": 0.008880138397216797,
+      "total_queries": 1,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "Based on the following information about Features, \n        create a comprehensive, well-structured ...",
+          "timestamp": 1760310223.8304782,
+          "duration_seconds": 0.008807897567749023,
+          "answer_length": 0,
+          "source_count": 0,
+          "sources": [],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "failed"
+        }
+      ]
+    }
+  ]
+}

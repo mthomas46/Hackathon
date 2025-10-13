@@ -102,9 +102,13 @@ async def start_ingestion(
             
             job_id = str(job.id)
         
-        # Queue ingestion (simplified for now)
-        # In production, this would use background tasks or a worker queue
-        logger.info(f"Ingestion job {job_id} created for {repo_path}")
+        # ✅ Add job to Redis stream for worker to process
+        redis = get_redis_client()
+        await redis.add_to_stream(
+            stream=redis.INGESTION_STREAM,
+            data={"job_id": job_id, "mode": request.mode, "repo_path": str(repo_path)}
+        )
+        logger.info(f"✅ Ingestion job {job_id} created and queued for {repo_path}")
         
         return IngestResponse(
             job_id=job_id,

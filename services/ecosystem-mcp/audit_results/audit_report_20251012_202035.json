@@ -1,0 +1,471 @@
+{
+  "audit_timestamp": "20251012_202035",
+  "service_audit": {
+    "service_name": "ecosystem-mcp",
+    "version": "0.1.0",
+    "status": "healthy",
+    "endpoints": [
+      {
+        "path": "/health",
+        "method": "GET",
+        "description": "Health check with component status",
+        "tags": [
+          "Health"
+        ]
+      },
+      {
+        "path": "/metrics",
+        "method": "GET",
+        "description": "Prometheus metrics",
+        "tags": [
+          "Metrics"
+        ]
+      },
+      {
+        "path": "/about-me",
+        "method": "GET",
+        "description": "Service information",
+        "tags": [
+          "Standard"
+        ]
+      },
+      {
+        "path": "/endpoints",
+        "method": "GET",
+        "description": "List all endpoints",
+        "tags": [
+          "Standard"
+        ]
+      },
+      {
+        "path": "/provider-consumer",
+        "method": "GET",
+        "description": "Service relationships",
+        "tags": [
+          "Standard"
+        ]
+      },
+      {
+        "path": "/openapi.json",
+        "method": "GET",
+        "description": "OpenAPI specification",
+        "tags": [
+          "Documentation"
+        ]
+      },
+      {
+        "path": "/docs",
+        "method": "GET",
+        "description": "Swagger UI",
+        "tags": [
+          "Documentation"
+        ]
+      },
+      {
+        "path": "/redoc",
+        "method": "GET",
+        "description": "ReDoc documentation",
+        "tags": [
+          "Documentation"
+        ]
+      },
+      {
+        "path": "/api/v1/search",
+        "method": "POST",
+        "description": "Semantic search",
+        "tags": [
+          "Search"
+        ]
+      },
+      {
+        "path": "/api/v1/query",
+        "method": "POST",
+        "description": "Query documents with filters",
+        "tags": [
+          "Query"
+        ]
+      },
+      {
+        "path": "/api/v1/document/{document_id}",
+        "method": "GET",
+        "description": "Get document by ID",
+        "tags": [
+          "Query"
+        ]
+      },
+      {
+        "path": "/api/v1/admin/ingest",
+        "method": "POST",
+        "description": "Create ingestion job",
+        "tags": [
+          "Admin"
+        ]
+      },
+      {
+        "path": "/api/v1/admin/stats",
+        "method": "GET",
+        "description": "Service statistics",
+        "tags": [
+          "Admin"
+        ]
+      },
+      {
+        "path": "/api/v1/admin/queue-status",
+        "method": "GET",
+        "description": "Queue status",
+        "tags": [
+          "Admin"
+        ]
+      },
+      {
+        "path": "/api/v1/admin/cache-stats",
+        "method": "GET",
+        "description": "Cache statistics",
+        "tags": [
+          "Admin"
+        ]
+      },
+      {
+        "path": "/api/v1/admin/circuit-breakers",
+        "method": "GET",
+        "description": "Circuit breaker status",
+        "tags": [
+          "Admin"
+        ]
+      },
+      {
+        "path": "/api/v1/documents",
+        "method": "GET",
+        "description": "List documents",
+        "tags": [
+          "Documents"
+        ]
+      },
+      {
+        "path": "/api/v1/documents/{document_id}",
+        "method": "GET",
+        "description": "Get specific document",
+        "tags": [
+          "Documents"
+        ]
+      },
+      {
+        "path": "/api/v1/list",
+        "method": "GET",
+        "description": "List log files",
+        "tags": [
+          "Logs"
+        ]
+      },
+      {
+        "path": "/api/v1/tail",
+        "method": "GET",
+        "description": "Tail log file",
+        "tags": [
+          "Logs"
+        ]
+      },
+      {
+        "path": "/api/v1/generate",
+        "method": "POST",
+        "description": "Generate text with Ollama",
+        "tags": [
+          "Ollama"
+        ]
+      },
+      {
+        "path": "/api/v1/embed",
+        "method": "POST",
+        "description": "Generate embeddings",
+        "tags": [
+          "Ollama"
+        ]
+      },
+      {
+        "path": "/api/v1/models",
+        "method": "GET",
+        "description": "List Ollama models",
+        "tags": [
+          "Ollama"
+        ]
+      }
+    ],
+    "health_status": {
+      "status": "healthy",
+      "version": "0.1.0",
+      "timestamp": "2025-10-12T19:28:13.566459",
+      "uptime_seconds": 987.66,
+      "components": {
+        "database": {
+          "status": "healthy",
+          "message": "Connected",
+          "response_time_ms": 4.56
+        },
+        "redis": {
+          "status": "healthy",
+          "message": "Connected",
+          "response_time_ms": 0.82
+        },
+        "chromadb": {
+          "status": "healthy",
+          "message": "Connected",
+          "response_time_ms": 0.35
+        },
+        "ollama": {
+          "status": "healthy",
+          "message": "Connected",
+          "response_time_ms": 0.0
+        }
+      }
+    },
+    "document_count": 0,
+    "timestamp": "2025-10-12T19:28:13.580901"
+  },
+  "ingestion_summary": {
+    "total_batches": 10,
+    "successful_batches": 0,
+    "failed_batches": 10,
+    "total_documents": 98,
+    "total_duration_seconds": 3005.8324279785156,
+    "average_batch_duration": 300.58324279785154,
+    "documents_per_second": 0.03260328123677441,
+    "success_rate": 0.0
+  },
+  "query_summary": {
+    "total_queries": 10,
+    "successful_queries": 10,
+    "failed_queries": 0,
+    "total_duration_seconds": 87.82019925117493,
+    "average_query_duration": 8.782019925117492,
+    "min_query_duration": 4.002552032470703,
+    "max_query_duration": 20.61404323577881,
+    "average_answer_length": 878.3,
+    "average_sources_count": 10.0,
+    "average_confidence": 0.4025,
+    "success_rate": 100.0
+  },
+  "ingestion_metrics": [
+    {
+      "batch_number": 1,
+      "documents_count": 10,
+      "start_time": 1760297293.683394,
+      "end_time": 1760297594.0415208,
+      "duration_seconds": 300.3581268787384,
+      "success": false,
+      "error": null,
+      "job_id": "dada7673-79dd-4a85-b58b-270d467270ac"
+    },
+    {
+      "batch_number": 2,
+      "documents_count": 10,
+      "start_time": 1760297596.046607,
+      "end_time": 1760297896.4564211,
+      "duration_seconds": 300.409814119339,
+      "success": false,
+      "error": null,
+      "job_id": "7c3ea92d-cc34-415a-ab5f-64828c11dc8c"
+    },
+    {
+      "batch_number": 3,
+      "documents_count": 10,
+      "start_time": 1760297898.460931,
+      "end_time": 1760298199.062279,
+      "duration_seconds": 300.6013479232788,
+      "success": false,
+      "error": null,
+      "job_id": "a8e41b44-497e-4c21-ade0-6541991e46f2"
+    },
+    {
+      "batch_number": 4,
+      "documents_count": 10,
+      "start_time": 1760298201.065658,
+      "end_time": 1760298501.625891,
+      "duration_seconds": 300.5602328777313,
+      "success": false,
+      "error": null,
+      "job_id": "f042b58c-12c3-453a-a1b1-28bcc20c701f"
+    },
+    {
+      "batch_number": 5,
+      "documents_count": 10,
+      "start_time": 1760298503.631998,
+      "end_time": 1760298804.2584572,
+      "duration_seconds": 300.6264591217041,
+      "success": false,
+      "error": null,
+      "job_id": "2dd9eff8-bc7b-495d-b7b0-b4ca9e314367"
+    },
+    {
+      "batch_number": 6,
+      "documents_count": 10,
+      "start_time": 1760298806.263959,
+      "end_time": 1760299106.77859,
+      "duration_seconds": 300.5146310329437,
+      "success": false,
+      "error": null,
+      "job_id": "3877fc4b-9c60-4f40-84dc-3b94a906ea0b"
+    },
+    {
+      "batch_number": 7,
+      "documents_count": 10,
+      "start_time": 1760299108.78126,
+      "end_time": 1760299409.2276201,
+      "duration_seconds": 300.4463601112366,
+      "success": false,
+      "error": null,
+      "job_id": "09ded763-d681-41b4-8af5-1a7f794b289f"
+    },
+    {
+      "batch_number": 8,
+      "documents_count": 10,
+      "start_time": 1760299411.231095,
+      "end_time": 1760299712.135531,
+      "duration_seconds": 300.9044358730316,
+      "success": false,
+      "error": null,
+      "job_id": "b05d8ef5-8455-491a-a459-8b8ce100164d"
+    },
+    {
+      "batch_number": 9,
+      "documents_count": 10,
+      "start_time": 1760299714.139466,
+      "end_time": 1760300014.923421,
+      "duration_seconds": 300.7839548587799,
+      "success": false,
+      "error": null,
+      "job_id": "89e6c081-beb4-4798-bbee-f069ef68daad"
+    },
+    {
+      "batch_number": 10,
+      "documents_count": 8,
+      "start_time": 1760300016.927583,
+      "end_time": 1760300317.5546482,
+      "duration_seconds": 300.6270651817322,
+      "success": false,
+      "error": null,
+      "job_id": "bec0f9aa-33cf-4d47-821a-707e5496e377"
+    }
+  ],
+  "query_metrics": [
+    {
+      "query_number": 1,
+      "question": "What is ecosystem-mcp and what does it do?",
+      "start_time": 1760300317.556976,
+      "end_time": 1760300327.2577631,
+      "duration_seconds": 9.70078706741333,
+      "success": true,
+      "answer_length": 833,
+      "sources_count": 10,
+      "confidence": 0.313,
+      "error": null
+    },
+    {
+      "query_number": 2,
+      "question": "How does the ingestion pipeline work?",
+      "start_time": 1760300330.2588952,
+      "end_time": 1760300338.893677,
+      "duration_seconds": 8.634781837463379,
+      "success": true,
+      "answer_length": 1242,
+      "sources_count": 10,
+      "confidence": 0.488,
+      "error": null
+    },
+    {
+      "query_number": 3,
+      "question": "What are the main features of the RAG system?",
+      "start_time": 1760300341.894794,
+      "end_time": 1760300345.897346,
+      "duration_seconds": 4.002552032470703,
+      "success": true,
+      "answer_length": 118,
+      "sources_count": 10,
+      "confidence": 0.371,
+      "error": null
+    },
+    {
+      "query_number": 4,
+      "question": "How is document versioning handled?",
+      "start_time": 1760300348.89846,
+      "end_time": 1760300355.88841,
+      "duration_seconds": 6.989950180053711,
+      "success": true,
+      "answer_length": 724,
+      "sources_count": 10,
+      "confidence": 0.471,
+      "error": null
+    },
+    {
+      "query_number": 5,
+      "question": "What models are used for embeddings?",
+      "start_time": 1760300358.8902981,
+      "end_time": 1760300365.985306,
+      "duration_seconds": 7.09500789642334,
+      "success": true,
+      "answer_length": 544,
+      "sources_count": 10,
+      "confidence": 0.307,
+      "error": null
+    },
+    {
+      "query_number": 6,
+      "question": "How does the caching system work?",
+      "start_time": 1760300368.9855502,
+      "end_time": 1760300379.059967,
+      "duration_seconds": 10.074416875839233,
+      "success": true,
+      "answer_length": 1440,
+      "sources_count": 10,
+      "confidence": 0.514,
+      "error": null
+    },
+    {
+      "query_number": 7,
+      "question": "What are the rate limits for API endpoints?",
+      "start_time": 1760300382.060825,
+      "end_time": 1760300386.945027,
+      "duration_seconds": 4.884202003479004,
+      "success": true,
+      "answer_length": 142,
+      "sources_count": 10,
+      "confidence": 0.346,
+      "error": null
+    },
+    {
+      "query_number": 8,
+      "question": "How does the 3-tier LLM routing work?",
+      "start_time": 1760300389.9463658,
+      "end_time": 1760300396.547462,
+      "duration_seconds": 6.601096153259277,
+      "success": true,
+      "answer_length": 769,
+      "sources_count": 10,
+      "confidence": 0.363,
+      "error": null
+    },
+    {
+      "query_number": 9,
+      "question": "What is the deployment architecture?",
+      "start_time": 1760300399.5485818,
+      "end_time": 1760300420.162625,
+      "duration_seconds": 20.61404323577881,
+      "success": true,
+      "answer_length": 1760,
+      "sources_count": 10,
+      "confidence": 0.509,
+      "error": null
+    },
+    {
+      "query_number": 10,
+      "question": "How are errors handled in the ingestion pipeline?",
+      "start_time": 1760300423.163764,
+      "end_time": 1760300432.387126,
+      "duration_seconds": 9.22336196899414,
+      "success": true,
+      "answer_length": 1211,
+      "sources_count": 10,
+      "confidence": 0.343,
+      "error": null
+    }
+  ]
+}

@@ -31,6 +31,7 @@ class TimeoutMiddleware(BaseHTTPMiddleware):
     ENDPOINT_TIMEOUTS = {
         "/health": 5.0,
         "/api/v1/search": 60.0,  # Search can take longer
+        "/api/v1/ask": 120.0,  # RAG with LLM generation
         "/api/v1/query": 30.0,
         "/api/v1/admin/ingest": 300.0,  # Ingestion can be long
         "/api/v1/ollama": 120.0,  # LLM calls can be slow

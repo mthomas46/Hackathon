@@ -1,79 +1,213 @@
 """
-Cursor model client.
+Cursor IDE Client - Communicates with Cursor via MCP for premium model access.
 
-Integrates with Cursor's free models for medium-complexity tasks.
+Enables ecosystem-mcp to leverage Cursor IDE's Claude 4.5 Sonnet and other
+premium models for the most complex queries.
 """
 
 import logging
-from typing import Optional, Dict, Any
+from typing import Dict, Any, Optional
+import httpx
+
+from ...config import settings
 
 logger = logging.getLogger(__name__)
 
 
 class CursorClient:
     """
-    Cursor model client.
+    Client for Cursor IDE integration via MCP.
     
-    Note: This is a placeholder for Cursor's API integration.
-    Actual implementation depends on Cursor's model access API.
+    Features:
+    - Access to Claude 4.5 Sonnet and other premium models
+    - Uses user's Cursor credentials
+    - Highest quality responses for most complex queries
+    - Automatic fallback if unavailable
     """
     
-    def __init__(self):
-        """Initialize Cursor client."""
-        self._available = False  # Set to True when Cursor API is available
-        logger.info("Cursor client initialized (placeholder)")
-    
-    def is_available(self) -> bool:
+    def __init__(self, base_url: Optional[str] = None):
         """
-        Check if Cursor models are available.
+        Initialize Cursor client.
+        
+        Args:
+            base_url: Optional override for Cursor MCP URL
+        """
+        self.base_url = base_url or settings.cursor_mcp_url
+        self.model = settings.cursor_model
+        self.timeout = settings.ollama_timeout  # Reuse timeout setting
+        self._available = None  # Cached availability status
+        
+        logger.info(f"CursorClient initialized: {self.base_url}, model={self.model}")
+    
+    async def is_available(self) -> bool:
+        """
+        Check if Cursor MCP server is available.
         
         Returns:
-            True if available
+            True if Cursor is accessible
         """
-        return self._available
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(f"{self.base_url}/health")
+                available = response.status_code == 200
+                self._available = available
+                return available
+        except Exception as e:
+            logger.debug(f"Cursor not available: {e}")
+            self._available = False
+            return False
     
     async def generate(
         self,
         prompt: str,
-        model: str = "cursor-free-smart",
+        model: Optional[str] = None,
         system: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: int = 2048
+        max_tokens: Optional[int] = None
     ) -> Dict[str, Any]:
         """
-        Generate text using Cursor model.
+        Generate text using Cursor IDE's model.
         
         Args:
             prompt: Input prompt
-            model: Model name
+            model: Optional model override
             system: Optional system prompt
             temperature: Sampling temperature
-            max_tokens: Maximum tokens
+            max_tokens: Maximum tokens to generate
         
         Returns:
-            Response dict
+            Response dict with 'response' key
+        
+        Raises:
+            httpx.HTTPError: If request fails
         """
-        if not self.is_available():
-            from ...utils.exceptions import ModelError
-            raise ModelError("Cursor models not available")
+        model = model or self.model
         
-        # TODO: Implement actual Cursor API integration
-        # This is a placeholder that should be replaced with real implementation
+        logger.info(f"Generating with Cursor: model={model}, temp={temperature}")
         
-        raise NotImplementedError(
-            "Cursor API integration not yet implemented. "
-            "This will be added when Cursor provides model access API."
-        )
+        # Build request payload (MCP format)
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "temperature": temperature,
+            "stream": False
+        }
+        
+        if system:
+            payload["system"] = system
+        
+        if max_tokens:
+            payload["max_tokens"] = max_tokens
+        
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}/api/generate",
+                    json=payload
+                )
+                response.raise_for_status()
+                
+                data = response.json()
+                
+                logger.info(
+                    f"Cursor response received: {len(data.get('response', ''))} chars"
+                )
+                
+                return data
+        
+        except httpx.HTTPError as e:
+            logger.error(f"Cursor request failed: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error with Cursor: {e}", exc_info=True)
+            raise
+    
+    async def chat(
+        self,
+        messages: list[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Chat with Cursor IDE's model (conversational format).
+        
+        Args:
+            messages: List of {"role": "user/assistant", "content": "..."}
+            model: Optional model override
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+        
+        Returns:
+            Response dict with 'message' key
+        """
+        model = model or self.model
+        
+        logger.info(f"Chat with Cursor: {len(messages)} messages")
+        
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "stream": False
+        }
+        
+        if max_tokens:
+            payload["max_tokens"] = max_tokens
+        
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}/api/chat",
+                    json=payload
+                )
+                response.raise_for_status()
+                
+                return response.json()
+        
+        except httpx.HTTPError as e:
+            logger.error(f"Cursor chat failed: {e}")
+            raise
+    
+    async def get_models(self) -> list[str]:
+        """
+        Get list of available models in Cursor.
+        
+        Returns:
+            List of model names
+        """
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(f"{self.base_url}/api/models")
+                response.raise_for_status()
+                
+                data = response.json()
+                models = [model.get("name") for model in data.get("models", [])]
+                
+                logger.info(f"Cursor models: {models}")
+                
+                return models
+        
+        except Exception as e:
+            logger.error(f"Failed to get Cursor models: {e}")
+            return []
 
 
-# Global instance
+# Singleton instance
 _cursor_client: Optional[CursorClient] = None
 
 
 def get_cursor_client() -> CursorClient:
-    """Get global Cursor client instance."""
+    """
+    Get the global Cursor client instance.
+    
+    Returns:
+        CursorClient instance
+    """
     global _cursor_client
+    
     if _cursor_client is None:
         _cursor_client = CursorClient()
+    
     return _cursor_client
 

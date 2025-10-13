@@ -96,7 +96,7 @@ async def list_documents(
                     created_at=doc.created_at.isoformat(),
                     updated_at=doc.updated_at.isoformat(),
                     is_latest=doc.is_latest,
-                    word_count=doc.metadata.get("word_count", 0)
+                    word_count=getattr(doc.metadata, "word_count", 0)
                 )
                 for doc in documents
             ],
@@ -141,6 +141,6 @@ async def get_document(document_id: UUID):
             created_at=doc.created_at.isoformat(),
             updated_at=doc.updated_at.isoformat(),
             is_latest=doc.is_latest,
-            word_count=doc.metadata.get("word_count", 0)
+            word_count=getattr(doc.metadata, "word_count", 0)
         )
 

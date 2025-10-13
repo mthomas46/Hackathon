@@ -49,6 +49,17 @@ services:
       - ./data/ollama:/root/.ollama
     environment:
       - OLLAMA_HOST=0.0.0.0
+      # ⚡ Performance Optimizations
+      - OLLAMA_NUM_CTX=2048           # Reduce context window (was 4096)
+      - OLLAMA_NUM_THREADS=10         # Use 10 threads for M4 Max
+      - OLLAMA_NUM_BATCH=2048         # Increase batch size (was 512)
+      - OLLAMA_KEEP_ALIVE=10m         # Keep models loaded for 10 minutes
+      - OLLAMA_FLASH_ATTENTION=1      # Enable flash attention
+      - OLLAMA_MAX_QUEUE=10           # Allow queue of 10 requests
+      - OLLAMA_NUM_PARALLEL=2         # Process 2 requests in parallel
+      - OLLAMA_LLM_LIBRARY=cpu_arm64  # Optimize for Apple Silicon
+    mem_limit: 30g  # 30GB for multiple LLaMA models
+    mem_reservation: 8g  # Reserve 8GB minimum
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
       interval: 30s
@@ -65,34 +76,65 @@ services:
     #           count: 1
     #           capabilities: [gpu]
 
-  # MCP Service (commented out - run locally for development)
-  # ecosystem-mcp:
-  #   build:
-  #     context: .
-  #     dockerfile: docker/Dockerfile
-  #   container_name: ecosystem-mcp-service
-  #   environment:
-  #     DATABASE_URL: postgresql://ecosystem:ecosystem_password@postgres:5432/ecosystem_mcp
-  #     REDIS_URL: redis://redis:6379/0
-  #     CHROMA_PATH: /app/data/chroma_db
-  #     OLLAMA_BASE_URL: http://ollama:11434
-  #     MODEL_STRATEGY: ollama-only
-  #   ports:
-  #     - "8000:8000"
-  #     - "9090:9090"
-  #   volumes:
-  #     - ./data/chroma_db:/app/data/chroma_db
-  #     - ./data/backups:/app/data/backups
-  #     - /Users/mykalthomas/Documents/work/Hackathon:/repo:ro
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     ollama:
-  #       condition: service_started
-  #   networks:
-  #     - ecosystem-mcp
+  # Ecosystem MCP Service
+  ecosystem-mcp:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: ecosystem-mcp-service
+    environment:
+      DATABASE_URL: postgresql://ecosystem:ecosystem_password@postgres:5432/ecosystem_mcp
+      REDIS_URL: redis://redis:6379/0
+      CHROMA_PATH: /app/data/chroma_db
+      OLLAMA_BASE_URL: http://ollama:11434
+      MODEL_STRATEGY: ollama-only
+      # Performance settings
+      ENABLE_CACHE: "true"
+      CACHE_TTL: 3600
+      RATE_LIMIT_ENABLED: "false"  # Disable for local dev
+    ports:
+      - "8000:8000"  # API
+      - "9090:9090"  # Metrics
+    volumes:
+      - ./data/chroma_db:/app/data/chroma_db
+      - ./data/backups:/app/data/backups
+      - /Users/mykalthomas/Documents/work/Hackathon:/repo:ro
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker socket for container management
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - ecosystem-mcp
+
+  # Ecosystem MCP Dashboard
+  dashboard:
+    build:
+      context: ../ecosystem-mcp-dashboard
+      dockerfile: Dockerfile
+    container_name: ecosystem-mcp-dashboard
+    environment:
+      - API_BASE_URL=http://host.docker.internal:8000
+    ports:
+      - "8501:8501"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ecosystem-mcp
+    restart: unless-stopped
 
 networks:
   ecosystem-mcp:

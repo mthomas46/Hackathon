@@ -187,10 +187,15 @@ class PreflightChecker:
             )
     
     async def check_postgresql(self) -> CheckResult:
-        """Check PostgreSQL connectivity."""
+        """Check PostgreSQL connectivity and database existence."""
         logger.info("Checking PostgreSQL connection...")
         
         try:
+            # Parse database name from URL
+            from urllib.parse import urlparse
+            parsed = urlparse(str(settings.database_url))
+            db_name = parsed.path.lstrip('/') if parsed.path else "unknown"
+            
             # Try to connect with timeout
             conn = await asyncio.wait_for(
                 psycopg.AsyncConnection.connect(
@@ -200,29 +205,90 @@ class PreflightChecker:
                 timeout=5.0
             )
             
-            # Execute simple query
+            # Execute simple query to verify connection
             async with conn.cursor() as cur:
-                await cur.execute("SELECT version()")
-                version = await cur.fetchone()
+                await cur.execute("SELECT version(), current_database()")
+                result = await cur.fetchone()
+                version = result[0] if result else "unknown"
+                current_db = result[1] if result and len(result) > 1 else "unknown"
+            
+            # Verify we're connected to the correct database
+            if current_db != db_name:
+                await conn.close()
+                return CheckResult(
+                    name="PostgreSQL",
+                    passed=False,
+                    message=f"Connected to wrong database: expected '{db_name}', got '{current_db}'",
+                    details={
+                        "expected_db": db_name,
+                        "actual_db": current_db
+                    }
+                )
+            
+            # Check if tables exist (basic schema validation)
+            async with conn.cursor() as cur:
+                await cur.execute("""
+                    SELECT COUNT(*) FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+                """)
+                table_count = await cur.fetchone()
+                tables = table_count[0] if table_count else 0
             
             await conn.close()
             
             return CheckResult(
                 name="PostgreSQL",
                 passed=True,
-                message="Connection successful",
+                message=f"Connection successful to '{db_name}' ({tables} tables)",
                 details={
-                    "version": version[0] if version else "unknown",
-                    "database_url": str(settings.database_url)
+                    "version": version,
+                    "database": current_db,
+                    "tables": tables,
+                    "database_url": str(settings.database_url).split('@')[1] if '@' in str(settings.database_url) else str(settings.database_url)
                 }
             )
         except asyncio.TimeoutError:
             return CheckResult(
                 name="PostgreSQL",
                 passed=False,
-                message="Connection timeout (5s)",
-                details={"url": str(settings.database_url).split('@')[1] if '@' in str(settings.database_url) else "unknown"}
+                message="Connection timeout (5s) - database may not be running",
+                details={
+                    "url": str(settings.database_url).split('@')[1] if '@' in str(settings.database_url) else "unknown",
+                    "suggestion": "Check if PostgreSQL container is running: docker ps | grep postgres"
+                }
             )
+        except psycopg.OperationalError as e:
+            error_msg = str(e)
+            # Check for specific errors
+            if "database" in error_msg and "does not exist" in error_msg:
+                return CheckResult(
+                    name="PostgreSQL",
+                    passed=False,
+                    message=f"Database does not exist: {error_msg}",
+                    details={
+                        "error": "database_not_found",
+                        "exception": error_msg,
+                        "suggestion": f"Create database: docker exec <postgres-container> psql -U <user> -c 'CREATE DATABASE {db_name};'"
+                    }
+                )
+            elif "Connection refused" in error_msg or "could not connect" in error_msg:
+                return CheckResult(
+                    name="PostgreSQL",
+                    passed=False,
+                    message=f"Cannot connect to PostgreSQL server: {error_msg}",
+                    details={
+                        "error": "connection_refused",
+                        "exception": error_msg,
+                        "suggestion": "Check if PostgreSQL is running and accessible"
+                    }
+                )
+            else:
+                return CheckResult(
+                    name="PostgreSQL",
+                    passed=False,
+                    message=f"PostgreSQL error: {error_msg}",
+                    details={"exception": error_msg}
+                )
         except Exception as e:
             return CheckResult(
                 name="PostgreSQL",

@@ -69,7 +69,11 @@ def cache(
             async def async_wrapper(*args, **kwargs) -> Any:
                 global CACHE_HITS, CACHE_MISSES
                 
-                redis = get_redis_client()
+                try:
+                    redis_client = await get_redis_client()
+                except Exception as e:
+                    logger.warning(f"Redis not available, skipping cache: {e}")
+                    return await func(*args, **kwargs)
                 
                 # Generate cache key
                 if key_fn:
@@ -104,12 +108,19 @@ def cache(
                 
                 # Try cache first
                 try:
-                    cached = await redis.get(cache_key)
+                    cached = await redis_client.get(cache_key)
                     if cached:
                         CACHE_HITS += 1
                         if PROMETHEUS_AVAILABLE:
                             CACHE_HIT_COUNTER.labels(prefix=key_prefix).inc()
-                        logger.debug(f"Cache HIT: {cache_key}")
+                        logger.info(f"🎯 Cache HIT: {key_prefix}:{func.__name__} (key: {cache_key})")
+                        
+                        # Track stats in Redis
+                        try:
+                            await redis_client.incr(f"cache_stats:{key_prefix}:hits")
+                        except:
+                            pass
+                        
                         return json.loads(cached)
                 except Exception as e:
                     logger.warning(f"Cache read error for {cache_key}: {e}")
@@ -119,14 +130,21 @@ def cache(
                 CACHE_MISSES += 1
                 if PROMETHEUS_AVAILABLE:
                     CACHE_MISS_COUNTER.labels(prefix=key_prefix).inc()
-                logger.debug(f"Cache MISS: {cache_key}")
+                logger.info(f"❌ Cache MISS: {key_prefix}:{func.__name__} (key: {cache_key})")
+                
+                # Track stats in Redis
+                try:
+                    await redis_client.incr(f"cache_stats:{key_prefix}:misses")
+                except:
+                    pass
+                
                 result = await func(*args, **kwargs)
                 
                 # Store in cache (best effort)
                 try:
                     serialized = json.dumps(result)
-                    await redis.set(cache_key, serialized, ex=ttl)
-                    logger.debug(f"Cached result for {cache_key} (TTL: {ttl}s)")
+                    await redis_client.setex(cache_key, ttl, serialized)
+                    logger.info(f"💾 Cached result for {cache_key} (TTL: {ttl}s)")
                 except (TypeError, ValueError) as e:
                     logger.warning(f"Cannot cache result for {cache_key}: {e}")
                 except Exception as e:

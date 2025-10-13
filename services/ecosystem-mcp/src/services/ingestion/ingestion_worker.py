@@ -8,7 +8,7 @@ Coordinates the entire ingestion pipeline from Git → Database → ChromaDB.
 import asyncio
 import logging
 from typing import Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 from datetime import datetime
 
 from ...config import settings
@@ -37,10 +37,11 @@ class IngestionWorker:
     
     def __init__(self):
         """Initialize the ingestion worker."""
+        self.worker_id = str(uuid4())[:8]  # Short unique ID for this worker instance
         self.running = False
         self._task: Optional[asyncio.Task] = None
         self.job_processor = JobProcessor()
-        logger.info("IngestionWorker initialized")
+        logger.info(f"IngestionWorker initialized (ID: {self.worker_id})")
     
     async def start(self):
         """
@@ -89,11 +90,21 @@ class IngestionWorker:
         while self.running:
             try:
                 # Get next job from Redis stream
-                job_id = await self._get_next_job()
+                result = await self._get_next_job()
                 
-                if job_id:
+                if result:
+                    message_id, job_id = result
                     logger.info(f"Processing job: {job_id}")
                     await self._process_job(job_id)
+                    
+                    # ✅ CRITICAL: ACK the message after processing
+                    redis = get_redis_client()
+                    await redis.client.xack(
+                        redis.INGESTION_STREAM,
+                        redis.CONSUMER_GROUP,
+                        message_id
+                    )
+                    logger.debug(f"✅ ACK'd message {message_id}")
                 else:
                     # No jobs available, wait before checking again
                     await asyncio.sleep(5)
@@ -102,30 +113,32 @@ class IngestionWorker:
                 logger.error(f"Error in worker loop: {e}", exc_info=True)
                 await asyncio.sleep(10)  # Back off on errors
     
-    async def _get_next_job(self) -> Optional[UUID]:
+    async def _get_next_job(self) -> Optional[tuple[str, UUID]]:
         """
-        Get the next job ID from Redis stream.
+        Get the next job from Redis stream.
         
         Returns:
-            Job ID if available, None otherwise
+            Tuple of (message_id, job_id) if available, None otherwise
         """
         try:
             redis = get_redis_client()
             
             # Read from ingestion stream
-            messages = await redis.read_stream(
-                redis.INGESTION_STREAM,
+            messages = await redis.read_from_stream(
+                stream=redis.INGESTION_STREAM,
+                consumer_name=f"worker-{self.worker_id}",
                 count=1,
                 block=1000  # Block for 1 second
             )
             
             if messages:
-                # Extract job_id from message
-                message = messages[0]
-                job_id_str = message.get("job_id")
+                # Extract message_id and job_id from message
+                # messages is a list of (message_id, data) tuples
+                message_id, data = messages[0]
+                job_id_str = data.get("job_id")
                 
                 if job_id_str:
-                    return UUID(job_id_str)
+                    return (message_id, UUID(job_id_str))  # ✅ Return both!
             
             return None
         

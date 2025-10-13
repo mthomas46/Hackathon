@@ -50,15 +50,57 @@ class Settings(BaseSettings):
     )
     chroma_collection_name: str = Field(default="ecosystem_docs")
 
-    # Ollama
+    # Ollama (Docker/Container)
     ollama_base_url: str = Field(
         default="http://localhost:11434",
-        description="Ollama API base URL"
+        description="Ollama API base URL (Docker/Container)"
     )
-    ollama_model_small: str = Field(default="llama3.1:8b-instruct-q8_0")
+    ollama_model_small: str = Field(default="llama3.2:3b")  # Faster for RAG queries
     ollama_model_medium: str = Field(default="mistral:7b-instruct-q8_0")
     ollama_embedding_model: str = Field(default="nomic-embed-text:latest")
     ollama_timeout: int = Field(default=300, ge=10, le=600)
+    
+    # Ollama Desktop (Native client with GPU access)
+    ollama_desktop_enabled: bool = Field(
+        default=True,
+        description="Enable native desktop Ollama for heavy workloads"
+    )
+    ollama_desktop_url: str = Field(
+        default="http://localhost:11435",
+        description="Desktop Ollama API URL (different port to avoid conflict)"
+    )
+    ollama_desktop_model: str = Field(
+        default="llama3:latest",
+        description="Model to use on desktop (can use larger models with GPU)"
+    )
+    use_desktop_for_rag: bool = Field(
+        default=True,
+        description="Use desktop Ollama for RAG queries (better performance)"
+    )
+    
+    # Cursor IDE Integration (Premium models via MCP)
+    cursor_enabled: bool = Field(
+        default=False,
+        description="Enable Cursor IDE models for most complex queries"
+    )
+    cursor_mcp_url: str = Field(
+        default="http://localhost:3000",
+        description="Cursor MCP server URL"
+    )
+    cursor_model: str = Field(
+        default="claude-4.5-sonnet",
+        description="Cursor model to use (claude-4.5-sonnet, gpt-4, etc.)"
+    )
+    cursor_complexity_threshold: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=1.0,
+        description="Complexity threshold for routing to Cursor (0.7 = very complex)"
+    )
+    cursor_fallback_enabled: bool = Field(
+        default=True,
+        description="Fallback to desktop/docker if Cursor unavailable"
+    )
 
     # OpenAI
     openai_api_key: Optional[str] = Field(default=None)

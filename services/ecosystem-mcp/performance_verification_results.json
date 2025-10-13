@@ -1,0 +1,24 @@
+{
+  "search": {
+    "cold_avg": 0.0253299077351888,
+    "warm_avg": 0.027715587615966798,
+    "speedup": 0.9139228107361642,
+    "pass": false
+  },
+  "rag": {
+    "first_query": 8.503474950790405,
+    "second_query": 6.041578054428101,
+    "improvement": 1.4074923594768236,
+    "answers_match": false,
+    "pass": true
+  },
+  "doc_query": {
+    "error": "First query failed"
+  },
+  "parallel": {
+    "sequential": 1.1073400974273682,
+    "parallel": 0.02306985855102539,
+    "speedup": 47.99943159504764,
+    "pass": true
+  }
+}

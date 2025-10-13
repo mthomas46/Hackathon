@@ -1,0 +1,1699 @@
+{
+  "section": "Troubleshooting",
+  "summary": {
+    "duration_seconds": 312.209046125412,
+    "total_queries": 14,
+    "cache_hits": 0,
+    "output_size_bytes": 25266
+  },
+  "passes": [
+    {
+      "pass_name": "Pass 1: Initial Overview",
+      "duration_seconds": 51.17816185951233,
+      "total_queries": 2,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "What are common issues with ecosystem-mcp?",
+          "timestamp": 1760311379.23548,
+          "duration_seconds": 19.864580869674683,
+          "answer_length": 1104,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/mcp-provisioner/domain/repositories/__init__.py",
+              "score": 0.413
+            },
+            {
+              "id": 2,
+              "file_path": "services/ecosystem-mcp/src/services/models/__init__.py",
+              "score": 0.41
+            },
+            {
+              "id": 3,
+              "file_path": "services/mcp-infrastructure/application/use_cases/__init__.py",
+              "score": 0.41
+            },
+            {
+              "id": 4,
+              "file_path": "services/mcp-gateway/domain/value_objects/mcp_instance_status.py",
+              "score": 0.409
+            },
+            {
+              "id": 5,
+              "file_path": "README.md",
+              "score": 0.409
+            },
+            {
+              "id": 6,
+              "file_path": "services/mcp-provisioner/application/use_cases/get_mcp_status_use_case.py",
+              "score": 0.409
+            },
+            {
+              "id": 7,
+              "file_path": "services/mcp-infrastructure/application/dto/mcp_context_response.py",
+              "score": 0.408
+            },
+            {
+              "id": 8,
+              "file_path": "services/mcp-registry/domain/value_objects/mcp_version.py",
+              "score": 0.408
+            },
+            {
+              "id": 9,
+              "file_path": "services/ecosystem-mcp/src/utils/system_validator.py",
+              "score": 0.407
+            },
+            {
+              "id": 10,
+              "file_path": "services/mcp-registry/domain/entities/mcp_package.py",
+              "score": 0.404
+            },
+            {
+              "id": 11,
+              "file_path": "services/mcp-infrastructure/domain/value_objects/mcp_context_type.py",
+              "score": 0.403
+            },
+            {
+              "id": 12,
+              "file_path": "services/mcp-orchestrator/domain/entities/mcp_query.py",
+              "score": 0.402
+            },
+            {
+              "id": 13,
+              "file_path": "services/ecosystem-mcp/src/models/__init__.py",
+              "score": 0.399
+            },
+            {
+              "id": 14,
+              "file_path": "services/ecosystem-mcp/src/ingestion/__init__.py",
+              "score": 0.399
+            },
+            {
+              "id": 15,
+              "file_path": "horus_heresy_demo/README.md",
+              "score": 0.398
+            },
+            {
+              "id": 16,
+              "file_path": "docs/COMPLETE_CONSOLIDATION_SUMMARY.md",
+              "score": 0.398
+            },
+            {
+              "id": 17,
+              "file_path": "services/ecosystem-mcp/src/services/__init__.py",
+              "score": 0.397
+            },
+            {
+              "id": 18,
+              "file_path": "services/ecosystem-mcp/src/api/__init__.py",
+              "score": 0.394
+            },
+            {
+              "id": 19,
+              "file_path": "services/mcp-store/domain/entities/mcp_package.py",
+              "score": 0.392
+            },
+            {
+              "id": 20,
+              "file_path": "docs/PASS_2_CONSOLIDATION_COMPLETE.md",
+              "score": 0.392
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "How do you diagnose problems?",
+          "timestamp": 1760311399.4012969,
+          "duration_seconds": 30.711209297180176,
+          "answer_length": 2593,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/documentation_analyzer.py",
+              "score": 0.416
+            },
+            {
+              "id": 2,
+              "file_path": "services/simulation_dashboard/components/charts/anomaly_charts.py",
+              "score": 0.416
+            },
+            {
+              "id": 3,
+              "file_path": "services/cli/tests/unit/domain/test_exceptions.py",
+              "score": 0.416
+            },
+            {
+              "id": 4,
+              "file_path": "services/analysis-service/modules/change_impact/relationship_analyzer.py",
+              "score": 0.416
+            },
+            {
+              "id": 5,
+              "file_path": "services/simulation-dashboard/components/charts/anomaly_charts.py",
+              "score": 0.416
+            },
+            {
+              "id": 6,
+              "file_path": "services/doc_store/presentation/api/routes_debug.py",
+              "score": 0.416
+            },
+            {
+              "id": 7,
+              "file_path": "scripts/audit-framework/domain/entities/analysis_result.py",
+              "score": 0.416
+            },
+            {
+              "id": 8,
+              "file_path": "services/mcp-logs/domain/entities/anomaly.py",
+              "score": 0.416
+            },
+            {
+              "id": 9,
+              "file_path": "services/analysis-service/application/use_cases/get_findings_use_case.py",
+              "score": 0.415
+            },
+            {
+              "id": 10,
+              "file_path": "services/analysis-service/domain/entities/analysis.py",
+              "score": 0.414
+            },
+            {
+              "id": 11,
+              "file_path": "services/code-analyzer/domain/entities/analysis_results.py",
+              "score": 0.413
+            },
+            {
+              "id": 12,
+              "file_path": "services/project-planning-service/domain/services/dependency_resolver.py",
+              "score": 0.413
+            },
+            {
+              "id": 13,
+              "file_path": "services/analysis-service/domain/services/finding_service.py",
+              "score": 0.412
+            },
+            {
+              "id": 14,
+              "file_path": "tests/test_search_analysis.py",
+              "score": 0.412
+            },
+            {
+              "id": 15,
+              "file_path": "services/analysis-service/tests/coverage/coverage_analyzer.py",
+              "score": 0.412
+            },
+            {
+              "id": 16,
+              "file_path": "services/source-agent/domain/value_objects/document_status.py",
+              "score": 0.411
+            },
+            {
+              "id": 17,
+              "file_path": "services/analysis-service/domain/services/analysis_service.py",
+              "score": 0.411
+            },
+            {
+              "id": 18,
+              "file_path": "services/cli/modules/formatters/status_formatters.py",
+              "score": 0.411
+            },
+            {
+              "id": 19,
+              "file_path": "services/orchestrator/application/health_monitoring/use_cases.py",
+              "score": 0.41
+            },
+            {
+              "id": 20,
+              "file_path": "services/analysis-service/application/dto/response_dtos.py",
+              "score": 0.41
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 20,
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pass_name": "Pass 2: Deep Dive",
+      "duration_seconds": 182.25780725479126,
+      "total_queries": 7,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "How to troubleshoot cache issues and verify cache is working?",
+          "timestamp": 1760311430.413651,
+          "duration_seconds": 32.05586814880371,
+          "answer_length": 2410,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/simulation-dashboard/components/tables/resource_tables.py",
+              "score": 0.486
+            },
+            {
+              "id": 2,
+              "file_path": "services/simulation_dashboard/components/tables/resource_tables.py",
+              "score": 0.485
+            },
+            {
+              "id": 3,
+              "file_path": "services/analysis-service/domain/value_objects/maintenance_models.py",
+              "score": 0.485
+            },
+            {
+              "id": 4,
+              "file_path": "data/service_test_results.txt",
+              "score": 0.485
+            },
+            {
+              "id": 5,
+              "file_path": "services/analysis-service/tests/infrastructure/test_analysis_core.py",
+              "score": 0.484
+            },
+            {
+              "id": 6,
+              "file_path": "services/analysis-service/modules/models/maintenance.py",
+              "score": 0.483
+            },
+            {
+              "id": 7,
+              "file_path": "docker/docker-requirements.txt",
+              "score": 0.482
+            },
+            {
+              "id": 8,
+              "file_path": "tests/test_ingestion_deduplication.py",
+              "score": 0.48
+            },
+            {
+              "id": 9,
+              "file_path": "services/doc_store/infrastructure/config/settings.py",
+              "score": 0.48
+            },
+            {
+              "id": 10,
+              "file_path": "services/doc_store/tests/unit/test_doc_store_core.py",
+              "score": 0.48
+            },
+            {
+              "id": 11,
+              "file_path": "scripts/requirements.txt",
+              "score": 0.48
+            },
+            {
+              "id": 12,
+              "file_path": "services/doc_store/infrastructure/services/resource_monitor_service.py",
+              "score": 0.479
+            },
+            {
+              "id": 13,
+              "file_path": "services/mcp-performance-store/infrastructure/analytics/anomaly_detector.py",
+              "score": 0.479
+            },
+            {
+              "id": 14,
+              "file_path": "services/code-analyzer/domain/entities/security_issue.py",
+              "score": 0.478
+            },
+            {
+              "id": 15,
+              "file_path": "services/doc_store/infrastructure/database/connection.py",
+              "score": 0.478
+            },
+            {
+              "id": 16,
+              "file_path": "services/mcp-performance-store/domain/services/anomaly_detection_service.py",
+              "score": 0.476
+            },
+            {
+              "id": 17,
+              "file_path": "services/code-analyzer/domain/value_objects/analysis_status.py",
+              "score": 0.475
+            },
+            {
+              "id": 18,
+              "file_path": "services/doc_store/tests/unit/test_quality_service.py",
+              "score": 0.475
+            },
+            {
+              "id": 19,
+              "file_path": "services/doc_store/domain/common/validation_utils.py",
+              "score": 0.475
+            },
+            {
+              "id": 20,
+              "file_path": "tests/test_search_analysis.py",
+              "score": 0.474
+            },
+            {
+              "id": 21,
+              "file_path": "services/ecosystem-mcp/tests/load/README.md",
+              "score": 0.473
+            },
+            {
+              "id": 22,
+              "file_path": "services/project-planning-service/domain/services/dependency_resolver.py",
+              "score": 0.473
+            },
+            {
+              "id": 23,
+              "file_path": "status/README.md",
+              "score": 0.471
+            },
+            {
+              "id": 24,
+              "file_path": "docker-compose.dev.yml",
+              "score": 0.467
+            },
+            {
+              "id": 25,
+              "file_path": "services/doc_store/tests/integration/test_document_workflow.py",
+              "score": 0.465
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "How to troubleshoot database connection problems?",
+          "timestamp": 1760311462.7716632,
+          "duration_seconds": 25.045196771621704,
+          "answer_length": 1942,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/shared/core/logging/correlation_middleware.py",
+              "score": 0.465
+            },
+            {
+              "id": 2,
+              "file_path": "services/project-planning-service/domain/services/development_blindspot_detector.py",
+              "score": 0.464
+            },
+            {
+              "id": 3,
+              "file_path": "services/simulation-dashboard/services/clients/websocket_client.py",
+              "score": 0.464
+            },
+            {
+              "id": 4,
+              "file_path": "services/cli/modules/adapters/base_service_adapter.py",
+              "score": 0.464
+            },
+            {
+              "id": 5,
+              "file_path": "services/simulation_dashboard/services/clients/websocket_client.py",
+              "score": 0.463
+            },
+            {
+              "id": 6,
+              "file_path": "common/config.py",
+              "score": 0.463
+            },
+            {
+              "id": 7,
+              "file_path": "services/cli/infrastructure/adapters/base_service_adapter.py",
+              "score": 0.462
+            },
+            {
+              "id": 8,
+              "file_path": "services/doc_store/infrastructure/config/settings.py",
+              "score": 0.461
+            },
+            {
+              "id": 9,
+              "file_path": "services/analysis-service/infrastructure/migrations/sqlite_migration_manager.py",
+              "score": 0.46
+            },
+            {
+              "id": 10,
+              "file_path": "services/analysis-service/presentation/middleware/error_handling.py",
+              "score": 0.459
+            },
+            {
+              "id": 11,
+              "file_path": "services/simulation-dashboard/domain/services/causal_analysis_service.py",
+              "score": 0.458
+            },
+            {
+              "id": 12,
+              "file_path": "services/doc_store/infrastructure/services/resource_monitor_service.py",
+              "score": 0.458
+            },
+            {
+              "id": 13,
+              "file_path": "services/simulation_dashboard/domain/services/causal_analysis_service.py",
+              "score": 0.458
+            },
+            {
+              "id": 14,
+              "file_path": "services/project-planning-service/domain/services/dependency_resolver.py",
+              "score": 0.458
+            },
+            {
+              "id": 15,
+              "file_path": "scripts/fix_profiles.py",
+              "score": 0.457
+            },
+            {
+              "id": 16,
+              "file_path": "services/analysis-service/infrastructure/connections/pool_manager.py",
+              "score": 0.457
+            },
+            {
+              "id": 17,
+              "file_path": "services/prompt_store/domain/relationships/repository.py",
+              "score": 0.456
+            },
+            {
+              "id": 18,
+              "file_path": "services/mcp-performance-store/domain/services/anomaly_detection_service.py",
+              "score": 0.455
+            },
+            {
+              "id": 19,
+              "file_path": "services/doc_store/domain/relationships/__init__.py",
+              "score": 0.453
+            },
+            {
+              "id": 20,
+              "file_path": "services/shared/infrastructure/utilities/logging_service.py",
+              "score": 0.453
+            },
+            {
+              "id": 21,
+              "file_path": "services/mcp-logs/application/services/anomaly_service.py",
+              "score": 0.453
+            },
+            {
+              "id": 22,
+              "file_path": "services/user-store/infrastructure/repositories/sqlite_document_relationship_repository.py",
+              "score": 0.453
+            },
+            {
+              "id": 23,
+              "file_path": "services/doc_store/tests/unit/domains/test_relationships.py",
+              "score": 0.452
+            },
+            {
+              "id": 24,
+              "file_path": "services/doc_store/application/handlers/relationships_handlers.py",
+              "score": 0.448
+            },
+            {
+              "id": 25,
+              "file_path": "services/prompt_store/domain/relationships/service.py",
+              "score": 0.448
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "How to troubleshoot Redis connectivity?",
+          "timestamp": 1760311488.119107,
+          "duration_seconds": 23.00581407546997,
+          "answer_length": 1913,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/analysis-service/presentation/api/routers/repositories_router.py",
+              "score": 0.503
+            },
+            {
+              "id": 2,
+              "file_path": "services/analysis-service/presentation/routes/repository_routes.py",
+              "score": 0.502
+            },
+            {
+              "id": 3,
+              "file_path": "tests/integration/mcp_provisioner/test_provisioner_gateway_integration.py",
+              "score": 0.502
+            },
+            {
+              "id": 4,
+              "file_path": "services/shared/infrastructure/utilities/connection_pool_service.py",
+              "score": 0.499
+            },
+            {
+              "id": 5,
+              "file_path": "services/analysis-service/infrastructure/connections/__init__.py",
+              "score": 0.498
+            },
+            {
+              "id": 6,
+              "file_path": "reports/final_verification_report.json",
+              "score": 0.498
+            },
+            {
+              "id": 7,
+              "file_path": "status/all_running_services.txt",
+              "score": 0.496
+            },
+            {
+              "id": 8,
+              "file_path": "services/shared/infrastructure/config/config_monitor.py",
+              "score": 0.494
+            },
+            {
+              "id": 9,
+              "file_path": "services/mcp-logs/application/services/anomaly_service.py",
+              "score": 0.494
+            },
+            {
+              "id": 10,
+              "file_path": "services/cli/infrastructure/services/services/infrastructure_manager.py",
+              "score": 0.493
+            },
+            {
+              "id": 11,
+              "file_path": "services/ecosystem-mcp/src/utils/retry.py",
+              "score": 0.493
+            },
+            {
+              "id": 12,
+              "file_path": "docs/00-START-HERE.md",
+              "score": 0.49
+            },
+            {
+              "id": 13,
+              "file_path": ".github/workflows/ecosystem-validation.yml",
+              "score": 0.489
+            },
+            {
+              "id": 14,
+              "file_path": "services/project-simulation/tests/unit/test_discovery_agent_registration.py",
+              "score": 0.488
+            },
+            {
+              "id": 15,
+              "file_path": "services/analysis-service/infrastructure/connections/pool_monitor.py",
+              "score": 0.487
+            },
+            {
+              "id": 16,
+              "file_path": "services/cli/modules/utils/error_utils.py",
+              "score": 0.484
+            },
+            {
+              "id": 17,
+              "file_path": "services/shared/infrastructure/utilities/resilience.py",
+              "score": 0.484
+            },
+            {
+              "id": 18,
+              "file_path": "services/project-planning-service/domain/services/dependency_resolver.py",
+              "score": 0.482
+            },
+            {
+              "id": 19,
+              "file_path": "services/github-mcp/presentation/api/routes/issues.py",
+              "score": 0.48
+            },
+            {
+              "id": 20,
+              "file_path": "services/analysis-service/infrastructure/connections/connection_pool.py",
+              "score": 0.479
+            },
+            {
+              "id": 21,
+              "file_path": "services/unified-api-dashboard/deploy/monitoring/alert_rules.yml",
+              "score": 0.477
+            },
+            {
+              "id": 22,
+              "file_path": "services/mcp-performance-store/infrastructure/db/connection.py",
+              "score": 0.477
+            },
+            {
+              "id": 23,
+              "file_path": "services/shared/infrastructure/utilities/retry_service.py",
+              "score": 0.472
+            },
+            {
+              "id": 24,
+              "file_path": "services/unified-api-dashboard/docs/deployment/docker-setup.md",
+              "score": 0.441
+            },
+            {
+              "id": 25,
+              "file_path": "services/doc_store/infrastructure/database/connection.py",
+              "score": 0.435
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "How to troubleshoot ChromaDB and vector search issues?",
+          "timestamp": 1760311511.427386,
+          "duration_seconds": 26.91269588470459,
+          "answer_length": 2617,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/expert-finder-service/application/use_cases/find_experts_use_case.py",
+              "score": 0.503
+            },
+            {
+              "id": 2,
+              "file_path": "status/all_running_services.txt",
+              "score": 0.503
+            },
+            {
+              "id": 3,
+              "file_path": "services/cli/infrastructure/services/services/code_analyzer_manager.py",
+              "score": 0.503
+            },
+            {
+              "id": 4,
+              "file_path": "services/cli/modules/utils/display_helpers.py",
+              "score": 0.502
+            },
+            {
+              "id": 5,
+              "file_path": "services/discovery-agent/application/handlers/discovery_handler.py",
+              "score": 0.502
+            },
+            {
+              "id": 6,
+              "file_path": "services/expert-finder-service/domain/services/relevance_scoring_service.py",
+              "score": 0.502
+            },
+            {
+              "id": 7,
+              "file_path": "services/project-simulation/domain/analysis/analysis_result.py",
+              "score": 0.501
+            },
+            {
+              "id": 8,
+              "file_path": "services/project-planning-service/domain/services/development_blindspot_detector.py",
+              "score": 0.501
+            },
+            {
+              "id": 9,
+              "file_path": "docs-horus-heresy/07_SIEGE_OF_TERRA.md",
+              "score": 0.498
+            },
+            {
+              "id": 10,
+              "file_path": "RAG_SYSTEM_COMPLETE.md",
+              "score": 0.497
+            },
+            {
+              "id": 11,
+              "file_path": "docs-evergreen/ECOSYSTEM_OVERVIEW.md",
+              "score": 0.497
+            },
+            {
+              "id": 12,
+              "file_path": "docs-horus-heresy/09_KEY_CHARACTERS.md",
+              "score": 0.497
+            },
+            {
+              "id": 13,
+              "file_path": "services/analysis-service/domain/entities/finding.py",
+              "score": 0.497
+            },
+            {
+              "id": 14,
+              "file_path": "services/code-analyzer/domain/entities/security_issue.py",
+              "score": 0.496
+            },
+            {
+              "id": 15,
+              "file_path": "services/discovery-agent/application/handlers/ai_tool_selector.py",
+              "score": 0.496
+            },
+            {
+              "id": 16,
+              "file_path": "services/memory-agent/tests/integration/test_context_aggregation_day4.py",
+              "score": 0.494
+            },
+            {
+              "id": 17,
+              "file_path": "services/cli/infrastructure/services/services/docstore_manager.py",
+              "score": 0.493
+            },
+            {
+              "id": 18,
+              "file_path": "services/cli/infrastructure/adapters/discovery_agent_adapter.py",
+              "score": 0.492
+            },
+            {
+              "id": 19,
+              "file_path": "services/doc_store/domain/services/quality_service.py",
+              "score": 0.492
+            },
+            {
+              "id": 20,
+              "file_path": "services/code-analyzer/domain/entities/analysis_result.py",
+              "score": 0.492
+            },
+            {
+              "id": 21,
+              "file_path": "services/github-mcp/presentation/api/routes/issues.py",
+              "score": 0.492
+            },
+            {
+              "id": 22,
+              "file_path": "docs-evergreen/SERVICE_CATALOG.md",
+              "score": 0.492
+            },
+            {
+              "id": 23,
+              "file_path": "services/mcp-performance-store/domain/services/anomaly_detection_service.py",
+              "score": 0.491
+            },
+            {
+              "id": 24,
+              "file_path": "services/code-analyzer/domain/value_objects/security_finding.py",
+              "score": 0.491
+            },
+            {
+              "id": 25,
+              "file_path": "data/README.md",
+              "score": 0.491
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "How to troubleshoot Ollama and LLM generation problems?",
+          "timestamp": 1760311538.6413262,
+          "duration_seconds": 21.60590386390686,
+          "answer_length": 1679,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/workers/embedders/auto_tagger.py",
+              "score": 0.456
+            },
+            {
+              "id": 2,
+              "file_path": "services/llm-gateway/presentation/api/__init__.py",
+              "score": 0.456
+            },
+            {
+              "id": 3,
+              "file_path": "services/cli/infrastructure/adapters/bedrock_proxy_adapter.py",
+              "score": 0.455
+            },
+            {
+              "id": 4,
+              "file_path": "services/mcp_local_llm/domain/entities/model.py",
+              "score": 0.455
+            },
+            {
+              "id": 5,
+              "file_path": "services/llm-gateway/tests/integration/__init__.py",
+              "score": 0.454
+            },
+            {
+              "id": 6,
+              "file_path": "services/cli/modules/adapters/bedrock_proxy_adapter.py",
+              "score": 0.453
+            },
+            {
+              "id": 7,
+              "file_path": "services/cli/infrastructure/services/services/log_collector_manager.py",
+              "score": 0.452
+            },
+            {
+              "id": 8,
+              "file_path": "services/cli/infrastructure/services/services/analysis_manager.py",
+              "score": 0.451
+            },
+            {
+              "id": 9,
+              "file_path": "services/mcp-orchestrator/application/patterns/base.py",
+              "score": 0.451
+            },
+            {
+              "id": 10,
+              "file_path": "services/analysis-service/domain/value_objects/maintenance_models.py",
+              "score": 0.45
+            },
+            {
+              "id": 11,
+              "file_path": "scripts/test_runner.py",
+              "score": 0.449
+            },
+            {
+              "id": 12,
+              "file_path": "services/llm-gateway/tests/e2e/__init__.py",
+              "score": 0.449
+            },
+            {
+              "id": 13,
+              "file_path": "services/architecture-digitizer/modules/normalizers/figjam.py",
+              "score": 0.446
+            },
+            {
+              "id": 14,
+              "file_path": "services/llm-gateway/tests/unit/__init__.py",
+              "score": 0.446
+            },
+            {
+              "id": 15,
+              "file_path": "services/llm-tagging-pipeline/infrastructure/llm/__init__.py",
+              "score": 0.445
+            },
+            {
+              "id": 16,
+              "file_path": "services/architecture-digitizer/modules/normalizers/lucid.py",
+              "score": 0.445
+            },
+            {
+              "id": 17,
+              "file_path": "services/llm-gateway/tests/performance/__init__.py",
+              "score": 0.444
+            },
+            {
+              "id": 18,
+              "file_path": "services/llm-gateway/infrastructure/services/cache_manager.py",
+              "score": 0.441
+            },
+            {
+              "id": 19,
+              "file_path": "services/llm-tagging-pipeline/domain/value_objects/extraction_config.py",
+              "score": 0.44
+            },
+            {
+              "id": 20,
+              "file_path": "services/summarizer-hub/modules/provider_implementations.py",
+              "score": 0.438
+            },
+            {
+              "id": 21,
+              "file_path": "services/notification-service/infrastructure/messaging/dlq_manager.py",
+              "score": 0.435
+            },
+            {
+              "id": 22,
+              "file_path": "reports/configuration_audit_results.json",
+              "score": 0.433
+            },
+            {
+              "id": 23,
+              "file_path": "status/README.md",
+              "score": 0.431
+            },
+            {
+              "id": 24,
+              "file_path": "reports/mcp_lifecycle_report_20251007_184426.md",
+              "score": 0.429
+            },
+            {
+              "id": 25,
+              "file_path": "docs/COMPREHENSIVE_AUDIT_REPORT.md",
+              "score": 0.428
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "How to troubleshoot slow performance?",
+          "timestamp": 1760311560.5484622,
+          "duration_seconds": 26.719861030578613,
+          "answer_length": 2223,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/project-simulation/tests/integration/test_test_quality_validation.py",
+              "score": 0.464
+            },
+            {
+              "id": 2,
+              "file_path": "services/project-simulation/tests/performance/test_framework_performance.py",
+              "score": 0.464
+            },
+            {
+              "id": 3,
+              "file_path": "services/project-simulation/tests/integration/test_cicd_pipeline.py",
+              "score": 0.464
+            },
+            {
+              "id": 4,
+              "file_path": "services/mcp-performance-store/infrastructure/repositories/redis_pattern_performance_repository.py",
+              "score": 0.463
+            },
+            {
+              "id": 5,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/maintainability.py",
+              "score": 0.462
+            },
+            {
+              "id": 6,
+              "file_path": "services/shared/infrastructure/config/config_monitor.py",
+              "score": 0.462
+            },
+            {
+              "id": 7,
+              "file_path": "services/doc_store/tests/performance/__init__.py",
+              "score": 0.462
+            },
+            {
+              "id": 8,
+              "file_path": "services/llm-gateway/tests/performance/__init__.py",
+              "score": 0.461
+            },
+            {
+              "id": 9,
+              "file_path": "services/ecosystem-mcp/src/utils/retry.py",
+              "score": 0.461
+            },
+            {
+              "id": 10,
+              "file_path": "services/code-analyzer/tests/performance/__init__.py",
+              "score": 0.461
+            },
+            {
+              "id": 11,
+              "file_path": "services/ecosystem-mcp/src/utils/metrics.py",
+              "score": 0.46
+            },
+            {
+              "id": 12,
+              "file_path": "services/doc_store/domain/services/quality_service.py",
+              "score": 0.46
+            },
+            {
+              "id": 13,
+              "file_path": "services/shared/infrastructure/monitoring/metrics.py",
+              "score": 0.46
+            },
+            {
+              "id": 14,
+              "file_path": "services/mcp-performance-store/tests/unit/test_anomaly_detection_service.py",
+              "score": 0.46
+            },
+            {
+              "id": 15,
+              "file_path": "status/README.md",
+              "score": 0.459
+            },
+            {
+              "id": 16,
+              "file_path": "services/simulation_dashboard/components/realtime/live_metrics.py",
+              "score": 0.458
+            },
+            {
+              "id": 17,
+              "file_path": "services/simulation-dashboard/components/realtime/live_metrics.py",
+              "score": 0.458
+            },
+            {
+              "id": 18,
+              "file_path": "services/mcp-performance-store/domain/repositories/pattern_performance_repository.py",
+              "score": 0.457
+            },
+            {
+              "id": 19,
+              "file_path": "services/shared/infrastructure/utilities/retry_service.py",
+              "score": 0.45
+            },
+            {
+              "id": 20,
+              "file_path": "services/shared/core/performance/profiler.py",
+              "score": 0.447
+            },
+            {
+              "id": 21,
+              "file_path": "services/mcp-performance-store/application/use_cases/get_pattern_performance_use_case.py",
+              "score": 0.444
+            },
+            {
+              "id": 22,
+              "file_path": "services/project-simulation/tests/performance/load_test_simulation.py",
+              "score": 0.442
+            },
+            {
+              "id": 23,
+              "file_path": "services/user-store/domain/services/velocity_tracker.py",
+              "score": 0.438
+            },
+            {
+              "id": 24,
+              "file_path": "services/analysis-service/application/services/monitoring_service.py",
+              "score": 0.437
+            },
+            {
+              "id": 25,
+              "file_path": "services/llm-gateway/infrastructure/services/metrics_collector.py",
+              "score": 0.435
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "How to troubleshoot memory or resource issues?",
+          "timestamp": 1760311587.5694761,
+          "duration_seconds": 24.800777912139893,
+          "answer_length": 2169,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/analysis-service/infrastructure/config/cache_config.py",
+              "score": 0.431
+            },
+            {
+              "id": 2,
+              "file_path": "services/analysis-service/infrastructure/repositories/finding_repository.py",
+              "score": 0.43
+            },
+            {
+              "id": 3,
+              "file_path": "services/analysis-service/infrastructure/repositories/analysis_repository.py",
+              "score": 0.429
+            },
+            {
+              "id": 4,
+              "file_path": "services/project-simulation/tests/performance/load_test_simulation.py",
+              "score": 0.429
+            },
+            {
+              "id": 5,
+              "file_path": "services/doc_store/infrastructure/services/caching_service.py",
+              "score": 0.428
+            },
+            {
+              "id": 6,
+              "file_path": "services/log-collector/domain/services/log_storage.py",
+              "score": 0.427
+            },
+            {
+              "id": 7,
+              "file_path": "services/unified-api-dashboard/modules/performance.py",
+              "score": 0.427
+            },
+            {
+              "id": 8,
+              "file_path": "services/code-analyzer/infrastructure/repositories/analysis_result_repository.py",
+              "score": 0.427
+            },
+            {
+              "id": 9,
+              "file_path": "services/analysis-service/domain/value_objects/maintenance_models.py",
+              "score": 0.426
+            },
+            {
+              "id": 10,
+              "file_path": "status/running_services.txt",
+              "score": 0.425
+            },
+            {
+              "id": 11,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/maintainability.py",
+              "score": 0.425
+            },
+            {
+              "id": 12,
+              "file_path": "services/project-planning-service/domain/services/development_blindspot_detector.py",
+              "score": 0.424
+            },
+            {
+              "id": 13,
+              "file_path": "status/all_running_services.txt",
+              "score": 0.424
+            },
+            {
+              "id": 14,
+              "file_path": "services/mcp-performance-store/domain/services/anomaly_detection_service.py",
+              "score": 0.423
+            },
+            {
+              "id": 15,
+              "file_path": "services/analysis-service/domain/services/maintenance_forecasting_service.py",
+              "score": 0.423
+            },
+            {
+              "id": 16,
+              "file_path": "services/user-store/domain/services/resource_allocator.py",
+              "score": 0.423
+            },
+            {
+              "id": 17,
+              "file_path": "services/mcp-store/domain/repositories/storage_repository.py",
+              "score": 0.423
+            },
+            {
+              "id": 18,
+              "file_path": "services/user-store/tests/test_resource_allocator.py",
+              "score": 0.422
+            },
+            {
+              "id": 19,
+              "file_path": "services/memory-agent/tests/performance/__init__.py",
+              "score": 0.42
+            },
+            {
+              "id": 20,
+              "file_path": "services/code-analyzer/domain/entities/security_issue.py",
+              "score": 0.42
+            },
+            {
+              "id": 21,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/performance.py",
+              "score": 0.418
+            },
+            {
+              "id": 22,
+              "file_path": "services/analysis-service/modules/models/maintenance.py",
+              "score": 0.415
+            },
+            {
+              "id": 23,
+              "file_path": "services/memory-agent/presentation/api/routes.py",
+              "score": 0.415
+            },
+            {
+              "id": 24,
+              "file_path": "services/frontend/modules/ui_handlers/memory_agent_handlers.py",
+              "score": 0.415
+            },
+            {
+              "id": 25,
+              "file_path": "services/mcp-performance-store/infrastructure/repositories/redis_performance_repository.py",
+              "score": 0.415
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pass_name": "Pass 3: Practical Examples",
+      "duration_seconds": 78.75287294387817,
+      "total_queries": 4,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "What diagnostic commands and tools are available?",
+          "timestamp": 1760311612.671508,
+          "duration_seconds": 18.413393020629883,
+          "answer_length": 1353,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/doc_store/tests/unit/test_doc_store_core.py",
+              "score": 0.395
+            },
+            {
+              "id": 2,
+              "file_path": "services/doc_store/tests/unit/domains/test_documents.py",
+              "score": 0.394
+            },
+            {
+              "id": 3,
+              "file_path": "services/doc_store/tests/unit/api/test_search.py",
+              "score": 0.393
+            },
+            {
+              "id": 4,
+              "file_path": "services/analysis-service/application/handlers/command_handlers.py",
+              "score": 0.393
+            },
+            {
+              "id": 5,
+              "file_path": "services/code-analyzer/domain/entities/analysis_options.py",
+              "score": 0.392
+            },
+            {
+              "id": 6,
+              "file_path": "services/mcp-store/tests/unit/test_compression_service.py",
+              "score": 0.391
+            },
+            {
+              "id": 7,
+              "file_path": "services/cli/infrastructure/services/services/analysis_manager.py",
+              "score": 0.391
+            },
+            {
+              "id": 8,
+              "file_path": "services/prompt_store/domain/optimization/handlers.py",
+              "score": 0.391
+            },
+            {
+              "id": 9,
+              "file_path": "services/code-analyzer/domain/services/analysis_processor.py",
+              "score": 0.39
+            },
+            {
+              "id": 10,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/documentation_analyzer.py",
+              "score": 0.389
+            },
+            {
+              "id": 11,
+              "file_path": "docs/CONTRIBUTING.md",
+              "score": 0.389
+            },
+            {
+              "id": 12,
+              "file_path": "services/discovery-agent/application/commands/__init__.py",
+              "score": 0.389
+            },
+            {
+              "id": 13,
+              "file_path": "data/README.md",
+              "score": 0.389
+            },
+            {
+              "id": 14,
+              "file_path": "services/doc_store/tests/unit/test_doc_store_endpoints.py",
+              "score": 0.388
+            },
+            {
+              "id": 15,
+              "file_path": "services/doc_store/infrastructure/services/resource_monitor_service.py",
+              "score": 0.386
+            },
+            {
+              "id": 16,
+              "file_path": "scripts/audit-framework/infrastructure/external_services/third_party_tool_service.py",
+              "score": 0.386
+            },
+            {
+              "id": 17,
+              "file_path": "services/simulation_dashboard/infrastructure/scripts/run_dashboard.py",
+              "score": 0.385
+            },
+            {
+              "id": 18,
+              "file_path": "services/simulation-dashboard/infrastructure/scripts/run_dashboard.py",
+              "score": 0.385
+            },
+            {
+              "id": 19,
+              "file_path": "docker/docker-requirements.txt",
+              "score": 0.384
+            },
+            {
+              "id": 20,
+              "file_path": "services/analysis-service/application/handlers/commands.py",
+              "score": 0.381
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "How to check logs for each component?",
+          "timestamp": 1760311631.3861172,
+          "duration_seconds": 18.2592875957489,
+          "answer_length": 1724,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/base_analyzer.py",
+              "score": 0.475
+            },
+            {
+              "id": 2,
+              "file_path": "services/shared/infrastructure/monitoring/__init__.py",
+              "score": 0.473
+            },
+            {
+              "id": 3,
+              "file_path": "services/mcp-logs/domain/entities/alert.py",
+              "score": 0.473
+            },
+            {
+              "id": 4,
+              "file_path": "services/mcp-logs/application/services/search_service.py",
+              "score": 0.47
+            },
+            {
+              "id": 5,
+              "file_path": "services/mcp-gateway/infrastructure/health/health_checker.py",
+              "score": 0.468
+            },
+            {
+              "id": 6,
+              "file_path": "services/shared/core/logging/__init__.py",
+              "score": 0.468
+            },
+            {
+              "id": 7,
+              "file_path": "services/mcp-logs/domain/value_objects/log_level.py",
+              "score": 0.467
+            },
+            {
+              "id": 8,
+              "file_path": "services/simulation-dashboard/components/charts/correlation_charts.py",
+              "score": 0.467
+            },
+            {
+              "id": 9,
+              "file_path": "services/simulation_dashboard/components/charts/correlation_charts.py",
+              "score": 0.467
+            },
+            {
+              "id": 10,
+              "file_path": "services/analysis-service/infrastructure/logging/__init__.py",
+              "score": 0.463
+            },
+            {
+              "id": 11,
+              "file_path": "services/mcp-logs/application/services/log_service.py",
+              "score": 0.462
+            },
+            {
+              "id": 12,
+              "file_path": "services/meta-orchestrator/monitoring/health/checker.py",
+              "score": 0.462
+            },
+            {
+              "id": 13,
+              "file_path": "services/mcp-logs/presentation/api/log_routes.py",
+              "score": 0.462
+            },
+            {
+              "id": 14,
+              "file_path": "services/cli/infrastructure/services/services/log_collector_manager.py",
+              "score": 0.461
+            },
+            {
+              "id": 15,
+              "file_path": "services/shared/core/logging/logger.py",
+              "score": 0.456
+            },
+            {
+              "id": 16,
+              "file_path": "services/shared/infrastructure/utilities/logging_client.py",
+              "score": 0.455
+            },
+            {
+              "id": 17,
+              "file_path": "services/log-collector/domain/services/log_storage.py",
+              "score": 0.455
+            },
+            {
+              "id": 18,
+              "file_path": "services/log-collector/domain/entities/log_entry.py",
+              "score": 0.452
+            },
+            {
+              "id": 19,
+              "file_path": "services/simulation-dashboard/components/charts/__init__.py",
+              "score": 0.451
+            },
+            {
+              "id": 20,
+              "file_path": "services/mcp-logs/domain/repositories/log_repository.py",
+              "score": 0.45
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "Show examples of common error messages and their solutions.",
+          "timestamp": 1760311649.94661,
+          "duration_seconds": 23.956032037734985,
+          "answer_length": 2247,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/code-analyzer/domain/value_objects/style_issue.py",
+              "score": 0.425
+            },
+            {
+              "id": 2,
+              "file_path": "services/shared/core/responses/responses.py",
+              "score": 0.425
+            },
+            {
+              "id": 3,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/dry_principles_analyzer.py",
+              "score": 0.424
+            },
+            {
+              "id": 4,
+              "file_path": "services/discovery-agent/presentation/api/standard_endpoints.py",
+              "score": 0.424
+            },
+            {
+              "id": 5,
+              "file_path": "services/mcp-orchestrator/application/patterns/fallback_cascade.py",
+              "score": 0.423
+            },
+            {
+              "id": 6,
+              "file_path": "services/code-analyzer/domain/entities/security_issue.py",
+              "score": 0.423
+            },
+            {
+              "id": 7,
+              "file_path": "services/cli/modules/formatters/display_utils.py",
+              "score": 0.422
+            },
+            {
+              "id": 8,
+              "file_path": "services/frontend/tests/unit/test_utils.py",
+              "score": 0.422
+            },
+            {
+              "id": 9,
+              "file_path": "services/analysis-service/presentation/models/base.py",
+              "score": 0.42
+            },
+            {
+              "id": 10,
+              "file_path": "services/bedrock-proxy/domain/exceptions/ai_exceptions.py",
+              "score": 0.42
+            },
+            {
+              "id": 11,
+              "file_path": "services/expert-finder-service/tests/unit/test_application_use_cases.py",
+              "score": 0.419
+            },
+            {
+              "id": 12,
+              "file_path": "services/shared/infrastructure/utilities/resilience.py",
+              "score": 0.419
+            },
+            {
+              "id": 13,
+              "file_path": "services/cli/modules/utils/display_helpers.py",
+              "score": 0.418
+            },
+            {
+              "id": 14,
+              "file_path": "docs/00-START-HERE.md",
+              "score": 0.418
+            },
+            {
+              "id": 15,
+              "file_path": "services/architecture-digitizer/presentation/api/models.py",
+              "score": 0.418
+            },
+            {
+              "id": 16,
+              "file_path": "services/orchestrator/application/reporting/use_cases.py",
+              "score": 0.417
+            },
+            {
+              "id": 17,
+              "file_path": "common/http_client.py",
+              "score": 0.415
+            },
+            {
+              "id": 18,
+              "file_path": "services/analysis-service/tests/unit/test_utils.py",
+              "score": 0.414
+            },
+            {
+              "id": 19,
+              "file_path": "services/orchestrator/application/health_monitoring/use_cases.py",
+              "score": 0.412
+            },
+            {
+              "id": 20,
+              "file_path": "services/orchestrator/shared/application/base_use_case.py",
+              "score": 0.412
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "What monitoring metrics should you watch?",
+          "timestamp": 1760311674.2037911,
+          "duration_seconds": 16.919389963150024,
+          "answer_length": 1186,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/simulation-dashboard/components/realtime/progress_indicators.py",
+              "score": 0.449
+            },
+            {
+              "id": 2,
+              "file_path": "services/simulation_dashboard/components/realtime/progress_indicators.py",
+              "score": 0.448
+            },
+            {
+              "id": 3,
+              "file_path": "services/simulation-dashboard/components/charts/__init__.py",
+              "score": 0.446
+            },
+            {
+              "id": 4,
+              "file_path": "services/analysis-service/domain/services/trend_analysis_service.py",
+              "score": 0.443
+            },
+            {
+              "id": 5,
+              "file_path": "services/meta-orchestrator/monitoring/analytics/analyzer.py",
+              "score": 0.443
+            },
+            {
+              "id": 6,
+              "file_path": "services/user-store/domain/services/velocity_tracker.py",
+              "score": 0.443
+            },
+            {
+              "id": 7,
+              "file_path": "services/analysis-service/tests/coverage/coverage_analyzer.py",
+              "score": 0.443
+            },
+            {
+              "id": 8,
+              "file_path": "services/prompt_store/domain/analytics/entities.py",
+              "score": 0.443
+            },
+            {
+              "id": 9,
+              "file_path": "services/simulation_dashboard/components/charts/__init__.py",
+              "score": 0.442
+            },
+            {
+              "id": 10,
+              "file_path": "services/meta-orchestrator/tests/integration/test_monitoring_api.py",
+              "score": 0.441
+            },
+            {
+              "id": 11,
+              "file_path": "services/shared/infrastructure/operational/operational_excellence.py",
+              "score": 0.44
+            },
+            {
+              "id": 12,
+              "file_path": "services/mcp-performance-store/infrastructure/analytics/analytics_service.py",
+              "score": 0.437
+            },
+            {
+              "id": 13,
+              "file_path": "services/simulation_dashboard/pages/simulation_monitor.py",
+              "score": 0.434
+            },
+            {
+              "id": 14,
+              "file_path": "services/simulation_dashboard/pages/monitor.py",
+              "score": 0.429
+            },
+            {
+              "id": 15,
+              "file_path": "services/simulation-dashboard/components/tables/performance_tables.py",
+              "score": 0.425
+            },
+            {
+              "id": 16,
+              "file_path": "services/cli/infrastructure/services/monitoring/advanced_monitoring_manager.py",
+              "score": 0.425
+            },
+            {
+              "id": 17,
+              "file_path": "services/simulation_dashboard/components/tables/performance_tables.py",
+              "score": 0.425
+            },
+            {
+              "id": 18,
+              "file_path": "services/shared/core/logging/performance_logger.py",
+              "score": 0.421
+            },
+            {
+              "id": 19,
+              "file_path": "scripts/audit-framework/infrastructure/analyzers/performance.py",
+              "score": 0.416
+            },
+            {
+              "id": 20,
+              "file_path": "services/doc_store/infrastructure/services/resource_monitor_service.py",
+              "score": 0.408
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pass_name": "Pass 4: Synthesis",
+      "duration_seconds": 0.020157814025878906,
+      "total_queries": 1,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "Based on the following information about Troubleshooting, \n        create a comprehensive, well-stru...",
+          "timestamp": 1760311691.424381,
+          "duration_seconds": 0.020041942596435547,
+          "answer_length": 0,
+          "source_count": 0,
+          "sources": [],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "failed"
+        }
+      ]
+    }
+  ]
+}

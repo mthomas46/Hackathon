@@ -87,6 +87,25 @@ class GitService:
         
         return commits
     
+    async def get_file_content_at_commit(
+        self,
+        commit_sha: str,
+        file_path: str
+    ) -> Optional[str]:
+        """
+        Get file content at specific commit.
+        
+        Alias for get_file_at_commit with swapped parameter order.
+        
+        Args:
+            commit_sha: Git commit SHA
+            file_path: Relative path to file
+        
+        Returns:
+            File content or None if not found
+        """
+        return await self.get_file_at_commit(file_path, commit_sha)
+    
     async def get_file_at_commit(
         self,
         file_path: str,
@@ -177,6 +196,23 @@ class GitService:
             max_count
         )
     
+    async def get_recent_commits(
+        self,
+        limit: int = 10
+    ) -> List[GitCommit]:
+        """
+        Get recent commits in repository.
+        
+        Alias for get_all_commits with a limit.
+        
+        Args:
+            limit: Maximum number of commits to return
+        
+        Returns:
+            List of recent commits in reverse chronological order
+        """
+        return await self.get_all_commits(max_count=limit)
+    
     def _get_all_commits_sync(
         self,
         max_count: Optional[int]
@@ -189,6 +225,23 @@ class GitService:
             commits.append(git_commit)
         
         return commits
+    
+    async def get_commit_files(
+        self,
+        commit_sha: str
+    ) -> List[str]:
+        """
+        Get list of all files at a specific commit.
+        
+        Alias for get_files_at_commit.
+        
+        Args:
+            commit_sha: Git commit SHA
+        
+        Returns:
+            List of file paths
+        """
+        return await self.get_files_at_commit(commit_sha)
     
     async def get_files_at_commit(
         self,

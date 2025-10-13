@@ -1,0 +1,118 @@
+section,pass,question,duration_seconds,answer_length,source_count,cache_hit,temperature,status
+"Overview","Pass 1: Initial Overview","What is the ecosystem-mcp service? Provide a comprehensive overview.",23.669703006744385,2020,20,False,0.0,success
+"Overview","Pass 1: Initial Overview","What problem does ecosystem-mcp solve and why was it created?",9.107943773269653,307,20,False,0.0,success
+"Overview","Pass 1: Initial Overview","Who are the target users and what are the main use cases?",18.70233392715454,2231,20,False,0.0,success
+"Overview","Pass 2: Deep Dive","What are the core technical components of ecosystem-mcp and how do they work together?",16.433820724487305,1191,25,False,0.0,success
+"Overview","Pass 2: Deep Dive","What technology stack is used and why were these choices made?",16.78749990463257,1273,25,False,0.0,success
+"Overview","Pass 2: Deep Dive","What are the key architectural decisions and design patterns?",23.945048093795776,2150,25,False,0.0,success
+"Overview","Pass 2: Deep Dive","How does data flow through the system from input to output?",25.949265241622925,1985,25,False,0.0,success
+"Overview","Pass 3: Practical Examples","What are real-world examples of using ecosystem-mcp?",22.821054220199585,1774,20,False,0.1,success
+"Overview","Pass 3: Practical Examples","What are the typical workflows and usage patterns?",23.274755239486694,2281,20,False,0.1,success
+"Overview","Pass 3: Practical Examples","What makes ecosystem-mcp unique compared to alternatives?",29.641833066940308,2586,20,False,0.1,success
+"Overview","Pass 4: Synthesis","Based on the following information about Overview; 
+        create a comprehensive; well-structured ...",0.013096332550048828,0,0,False,0.0,failed
+"Architecture","Pass 1: Initial Overview","Describe the overall architecture of ecosystem-mcp.",25.811694145202637,1754,20,False,0.0,success
+"Architecture","Pass 1: Initial Overview","What are the main service components and their responsibilities?",31.583356142044067,3106,20,False,0.0,success
+"Architecture","Pass 2: Deep Dive","How does the FastAPI application layer work? What endpoints and middleware exist?",22.015074014663696,1785,25,False,0.0,success
+"Architecture","Pass 2: Deep Dive","Describe the database layer: PostgreSQL schema; models; and repositories.",15.965286016464233,811,25,False,0.0,success
+"Architecture","Pass 2: Deep Dive","How does ChromaDB work for vector storage? What is the embedding process?",11.263389348983765,369,25,False,0.0,success
+"Architecture","Pass 2: Deep Dive","Explain the Redis caching layer: what's cached; TTLs; and cache strategies.",24.640374898910522,2311,25,False,0.0,success
+"Architecture","Pass 2: Deep Dive","How does Ollama integrate for LLM inference? What models are used?",18.972633123397827,1394,25,False,0.0,success
+"Architecture","Pass 2: Deep Dive","What is the document ingestion pipeline? Steps from file to embedded document.",16.81242871284485,1346,25,False,0.0,success
+"Architecture","Pass 2: Deep Dive","How does the RAG (Retrieval Augmented Generation) system work end-to-end?",27.25209903717041,2480,25,False,0.0,success
+"Architecture","Pass 3: Practical Examples","Show the complete flow for a document ingestion request.",23.844690084457397,1327,20,False,0.1,success
+"Architecture","Pass 3: Practical Examples","Show the complete flow for a semantic search query.",30.862919807434082,2060,20,False,0.1,success
+"Architecture","Pass 3: Practical Examples","Show the complete flow for a RAG question-answering request.",25.216176986694336,1719,20,False,0.1,success
+"Architecture","Pass 3: Practical Examples","What are the key configuration points and environment variables?",23.425298929214478,2687,20,False,0.1,success
+"Architecture","Pass 4: Synthesis","Based on the following information about Architecture; 
+        create a comprehensive; well-structu...",0.013922691345214844,0,0,False,0.0,failed
+"Features","Pass 1: Initial Overview","List and describe all major features of ecosystem-mcp.",19.594799041748047,1276,20,False,0.0,success
+"Features","Pass 1: Initial Overview","What capabilities does the document ingestion system provide?",15.765130043029785,1126,20,False,0.0,success
+"Features","Pass 1: Initial Overview","What search and retrieval features are available?",22.682549953460693,2048,20,False,0.0,success
+"Features","Pass 2: Deep Dive","How does semantic search work? What algorithms and techniques are used?",34.46766686439514,3337,25,False,0.0,success
+"Features","Pass 2: Deep Dive","Describe the RAG implementation: retrieval; ranking; and generation.",9.280786991119385,199,25,False,0.0,success
+"Features","Pass 2: Deep Dive","What caching strategies are implemented? List all cache layers.",19.144532918930054,1094,25,False,0.0,success
+"Features","Pass 2: Deep Dive","How does the 3-tier LLM routing work (Cursor; Desktop Ollama; Docker)?",23.7903790473938,1838,25,False,0.0,success
+"Features","Pass 2: Deep Dive","What monitoring and observability features exist?",20.521714210510254,1411,25,False,0.0,success
+"Features","Pass 2: Deep Dive","What API endpoints are available and what do they do?",29.82248616218567,2915,25,False,0.0,success
+"Features","Pass 3: Practical Examples","Provide examples of search queries and expected results.",26.664349794387817,1688,20,False,0.1,success
+"Features","Pass 3: Practical Examples","Provide examples of RAG questions with sample responses.",16.867220163345337,647,20,False,0.1,success
+"Features","Pass 3: Practical Examples","Show example API calls with curl commands.",19.31326198577881,1394,20,False,0.1,success
+"Features","Pass 3: Practical Examples","What are the performance characteristics of each feature?",26.06690502166748,1841,20,False,0.1,success
+"Features","Pass 4: Synthesis","Based on the following information about Features; 
+        create a comprehensive; well-structured ...",0.008807897567749023,0,0,False,0.0,failed
+"API Reference","Pass 1: Initial Overview","List all API endpoints in ecosystem-mcp with brief descriptions.",18.737836122512817,762,20,False,0.0,success
+"API Reference","Pass 1: Initial Overview","What are the main API categories (health; search; RAG; admin; etc.)?",19.801305055618286,1203,20,False,0.0,success
+"API Reference","Pass 2: Deep Dive","Document the /api/v1/search endpoint: parameters; request/response format; examples.",34.824466943740845,2160,25,False,0.0,success
+"API Reference","Pass 2: Deep Dive","Document the /api/v1/ask endpoint: parameters; request/response format; examples.",15.28640103340149,749,25,False,0.0,success
+"API Reference","Pass 2: Deep Dive","Document the /api/v1/admin/ingest endpoint: how to trigger ingestion.",7.430759906768799,174,25,False,0.0,success
+"API Reference","Pass 2: Deep Dive","Document the /api/v1/query endpoint: document retrieval and filtering.",31.314249992370605,2660,25,False,0.0,success
+"API Reference","Pass 2: Deep Dive","Document the /api/v1/cache/stats endpoint: monitoring cache performance.",21.083231925964355,1592,25,False,0.0,success
+"API Reference","Pass 2: Deep Dive","What authentication and authorization mechanisms exist?",15.596755981445312,1262,25,False,0.0,success
+"API Reference","Pass 2: Deep Dive","What rate limits are in place and how to configure them?",13.520115852355957,634,25,False,0.0,success
+"API Reference","Pass 3: Practical Examples","Show complete curl examples for each major endpoint.",17.246480226516724,1481,20,False,0.1,success
+"API Reference","Pass 3: Practical Examples","Show Python client examples for programmatic access.",10.978766918182373,802,20,False,0.1,success
+"API Reference","Pass 3: Practical Examples","What are common API usage patterns and workflows?",21.05239701271057,2260,20,False,0.1,success
+"API Reference","Pass 3: Practical Examples","How to handle errors and rate limiting?",27.380728721618652,2752,20,False,0.1,success
+"API Reference","Pass 4: Synthesis","Based on the following information about API Reference; 
+        create a comprehensive; well-struct...",0.01089787483215332,0,0,False,0.0,failed
+"Performance","Pass 1: Initial Overview","What are the performance characteristics of ecosystem-mcp?",18.334260940551758,1511,20,False,0.0,success
+"Performance","Pass 1: Initial Overview","What optimizations have been implemented?",23.023462057113647,1894,20,False,0.0,success
+"Performance","Pass 2: Deep Dive","Describe all caching layers: what's cached; hit rates; and speedups.",16.47567105293274,781,25,False,0.0,success
+"Performance","Pass 2: Deep Dive","What is the performance of search queries (cold vs warm cache)?",23.214859008789062,1709,25,False,0.0,success
+"Performance","Pass 2: Deep Dive","What is the performance of RAG queries (with different temperatures)?",11.828100204467773,465,25,False,0.0,success
+"Performance","Pass 2: Deep Dive","How does connection pooling work and what performance gains does it provide?",24.804747104644775,2365,25,False,0.0,success
+"Performance","Pass 2: Deep Dive","What is the ingestion throughput (documents per minute)?",9.598937034606934,300,25,False,0.0,success
+"Performance","Pass 2: Deep Dive","How does parallel processing improve performance?",18.505402088165283,1478,25,False,0.0,success
+"Performance","Pass 2: Deep Dive","What are the benchmark results and verified metrics?",17.630270957946777,1346,25,False,0.0,success
+"Performance","Pass 3: Practical Examples","What are realistic performance expectations for production?",23.224196910858154,1712,20,False,0.1,success
+"Performance","Pass 3: Practical Examples","How do you optimize performance for different workloads?",30.080259084701538,2516,20,False,0.1,success
+"Performance","Pass 3: Practical Examples","What configuration settings affect performance?",27.833040952682495,2107,20,False,0.1,success
+"Performance","Pass 3: Practical Examples","What are the bottlenecks and how to address them?",22.97046709060669,1913,20,False,0.1,success
+"Performance","Pass 4: Synthesis","Based on the following information about Performance; 
+        create a comprehensive; well-structur...",0.014576911926269531,0,0,False,0.0,failed
+"Deployment","Pass 1: Initial Overview","How do you deploy ecosystem-mcp?",25.197423696517944,1820,20,False,0.0,success
+"Deployment","Pass 1: Initial Overview","What are the system requirements and dependencies?",29.14148712158203,1689,20,False,0.0,success
+"Deployment","Pass 2: Deep Dive","Describe the Docker setup: containers; networking; volumes.",25.742971897125244,1447,25,False,0.0,success
+"Deployment","Pass 2: Deep Dive","What environment variables need to be configured?",24.159615993499756,1733,25,False,0.0,success
+"Deployment","Pass 2: Deep Dive","How to configure PostgreSQL; Redis; ChromaDB; and Ollama?",28.774780988693237,1994,25,False,0.0,success
+"Deployment","Pass 2: Deep Dive","What ports are used and how to configure networking?",30.66673994064331,1882,25,False,0.0,success
+"Deployment","Pass 2: Deep Dive","How to handle secrets and sensitive configuration?",19.56083607673645,1626,25,False,0.0,success
+"Deployment","Pass 2: Deep Dive","What monitoring should be set up for production?",28.92819595336914,2470,25,False,0.0,success
+"Deployment","Pass 3: Practical Examples","Provide step-by-step deployment instructions for local development.",19.653853178024292,1602,20,False,0.1,success
+"Deployment","Pass 3: Practical Examples","Provide step-by-step deployment instructions for production.",33.87473487854004,3166,20,False,0.1,success
+"Deployment","Pass 3: Practical Examples","Show docker-compose configuration examples.",27.273761987686157,1825,20,False,0.1,success
+"Deployment","Pass 3: Practical Examples","What are common deployment issues and solutions?",29.2139630317688,2836,20,False,0.1,success
+"Deployment","Pass 3: Practical Examples","How to scale horizontally for high availability?",22.27513289451599,2188,20,False,0.1,success
+"Deployment","Pass 4: Synthesis","Based on the following information about Deployment; 
+        create a comprehensive; well-structure...",0.015153169631958008,0,0,False,0.0,failed
+"Development Guide","Pass 1: Initial Overview","How do you set up a development environment for ecosystem-mcp?",19.41602921485901,1484,20,False,0.0,success
+"Development Guide","Pass 1: Initial Overview","What is the code structure and organization?",12.591775894165039,597,20,False,0.0,success
+"Development Guide","Pass 2: Deep Dive","Describe the directory structure and what each directory contains.",25.332770109176636,2860,25,False,0.0,success
+"Development Guide","Pass 2: Deep Dive","What are the key Python modules and their purposes?",13.302925109863281,1455,25,False,0.0,success
+"Development Guide","Pass 2: Deep Dive","How is the codebase organized (services; repositories; models; etc.)?",18.085876941680908,1487,25,False,0.0,success
+"Development Guide","Pass 2: Deep Dive","What testing strategy is used? Unit; integration; functional tests?",20.364748001098633,1736,25,False,0.0,success
+"Development Guide","Pass 2: Deep Dive","How to add a new API endpoint?",16.455979108810425,1330,25,False,0.0,success
+"Development Guide","Pass 2: Deep Dive","How to add a new caching layer?",29.045367002487183,2255,25,False,0.0,success
+"Development Guide","Pass 2: Deep Dive","What are the coding standards and best practices?",20.532612085342407,1388,25,False,0.0,success
+"Development Guide","Pass 3: Practical Examples","Show how to run tests locally.",18.106486082077026,859,20,False,0.1,success
+"Development Guide","Pass 3: Practical Examples","Show how to debug the application.",33.12264609336853,2551,20,False,0.1,success
+"Development Guide","Pass 3: Practical Examples","Provide examples of common development tasks.",23.1249520778656,1326,20,False,0.1,success
+"Development Guide","Pass 3: Practical Examples","How to contribute: workflow; pull requests; code review?",23.914292812347412,1893,20,False,0.1,success
+"Development Guide","Pass 4: Synthesis","Based on the following information about Development Guide; 
+        create a comprehensive; well-st...",0.03419899940490723,0,0,False,0.0,failed
+"Troubleshooting","Pass 1: Initial Overview","What are common issues with ecosystem-mcp?",19.864580869674683,1104,20,False,0.0,success
+"Troubleshooting","Pass 1: Initial Overview","How do you diagnose problems?",30.711209297180176,2593,20,False,0.0,success
+"Troubleshooting","Pass 2: Deep Dive","How to troubleshoot cache issues and verify cache is working?",32.05586814880371,2410,25,False,0.0,success
+"Troubleshooting","Pass 2: Deep Dive","How to troubleshoot database connection problems?",25.045196771621704,1942,25,False,0.0,success
+"Troubleshooting","Pass 2: Deep Dive","How to troubleshoot Redis connectivity?",23.00581407546997,1913,25,False,0.0,success
+"Troubleshooting","Pass 2: Deep Dive","How to troubleshoot ChromaDB and vector search issues?",26.91269588470459,2617,25,False,0.0,success
+"Troubleshooting","Pass 2: Deep Dive","How to troubleshoot Ollama and LLM generation problems?",21.60590386390686,1679,25,False,0.0,success
+"Troubleshooting","Pass 2: Deep Dive","How to troubleshoot slow performance?",26.719861030578613,2223,25,False,0.0,success
+"Troubleshooting","Pass 2: Deep Dive","How to troubleshoot memory or resource issues?",24.800777912139893,2169,25,False,0.0,success
+"Troubleshooting","Pass 3: Practical Examples","What diagnostic commands and tools are available?",18.413393020629883,1353,20,False,0.1,success
+"Troubleshooting","Pass 3: Practical Examples","How to check logs for each component?",18.2592875957489,1724,20,False,0.1,success
+"Troubleshooting","Pass 3: Practical Examples","Show examples of common error messages and their solutions.",23.956032037734985,2247,20,False,0.1,success
+"Troubleshooting","Pass 3: Practical Examples","What monitoring metrics should you watch?",16.919389963150024,1186,20,False,0.1,success
+"Troubleshooting","Pass 4: Synthesis","Based on the following information about Troubleshooting; 
+        create a comprehensive; well-stru...",0.020041942596435547,0,0,False,0.0,failed

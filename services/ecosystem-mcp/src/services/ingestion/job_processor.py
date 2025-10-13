@@ -189,7 +189,9 @@ class JobProcessor:
                     result["cost"] += file_result["cost"]
                 else:
                     result["failed"] += 1
-                    logger.warning(f"Failed to process {file_change.path}: {file_result.get('error')}")
+                    # ✅ FIXED: file_change is a string
+                    file_path_str = file_change if isinstance(file_change, str) else file_change.path
+                    logger.warning(f"Failed to process {file_path_str}: {file_result.get('error')}")
         
         except Exception as e:
             logger.error(f"Error processing commit {commit.sha}: {e}", exc_info=True)
@@ -222,12 +224,9 @@ class JobProcessor:
         
         filtered = []
         
-        for file_change in files:
-            path = Path(file_change.path)
-            
-            # Skip deleted files
-            if file_change.change_type == 'deleted':
-                continue
+        for file_path in files:
+            # ✅ FIXED: files are strings, not objects
+            path = Path(file_path) if isinstance(file_path, str) else Path(file_path.path)
             
             # Check extension
             if path.suffix not in include_extensions:
@@ -237,7 +236,7 @@ class JobProcessor:
             if any(pattern in str(path) for pattern in exclude_patterns):
                 continue
             
-            filtered.append(file_change)
+            filtered.append(file_path)
         
         return filtered
     
@@ -265,10 +264,14 @@ class JobProcessor:
         }
         
         try:
+            # ✅ FIXED: file_change is a string, not an object
+            file_path_str = file_change if isinstance(file_change, str) else file_change.path
+            
             # Get file content
-            content = await self.git_service.get_file_content(
+            # ✅ FIXED: Method is get_file_content_at_commit
+            content = await self.git_service.get_file_content_at_commit(
                 commit_sha=commit.sha,
-                file_path=file_change.path
+                file_path=file_path_str
             )
             
             if not content:
@@ -281,7 +284,7 @@ class JobProcessor:
                 return result
             
             # Normalize document
-            path = Path(file_change.path)
+            path = Path(file_path_str)
             normalizer = self.normalizer_factory.get_normalizer(path.suffix)
             
             normalized = await normalizer.normalize(
@@ -292,7 +295,7 @@ class JobProcessor:
                     "commit_message": commit.message,
                     "commit_author": commit.author,
                     "commit_date": commit.date.isoformat(),
-                    "change_type": file_change.change_type
+                    "change_type": "modified"  # ✅ Default since we don't track change type
                 }
             )
             
@@ -305,12 +308,44 @@ class JobProcessor:
             async with get_database().session() as session:
                 doc_repo = DocumentRepository(session)
                 
-                # Create document
-                from ...storage.db_models import DocumentModel
+                # ✅ CRITICAL FIX: Ensure commit exists in git_commits table first
+                from ...storage.db_models import DocumentModel, GitCommitModel
+                from sqlalchemy import select
                 from hashlib import sha256
                 from uuid import uuid4
                 
+                # Check if commit exists, if not create it
+                commit_query = select(GitCommitModel).where(GitCommitModel.sha == commit.sha)
+                commit_result = await session.execute(commit_query)
+                existing_commit = commit_result.scalar_one_or_none()
+                
+                if not existing_commit:
+                    # ✅ Parse author and email from author string
+                    # Format is usually: "Name <email@domain.com>"
+                    author_parts = commit.author.split("<")
+                    author_name = author_parts[0].strip() if author_parts else commit.author
+                    author_email = author_parts[1].rstrip(">") if len(author_parts) > 1 else "unknown@unknown.com"
+                    
+                    git_commit = GitCommitModel(
+                        sha=commit.sha,
+                        message=commit.message,
+                        author=author_name,
+                        author_email=author_email,
+                        date=commit.date,
+                        commit_metadata={"repo_path": str(self.git_service.repo_path)}
+                    )
+                    session.add(git_commit)
+                    await session.flush()  # Ensure it's inserted before document
+                    logger.debug(f"✅ Inserted commit {commit.sha[:8]} by {author_name} into git_commits table")
+                
                 content_hash = sha256(normalized["content"].encode()).hexdigest()
+                
+                # ✅ DUPLICATE PROTECTION: Check if identical document exists
+                existing_doc = await doc_repo.get_by_content_hash(content_hash)
+                if existing_doc:
+                    logger.debug(f"⏭️  Skipping duplicate document: {path} (hash: {content_hash[:8]})")
+                    result["error"] = "duplicate"
+                    return result
                 
                 document = DocumentModel(
                     id=uuid4(),
@@ -354,7 +389,9 @@ class JobProcessor:
             logger.debug(f"✅ Processed {path}")
         
         except Exception as e:
-            logger.error(f"Error processing file {file_change.path}: {e}", exc_info=True)
+            # ✅ FIXED: file_change is a string
+            file_path_display = file_change if isinstance(file_change, str) else file_change.path
+            logger.error(f"Error processing file {file_path_display}: {e}", exc_info=True)
             result["error"] = str(e)
         
         return result

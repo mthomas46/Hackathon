@@ -26,7 +26,7 @@ from ..utils.redis_client import get_redis_client
 from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
-from .routes import health, admin, search, documents, query, logs, ollama, metrics
+from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer
 from .middleware import RequestIDMiddleware, TimeoutMiddleware, MetricsMiddleware
 from .exception_handlers import register_exception_handlers
 
@@ -171,6 +171,12 @@ async def lifespan(app: FastAPI):
         await init_redis()
         logger.info("  ✅ Redis initialized")
         
+        # Start ingestion worker
+        from ..services.ingestion import get_ingestion_worker
+        ingestion_worker = get_ingestion_worker()
+        await ingestion_worker.start()
+        logger.info("  ✅ Ingestion worker started")
+        
         logger.info("\n✅ ALL SERVICES INITIALIZED SUCCESSFULLY")
         
         # Initialize metrics
@@ -189,6 +195,15 @@ async def lifespan(app: FastAPI):
     logger.info("\n" + "=" * 80)
     logger.info("SHUTTING DOWN SERVICES")
     logger.info("=" * 80)
+    
+    # Stop ingestion worker
+    try:
+        from ..services.ingestion import get_ingestion_worker
+        worker = get_ingestion_worker()
+        await worker.stop()
+        logger.info("  ✅ Ingestion worker stopped")
+    except Exception as e:
+        logger.error(f"Error stopping ingestion worker: {e}")
     
     # Use cleanup_resources for graceful shutdown
     await cleanup_resources()
@@ -255,7 +270,7 @@ def create_app() -> FastAPI:
     app.add_middleware(MetricsMiddleware)
     
     # 2. Request timeout (applies to entire request)
-    app.add_middleware(TimeoutMiddleware, default_timeout=30.0)
+    app.add_middleware(TimeoutMiddleware, default_timeout=120.0)  # Increased for LLM generation
     
     # 3. Request ID (for distributed tracing)
     app.add_middleware(RequestIDMiddleware)
@@ -292,12 +307,32 @@ def create_app() -> FastAPI:
     
     # Include routers
     app.include_router(health.router, tags=["Health"])
+    app.include_router(infrastructure.router, prefix="/api/v1", tags=["Infrastructure"])  # ✅ Infrastructure monitoring
+    app.include_router(standard.router, tags=["Standard"])  # ✅ Standard ecosystem endpoints
     app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
     app.include_router(search.router, prefix="/api/v1", tags=["Search"])
+    app.include_router(ask.router, prefix="/api/v1", tags=["RAG"])  # ✅ RAG question answering
     app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
-    app.include_router(query.router, prefix="/api/v1/query", tags=["Query"])
-    app.include_router(logs.router, prefix="/api/v1/logs", tags=["Logs"])
-    app.include_router(ollama.router, prefix="/api/v1/ollama", tags=["Ollama"])
+    app.include_router(query.router, prefix="/api/v1", tags=["Query"])
+    app.include_router(logs.router, prefix="/api/v1", tags=["Logs"])
+    app.include_router(ollama.router, prefix="/api/v1", tags=["Ollama"])
+    app.include_router(ollama_status.router, prefix="/api/v1", tags=["Ollama Status"])  # ✅ Ollama instance monitoring
+    
+    # Cache monitoring
+    from .routes import cache_stats
+    app.include_router(cache_stats.router, prefix="/api/v1", tags=["Monitoring"])
+    
+    # Container management
+    app.include_router(containers.router, prefix="/api/v1", tags=["Containers"])
+    
+    # Database administration
+    app.include_router(redis_admin.router, prefix="/api/v1", tags=["Redis Admin"])
+    app.include_router(postgres_admin.router, prefix="/api/v1", tags=["PostgreSQL Admin"])
+    
+    # Diagnostics and configuration
+    app.include_router(diagnostics.router, prefix="/api/v1", tags=["Diagnostics"])
+    app.include_router(config_viewer.router, prefix="/api/v1", tags=["Configuration"])
+    
     app.include_router(metrics.router, tags=["Metrics"])
     
     # Root endpoint

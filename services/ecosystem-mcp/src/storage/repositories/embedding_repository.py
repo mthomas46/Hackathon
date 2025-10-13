@@ -22,7 +22,7 @@ class EmbeddingRepository(BaseRepository[EmbeddingModel]):
     
     def __init__(self, session: AsyncSession):
         """Initialize embedding repository."""
-        super().__init__(EmbeddingModel, session)
+        super().__init__(session, EmbeddingModel)
     
     async def get_by_document_id(
         self,

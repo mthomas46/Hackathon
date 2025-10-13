@@ -435,3 +435,7 @@ scala_elm_crud_demo_v4/
 scala_elm_crud_demo_v5/
 scala_elm_crud_demo_v6/
 scala_elm_crud_demo_v7/
+/services/ecosystem-mcp/data/ollama/models/blobs
+/services/ecosystem-mcp/data/ollama/models
+/services/ecosystem-mcp/data/postgresql/pgdata
+/services/ecosystem-mcp/data/postgresql

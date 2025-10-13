@@ -1,0 +1,1699 @@
+{
+  "section": "Development Guide",
+  "summary": {
+    "duration_seconds": 277.3602430820465,
+    "total_queries": 14,
+    "cache_hits": 0,
+    "output_size_bytes": 21329
+  },
+  "passes": [
+    {
+      "pass_name": "Pass 1: Initial Overview",
+      "duration_seconds": 32.61063289642334,
+      "total_queries": 2,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "How do you set up a development environment for ecosystem-mcp?",
+          "timestamp": 1760311101.875176,
+          "duration_seconds": 19.41602921485901,
+          "answer_length": 1484,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "docs-evergreen/02_ARCHITECTURE_DEEP_DIVE.md",
+              "score": 0.375
+            },
+            {
+              "id": 2,
+              "file_path": "docs-evergreen/08_QUERY_PATTERNS.md",
+              "score": 0.374
+            },
+            {
+              "id": 3,
+              "file_path": "services/ecosystem-mcp/src/api/__init__.py",
+              "score": 0.374
+            },
+            {
+              "id": 4,
+              "file_path": "services/mcp-provisioner/domain/entities/mcp_instance.py",
+              "score": 0.374
+            },
+            {
+              "id": 5,
+              "file_path": "services/ecosystem-mcp/src/utils/exceptions.py",
+              "score": 0.374
+            },
+            {
+              "id": 6,
+              "file_path": "services/mcp-interpreter/infrastructure/config/settings.py",
+              "score": 0.373
+            },
+            {
+              "id": 7,
+              "file_path": "services/mcp-infrastructure/domain/repositories/mcp_context_repository.py",
+              "score": 0.373
+            },
+            {
+              "id": 8,
+              "file_path": "services/mcp-infrastructure/infrastructure/config/settings.py",
+              "score": 0.372
+            },
+            {
+              "id": 9,
+              "file_path": "services/mcp-orchestrator/infrastructure/config/settings.py",
+              "score": 0.372
+            },
+            {
+              "id": 10,
+              "file_path": "services/ecosystem-mcp/src/services/__init__.py",
+              "score": 0.372
+            },
+            {
+              "id": 11,
+              "file_path": "README.md",
+              "score": 0.371
+            },
+            {
+              "id": 12,
+              "file_path": "docs-evergreen/06_DATA_FLOW.md",
+              "score": 0.371
+            },
+            {
+              "id": 13,
+              "file_path": "services/ecosystem-mcp/src/ingestion/__init__.py",
+              "score": 0.371
+            },
+            {
+              "id": 14,
+              "file_path": "services/ecosystem-mcp/src/utils/system_validator.py",
+              "score": 0.37
+            },
+            {
+              "id": 15,
+              "file_path": "services/mcp-provisioner/infrastructure/config/settings.py",
+              "score": 0.37
+            },
+            {
+              "id": 16,
+              "file_path": "services/mcp-store/domain/entities/mcp_package.py",
+              "score": 0.37
+            },
+            {
+              "id": 17,
+              "file_path": "services/ecosystem-mcp/src/models/document.py",
+              "score": 0.368
+            },
+            {
+              "id": 18,
+              "file_path": "docs-evergreen/01_ECOSYSTEM_OVERVIEW.md",
+              "score": 0.368
+            },
+            {
+              "id": 19,
+              "file_path": "services/mcp-provisioner/domain/value_objects/mcp_config.py",
+              "score": 0.368
+            },
+            {
+              "id": 20,
+              "file_path": "services/ecosystem-mcp/src/storage/repositories/document_repository.py",
+              "score": 0.368
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "What is the code structure and organization?",
+          "timestamp": 1760311121.5923982,
+          "duration_seconds": 12.591775894165039,
+          "answer_length": 597,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/ecosystem-mcp/src/utils/cache_decorator.py",
+              "score": 0.433
+            },
+            {
+              "id": 2,
+              "file_path": "services/code-analyzer/tests/e2e/__init__.py",
+              "score": 0.433
+            },
+            {
+              "id": 3,
+              "file_path": "services/summarizer-hub/domain/repositories/category_repository.py",
+              "score": 0.432
+            },
+            {
+              "id": 4,
+              "file_path": "services/ecosystem-mcp/tests/unit/test_ollama_routes.py",
+              "score": 0.431
+            },
+            {
+              "id": 5,
+              "file_path": "services/mcp-orchestrator/application/patterns/ensemble_orchestration.py",
+              "score": 0.43
+            },
+            {
+              "id": 6,
+              "file_path": "services/code-analyzer/domain/services/analysis_processor.py",
+              "score": 0.429
+            },
+            {
+              "id": 7,
+              "file_path": "services/doc_store/presentation/dto/types.py",
+              "score": 0.428
+            },
+            {
+              "id": 8,
+              "file_path": "services/analysis-service/tests/infrastructure/test_analysis_core.py",
+              "score": 0.427
+            },
+            {
+              "id": 9,
+              "file_path": "services/code-analyzer/domain/entities/analysis_result.py",
+              "score": 0.424
+            },
+            {
+              "id": 10,
+              "file_path": "services/workers/normalizers/scope_classifier.py",
+              "score": 0.422
+            },
+            {
+              "id": 11,
+              "file_path": "services/cli/modules/base/base_formatter.py",
+              "score": 0.421
+            },
+            {
+              "id": 12,
+              "file_path": "services/cli/modules/formatters/table_formatters.py",
+              "score": 0.421
+            },
+            {
+              "id": 13,
+              "file_path": "services/simulation-dashboard/components/forms/team_builder_forms.py",
+              "score": 0.421
+            },
+            {
+              "id": 14,
+              "file_path": "services/simulation_dashboard/components/forms/team_builder_forms.py",
+              "score": 0.42
+            },
+            {
+              "id": 15,
+              "file_path": "services/code-analyzer/domain/value_objects/__init__.py",
+              "score": 0.42
+            },
+            {
+              "id": 16,
+              "file_path": "services/code-analyzer/tests/unit/__init__.py",
+              "score": 0.42
+            },
+            {
+              "id": 17,
+              "file_path": "services/code-analyzer/tests/integration/test_code_analysis_workflow.py",
+              "score": 0.419
+            },
+            {
+              "id": 18,
+              "file_path": "services/simulation_dashboard/services/templates/project_templates.py",
+              "score": 0.418
+            },
+            {
+              "id": 19,
+              "file_path": "services/project-planning-service/domain/services/feature_decomposer.py",
+              "score": 0.418
+            },
+            {
+              "id": 20,
+              "file_path": "services/simulation-dashboard/services/templates/project_templates.py",
+              "score": 0.418
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 20,
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pass_name": "Pass 2: Deep Dive",
+      "duration_seconds": 145.2297239303589,
+      "total_queries": 7,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "Describe the directory structure and what each directory contains.",
+          "timestamp": 1760311134.4858649,
+          "duration_seconds": 25.332770109176636,
+          "answer_length": 2860,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/summarizer-hub/domain/entities/document.py",
+              "score": 0.41
+            },
+            {
+              "id": 2,
+              "file_path": "services/doc_store/domain/lifecycle/__init__.py",
+              "score": 0.409
+            },
+            {
+              "id": 3,
+              "file_path": "services/doc_store/application/handlers/dto/__init__.py",
+              "score": 0.409
+            },
+            {
+              "id": 4,
+              "file_path": "services/doc_store/application/commands/__init__.py",
+              "score": 0.409
+            },
+            {
+              "id": 5,
+              "file_path": ".serena/memories/code_style_and_conventions.md",
+              "score": 0.409
+            },
+            {
+              "id": 6,
+              "file_path": "services/mcp-evergreen-docs/infrastructure/storage/redis_documentation_repository.py",
+              "score": 0.409
+            },
+            {
+              "id": 7,
+              "file_path": "services/doc_store/domain/documents/repository.py",
+              "score": 0.408
+            },
+            {
+              "id": 8,
+              "file_path": "services/interpreter/domain/entities/document.py",
+              "score": 0.408
+            },
+            {
+              "id": 9,
+              "file_path": "services/ecosystem-mcp/src/api/routes/documents.py",
+              "score": 0.408
+            },
+            {
+              "id": 10,
+              "file_path": "services/mcp-orchestrator/domain/entities/__init__.py",
+              "score": 0.408
+            },
+            {
+              "id": 11,
+              "file_path": "services/ecosystem-mcp/src/storage/repositories/document_repository.py",
+              "score": 0.408
+            },
+            {
+              "id": 12,
+              "file_path": "services/github-mcp/presentation/api/routes/repositories.py",
+              "score": 0.407
+            },
+            {
+              "id": 13,
+              "file_path": "scripts/audit-framework/domain/entities/service_info.py",
+              "score": 0.405
+            },
+            {
+              "id": 14,
+              "file_path": "services/ecosystem-mcp/src/storage/__init__.py",
+              "score": 0.405
+            },
+            {
+              "id": 15,
+              "file_path": "scripts/audit-framework/domain/entities/__init__.py",
+              "score": 0.404
+            },
+            {
+              "id": 16,
+              "file_path": "services/summarizer-hub/domain/entities/category.py",
+              "score": 0.404
+            },
+            {
+              "id": 17,
+              "file_path": "services/shared/domain/entities/__init__.py",
+              "score": 0.403
+            },
+            {
+              "id": 18,
+              "file_path": "services/mcp-package-manager/domain/entities/__init__.py",
+              "score": 0.403
+            },
+            {
+              "id": 19,
+              "file_path": "services/doc_store/domain/bulk/__init__.py",
+              "score": 0.403
+            },
+            {
+              "id": 20,
+              "file_path": "services/prompt_store/domain/relationships/__init__.py",
+              "score": 0.403
+            },
+            {
+              "id": 21,
+              "file_path": "services/doc_store/infrastructure/repositories/__init__.py",
+              "score": 0.403
+            },
+            {
+              "id": 22,
+              "file_path": "services/mcp-registry/infrastructure/repositories/local_filesystem_storage_repository.py",
+              "score": 0.403
+            },
+            {
+              "id": 23,
+              "file_path": "services/summarizer-hub/domain/repositories/document_repository.py",
+              "score": 0.402
+            },
+            {
+              "id": 24,
+              "file_path": "services/llm-tagging-pipeline/domain/repositories/__init__.py",
+              "score": 0.402
+            },
+            {
+              "id": 25,
+              "file_path": "services/doc_store/infrastructure/database/__init__.py",
+              "score": 0.402
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "What are the key Python modules and their purposes?",
+          "timestamp": 1760311160.1198049,
+          "duration_seconds": 13.302925109863281,
+          "answer_length": 1455,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/mcp-performance-store/infrastructure/repositories/__init__.py",
+              "score": 0.286
+            },
+            {
+              "id": 2,
+              "file_path": "services/ecosystem-mcp/src/api/routes/__init__.py",
+              "score": 0.286
+            },
+            {
+              "id": 3,
+              "file_path": "services/mcp-store/infrastructure/database/__init__.py",
+              "score": 0.286
+            },
+            {
+              "id": 4,
+              "file_path": "services/mcp-performance-store/application/use_cases/__init__.py",
+              "score": 0.286
+            },
+            {
+              "id": 5,
+              "file_path": "services/mcp-provisioner/infrastructure/database/__init__.py",
+              "score": 0.286
+            },
+            {
+              "id": 6,
+              "file_path": "services/mcp-interpreter/application/use_cases/__init__.py",
+              "score": 0.286
+            },
+            {
+              "id": 7,
+              "file_path": "services/mcp_local_llm/infrastructure/config/__init__.py",
+              "score": 0.286
+            },
+            {
+              "id": 8,
+              "file_path": "services/mcp-orchestrator/domain/repositories/__init__.py",
+              "score": 0.286
+            },
+            {
+              "id": 9,
+              "file_path": "services/github-mcp/presentation/api/__init__.py",
+              "score": 0.286
+            },
+            {
+              "id": 10,
+              "file_path": "services/unified-api-dashboard/modules/security.py",
+              "score": 0.285
+            },
+            {
+              "id": 11,
+              "file_path": "services/mcp-logs/domain/repositories/__init__.py",
+              "score": 0.285
+            },
+            {
+              "id": 12,
+              "file_path": "services/project-simulation/application/handlers/__init__.py",
+              "score": 0.285
+            },
+            {
+              "id": 13,
+              "file_path": "services/mcp-infrastructure/domain/repositories/__init__.py",
+              "score": 0.285
+            },
+            {
+              "id": 14,
+              "file_path": "services/unified-api-dashboard/modules/__init__.py",
+              "score": 0.285
+            },
+            {
+              "id": 15,
+              "file_path": "services/mcp-registry/infrastructure/repositories/__init__.py",
+              "score": 0.285
+            },
+            {
+              "id": 16,
+              "file_path": "services/mcp-composer/infrastructure/repositories/__init__.py",
+              "score": 0.285
+            },
+            {
+              "id": 17,
+              "file_path": "services/cli/infrastructure/services/config/__init__.py",
+              "score": 0.285
+            },
+            {
+              "id": 18,
+              "file_path": "services/mcp-performance-store/infrastructure/db/__init__.py",
+              "score": 0.285
+            },
+            {
+              "id": 19,
+              "file_path": "services/mcp-training-coordinator/application/use_cases/__init__.py",
+              "score": 0.285
+            },
+            {
+              "id": 20,
+              "file_path": "services/shared/domain/repositories/__init__.py",
+              "score": 0.285
+            },
+            {
+              "id": 21,
+              "file_path": "services/mcp-gateway/domain/repositories/__init__.py",
+              "score": 0.284
+            },
+            {
+              "id": 22,
+              "file_path": "services/orchestrator/domain/repositories/__init__.py",
+              "score": 0.284
+            },
+            {
+              "id": 23,
+              "file_path": "services/orchestrator/application/infrastructure/__init__.py",
+              "score": 0.283
+            },
+            {
+              "id": 24,
+              "file_path": "services/mcp-provisioner/presentation/api/__init__.py",
+              "score": 0.283
+            },
+            {
+              "id": 25,
+              "file_path": "services/mcp-orchestrator/infrastructure/repositories/__init__.py",
+              "score": 0.282
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "How is the codebase organized (services, repositories, models, etc.)?",
+          "timestamp": 1760311173.7239301,
+          "duration_seconds": 18.085876941680908,
+          "answer_length": 1487,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "status/all_running_services.txt",
+              "score": 0.401
+            },
+            {
+              "id": 2,
+              "file_path": "services/prompt_store/domain/value_objects/models.py",
+              "score": 0.401
+            },
+            {
+              "id": 3,
+              "file_path": "services/meta-orchestrator/monitoring/database/models.py",
+              "score": 0.4
+            },
+            {
+              "id": 4,
+              "file_path": "services/doc_store/domain/tagging/repository.py",
+              "score": 0.399
+            },
+            {
+              "id": 5,
+              "file_path": "services/doc_store/domain/bulk/repository.py",
+              "score": 0.398
+            },
+            {
+              "id": 6,
+              "file_path": "services/orchestrator/domain/entities/service.py",
+              "score": 0.397
+            },
+            {
+              "id": 7,
+              "file_path": "services/doc_store/infrastructure/services/caching_service.py",
+              "score": 0.397
+            },
+            {
+              "id": 8,
+              "file_path": "services/shared/infrastructure/config/service_config.py",
+              "score": 0.397
+            },
+            {
+              "id": 9,
+              "file_path": "services/doc_store/domain/tagging/service.py",
+              "score": 0.397
+            },
+            {
+              "id": 10,
+              "file_path": "scripts/audit-framework/infrastructure/file_system/file_system_service.py",
+              "score": 0.397
+            },
+            {
+              "id": 11,
+              "file_path": "services/mcp_local_llm/application/services/model_service.py",
+              "score": 0.397
+            },
+            {
+              "id": 12,
+              "file_path": "services/source-agent/presentation/models.py",
+              "score": 0.397
+            },
+            {
+              "id": 13,
+              "file_path": "services/prompt_store/infrastructure/repositories/repository.py",
+              "score": 0.396
+            },
+            {
+              "id": 14,
+              "file_path": "services/expert-finder-service/infrastructure/repositories/base_repository.py",
+              "score": 0.396
+            },
+            {
+              "id": 15,
+              "file_path": "services/analysis-service/application/services/application_service.py",
+              "score": 0.396
+            },
+            {
+              "id": 16,
+              "file_path": "status/running_services.txt",
+              "score": 0.396
+            },
+            {
+              "id": 17,
+              "file_path": "services/shared/domain/repositories/base_repository.py",
+              "score": 0.396
+            },
+            {
+              "id": 18,
+              "file_path": "services/project-planning-service/infrastructure/repositories/feature_repository.py",
+              "score": 0.395
+            },
+            {
+              "id": 19,
+              "file_path": "services/orchestrator/infrastructure/persistence/service_registry_repository.py",
+              "score": 0.395
+            },
+            {
+              "id": 20,
+              "file_path": "services/bedrock-proxy/domain/repositories/ai_model_repository.py",
+              "score": 0.395
+            },
+            {
+              "id": 21,
+              "file_path": "services/mcp-store/infrastructure/repositories/postgres_package_repository.py",
+              "score": 0.392
+            },
+            {
+              "id": 22,
+              "file_path": "services/user-store/domain/repositories/user_repository.py",
+              "score": 0.392
+            },
+            {
+              "id": 23,
+              "file_path": "services/frontend/modules/ui_handlers/code_analyzer_handlers.py",
+              "score": 0.391
+            },
+            {
+              "id": 24,
+              "file_path": "services/architecture-digitizer/presentation/api/models.py",
+              "score": 0.39
+            },
+            {
+              "id": 25,
+              "file_path": "services/summarizer-hub/domain/repositories/category_repository.py",
+              "score": 0.39
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "What testing strategy is used? Unit, integration, functional tests?",
+          "timestamp": 1760311192.110968,
+          "duration_seconds": 20.364748001098633,
+          "answer_length": 1736,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "tests/unit/workflow_f/__init__.py",
+              "score": 0.385
+            },
+            {
+              "id": 2,
+              "file_path": "tests/integration/mcp_provisioner/test_provisioner_gateway_integration.py",
+              "score": 0.384
+            },
+            {
+              "id": 3,
+              "file_path": "services/source-agent/tests/test_basic.py",
+              "score": 0.384
+            },
+            {
+              "id": 4,
+              "file_path": "services/doc_store/tests/unit/integration/test_document_lifecycle_integration.py",
+              "score": 0.383
+            },
+            {
+              "id": 5,
+              "file_path": "services/ecosystem-mcp/tests/integration/test_ingestion_pipeline.py",
+              "score": 0.383
+            },
+            {
+              "id": 6,
+              "file_path": "services/doc_store/tests/unit/test_document_repository_comprehensive.py",
+              "score": 0.382
+            },
+            {
+              "id": 7,
+              "file_path": "services/analysis-service/tests/unit/test_utils.py",
+              "score": 0.382
+            },
+            {
+              "id": 8,
+              "file_path": "services/expert-finder-service/tests/unit/test_application_use_cases.py",
+              "score": 0.382
+            },
+            {
+              "id": 9,
+              "file_path": "tests/unit/tagging/test_tag_collection.py",
+              "score": 0.382
+            },
+            {
+              "id": 10,
+              "file_path": "services/project-simulation/tests/integration/test_http_adapters.py",
+              "score": 0.382
+            },
+            {
+              "id": 11,
+              "file_path": "services/project-planning-service/tests/unit/test_feature_entity.py",
+              "score": 0.381
+            },
+            {
+              "id": 12,
+              "file_path": "services/simulation-dashboard/infrastructure/scripts/test_dashboard.py",
+              "score": 0.381
+            },
+            {
+              "id": 13,
+              "file_path": "services/user-store/tests/test_team_capacity.py",
+              "score": 0.38
+            },
+            {
+              "id": 14,
+              "file_path": "services/simulation_dashboard/infrastructure/scripts/test_dashboard.py",
+              "score": 0.38
+            },
+            {
+              "id": 15,
+              "file_path": "services/mcp-infrastructure/tests/integration/test_api.py",
+              "score": 0.38
+            },
+            {
+              "id": 16,
+              "file_path": "services/external-service-store/tests/unit/test_external_service_repository.py",
+              "score": 0.379
+            },
+            {
+              "id": 17,
+              "file_path": "services/doc_store/tests/unit/test_document_repository.py",
+              "score": 0.379
+            },
+            {
+              "id": 18,
+              "file_path": "services/frontend/tests/unit/test_utils.py",
+              "score": 0.377
+            },
+            {
+              "id": 19,
+              "file_path": "services/kafka-ingestion-service/tests/integration/test_redis_integration.py",
+              "score": 0.377
+            },
+            {
+              "id": 20,
+              "file_path": "services/doc_store/tests/unit/test_utils.py",
+              "score": 0.377
+            },
+            {
+              "id": 21,
+              "file_path": "services/project-simulation/tests/integration/test_error_handling_fallbacks.py",
+              "score": 0.377
+            },
+            {
+              "id": 22,
+              "file_path": "services/frontend/tests/unit/test_domain_entities_clean.py",
+              "score": 0.377
+            },
+            {
+              "id": 23,
+              "file_path": "services/kafka-ingestion-service/tests/functional/test_api_endpoints.py",
+              "score": 0.376
+            },
+            {
+              "id": 24,
+              "file_path": "services/code-analyzer/tests/integration/test_workflows.py",
+              "score": 0.376
+            },
+            {
+              "id": 25,
+              "file_path": "tests/integration/tagging/test_hierarchical_integration.py",
+              "score": 0.374
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "How to add a new API endpoint?",
+          "timestamp": 1760311212.778071,
+          "duration_seconds": 16.455979108810425,
+          "answer_length": 1330,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/doc_store/domain/documents/handlers.py",
+              "score": 0.463
+            },
+            {
+              "id": 2,
+              "file_path": "services/discovery-agent/presentation/api/constants.py",
+              "score": 0.463
+            },
+            {
+              "id": 3,
+              "file_path": "services/analysis-service/presentation/api/routers/distributed_router.py",
+              "score": 0.462
+            },
+            {
+              "id": 4,
+              "file_path": "services/unified-api-dashboard/modules/discovery.py",
+              "score": 0.462
+            },
+            {
+              "id": 5,
+              "file_path": "services/mcp-infrastructure/presentation/api/main.py",
+              "score": 0.461
+            },
+            {
+              "id": 6,
+              "file_path": "services/meta-orchestrator/tests/integration/test_monitoring_api.py",
+              "score": 0.461
+            },
+            {
+              "id": 7,
+              "file_path": "services/cli/application/handlers/actions/source_agent.py",
+              "score": 0.461
+            },
+            {
+              "id": 8,
+              "file_path": "services/prompt_store/domain/refinement/handlers.py",
+              "score": 0.46
+            },
+            {
+              "id": 9,
+              "file_path": "services/unified-api-dashboard/modules/developer_tools.py",
+              "score": 0.46
+            },
+            {
+              "id": 10,
+              "file_path": "services/cli/infrastructure/adapters/frontend_adapter.py",
+              "score": 0.46
+            },
+            {
+              "id": 11,
+              "file_path": "scripts/add_all_profile.py",
+              "score": 0.459
+            },
+            {
+              "id": 12,
+              "file_path": "services/ecosystem-mcp/src/api/middleware/__init__.py",
+              "score": 0.459
+            },
+            {
+              "id": 13,
+              "file_path": "services/ecosystem-mcp/src/api/models/__init__.py",
+              "score": 0.458
+            },
+            {
+              "id": 14,
+              "file_path": "services/frontend/modules/ui_handlers/discovery_agent_handlers.py",
+              "score": 0.457
+            },
+            {
+              "id": 15,
+              "file_path": "services/ecosystem-mcp/src/api/middleware/request_id.py",
+              "score": 0.457
+            },
+            {
+              "id": 16,
+              "file_path": "services/cli/application/handlers/actions/summarizer_hub.py",
+              "score": 0.457
+            },
+            {
+              "id": 17,
+              "file_path": "services/mcp-store/tests/e2e/test_api_basic.py",
+              "score": 0.455
+            },
+            {
+              "id": 18,
+              "file_path": "services/analysis-service/presentation/api/routers/workflows_router.py",
+              "score": 0.455
+            },
+            {
+              "id": 19,
+              "file_path": "services/unified-api-dashboard/modules/__init__.py",
+              "score": 0.451
+            },
+            {
+              "id": 20,
+              "file_path": "common/health_checks.py",
+              "score": 0.451
+            },
+            {
+              "id": 21,
+              "file_path": "services/cli/application/handlers/actions/frontend.py",
+              "score": 0.449
+            },
+            {
+              "id": 22,
+              "file_path": "services/ecosystem-mcp/src/api/__init__.py",
+              "score": 0.449
+            },
+            {
+              "id": 23,
+              "file_path": "services/doc_store/application/handlers/base_handler.py",
+              "score": 0.448
+            },
+            {
+              "id": 24,
+              "file_path": "services/analysis-service/presentation/api/routers/analysis_router.py",
+              "score": 0.448
+            },
+            {
+              "id": 25,
+              "file_path": "services/data-services-dashboard/tests/integration/test_api_endpoints.py",
+              "score": 0.443
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "How to add a new caching layer?",
+          "timestamp": 1760311229.5352662,
+          "duration_seconds": 29.045367002487183,
+          "answer_length": 2255,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/mcp-orchestrator/infrastructure/config/settings.py",
+              "score": 0.538
+            },
+            {
+              "id": 2,
+              "file_path": "services/mcp-infrastructure/domain/repositories/mcp_context_repository.py",
+              "score": 0.537
+            },
+            {
+              "id": 3,
+              "file_path": "docs/CONTRIBUTING.md",
+              "score": 0.536
+            },
+            {
+              "id": 4,
+              "file_path": "services/ecosystem-mcp/data/postgresql/pgdata/postgresql.auto.conf",
+              "score": 0.535
+            },
+            {
+              "id": 5,
+              "file_path": "services/doc_store/infrastructure/config/settings.py",
+              "score": 0.535
+            },
+            {
+              "id": 6,
+              "file_path": "services/mcp-provisioner/infrastructure/repositories/redis_mcp_repository.py",
+              "score": 0.535
+            },
+            {
+              "id": 7,
+              "file_path": "scripts/requirements.txt",
+              "score": 0.534
+            },
+            {
+              "id": 8,
+              "file_path": "dashboard/requirements.txt",
+              "score": 0.534
+            },
+            {
+              "id": 9,
+              "file_path": "services/mcp-store/domain/services/compression_service.py",
+              "score": 0.532
+            },
+            {
+              "id": 10,
+              "file_path": "docs/add_remaining_metadata.py",
+              "score": 0.531
+            },
+            {
+              "id": 11,
+              "file_path": "services/discovery-agent/infrastructure/repositories/__init__.py",
+              "score": 0.531
+            },
+            {
+              "id": 12,
+              "file_path": "services/cli/modules/adapters/bedrock_proxy_adapter.py",
+              "score": 0.531
+            },
+            {
+              "id": 13,
+              "file_path": "docker/docker-requirements.txt",
+              "score": 0.53
+            },
+            {
+              "id": 14,
+              "file_path": "services/cli/application/handlers/actions/prompt_store.py",
+              "score": 0.53
+            },
+            {
+              "id": 15,
+              "file_path": "services/cli/infrastructure/adapters/bedrock_proxy_adapter.py",
+              "score": 0.528
+            },
+            {
+              "id": 16,
+              "file_path": "services/mcp-gateway/infrastructure/config/settings.py",
+              "score": 0.527
+            },
+            {
+              "id": 17,
+              "file_path": "requirements.txt",
+              "score": 0.527
+            },
+            {
+              "id": 18,
+              "file_path": "services/kafka-ingestion-service/infrastructure/kafka/kafka_consumer.py",
+              "score": 0.526
+            },
+            {
+              "id": 19,
+              "file_path": "services/mcp-infrastructure/domain/entities/mcp_context.py",
+              "score": 0.525
+            },
+            {
+              "id": 20,
+              "file_path": "services/bedrock-proxy/infrastructure/config/config.yaml",
+              "score": 0.524
+            },
+            {
+              "id": 21,
+              "file_path": "services/ecosystem-mcp/src/storage/repositories/embedding_repository.py",
+              "score": 0.524
+            },
+            {
+              "id": 22,
+              "file_path": "services/mcp-infrastructure/infrastructure/repositories/redis_mcp_context_repository.py",
+              "score": 0.523
+            },
+            {
+              "id": 23,
+              "file_path": "services/ecosystem-mcp/alembic/versions/20251012_0000_initial_schema_complete.py",
+              "score": 0.522
+            },
+            {
+              "id": 24,
+              "file_path": "services/mcp-orchestrator/application/patterns/memory_augmented.py",
+              "score": 0.522
+            },
+            {
+              "id": 25,
+              "file_path": "services/ecosystem-mcp/src/storage/__init__.py",
+              "score": 0.52
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        },
+        {
+          "question": "What are the coding standards and best practices?",
+          "timestamp": 1760311258.881734,
+          "duration_seconds": 20.532612085342407,
+          "answer_length": 1388,
+          "source_count": 25,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/orchestrator/application/ingestion/use_cases.py",
+              "score": 0.464
+            },
+            {
+              "id": 2,
+              "file_path": "services/mcp-performance-store/application/use_cases/get_pattern_performance_use_case.py",
+              "score": 0.463
+            },
+            {
+              "id": 3,
+              "file_path": "services/project-planning-service/domain/services/development_blindspot_detector.py",
+              "score": 0.462
+            },
+            {
+              "id": 4,
+              "file_path": "services/project-simulation/domain/recommendations/recommendation.py",
+              "score": 0.462
+            },
+            {
+              "id": 5,
+              "file_path": "services/analysis-service/application/handlers/quality_analysis_handler.py",
+              "score": 0.462
+            },
+            {
+              "id": 6,
+              "file_path": "services/ecosystem-mcp/src/ingestion/normalizer.py",
+              "score": 0.462
+            },
+            {
+              "id": 7,
+              "file_path": "services/code-analyzer/domain/value_objects/entity_type.py",
+              "score": 0.462
+            },
+            {
+              "id": 8,
+              "file_path": "services/mcp-registry/application/use_cases/register_mcp_use_case.py",
+              "score": 0.462
+            },
+            {
+              "id": 9,
+              "file_path": "services/unified-api-dashboard/modules/developer_tools.py",
+              "score": 0.461
+            },
+            {
+              "id": 10,
+              "file_path": "services/doc_store/tests/unit/test_utils.py",
+              "score": 0.461
+            },
+            {
+              "id": 11,
+              "file_path": "services/orchestrator/shared/application/base_use_case.py",
+              "score": 0.461
+            },
+            {
+              "id": 12,
+              "file_path": "services/mcp-registry/domain/value_objects/export_format.py",
+              "score": 0.459
+            },
+            {
+              "id": 13,
+              "file_path": "services/doc_store/presentation/dto/types.py",
+              "score": 0.459
+            },
+            {
+              "id": 14,
+              "file_path": "services/mcp-store/tests/unit/test_compression_service.py",
+              "score": 0.458
+            },
+            {
+              "id": 15,
+              "file_path": "services/workers/normalizers/__init__.py",
+              "score": 0.457
+            },
+            {
+              "id": 16,
+              "file_path": "services/code-analyzer/domain/value_objects/severity_level.py",
+              "score": 0.457
+            },
+            {
+              "id": 17,
+              "file_path": "services/code-analyzer/tests/performance/__init__.py",
+              "score": 0.456
+            },
+            {
+              "id": 18,
+              "file_path": "services/code-analyzer/tests/unit/__init__.py",
+              "score": 0.456
+            },
+            {
+              "id": 19,
+              "file_path": "services/analysis-service/modules/handlers/quality_handler.py",
+              "score": 0.456
+            },
+            {
+              "id": 20,
+              "file_path": "services/architecture-digitizer/modules/normalizers/base.py",
+              "score": 0.455
+            },
+            {
+              "id": 21,
+              "file_path": "services/cli/tests/unit/conftest.py",
+              "score": 0.453
+            },
+            {
+              "id": 22,
+              "file_path": "services/architecture-digitizer/modules/normalizers/miro.py",
+              "score": 0.451
+            },
+            {
+              "id": 23,
+              "file_path": "services/mcp-orchestrator/application/patterns/constitutional_ai.py",
+              "score": 0.451
+            },
+            {
+              "id": 24,
+              "file_path": "services/cli/infrastructure/services/services/code_analyzer_manager.py",
+              "score": 0.451
+            },
+            {
+              "id": 25,
+              "file_path": "services/bedrock-proxy/presentation/api/standard_endpoints.py",
+              "score": 0.45
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pass_name": "Pass 3: Practical Examples",
+      "duration_seconds": 99.4854531288147,
+      "total_queries": 4,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "Show how to run tests locally.",
+          "timestamp": 1760311279.715606,
+          "duration_seconds": 18.106486082077026,
+          "answer_length": 859,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/analysis-service/tests/unit/test_utils.py",
+              "score": 0.408
+            },
+            {
+              "id": 2,
+              "file_path": "services/mcp-performance-store/tests/e2e/test_api_workflows.py",
+              "score": 0.408
+            },
+            {
+              "id": 3,
+              "file_path": "services/doc_store/tests/unit/test_document_repository.py",
+              "score": 0.408
+            },
+            {
+              "id": 4,
+              "file_path": "services/mcp-store/tests/unit/test_domain_entities.py",
+              "score": 0.405
+            },
+            {
+              "id": 5,
+              "file_path": "services/meta-orchestrator/tests/integration/test_monitoring_api.py",
+              "score": 0.404
+            },
+            {
+              "id": 6,
+              "file_path": "services/user-store/tests/test_resource_allocator.py",
+              "score": 0.403
+            },
+            {
+              "id": 7,
+              "file_path": "services/expert-finder-service/tests/unit/test_presentation_routes.py",
+              "score": 0.403
+            },
+            {
+              "id": 8,
+              "file_path": "services/project-simulation/tests/integration/test_websocket_communication.py",
+              "score": 0.402
+            },
+            {
+              "id": 9,
+              "file_path": "services/doc_store/tests/unit/api/test_notifications.py",
+              "score": 0.401
+            },
+            {
+              "id": 10,
+              "file_path": "services/simulation-dashboard/infrastructure/scripts/test_dashboard.py",
+              "score": 0.401
+            },
+            {
+              "id": 11,
+              "file_path": "services/simulation_dashboard/infrastructure/scripts/test_dashboard.py",
+              "score": 0.401
+            },
+            {
+              "id": 12,
+              "file_path": "services/meta-orchestrator/tests/unit/test_settings.py",
+              "score": 0.4
+            },
+            {
+              "id": 13,
+              "file_path": "services/doc_store/tests/unit/test_document_repository_comprehensive.py",
+              "score": 0.4
+            },
+            {
+              "id": 14,
+              "file_path": "docs/CONTRIBUTING.md",
+              "score": 0.4
+            },
+            {
+              "id": 15,
+              "file_path": "services/frontend/tests/unit/test_utils.py",
+              "score": 0.398
+            },
+            {
+              "id": 16,
+              "file_path": "services/source-agent/tests/unit/test_utils.py",
+              "score": 0.397
+            },
+            {
+              "id": 17,
+              "file_path": "services/mcp-infrastructure/tests/integration/test_api.py",
+              "score": 0.396
+            },
+            {
+              "id": 18,
+              "file_path": "services/interpreter/tests/unit/test_utils.py",
+              "score": 0.393
+            },
+            {
+              "id": 19,
+              "file_path": "services/project-simulation/tests/integration/test_websocket_basic.py",
+              "score": 0.393
+            },
+            {
+              "id": 20,
+              "file_path": "services/expert-finder-service/tests/unit/test_infrastructure_config.py",
+              "score": 0.393
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "Show how to debug the application.",
+          "timestamp": 1760311298.122831,
+          "duration_seconds": 33.12264609336853,
+          "answer_length": 2551,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/project-simulation/tests/integration/test_api_cli_enhancement.py",
+              "score": 0.45
+            },
+            {
+              "id": 2,
+              "file_path": "services/doc_store/tests/unit/api/test_search.py",
+              "score": 0.45
+            },
+            {
+              "id": 3,
+              "file_path": "services/cli/infrastructure/services/monitoring/dashboard_manager.py",
+              "score": 0.45
+            },
+            {
+              "id": 4,
+              "file_path": "services/simulation-dashboard/components/realtime/status_dashboard.py",
+              "score": 0.45
+            },
+            {
+              "id": 5,
+              "file_path": "services/simulation_dashboard/components/realtime/status_dashboard.py",
+              "score": 0.45
+            },
+            {
+              "id": 6,
+              "file_path": "services/project-simulation/tests/api/test_simulation_endpoints.py",
+              "score": 0.45
+            },
+            {
+              "id": 7,
+              "file_path": "services/cli/modules/utils/error_utils.py",
+              "score": 0.449
+            },
+            {
+              "id": 8,
+              "file_path": "services/analysis-service/presentation/middleware/error_handling.py",
+              "score": 0.449
+            },
+            {
+              "id": 9,
+              "file_path": "services/frontend/modules/ui_handlers/code_analyzer_handlers.py",
+              "score": 0.449
+            },
+            {
+              "id": 10,
+              "file_path": "services/cli/application/handlers/actions/code_analyzer.py",
+              "score": 0.448
+            },
+            {
+              "id": 11,
+              "file_path": "services/analysis-service/application/services/analysis_application_service.py",
+              "score": 0.448
+            },
+            {
+              "id": 12,
+              "file_path": "services/project-simulation/tests/integration/test_error_handling_fallbacks.py",
+              "score": 0.448
+            },
+            {
+              "id": 13,
+              "file_path": "services/simulation-dashboard/presentation/streamlit/app.py",
+              "score": 0.447
+            },
+            {
+              "id": 14,
+              "file_path": "services/mcp-logs/application/services/anomaly_service.py",
+              "score": 0.447
+            },
+            {
+              "id": 15,
+              "file_path": "services/mcp-store/tests/e2e/test_api_basic.py",
+              "score": 0.446
+            },
+            {
+              "id": 16,
+              "file_path": "services/analysis-service/application/events/application_events.py",
+              "score": 0.446
+            },
+            {
+              "id": 17,
+              "file_path": "services/simulation_dashboard/presentation/streamlit/app.py",
+              "score": 0.445
+            },
+            {
+              "id": 18,
+              "file_path": "services/ecosystem-mcp/tests/integration/test_request_id_logging.py",
+              "score": 0.445
+            },
+            {
+              "id": 19,
+              "file_path": "services/meta-orchestrator/tests/integration/test_config_modification_api.py",
+              "score": 0.444
+            },
+            {
+              "id": 20,
+              "file_path": "services/ecosystem-mcp/src/api/exception_handlers.py",
+              "score": 0.444
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "Provide examples of common development tasks.",
+          "timestamp": 1760311331.546603,
+          "duration_seconds": 23.1249520778656,
+          "answer_length": 1326,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/user-store/application/use_cases/process_document_relationships_use_case.py",
+              "score": 0.447
+            },
+            {
+              "id": 2,
+              "file_path": "services/mcp-training-coordinator/domain/repositories/job_repository.py",
+              "score": 0.447
+            },
+            {
+              "id": 3,
+              "file_path": "services/project-planning-service/domain/entities/feature.py",
+              "score": 0.447
+            },
+            {
+              "id": 4,
+              "file_path": "demo_rag_synthesis.py",
+              "score": 0.447
+            },
+            {
+              "id": 5,
+              "file_path": "services/project-planning-service/domain/services/workflow_f_user_intelligence.py",
+              "score": 0.446
+            },
+            {
+              "id": 6,
+              "file_path": "services/unified-api-dashboard/modules/developer_tools.py",
+              "score": 0.446
+            },
+            {
+              "id": 7,
+              "file_path": "services/simulation_dashboard/components/realtime/progress_indicators.py",
+              "score": 0.446
+            },
+            {
+              "id": 8,
+              "file_path": "services/simulation-dashboard/components/realtime/progress_indicators.py",
+              "score": 0.446
+            },
+            {
+              "id": 9,
+              "file_path": ".serena/memories/project_overview.md",
+              "score": 0.446
+            },
+            {
+              "id": 10,
+              "file_path": "services/code-analyzer/domain/services/style_manager.py",
+              "score": 0.445
+            },
+            {
+              "id": 11,
+              "file_path": "services/mcp-training-coordinator/domain/entities/job_result.py",
+              "score": 0.444
+            },
+            {
+              "id": 12,
+              "file_path": "services/mcp-orchestrator/domain/entities/workflow_step.py",
+              "score": 0.443
+            },
+            {
+              "id": 13,
+              "file_path": "services/mcp-training-coordinator/domain/entities/training_job.py",
+              "score": 0.442
+            },
+            {
+              "id": 14,
+              "file_path": "services/project-planning-service/tests/unit/test_milestone_planner.py",
+              "score": 0.442
+            },
+            {
+              "id": 15,
+              "file_path": "services/simulation-dashboard/components/charts/timeline_charts.py",
+              "score": 0.441
+            },
+            {
+              "id": 16,
+              "file_path": "services/kafka-ingestion-service/domain/repositories/job_repository.py",
+              "score": 0.441
+            },
+            {
+              "id": 17,
+              "file_path": "services/orchestrator/domain/collaboration/entities.py",
+              "score": 0.441
+            },
+            {
+              "id": 18,
+              "file_path": "services/mcp-training-coordinator/application/use_cases/create_job_use_case.py",
+              "score": 0.441
+            },
+            {
+              "id": 19,
+              "file_path": "services/simulation_dashboard/components/charts/timeline_charts.py",
+              "score": 0.441
+            },
+            {
+              "id": 20,
+              "file_path": "services/project-simulation/domain/entities/project.py",
+              "score": 0.441
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        },
+        {
+          "question": "How to contribute: workflow, pull requests, code review?",
+          "timestamp": 1760311354.9727051,
+          "duration_seconds": 23.914292812347412,
+          "answer_length": 1893,
+          "source_count": 20,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/orchestrator/domain/value_objects/workflow_id.py",
+              "score": 0.375
+            },
+            {
+              "id": 2,
+              "file_path": "services/orchestrator/application/workflow_management/queries.py",
+              "score": 0.374
+            },
+            {
+              "id": 3,
+              "file_path": "services/shared/infrastructure/logging/workflow_logger.py",
+              "score": 0.374
+            },
+            {
+              "id": 4,
+              "file_path": "services/orchestrator/domain/workflows/skills_matching_workflow.py",
+              "score": 0.371
+            },
+            {
+              "id": 5,
+              "file_path": "services/analysis-service/application/services/reporting/reporting_service.py",
+              "score": 0.371
+            },
+            {
+              "id": 6,
+              "file_path": "services/analysis-service/application/services/report_services.py",
+              "score": 0.369
+            },
+            {
+              "id": 7,
+              "file_path": "services/analysis-service/presentation/routes/workflow_routes.py",
+              "score": 0.369
+            },
+            {
+              "id": 8,
+              "file_path": "services/mcp-store/tests/e2e/test_package_workflows.py",
+              "score": 0.368
+            },
+            {
+              "id": 9,
+              "file_path": "services/interpreter/domain/entities/workflow.py",
+              "score": 0.366
+            },
+            {
+              "id": 10,
+              "file_path": "services/cli/infrastructure/services/workflow_manager.py",
+              "score": 0.365
+            },
+            {
+              "id": 11,
+              "file_path": "services/project-planning-service/domain/services/workflow_e_orchestrator.py",
+              "score": 0.364
+            },
+            {
+              "id": 12,
+              "file_path": "services/code-analyzer/tests/integration/test_workflows.py",
+              "score": 0.362
+            },
+            {
+              "id": 13,
+              "file_path": "services/mcp-orchestrator/infrastructure/repositories/redis_workflow_repository.py",
+              "score": 0.361
+            },
+            {
+              "id": 14,
+              "file_path": "services/mcp-performance-store/tests/e2e/test_api_workflows.py",
+              "score": 0.361
+            },
+            {
+              "id": 15,
+              "file_path": "services/ecosystem-mcp/src/api/middleware/request_id.py",
+              "score": 0.359
+            },
+            {
+              "id": 16,
+              "file_path": "services/orchestrator/application/workflow_management/commands.py",
+              "score": 0.359
+            },
+            {
+              "id": 17,
+              "file_path": "services/mcp-registry/application/dto/export_mcp_request.py",
+              "score": 0.358
+            },
+            {
+              "id": 18,
+              "file_path": "services/memory-agent/infrastructure/integrations/workflow_integration.py",
+              "score": 0.358
+            },
+            {
+              "id": 19,
+              "file_path": "services/expert-finder-service/tests/integration/test_workflow_integration.py",
+              "score": 0.358
+            },
+            {
+              "id": 20,
+              "file_path": "services/mcp-orchestrator/domain/value_objects/workflow_state.py",
+              "score": 0.355
+            }
+          ],
+          "cache_hit": false,
+          "temperature": 0.1,
+          "n_results": 20,
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pass_name": "Pass 4: Synthesis",
+      "duration_seconds": 0.03435182571411133,
+      "total_queries": 1,
+      "cache_hits": 0,
+      "queries": [
+        {
+          "question": "Based on the following information about Development Guide, \n        create a comprehensive, well-st...",
+          "timestamp": 1760311379.201129,
+          "duration_seconds": 0.03419899940490723,
+          "answer_length": 0,
+          "source_count": 0,
+          "sources": [],
+          "cache_hit": false,
+          "temperature": 0.0,
+          "n_results": 25,
+          "status": "failed"
+        }
+      ]
+    }
+  ]
+}
