@@ -84,7 +84,8 @@ async def list_containers():
         container_list = []
         for container in containers:
             try:
-                stats = container.stats(stream=False) if container.status == "running" else {}
+                # Don't fetch stats during list - it's too expensive and slow
+                # Stats can be fetched individually via /containers/{name}/stats
                 
                 container_info = {
                     "id": container.id[:12],
