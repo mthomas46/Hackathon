@@ -53,6 +53,7 @@ def show(api_base_url: str):
                 st.info(f"Found {len(documents)} documents")
                 
                 for i, doc in enumerate(documents):
+                    doc_id = doc.get('id', f'doc_{i}')  # Use document ID or fallback to index
                     with st.expander(f"📄 {doc.get('file_path', 'Unknown')[:80]}"):
                         col_a, col_b = st.columns(2)
                         
@@ -73,7 +74,7 @@ def show(api_base_url: str):
                             value=content[:1000] + "..." if len(content) > 1000 else content,
                             height=200,
                             disabled=True,
-                            key=f"doc_preview_{i}"
+                            key=f"doc_content_{doc_id}"
                         )
             else:
                 st.error(f"Failed to fetch documents: {response.status_code}")
