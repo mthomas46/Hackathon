@@ -82,7 +82,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("🔗 Configuration")
 api_base_url = st.sidebar.text_input(
     "Ecosystem MCP API Base URL",
-    value=os.getenv("API_BASE_URL", "http://host.docker.internal:8000"),
+    value=os.getenv("API_BASE_URL", "http://localhost:8000"),
     help="Base URL for the Ecosystem MCP API"
 )
 
