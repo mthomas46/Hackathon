@@ -19,17 +19,18 @@ st.set_page_config(
     layout="wide"
 )
 
-def show():
+def show(api_base_url: str = None):
     """Display enhanced query interface."""
+    # Use provided URL or fall back to environment variable
+    if api_base_url is None:
+        api_base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
+    
     st.title("🎯 Enhanced Query Interface")
     st.markdown("""
     Advanced querying with **multiple modes** and **manual tier selection**.
     
     Choose your query mode and LLM tier for optimal performance!
     """)
-    
-    # Get API base URL
-    api_base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
     
     # Fetch tier status
     st.markdown("---")

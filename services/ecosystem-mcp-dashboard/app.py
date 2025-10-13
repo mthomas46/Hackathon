@@ -71,10 +71,35 @@ st.markdown('<div class="main-header">🧠 Ecosystem MCP Dashboard</div>', unsaf
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Go to",
-    ["🏠 Home", "🏥 Health & Infrastructure", "🔬 Diagnostics", "⚙️ Configuration", 
-     "📋 Logs Viewer", "🔌 API Explorer", "🐳 Container Management", 
-     "🔍 Redis Explorer", "🗄️ PostgreSQL Explorer", "🤖 RAG Query", "📚 Documents", 
-     "⚡ Cache Performance", "📊 Metrics & Analytics", "🔧 Settings"]
+    [
+        # Overview & Status
+        "🏠 Home",
+        "🏥 Health & Infrastructure",
+        "🔬 Diagnostics",
+        
+        # Query Interfaces
+        "🤖 RAG Query",
+        "🎯 Enhanced Query",
+        "🔬 Multi-Pass RAG Query",
+        
+        # Data Management
+        "📚 Documents",
+        
+        # Infrastructure
+        "🐳 Container Management",
+        "🔍 Redis Explorer",
+        "🗄️ PostgreSQL Explorer",
+        
+        # Monitoring & Analytics
+        "⚡ Cache Performance",
+        "📊 Metrics & Analytics",
+        "📋 Logs Viewer",
+        
+        # Tools & Configuration
+        "🔌 API Explorer",
+        "⚙️ Configuration",
+        "🔧 Settings"
+    ]
 )
 
 # API Base URL configuration
@@ -165,6 +190,12 @@ elif page == "🗄️ PostgreSQL Explorer":
 elif page == "🤖 RAG Query":
     from pages import rag
     rag.show(api_base_url)
+elif page == "🎯 Enhanced Query":
+    from pages import query_enhanced
+    query_enhanced.show(api_base_url)
+elif page == "🔬 Multi-Pass RAG Query":
+    from pages import rag_multi_pass
+    rag_multi_pass.show(api_base_url)
 elif page == "📚 Documents":
     from pages import documents
     documents.show(api_base_url)
