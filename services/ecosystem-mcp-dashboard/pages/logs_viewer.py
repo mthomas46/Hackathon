@@ -229,7 +229,7 @@ def show_log_search(api_base_url: str):
                             log_response = httpx.get(
                                 f"{api_base_url}/api/v1/containers/{container_name}/logs",
                                 params={"tail": 500},
-                                timeout=10.0
+                                timeout=30.0  # Increased timeout for large log files
                             )
                             
                             if log_response.status_code == 200:
