@@ -15,6 +15,9 @@ from pathlib import Path
 # Add pages directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Import health checker
+from utils.health_check import HealthChecker
+
 # Page configuration
 st.set_page_config(
     page_title="Ecosystem MCP Dashboard",
