@@ -72,7 +72,8 @@ def show(api_base_url: str):
                             "Content Preview",
                             value=content[:1000] + "..." if len(content) > 1000 else content,
                             height=200,
-                            disabled=True
+                            disabled=True,
+                            key=f"doc_preview_{i}"
                         )
             else:
                 st.error(f"Failed to fetch documents: {response.status_code}")
