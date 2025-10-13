@@ -35,7 +35,8 @@ def show_container_logs(api_base_url: str):
         response = httpx.get(f"{api_base_url}/api/v1/containers", timeout=30.0)
         
         if response.status_code == 200:
-            containers = response.json()
+            data = response.json()
+            containers = data.get('containers', []) if isinstance(data, dict) else data
             
             if not containers:
                 st.info("No containers found.")
@@ -122,11 +123,25 @@ def show_dashboard_logs():
     """Display logs from the dashboard itself."""
     st.subheader("🖥️ Dashboard Logs")
     
-    st.info("This feature displays logs from the Streamlit dashboard container.")
+    st.info("This feature displays logs from the Streamlit dashboard application.")
     
     # Try to read logs from common locations
     import subprocess
     import os
+    import shutil
+    
+    # Check if docker command is available
+    docker_available = shutil.which("docker") is not None
+    
+    if not docker_available:
+        st.warning("⚠️ Docker CLI not available in this environment.")
+        st.markdown("""
+        **Alternative options:**
+        - View logs from the host machine: `docker logs ecosystem-mcp-dashboard`
+        - Check container logs in the 🐳 Container Logs tab
+        - Use Docker Desktop to view logs
+        """)
+        return
     
     try:
         # Try to get logs from Docker
@@ -184,7 +199,8 @@ def show_log_search(api_base_url: str):
         response = httpx.get(f"{api_base_url}/api/v1/containers", timeout=30.0)
         
         if response.status_code == 200:
-            containers = response.json()
+            data = response.json()
+            containers = data.get('containers', []) if isinstance(data, dict) else data
             
             if not containers:
                 st.info("No containers found.")

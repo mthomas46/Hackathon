@@ -28,10 +28,10 @@ def show(api_base_url: str):
                 st.rerun()
         
         try:
-            # Fetch documents
-            response = httpx.post(
-                f"{api_base_url}/api/v1/query",
-                json={"limit": limit},
+            # Fetch documents using the documents endpoint
+            response = httpx.get(
+                f"{api_base_url}/api/v1/documents",
+                params={"limit": limit, "offset": 0},
                 timeout=10.0
             )
             
