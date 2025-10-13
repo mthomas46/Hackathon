@@ -100,8 +100,8 @@ async def list_containers():
                     "network_mode": container.attrs.get("HostConfig", {}).get("NetworkMode", ""),
                 }
                 
-                # Add resource usage if running
-                if container.status == "running" and stats:
+                # Resource stats removed for performance - use /containers/{name}/stats instead
+                if False:  # Disabled - stats are too slow for list operation
                     memory_stats = stats.get("memory_stats", {})
                     cpu_stats = stats.get("cpu_stats", {})
                     
