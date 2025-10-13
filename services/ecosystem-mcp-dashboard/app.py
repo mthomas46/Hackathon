@@ -89,6 +89,7 @@ page = st.sidebar.radio(
         "🐳 Container Management",
         "🔍 Redis Explorer",
         "🗄️ PostgreSQL Explorer",
+        "🔮 ChromaDB Explorer",
         
         # Monitoring & Analytics
         "⚡ Cache Performance",
@@ -98,6 +99,7 @@ page = st.sidebar.radio(
         # Tools & Configuration
         "🔌 API Explorer",
         "⚙️ Configuration",
+        "🔌 LLM Tier Management",
         "🔧 Settings"
     ]
 )
@@ -187,6 +189,9 @@ elif page == "🔍 Redis Explorer":
 elif page == "🗄️ PostgreSQL Explorer":
     from pages import postgres_explorer
     postgres_explorer.show(api_base_url)
+elif page == "🔮 ChromaDB Explorer":
+    from pages import chromadb_explorer
+    chromadb_explorer.show(api_base_url)
 elif page == "🤖 RAG Query":
     from pages import rag
     rag.show(api_base_url)
@@ -205,6 +210,9 @@ elif page == "⚡ Cache Performance":
 elif page == "📊 Metrics & Analytics":
     from pages import metrics
     metrics.show(api_base_url)
+elif page == "🔌 LLM Tier Management":
+    from pages import tier_management
+    tier_management.show(api_base_url)
 elif page == "🔧 Settings":
     from pages import settings
     settings.show(api_base_url)
