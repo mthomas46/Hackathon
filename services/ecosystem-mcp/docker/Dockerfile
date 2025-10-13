@@ -1,5 +1,6 @@
 # Ecosystem MCP Service Dockerfile
-FROM python:3.11-slim-bullseye
+# Using bookworm (Debian 12) for sqlite3 >= 3.35.0 (required by ChromaDB)
+FROM python:3.11-slim-bookworm
 
 # Set working directory
 WORKDIR /app
