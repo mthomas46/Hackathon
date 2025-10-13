@@ -43,7 +43,7 @@ colorama>=0.4.6,<0.5.0            # Cross-platform colored terminal
 gitpython>=3.1.0,<4.0.0           # Git repository operations
 
 # Document Processing
-python-markdown>=3.6.0,<4.0.0     # Markdown processing
+Markdown>=3.6.0,<4.0.0            # Markdown processing
 beautifulsoup4>=4.12.0,<5.0.0     # HTML parsing
 lxml>=5.0.0,<6.0.0                # XML/HTML processing
 pygments>=2.19.0,<3.0.0           # Syntax highlighting
