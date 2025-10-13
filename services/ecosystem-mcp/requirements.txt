@@ -12,6 +12,7 @@ pydantic-settings>=2.0.0,<3.0.0   # Settings management
 SQLAlchemy>=2.0.44,<2.1.0         # SQL toolkit and ORM
 asyncpg>=0.30.0,<0.31.0           # Async PostgreSQL driver
 psycopg[binary]>=3.2.0,<4.0.0     # PostgreSQL adapter
+psycopg2-binary>=2.9.9,<3.0.0     # PostgreSQL adapter (legacy psycopg2 for sync connections)
 greenlet>=3.0.0,<4.0.0            # Required for SQLAlchemy async
 
 # Vector Database
