@@ -215,8 +215,8 @@ def show(api_base_url: str):
         
         submitted = st.form_submit_button("🚀 Submit Query", use_container_width=True)
     
-    # Process query
-    if submitted and question:
+    # Process query (outside form)
+    if query_type == "standard" and submitted and question:
         # Add to history
         if 'query_history' not in st.session_state:
             st.session_state.query_history = []
