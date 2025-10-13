@@ -148,10 +148,8 @@ async def ask_question(request_data: AskRequest, request: Request):
         }
         ```
     """
-    # Apply rate limiting if enabled
-    settings = get_settings()
-    if settings.rate_limit_enabled:
-        await limiter.limit(settings.rag_rate_limit)(lambda: None)()
+    # Rate limiting would go here if configured in settings
+    # Currently not enabled - would need to add rate_limit_enabled and rag_rate_limit to Settings
     
     try:
         # Sanitize input

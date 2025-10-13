@@ -314,6 +314,15 @@ def create_app() -> FastAPI:
     app.include_router(ask.router, prefix="/api/v1", tags=["RAG"])  # ✅ RAG question answering
     app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
     app.include_router(query.router, prefix="/api/v1", tags=["Query"])
+    
+    # Enhanced query with mode and tier selection
+    from .routes import query_enhanced
+    app.include_router(query_enhanced.router, prefix="/api/v1", tags=["Enhanced Query"])
+    
+    # Multi-pass query processing
+    from .routes import multi_pass
+    app.include_router(multi_pass.router, prefix="/api/v1", tags=["Multi-Pass Query"])
+    
     app.include_router(logs.router, prefix="/api/v1", tags=["Logs"])
     app.include_router(ollama.router, prefix="/api/v1", tags=["Ollama"])
     app.include_router(ollama_status.router, prefix="/api/v1", tags=["Ollama Status"])  # ✅ Ollama instance monitoring

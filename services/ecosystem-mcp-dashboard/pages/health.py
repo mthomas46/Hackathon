@@ -76,40 +76,87 @@ def show(api_base_url: str):
             st.markdown("---")
             st.subheader("⚡ Circuit Breakers")
             
-            breakers = health_data.get("components", {}).get("circuit_breakers", {})
+            try:
+                # Fetch circuit breaker data from admin endpoint
+                breaker_response = httpx.get(f"{api_base_url}/api/v1/admin/circuit-breakers", timeout=5.0)
+                
+                if breaker_response.status_code == 200:
+                    breaker_data = breaker_response.json()
+                    breakers = breaker_data.get("circuit_breakers", {})
+                    
+                    if breakers:
+                        for breaker_name, breaker_info in breakers.items():
+                            state = breaker_info.get("state", "UNKNOWN").upper()
+                            
+                            # Skip if not configured
+                            if state == "NOT_CONFIGURED":
+                                continue
+                            
+                            col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+                            
+                            with col1:
+                                if state == "CLOSED":
+                                    st.success(f"✅ **{breaker_name.title()}**")
+                                elif state == "HALF_OPEN":
+                                    st.warning(f"⚠️ **{breaker_name.title()}**")
+                                else:
+                                    st.error(f"❌ **{breaker_name.title()}**")
+                            
+                            with col2:
+                                st.metric("State", state)
+                            
+                            with col3:
+                                failure_count = breaker_info.get('failure_count', 0)
+                                total_calls = breaker_info.get('total_calls', 0)
+                                st.metric("Failures", f"{failure_count}/{breaker_info.get('config', {}).get('failure_threshold', 5)}")
+                            
+                            with col4:
+                                if state == "OPEN":
+                                    retry_time = breaker_info.get('recovery_time_remaining', 0)
+                                    st.metric("Retry In", f"{retry_time:.0f}s")
+                                elif state == "CLOSED" and total_calls > 0:
+                                    success_rate = (breaker_info.get('total_successes', 0) / total_calls * 100) if total_calls > 0 else 0
+                                    st.metric("Success", f"{success_rate:.1f}%")
+                                else:
+                                    st.metric("Calls", total_calls)
+                            
+                            # Show details in expander
+                            with st.expander(f"🔍 {breaker_name.title()} Details"):
+                                detail_col1, detail_col2 = st.columns(2)
+                                
+                                with detail_col1:
+                                    st.markdown("**Statistics:**")
+                                    st.write(f"Total Calls: {breaker_info.get('total_calls', 0)}")
+                                    st.write(f"Total Successes: {breaker_info.get('total_successes', 0)}")
+                                    st.write(f"Total Failures: {breaker_info.get('total_failures', 0)}")
+                                    st.write(f"Current Failures: {breaker_info.get('failure_count', 0)}")
+                                
+                                with detail_col2:
+                                    st.markdown("**Configuration:**")
+                                    config = breaker_info.get('config', {})
+                                    st.write(f"Failure Threshold: {config.get('failure_threshold', 'N/A')}")
+                                    st.write(f"Success Threshold: {config.get('success_threshold', 'N/A')}")
+                                    st.write(f"Timeout: {config.get('timeout', 'N/A')}s")
+                                
+                                if "last_failure_time" in breaker_info:
+                                    st.markdown("**Timing:**")
+                                    st.write(f"Time Since Last Failure: {breaker_info.get('time_since_last_failure', 0):.1f}s")
+                                
+                                if "time_in_open_state" in breaker_info:
+                                    st.write(f"Time in Open State: {breaker_info.get('time_in_open_state', 0):.1f}s")
+                                
+                                st.markdown("**Raw Data:**")
+                                st.json(breaker_info)
+                        
+                        # Show summary
+                        st.info(f"ℹ️ {breaker_data.get('message', 'Circuit breakers active')}")
+                    else:
+                        st.info("✅ All circuit breakers are healthy (CLOSED state)")
+                else:
+                    st.warning(f"Could not fetch circuit breaker data: HTTP {breaker_response.status_code}")
             
-            if breakers:
-                for breaker_name, breaker_data in breakers.items():
-                    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
-                    
-                    state = breaker_data.get("state", "UNKNOWN")
-                    
-                    with col1:
-                        if state == "CLOSED":
-                            st.success(f"✅ {breaker_name}")
-                        elif state == "HALF_OPEN":
-                            st.warning(f"⚠️ {breaker_name}")
-                        else:
-                            st.error(f"❌ {breaker_name}")
-                    
-                    with col2:
-                        st.write(f"State: **{state}**")
-                    
-                    with col3:
-                        st.write(f"Failures: {breaker_data.get('failures', 0)}")
-                    
-                    with col4:
-                        if state == "OPEN":
-                            retry_time = breaker_data.get('time_until_retry_seconds', 0)
-                            st.write(f"Retry in: {retry_time:.1f}s")
-                        else:
-                            st.write("—")
-                    
-                    # Show details in expander
-                    with st.expander(f"🔍 {breaker_name} Details"):
-                        st.json(breaker_data)
-            else:
-                st.info("No circuit breakers found or all are closed")
+            except Exception as breaker_error:
+                st.error(f"Error fetching circuit breakers: {str(breaker_error)}")
             
             # Diagnostics
             st.markdown("---")

@@ -9,6 +9,11 @@ def show(api_base_url: str):
     """Show metrics & analytics page."""
     st.title("📊 Metrics & Analytics")
     
+    st.markdown("""
+    View comprehensive system metrics including document counts, queue status, 
+    processing costs, and embedding coverage.
+    """)
+    
     # Refresh controls
     col1, col2 = st.columns([1, 5])
     
@@ -29,108 +34,215 @@ def show(api_base_url: str):
         if response.status_code == 200:
             data = response.json()
             
+            # Extract nested data
+            documents_data = data.get("documents", {})
+            queues_data = data.get("queues", {})
+            cost_data = data.get("cost", {})
+            
             # System metrics
             st.subheader("🖥️ System Metrics")
             
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
-                total_docs = data.get("document_count", 0)
+                total_docs = documents_data.get("total", 0)
                 st.metric("Total Documents", f"{total_docs:,}")
             
             with col2:
-                collection_count = data.get("collection_count", 0)
-                st.metric("Collections", collection_count)
-            
-            with col3:
-                total_embeddings = data.get("total_embeddings", 0)
+                total_embeddings = documents_data.get("embeddings", 0)
                 st.metric("Embeddings", f"{total_embeddings:,}")
             
+            with col3:
+                ingestion_queue = queues_data.get("ingestion", 0)
+                st.metric("Ingestion Queue", f"{ingestion_queue:,}")
+            
             with col4:
-                cache_size = data.get("cache_size_mb", 0)
-                st.metric("Cache Size", f"{cache_size:.1f} MB")
+                total_cost = cost_data.get("total_usd", 0)
+                st.metric("Total Cost", f"${total_cost:.2f}")
             
-            # Document distribution
+            # Queue Status
             st.markdown("---")
-            st.subheader("📁 Document Distribution")
+            st.subheader("📋 Queue Status")
             
-            doc_types = data.get("document_types", {})
+            col1, col2, col3 = st.columns(3)
             
-            if doc_types:
+            with col1:
+                ingestion_queue = queues_data.get("ingestion", 0)
+                st.metric(
+                    "Ingestion Queue", 
+                    f"{ingestion_queue:,}",
+                    delta=None,
+                    help="Documents waiting to be ingested"
+                )
+            
+            with col2:
+                embedding_queue = queues_data.get("embedding", 0)
+                st.metric(
+                    "Embedding Queue", 
+                    f"{embedding_queue:,}",
+                    delta=None,
+                    help="Documents waiting for embeddings"
+                )
+            
+            with col3:
+                failed_queue = queues_data.get("failed", 0)
+                st.metric(
+                    "Failed Jobs", 
+                    f"{failed_queue:,}",
+                    delta=None,
+                    help="Jobs that failed processing"
+                )
+            
+            # Queue visualization
+            if ingestion_queue > 0 or embedding_queue > 0 or failed_queue > 0:
                 fig = go.Figure(data=[go.Bar(
-                    x=list(doc_types.keys()),
-                    y=list(doc_types.values()),
-                    marker_color='#1f77b4'
+                    x=['Ingestion', 'Embedding', 'Failed'],
+                    y=[ingestion_queue, embedding_queue, failed_queue],
+                    marker_color=['#1f77b4', '#ff7f0e', '#d62728']
                 )])
                 
                 fig.update_layout(
-                    title="Documents by Type",
-                    xaxis_title="File Type",
+                    title="Queue Status",
+                    xaxis_title="Queue Type",
                     yaxis_title="Count",
-                    height=400
+                    height=300
                 )
                 
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.info("No document type data available")
+                st.success("✅ All queues are empty!")
             
-            # Query performance
+            # Cost Tracking
             st.markdown("---")
-            st.subheader("⚡ Query Performance")
-            
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                avg_query_time = data.get("avg_query_time_ms", 0)
-                st.metric("Avg Query Time", f"{avg_query_time:.0f} ms")
-            
-            with col2:
-                total_queries = data.get("total_queries", 0)
-                st.metric("Total Queries", f"{total_queries:,}")
-            
-            with col3:
-                queries_per_sec = data.get("queries_per_second", 0)
-                st.metric("Queries/sec", f"{queries_per_sec:.2f}")
-            
-            # Database stats
-            st.markdown("---")
-            st.subheader("🗄️ Database Statistics")
-            
-            db_stats = data.get("database", {})
+            st.subheader("💰 Cost Tracking")
             
             col1, col2 = st.columns(2)
             
             with col1:
-                st.metric("DB Size", f"{db_stats.get('size_mb', 0):.1f} MB")
-                st.metric("Active Connections", db_stats.get('active_connections', 0))
+                total_cost = cost_data.get("total_usd", 0)
+                st.metric(
+                    "Total Cost (All Time)", 
+                    f"${total_cost:.4f}",
+                    help="Total API costs incurred"
+                )
             
             with col2:
-                st.metric("Table Count", db_stats.get('table_count', 0))
-                st.metric("Index Count", db_stats.get('index_count', 0))
+                today_cost = cost_data.get("today_usd", 0)
+                st.metric(
+                    "Today's Cost", 
+                    f"${today_cost:.4f}",
+                    help="Costs incurred today"
+                )
             
-            # Redis stats
+            # Cost visualization
+            if total_cost > 0:
+                remaining_today = max(0, total_cost - today_cost)
+                
+                fig = go.Figure(data=[go.Pie(
+                    labels=['Today', 'Previous Days'],
+                    values=[today_cost, remaining_today],
+                    marker=dict(colors=['#ff7f0e', '#1f77b4']),
+                    hole=.4
+                )])
+                
+                fig.update_layout(
+                    title="Cost Distribution",
+                    height=300
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("💡 No costs tracked yet. Costs will appear as you use the API.")
+            
+            # Document & Embedding Ratio
             st.markdown("---")
-            st.subheader("💾 Redis Statistics")
+            st.subheader("📊 Document Processing Status")
             
-            redis_stats = data.get("redis", {})
+            total_docs = documents_data.get("total", 0)
+            total_embeddings = documents_data.get("embeddings", 0)
             
-            col1, col2, col3 = st.columns(3)
+            if total_docs > 0:
+                embedded_percent = (total_embeddings / total_docs) * 100
+                not_embedded = total_docs - total_embeddings
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.metric(
+                        "Embedding Coverage",
+                        f"{embedded_percent:.1f}%",
+                        help="Percentage of documents with embeddings"
+                    )
+                
+                with col2:
+                    st.metric(
+                        "Documents Without Embeddings",
+                        f"{not_embedded:,}",
+                        help="Documents that still need embeddings"
+                    )
+                
+                # Progress bar
+                st.progress(embedded_percent / 100)
+                
+                if embedded_percent == 100:
+                    st.success("✅ All documents have embeddings!")
+                elif embedded_percent > 90:
+                    st.info("🟡 Almost there! Most documents are embedded.")
+                elif embedded_percent < 50:
+                    st.warning("⚠️ Less than half of documents have embeddings.")
+            else:
+                st.info("No documents in the system yet.")
             
-            with col1:
-                st.metric("Used Memory", f"{redis_stats.get('used_memory_mb', 0):.1f} MB")
-            
-            with col2:
-                st.metric("Connected Clients", redis_stats.get('connected_clients', 0))
-            
-            with col3:
-                st.metric("Total Keys", f"{redis_stats.get('total_keys', 0):,}")
-            
-            # System health timeline (placeholder)
+            # Infrastructure Health
             st.markdown("---")
-            st.subheader("📈 System Health Timeline")
-            st.info("Health timeline visualization coming soon...")
+            st.subheader("🏥 Infrastructure Health")
+            
+            try:
+                # Fetch health check data
+                health_response = httpx.get(
+                    f"{api_base_url}/api/v1/health/datasources",
+                    timeout=5.0
+                )
+                
+                if health_response.status_code == 200:
+                    health_data = health_response.json()
+                    
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        postgres_status = health_data.get("postgresql", {}).get("status", "unknown")
+                        postgres_latency = health_data.get("postgresql", {}).get("latency_ms", 0)
+                        
+                        if postgres_status == "healthy":
+                            st.success(f"✅ PostgreSQL\n\n{postgres_latency:.0f}ms")
+                        else:
+                            st.error(f"❌ PostgreSQL\n\n{postgres_status}")
+                    
+                    with col2:
+                        redis_status = health_data.get("redis", {}).get("status", "unknown")
+                        redis_latency = health_data.get("redis", {}).get("latency_ms", 0)
+                        
+                        if redis_status == "healthy":
+                            st.success(f"✅ Redis\n\n{redis_latency:.0f}ms")
+                        else:
+                            st.error(f"❌ Redis\n\n{redis_status}")
+                    
+                    with col3:
+                        qdrant_status = health_data.get("qdrant", {}).get("status", "unknown")
+                        qdrant_latency = health_data.get("qdrant", {}).get("latency_ms", 0)
+                        
+                        if qdrant_status == "healthy":
+                            st.success(f"✅ Qdrant\n\n{qdrant_latency:.0f}ms")
+                        else:
+                            st.error(f"❌ Qdrant\n\n{qdrant_status}")
+                else:
+                    st.info("Infrastructure health data not available")
+            
+            except Exception as health_error:
+                st.info(f"Could not fetch infrastructure health: {str(health_error)}")
             
             # Full stats
+            st.markdown("---")
             with st.expander("🔍 Raw Statistics Data"):
                 st.json(data)
         
@@ -148,21 +260,30 @@ def show(api_base_url: str):
     except Exception as e:
         st.error(f"Error: {str(e)}")
     
-    # Export options
+    # Quick Actions
     st.markdown("---")
-    st.subheader("💾 Export Options")
+    st.subheader("⚡ Quick Actions")
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("📥 Export Metrics (JSON)", use_container_width=True):
-            st.info("Exporting metrics...")
+        if st.button("📥 Export All Metrics (JSON)", use_container_width=True):
+            try:
+                stats_response = httpx.get(f"{api_base_url}/api/v1/admin/stats", timeout=10.0)
+                if stats_response.status_code == 200:
+                    st.download_button(
+                        "💾 Download Metrics",
+                        data=stats_response.text,
+                        file_name=f"metrics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                        mime="application/json",
+                        use_container_width=True
+                    )
+                else:
+                    st.error("Failed to fetch metrics")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
     
     with col2:
-        if st.button("📊 Generate Report", use_container_width=True):
-            st.info("Report generation coming soon...")
-    
-    with col3:
-        if st.button("📧 Email Report", use_container_width=True):
-            st.info("Email functionality coming soon...")
+        if st.button("🔄 Refresh All Data", use_container_width=True):
+            st.rerun()
 

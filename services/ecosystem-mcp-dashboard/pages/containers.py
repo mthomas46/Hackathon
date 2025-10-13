@@ -283,8 +283,13 @@ def show(api_base_url: str):
                                     logs_data = logs_response.json()
                                     log_lines = logs_data.get("logs", [])
                                     
+                                    # Convert list to string (API returns logs as a list of lines)
                                     if log_lines:
-                                        logs_text = "\n".join(log_lines[-50:])
+                                        if isinstance(log_lines, list):
+                                            logs_text = "\n".join(str(line) for line in log_lines[-50:])
+                                        else:
+                                            logs_text = str(log_lines)
+                                        
                                         st.text_area(
                                             "Container Logs",
                                             value=logs_text,

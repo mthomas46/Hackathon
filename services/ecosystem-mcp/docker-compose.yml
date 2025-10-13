@@ -103,6 +103,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     container_name: ecosystem-mcp-service
+    # Allow access to Docker socket
+    user: root  # Run as root to access Docker socket
     environment:
       DATABASE_URL: postgresql://ecosystem:ecosystem_password@postgres:5432/ecosystem_mcp
       REDIS_URL: redis://redis:6379/0
@@ -156,6 +158,11 @@ services:
       - API_BASE_URL=http://ecosystem-mcp:8000
     ports:
       - "8501:8501"
+    volumes:
+      # Mount local code for hot-reload during development
+      - ../ecosystem-mcp-dashboard/pages:/app/pages
+      - ../ecosystem-mcp-dashboard/utils:/app/utils
+      - ../ecosystem-mcp-dashboard/app.py:/app/app.py
     depends_on:
       ecosystem-mcp:
         condition: service_healthy  # Wait for API to be healthy

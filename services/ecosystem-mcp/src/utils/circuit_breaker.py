@@ -248,6 +248,50 @@ class CircuitBreaker:
         elapsed = time.time() - self.stats.opened_at
         return elapsed >= self.config.timeout
     
+    def get_state(self) -> Dict[str, Any]:
+        """
+        Get current state and statistics of the circuit breaker.
+        
+        Returns:
+            Dictionary with current state, counts, and timing information
+        """
+        state = self.stats.state.value if hasattr(self.stats.state, 'value') else str(self.stats.state)
+        
+        result = {
+            "name": self.name,
+            "state": state,
+            "failure_count": self.stats.failure_count,
+            "success_count": self.stats.success_count,
+            "total_calls": self.stats.total_calls,
+            "total_failures": self.stats.total_failures,
+            "total_successes": self.stats.total_successes,
+            "config": {
+                "failure_threshold": self.config.failure_threshold,
+                "success_threshold": self.config.success_threshold,
+                "timeout": self.config.timeout
+            }
+        }
+        
+        # Add timing information if available
+        if self.stats.last_failure_time:
+            result["last_failure_time"] = self.stats.last_failure_time
+            result["time_since_last_failure"] = time.time() - self.stats.last_failure_time
+        
+        if self.stats.last_success_time:
+            result["last_success_time"] = self.stats.last_success_time
+            result["time_since_last_success"] = time.time() - self.stats.last_success_time
+        
+        # Add recovery information if circuit is open
+        if self.stats.state == CircuitState.OPEN and self.stats.opened_at:
+            elapsed = time.time() - self.stats.opened_at
+            remaining = max(0, self.config.timeout - elapsed)
+            result["opened_at"] = self.stats.opened_at
+            result["time_in_open_state"] = elapsed
+            result["recovery_time_remaining"] = remaining
+            result["will_attempt_recovery_soon"] = remaining < 5
+        
+        return result
+    
     def get_stats(self) -> Dict[str, Any]:
         """Get current statistics."""
         return {
@@ -276,6 +320,32 @@ class CircuitBreaker:
             self.stats.failure_count = 0
             self.stats.success_count = 0
             self.stats.opened_at = None
+    
+    async def __aenter__(self):
+        """Async context manager entry - check if circuit is open."""
+        if self.stats.state == CircuitState.OPEN:
+            if not self._should_attempt_reset():
+                raise CircuitBreakerOpenError(
+                    f"Circuit breaker '{self.name}' is OPEN"
+                )
+            # Try to transition to HALF_OPEN
+            async with self._lock:
+                if self.stats.state == CircuitState.OPEN:
+                    logger.info(f"Circuit breaker '{self.name}': OPEN -> HALF_OPEN (testing recovery)")
+                    self.stats.state = CircuitState.HALF_OPEN
+                    self.stats.success_count = 0
+                    self.stats.failure_count = 0
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit - record success or failure."""
+        if exc_type is None:
+            # Success
+            await self._record_success()
+        else:
+            # Failure
+            await self._record_failure()
+        return False  # Don't suppress exceptions
 
 
 class CircuitBreakerOpenError(Exception):

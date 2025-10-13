@@ -218,7 +218,7 @@ async def infrastructure_diagnostics():
         from ...config import settings
         from urllib.parse import urlparse
         
-        settings = get_settings()
+        # settings is already imported, don't call get_settings()
         parsed = urlparse(str(settings.database_url))
         
         db = get_database()

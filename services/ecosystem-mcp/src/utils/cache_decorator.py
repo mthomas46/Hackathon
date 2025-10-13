@@ -70,7 +70,11 @@ def cache(
                 global CACHE_HITS, CACHE_MISSES
                 
                 try:
-                    redis_client = await get_redis_client()
+                    # get_redis_client() is NOT async - just returns the client
+                    redis_client = get_redis_client()
+                    # Ensure it's connected (this IS async)
+                    if not redis_client._connected:
+                        await redis_client.connect()
                 except Exception as e:
                     logger.warning(f"Redis not available, skipping cache: {e}")
                     return await func(*args, **kwargs)
@@ -143,7 +147,7 @@ def cache(
                 # Store in cache (best effort)
                 try:
                     serialized = json.dumps(result)
-                    await redis_client.setex(cache_key, ttl, serialized)
+                    await redis_client.set(cache_key, serialized, ex=ttl)
                     logger.info(f"💾 Cached result for {cache_key} (TTL: {ttl}s)")
                 except (TypeError, ValueError) as e:
                     logger.warning(f"Cannot cache result for {cache_key}: {e}")

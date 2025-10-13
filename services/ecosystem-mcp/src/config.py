@@ -66,8 +66,8 @@ class Settings(BaseSettings):
         description="Enable native desktop Ollama for heavy workloads"
     )
     ollama_desktop_url: str = Field(
-        default="http://localhost:11435",
-        description="Desktop Ollama API URL (different port to avoid conflict)"
+        default="http://host.docker.internal:11435",
+        description="Desktop Ollama API URL (use host.docker.internal to access host from container)"
     )
     ollama_desktop_model: str = Field(
         default="llama3:latest",
@@ -84,8 +84,8 @@ class Settings(BaseSettings):
         description="Enable Cursor IDE models for most complex queries"
     )
     cursor_mcp_url: str = Field(
-        default="http://localhost:3000",
-        description="Cursor MCP server URL"
+        default="http://host.docker.internal:3000",
+        description="Cursor MCP server URL (use host.docker.internal to access host from container)"
     )
     cursor_model: str = Field(
         default="claude-4.5-sonnet",

@@ -2,22 +2,18 @@
 Docker container management endpoints.
 
 Provides API for managing Docker containers in the ecosystem.
+Uses subprocess calls to docker CLI for reliability.
 """
 
 import logging
-from typing import Dict, Any, List
+import json
+import subprocess
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-
-try:
-    import docker
-    from docker.errors import DockerException, NotFound, APIError
-    DOCKER_AVAILABLE = True
-except ImportError:
-    DOCKER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -45,22 +41,51 @@ class ContainerActionResponse(BaseModel):
     timestamp: str
 
 
-def get_docker_client():
-    """Get Docker client with error handling."""
-    if not DOCKER_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail="Docker SDK not available. Install docker-py to use this feature."
-        )
+def run_docker_command(args: List[str], check: bool = True) -> subprocess.CompletedProcess:
+    """
+    Run a docker command using subprocess.
     
+    Args:
+        args: Docker command arguments (without 'docker' prefix)
+        check: Whether to raise exception on non-zero exit code
+    
+    Returns:
+        CompletedProcess result
+    
+    Raises:
+        HTTPException: If Docker command fails
+    """
     try:
-        client = docker.from_env()
-        client.ping()
-        return client
-    except DockerException as e:
+        result = subprocess.run(
+            ["docker"] + args,
+            capture_output=True,
+            text=True,
+            check=check,
+            timeout=30
+        )
+        return result
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            status_code=504,
+            detail="Docker command timed out"
+        )
+    except subprocess.CalledProcessError as e:
+        error_msg = e.stderr.strip() if e.stderr else str(e)
+        logger.error(f"Docker command failed: {error_msg}")
         raise HTTPException(
             status_code=503,
-            detail=f"Cannot connect to Docker daemon: {str(e)}"
+            detail=f"Docker command failed: {error_msg}"
+        )
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=503,
+            detail="Docker CLI not found. Ensure Docker is installed."
+        )
+    except Exception as e:
+        logger.error(f"Error running docker command: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error executing docker command: {str(e)}"
         )
 
 
@@ -72,55 +97,58 @@ def get_docker_client():
 )
 async def list_containers():
     """
-    List all Docker containers.
+    List all Docker containers using docker ps.
     
     Returns:
         List of containers with their status, names, and details.
     """
     try:
-        client = get_docker_client()
-        containers = client.containers.list(all=True)
+        # Use docker ps with JSON format for easy parsing
+        result = run_docker_command([
+            "ps", "-a",
+            "--format", "{{json .}}",
+            "--no-trunc"
+        ])
         
         container_list = []
-        for container in containers:
-            try:
-                # Don't fetch stats during list - it's too expensive and slow
-                # Stats can be fetched individually via /containers/{name}/stats
-                
-                container_info = {
-                    "id": container.id[:12],
-                    "name": container.name,
-                    "short_id": container.short_id,
-                    "status": container.status,
-                    "state": container.attrs.get("State", {}).get("Status", "unknown"),
-                    "image": container.image.tags[0] if container.image.tags else container.image.id[:12],
-                    "created": container.attrs.get("Created", ""),
-                    "ports": container.ports,
-                    "labels": container.labels,
-                    "network_mode": container.attrs.get("HostConfig", {}).get("NetworkMode", ""),
-                }
-                
-                # Resource stats removed for performance - use /containers/{name}/stats instead
-                if False:  # Disabled - stats are too slow for list operation
-                    memory_stats = stats.get("memory_stats", {})
-                    cpu_stats = stats.get("cpu_stats", {})
-                    
-                    if memory_stats and "usage" in memory_stats:
-                        container_info["memory_usage_mb"] = memory_stats["usage"] / 1024 / 1024
-                        if "limit" in memory_stats:
-                            container_info["memory_limit_mb"] = memory_stats["limit"] / 1024 / 1024
-                            container_info["memory_percent"] = (memory_stats["usage"] / memory_stats["limit"]) * 100
-                
-                container_list.append(container_info)
+        for line in result.stdout.strip().split('\n'):
+            if not line:
+                continue
             
+            try:
+                container_data = json.loads(line)
+                
+                # Get detailed info with docker inspect
+                inspect_result = run_docker_command(["inspect", container_data.get("ID", container_data.get("Names", ""))])
+                inspect_data = json.loads(inspect_result.stdout)
+                
+                if inspect_data:
+                    container_info = inspect_data[0]
+                    
+                    # Parse ports
+                    ports = {}
+                    if container_info.get("NetworkSettings", {}).get("Ports"):
+                        ports = container_info["NetworkSettings"]["Ports"]
+                    
+                    container_list.append({
+                        "id": container_info["Id"][:12],
+                        "name": container_info["Name"].lstrip("/"),
+                        "short_id": container_info["Id"][:12],
+                        "status": container_info["State"]["Status"],
+                        "state": container_info["State"]["Status"],
+                        "image": container_info["Config"]["Image"],
+                        "created": container_info["Created"],
+                        "ports": ports,
+                        "labels": container_info["Config"].get("Labels", {}),
+                        "network_mode": container_info["HostConfig"].get("NetworkMode", ""),
+                    })
+            
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to parse container JSON: {e}")
+                continue
             except Exception as e:
-                logger.warning(f"Error getting stats for container {container.name}: {e}")
-                container_list.append({
-                    "id": container.id[:12],
-                    "name": container.name,
-                    "status": container.status,
-                    "error": str(e)
-                })
+                logger.warning(f"Error processing container: {e}")
+                continue
         
         return ContainerListResponse(
             containers=container_list,
@@ -144,63 +172,60 @@ async def list_containers():
 )
 async def get_container(container_name: str):
     """
-    Get detailed information about a specific container.
+    Get detailed information about a specific container using docker inspect.
     
     Args:
         container_name: Name or ID of the container
     
     Returns:
-        Detailed container information including logs, stats, and configuration.
+        Detailed container information.
     """
     try:
-        client = get_docker_client()
-        container = client.containers.get(container_name)
+        # Get container details with docker inspect
+        result = run_docker_command(["inspect", container_name])
+        inspect_data = json.loads(result.stdout)
         
-        # Get container details
+        if not inspect_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Container '{container_name}' not found"
+            )
+        
+        container = inspect_data[0]
+        
+        # Build response
         details = {
-            "id": container.id,
-            "name": container.name,
-            "short_id": container.short_id,
-            "status": container.status,
-            "image": container.image.tags[0] if container.image.tags else container.image.id,
-            "created": container.attrs.get("Created"),
-            "started": container.attrs.get("State", {}).get("StartedAt"),
-            "finished": container.attrs.get("State", {}).get("FinishedAt"),
-            "ports": container.ports,
-            "environment": container.attrs.get("Config", {}).get("Env", []),
-            "labels": container.labels,
-            "mounts": [m for m in container.attrs.get("Mounts", [])],
-            "network_settings": container.attrs.get("NetworkSettings", {}),
-            "restart_count": container.attrs.get("RestartCount", 0),
+            "id": container["Id"],
+            "name": container["Name"].lstrip("/"),
+            "short_id": container["Id"][:12],
+            "status": container["State"]["Status"],
+            "image": container["Config"]["Image"],
+            "created": container["Created"],
+            "started": container["State"].get("StartedAt"),
+            "finished": container["State"].get("FinishedAt"),
+            "ports": container["NetworkSettings"].get("Ports", {}),
+            "environment": container["Config"].get("Env", []),
+            "labels": container["Config"].get("Labels", {}),
+            "mounts": container.get("Mounts", []),
+            "network_settings": container.get("NetworkSettings", {}),
+            "restart_count": container.get("RestartCount", 0),
         }
         
         # Get stats if running
-        if container.status == "running":
+        if container["State"]["Status"] == "running":
             try:
-                stats = container.stats(stream=False)
-                details["stats"] = {
-                    "memory": stats.get("memory_stats", {}),
-                    "cpu": stats.get("cpu_stats", {}),
-                    "networks": stats.get("networks", {}),
-                }
+                stats_result = run_docker_command([
+                    "stats", container_name,
+                    "--no-stream", "--format", "{{json .}}"
+                ])
+                if stats_result.stdout.strip():
+                    stats_data = json.loads(stats_result.stdout)
+                    details["stats"] = stats_data
             except Exception as e:
                 logger.warning(f"Could not get stats: {e}")
         
-        # Get recent logs (last 100 lines)
-        try:
-            logs = container.logs(tail=100, timestamps=True).decode("utf-8", errors="ignore")
-            details["recent_logs"] = logs.split("\n")[-100:]
-        except Exception as e:
-            logger.warning(f"Could not get logs: {e}")
-            details["recent_logs"] = []
-        
         return JSONResponse(content=details)
     
-    except NotFound:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Container '{container_name}' not found"
-        )
     except HTTPException:
         raise
     except Exception as e:
@@ -219,7 +244,7 @@ async def get_container(container_name: str):
 )
 async def container_action(action_request: ContainerAction):
     """
-    Perform an action on a Docker container.
+    Perform an action on a Docker container using docker CLI.
     
     Supported actions:
     - start: Start a stopped container
@@ -243,51 +268,29 @@ async def container_action(action_request: ContainerAction):
         )
     
     try:
-        client = get_docker_client()
-        container = client.containers.get(action_request.container_name)
+        logger.info(f"Performing '{action_request.action}' on container '{action_request.container_name}'")
         
-        logger.info(f"Performing '{action_request.action}' on container '{container.name}'")
-        
-        # Perform the action
-        if action_request.action == "start":
-            container.start()
-            message = f"Container '{container.name}' started successfully"
-        
-        elif action_request.action == "stop":
-            container.stop(timeout=10)
-            message = f"Container '{container.name}' stopped successfully"
-        
+        # Execute the docker command
+        if action_request.action == "stop":
+            # Add timeout for stop command
+            run_docker_command(["stop", "-t", "10", action_request.container_name])
         elif action_request.action == "restart":
-            container.restart(timeout=10)
-            message = f"Container '{container.name}' restarted successfully"
+            # Add timeout for restart command
+            run_docker_command(["restart", "-t", "10", action_request.container_name])
+        else:
+            # start, pause, unpause don't need timeout
+            run_docker_command([action_request.action, action_request.container_name])
         
-        elif action_request.action == "pause":
-            container.pause()
-            message = f"Container '{container.name}' paused successfully"
-        
-        elif action_request.action == "unpause":
-            container.unpause()
-            message = f"Container '{container.name}' unpaused successfully"
+        message = f"Container '{action_request.container_name}' {action_request.action}ed successfully"
         
         return ContainerActionResponse(
             success=True,
             message=message,
-            container_name=container.name,
+            container_name=action_request.container_name,
             action=action_request.action,
             timestamp=datetime.now().isoformat()
         )
     
-    except NotFound:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Container '{action_request.container_name}' not found"
-        )
-    except APIError as e:
-        logger.error(f"Docker API error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Docker operation failed: {str(e)}"
-        )
     except HTTPException:
         raise
     except Exception as e:
@@ -305,12 +308,12 @@ async def container_action(action_request: ContainerAction):
 )
 async def get_container_logs(
     container_name: str,
-    tail: int = 100,
-    since: str = None,
-    timestamps: bool = True
+    tail: int = Query(100, description="Number of lines to retrieve from the end"),
+    since: Optional[str] = Query(None, description="Show logs since timestamp or relative time"),
+    timestamps: bool = Query(True, description="Include timestamps in logs")
 ):
     """
-    Get logs from a specific container.
+    Get logs from a specific container using docker logs.
     
     Args:
         container_name: Name or ID of the container
@@ -322,31 +325,26 @@ async def get_container_logs(
         Container logs as a list of lines.
     """
     try:
-        client = get_docker_client()
-        container = client.containers.get(container_name)
+        # Build docker logs command
+        cmd = ["logs", "--tail", str(tail)]
         
-        log_kwargs = {
-            "tail": tail,
-            "timestamps": timestamps
-        }
+        if timestamps:
+            cmd.append("--timestamps")
         
         if since:
-            log_kwargs["since"] = since
+            cmd.extend(["--since", since])
         
-        logs = container.logs(**log_kwargs).decode("utf-8", errors="ignore")
-        log_lines = logs.split("\n")
+        cmd.append(container_name)
+        
+        result = run_docker_command(cmd)
+        log_lines = result.stdout.split("\n")
         
         return JSONResponse(content={
-            "container": container.name,
+            "container": container_name,
             "lines": len(log_lines),
             "logs": log_lines
         })
     
-    except NotFound:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Container '{container_name}' not found"
-        )
     except HTTPException:
         raise
     except Exception as e:
@@ -364,7 +362,7 @@ async def get_container_logs(
 )
 async def get_container_stats(container_name: str):
     """
-    Get real-time resource usage statistics for a container.
+    Get real-time resource usage statistics for a container using docker stats.
     
     Args:
         container_name: Name or ID of the container
@@ -373,48 +371,85 @@ async def get_container_stats(container_name: str):
         Resource usage statistics (CPU, memory, network, disk I/O).
     """
     try:
-        client = get_docker_client()
-        container = client.containers.get(container_name)
+        # Check if container is running first
+        inspect_result = run_docker_command(["inspect", "-f", "{{.State.Status}}", container_name])
+        status = inspect_result.stdout.strip()
         
-        if container.status != "running":
+        if status != "running":
             raise HTTPException(
                 status_code=400,
-                detail=f"Container '{container_name}' is not running (status: {container.status})"
+                detail=f"Container '{container_name}' is not running (status: {status})"
             )
         
-        stats = container.stats(stream=False)
+        # Get stats
+        result = run_docker_command([
+            "stats", container_name,
+            "--no-stream",
+            "--format", "{{json .}}"
+        ])
         
-        # Parse stats
-        memory_stats = stats.get("memory_stats", {})
-        cpu_stats = stats.get("cpu_stats", {})
-        precpu_stats = stats.get("precpu_stats", {})
+        if not result.stdout.strip():
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to retrieve container stats"
+            )
+        
+        stats_data = json.loads(result.stdout)
+        
+        # Parse memory usage
+        mem_usage = stats_data.get("MemUsage", "0B / 0B")
+        mem_percent = stats_data.get("MemPerc", "0.00%")
+        
+        # Try to extract memory values
+        try:
+            mem_parts = mem_usage.split(" / ")
+            usage_str = mem_parts[0].strip()
+            limit_str = mem_parts[1].strip() if len(mem_parts) > 1 else "0B"
+            
+            def parse_memory(s):
+                """Parse memory string like '123.4MiB' to MB"""
+                s = s.strip()
+                if 'GiB' in s or 'GB' in s:
+                    return float(s.replace('GiB', '').replace('GB', '')) * 1024
+                elif 'MiB' in s or 'MB' in s:
+                    return float(s.replace('MiB', '').replace('MB', ''))
+                elif 'KiB' in s or 'KB' in s:
+                    return float(s.replace('KiB', '').replace('KB', '')) / 1024
+                else:
+                    return float(s.replace('B', '')) / 1024 / 1024
+            
+            usage_mb = parse_memory(usage_str)
+            limit_mb = parse_memory(limit_str)
+            percent = float(mem_percent.rstrip('%'))
+        except Exception as e:
+            logger.warning(f"Failed to parse memory values: {e}")
+            usage_mb = limit_mb = percent = 0.0
         
         parsed_stats = {
-            "container": container.name,
+            "container": container_name,
             "timestamp": datetime.now().isoformat(),
             "memory": {
-                "usage_bytes": memory_stats.get("usage", 0),
-                "usage_mb": memory_stats.get("usage", 0) / 1024 / 1024,
-                "limit_bytes": memory_stats.get("limit", 0),
-                "limit_mb": memory_stats.get("limit", 0) / 1024 / 1024,
-                "percent": (memory_stats.get("usage", 0) / memory_stats.get("limit", 1)) * 100 if memory_stats.get("limit") else 0
+                "usage_mb": usage_mb,
+                "limit_mb": limit_mb,
+                "percent": percent
             },
             "cpu": {
-                "total_usage": cpu_stats.get("cpu_usage", {}).get("total_usage", 0),
-                "system_cpu_usage": cpu_stats.get("system_cpu_usage", 0),
-                "online_cpus": cpu_stats.get("online_cpus", 0)
+                "percent": stats_data.get("CPUPerc", "0.00%"),
+                "online_cpus": stats_data.get("CPUs", 0)
             },
-            "network": stats.get("networks", {}),
-            "blkio": stats.get("blkio_stats", {})
+            "network": {
+                "input": stats_data.get("NetIO", "0B / 0B").split(" / ")[0],
+                "output": stats_data.get("NetIO", "0B / 0B").split(" / ")[1] if " / " in stats_data.get("NetIO", "") else "0B"
+            },
+            "block_io": {
+                "read": stats_data.get("BlockIO", "0B / 0B").split(" / ")[0],
+                "write": stats_data.get("BlockIO", "0B / 0B").split(" / ")[1] if " / " in stats_data.get("BlockIO", "") else "0B"
+            },
+            "pids": stats_data.get("PIDs", 0)
         }
         
         return JSONResponse(content=parsed_stats)
     
-    except NotFound:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Container '{container_name}' not found"
-        )
     except HTTPException:
         raise
     except Exception as e:
@@ -423,4 +458,3 @@ async def get_container_stats(container_name: str):
             status_code=500,
             detail=f"Failed to get container stats: {str(e)}"
         )
-

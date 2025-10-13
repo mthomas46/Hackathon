@@ -291,16 +291,40 @@ async def get_circuit_breaker_status():
     - Failure counts
     - Recovery time remaining
     """
-    ollama = get_ollama_client()
-    chroma = get_chroma_client()
+    try:
+        ollama = get_ollama_client()
+        chroma = get_chroma_client()
+        
+        circuit_breakers = {}
+        
+        # Check if clients have circuit breakers
+        if hasattr(ollama, 'circuit_breaker') and hasattr(ollama.circuit_breaker, 'get_state'):
+            circuit_breakers["ollama"] = ollama.circuit_breaker.get_state()
+        else:
+            circuit_breakers["ollama"] = {
+                "state": "NOT_CONFIGURED",
+                "message": "Circuit breaker not configured for Ollama"
+            }
+        
+        if hasattr(chroma, 'circuit_breaker') and hasattr(chroma.circuit_breaker, 'get_state'):
+            circuit_breakers["chromadb"] = chroma.circuit_breaker.get_state()
+        else:
+            circuit_breakers["chromadb"] = {
+                "state": "NOT_CONFIGURED",
+                "message": "Circuit breaker not configured for ChromaDB"
+            }
+        
+        return {
+            "circuit_breakers": circuit_breakers,
+            "message": "Circuit breakers protect against cascading failures"
+        }
     
-    return {
-        "circuit_breakers": {
-            "ollama": ollama.circuit_breaker.get_state(),
-            "chromadb": chroma.circuit_breaker.get_state()
-        },
-        "message": "Circuit breakers protect against cascading failures"
-    }
+    except Exception as e:
+        logger.error(f"Error getting circuit breaker status: {e}")
+        return {
+            "circuit_breakers": {},
+            "message": f"Error retrieving circuit breakers: {str(e)}"
+        }
 
 
 @router.get(

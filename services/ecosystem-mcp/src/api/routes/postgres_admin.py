@@ -143,9 +143,9 @@ async def list_postgres_tables():
                 """
                 SELECT 
                     schemaname,
-                    tablename,
-                    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size,
-                    pg_total_relation_size(schemaname||'.'||tablename) as size_bytes,
+                    relname as tablename,
+                    pg_size_pretty(pg_total_relation_size(schemaname||'.'||relname)) as size,
+                    pg_total_relation_size(schemaname||'.'||relname) as size_bytes,
                     n_live_tup as row_count,
                     n_dead_tup as dead_rows,
                     last_vacuum,
@@ -153,7 +153,7 @@ async def list_postgres_tables():
                     last_analyze,
                     last_autoanalyze
                 FROM pg_stat_user_tables
-                ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
+                ORDER BY pg_total_relation_size(schemaname||'.'||relname) DESC
                 """
             ))
             
@@ -266,7 +266,23 @@ async def get_postgres_table(table_name: str):
             
             sample_data = []
             for row in result:
-                sample_data.append(dict(row._mapping))
+                # Convert row to dict and handle non-serializable types
+                row_dict = {}
+                for key, value in row._mapping.items():
+                    # Convert UUIDs, dates, and other types to strings
+                    if value is None:
+                        row_dict[key] = None
+                    elif hasattr(value, 'isoformat'):
+                        # datetime, date, time objects
+                        row_dict[key] = value.isoformat()
+                    elif isinstance(value, (bytes, bytearray)):
+                        # Binary data
+                        row_dict[key] = f"<binary {len(value)} bytes>"
+                    else:
+                        # Everything else including UUIDs
+                        row_dict[key] = str(value)
+                
+                sample_data.append(row_dict)
             
             return JSONResponse(content={
                 "table_name": table_name,
@@ -341,7 +357,23 @@ async def execute_postgres_query(request: QueryRequest):
             # Get rows
             rows = []
             for row in result:
-                rows.append(dict(row._mapping))
+                # Convert row to dict and handle non-serializable types
+                row_dict = {}
+                for key, value in row._mapping.items():
+                    # Convert UUIDs, dates, and other types to strings
+                    if value is None:
+                        row_dict[key] = None
+                    elif hasattr(value, 'isoformat'):
+                        # datetime, date, time objects
+                        row_dict[key] = value.isoformat()
+                    elif isinstance(value, (bytes, bytearray)):
+                        # Binary data
+                        row_dict[key] = f"<binary {len(value)} bytes>"
+                    else:
+                        # Everything else including UUIDs
+                        row_dict[key] = str(value)
+                
+                rows.append(row_dict)
             
             return JSONResponse(content={
                 "query": request.query,

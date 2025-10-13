@@ -1,9 +1,17 @@
 # Ecosystem MCP Service Dockerfile
 # Using bookworm (Debian 12) for sqlite3 >= 3.35.0 (required by ChromaDB)
+
+# Get Docker CLI from official image
+FROM docker:latest AS docker-cli
+
+# Main image
 FROM python:3.11-slim-bookworm
 
 # Set working directory
 WORKDIR /app
+
+# Copy docker CLI from docker image
+COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \

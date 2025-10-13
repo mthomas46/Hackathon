@@ -86,7 +86,13 @@ def show_container_logs(api_base_url: str):
                         
                         if log_response.status_code == 200:
                             log_data = log_response.json()
-                            logs = log_data.get("logs", "")
+                            logs_list = log_data.get("logs", [])
+                            
+                            # Convert list to string (API returns logs as a list of lines)
+                            if isinstance(logs_list, list):
+                                logs = "\n".join(logs_list)
+                            else:
+                                logs = str(logs_list)
                             
                             st.markdown(f"**Logs from:** `{selected_container}`")
                             st.markdown(f"**Last updated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -134,12 +140,29 @@ def show_dashboard_logs():
     docker_available = shutil.which("docker") is not None
     
     if not docker_available:
-        st.warning("⚠️ Docker CLI not available in this environment.")
+        st.info("ℹ️ Docker CLI is not available inside the dashboard container.")
         st.markdown("""
-        **Alternative options:**
-        - View logs from the host machine: `docker logs ecosystem-mcp-dashboard`
-        - Check container logs in the 🐳 Container Logs tab
-        - Use Docker Desktop to view logs
+        **To view dashboard logs, use one of these options:**
+        
+        1. **🐳 Container Logs Tab** (recommended)
+           - Switch to the "Container Logs" tab above
+           - Select `ecosystem-mcp-dashboard` from the dropdown
+           - This will show the dashboard logs via the API
+        
+        2. **From Host Machine:**
+           ```bash
+           docker logs ecosystem-mcp-dashboard --tail 100
+           ```
+        
+        3. **Using Docker Desktop:**
+           - Open Docker Desktop
+           - Find the `ecosystem-mcp-dashboard` container
+           - Click to view logs
+        
+        4. **Via Container Management Page:**
+           - Go to "🐳 Container Management" in the sidebar
+           - Find the dashboard container
+           - Click to expand and view logs
         """)
         return
     
@@ -250,7 +273,13 @@ def show_log_search(api_base_url: str):
                             
                             if log_response.status_code == 200:
                                 log_data = log_response.json()
-                                logs = log_data.get("logs", "")
+                                logs_list = log_data.get("logs", [])
+                                
+                                # Convert list to string (API returns logs as a list of lines)
+                                if isinstance(logs_list, list):
+                                    logs = "\n".join(logs_list)
+                                else:
+                                    logs = str(logs_list)
                                 
                                 # Search in logs
                                 if logs:

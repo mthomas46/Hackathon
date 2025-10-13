@@ -30,15 +30,18 @@ def show(api_base_url: str):
         if response.status_code == 200:
             data = response.json()
             
+            # Extract overall data (may be nested or top-level)
+            overall = data.get("overall", data)
+            
             # Overall metrics
             st.subheader("📊 Cache Overview")
             
             col1, col2, col3, col4 = st.columns(4)
             
-            total_hits = data.get("total_hits", 0)
-            total_misses = data.get("total_misses", 0)
-            total_requests = total_hits + total_misses
-            hit_rate = (total_hits / total_requests * 100) if total_requests > 0 else 0
+            total_hits = overall.get("total_hits", 0)
+            total_misses = overall.get("total_misses", 0)
+            total_requests = overall.get("total_requests", total_hits + total_misses)
+            hit_rate = overall.get("hit_rate", (total_hits / total_requests * 100) if total_requests > 0 else 0)
             
             with col1:
                 st.metric("Total Hits", f"{total_hits:,}")
@@ -50,31 +53,41 @@ def show(api_base_url: str):
                 st.metric("Hit Rate", f"{hit_rate:.1f}%")
             
             with col4:
-                st.metric("Total Requests", f"{total_requests:,}")
+                cached_keys = overall.get("cached_keys", 0)
+                st.metric("Cached Keys", f"{cached_keys:,}")
+            
+            # Show status message if available
+            cache_status = overall.get("status", "")
+            if cache_status:
+                st.info(f"ℹ️ {cache_status}")
             
             # Cache hit rate visualization
             st.markdown("---")
             st.subheader("📈 Cache Hit Rate")
             
-            fig = go.Figure(data=[go.Pie(
-                labels=['Hits', 'Misses'],
-                values=[total_hits, total_misses],
-                marker=dict(colors=['#00c851', '#ff4444']),
-                hole=.4
-            )])
+            if total_requests > 0:
+                fig = go.Figure(data=[go.Pie(
+                    labels=['Hits', 'Misses'],
+                    values=[total_hits, total_misses],
+                    marker=dict(colors=['#00c851', '#ff4444']),
+                    hole=.4
+                )])
+                
+                fig.update_layout(
+                    title="Cache Performance",
+                    height=400
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("📊 No cache requests yet. Start using the API to see cache statistics!")
             
-            fig.update_layout(
-                title="Cache Performance",
-                height=400
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # Per-prefix stats
+            # Per-prefix/endpoint stats
             st.markdown("---")
-            st.subheader("🏷️ Cache by Prefix")
+            st.subheader("🏷️ Cache by Endpoint")
             
-            cache_stats = data.get("cache_stats", {})
+            # Try both field names for compatibility
+            cache_stats = data.get("by_endpoint", data.get("cache_stats", {}))
             
             if cache_stats:
                 # Create table data
@@ -82,16 +95,22 @@ def show(api_base_url: str):
                 for prefix, stats in cache_stats.items():
                     hits = stats.get("hits", 0)
                     misses = stats.get("misses", 0)
-                    total = hits + misses
-                    rate = (hits / total * 100) if total > 0 else 0
+                    total = stats.get("total", hits + misses)
+                    rate = stats.get("hit_rate", (hits / total * 100) if total > 0 else 0)
+                    status_msg = stats.get("status", "")
                     
-                    table_data.append({
-                        "Prefix": prefix,
+                    row = {
+                        "Endpoint": prefix,
                         "Hits": hits,
                         "Misses": misses,
                         "Total": total,
                         "Hit Rate": f"{rate:.1f}%"
-                    })
+                    }
+                    
+                    if status_msg:
+                        row["Status"] = status_msg
+                    
+                    table_data.append(row)
                 
                 # Display as table
                 st.dataframe(
@@ -104,27 +123,27 @@ def show(api_base_url: str):
                 if table_data:
                     fig = go.Figure()
                     
-                    prefixes = [d["Prefix"] for d in table_data]
+                    endpoints = [d["Endpoint"] for d in table_data]
                     hits = [d["Hits"] for d in table_data]
                     misses = [d["Misses"] for d in table_data]
                     
                     fig.add_trace(go.Bar(
                         name='Hits',
-                        x=prefixes,
+                        x=endpoints,
                         y=hits,
                         marker_color='#00c851'
                     ))
                     
                     fig.add_trace(go.Bar(
                         name='Misses',
-                        x=prefixes,
+                        x=endpoints,
                         y=misses,
                         marker_color='#ff4444'
                     ))
                     
                     fig.update_layout(
-                        title="Cache Operations by Prefix",
-                        xaxis_title="Cache Prefix",
+                        title="Cache Operations by Endpoint",
+                        xaxis_title="Endpoint",
                         yaxis_title="Count",
                         barmode='group',
                         height=400
