@@ -52,7 +52,7 @@ def show(api_base_url: str):
                 
                 st.info(f"Found {len(documents)} documents")
                 
-                for doc in documents:
+                for i, doc in enumerate(documents):
                     with st.expander(f"📄 {doc.get('file_path', 'Unknown')[:80]}"):
                         col_a, col_b = st.columns(2)
                         
