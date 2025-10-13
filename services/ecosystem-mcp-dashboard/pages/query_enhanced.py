@@ -12,13 +12,6 @@ import httpx
 import os
 from datetime import datetime
 
-# Page config
-st.set_page_config(
-    page_title="Enhanced Query",
-    page_icon="🎯",
-    layout="wide"
-)
-
 def show(api_base_url: str = None):
     """Display enhanced query interface."""
     # Use provided URL or fall back to environment variable
