@@ -32,7 +32,7 @@ def show_container_logs(api_base_url: str):
     
     # Fetch list of containers
     try:
-        response = httpx.get(f"{api_base_url}/api/v1/containers", timeout=10.0)
+        response = httpx.get(f"{api_base_url}/api/v1/containers", timeout=30.0)
         
         if response.status_code == 200:
             containers = response.json()
@@ -181,7 +181,7 @@ def show_log_search(api_base_url: str):
     
     # Fetch list of containers
     try:
-        response = httpx.get(f"{api_base_url}/api/v1/containers", timeout=10.0)
+        response = httpx.get(f"{api_base_url}/api/v1/containers", timeout=30.0)
         
         if response.status_code == 200:
             containers = response.json()
