@@ -3,10 +3,21 @@
 import streamlit as st
 import httpx
 import json
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from utils.health_check import HealthChecker
 
 def show(api_base_url: str):
     """Show documents page."""
     st.title("📚 Document Management")
+    
+    # Check API health before proceeding
+    health_checker = HealthChecker(api_base_url)
+    if not health_checker.require_healthy_api(show_status=True):
+        st.stop()  # Stop rendering if API is not healthy
     
     # Tabs for different operations
     tab1, tab2, tab3 = st.tabs(["📋 Browse Documents", "➕ Ingest Documents", "📊 Ingestion Jobs"])
