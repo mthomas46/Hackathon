@@ -103,7 +103,8 @@ def show(api_base_url: str):
                                     "Content",
                                     value=content[:500] + "..." if len(content) > 500 else content,
                                     height=150,
-                                    disabled=True
+                                    disabled=True,
+                                    key=f"rag_content_{idx}"
                                 )
                     else:
                         st.info("No sources found")

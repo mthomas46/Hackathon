@@ -289,7 +289,8 @@ def show(api_base_url: str):
                                             "Container Logs",
                                             value=logs_text,
                                             height=400,
-                                            disabled=True
+                                            disabled=True,
+                                            key=f"container_logs_{name}"
                                         )
                                     else:
                                         st.info("No logs available")
