@@ -155,65 +155,65 @@ def show(api_base_url: str):
                 "basic": "Pure LLM query without documents"
             }
             st.caption(f"ℹ️ {mode_descriptions[mode]}")
-        
-        with col2:
-            tier = st.selectbox(
-                "🔌 LLM Tier",
-                options=["auto", "cursor", "desktop", "docker"],
-                index=0,
-                format_func=lambda x: {
-                    "auto": "🤖 Auto (Recommended)",
-                    "cursor": "🥇 Tier 1: Cursor IDE",
-                    "desktop": "🥈 Tier 2: Desktop Ollama",
-                    "docker": "🥉 Tier 3: Docker Ollama"
-                }[x],
-                help="Auto: Best available | Manual: Force specific tier with fallback"
-            )
             
-            # Show tier warning if unavailable
-            if tier_data and tier != "auto":
-                tier_info = tier_data.get("tiers", {}).get(tier, {})
-                if not tier_info.get("available", False):
-                    st.caption(f"⚠️ {tier.title()} tier unavailable - will fallback")
-                else:
-                    st.caption(f"✅ {tier.title()} tier available")
-        
-        # Settings
-        settings_col1, settings_col2, settings_col3 = st.columns(3)
-        
-        with settings_col1:
-            if mode in ["rag", "contextual"]:
-                n_results = st.slider(
-                    "📚 Documents",
-                    min_value=1,
-                    max_value=50,
-                    value=10,
-                    help="Number of documents to retrieve"
+            with col2:
+                tier = st.selectbox(
+                    "🔌 LLM Tier",
+                    options=["auto", "cursor", "desktop", "docker"],
+                    index=0,
+                    format_func=lambda x: {
+                        "auto": "🤖 Auto (Recommended)",
+                        "cursor": "🥇 Tier 1: Cursor IDE",
+                        "desktop": "🥈 Tier 2: Desktop Ollama",
+                        "docker": "🥉 Tier 3: Docker Ollama"
+                    }[x],
+                    help="Auto: Best available | Manual: Force specific tier with fallback"
                 )
-            else:
-                n_results = 10
-                st.info("📌 Basic mode doesn't use documents")
-        
-        with settings_col2:
-            temperature = st.slider(
-                "🌡️ Temperature",
-                min_value=0.0,
-                max_value=1.0,
-                value=0.7,
-                step=0.1,
-                help="0 = focused, 1 = creative"
-            )
-        
-        with settings_col3:
-            max_retries = st.slider(
-                "🔄 Max Retries",
-                min_value=0,
-                max_value=5,
-                value=2,
-                help="Retry attempts if tier unavailable"
-            )
-        
-        submitted = st.form_submit_button("🚀 Submit Query", use_container_width=True)
+                
+                # Show tier warning if unavailable
+                if tier_data and tier != "auto":
+                    tier_info = tier_data.get("tiers", {}).get(tier, {})
+                    if not tier_info.get("available", False):
+                        st.caption(f"⚠️ {tier.title()} tier unavailable - will fallback")
+                    else:
+                        st.caption(f"✅ {tier.title()} tier available")
+            
+            # Settings
+            settings_col1, settings_col2, settings_col3 = st.columns(3)
+            
+            with settings_col1:
+                if mode in ["rag", "contextual"]:
+                    n_results = st.slider(
+                        "📚 Documents",
+                        min_value=1,
+                        max_value=50,
+                        value=10,
+                        help="Number of documents to retrieve"
+                    )
+                else:
+                    n_results = 10
+                    st.info("📌 Basic mode doesn't use documents")
+            
+            with settings_col2:
+                temperature = st.slider(
+                    "🌡️ Temperature",
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=0.7,
+                    step=0.1,
+                    help="0 = focused, 1 = creative"
+                )
+            
+            with settings_col3:
+                max_retries = st.slider(
+                    "🔄 Max Retries",
+                    min_value=0,
+                    max_value=5,
+                    value=2,
+                    help="Retry attempts if tier unavailable"
+                )
+            
+            submitted = st.form_submit_button("🚀 Submit Query", use_container_width=True)
     
     # Process query (outside form)
     if query_type == "standard" and submitted and question:
