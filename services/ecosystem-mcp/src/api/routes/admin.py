@@ -106,6 +106,12 @@ async def start_ingestion(
         
         # ✅ Add job to Redis stream for worker to process
         redis = get_redis_client()
+        
+        # Ensure Redis is connected (lazy connection)
+        if not redis._connected or redis.client is None:
+            logger.warning("Redis not connected, connecting now...")
+            await redis.connect()
+        
         await redis.add_to_stream(
             stream=redis.INGESTION_STREAM,
             data={"job_id": job_id, "mode": request.mode, "repo_path": str(repo_path)}
