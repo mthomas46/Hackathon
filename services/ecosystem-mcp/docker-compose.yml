@@ -117,6 +117,11 @@ services:
       RATE_LIMIT_ENABLED: "false"  # Disable for local dev
       # Preflight settings
       PREFLIGHT_MODE: "lenient"  # Allow startup even if Ollama is slow
+      # Desktop Ollama (Tier 2) - GPU Enhanced
+      OLLAMA_DESKTOP_ENABLED: "true"
+      OLLAMA_DESKTOP_URL: http://host.docker.internal:11435
+      OLLAMA_DESKTOP_MODEL: llama3:latest
+      USE_DESKTOP_FOR_RAG: "true"
     ports:
       - "8000:8000"  # API
       - "9090:9090"  # Metrics
