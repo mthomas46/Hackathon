@@ -327,32 +327,34 @@ def show(api_base_url: str):
                         st.session_state['confirm_clear_failed'] = False
                         st.rerun()
         
-        # Auto-refresh using HTML meta tag (page-level refresh)
+        # Auto-refresh - display info only, let user manually refresh
+        # Note: Automatic page refresh in tabs context is disabled to prevent navigation loss
         if auto_refresh:
             import time
             
-            # Initialize refresh count
-            if 'refresh_count' not in st.session_state:
-                st.session_state.refresh_count = 0
+            # Initialize refresh tracking
+            if 'manual_refresh_count' not in st.session_state:
+                st.session_state.manual_refresh_count = 0
             
-            # Get current timestamp for display
             current_time = datetime.now().strftime('%H:%M:%S')
             
-            # Display refresh info
-            st.info(
-                f"🔄 Auto-refresh enabled (every {refresh_interval}s) • "
-                f"Current time: {current_time} • "
-                f"Refreshes: {st.session_state.refresh_count}"
-            )
+            # Show manual refresh button with countdown
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.info(
+                    f"🔄 Auto-refresh mode • Current time: {current_time} • "
+                    f"Manual refreshes: {st.session_state.manual_refresh_count}"
+                )
+            with col2:
+                if st.button("🔄 Refresh Now", key="manual_refresh_btn", use_container_width=True):
+                    st.session_state.manual_refresh_count += 1
+                    st.rerun()
             
-            # Use HTML meta refresh tag to auto-reload the page
-            st.markdown(
-                f'<meta http-equiv="refresh" content="{refresh_interval}">',
-                unsafe_allow_html=True
+            # Add a note about manual refresh
+            st.caption(
+                f"💡 Tip: Click '🔄 Refresh Now' or refresh your browser to update data. "
+                f"Expected refresh interval: {refresh_interval}s"
             )
-            
-            # Increment counter on each load
-            st.session_state.refresh_count += 1
         
         st.markdown("---")
         
