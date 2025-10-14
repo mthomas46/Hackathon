@@ -327,27 +327,32 @@ def show(api_base_url: str):
                         st.session_state['confirm_clear_failed'] = False
                         st.rerun()
         
-        # Auto-refresh logic using Streamlit's fragment
+        # Auto-refresh using HTML meta tag (page-level refresh)
         if auto_refresh:
-            # Display refresh indicator
-            refresh_placeholder = st.empty()
-            refresh_placeholder.info(f"🔄 Auto-refreshing every {refresh_interval} seconds... (last update: {datetime.now().strftime('%H:%M:%S')})")
-            
-            # Use Streamlit's experimental fragment for auto-refresh
             import time
-            if 'last_refresh_time' not in st.session_state:
-                st.session_state.last_refresh_time = time.time()
             
-            current_time = time.time()
-            time_since_last_refresh = current_time - st.session_state.last_refresh_time
+            # Initialize refresh count
+            if 'refresh_count' not in st.session_state:
+                st.session_state.refresh_count = 0
             
-            if time_since_last_refresh >= refresh_interval:
-                st.session_state.last_refresh_time = current_time
-                st.rerun()
-            else:
-                # Schedule next refresh
-                time.sleep(0.5)  # Small sleep to prevent excessive CPU usage
-                st.rerun()
+            # Get current timestamp for display
+            current_time = datetime.now().strftime('%H:%M:%S')
+            
+            # Display refresh info
+            st.info(
+                f"🔄 Auto-refresh enabled (every {refresh_interval}s) • "
+                f"Current time: {current_time} • "
+                f"Refreshes: {st.session_state.refresh_count}"
+            )
+            
+            # Use HTML meta refresh tag to auto-reload the page
+            st.markdown(
+                f'<meta http-equiv="refresh" content="{refresh_interval}">',
+                unsafe_allow_html=True
+            )
+            
+            # Increment counter on each load
+            st.session_state.refresh_count += 1
         
         st.markdown("---")
         
