@@ -41,21 +41,29 @@ class CursorClient:
     
     async def is_available(self) -> bool:
         """
-        Check if Cursor MCP server is available.
+        Check if Cursor integration is configured.
+        
+        Note: Cursor IDE calls ecosystem-mcp via MCP (inbound), 
+        not the other way around. This check only verifies if 
+        the integration is enabled in config.
         
         Returns:
-            True if Cursor is accessible
+            True if Cursor integration is enabled
         """
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"{self.base_url}/health")
-                available = response.status_code == 200
-                self._available = available
-                return available
-        except Exception as e:
-            logger.debug(f"Cursor not available: {e}")
-            self._available = False
-            return False
+        # Cursor IDE doesn't host an HTTP server that we can check.
+        # The MCP integration allows Cursor to call US, not us calling Cursor.
+        # So we can only check if the feature is enabled in config.
+        from ...config import settings
+        
+        is_enabled = settings.cursor_enabled
+        self._available = is_enabled
+        
+        if is_enabled:
+            logger.info("✅ Cursor MCP integration enabled (Cursor can call ecosystem-mcp via MCP)")
+        else:
+            logger.debug("ℹ️ Cursor MCP integration disabled")
+        
+        return is_enabled
     
     async def generate(
         self,

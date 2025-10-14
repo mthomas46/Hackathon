@@ -27,6 +27,7 @@ from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
 from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer
+# embeddings import moved below to handle conditional loading
 from .middleware import RequestIDMiddleware, TimeoutMiddleware, MetricsMiddleware
 from .exception_handlers import register_exception_handlers
 
@@ -315,6 +316,13 @@ def create_app() -> FastAPI:
     app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
     app.include_router(query.router, prefix="/api/v1", tags=["Query"])
     
+    # Embeddings exploration and analysis (conditionally loaded)
+    try:
+        from .routes import embeddings
+        app.include_router(embeddings.router, prefix="/api/v1/embeddings", tags=["Embeddings"])
+    except ImportError:
+        logger.warning("Embeddings module not available, skipping embeddings routes")
+    
     # Enhanced query with mode and tier selection
     from .routes import query_enhanced
     app.include_router(query_enhanced.router, prefix="/api/v1", tags=["Enhanced Query"])
@@ -341,6 +349,14 @@ def create_app() -> FastAPI:
     # Diagnostics and configuration
     app.include_router(diagnostics.router, prefix="/api/v1", tags=["Diagnostics"])
     app.include_router(config_viewer.router, prefix="/api/v1", tags=["Configuration"])
+    
+    # Worker management and health monitoring
+    from .routes import workers
+    app.include_router(workers.router, prefix="/api/v1/admin", tags=["Workers"])
+    
+    # Ingestion log streaming
+    from .routes import ingestion_logs
+    app.include_router(ingestion_logs.router, prefix="/api/v1/admin", tags=["Ingestion Logs"])
     
     app.include_router(metrics.router, tags=["Metrics"])
     

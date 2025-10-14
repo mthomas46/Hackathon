@@ -60,24 +60,6 @@ def show(api_base_url: str):
         st.error(f"Error connecting to API: {str(e)}")
         st.info(f"Make sure the service is running at {api_base_url}")
     
-    # Quick actions
-    st.markdown("---")
-    st.subheader("⚡ Quick Actions")
-    
-    action_col1, action_col2, action_col3 = st.columns(3)
-    
-    with action_col1:
-        if st.button("🏥 Check Health", use_container_width=True):
-            st.switch_page("pages/health.py")
-    
-    with action_col2:
-        if st.button("🤖 Ask RAG", use_container_width=True):
-            st.switch_page("pages/rag.py")
-    
-    with action_col3:
-        if st.button("📊 View Metrics", use_container_width=True):
-            st.switch_page("pages/metrics.py")
-    
     # Recent activity (placeholder)
     st.markdown("---")
     st.subheader("📌 Recent Activity")

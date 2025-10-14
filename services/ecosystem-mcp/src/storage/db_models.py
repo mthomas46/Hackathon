@@ -157,6 +157,7 @@ class IngestionJobModel(Base):
     processed_documents = Column(Integer, nullable=False, default=0)
     total_documents = Column(Integer)
     failed_documents = Column(Integer, nullable=False, default=0)
+    skipped_documents = Column(Integer, nullable=False, default=0)  # Duplicates, not errors
     repo_path = Column(Text)
     embeddings_generated = Column(Integer, nullable=False, default=0)
     total_cost_usd = Column(Float, nullable=False, default=0.0)

@@ -64,7 +64,7 @@ def show(api_base_url: str):
     st.markdown("---")
     st.subheader("🔬 Configure Multi-Pass Analysis")
     
-    with st.form("multi_pass_form"):
+    with st.form("rag_multi_pass_form_unique"):
         # Query input
         query = st.text_area(
             "📝 Your Complex Query",
@@ -110,19 +110,37 @@ def show(api_base_url: str):
                 help="LLM creativity: 0 = focused, 1 = creative"
             )
         
-        # Tier selection
-        tier = st.selectbox(
-            "🔌 LLM Tier Preference",
-            options=["auto", "cursor", "desktop", "docker"],
-            index=0,
-            format_func=lambda x: {
-                "auto": "🤖 Auto (Recommended)",
-                "cursor": "🥇 Tier 1: Cursor IDE",
-                "desktop": "🥈 Tier 2: Desktop Ollama",
-                "docker": "🥉 Tier 3: Docker Ollama"
-            }[x],
-            help="Select preferred LLM tier (auto-fallback enabled)"
-        )
+        # Additional settings row
+        col3, col4 = st.columns(2)
+        
+        with col3:
+            # Tier selection
+            tier = st.selectbox(
+                "🔌 LLM Tier Preference",
+                options=["auto", "cursor", "desktop", "docker"],
+                index=0,
+                format_func=lambda x: {
+                    "auto": "🤖 Auto (Recommended)",
+                    "cursor": "🥇 Tier 1: Cursor IDE",
+                    "desktop": "🥈 Tier 2: Desktop Ollama",
+                    "docker": "🥉 Tier 3: Docker Ollama"
+                }[x],
+                help="Select preferred LLM tier (auto-fallback enabled)"
+            )
+        
+        with col4:
+            response_length = st.selectbox(
+                "📏 Response Length",
+                options=["S", "M", "L", "XL"],
+                index=2,  # Default to Large for multi-pass
+                format_func=lambda x: {
+                    "S": "S (~500 chars)",
+                    "M": "M (~1K chars)",
+                    "L": "L (~2K chars)",
+                    "XL": "XL (~4K chars)"
+                }[x],
+                help="Control response verbosity per answer"
+            )
         
         # Calculate total questions
         total_questions = num_passes * num_secondary_questions
@@ -151,6 +169,15 @@ def show(api_base_url: str):
                 status_text.text("📡 Sending request to API...")
                 progress_bar.progress(5)
                 
+                # Convert response length to max_tokens
+                length_to_tokens = {
+                    "S": 150,    # ~500 chars
+                    "M": 300,    # ~1K chars
+                    "L": 600,    # ~2K chars
+                    "XL": 1200   # ~4K chars
+                }
+                max_tokens = length_to_tokens.get(response_length, 600)
+                
                 # Make request using enhanced endpoint (single-pass RAG for now)
                 # TODO: Switch to multi-pass endpoint when ready
                 response = httpx.post(
@@ -161,7 +188,9 @@ def show(api_base_url: str):
                         "tier": tier,
                         "n_results": n_results,
                         "temperature": temperature,
-                        "max_retries": 2
+                        "max_retries": 2,
+                        "max_tokens": max_tokens,
+                        "response_length": response_length
                     },
                     timeout=900.0
                 )

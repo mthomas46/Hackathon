@@ -1,0 +1,9 @@
+{
+  "ecosystem-mcp": {
+    "command": "python3",
+    "args": [
+      "/Users/mykalthomas/Documents/work/Hackathon/services/ecosystem-mcp/mcp_server.py"
+    ],
+    "env": {}
+  }
+}

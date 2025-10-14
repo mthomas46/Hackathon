@@ -127,7 +127,7 @@ def show(api_base_url: str = None):
     st.subheader("🔍 Submit Query")
     
     # Create form
-    with st.form("enhanced_query_form"):
+    with st.form("query_enhanced_form_unique"):
         # Question input
         question = st.text_area(
             "Your Question",

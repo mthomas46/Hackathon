@@ -6,10 +6,14 @@ Provides real-time insights into infrastructure health, document ingestion, RAG 
 cache performance, and system metrics.
 """
 
-import streamlit as st
-from datetime import datetime
 import sys
 import os
+
+# Ensure /app is in the Python path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import streamlit as st
+from datetime import datetime
 from pathlib import Path
 
 # Add pages directory to path
@@ -82,11 +86,14 @@ page = st.sidebar.radio(
         "🎯 Enhanced Query",
         "🔬 Multi-Pass RAG Query",
         
-        # Data Management
-        "📚 Documents",
-        
-        # Infrastructure
-        "🐳 Container Management",
+                # Data Management
+                "📚 Documents",
+                "📥 Ingestion Manager",
+                "📖 Documentation Generator",
+                
+                # Infrastructure
+                "⚙️ Worker Monitor",
+                "🐳 Container Management",
         "🔍 Redis Explorer",
         "🗄️ PostgreSQL Explorer",
         "🔮 ChromaDB Explorer",
@@ -163,58 +170,67 @@ else:
 
 # Page routing
 if page == "🏠 Home":
-    from pages import home
+    from dashboard_views import home
     home.show(api_base_url)
 elif page == "🏥 Health & Infrastructure":
-    from pages import health
+    from dashboard_views import health
     health.show(api_base_url)
 elif page == "🔬 Diagnostics":
-    from pages import diagnostics
+    from dashboard_views import diagnostics
     diagnostics.show(api_base_url)
 elif page == "⚙️ Configuration":
-    from pages import config_viewer
+    from dashboard_views import config_viewer
     config_viewer.show(api_base_url)
 elif page == "📋 Logs Viewer":
-    from pages import logs_viewer
+    from dashboard_views import logs_viewer
     logs_viewer.show(api_base_url)
 elif page == "🔌 API Explorer":
-    from pages import api_explorer
+    from dashboard_views import api_explorer
     api_explorer.show(api_base_url)
 elif page == "🐳 Container Management":
-    from pages import containers
+    from dashboard_views import containers
     containers.show(api_base_url)
 elif page == "🔍 Redis Explorer":
-    from pages import redis_explorer
+    from dashboard_views import redis_explorer
     redis_explorer.show(api_base_url)
 elif page == "🗄️ PostgreSQL Explorer":
-    from pages import postgres_explorer
+    from dashboard_views import postgres_explorer
     postgres_explorer.show(api_base_url)
 elif page == "🔮 ChromaDB Explorer":
-    from pages import chromadb_explorer
+    from dashboard_views import chromadb_explorer
     chromadb_explorer.show(api_base_url)
 elif page == "🤖 RAG Query":
-    from pages import rag
+    from dashboard_views import rag
     rag.show(api_base_url)
 elif page == "🎯 Enhanced Query":
-    from pages import query_enhanced
+    from dashboard_views import query_enhanced
     query_enhanced.show(api_base_url)
 elif page == "🔬 Multi-Pass RAG Query":
-    from pages import rag_multi_pass
+    from dashboard_views import rag_multi_pass
     rag_multi_pass.show(api_base_url)
 elif page == "📚 Documents":
-    from pages import documents
+    from dashboard_views import documents
     documents.show(api_base_url)
+elif page == "📥 Ingestion Manager":
+    from dashboard_views import ingestion_manager
+    ingestion_manager.show(api_base_url)
+elif page == "📖 Documentation Generator":
+    from dashboard_views import doc_generator
+    doc_generator.show(api_base_url)
+elif page == "⚙️ Worker Monitor":
+    from dashboard_views import worker_monitor
+    worker_monitor.show(api_base_url)
 elif page == "⚡ Cache Performance":
-    from pages import cache
+    from dashboard_views import cache
     cache.show(api_base_url)
 elif page == "📊 Metrics & Analytics":
-    from pages import metrics
+    from dashboard_views import metrics
     metrics.show(api_base_url)
 elif page == "🔌 LLM Tier Management":
-    from pages import tier_management
+    from dashboard_views import tier_management
     tier_management.show(api_base_url)
 elif page == "🔧 Settings":
-    from pages import settings
+    from dashboard_views import settings
     settings.show(api_base_url)
 
 # Footer

@@ -180,6 +180,7 @@ class IngestionWorker:
                 job.processed_documents = result.get("processed_documents", 0)
                 job.total_documents = result.get("total_documents", 0)
                 job.failed_documents = result.get("failed_documents", 0)
+                job.skipped_documents = result.get("skipped_documents", 0)  # NEW
                 job.embeddings_generated = result.get("embeddings_generated", 0)
                 job.total_cost_usd = result.get("total_cost_usd", 0.0)
                 
@@ -193,6 +194,7 @@ class IngestionWorker:
                     logger.info(
                         f"✅ Job {job_id} completed: "
                         f"{result['processed_documents']}/{result['total_documents']} documents, "
+                        f"{result['skipped_documents']} skipped, "
                         f"{result['embeddings_generated']} embeddings, "
                         f"${result['total_cost_usd']:.4f} cost"
                     )

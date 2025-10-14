@@ -312,7 +312,7 @@ async def _get_tier_client(
         # Use complexity-based routing
         from ...services.models.complexity_analyzer import get_complexity_analyzer
         analyzer = get_complexity_analyzer()
-        complexity = await analyzer.analyze_complexity(question)
+        complexity = analyzer.analyze(question)  # Fixed: analyze() not analyze_complexity(), and it's not async
         
         instance, model, tier_name = await ollama_router.get_instance_for_complexity(
             complexity_score=complexity,
@@ -460,17 +460,17 @@ async def check_tier_status():
         "tiers": {
             "cursor": {
                 "tier": 1,
-                "name": "Cursor IDE",
+                "name": "Cursor MCP Integration",
                 "available": cursor_available,
-                "model": "Claude 4.5 Sonnet",
-                "use_case": "Extreme complexity queries"
+                "model": "Claude 4.5 Sonnet (via Cursor)",
+                "use_case": "Configured" if cursor_available else "Not configured (enable in .env)"
             },
             "desktop": {
                 "tier": 2,
                 "name": "Desktop Ollama",
                 "available": desktop_available,
                 "model": "llama3:latest (GPU)",
-                "use_case": "Heavy workloads"
+                "use_case": "Heavy workloads (GPU accelerated)"
             },
             "docker": {
                 "tier": 3,

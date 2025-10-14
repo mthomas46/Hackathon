@@ -242,26 +242,29 @@ def show_query_editor(api_base_url: str):
     
     st.warning("⚠️ **Safety:** Only SELECT and WITH queries are allowed. Destructive operations (DELETE, UPDATE, DROP, etc.) are blocked.")
     
-    # Query input
-    query = st.text_area(
-        "SQL Query",
-        height=150,
-        placeholder="SELECT * FROM your_table LIMIT 10;",
-        help="Enter a SELECT query to execute"
-    )
-    
-    col1, col2 = st.columns([1, 3])
-    
-    with col1:
-        limit = st.number_input("Row Limit", min_value=1, max_value=1000, value=100)
-    
-    with col2:
-        st.write("")  # Spacing
-        st.write("")  # Spacing
-        execute_button = st.button("▶️ Execute Query", use_container_width=False, type="primary")
+    # Query form
+    with st.form("sql_query_form"):
+        # Query input
+        query = st.text_area(
+            "SQL Query",
+            height=150,
+            placeholder="SELECT * FROM your_table LIMIT 10;",
+            help="Enter a SELECT query to execute"
+        )
+        
+        col1, col2 = st.columns([1, 3])
+        
+        with col1:
+            limit = st.number_input("Row Limit", min_value=1, max_value=1000, value=100)
+        
+        with col2:
+            st.write("")  # Spacing
+        
+        # Submit button
+        submitted = st.form_submit_button("▶️ Execute Query", type="primary", use_container_width=True)
     
     # Execute query
-    if execute_button and query.strip():
+    if submitted and query.strip():
         with st.spinner("Executing query..."):
             try:
                 response = httpx.post(

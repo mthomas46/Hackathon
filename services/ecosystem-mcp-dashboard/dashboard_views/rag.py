@@ -179,7 +179,7 @@ def show(api_base_url: str):
                         st.caption(f"✅ {tier.title()} tier available")
             
             # Settings
-            settings_col1, settings_col2, settings_col3 = st.columns(3)
+            settings_col1, settings_col2, settings_col3, settings_col4 = st.columns(4)
             
             with settings_col1:
                 if mode in ["rag", "contextual"]:
@@ -213,6 +213,20 @@ def show(api_base_url: str):
                     help="Retry attempts if tier unavailable"
                 )
             
+            with settings_col4:
+                response_length = st.selectbox(
+                    "📏 Response Length",
+                    options=["S", "M", "L", "XL"],
+                    index=1,  # Default to Medium
+                    format_func=lambda x: {
+                        "S": "S (~500 chars)",
+                        "M": "M (~1K chars)",
+                        "L": "L (~2K chars)",
+                        "XL": "XL (~4K chars)"
+                    }[x],
+                    help="Control response verbosity"
+                )
+            
             submitted = st.form_submit_button("🚀 Submit Query", use_container_width=True)
     
     # Process query (outside form)
@@ -232,6 +246,15 @@ def show(api_base_url: str):
             try:
                 start_time = datetime.now()
                 
+                # Convert response length to max_tokens
+                length_to_tokens = {
+                    "S": 150,    # ~500 chars (~125 tokens * 4 chars/token)
+                    "M": 300,    # ~1K chars
+                    "L": 600,    # ~2K chars
+                    "XL": 1200   # ~4K chars
+                }
+                max_tokens = length_to_tokens.get(response_length, 300)
+                
                 # Make enhanced query request
                 response = httpx.post(
                     f"{api_base_url}/api/v1/query/enhanced",
@@ -241,7 +264,9 @@ def show(api_base_url: str):
                         "tier": tier,
                         "n_results": n_results,
                         "temperature": temperature,
-                        "max_retries": max_retries
+                        "max_retries": max_retries,
+                        "max_tokens": max_tokens,
+                        "response_length": response_length  # Send hint to backend
                     },
                     timeout=300.0  # 5 minutes
                 )

@@ -143,7 +143,7 @@ async def query_documents(request: Request, query: DocumentQuery):
                 created_at=doc.created_at.isoformat(),
                 updated_at=doc.updated_at.isoformat(),
                 is_latest=doc.is_latest,
-                metadata=doc.metadata
+                metadata=doc.doc_metadata or {}  # Use doc_metadata field, fallback to empty dict
             )
             for doc in documents
         ]

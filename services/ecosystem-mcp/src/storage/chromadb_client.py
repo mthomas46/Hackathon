@@ -243,6 +243,105 @@ class ChromaDBClient:
         
         logger.warning("ChromaDB collection reset")
     
+    async def ensure_connected(self) -> bool:
+        """
+        Ensure ChromaDB is connected, restart if needed.
+        
+        Returns:
+            True if connected, False if restart failed
+        """
+        try:
+            # Quick health check - just try to count
+            _ = self.collection.count()
+            return True
+        except Exception as e:
+            logger.warning(f"⚠️ ChromaDB connection lost: {e}, attempting restart...")
+            try:
+                # Reinitialize client
+                self.client = chromadb.PersistentClient(
+                    path=self.path,
+                    settings=Settings(
+                        anonymized_telemetry=False,
+                        allow_reset=True,
+                    )
+                )
+                
+                # Recreate collection reference
+                self.collection = self.client.get_or_create_collection(
+                    name=self.collection_name,
+                    metadata={
+                        "hnsw:space": "cosine",
+                        "hnsw:construction_ef": 100,
+                        "hnsw:search_ef": 50,
+                        "hnsw:M": 12,
+                    }
+                )
+                
+                # Verify it works
+                _ = self.collection.count()
+                logger.info("✅ ChromaDB client restarted successfully")
+                return True
+                
+            except Exception as restart_error:
+                logger.error(f"❌ Failed to restart ChromaDB client: {restart_error}", exc_info=True)
+                return False
+    
+    async def add_embeddings_with_retry(
+        self,
+        embeddings: List[List[float]],
+        metadatas: List[Dict[str, Any]],
+        ids: List[str],
+        documents: Optional[List[str]] = None,
+        max_retries: int = 3
+    ) -> bool:
+        """
+        Add embeddings with automatic retry on failure.
+        
+        Args:
+            embeddings: List of embedding vectors
+            metadatas: List of metadata dicts
+            ids: List of unique IDs
+            documents: Optional list of document texts
+            max_retries: Maximum number of retry attempts (default: 3)
+        
+        Returns:
+            True if successful, False if all retries failed
+        """
+        for attempt in range(max_retries):
+            try:
+                # Ensure we're connected
+                if not await self.ensure_connected():
+                    logger.error(f"ChromaDB not connected (attempt {attempt + 1}/{max_retries})")
+                    if attempt < max_retries - 1:
+                        wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                        logger.info(f"⏳ Retrying in {wait_time}s...")
+                        await asyncio.sleep(wait_time)
+                    continue
+                
+                # Try to add embeddings
+                await self.add_embeddings(embeddings, metadatas, ids, documents)
+                
+                if attempt > 0:
+                    logger.info(f"✅ Successfully added embeddings after {attempt + 1} attempts")
+                
+                return True
+                
+            except Exception as e:
+                logger.error(
+                    f"❌ Failed to add embeddings (attempt {attempt + 1}/{max_retries}): {e}",
+                    exc_info=(attempt == max_retries - 1)  # Full stack trace on last attempt
+                )
+                
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt  # 1s, 2s, 4s
+                    logger.info(f"⏳ Retrying in {wait_time}s...")
+                    await asyncio.sleep(wait_time)
+                else:
+                    logger.error(f"❌ Failed to add embeddings after {max_retries} attempts")
+                    return False
+        
+        return False
+    
     async def health_check(self) -> bool:
         """
         Check if ChromaDB is accessible.

@@ -260,9 +260,9 @@ def show(api_base_url: str):
     except Exception as e:
         st.error(f"Error: {str(e)}")
     
-    # Quick Actions
+    # Data Export
     st.markdown("---")
-    st.subheader("⚡ Quick Actions")
+    st.subheader("💾 Data Export")
     
     col1, col2 = st.columns(2)
     

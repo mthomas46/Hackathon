@@ -48,6 +48,57 @@ class JobProcessor:
         self.embedding_service = EmbeddingService()
         logger.info("JobProcessor initialized")
     
+    async def _update_job_progress(
+        self,
+        job: IngestionJobModel,
+        last_file: str,
+        current_commit: str,
+        processed: int,
+        skipped: int,
+        failed: int
+    ):
+        """
+        Update job metadata with current progress.
+        
+        Args:
+            job: The ingestion job
+            last_file: Last file that was processed
+            current_commit: Current commit SHA (short)
+            processed: Number of documents processed
+            skipped: Number of documents skipped
+            failed: Number of documents failed
+        """
+        try:
+            db = get_database()
+            async with db.session() as session:
+                from ...storage.repositories import IngestionJobRepository
+                repo = IngestionJobRepository(session)
+                
+                # Get fresh job instance
+                current_job = await repo.get_by_id(job.id)
+                if not current_job:
+                    return
+                
+                # Update metadata
+                if current_job.job_metadata is None:
+                    current_job.job_metadata = {}
+                
+                current_job.job_metadata["last_processed_file"] = last_file
+                current_job.job_metadata["current_commit"] = current_commit
+                current_job.job_metadata["last_update"] = datetime.utcnow().isoformat()
+                
+                # Update counters
+                current_job.processed_documents = processed
+                current_job.skipped_documents = skipped
+                current_job.failed_documents = failed
+                
+                await repo.update(current_job)
+                await session.commit()
+                
+        except Exception as e:
+            # Don't fail the job if metadata update fails
+            logger.warning(f"Failed to update job progress metadata: {e}")
+    
     async def process(self, job: IngestionJobModel) -> Dict[str, Any]:
         """
         Process a single ingestion job.
@@ -74,6 +125,7 @@ class JobProcessor:
             "processed_documents": 0,
             "total_documents": 0,
             "failed_documents": 0,
+            "skipped_documents": 0,  # NEW: Track skipped separately
             "embeddings_generated": 0,
             "total_cost_usd": 0.0,
             "error": None
@@ -100,15 +152,17 @@ class JobProcessor:
                 
                 result["processed_documents"] += commit_result["processed"]
                 result["failed_documents"] += commit_result["failed"]
+                result["skipped_documents"] += commit_result.get("skipped", 0)  # NEW
                 result["embeddings_generated"] += commit_result["embeddings"]
                 result["total_cost_usd"] += commit_result["cost"]
             
-            result["total_documents"] = result["processed_documents"] + result["failed_documents"]
+            result["total_documents"] = result["processed_documents"] + result["failed_documents"] + result["skipped_documents"]
             result["success"] = True
             
             logger.info(
                 f"✅ Job {job.id} processing complete: "
                 f"{result['processed_documents']}/{result['total_documents']} documents, "
+                f"{result['skipped_documents']} skipped, "
                 f"{result['embeddings_generated']} embeddings"
             )
         
@@ -159,6 +213,7 @@ class JobProcessor:
         result = {
             "processed": 0,
             "failed": 0,
+            "skipped": 0,  # NEW: Track skipped separately
             "embeddings": 0,
             "cost": 0.0
         }
@@ -176,22 +231,43 @@ class JobProcessor:
             logger.info(f"Commit {commit.sha[:8]}: {len(filtered_files)}/{len(files)} files to process")
             
             # Process each file
-            for file_change in filtered_files:
+            for idx, file_change in enumerate(filtered_files):
                 file_result = await self._process_file(
                     file_change=file_change,
                     commit=commit,
                     job=job
                 )
                 
+                # Get file path for logging
+                file_path_str = file_change if isinstance(file_change, str) else file_change.path
+                
                 if file_result["success"]:
                     result["processed"] += 1
-                    result["embeddings"] += 1
+                    if not file_result.get("embedding_failed"):
+                        result["embeddings"] += 1
                     result["cost"] += file_result["cost"]
+                elif file_result.get("skipped"):
+                    # Duplicate, not an error
+                    result["skipped"] += 1
+                    if file_result.get("enriched"):
+                        logger.debug(f"⏭️  Skipped (enriched): {file_path_str}")
+                    else:
+                        logger.debug(f"⏭️  Skipped (duplicate): {file_path_str}")
                 else:
+                    # Actual error
                     result["failed"] += 1
-                    # ✅ FIXED: file_change is a string
-                    file_path_str = file_change if isinstance(file_change, str) else file_change.path
                     logger.warning(f"Failed to process {file_path_str}: {file_result.get('error')}")
+                
+                # Update job metadata with progress (every 10 files or last file)
+                if (idx + 1) % 10 == 0 or idx == len(filtered_files) - 1:
+                    await self._update_job_progress(
+                        job=job,
+                        last_file=file_path_str,
+                        current_commit=commit.sha[:8],
+                        processed=result["processed"],
+                        skipped=result["skipped"],
+                        failed=result["failed"]
+                    )
         
         except Exception as e:
             logger.error(f"Error processing commit {commit.sha}: {e}", exc_info=True)
@@ -239,6 +315,63 @@ class JobProcessor:
             filtered.append(file_path)
         
         return filtered
+    
+    async def _enrich_duplicate_metadata(
+        self,
+        existing_doc: Any,
+        new_metadata: Dict[str, Any],
+        session: Any
+    ) -> bool:
+        """
+        Enrich existing document with missing metadata from duplicate.
+        
+        Args:
+            existing_doc: Existing document model
+            new_metadata: New metadata from duplicate document
+            session: Database session
+        
+        Returns:
+            True if any metadata was added, False otherwise
+        """
+        enriched = False
+        current_metadata = existing_doc.doc_metadata or {}
+        
+        # Fields to potentially enrich (only add if missing)
+        enrichable_fields = [
+            'author', 'last_modified', 'description',
+            'word_count', 'has_code', 'has_diagrams', 'language',
+            'commit_sha', 'commit_message', 'commit_author', 'commit_date'
+        ]
+        
+        for field in enrichable_fields:
+            # If field is missing or empty in existing doc
+            if field not in current_metadata or not current_metadata[field]:
+                # And new metadata has it
+                if field in new_metadata and new_metadata[field]:
+                    current_metadata[field] = new_metadata[field]
+                    enriched = True
+                    logger.debug(f"  ✨ Added {field}: {new_metadata[field]}")
+        
+        # Special handling for tags (merge, don't replace)
+        if 'tags' in new_metadata and new_metadata['tags']:
+            existing_tags = set(current_metadata.get('tags', []))
+            new_tags = set(new_metadata['tags'])
+            merged_tags = existing_tags | new_tags
+            
+            if len(merged_tags) > len(existing_tags):
+                current_metadata['tags'] = list(merged_tags)
+                enriched = True
+                added_tags = merged_tags - existing_tags
+                logger.debug(f"  ✨ Merged tags: {', '.join(added_tags)}")
+        
+        # Update if enriched
+        if enriched:
+            existing_doc.doc_metadata = current_metadata
+            existing_doc.updated_at = datetime.utcnow()
+            await session.commit()
+            logger.info(f"✨ Enriched metadata for document: {existing_doc.file_path}")
+        
+        return enriched
     
     async def _process_file(
         self,
@@ -343,8 +476,20 @@ class JobProcessor:
                 # ✅ DUPLICATE PROTECTION: Check if identical document exists
                 existing_doc = await doc_repo.get_by_content_hash(content_hash)
                 if existing_doc:
-                    logger.debug(f"⏭️  Skipping duplicate document: {path} (hash: {content_hash[:8]})")
-                    result["error"] = "duplicate"
+                    logger.debug(f"⏭️  Duplicate found: {path} (hash: {content_hash[:8]})")
+                    
+                    # Try to enrich existing metadata
+                    enriched = await self._enrich_duplicate_metadata(
+                        existing_doc,
+                        normalized["metadata"],
+                        session
+                    )
+                    
+                    if enriched:
+                        logger.info(f"✨ Enriched metadata for: {path}")
+                        result["enriched"] = True
+                    
+                    result["skipped"] = True  # Mark as skipped, not error
                     return result
                 
                 document = DocumentModel(
@@ -369,9 +514,9 @@ class JobProcessor:
                 created_doc = await doc_repo.create(document)
                 await session.commit()
                 
-                # Store embedding in ChromaDB
+                # Store embedding in ChromaDB with retry
                 chroma = get_chroma_client()
-                await chroma.add_embeddings(
+                embedding_success = await chroma.add_embeddings_with_retry(
                     ids=[str(created_doc.id)],
                     embeddings=[embedding_result["embedding"]],
                     documents=[normalized["content"]],
@@ -380,8 +525,13 @@ class JobProcessor:
                         "file_path": str(path),
                         "commit_sha": commit.sha,
                         "content_hash": content_hash
-                    }]
+                    }],
+                    max_retries=3
                 )
+                
+                if not embedding_success:
+                    logger.error(f"⚠️ Failed to store embedding for {path} after retries, but document saved")
+                    result["embedding_failed"] = True
             
             result["success"] = True
             result["cost"] = embedding_result.get("cost", 0.0)
