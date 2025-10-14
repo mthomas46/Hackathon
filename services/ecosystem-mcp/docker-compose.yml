@@ -122,6 +122,10 @@ services:
       OLLAMA_DESKTOP_URL: http://host.docker.internal:11435
       OLLAMA_DESKTOP_MODEL: llama3:latest
       USE_DESKTOP_FOR_RAG: "true"
+      # Cursor IDE (Tier 1) - Premium Models
+      CURSOR_ENABLED: "true"
+      CURSOR_MCP_URL: http://host.docker.internal:3000
+      CURSOR_MODEL: claude-4.5-sonnet
     ports:
       - "8000:8000"  # API
       - "9090:9090"  # Metrics
