@@ -440,9 +440,21 @@ def show(api_base_url: str):
                                         
                                         last_file = metadata.get('last_processed_file', '')
                                         current_commit = metadata.get('current_commit', '')
+                                        current_file_index = metadata.get('current_file_index', 0)
+                                        total_files = metadata.get('total_files_in_commit', 0)
+                                        progress_pct = metadata.get('progress_pct', 0)
                                         
                                         if last_file:
-                                            st.info(f"📄 **Last processed:** `{last_file}` (commit: `{current_commit}`)")
+                                            # Show detailed file-level progress
+                                            st.info(
+                                                f"📄 **Current file:** `{last_file}`\n\n"
+                                                f"📊 **Progress:** {current_file_index}/{total_files} files ({progress_pct}%)\n\n"
+                                                f"🔖 **Commit:** `{current_commit}`"
+                                            )
+                                            
+                                            # Show progress bar for current commit
+                                            if total_files > 0:
+                                                st.progress(progress_pct / 100.0, text=f"Processing files: {current_file_index}/{total_files}")
                                         else:
                                             st.info("⏳ Starting to process files...")
                                     else:

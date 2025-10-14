@@ -55,7 +55,9 @@ class JobProcessor:
         current_commit: str,
         processed: int,
         skipped: int,
-        failed: int
+        failed: int,
+        current_file_index: int = 0,
+        total_files: int = 0
     ):
         """
         Update job metadata with current progress.
@@ -67,6 +69,8 @@ class JobProcessor:
             processed: Number of documents processed
             skipped: Number of documents skipped
             failed: Number of documents failed
+            current_file_index: Current file index being processed
+            total_files: Total files in current commit
         """
         try:
             db = get_database()
@@ -86,6 +90,9 @@ class JobProcessor:
                 current_job.job_metadata["last_processed_file"] = last_file
                 current_job.job_metadata["current_commit"] = current_commit
                 current_job.job_metadata["last_update"] = datetime.utcnow().isoformat()
+                current_job.job_metadata["current_file_index"] = current_file_index
+                current_job.job_metadata["total_files_in_commit"] = total_files
+                current_job.job_metadata["progress_pct"] = round((current_file_index / total_files * 100) if total_files > 0 else 0, 1)
                 
                 # Update counters
                 current_job.processed_documents = processed
@@ -94,6 +101,8 @@ class JobProcessor:
                 
                 await repo.update(current_job)
                 await session.commit()
+                
+                logger.debug(f"Updated job progress: {current_file_index}/{total_files} files ({current_job.job_metadata['progress_pct']}%)")
                 
         except Exception as e:
             # Don't fail the job if metadata update fails
@@ -232,41 +241,47 @@ class JobProcessor:
             
             # Process each file
             for idx, file_change in enumerate(filtered_files):
+                # Get file path for logging
+                file_path_str = file_change if isinstance(file_change, str) else file_change.path
+                
+                # Log every file being processed (INFO level so it appears in logs)
+                logger.info(f"📄 Processing [{idx+1}/{len(filtered_files)}]: {file_path_str}")
+                
                 file_result = await self._process_file(
                     file_change=file_change,
                     commit=commit,
                     job=job
                 )
                 
-                # Get file path for logging
-                file_path_str = file_change if isinstance(file_change, str) else file_change.path
-                
                 if file_result["success"]:
                     result["processed"] += 1
                     if not file_result.get("embedding_failed"):
                         result["embeddings"] += 1
                     result["cost"] += file_result["cost"]
+                    logger.info(f"✅ Processed: {file_path_str}")
                 elif file_result.get("skipped"):
                     # Duplicate, not an error
                     result["skipped"] += 1
                     if file_result.get("enriched"):
-                        logger.debug(f"⏭️  Skipped (enriched): {file_path_str}")
+                        logger.info(f"⏭️  Skipped (enriched): {file_path_str}")
                     else:
-                        logger.debug(f"⏭️  Skipped (duplicate): {file_path_str}")
+                        logger.info(f"⏭️  Skipped (duplicate): {file_path_str}")
                 else:
                     # Actual error
                     result["failed"] += 1
-                    logger.warning(f"Failed to process {file_path_str}: {file_result.get('error')}")
+                    logger.warning(f"❌ Failed to process {file_path_str}: {file_result.get('error')}")
                 
-                # Update job metadata with progress (every 10 files or last file)
-                if (idx + 1) % 10 == 0 or idx == len(filtered_files) - 1:
+                # Update job metadata with progress (every 5 files or last file for more frequent updates)
+                if (idx + 1) % 5 == 0 or idx == len(filtered_files) - 1:
                     await self._update_job_progress(
                         job=job,
                         last_file=file_path_str,
                         current_commit=commit.sha[:8],
                         processed=result["processed"],
                         skipped=result["skipped"],
-                        failed=result["failed"]
+                        failed=result["failed"],
+                        current_file_index=idx + 1,
+                        total_files=len(filtered_files)
                     )
         
         except Exception as e:
