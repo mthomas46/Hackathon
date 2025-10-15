@@ -249,7 +249,8 @@ class HostPathResolver:
             
             # Check common mount points where host paths might be accessible
             possible_mounts = [
-                ("/app", "/Users/mykalthomas/Documents/work/Hackathon"),
+                ("/repo", "/Users/mykalthomas/Documents/work/Hackathon"),  # Full Hackathon repo mounted here
+                ("/app", "/Users/mykalthomas/Documents/work/Hackathon/services/ecosystem-mcp"),  # Just this service
                 ("/workspace", "/Users/mykalthomas/Documents/work"),
                 ("/host", ""),
             ]
