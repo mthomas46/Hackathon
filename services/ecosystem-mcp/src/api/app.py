@@ -26,7 +26,7 @@ from ..utils.redis_client import get_redis_client
 from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
-from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, embeddings_admin
+from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, embeddings_admin, job_recovery
 # embeddings import moved below to handle conditional loading
 from .middleware import RequestIDMiddleware, TimeoutMiddleware, MetricsMiddleware
 from .exception_handlers import register_exception_handlers
@@ -360,6 +360,9 @@ def create_app() -> FastAPI:
     
     # Embeddings administration
     app.include_router(embeddings_admin.router, prefix="/api/v1/admin", tags=["Embeddings"])
+    
+    # Job recovery and checkpoints
+    app.include_router(job_recovery.router, prefix="/api/v1", tags=["Job Recovery"])
     
     app.include_router(metrics.router, tags=["Metrics"])
     
