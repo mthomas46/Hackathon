@@ -112,11 +112,97 @@ def show(api_base_url: str):
             
             # Repository path
             if path_type == "Host Machine Path":
-                repo_path = st.text_input(
-                    "Repository Path",
-                    value="/Users/mykalthomas/Documents/work",
-                    help="Path on your host machine (e.g., ~/projects/my-repo). Git root will be auto-detected."
+                # Initialize recent paths in session state
+                if 'recent_host_paths' not in st.session_state:
+                    st.session_state.recent_host_paths = [
+                        "/Users/mykalthomas/Documents/work",
+                        "/Users/mykalthomas/Documents/work/Hackathon",
+                    ]
+                
+                # Path selection method
+                path_method = st.radio(
+                    "Path Selection",
+                    options=["Enter Path", "Recent Paths", "Quick Select"],
+                    horizontal=True,
+                    help="Choose how to specify the repository path"
                 )
+                
+                if path_method == "Enter Path":
+                    repo_path = st.text_input(
+                        "Repository Path",
+                        value="/Users/mykalthomas/Documents/work",
+                        help="Path on your host machine (e.g., ~/projects/my-repo). Git root will be auto-detected."
+                    )
+                    
+                    # Show path suggestions
+                    with st.expander("💡 Common Path Examples"):
+                        st.markdown("""
+                        **macOS:**
+                        - `/Users/USERNAME/Documents/projects`
+                        - `/Users/USERNAME/Developer`
+                        - `~/Documents/work`
+                        
+                        **Linux:**
+                        - `/home/USERNAME/projects`
+                        - `/opt/projects`
+                        - `~/dev`
+                        
+                        **Windows (WSL):**
+                        - `/mnt/c/Users/USERNAME/Documents`
+                        - `/mnt/d/projects`
+                        """)
+                
+                elif path_method == "Recent Paths":
+                    if st.session_state.recent_host_paths:
+                        selected_recent = st.selectbox(
+                            "Select from Recent Paths",
+                            options=st.session_state.recent_host_paths,
+                            help="Previously used paths"
+                        )
+                        repo_path = selected_recent
+                        
+                        # Option to clear recent paths
+                        if st.button("🗑️ Clear Recent Paths", key="clear_recent"):
+                            st.session_state.recent_host_paths = []
+                            st.rerun()
+                    else:
+                        st.info("No recent paths saved. Use 'Enter Path' to add one.")
+                        repo_path = "/Users/mykalthomas/Documents/work"
+                
+                else:  # Quick Select
+                    st.markdown("**Quick Select Common Locations:**")
+                    
+                    # Quick select buttons
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        if st.button("📁 Documents", key="quick_docs", use_container_width=True):
+                            repo_path = "/Users/mykalthomas/Documents"
+                            st.session_state.quick_selected_path = repo_path
+                    
+                    with col2:
+                        if st.button("💼 Work", key="quick_work", use_container_width=True):
+                            repo_path = "/Users/mykalthomas/Documents/work"
+                            st.session_state.quick_selected_path = repo_path
+                    
+                    with col3:
+                        if st.button("🚀 Hackathon", key="quick_hack", use_container_width=True):
+                            repo_path = "/Users/mykalthomas/Documents/work/Hackathon"
+                            st.session_state.quick_selected_path = repo_path
+                    
+                    # Show selected or allow custom
+                    if 'quick_selected_path' in st.session_state:
+                        repo_path = st.text_input(
+                            "Selected Path",
+                            value=st.session_state.quick_selected_path,
+                            help="You can modify this path if needed"
+                        )
+                    else:
+                        repo_path = st.text_input(
+                            "Or Enter Custom Path",
+                            value="/Users/mykalthomas/Documents/work",
+                            help="Enter a custom path"
+                        )
                 resolve_host_path = True
                 
                 # Add path validation button
@@ -134,6 +220,12 @@ def show(api_base_url: str):
                                 
                                 if result["is_valid"]:
                                     st.success(f"✅ {result['message']}")
+                                    
+                                    # Add to recent paths if valid
+                                    if repo_path not in st.session_state.recent_host_paths:
+                                        st.session_state.recent_host_paths.insert(0, repo_path)
+                                        # Keep only last 10 paths
+                                        st.session_state.recent_host_paths = st.session_state.recent_host_paths[:10]
                                     
                                     if result["resolved_path"]:
                                         resolved = result["resolved_path"]
