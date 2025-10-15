@@ -201,6 +201,31 @@ def show(api_base_url: str):
                     max_value=100,
                     help="Maximum file size to process"
                 )
+                
+                st.markdown("---")
+                st.markdown("### 🕐 Temporal Versioning")
+                
+                enable_versioning = st.checkbox(
+                    "Enable Content-Based Versioning",
+                    value=True,
+                    help="Use temporal content versioning for deduplication and change tracking"
+                )
+                
+                if enable_versioning:
+                    st.info("""
+                    ✅ **Enabled**: Content-addressable storage with temporal ordering
+                    - Deduplicates identical content across versions
+                    - Tracks changes with content hashing (SHA-256)
+                    - Maintains temporal ordering for history
+                    - Enables "as of date" queries
+                    """)
+                else:
+                    st.warning("""
+                    ⚠️ **Disabled**: Standard versioning (git-only)
+                    - No content deduplication
+                    - Relies solely on git commits
+                    - Higher storage usage
+                    """)
             
             # Submit button
             submit = st.form_submit_button("🚀 Start Ingestion", use_container_width=True)

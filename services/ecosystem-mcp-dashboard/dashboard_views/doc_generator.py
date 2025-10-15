@@ -191,6 +191,42 @@ def show(api_base_url: str):
             - With {tier} tier for optimal performance
             """)
             
+            # Documentation Run Persistence (NEW)
+            st.markdown("---")
+            st.markdown("### 💾 Documentation Run Persistence")
+            
+            persist_run = st.checkbox(
+                "Save Generated Documentation",
+                value=True,
+                help="Persist generated documents to database for future reference"
+            )
+            
+            if persist_run:
+                run_name = st.text_input(
+                    "Run Name",
+                    value=f"Documentation - {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                    help="Descriptive name for this documentation run"
+                )
+                
+                run_description = st.text_area(
+                    "Description (Optional)",
+                    value="",
+                    help="Brief description of this documentation generation",
+                    height=80
+                )
+                
+                st.success("""
+                ✅ **Documentation will be saved with:**
+                - Run metadata (config, timing, stats)
+                - All generated documents with full content
+                - Browseable via Documentation Browser
+                - Exportable as ZIP archive
+                """)
+            else:
+                run_name = ""
+                run_description = ""
+                st.info("ℹ️ Documents will be generated but not persisted to database")
+            
             # Submit
             submitted = st.form_submit_button("💾 Save Configuration", use_container_width=True)
             
@@ -227,11 +263,18 @@ def show(api_base_url: str):
                     "include_sources": include_sources,
                     "tier": tier,
                     "query_timeout": query_timeout,
-                    "max_retries": max_retries
+                    "max_retries": max_retries,
+                    "persist_run": persist_run,
+                    "run_name": run_name,
+                    "run_description": run_description
                 }
                 
-                st.success(f"✅ Configuration saved! Ready to generate {len(sections)} sections with {tier} tier.")
-                st.info("📋 Switch to the **Generate** tab to start.")
+                if persist_run:
+                    st.success(f"✅ Configuration saved! Ready to generate and persist {len(sections)} sections with {tier} tier.")
+                    st.info("📋 Switch to the **Generate** tab to start. Documents will be saved to database.")
+                else:
+                    st.success(f"✅ Configuration saved! Ready to generate {len(sections)} sections with {tier} tier.")
+                    st.info("📋 Switch to the **Generate** tab to start.")
     
     # ============================================================================
     # Tab 2: Generate
@@ -365,6 +408,84 @@ def show(api_base_url: str):
                 - LLM Tier: {config['tier'].upper()}
                 """)
             
+            # Persist documentation run if enabled
+            if config.get('persist_run', False):
+                with st.spinner("💾 Saving documentation to database..."):
+                    try:
+                        # Create documentation run
+                        run_response = httpx.post(
+                            f"{api_base_url}/api/v1/documentation/runs",
+                            json={
+                                "name": config.get('run_name', f"Documentation - {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
+                                "description": config.get('run_description', ''),
+                                "source_directory": config['directory'],
+                                "output_format": "markdown",
+                                "response_size": config.get('response_length', 'L'),
+                                "tier": config.get('tier', 'auto'),
+                                "num_passes": len(config['passes']),
+                                "questions_per_pass": config['queries_per_pass'],
+                                "created_by": "dashboard_user"
+                            },
+                            timeout=30.0
+                        )
+                        
+                        if run_response.status_code == 200:
+                            run_data = run_response.json()
+                            run_id = run_data['run_id']
+                            
+                            # Mark run as started
+                            httpx.put(
+                                f"{api_base_url}/api/v1/documentation/runs/{run_id}/start",
+                                json={"output_directory": "/tmp/docs"},
+                                timeout=10.0
+                            )
+                            
+                            # Save each generated document
+                            docs_saved = 0
+                            for section, content in st.session_state.generation_results.items():
+                                doc_response = httpx.post(
+                                    f"{api_base_url}/api/v1/documentation/runs/{run_id}/documents",
+                                    json={
+                                        "title": section,
+                                        "filename": f"{section.lower()}.md",
+                                        "content": content,
+                                        "pass_number": len(config['passes']),
+                                        "question": f"Generated documentation for {section}"
+                                    },
+                                    timeout=30.0
+                                )
+                                
+                                if doc_response.status_code == 200:
+                                    docs_saved += 1
+                            
+                            # Mark run as completed
+                            httpx.put(
+                                f"{api_base_url}/api/v1/documentation/runs/{run_id}/complete",
+                                json={
+                                    "status": "completed",
+                                    "total_docs": len(st.session_state.generation_results),
+                                    "successful_docs": docs_saved,
+                                    "failed_docs": len(st.session_state.generation_results) - docs_saved
+                                },
+                                timeout=10.0
+                            )
+                            
+                            st.success(f"""
+                            ✅ **Documentation saved to database!**
+                            - Run ID: `{run_id[:8]}...`
+                            - Documents saved: {docs_saved}/{len(st.session_state.generation_results)}
+                            - Browse in: 📚 Documentation Browser
+                            """)
+                            
+                            # Store run ID for later reference
+                            st.session_state['last_doc_run_id'] = run_id
+                        else:
+                            st.error(f"❌ Failed to create documentation run: HTTP {run_response.status_code}")
+                    
+                    except Exception as e:
+                        st.error(f"❌ Error saving documentation: {str(e)}")
+                        st.info("Documents are still available in the Results tab")
+            
             st.info("📄 Switch to the **Results** tab to view and download documentation.")
     
     # ============================================================================
@@ -376,6 +497,25 @@ def show(api_base_url: str):
         if not st.session_state.generation_results:
             st.info("No documentation generated yet. Configure and generate first.")
             st.stop()
+        
+        # Show link to saved run if persisted
+        if st.session_state.get('last_doc_run_id'):
+            run_id = st.session_state['last_doc_run_id']
+            st.success(f"""
+            💾 **This documentation is saved in the database!**
+            
+            Run ID: `{run_id}`
+            
+            📚 **Browse in:** Documentation Browser → Run History
+            📥 **Export as ZIP** from the Documentation Browser
+            🔍 **View all documents** with metadata and search
+            """)
+            
+            if st.button("🗑️ Clear Saved Run Reference"):
+                del st.session_state['last_doc_run_id']
+                st.rerun()
+            
+            st.markdown("---")
         
         # Display each section
         for section, content in st.session_state.generation_results.items():
