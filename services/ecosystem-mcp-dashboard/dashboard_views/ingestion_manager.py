@@ -325,6 +325,36 @@ def show(api_base_url: str):
             if submit:
                 st.info("⏳ Starting ingestion job...")
                 
+                # If using host path, validate and resolve it first
+                resolved_path = repo_path
+                if resolve_host_path:
+                    with st.spinner("🔍 Resolving host path..."):
+                        try:
+                            validate_response = httpx.post(
+                                f"{api_base_url}/api/v1/path/validate",
+                                json={"path": repo_path},
+                                timeout=10.0
+                            )
+                            
+                            if validate_response.status_code == 200:
+                                validation = validate_response.json()
+                                if validation.get("is_valid"):
+                                    resolved_path = validation.get("container_path", repo_path)
+                                    st.success(f"✅ Path validated: {resolved_path}")
+                                    
+                                    # Save to recent paths if successful
+                                    if repo_path not in st.session_state.recent_host_paths:
+                                        st.session_state.recent_host_paths.insert(0, repo_path)
+                                        st.session_state.recent_host_paths = st.session_state.recent_host_paths[:10]
+                                else:
+                                    st.error(f"❌ Path validation failed: {validation.get('message')}")
+                                    st.stop()
+                            else:
+                                st.warning("⚠️ Could not validate path, using as-is")
+                        except Exception as e:
+                            st.warning(f"⚠️ Path validation error: {e}")
+                            st.info("Continuing with original path...")
+                
                 # Auto-check worker health before starting
                 try:
                     worker_check = httpx.get(
@@ -356,12 +386,16 @@ def show(api_base_url: str):
                     st.info("Continuing with ingestion anyway...")
                 
                 try:
-                    # Prepare request
+                    # Prepare request with resolved path
                     request_data = {
-                        "repo_path": repo_path,
+                        "repo_path": resolved_path,
                         "mode": mode,
-                        "resolve_host_path": resolve_host_path
+                        "resolve_host_path": False  # Already resolved, don't re-resolve
                     }
+                    
+                    # Show what we're sending (helpful for debugging)
+                    with st.expander("🔍 Request Details", expanded=False):
+                        st.json(request_data)
                     
                     # Call ingestion endpoint
                     response = httpx.post(
@@ -376,9 +410,31 @@ def show(api_base_url: str):
                         st.info(f"📋 Job ID: `{data.get('job_id')}`")
                         st.markdown("Monitor progress in the **Job Status** tab")
                     else:
-                        error_data = response.json()
+                        # Better error handling
+                        try:
+                            error_data = response.json()
+                            error_detail = error_data.get('detail', 'Unknown error')
+                        except:
+                            error_detail = response.text or 'Unknown error'
+                        
                         st.error(f"❌ Failed to start ingestion (HTTP {response.status_code})")
-                        st.error(f"Error: {error_data.get('detail', 'Unknown error')}")
+                        st.error(f"**Error:** {error_detail}")
+                        
+                        # Provide helpful suggestions based on error
+                        if response.status_code == 400:
+                            st.warning("""
+                            💡 **Common fixes for HTTP 400:**
+                            - If using Host Machine Path, try clicking 🔍 Validate Path first
+                            - Make sure the path exists and is a git repository
+                            - Check if Docker has access to the path
+                            - Try using Container Path with /app instead
+                            """)
+                        elif "mount" in error_detail.lower():
+                            st.info("""
+                            📌 **Path Mounting Issue:**
+                            The host path needs to be mounted in Docker.
+                            See the suggested mount configuration above.
+                            """)
                         
                 except httpx.RequestError as e:
                     st.error(f"❌ Connection error: {e}")
