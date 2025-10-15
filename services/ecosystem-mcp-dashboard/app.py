@@ -90,6 +90,7 @@ page = st.sidebar.radio(
         "📚 Documents",
         "📥 Ingestion Manager",
         "📖 Documentation Generator",
+        "📚 Documentation Browser",
         "🎯 Embeddings Manager",
         "🔄 Job Recovery",
         "📈 Timeline Viewer",
@@ -220,6 +221,9 @@ elif page == "📥 Ingestion Manager":
 elif page == "📖 Documentation Generator":
     from dashboard_views import doc_generator
     doc_generator.show(api_base_url)
+elif page == "📚 Documentation Browser":
+    from dashboard_views import documentation_browser
+    documentation_browser.show()
 elif page == "🎯 Embeddings Manager":
     from dashboard_views import embeddings_manager
     embeddings_manager.show(api_base_url)
