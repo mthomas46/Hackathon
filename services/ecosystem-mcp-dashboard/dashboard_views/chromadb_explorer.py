@@ -570,12 +570,12 @@ def show(api_base_url: str):
                                     
                                     # Vector preview
                                     if "vector_preview" in sample and sample["vector_preview"]:
-                                        with st.expander("🧬 Vector Preview (first 10 dimensions)"):
-                                            st.code(str(sample["vector_preview"]), language="python")
+                                        st.markdown("**🧬 Vector Preview (first 10 dimensions):**")
+                                        st.code(str(sample["vector_preview"]), language="python")
                                     
                                     # Metadata
-                                    with st.expander("📋 Metadata"):
-                                        st.json(sample.get("metadata", {}))
+                                    st.markdown("**📋 Metadata:**")
+                                    st.json(sample.get("metadata", {}))
                         
                         elif response.status_code == 404:
                             st.error("❌ No documents found in ChromaDB")
