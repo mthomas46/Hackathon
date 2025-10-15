@@ -86,15 +86,15 @@ page = st.sidebar.radio(
         "🎯 Enhanced Query",
         "🔬 Multi-Pass RAG Query",
         
-            # Data Management
-            "📚 Documents",
-            "📥 Ingestion Manager",
-            "📖 Documentation Generator",
-            "🎯 Embeddings Manager",
-                
-                # Infrastructure
-                "⚙️ Worker Monitor",
-                "🐳 Container Management",
+        # Data Management
+        "📚 Documents",
+        "📥 Ingestion Manager",
+        "📖 Documentation Generator",
+        "🎯 Embeddings Manager",
+        
+        # Infrastructure
+        "⚙️ Worker Monitor",
+        "🐳 Container Management",
         "🔍 Redis Explorer",
         "🗄️ PostgreSQL Explorer",
         "🔮 ChromaDB Explorer",
