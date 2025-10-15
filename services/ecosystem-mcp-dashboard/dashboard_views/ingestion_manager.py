@@ -330,6 +330,10 @@ def show(api_base_url: str):
                 git_info = None
                 needs_confirmation = False
                 
+                # Initialize confirmed_target_subdir to None by default
+                if 'confirmed_target_subdir' not in st.session_state:
+                    st.session_state.confirmed_target_subdir = None
+                
                 if resolve_host_path:
                     with st.spinner("🔍 Analyzing path and detecting git repository..."):
                         try:
@@ -354,8 +358,12 @@ def show(api_base_url: str):
                                     }
                                     
                                     # Determine if user confirmation is needed
+                                    # ALWAYS ask for confirmation if subdirectory detected
                                     if git_info["is_subdirectory"]:
                                         needs_confirmation = True
+                                    else:
+                                        # Not a subdirectory, but still set default
+                                        st.session_state.confirmed_target_subdir = None
                                     
                                     # Save to recent paths if successful
                                     if repo_path not in st.session_state.recent_host_paths:
@@ -460,7 +468,12 @@ def show(api_base_url: str):
                 elif git_info:
                     # No confirmation needed (not a subdirectory)
                     st.success(f"✅ Path validated: {resolved_path}")
-                    st.session_state.confirmed_target_subdir = None
+                    # Even if no confirmation UI, preserve subdirectory if detected
+                    if git_info.get("is_subdirectory") and git_info.get("target_subdir"):
+                        st.session_state.confirmed_target_subdir = git_info["target_subdir"]
+                        st.info(f"🎯 Will process subdirectory: `{git_info['target_subdir']}`")
+                    else:
+                        st.session_state.confirmed_target_subdir = None
                 
                 # Auto-check worker health before starting
                 try:

@@ -201,7 +201,11 @@ class HostPathResolver:
             if host_path.startswith(host_mount):
                 # Map to container path
                 relative = os.path.relpath(host_path, host_mount)
-                container_path = os.path.join(container_mount, relative)
+                # If relative is ".", it means paths are the same
+                if relative == ".":
+                    container_path = container_mount
+                else:
+                    container_path = os.path.join(container_mount, relative)
                 return True, container_path
         
         # Path not in any mount - needs to be mounted
