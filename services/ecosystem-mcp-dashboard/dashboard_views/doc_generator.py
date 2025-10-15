@@ -1,203 +1,283 @@
 """
-Documentation Generator Page
+Documentation Generator
 
-Generates comprehensive documentation using multi-pass RAG queries,
-similar to the generate_deep_docs.py script.
+Enhanced with proper timeouts, tier selection, and feedback.
 """
 
 import streamlit as st
 import httpx
-from datetime import datetime
-import json
 import time
-from pathlib import Path
+from datetime import datetime
 from typing import List, Dict, Any
 
 
 def show(api_base_url: str):
-    """Display documentation generator page."""
-    
-    st.title("📚 Documentation Generator")
+    """Display documentation generator page with enhanced feedback."""
+    st.title("📖 Documentation Generator")
     st.markdown("Generate comprehensive documentation using multi-pass RAG queries")
     
+    # Initialize session state
+    if "generation_results" not in st.session_state:
+        st.session_state.generation_results = {}
+    if "generation_metrics" not in st.session_state:
+        st.session_state.generation_metrics = []
+    if "generating" not in st.session_state:
+        st.session_state.generating = False
+    
     # Create tabs
-    tab1, tab2, tab3 = st.tabs(["⚙️ Configure", "🚀 Generate", "📄 View Output"])
+    tab1, tab2, tab3 = st.tabs([
+        "⚙️ Configure",
+        "📊 Generate",
+        "📄 Results"
+    ])
     
     # ============================================================================
-    # Tab 1: Configure
+    # Tab 1: Configuration
     # ============================================================================
     with tab1:
-        st.header("⚙️ Documentation Configuration")
+        st.header("⚙️ Generation Configuration")
         
         with st.form("doc_config_form"):
-            st.markdown("### Documentation Sections")
-            
-            # Section selection
-            sections = st.multiselect(
-                "Select Sections to Generate",
-                options=[
-                    "OVERVIEW",
-                    "ARCHITECTURE",
-                    "API",
-                    "FEATURES",
-                    "DEVELOPMENT",
-                    "DEPLOYMENT",
-                    "PERFORMANCE",
-                    "TROUBLESHOOTING"
-                ],
-                default=["OVERVIEW", "ARCHITECTURE", "API"],
-                help="Choose which documentation sections to generate"
+            # Directory selection
+            st.markdown("### 📁 Source Directory")
+            directory = st.text_input(
+                "Directory Path",
+                value="/app",
+                help="Path to analyze (inside container: /app)"
             )
             
-            # Multi-pass workflow options
-            st.markdown("### Multi-Pass Workflow")
+            st.info("""
+            💡 **Default:** `/app` - The mounted workspace directory
+            - Contains all your codebase
+            - Accessible from the container
+            - Already indexed in the database
+            """)
             
-            enable_multipass = st.checkbox(
-                "Enable Multi-Pass Workflow",
-                value=True,
-                help="Use multiple passes for deeper, more comprehensive documentation"
-            )
+            st.markdown("---")
             
-            if enable_multipass:
-                passes = st.multiselect(
-                    "Select Passes",
-                    options=[
-                        "initial",      # Broad overview
-                        "deep_dive",    # Technical details
-                        "practical",    # Examples and patterns
-                        "integration",  # Synthesis
-                        "refinement"    # Polish
-                    ],
-                    default=["initial", "deep_dive", "practical"],
-                    help="Each pass adds more depth and detail"
-                )
-                
-                queries_per_pass = st.slider(
-                    "Queries per Pass",
-                    min_value=3,
-                    max_value=20,
-                    value=10,
-                    help="Number of questions to ask in each pass"
-                )
-            else:
-                passes = ["initial"]
-                queries_per_pass = 5
-            
-            # RAG parameters
-            st.markdown("### RAG Parameters")
+            # Documentation sections
+            st.markdown("### 📚 Sections to Generate")
             
             col1, col2 = st.columns(2)
+            
             with col1:
+                include_overview = st.checkbox("📋 Overview", value=True)
+                include_architecture = st.checkbox("🏗️ Architecture", value=True)
+                include_api = st.checkbox("🔌 API Reference", value=True)
+            
+            with col2:
+                include_setup = st.checkbox("🚀 Setup Guide", value=False)
+                include_examples = st.checkbox("💡 Examples", value=False)
+                include_troubleshooting = st.checkbox("🔧 Troubleshooting", value=False)
+            
+            st.markdown("---")
+            
+            # Multi-pass settings
+            st.markdown("### 🔄 Multi-Pass Configuration")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                num_passes = st.slider(
+                    "Passes per Section",
+                    min_value=1,
+                    max_value=5,
+                    value=2,
+                    help="More passes = more comprehensive but slower"
+                )
+            
+            with col2:
+                queries_per_pass = st.slider(
+                    "Queries per Pass",
+                    min_value=1,
+                    max_value=10,
+                    value=3,
+                    help="Number of questions to ask per pass"
+                )
+            
+            with col3:
                 n_results = st.slider(
                     "Documents per Query",
-                    min_value=3,
-                    max_value=20,
+                    min_value=5,
+                    max_value=30,
                     value=10,
-                    help="Number of documents to retrieve for each query"
+                    help="Number of documents to retrieve"
+                )
+            
+            st.markdown("---")
+            
+            # LLM Tier Selection (NEW)
+            st.markdown("### 🤖 LLM Tier Selection")
+            
+            tier = st.selectbox(
+                "Preferred LLM Tier",
+                options=["desktop", "auto", "docker"],
+                index=0,
+                help="""
+                **desktop**: Use Desktop Ollama (GPU, fastest) - RECOMMENDED
+                **auto**: Automatic complexity-based routing
+                **docker**: Use Docker Ollama (CPU, always available)
+                
+                Desktop Ollama is preferred for documentation generation as it's faster and more reliable.
+                Will automatically fall back to Docker if Desktop is unavailable.
+                """
+            )
+            
+            if tier == "desktop":
+                st.success("✅ Will use Desktop Ollama (GPU) with fallback to Docker")
+            elif tier == "auto":
+                st.info("ℹ️ Will analyze complexity and route automatically")
+            else:
+                st.warning("⚠️ Will use Docker Ollama (slower, CPU-based)")
+            
+            st.markdown("---")
+            
+            # Generation settings
+            st.markdown("### ⚙️ Generation Settings")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                response_length = st.select_slider(
+                    "Response Length",
+                    options=["S", "M", "L", "XL"],
+                    value="L",
+                    help="S=512, M=1024, L=2048, XL=4096 tokens"
                 )
                 
                 temperature = st.slider(
                     "Temperature",
                     min_value=0.0,
                     max_value=1.0,
-                    value=0.3,
+                    value=0.7,
                     step=0.1,
-                    help="Lower = more focused, Higher = more creative"
+                    help="0.0=Focused, 1.0=Creative"
                 )
             
             with col2:
-                response_length = st.selectbox(
-                    "Response Length",
-                    options=["S", "M", "L", "XL"],
-                    index=2,
-                    help="S=512, M=1024, L=2048, XL=4096 tokens"
+                use_cache = st.checkbox("Use Cache", value=True, help="Speed up with caching")
+                include_sources = st.checkbox("Include Sources", value=True, help="Add source citations")
+            
+            # Timeout settings (NEW)
+            st.markdown("---")
+            st.markdown("### ⏱️ Timeout Settings")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                query_timeout = st.number_input(
+                    "Query Timeout (seconds)",
+                    min_value=60,
+                    max_value=600,
+                    value=300,
+                    step=30,
+                    help="Timeout for each individual query (5min default)"
                 )
+            
+            with col2:
+                max_retries = st.number_input(
+                    "Max Retries per Query",
+                    min_value=0,
+                    max_value=5,
+                    value=2,
+                    help="Number of retries if a query fails"
+                )
+            
+            st.info(f"""
+            ⏱️ **Time Estimates:**
+            - Per query: ~{query_timeout}s max
+            - Total queries: {sum([include_overview, include_architecture, include_api, include_setup, include_examples, include_troubleshooting]) * num_passes * queries_per_pass}
+            - Estimated total: ~{sum([include_overview, include_architecture, include_api, include_setup, include_examples, include_troubleshooting]) * num_passes * queries_per_pass * 10 / 60:.1f} minutes
+            - With {tier} tier for optimal performance
+            """)
+            
+            # Submit
+            submitted = st.form_submit_button("💾 Save Configuration", use_container_width=True)
+            
+            if submitted:
+                # Build sections list
+                sections = []
+                if include_overview: sections.append("OVERVIEW")
+                if include_architecture: sections.append("ARCHITECTURE")
+                if include_api: sections.append("API")
+                if include_setup: sections.append("SETUP")
+                if include_examples: sections.append("EXAMPLES")
+                if include_troubleshooting: sections.append("TROUBLESHOOTING")
                 
-                use_cache = st.checkbox(
-                    "Use Cache",
-                    value=True,
-                    help="Cache responses for faster regeneration"
-                )
-            
-            # Output options
-            st.markdown("### Output Options")
-            
-            include_metrics = st.checkbox(
-                "Include Generation Metrics",
-                value=True,
-                help="Save detailed metrics about the generation process"
-            )
-            
-            include_sources = st.checkbox(
-                "Include Source References",
-                value=True,
-                help="Add source document references to the output"
-            )
-            
-            # Save configuration button
-            save_config = st.form_submit_button("💾 Save Configuration", use_container_width=True)
-            
-            if save_config:
-                # Store in session state
+                # Build pass names
+                pass_names = []
+                for i in range(num_passes):
+                    if i == 0:
+                        pass_names.append("initial")
+                    elif i == 1:
+                        pass_names.append("deep_dive")
+                    else:
+                        pass_names.append(f"pass_{i+1}")
+                
+                # Save config
                 st.session_state.doc_config = {
+                    "directory": directory,
                     "sections": sections,
-                    "enable_multipass": enable_multipass,
-                    "passes": passes if enable_multipass else ["initial"],
+                    "passes": pass_names,
                     "queries_per_pass": queries_per_pass,
                     "n_results": n_results,
-                    "temperature": temperature,
                     "response_length": response_length,
+                    "temperature": temperature,
                     "use_cache": use_cache,
-                    "include_metrics": include_metrics,
-                    "include_sources": include_sources
+                    "include_sources": include_sources,
+                    "tier": tier,
+                    "query_timeout": query_timeout,
+                    "max_retries": max_retries
                 }
-                st.success("✅ Configuration saved!")
-        
-        # Configuration summary
-        if "doc_config" in st.session_state:
-            st.markdown("---")
-            st.markdown("### 📋 Current Configuration")
-            config = st.session_state.doc_config
-            
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Sections", len(config["sections"]))
-            with col2:
-                st.metric("Passes", len(config["passes"]))
-            with col3:
-                estimated_queries = len(config["sections"]) * len(config["passes"]) * config["queries_per_pass"]
-                st.metric("Estimated Queries", estimated_queries)
-            
-            st.info(f"📊 Estimated generation time: {estimated_queries * 3} - {estimated_queries * 5} seconds")
+                
+                st.success(f"✅ Configuration saved! Ready to generate {len(sections)} sections with {tier} tier.")
+                st.info("📋 Switch to the **Generate** tab to start.")
     
     # ============================================================================
     # Tab 2: Generate
     # ============================================================================
     with tab2:
-        st.header("🚀 Generate Documentation")
+        st.header("📊 Generate Documentation")
         
-        # Check if config exists
         if "doc_config" not in st.session_state:
-            st.warning("⚠️ Please configure documentation settings in the **Configure** tab first")
-            return
+            st.warning("⚠️ Please configure documentation settings in the **Configure** tab first.")
+            st.stop()
         
         config = st.session_state.doc_config
         
-        # Display configuration summary
+        # Show configuration summary
         st.markdown("### 📋 Generation Plan")
-        st.markdown(f"**Sections:** {', '.join(config['sections'])}")
-        st.markdown(f"**Passes:** {', '.join(config['passes'])}")
-        st.markdown(f"**Queries per pass:** {config['queries_per_pass']}")
-        st.markdown(f"**Total estimated queries:** {len(config['sections']) * len(config['passes']) * config['queries_per_pass']}")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Sections", len(config['sections']))
+            st.metric("Passes per Section", len(config['passes']))
+        
+        with col2:
+            st.metric("Queries per Pass", config['queries_per_pass'])
+            total_queries = len(config['sections']) * len(config['passes']) * config['queries_per_pass']
+            st.metric("Total Queries", total_queries)
+        
+        with col3:
+            st.metric("LLM Tier", config['tier'].upper())
+            est_time = total_queries * 10 / 60
+            st.metric("Est. Time", f"~{est_time:.1f}min")
+        
+        # Show sections
+        st.markdown("**Sections to Generate:**")
+        st.write(", ".join(config['sections']))
         
         st.markdown("---")
         
-        # Start generation button
-        if st.button("🚀 Start Generation", use_container_width=True, type="primary"):
-            st.session_state.generating = True
-            st.session_state.generation_start_time = time.time()
-            st.session_state.generation_results = {}
-            st.session_state.generation_metrics = []
+        # Start button
+        if not st.session_state.get("generating", False):
+            if st.button("🚀 Start Generation", type="primary", use_container_width=True):
+                st.session_state.generating = True
+                st.session_state.generation_start_time = time.time()
+                st.session_state.generation_results = {}
+                st.session_state.generation_metrics = []
+                st.rerun()
         
         # Generation in progress
         if st.session_state.get("generating", False):
@@ -206,16 +286,31 @@ def show(api_base_url: str):
             # Progress tracking
             progress_bar = st.progress(0)
             status_text = st.empty()
+            metrics_placeholder = st.empty()
             
             # Generate documentation section by section
             total_sections = len(config['sections'])
+            
             for i, section in enumerate(config['sections']):
-                status_text.text(f"Generating {section}... ({i+1}/{total_sections})")
+                section_start = time.time()
+                status_text.markdown(f"### 📝 Generating: **{section}** ({i+1}/{total_sections})")
                 
                 section_content = []
+                pass_count = 0
                 
                 # Run each pass for this section
-                for pass_name in config['passes']:
+                for pass_idx, pass_name in enumerate(config['passes']):
+                    pass_start = time.time()
+                    
+                    # Show current pass
+                    metrics_placeholder.info(f"""
+                    🔄 **Current Progress:**
+                    - Section: {section} ({i+1}/{total_sections})
+                    - Pass: {pass_name} ({pass_idx+1}/{len(config['passes'])})
+                    - Tier: {config['tier'].upper()}
+                    - Timeout: {config['query_timeout']}s per query
+                    """)
+                    
                     pass_content = generate_pass(
                         api_base_url=api_base_url,
                         section=section,
@@ -225,9 +320,25 @@ def show(api_base_url: str):
                     
                     if pass_content:
                         section_content.append(pass_content)
+                        pass_count += 1
+                    
+                    pass_time = time.time() - pass_start
+                    
+                    # Log metrics
+                    st.session_state.generation_metrics.append({
+                        "section": section,
+                        "pass": pass_name,
+                        "duration": pass_time,
+                        "success": bool(pass_content)
+                    })
                 
                 # Combine pass results
-                st.session_state.generation_results[section] = "\n\n".join(section_content)
+                if section_content:
+                    st.session_state.generation_results[section] = "\n\n".join(section_content)
+                    section_time = time.time() - section_start
+                    st.success(f"✅ {section} complete ({pass_count} passes, {section_time:.1f}s)")
+                else:
+                    st.error(f"❌ {section} failed - no content generated")
                 
                 # Update progress
                 progress_bar.progress((i + 1) / total_sections)
@@ -236,115 +347,96 @@ def show(api_base_url: str):
             st.session_state.generating = False
             generation_time = time.time() - st.session_state.generation_start_time
             
-            st.success(f"✅ Documentation generated in {generation_time:.1f} seconds!")
+            st.success(f"🎉 Documentation generated in {generation_time:.1f} seconds!")
+            st.balloons()
             
             # Save metrics
-            if config['include_metrics']:
-                st.session_state.generation_metrics.append({
-                    "timestamp": datetime.now().isoformat(),
-                    "sections": config['sections'],
-                    "passes": config['passes'],
-                    "total_time": generation_time,
-                    "queries": len(config['sections']) * len(config['passes']) * config['queries_per_pass']
-                })
-            
-            st.info("📄 View generated documentation in the **View Output** tab")
-            
-            # Download button
-            if st.session_state.generation_results:
-                all_content = "\n\n---\n\n".join([
-                    f"# {section}\n\n{content}"
-                    for section, content in st.session_state.generation_results.items()
-                ])
+            if st.session_state.generation_metrics:
+                total_queries = len(st.session_state.generation_metrics)
+                successful = sum(1 for m in st.session_state.generation_metrics if m['success'])
                 
-                st.download_button(
-                    label="📥 Download Complete Documentation",
-                    data=all_content,
-                    file_name=f"documentation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
-                    mime="text/markdown"
-                )
-        
-        # Generation controls
-        if st.session_state.get("generation_results"):
-            st.markdown("---")
-            st.markdown("### 🎛️ Controls")
+                st.info(f"""
+                📊 **Generation Summary:**
+                - Total queries: {total_queries}
+                - Successful: {successful} ({successful/total_queries*100:.1f}%)
+                - Failed: {total_queries - successful}
+                - Total time: {generation_time:.1f}s
+                - Avg per query: {generation_time/total_queries:.1f}s
+                - LLM Tier: {config['tier'].upper()}
+                """)
             
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                if st.button("🔄 Regenerate", use_container_width=True):
-                    st.session_state.generating = True
-                    st.rerun()
-            
-            with col2:
-                if st.button("💾 Save to Disk", use_container_width=True):
-                    # In a real implementation, this would save to a temporary directory
-                    st.info("💡 Would save to: /tmp/generated_docs/")
-            
-            with col3:
-                if st.button("🗑️ Clear Results", use_container_width=True):
-                    st.session_state.generation_results = {}
-                    st.session_state.generation_metrics = []
-                    st.rerun()
+            st.info("📄 Switch to the **Results** tab to view and download documentation.")
     
     # ============================================================================
-    # Tab 3: View Output
+    # Tab 3: Results
     # ============================================================================
     with tab3:
         st.header("📄 Generated Documentation")
         
-        if not st.session_state.get("generation_results"):
-            st.info("📭 No documentation generated yet")
-            st.markdown("Generate documentation in the **Generate** tab")
-            return
+        if not st.session_state.generation_results:
+            st.info("No documentation generated yet. Configure and generate first.")
+            st.stop()
         
-        # Section selector
-        results = st.session_state.generation_results
-        selected_section = st.selectbox(
-            "Select Section",
-            options=list(results.keys()),
-            format_func=lambda x: f"📄 {x}"
+        # Display each section
+        for section, content in st.session_state.generation_results.items():
+            with st.expander(f"📄 {section}", expanded=False):
+                st.markdown(content)
+                
+                # Download button for this section
+                st.download_button(
+                    label=f"⬇️ Download {section}",
+                    data=content,
+                    file_name=f"{section.lower()}.md",
+                    mime="text/markdown",
+                    key=f"download_{section}"
+                )
+        
+        st.markdown("---")
+        
+        # Download all
+        all_content = "\n\n---\n\n".join([
+            f"# {section}\n\n{content}"
+            for section, content in st.session_state.generation_results.items()
+        ])
+        
+        st.download_button(
+            label="⬇️ Download All Documentation",
+            data=all_content,
+            file_name="complete_documentation.md",
+            mime="text/markdown",
+            use_container_width=True
         )
         
-        if selected_section:
-            # Display section content
-            st.markdown("---")
-            st.markdown(f"## {selected_section}")
-            st.markdown(results[selected_section])
-            
-            # Download this section
-            st.download_button(
-                label=f"📥 Download {selected_section}",
-                data=results[selected_section],
-                file_name=f"{selected_section.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
-                mime="text/markdown",
-                key=f"download_{selected_section}"
-            )
-        
         # Metrics
-        if st.session_state.get("generation_metrics"):
+        if st.session_state.generation_metrics:
             st.markdown("---")
             st.markdown("### 📊 Generation Metrics")
             
-            metrics = st.session_state.generation_metrics[-1]  # Latest
-            
             col1, col2, col3, col4 = st.columns(4)
+            
             with col1:
-                st.metric("Sections", len(metrics['sections']))
+                st.metric("Sections", len(st.session_state.generation_results))
+            
             with col2:
-                st.metric("Passes", len(metrics['passes']))
+                total_queries = len(st.session_state.generation_metrics)
+                st.metric("Total Queries", total_queries)
+            
             with col3:
-                st.metric("Total Queries", metrics['queries'])
+                successful = sum(1 for m in st.session_state.generation_metrics if m['success'])
+                st.metric("Success Rate", f"{successful/total_queries*100:.1f}%")
+            
             with col4:
-                st.metric("Generation Time", f"{metrics['total_time']:.1f}s")
+                total_time = sum(m['duration'] for m in st.session_state.generation_metrics)
+                st.metric("Total Time", f"{total_time:.1f}s")
             
             # Detailed metrics
             with st.expander("📈 Detailed Metrics"):
-                st.json(metrics)
+                st.json(st.session_state.generation_metrics)
 
 
 def generate_pass(api_base_url: str, section: str, pass_name: str, config: Dict[str, Any]) -> str:
     """
-    Generate documentation for a single pass.
+    Generate documentation for a single pass with enhanced error handling and tier support.
     
     Args:
         api_base_url: Base URL for API
@@ -363,38 +455,82 @@ def generate_pass(api_base_url: str, section: str, pass_name: str, config: Dict[
     max_tokens = length_map.get(config['response_length'], 2048)
     
     pass_results = []
+    query_timeout = config.get('query_timeout', 300)  # Default 5 minutes
+    max_retries = config.get('max_retries', 2)
+    tier = config.get('tier', 'desktop')  # Default to desktop
     
-    for question in questions:
-        try:
-            # Call multi-pass RAG API
-            response = httpx.post(
-                f"{api_base_url}/api/v1/query/multi-pass",
-                json={
-                    "query": question,
-                    "n_results": config['n_results'],
-                    "temperature": config['temperature'],
-                    "max_tokens": max_tokens,
-                    "response_length": config['response_length'],
-                    "use_cache": config['use_cache']
-                },
-                timeout=60.0
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                answer = data.get("answer", "")
+    for q_idx, question in enumerate(questions):
+        retry_count = 0
+        success = False
+        
+        while retry_count <= max_retries and not success:
+            try:
+                # Show progress
+                st.write(f"  ⏳ Query {q_idx+1}/{len(questions)}: {question[:60]}... (attempt {retry_count+1})")
                 
-                if config['include_sources']:
-                    sources = data.get("sources", [])
-                    if sources:
-                        answer += f"\n\n**Sources:** {len(sources)} documents"
+                # Call multi-pass RAG API with tier and extended timeout
+                response = httpx.post(
+                    f"{api_base_url}/api/v1/query/enhanced",  # Use enhanced endpoint for tier support
+                    json={
+                        "question": question,
+                        "mode": "rag",  # Full RAG mode
+                        "tier": tier,  # Desktop/auto/docker
+                        "n_results": config['n_results'],
+                        "temperature": config['temperature'],
+                        "max_tokens": max_tokens,
+                        "max_retries": max_retries
+                    },
+                    timeout=query_timeout  # Configurable timeout (default 5min)
+                )
                 
-                pass_results.append(answer)
-            else:
-                st.warning(f"⚠️ Query failed for: {question[:50]}...")
-                
-        except Exception as e:
-            st.error(f"❌ Error querying: {e}")
+                if response.status_code == 200:
+                    data = response.json()
+                    answer = data.get("answer", "")
+                    tier_used = data.get("tier_used", "unknown")
+                    
+                    # Add tier info to first response
+                    if q_idx == 0 and retry_count == 0:
+                        st.success(f"  ✅ Using {tier_used.upper()} tier")
+                    
+                    if config['include_sources']:
+                        sources = data.get("sources", [])
+                        if sources:
+                            answer += f"\n\n**Sources:** {len(sources)} documents"
+                    
+                    pass_results.append(answer)
+                    st.success(f"  ✅ Query {q_idx+1} complete")
+                    success = True
+                    
+                elif response.status_code == 503:
+                    st.warning(f"  ⚠️ Service unavailable (attempt {retry_count+1})")
+                    retry_count += 1
+                    if retry_count <= max_retries:
+                        time.sleep(2 ** retry_count)  # Exponential backoff
+                else:
+                    st.warning(f"  ⚠️ Query failed (HTTP {response.status_code})")
+                    retry_count += 1
+                    
+            except httpx.TimeoutException:
+                st.error(f"  ⏱️ Timeout after {query_timeout}s (attempt {retry_count+1})")
+                retry_count += 1
+                if retry_count <= max_retries:
+                    st.info(f"  🔄 Retrying in {2 ** retry_count}s...")
+                    time.sleep(2 ** retry_count)
+                    
+            except httpx.ConnectError:
+                st.error(f"  ❌ Connection error (attempt {retry_count+1})")
+                retry_count += 1
+                if retry_count <= max_retries:
+                    time.sleep(2 ** retry_count)
+                    
+            except Exception as e:
+                st.error(f"  ❌ Error: {str(e)} (attempt {retry_count+1})")
+                retry_count += 1
+                if retry_count <= max_retries:
+                    time.sleep(2 ** retry_count)
+        
+        if not success:
+            st.error(f"  ❌ Query {q_idx+1} failed after {max_retries+1} attempts")
     
     return "\n\n".join(pass_results)
 
@@ -411,83 +547,66 @@ def generate_questions(section: str, pass_name: str, count: int) -> List[str]:
     Returns:
         List of questions
     """
-    # Question templates by section and pass
+    # Question templates by section
     templates = {
-        "OVERVIEW": {
-            "initial": [
-                "What is the ecosystem-mcp service and what does it do?",
-                "What are the main components of the ecosystem-mcp architecture?",
-                "What problems does ecosystem-mcp solve?",
-                "How does ecosystem-mcp integrate with other services?",
-                "What are the key features of ecosystem-mcp?"
-            ],
-            "deep_dive": [
-                "Explain the internal architecture of ecosystem-mcp in detail",
-                "What design patterns are used in ecosystem-mcp?",
-                "How does data flow through the ecosystem-mcp system?",
-                "What are the performance characteristics of ecosystem-mcp?",
-                "How is state managed in ecosystem-mcp?"
-            ],
-            "practical": [
-                "Provide examples of using ecosystem-mcp",
-                "What are common use cases for ecosystem-mcp?",
-                "Show typical workflows with ecosystem-mcp",
-                "What are best practices for using ecosystem-mcp?",
-                "Provide code examples for ecosystem-mcp integration"
-            ]
-        },
-        "ARCHITECTURE": {
-            "initial": [
-                "What is the high-level architecture of ecosystem-mcp?",
-                "What are the main components and their responsibilities?",
-                "How do components communicate with each other?",
-                "What external dependencies does ecosystem-mcp have?",
-                "What is the data flow architecture?"
-            ],
-            "deep_dive": [
-                "Explain the detailed implementation of each component",
-                "What design patterns are used and why?",
-                "How is concurrency handled in the architecture?",
-                "What are the scalability considerations?",
-                "How is fault tolerance implemented?"
-            ],
-            "practical": [
-                "Provide architecture diagrams and explanations",
-                "Show examples of component interactions",
-                "Explain deployment architecture options",
-                "What are architectural best practices?",
-                "How to extend the architecture?"
-            ]
-        },
-        "API": {
-            "initial": [
-                "What APIs does ecosystem-mcp expose?",
-                "What are the main API endpoints?",
-                "How is authentication handled?",
-                "What data formats are used?",
-                "What are the API rate limits?"
-            ],
-            "deep_dive": [
-                "Explain each API endpoint in detail",
-                "What are the request and response schemas?",
-                "How is error handling implemented?",
-                "What validation is performed?",
-                "How are versioning and compatibility handled?"
-            ],
-            "practical": [
-                "Provide API usage examples",
-                "Show common API workflows",
-                "Explain authentication setup",
-                "Provide curl examples",
-                "Show client library usage"
-            ]
-        }
+        "OVERVIEW": [
+            "What is the main purpose and functionality of this codebase?",
+            "What are the key components and their relationships?",
+            "What technologies and frameworks are used?",
+            "What are the main entry points and workflows?",
+            "What is the overall architecture pattern?",
+        ],
+        "ARCHITECTURE": [
+            "How is the system architected at a high level?",
+            "What are the main services and how do they interact?",
+            "What design patterns are employed?",
+            "How is data flow managed?",
+            "What are the key architectural decisions?",
+        ],
+        "API": [
+            "What are the main API endpoints?",
+            "How are requests authenticated and authorized?",
+            "What data formats are supported?",
+            "What are the key request/response models?",
+            "How is error handling implemented?",
+        ],
+        "SETUP": [
+            "What are the prerequisites for running this project?",
+            "How do you install and configure dependencies?",
+            "What environment variables are required?",
+            "How do you start the development server?",
+            "What are the deployment steps?",
+        ],
+        "EXAMPLES": [
+            "What are common use cases and examples?",
+            "How do you perform basic operations?",
+            "What are best practices for using this system?",
+            "Are there code samples or tutorials available?",
+            "What are typical workflows?",
+        ],
+        "TROUBLESHOOTING": [
+            "What are common issues and their solutions?",
+            "How do you debug problems?",
+            "What logs are available for troubleshooting?",
+            "How do you handle errors?",
+            "What are known limitations?",
+        ],
     }
     
-    # Get templates for this section and pass, or use generic
-    section_templates = templates.get(section, templates["OVERVIEW"])
-    pass_templates = section_templates.get(pass_name, section_templates.get("initial", []))
+    # Get questions for this section
+    base_questions = templates.get(section, [
+        f"What is important to know about {section.lower()}?",
+        f"How does {section.lower()} work in this system?",
+        f"What are key aspects of {section.lower()}?",
+    ])
     
-    # Return up to count questions
-    return pass_templates[:count]
-
+    # Modify for different passes
+    if pass_name == "deep_dive":
+        base_questions = [
+            q.replace("What are", "Explain in detail")
+            .replace("How do", "Describe comprehensively how")
+            for q in base_questions
+        ]
+    
+    # Return requested count
+    return base_questions[:count]
