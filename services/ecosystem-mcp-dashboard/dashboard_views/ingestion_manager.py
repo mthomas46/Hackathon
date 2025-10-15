@@ -350,20 +350,23 @@ def show(api_base_url: str):
                                 validation = validate_response.json()
                                 
                                 if validation.get("is_valid"):
-                                    resolved_path = validation.get("container_path", repo_path)
+                                    # Extract resolved_path object from response
+                                    resolved_data = validation.get("resolved_path", {})
+                                    resolved_path = resolved_data.get("container_path", repo_path)
                                     
                                     # 🔍 DEBUGGING: Log what validation returned
                                     logger.info(f"Validation response: {validation}")
+                                    logger.info(f"resolved_data: {resolved_data}")
                                     logger.info(f"repo_path (input): {repo_path}")
                                     logger.info(f"resolved_path (from validation): {resolved_path}")
                                     
                                     git_info = {
                                         "original_path": repo_path,
-                                        "git_root": validation.get("git_root"),
+                                        "git_root": resolved_data.get("git_root"),
                                         "container_path": resolved_path,
-                                        "is_subdirectory": validation.get("is_subdirectory", False),
-                                        "target_subdir": validation.get("target_subdir"),
-                                        "is_mounted": validation.get("is_mounted", False)
+                                        "is_subdirectory": resolved_data.get("is_subdirectory", False),
+                                        "target_subdir": resolved_data.get("target_subdir"),
+                                        "is_mounted": resolved_data.get("is_host_mount", False)
                                     }
                                     
                                     # Determine if user confirmation is needed
