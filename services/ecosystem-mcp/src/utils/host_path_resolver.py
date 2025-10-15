@@ -61,6 +61,7 @@ class HostPathResolver:
     
     # Common host mount points (configurable via environment)
     HOST_MOUNTS = {
+        "/repo": "/Users/mykalthomas/Documents/work/Hackathon",  # Full Hackathon repo (read-only)
         "/host": "/",  # Full host root mounted at /host
         "/workspace": os.getenv("HOST_WORKSPACE", "/Users"),  # User workspace
         "/projects": os.getenv("HOST_PROJECTS", "/Users/mykalthomas/Documents/work"),
