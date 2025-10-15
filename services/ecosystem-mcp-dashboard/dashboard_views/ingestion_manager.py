@@ -139,6 +139,11 @@ def show(api_base_url: str):
                                         resolved = result["resolved_path"]
                                         st.info(f"📂 Git Root: `{resolved['git_root']}`")
                                         
+                                        # Show if targeting a subdirectory
+                                        if resolved.get("is_subdirectory"):
+                                            st.info(f"📁 Target Subdirectory: `{resolved['target_subdir']}`")
+                                            st.caption("Will ingest only files in this subdirectory")
+                                        
                                         if resolved["mount_suggestion"]:
                                             with st.expander("⚙️ Mount Configuration Needed"):
                                                 st.code(resolved["mount_suggestion"], language="yaml")

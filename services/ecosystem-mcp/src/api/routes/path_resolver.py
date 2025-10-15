@@ -38,6 +38,8 @@ class PathResolveResponse(BaseModel):
     is_git_repo: bool
     is_host_mount: bool
     relative_to_git: str | None
+    target_subdir: str | None
+    is_subdirectory: bool
     mount_suggestion: str | None
 
 
@@ -90,6 +92,8 @@ async def resolve_path(request: PathResolveRequest):
             is_git_repo=resolved.is_git_repo,
             is_host_mount=resolved.is_host_mount,
             relative_to_git=resolved.relative_to_git,
+            target_subdir=resolved.target_subdir,
+            is_subdirectory=resolved.is_subdirectory,
             mount_suggestion=mount_suggestion
         )
     
@@ -138,6 +142,8 @@ async def validate_path(request: PathResolveRequest):
                 is_git_repo=resolved.is_git_repo,
                 is_host_mount=resolved.is_host_mount,
                 relative_to_git=resolved.relative_to_git,
+                target_subdir=resolved.target_subdir,
+                is_subdirectory=resolved.is_subdirectory,
                 mount_suggestion=mount_suggestion
             )
         

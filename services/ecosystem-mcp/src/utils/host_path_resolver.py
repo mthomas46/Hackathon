@@ -34,6 +34,8 @@ class ResolvedPath:
         is_git_repo: Whether path is in a git repository
         is_host_mount: Whether path requires host mount
         relative_to_git: Path relative to git root
+        target_subdir: Specific subdirectory to target (relative to git root)
+        is_subdirectory: Whether targeting a specific subdirectory
     """
     original_path: str
     normalized_path: str
@@ -42,6 +44,8 @@ class ResolvedPath:
     is_git_repo: bool
     is_host_mount: bool
     relative_to_git: Optional[str]
+    target_subdir: Optional[str] = None
+    is_subdirectory: bool = False
 
 
 class HostPathResolver:
@@ -88,12 +92,13 @@ class HostPathResolver:
         
         return mounts
     
-    def resolve(self, path: str) -> ResolvedPath:
+    def resolve(self, path: str, preserve_subdir: bool = True) -> ResolvedPath:
         """
         Resolve a path for container ingestion.
         
         Args:
             path: Path to resolve (can be host or container path)
+            preserve_subdir: Whether to preserve subdirectory targeting
         
         Returns:
             ResolvedPath with all resolution information
@@ -112,12 +117,22 @@ class HostPathResolver:
         # Find git repository root
         git_root = self._find_git_root(container_path if not is_host_mount else normalized)
         
-        # Calculate relative path to git root
+        # Calculate relative path to git root and detect subdirectory targeting
         relative_to_git = None
+        target_subdir = None
+        is_subdirectory = False
+        
         if git_root:
             try:
                 rel_path = Path(normalized).relative_to(git_root)
                 relative_to_git = str(rel_path)
+                
+                # If relative path is not ".", user is targeting a subdirectory
+                if preserve_subdir and relative_to_git != ".":
+                    target_subdir = relative_to_git
+                    is_subdirectory = True
+                    logger.info(f"Subdirectory targeting detected: {target_subdir}")
+                
             except ValueError:
                 # Not relative to git root
                 pass
@@ -129,12 +144,16 @@ class HostPathResolver:
             git_root=git_root,
             is_git_repo=git_root is not None,
             is_host_mount=is_host_mount,
-            relative_to_git=relative_to_git
+            relative_to_git=relative_to_git,
+            target_subdir=target_subdir,
+            is_subdirectory=is_subdirectory
         )
         
         logger.info(
             f"Path resolved: is_git={resolved.is_git_repo}, "
             f"is_host_mount={resolved.is_host_mount}, "
+            f"is_subdirectory={resolved.is_subdirectory}, "
+            f"target_subdir={resolved.target_subdir}, "
             f"container_path={resolved.container_path}"
         )
         

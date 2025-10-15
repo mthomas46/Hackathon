@@ -35,6 +35,7 @@ class IngestRequest(BaseModel):
     repo_path: str = Field(..., description="Path to repository to ingest (host or container path)")
     mode: str = Field(default="quick", description="Ingestion mode: quick, full, incremental")
     resolve_host_path: bool = Field(default=True, description="Automatically resolve host paths and find git root")
+    target_subdirectory: Optional[str] = Field(default=None, description="Specific subdirectory to target (relative to repo root)")
 
 
 class IngestResponse(BaseModel):
@@ -107,9 +108,14 @@ async def start_ingestion(
             # Use the git root as the repo path
             repo_path = Path(resolved.git_root if resolved.git_root else resolved.container_path)
             
+            # Use subdirectory from resolved path if not explicitly provided
+            if request.target_subdirectory is None and resolved.is_subdirectory:
+                request.target_subdirectory = resolved.target_subdir
+            
             logger.info(
                 f"Resolved ingestion path: {request.repo_path} -> {repo_path} "
-                f"(is_host_mount={resolved.is_host_mount})"
+                f"(is_host_mount={resolved.is_host_mount}, "
+                f"target_subdir={request.target_subdirectory})"
             )
         else:
             # Use path as-is
