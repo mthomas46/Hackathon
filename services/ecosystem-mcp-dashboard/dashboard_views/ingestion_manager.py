@@ -432,10 +432,17 @@ def show(api_base_url: str):
                             # User chose entire repo
                             st.info("✅ Will ingest the **entire git repository**")
                             target_subdirectory = None
+                            # Update resolved_path to point to git root, not subdirectory
+                            # Find the git root in container (remove the subdirectory part)
+                            if git_info["target_subdir"] and resolved_path.endswith(git_info["target_subdir"]):
+                                # Remove subdirectory from container path
+                                resolved_path = resolved_path[:-len(git_info["target_subdir"])].rstrip("/")
+                                st.info(f"📂 Using git root path: `{resolved_path}`")
                         else:
                             # User chose subdirectory
                             st.info(f"✅ Will ingest only the **`{git_info['target_subdir']}`** subdirectory")
                             target_subdirectory = git_info["target_subdir"]
+                            # resolved_path already points to subdirectory from validation
                         
                         # Warning for nested git repos
                         st.warning("""
