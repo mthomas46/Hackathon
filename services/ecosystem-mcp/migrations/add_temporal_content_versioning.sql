@@ -48,6 +48,17 @@ BEGIN
         ALTER TABLE document_versions ADD COLUMN effective_date TIMESTAMP WITH TIME ZONE;
     END IF;
     
+    -- Version numbering
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='document_versions' AND column_name='version_number') THEN
+        ALTER TABLE document_versions ADD COLUMN version_number INTEGER;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='document_versions' AND column_name='version_id') THEN
+        ALTER TABLE document_versions ADD COLUMN version_id VARCHAR(128);
+    END IF;
+    
     -- Timeline positioning
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                    WHERE table_name='document_versions' AND column_name='timeline_position') THEN

@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...database.base import get_db
+from ...storage import get_database
 from ...services.versioning.timeline_query_engine import (
     TimelineQueryEngine,
     DocumentSnapshot,
@@ -162,8 +162,7 @@ class CleanupStatsResponse(BaseModel):
 
 @router.post("/as-of", response_model=AsOfQueryResponse)
 async def query_documents_as_of(
-    request: AsOfQueryRequest,
-    db: AsyncSession = Depends(get_db)
+    request: AsOfQueryRequest
 ):
     """
     Query documents as they existed at a specific point in time.
@@ -174,7 +173,9 @@ async def query_documents_as_of(
     Returns the version of each document that was current at that timestamp.
     """
     try:
-        engine = TimelineQueryEngine(db)
+        db = get_database()
+        async with db.get_session() as session:
+            engine = TimelineQueryEngine(session)
         
         snapshots = await engine.get_documents_as_of(
             as_of_date=request.as_of_date,

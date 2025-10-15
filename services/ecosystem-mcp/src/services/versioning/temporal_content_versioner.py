@@ -16,8 +16,8 @@ from uuid import UUID, uuid4
 from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...database.models import DocumentModel, DocumentVersion as DocumentVersionModel
-from ...database.base import get_db
+from ...storage.db_models import DocumentModel, DocumentVersionModel
+from ...storage import get_db
 
 logger = logging.getLogger(__name__)
 
