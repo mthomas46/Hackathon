@@ -536,31 +536,97 @@ def show(api_base_url: str):
                         st.info(f"📋 Job ID: `{data.get('job_id')}`")
                         st.markdown("Monitor progress in the **Job Status** tab")
                     else:
-                        # Better error handling
+                        # Enhanced error handling with detailed debugging
+                        st.error(f"❌ Failed to start ingestion (HTTP {response.status_code})")
+                        
+                        # Try to get detailed error information
+                        error_detail = "Unknown error"
+                        error_body = None
+                        
                         try:
                             error_data = response.json()
                             error_detail = error_data.get('detail', 'Unknown error')
+                            error_body = error_data
                         except:
                             error_detail = response.text or 'Unknown error'
+                            error_body = {"raw_text": response.text}
                         
-                        st.error(f"❌ Failed to start ingestion (HTTP {response.status_code})")
                         st.error(f"**Error:** {error_detail}")
+                        
+                        # Show detailed error information
+                        with st.expander("🔍 Detailed Error Information", expanded=True):
+                            st.markdown("**HTTP Status:**")
+                            st.code(f"{response.status_code} - {response.reason_phrase if hasattr(response, 'reason_phrase') else 'Unknown'}")
+                            
+                            st.markdown("**Error Body:**")
+                            st.json(error_body if error_body else {"error": "No error body"})
+                            
+                            st.markdown("**Request That Was Sent:**")
+                            st.json(request_data)
+                            
+                            st.markdown("**Response Headers:**")
+                            st.json(dict(response.headers))
                         
                         # Provide helpful suggestions based on error
                         if response.status_code == 400:
-                            st.warning("""
-                            💡 **Common fixes for HTTP 400:**
-                            - If using Host Machine Path, try clicking 🔍 Validate Path first
-                            - Make sure the path exists and is a git repository
-                            - Check if Docker has access to the path
-                            - Try using Container Path with /app instead
-                            """)
+                            if "does not exist" in error_detail.lower():
+                                st.warning(f"""
+                                🔍 **Path Not Found:**
+                                
+                                The backend couldn't find the path: `{request_data.get('repo_path')}`
+                                
+                                **Possible causes:**
+                                - Path is a host path but needs to be container path
+                                - Mount point not configured correctly
+                                - Path doesn't exist in container
+                                
+                                **Try this:**
+                                1. Check that path exists: `docker exec ecosystem-mcp-service ls -la {request_data.get('repo_path')}`
+                                2. Verify mount in docker-compose.yml
+                                3. Try with Container Path mode instead
+                                """)
+                            elif "git" in error_detail.lower():
+                                st.warning("""
+                                📦 **Git Repository Issue:**
+                                
+                                The path is not in a git repository or git is not accessible.
+                                
+                                **Try this:**
+                                1. Ensure .git directory exists
+                                2. Check git is installed in container
+                                3. Verify path permissions
+                                """)
+                            else:
+                                st.warning("""
+                                💡 **Common fixes for HTTP 400:**
+                                - Validate the path first using 🔍 Validate Path
+                                - Ensure path is accessible in container
+                                - Check Docker mounts in docker-compose.yml
+                                - Try Container Path with /repo or /app
+                                """)
                         elif "mount" in error_detail.lower():
                             st.info("""
                             📌 **Path Mounting Issue:**
                             The host path needs to be mounted in Docker.
                             See the suggested mount configuration above.
                             """)
+                        
+                        # Add debugging commands
+                        st.markdown("---")
+                        st.markdown("### 🛠️ Debugging Commands")
+                        st.code(f"""
+# Check if path exists in container
+docker exec ecosystem-mcp-service ls -la {request_data.get('repo_path', '/repo')}
+
+# Check git in container
+docker exec ecosystem-mcp-service git -C {request_data.get('repo_path', '/repo')} status
+
+# Check backend logs
+docker logs ecosystem-mcp-service --tail 50
+
+# Check mount points
+docker exec ecosystem-mcp-service df -h
+                        """, language="bash")
                         
                 except httpx.RequestError as e:
                     st.error(f"❌ Connection error: {e}")
