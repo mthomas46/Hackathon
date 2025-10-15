@@ -115,7 +115,8 @@ class HostPathResolver:
         is_host_mount, container_path = self._resolve_container_path(normalized)
         
         # Find git repository root
-        git_root = self._find_git_root(container_path if not is_host_mount else normalized)
+        # For host paths, we need to check the HOST filesystem (via mounts)
+        git_root = self._find_git_root(normalized, is_host_path=is_host_mount)
         
         # Calculate relative path to git root and detect subdirectory targeting
         relative_to_git = None
@@ -226,16 +227,96 @@ class HostPathResolver:
         # Running on host - all paths are host paths
         return False
     
-    def _find_git_root(self, path: str) -> Optional[str]:
+    def _find_git_root(self, path: str, is_host_path: bool = False) -> Optional[str]:
         """
         Find the git repository root for a path.
         
         Args:
             path: Path to search from
+            is_host_path: If True, check host filesystem via mounted volumes
         
         Returns:
             Git root directory, or None if not in a git repo
         """
+        # For host paths, we need to check if they're accessible
+        # Check if we're in a container
+        in_container = os.path.exists("/.dockerenv")
+        
+        if in_container and is_host_path:
+            # We're in a container trying to check a host path
+            # Try to find if the path is mounted somewhere
+            logger.debug(f"Checking host path {path} from within container")
+            
+            # Check common mount points where host paths might be accessible
+            possible_mounts = [
+                ("/app", "/Users/mykalthomas/Documents/work/Hackathon"),
+                ("/workspace", "/Users/mykalthomas/Documents/work"),
+                ("/host", ""),
+            ]
+            
+            for mount_point, host_prefix in possible_mounts:
+                if path.startswith(host_prefix if host_prefix else "/"):
+                    # Try to map to mounted path
+                    if host_prefix:
+                        relative = path[len(host_prefix):].lstrip("/")
+                        check_path = os.path.join(mount_point, relative) if relative else mount_point
+                    else:
+                        check_path = os.path.join(mount_point, path.lstrip("/"))
+                    
+                    logger.debug(f"Checking mounted path: {check_path}")
+                    
+                    # Try git command on mounted path
+                    try:
+                        result = subprocess.run(
+                            ["git", "-C", check_path, "rev-parse", "--show-toplevel"],
+                            capture_output=True,
+                            text=True,
+                            timeout=5
+                        )
+                        
+                        if result.returncode == 0:
+                            # Git found it! Map back to host path
+                            container_git_root = result.stdout.strip()
+                            logger.debug(f"Found git root in container: {container_git_root}")
+                            
+                            # Map container path back to host path
+                            if container_git_root.startswith(mount_point) and host_prefix:
+                                relative_to_mount = container_git_root[len(mount_point):].lstrip("/")
+                                host_git_root = os.path.join(host_prefix, relative_to_mount) if relative_to_mount else host_prefix
+                                logger.info(f"Mapped git root to host path: {host_git_root}")
+                                return host_git_root
+                            else:
+                                return container_git_root
+                    
+                    except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+                        logger.debug(f"Git command failed on {check_path}: {e}")
+                        continue
+                    
+                    # Try manual .git search on mounted path
+                    current = Path(check_path)
+                    if current.exists():
+                        if current.is_file():
+                            current = current.parent
+                        
+                        for parent in [current] + list(current.parents):
+                            git_dir = parent / ".git"
+                            if git_dir.exists():
+                                container_git_root = str(parent)
+                                logger.debug(f"Found .git dir in container: {container_git_root}")
+                                
+                                # Map back to host path
+                                if container_git_root.startswith(mount_point) and host_prefix:
+                                    relative_to_mount = container_git_root[len(mount_point):].lstrip("/")
+                                    host_git_root = os.path.join(host_prefix, relative_to_mount) if relative_to_mount else host_prefix
+                                    logger.info(f"Mapped .git root to host path: {host_git_root}")
+                                    return host_git_root
+                                else:
+                                    return container_git_root
+            
+            logger.warning(f"Could not find git repository for host path {path} in any mounted location")
+            return None
+        
+        # Standard path checking (container path or running on host)
         try:
             # Try using git command
             result = subprocess.run(

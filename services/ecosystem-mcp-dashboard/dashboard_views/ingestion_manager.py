@@ -327,8 +327,11 @@ def show(api_base_url: str):
                 
                 # If using host path, validate and resolve it first
                 resolved_path = repo_path
+                git_info = None
+                needs_confirmation = False
+                
                 if resolve_host_path:
-                    with st.spinner("🔍 Resolving host path..."):
+                    with st.spinner("🔍 Analyzing path and detecting git repository..."):
                         try:
                             validate_response = httpx.post(
                                 f"{api_base_url}/api/v1/path/validate",
@@ -338,9 +341,21 @@ def show(api_base_url: str):
                             
                             if validate_response.status_code == 200:
                                 validation = validate_response.json()
+                                
                                 if validation.get("is_valid"):
                                     resolved_path = validation.get("container_path", repo_path)
-                                    st.success(f"✅ Path validated: {resolved_path}")
+                                    git_info = {
+                                        "original_path": repo_path,
+                                        "git_root": validation.get("git_root"),
+                                        "container_path": resolved_path,
+                                        "is_subdirectory": validation.get("is_subdirectory", False),
+                                        "target_subdir": validation.get("target_subdir"),
+                                        "is_mounted": validation.get("is_mounted", False)
+                                    }
+                                    
+                                    # Determine if user confirmation is needed
+                                    if git_info["is_subdirectory"]:
+                                        needs_confirmation = True
                                     
                                     # Save to recent paths if successful
                                     if repo_path not in st.session_state.recent_host_paths:
@@ -354,6 +369,98 @@ def show(api_base_url: str):
                         except Exception as e:
                             st.warning(f"⚠️ Path validation error: {e}")
                             st.info("Continuing with original path...")
+                
+                # Show git detection results and get confirmation if needed
+                if git_info and needs_confirmation:
+                    st.markdown("---")
+                    st.markdown("### 🔍 Git Repository Detection Results")
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("**📂 Your Selected Path:**")
+                        st.code(git_info["original_path"], language="bash")
+                        
+                        if git_info["is_subdirectory"]:
+                            st.info(f"📁 Subdirectory: `{git_info['target_subdir']}`")
+                    
+                    with col2:
+                        st.markdown("**📦 Detected Git Repository:**")
+                        st.code(git_info["git_root"], language="bash")
+                        
+                        if git_info["is_subdirectory"]:
+                            st.warning("⚠️ Selected path is inside a git repository")
+                    
+                    st.markdown("---")
+                    
+                    # Explanation
+                    if git_info["is_subdirectory"]:
+                        st.markdown("""
+                        **🤔 What does this mean?**
+                        
+                        You selected a **subdirectory** within a larger git repository:
+                        - **Selected:** `{subdir}`
+                        - **Git Root:** `{root}`
+                        
+                        **📋 Your Options:**
+                        """.format(
+                            subdir=git_info["target_subdir"],
+                            root=git_info["git_root"]
+                        ))
+                        
+                        # Radio button for user choice
+                        ingestion_scope = st.radio(
+                            "What would you like to ingest?",
+                            options=[
+                                f"🎯 Just this subdirectory: {git_info['target_subdir']}",
+                                f"📦 Entire git repository: {git_info['git_root']}",
+                            ],
+                            index=0,  # Default to subdirectory
+                            key="ingestion_scope_choice"
+                        )
+                        
+                        # Update target based on choice
+                        if ingestion_scope.startswith("📦"):
+                            # User chose entire repo
+                            st.info("✅ Will ingest the **entire git repository**")
+                            target_subdirectory = None
+                        else:
+                            # User chose subdirectory
+                            st.info(f"✅ Will ingest only the **`{git_info['target_subdir']}`** subdirectory")
+                            target_subdirectory = git_info["target_subdir"]
+                        
+                        # Warning for nested git repos
+                        st.warning("""
+                        ⚠️ **Note on Nested Git Repositories:**
+                        
+                        If this directory contains **git submodules** or **nested repositories**, 
+                        they will be detected and handled appropriately during ingestion.
+                        """)
+                        
+                        # Confirmation checkbox
+                        confirmed = st.checkbox(
+                            "✅ I understand and want to proceed with this configuration",
+                            value=False,
+                            key="git_detection_confirmation"
+                        )
+                        
+                        if not confirmed:
+                            st.info("👆 Please review the configuration above and check the box to proceed.")
+                            st.stop()
+                        
+                        # Store the target_subdirectory in request
+                        if target_subdirectory:
+                            st.session_state.confirmed_target_subdir = target_subdirectory
+                        else:
+                            st.session_state.confirmed_target_subdir = None
+                    
+                    st.markdown("---")
+                    st.success("✅ Configuration confirmed! Proceeding with ingestion...")
+                
+                elif git_info:
+                    # No confirmation needed (not a subdirectory)
+                    st.success(f"✅ Path validated: {resolved_path}")
+                    st.session_state.confirmed_target_subdir = None
                 
                 # Auto-check worker health before starting
                 try:
@@ -393,9 +500,15 @@ def show(api_base_url: str):
                         "resolve_host_path": False  # Already resolved, don't re-resolve
                     }
                     
+                    # Add target_subdirectory if user confirmed subdirectory-only ingestion
+                    if hasattr(st.session_state, 'confirmed_target_subdir') and st.session_state.confirmed_target_subdir:
+                        request_data["target_subdirectory"] = st.session_state.confirmed_target_subdir
+                    
                     # Show what we're sending (helpful for debugging)
                     with st.expander("🔍 Request Details", expanded=False):
                         st.json(request_data)
+                        if request_data.get("target_subdirectory"):
+                            st.info(f"🎯 **Scoped Ingestion:** Only `{request_data['target_subdirectory']}` will be processed")
                     
                     # Call ingestion endpoint
                     response = httpx.post(
