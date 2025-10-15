@@ -348,6 +348,12 @@ def show(api_base_url: str):
                                 
                                 if validation.get("is_valid"):
                                     resolved_path = validation.get("container_path", repo_path)
+                                    
+                                    # 🔍 DEBUGGING: Log what validation returned
+                                    logger.info(f"Validation response: {validation}")
+                                    logger.info(f"repo_path (input): {repo_path}")
+                                    logger.info(f"resolved_path (from validation): {resolved_path}")
+                                    
                                     git_info = {
                                         "original_path": repo_path,
                                         "git_root": validation.get("git_root"),
@@ -435,13 +441,16 @@ def show(api_base_url: str):
                             # Update resolved_path to point to git root, not subdirectory
                             # Find the git root in container (remove the subdirectory part)
                             if git_info["target_subdir"] and resolved_path.endswith(git_info["target_subdir"]):
+                                old_resolved = resolved_path
                                 # Remove subdirectory from container path
                                 resolved_path = resolved_path[:-len(git_info["target_subdir"])].rstrip("/")
                                 st.info(f"📂 Using git root path: `{resolved_path}`")
+                                logger.info(f"User chose full repo: {old_resolved} → {resolved_path}")
                         else:
                             # User chose subdirectory
                             st.info(f"✅ Will ingest only the **`{git_info['target_subdir']}`** subdirectory")
                             target_subdirectory = git_info["target_subdir"]
+                            logger.info(f"User chose subdirectory: {resolved_path} with target_subdir={target_subdirectory}")
                             # resolved_path already points to subdirectory from validation
                         
                         # Warning for nested git repos
@@ -475,12 +484,24 @@ def show(api_base_url: str):
                 elif git_info:
                     # No confirmation needed (not a subdirectory)
                     st.success(f"✅ Path validated: {resolved_path}")
+                    
+                    # Show path resolution details
+                    with st.expander("🔍 Path Resolution Details", expanded=False):
+                        st.markdown(f"**Host Path Entered:** `{git_info['original_path']}`")
+                        st.markdown(f"**Container Path:** `{git_info['container_path']}`")
+                        st.markdown(f"**Git Root:** `{git_info['git_root']}`")
+                        st.markdown(f"**Is Subdirectory:** {git_info['is_subdirectory']}")
+                        if git_info.get("target_subdir"):
+                            st.markdown(f"**Target Subdirectory:** `{git_info['target_subdir']}`")
+                    
                     # Even if no confirmation UI, preserve subdirectory if detected
                     if git_info.get("is_subdirectory") and git_info.get("target_subdir"):
                         st.session_state.confirmed_target_subdir = git_info["target_subdir"]
                         st.info(f"🎯 Will process subdirectory: `{git_info['target_subdir']}`")
+                        logger.info(f"No confirmation UI, but subdirectory detected: {git_info['target_subdir']}")
                     else:
                         st.session_state.confirmed_target_subdir = None
+                        logger.info(f"No confirmation UI, processing full path: {resolved_path}")
                 
                 # Auto-check worker health before starting
                 try:
@@ -524,9 +545,15 @@ def show(api_base_url: str):
                     if hasattr(st.session_state, 'confirmed_target_subdir') and st.session_state.confirmed_target_subdir:
                         request_data["target_subdirectory"] = st.session_state.confirmed_target_subdir
                     
+                    # 🔍 DEBUGGING: Log final request
+                    logger.info(f"Final request_data: {request_data}")
+                    logger.info(f"resolved_path at request time: {resolved_path}")
+                    logger.info(f"confirmed_target_subdir: {st.session_state.get('confirmed_target_subdir', 'NOT SET')}")
+                    
                     # Show what we're sending (helpful for debugging)
                     with st.expander("🔍 Request Details", expanded=False):
                         st.json(request_data)
+                        st.code(f"resolved_path variable: {resolved_path}", language="python")
                         if request_data.get("target_subdirectory"):
                             st.info(f"🎯 **Scoped Ingestion:** Only `{request_data['target_subdirectory']}` will be processed")
                     
