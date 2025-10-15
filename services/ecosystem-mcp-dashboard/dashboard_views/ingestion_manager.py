@@ -880,6 +880,53 @@ docker exec ecosystem-mcp-service df -h
                                 # Calculate progress
                                 progress_pct = (processed / total * 100) if total > 0 else 0
                                 
+                                # Live ticker - show currently processing file
+                                # Parse from Docker logs for real-time feedback
+                                try:
+                                    import subprocess
+                                    import re
+                                    
+                                    # Get last few log lines to find current file
+                                    result = subprocess.run(
+                                        ['docker', 'logs', 'ecosystem-mcp-service', '--tail', '50'],
+                                        capture_output=True,
+                                        text=True,
+                                        timeout=2
+                                    )
+                                    
+                                    # Look for processing messages: 📄 Processing [N/M]: filename
+                                    log_lines = result.stdout.split('\n') + result.stderr.split('\n')
+                                    
+                                    # Find the most recent processing message
+                                    processing_pattern = r'📄 Processing \[(\d+)/(\d+)\]: (.+)'
+                                    last_match = None
+                                    
+                                    for line in reversed(log_lines):
+                                        match = re.search(processing_pattern, line)
+                                        if match:
+                                            last_match = match
+                                            break
+                                    
+                                    if last_match:
+                                        current_num = last_match.group(1)
+                                        total_num = last_match.group(2)
+                                        filename = last_match.group(3).strip()
+                                        
+                                        # Truncate long paths
+                                        display_file = filename
+                                        if len(display_file) > 70:
+                                            display_file = "..." + display_file[-67:]
+                                        
+                                        # Show as a ticker with animation emoji
+                                        st.success(f"🎬 **Currently Processing #{current_num}:** `{display_file}`")
+                                    else:
+                                        st.info("🎬 **Status:** Scanning files and starting processing...")
+                                        
+                                except Exception as e:
+                                    # Silently fail - don't disrupt the display
+                                    logger.debug(f"Could not fetch current file from logs: {e}")
+                                    pass
+                                
                                 # Display current metrics prominently
                                 metric_cols = st.columns(4)
                                 with metric_cols[0]:
