@@ -19,6 +19,7 @@ from ...storage import get_database
 from ...storage.repositories import IngestionJobRepository
 from ...utils.cache_decorator import get_cache_stats, clear_cache_prefix, clear_all_cache
 from ...services.models.ollama_client import get_ollama_client
+from ...utils.host_path_resolver import HostPathResolver, validate_ingestion_path
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +32,9 @@ router = APIRouter()
 
 class IngestRequest(BaseModel):
     """Request to start ingestion."""
-    repo_path: str = Field(..., description="Path to repository to ingest")
+    repo_path: str = Field(..., description="Path to repository to ingest (host or container path)")
     mode: str = Field(default="quick", description="Ingestion mode: quick, full, incremental")
+    resolve_host_path: bool = Field(default=True, description="Automatically resolve host paths and find git root")
 
 
 class IngestResponse(BaseModel):
@@ -75,6 +77,9 @@ async def start_ingestion(
     """
     Start document ingestion process.
     
+    Supports both container paths and host machine paths.
+    Automatically detects git repository root and resolves host paths.
+    
     Args:
         request: Ingestion request with repo path and mode
         background_tasks: FastAPI background tasks
@@ -83,13 +88,37 @@ async def start_ingestion(
         Job ID and initial status
     """
     try:
-        # Validate repo path
-        repo_path = Path(request.repo_path)
-        if not repo_path.exists():
-            raise HTTPException(
-                status_code=400,
-                detail=f"Repository path does not exist: {request.repo_path}"
+        # Resolve and validate path (supports host paths)
+        if request.resolve_host_path:
+            is_valid, message, resolved = validate_ingestion_path(request.repo_path)
+            
+            if not is_valid:
+                # Check if this is a mount issue
+                if "mount" in message.lower():
+                    resolver = HostPathResolver()
+                    mount_config = resolver.suggest_mount_config(request.repo_path)
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"{message}\n\n{mount_config}"
+                    )
+                
+                raise HTTPException(status_code=400, detail=message)
+            
+            # Use the git root as the repo path
+            repo_path = Path(resolved.git_root if resolved.git_root else resolved.container_path)
+            
+            logger.info(
+                f"Resolved ingestion path: {request.repo_path} -> {repo_path} "
+                f"(is_host_mount={resolved.is_host_mount})"
             )
+        else:
+            # Use path as-is
+            repo_path = Path(request.repo_path)
+            if not repo_path.exists():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Repository path does not exist: {request.repo_path}"
+                )
         
         # Create job in database
         db = get_database()

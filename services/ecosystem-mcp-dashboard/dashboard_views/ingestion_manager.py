@@ -100,12 +100,62 @@ def show(api_base_url: str):
         with st.form("ingestion_form_unique"):
             st.markdown("### Configuration")
             
-            # Repository path - default to ecosystem-mcp service
-            repo_path = st.text_input(
-                "Repository Path",
-                value="/app",  # Inside container, /app is the service directory
-                help="Path to the repository to ingest (inside container: /app)"
+            # Path type selector
+            path_type = st.radio(
+                "Path Type",
+                options=["Container Path", "Host Machine Path"],
+                help="""
+                - **Container Path**: Path inside the Docker container (e.g., /app)
+                - **Host Machine Path**: Path on your local machine (automatically resolved)
+                """
             )
+            
+            # Repository path
+            if path_type == "Host Machine Path":
+                repo_path = st.text_input(
+                    "Repository Path",
+                    value="/Users/mykalthomas/Documents/work",
+                    help="Path on your host machine (e.g., ~/projects/my-repo). Git root will be auto-detected."
+                )
+                resolve_host_path = True
+                
+                # Add path validation button
+                if st.form_submit_button("🔍 Validate Path", type="secondary"):
+                    with st.spinner("Validating path..."):
+                        try:
+                            response = httpx.post(
+                                f"{api_base_url}/api/v1/path/validate",
+                                json={"path": repo_path},
+                                timeout=10.0
+                            )
+                            
+                            if response.status_code == 200:
+                                result = response.json()
+                                
+                                if result["is_valid"]:
+                                    st.success(f"✅ {result['message']}")
+                                    
+                                    if result["resolved_path"]:
+                                        resolved = result["resolved_path"]
+                                        st.info(f"📂 Git Root: `{resolved['git_root']}`")
+                                        
+                                        if resolved["mount_suggestion"]:
+                                            with st.expander("⚙️ Mount Configuration Needed"):
+                                                st.code(resolved["mount_suggestion"], language="yaml")
+                                else:
+                                    st.error(f"❌ {result['message']}")
+                            else:
+                                st.error(f"❌ Validation failed: HTTP {response.status_code}")
+                        
+                        except Exception as e:
+                            st.error(f"❌ Error: {str(e)}")
+            else:
+                repo_path = st.text_input(
+                    "Repository Path",
+                    value="/app",
+                    help="Path inside the container (e.g., /app)"
+                )
+                resolve_host_path = False
             
             # Ingestion mode
             mode = st.selectbox(
@@ -187,7 +237,8 @@ def show(api_base_url: str):
                     # Prepare request
                     request_data = {
                         "repo_path": repo_path,
-                        "mode": mode
+                        "mode": mode,
+                        "resolve_host_path": resolve_host_path
                     }
                     
                     # Call ingestion endpoint
