@@ -124,7 +124,7 @@ async def regenerate_embeddings_task(batch_size: int = 10, skip_existing: bool =
                     metadata = {
                         "file_path": doc.file_path,
                         "service_name": doc.service_name or "unknown",
-                        "file_type": doc.file_type or "unknown",
+                        "file_type": doc.original_format or "unknown",
                         "commit_sha": doc.git_commit_sha or "unknown",
                         "content_hash": doc.content_hash
                     }
