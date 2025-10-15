@@ -86,10 +86,11 @@ page = st.sidebar.radio(
         "🎯 Enhanced Query",
         "🔬 Multi-Pass RAG Query",
         
-                # Data Management
-                "📚 Documents",
-                "📥 Ingestion Manager",
-                "📖 Documentation Generator",
+            # Data Management
+            "📚 Documents",
+            "📥 Ingestion Manager",
+            "📖 Documentation Generator",
+            "🎯 Embeddings Manager",
                 
                 # Infrastructure
                 "⚙️ Worker Monitor",
@@ -217,6 +218,9 @@ elif page == "📥 Ingestion Manager":
 elif page == "📖 Documentation Generator":
     from dashboard_views import doc_generator
     doc_generator.show(api_base_url)
+elif page == "🎯 Embeddings Manager":
+    from dashboard_views import embeddings_manager
+    embeddings_manager.show(api_base_url)
 elif page == "⚙️ Worker Monitor":
     from dashboard_views import worker_monitor
     worker_monitor.show(api_base_url)
