@@ -17,7 +17,6 @@ from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...storage.db_models import DocumentModel, DocumentVersionModel
-from ...storage import get_db
 
 logger = logging.getLogger(__name__)
 

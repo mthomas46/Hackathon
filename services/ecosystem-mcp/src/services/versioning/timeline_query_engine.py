@@ -496,11 +496,11 @@ class TimelineQueryEngine:
                 total_size = row[4] or 1  # Avoid division by zero
                 
                 return {
-                    "unique_content_items": row[0],
-                    "total_versions": row[1],
-                    "deduplicated_items": row[2],
-                    "total_content_size": row[3],
-                    "size_without_dedup": row[4],
+                    "unique_content_items": row[0] or 0,
+                    "total_versions": row[1] or 0,
+                    "deduplicated_items": row[2] or 0,
+                    "total_content_size": row[3] or 0,
+                    "size_without_dedup": row[4] or 0,
                     "space_saved": space_saved,
                     "deduplication_ratio": round((space_saved / total_size) * 100, 2) if total_size > 0 else 0
                 }

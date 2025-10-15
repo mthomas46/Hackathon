@@ -13,9 +13,8 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...storage import get_database
 from ...services.versioning.timeline_query_engine import (
@@ -174,34 +173,34 @@ async def query_documents_as_of(
     """
     try:
         db = get_database()
-        async with db.get_session() as session:
+        async with db.session() as session:
             engine = TimelineQueryEngine(session)
-        
-        snapshots = await engine.get_documents_as_of(
-            as_of_date=request.as_of_date,
-            filters=request.filters,
-            limit=request.limit,
-            offset=request.offset
-        )
-        
-        return AsOfQueryResponse(
-            as_of_date=request.as_of_date,
-            total_documents=len(snapshots),
-            documents=[
-                DocumentSnapshotResponse(
-                    document_id=str(s.document_id),
-                    version_id=str(s.version_id),
-                    version_number=s.version_number,
-                    content_hash=s.content_hash,
-                    modified_at=s.modified_at,
-                    created_by=s.created_by,
-                    title=s.title,
-                    source_path=s.source_path,
-                    content_size=s.content_size
-                )
-                for s in snapshots
-            ]
-        )
+            
+            snapshots = await engine.get_documents_as_of(
+                as_of_date=request.as_of_date,
+                filters=request.filters,
+                limit=request.limit,
+                offset=request.offset
+            )
+            
+            return AsOfQueryResponse(
+                as_of_date=request.as_of_date,
+                total_documents=len(snapshots),
+                documents=[
+                    DocumentSnapshotResponse(
+                        document_id=str(s.document_id),
+                        version_id=str(s.version_id),
+                        version_number=s.version_number,
+                        content_hash=s.content_hash,
+                        modified_at=s.modified_at,
+                        created_by=s.created_by,
+                        title=s.title,
+                        source_path=s.source_path,
+                        content_size=s.content_size
+                    )
+                    for s in snapshots
+                ]
+            )
     
     except Exception as e:
         logger.error(f"Failed to query documents as of: {e}", exc_info=True)
@@ -210,8 +209,7 @@ async def query_documents_as_of(
 
 @router.post("/timeline", response_model=TimelineQueryResponse)
 async def get_document_timeline(
-    request: TimelineQueryRequest,
-    db: AsyncSession = Depends(get_db)
+    request: TimelineQueryRequest
 ):
     """
     Get complete timeline for a document.
@@ -219,32 +217,34 @@ async def get_document_timeline(
     Returns all versions and events in chronological order.
     """
     try:
-        engine = TimelineQueryEngine(db)
-        document_id = UUID(request.document_id)
-        
-        events = await engine.get_document_timeline(
-            document_id=document_id,
-            start_date=request.start_date,
-            end_date=request.end_date
-        )
-        
-        return TimelineQueryResponse(
-            document_id=request.document_id,
-            total_events=len(events),
-            events=[
-                TimelineEventResponse(
-                    version_id=str(e.version_id),
-                    version_number=e.version_number,
-                    event_timestamp=e.event_timestamp,
-                    event_type=e.event_type,
-                    actor=e.actor,
-                    content_hash=e.content_hash,
-                    title=e.title,
-                    is_latest=e.is_latest
-                )
-                for e in events
-            ]
-        )
+        db = get_database()
+        async with db.session() as session:
+            engine = TimelineQueryEngine(session)
+            document_id = UUID(request.document_id)
+            
+            events = await engine.get_document_timeline(
+                document_id=document_id,
+                start_date=request.start_date,
+                end_date=request.end_date
+            )
+            
+            return TimelineQueryResponse(
+                document_id=request.document_id,
+                total_events=len(events),
+                events=[
+                    TimelineEventResponse(
+                        version_id=str(e.version_id),
+                        version_number=e.version_number,
+                        event_timestamp=e.event_timestamp,
+                        event_type=e.event_type,
+                        actor=e.actor,
+                        content_hash=e.content_hash,
+                        title=e.title,
+                        is_latest=e.is_latest
+                    )
+                    for e in events
+                ]
+            )
     
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid document ID: {e}")
@@ -255,8 +255,7 @@ async def get_document_timeline(
 
 @router.post("/changes", response_model=ChangesQueryResponse)
 async def get_changes_between_dates(
-    request: ChangesQueryRequest,
-    db: AsyncSession = Depends(get_db)
+    request: ChangesQueryRequest
 ):
     """
     Get all document changes in a time range.
@@ -265,31 +264,33 @@ async def get_changes_between_dates(
         "What changed between Oct 1 and Oct 15?"
     """
     try:
-        engine = TimelineQueryEngine(db)
-        
-        changes = await engine.get_changes_between(
-            start_date=request.start_date,
-            end_date=request.end_date,
-            limit=request.limit
-        )
-        
-        return ChangesQueryResponse(
-            start_date=request.start_date,
-            end_date=request.end_date,
-            total_changes=len(changes),
-            changes=[
-                DocumentChangeResponse(
-                    document_id=str(c.document_id),
-                    title=c.title,
-                    version_count=c.version_count,
-                    first_change=c.first_change,
-                    last_change=c.last_change,
-                    contributors=c.contributors,
-                    source_path=c.source_path
-                )
-                for c in changes
-            ]
-        )
+        db = get_database()
+        async with db.session() as session:
+            engine = TimelineQueryEngine(session)
+            
+            changes = await engine.get_changes_between(
+                start_date=request.start_date,
+                end_date=request.end_date,
+                limit=request.limit
+            )
+            
+            return ChangesQueryResponse(
+                start_date=request.start_date,
+                end_date=request.end_date,
+                total_changes=len(changes),
+                changes=[
+                    DocumentChangeResponse(
+                        document_id=str(c.document_id),
+                        title=c.title,
+                        version_count=c.version_count,
+                        first_change=c.first_change,
+                        last_change=c.last_change,
+                        contributors=c.contributors,
+                        source_path=c.source_path
+                    )
+                    for c in changes
+                ]
+            )
     
     except Exception as e:
         logger.error(f"Failed to get changes: {e}", exc_info=True)
@@ -299,8 +300,7 @@ async def get_changes_between_dates(
 @router.get("/activity-summary", response_model=ActivitySummaryResponse)
 async def get_activity_summary(
     start_date: Optional[datetime] = Query(None),
-    end_date: Optional[datetime] = Query(None),
-    db: AsyncSession = Depends(get_db)
+    end_date: Optional[datetime] = Query(None)
 ):
     """
     Get activity summary statistics for a time period.
@@ -313,10 +313,12 @@ async def get_activity_summary(
     - Top contributors
     """
     try:
-        engine = TimelineQueryEngine(db)
-        summary = await engine.get_activity_summary(start_date, end_date)
-        
-        return ActivitySummaryResponse(**summary)
+        db = get_database()
+        async with db.session() as session:
+            engine = TimelineQueryEngine(session)
+            summary = await engine.get_activity_summary(start_date, end_date)
+            
+            return ActivitySummaryResponse(**summary)
     
     except Exception as e:
         logger.error(f"Failed to get activity summary: {e}", exc_info=True)
@@ -324,9 +326,7 @@ async def get_activity_summary(
 
 
 @router.get("/deduplication-stats", response_model=DeduplicationStatsResponse)
-async def get_deduplication_stats(
-    db: AsyncSession = Depends(get_db)
-):
+async def get_deduplication_stats():
     """
     Get content deduplication statistics.
     
@@ -337,10 +337,12 @@ async def get_deduplication_stats(
     - Deduplication ratio
     """
     try:
-        engine = TimelineQueryEngine(db)
-        stats = await engine.get_deduplication_stats()
-        
-        return DeduplicationStatsResponse(**stats)
+        db = get_database()
+        async with db.session() as session:
+            engine = TimelineQueryEngine(session)
+            stats = await engine.get_deduplication_stats()
+            
+            return DeduplicationStatsResponse(**stats)
     
     except Exception as e:
         logger.error(f"Failed to get deduplication stats: {e}", exc_info=True)
@@ -349,8 +351,7 @@ async def get_deduplication_stats(
 
 @router.get("/content/{content_hash}", response_model=ContentInfoResponse)
 async def get_content_info(
-    content_hash: str,
-    db: AsyncSession = Depends(get_db)
+    content_hash: str
 ):
     """
     Get information about stored content.
@@ -362,13 +363,15 @@ async def get_content_info(
     - First seen date
     """
     try:
-        deduplicator = ContentDeduplicator(db)
-        info = await deduplicator.get_content_info(content_hash)
-        
-        if not info:
-            raise HTTPException(status_code=404, detail="Content not found")
-        
-        return ContentInfoResponse(**info)
+        db = get_database()
+        async with db.session() as session:
+            deduplicator = ContentDeduplicator(session)
+            info = await deduplicator.get_content_info(content_hash)
+            
+            if not info:
+                raise HTTPException(status_code=404, detail="Content not found")
+            
+            return ContentInfoResponse(**info)
     
     except HTTPException:
         raise
@@ -379,8 +382,7 @@ async def get_content_info(
 
 @router.get("/content/{content_hash}/verify")
 async def verify_content_integrity(
-    content_hash: str,
-    db: AsyncSession = Depends(get_db)
+    content_hash: str
 ):
     """
     Verify that stored content matches its hash.
@@ -388,14 +390,16 @@ async def verify_content_integrity(
     Performs integrity check to ensure content hasn't been corrupted.
     """
     try:
-        deduplicator = ContentDeduplicator(db)
-        is_valid = await deduplicator.verify_integrity(content_hash)
-        
-        return {
-            "content_hash": content_hash,
-            "integrity_verified": is_valid,
-            "message": "Content integrity verified" if is_valid else "INTEGRITY CHECK FAILED"
-        }
+        db = get_database()
+        async with db.session() as session:
+            deduplicator = ContentDeduplicator(session)
+            is_valid = await deduplicator.verify_integrity(content_hash)
+            
+            return {
+                "content_hash": content_hash,
+                "integrity_verified": is_valid,
+                "message": "Content integrity verified" if is_valid else "INTEGRITY CHECK FAILED"
+            }
     
     except Exception as e:
         logger.error(f"Failed to verify integrity: {e}", exc_info=True)
@@ -404,8 +408,7 @@ async def verify_content_integrity(
 
 @router.post("/content/cleanup", response_model=CleanupStatsResponse)
 async def cleanup_unreferenced_content(
-    dry_run: bool = Query(True, description="If true, only report what would be deleted"),
-    db: AsyncSession = Depends(get_db)
+    dry_run: bool = Query(True, description="If true, only report what would be deleted")
 ):
     """
     Clean up content with zero references.
@@ -414,10 +417,12 @@ async def cleanup_unreferenced_content(
     Set dry_run=false to actually delete unreferenced content.
     """
     try:
-        deduplicator = ContentDeduplicator(db)
-        stats = await deduplicator.cleanup_unreferenced(dry_run=dry_run)
-        
-        return CleanupStatsResponse(**stats)
+        db = get_database()
+        async with db.session() as session:
+            deduplicator = ContentDeduplicator(session)
+            stats = await deduplicator.cleanup_unreferenced(dry_run=dry_run)
+            
+            return CleanupStatsResponse(**stats)
     
     except Exception as e:
         logger.error(f"Failed to cleanup content: {e}", exc_info=True)
@@ -426,8 +431,7 @@ async def cleanup_unreferenced_content(
 
 @router.get("/version/{version_id}", response_model=DocumentSnapshotResponse)
 async def get_version_by_id(
-    version_id: str,
-    db: AsyncSession = Depends(get_db)
+    version_id: str
 ):
     """
     Get a specific version by its ID.
@@ -435,25 +439,27 @@ async def get_version_by_id(
     Returns complete information about a document version.
     """
     try:
-        engine = TimelineQueryEngine(db)
-        version_uuid = UUID(version_id)
-        
-        snapshot = await engine.get_version_by_id(version_uuid)
-        
-        if not snapshot:
-            raise HTTPException(status_code=404, detail="Version not found")
-        
-        return DocumentSnapshotResponse(
-            document_id=str(snapshot.document_id),
-            version_id=str(snapshot.version_id),
-            version_number=snapshot.version_number,
-            content_hash=snapshot.content_hash,
-            modified_at=snapshot.modified_at,
-            created_by=snapshot.created_by,
-            title=snapshot.title,
-            source_path=snapshot.source_path,
-            content_size=snapshot.content_size
-        )
+        db = get_database()
+        async with db.session() as session:
+            engine = TimelineQueryEngine(session)
+            version_uuid = UUID(version_id)
+            
+            snapshot = await engine.get_version_by_id(version_uuid)
+            
+            if not snapshot:
+                raise HTTPException(status_code=404, detail="Version not found")
+            
+            return DocumentSnapshotResponse(
+                document_id=str(snapshot.document_id),
+                version_id=str(snapshot.version_id),
+                version_number=snapshot.version_number,
+                content_hash=snapshot.content_hash,
+                modified_at=snapshot.modified_at,
+                created_by=snapshot.created_by,
+                title=snapshot.title,
+                source_path=snapshot.source_path,
+                content_size=snapshot.content_size
+            )
     
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid version ID: {e}")
@@ -462,4 +468,3 @@ async def get_version_by_id(
     except Exception as e:
         logger.error(f"Failed to get version: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
-
