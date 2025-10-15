@@ -708,13 +708,14 @@ docker exec ecosystem-mcp-service df -h
                 st.rerun()
         
         with col2:
-            auto_refresh = st.checkbox("Auto-refresh", value=False, key="auto_refresh_toggle")
+            # Auto-refresh enabled by default for better UX
+            auto_refresh = st.checkbox("Auto-refresh", value=True, key="auto_refresh_toggle")
         
         with col3:
             refresh_interval = st.selectbox(
                 "Interval",
                 options=[3, 5, 10, 15, 30],
-                index=1,
+                index=0,  # Default to 3 seconds for faster updates
                 key="refresh_interval",
                 disabled=not auto_refresh
             )
@@ -867,6 +868,7 @@ docker exec ecosystem-mcp-service df -h
                             
                             with st.expander("📡 Live Progress Stream", expanded=True):
                                 st.markdown(f"**Job:** `{job_id[:12]}...`")
+                                st.markdown(f"**Status:** 🟢 Processing")
                                 
                                 # Fetch current progress from job data (non-blocking)
                                 processed = first_job.get('processed_documents', 0)
@@ -878,6 +880,17 @@ docker exec ecosystem-mcp-service df -h
                                 # Calculate progress
                                 progress_pct = (processed / total * 100) if total > 0 else 0
                                 
+                                # Display current metrics prominently
+                                metric_cols = st.columns(4)
+                                with metric_cols[0]:
+                                    st.metric("📄 Processed", processed)
+                                with metric_cols[1]:
+                                    st.metric("📊 Total", total if total > 0 else "Calculating...")
+                                with metric_cols[2]:
+                                    st.metric("⏭️ Skipped", skipped)
+                                with metric_cols[3]:
+                                    st.metric("❌ Failed", failed)
+                                
                                 # Display progress bar
                                 if total > 0:
                                     st.progress(
@@ -885,7 +898,7 @@ docker exec ecosystem-mcp-service df -h
                                         text=f"{processed}/{total} documents ({progress_pct:.1f}%)"
                                     )
                                 else:
-                                    st.progress(0, text=f"{processed} documents processed (calculating total...)")
+                                    st.progress(0, text=f"Processing... ({processed} documents so far, total being calculated)")
                                 
                                 # Try to get last file from metadata (non-blocking single request)
                                 try:
