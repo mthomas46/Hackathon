@@ -12,6 +12,9 @@ import streamlit as st
 import httpx
 from datetime import datetime
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def display_active_job(job, api_base_url):
