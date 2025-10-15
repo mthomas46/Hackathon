@@ -40,18 +40,43 @@ def show(api_base_url: str):
         with st.form("doc_config_form"):
             # Directory selection
             st.markdown("### 📁 Source Directory")
-            directory = st.text_input(
-                "Directory Path",
-                value="/app",
-                help="Path to analyze (inside container: /app)"
+            
+            # Path type selector
+            directory_type = st.radio(
+                "Directory Type",
+                options=["Container Path", "Host Machine Path"],
+                index=1,  # Default to Host Machine Path
+                help="""
+                - **Container Path**: Path inside Docker container (e.g., /app)
+                - **Host Machine Path**: Path on your local machine
+                """,
+                horizontal=True
             )
             
-            st.info("""
-            💡 **Default:** `/app` - The mounted workspace directory
-            - Contains all your codebase
-            - Accessible from the container
-            - Already indexed in the database
-            """)
+            if directory_type == "Host Machine Path":
+                directory = st.text_input(
+                    "Directory Path",
+                    value="/Users/mykalthomas/Documents/work/Hackathon",
+                    help="Path on your host machine to analyze. Git root will be auto-detected."
+                )
+                st.info("""
+                💡 **Default:** Hackathon project directory
+                - Generate documentation for your local codebase
+                - Auto-detects git root
+                - Works with temporal versioning
+                """)
+            else:
+                directory = st.text_input(
+                    "Directory Path",
+                    value="/app",
+                    help="Path inside the container (e.g., /app)"
+                )
+                st.info("""
+                💡 **Container Path:** `/app` - The mounted workspace directory
+                - Contains all your codebase
+                - Accessible from the container
+                - Already indexed in the database
+                """)
             
             st.markdown("---")
             

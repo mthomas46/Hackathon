@@ -112,11 +112,11 @@ def show(api_base_url: str):
             
             # Repository path
             if path_type == "Host Machine Path":
-                # Initialize recent paths in session state
+                # Initialize recent paths in session state with Hackathon as default
                 if 'recent_host_paths' not in st.session_state:
                     st.session_state.recent_host_paths = [
+                        "/Users/mykalthomas/Documents/work/Hackathon",  # Default primary path
                         "/Users/mykalthomas/Documents/work",
-                        "/Users/mykalthomas/Documents/work/Hackathon",
                     ]
                 
                 # Path selection method
@@ -130,7 +130,7 @@ def show(api_base_url: str):
                 if path_method == "Enter Path":
                     repo_path = st.text_input(
                         "Repository Path",
-                        value="/Users/mykalthomas/Documents/work",
+                        value="/Users/mykalthomas/Documents/work/Hackathon",
                         help="Path on your host machine (e.g., ~/projects/my-repo). Git root will be auto-detected."
                     )
                     
@@ -167,7 +167,7 @@ def show(api_base_url: str):
                             st.rerun()
                     else:
                         st.info("No recent paths saved. Use 'Enter Path' to add one.")
-                        repo_path = "/Users/mykalthomas/Documents/work"
+                        repo_path = "/Users/mykalthomas/Documents/work/Hackathon"
                 
                 else:  # Quick Select
                     st.markdown("**Quick Select Common Locations:**")
@@ -200,7 +200,7 @@ def show(api_base_url: str):
                     else:
                         repo_path = st.text_input(
                             "Or Enter Custom Path",
-                            value="/Users/mykalthomas/Documents/work",
+                            value="/Users/mykalthomas/Documents/work/Hackathon",
                             help="Enter a custom path"
                         )
                 resolve_host_path = True
