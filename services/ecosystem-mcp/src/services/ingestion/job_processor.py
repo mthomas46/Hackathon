@@ -110,11 +110,18 @@ class JobProcessor:
                 
         except Exception as e:
             # Don't fail the job if metadata update fails
+            # DEBUG: Write to file since logging isn't working
+            import traceback
+            with open('/tmp/job_update_error.log', 'a') as f:
+                f.write(f"\n{'='*50}\n")
+                f.write(f"Exception type: {type(e).__name__}\n")
+                f.write(f"Exception message: {e}\n")
+                f.write(f"Full traceback:\n{traceback.format_exc()}\n")
+                if 'current_job' in locals():
+                    f.write(f"Job ID: {current_job.id}\n")
+                    f.write(f"Job metadata: {current_job.job_metadata}\n")
+            
             logger.error(f"Failed to update job progress metadata: {type(e).__name__}: {e}", exc_info=True)
-            if 'current_job' in locals():
-                logger.error(f"Job ID: {current_job.id}")
-                logger.error(f"Job metadata type: {type(current_job.job_metadata)}")
-                logger.error(f"Job metadata value: {current_job.job_metadata}")
     
     async def process(self, job: IngestionJobModel) -> Dict[str, Any]:
         """
