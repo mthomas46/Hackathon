@@ -171,15 +171,15 @@ class IngestionJobRepository(BaseRepository[IngestionJobModel]):
     
     async def get_running_jobs(self) -> List[IngestionJobModel]:
         """
-        Get all running jobs.
+        Get all running/processing jobs.
         
         Returns:
             List of running job models
         """
         result = await self.session.execute(
             select(IngestionJobModel)
-            .where(IngestionJobModel.status == "running")
-            .order_by(IngestionJobModel.created_at.desc())
+            .where(IngestionJobModel.status.in_(["running", "processing", "queued"]))
+            .order_by(IngestionJobModel.started_at.desc())
         )
         return list(result.scalars().all())
     

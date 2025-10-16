@@ -425,6 +425,134 @@ async def fail_job(job_id: UUID, request: FailJobRequest = Body(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post(
+    "/jobs/orphaned/detect",
+    response_model=Dict[str, Any],
+    summary="Detect orphaned jobs",
+    description="Find jobs marked as 'processing' but not in Redis queue"
+)
+async def detect_orphaned_jobs_endpoint():
+    """
+    Detect orphaned ingestion jobs.
+    
+    An orphaned job is one that:
+    - Has status='processing' in PostgreSQL
+    - Has no corresponding message in Redis queue
+    - Worker crashed or service restarted without cleanup
+    
+    Returns:
+        Detection results with list of orphaned jobs
+    
+    Example Response:
+        {
+            "total_processing": 2,
+            "orphaned_found": 1,
+            "orphaned_jobs": [{
+                "job_id": "uuid",
+                "started_at": "timestamp",
+                "runtime_minutes": 120
+            }],
+            "recommendations": ["Requeue orphaned jobs"]
+        }
+    """
+    try:
+        from ...services.ingestion.orphaned_job_detector import detect_orphaned_jobs as detect_fn
+        
+        result = await detect_fn()
+        
+        return {
+            "total_processing": result.get("total_processing", 0),
+            "orphaned_found": result.get("orphaned_found", 0),
+            "failed_old": result.get("failed_old", 0),
+            "requeued_recent": result.get("requeued_recent", 0),
+            "errors": result.get("errors", []),
+            "message": f"Found {result.get('orphaned_found', 0)} orphaned job(s)",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Failed to detect orphaned jobs: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/jobs/orphaned/requeue",
+    response_model=Dict[str, Any],
+    summary="Requeue orphaned jobs",
+    description="Add orphaned jobs back to Redis queue for processing"
+)
+async def requeue_orphaned_jobs_endpoint(
+    job_id: Optional[UUID] = Query(None, description="Specific job ID to requeue (if not provided, requeues all orphaned)")
+):
+    """
+    Requeue orphaned jobs back to Redis stream.
+    
+    Args:
+        job_id: Optional specific job ID to requeue
+    
+    Returns:
+        Requeue results
+    
+    Example:
+        POST /api/v1/admin/jobs/orphaned/requeue
+        POST /api/v1/admin/jobs/orphaned/requeue?job_id=uuid
+    """
+    try:
+        db = get_database()
+        redis = get_redis_client()
+        requeued = []
+        errors = []
+        
+        async with db.session() as session:
+            job_repo = IngestionJobRepository(session)
+            
+            # Get jobs to requeue
+            if job_id:
+                job = await job_repo.get_by_id(job_id)
+                jobs_to_check = [job] if job else []
+            else:
+                jobs_to_check = await job_repo.get_running_jobs()
+            
+            for job in jobs_to_check:
+                if job.status != "processing":
+                    continue
+                
+                try:
+                    # Check if job is in Redis
+                    from ...services.ingestion.orphaned_job_detector import check_redis_has_job as check_fn
+                    in_redis = await check_fn(redis, job.id)
+                    
+                    if not in_redis:
+                        # Requeue to Redis stream
+                        await redis.add_to_stream(
+                            stream=redis.INGESTION_STREAM,
+                            data={
+                                "job_id": str(job.id),
+                                "mode": job.mode,
+                                "requeued": "true",
+                                "timestamp": datetime.now().isoformat()
+                            }
+                        )
+                        requeued.append(str(job.id))
+                        logger.info(f"✅ Requeued orphaned job {job.id}")
+                
+                except Exception as e:
+                    logger.error(f"Failed to requeue job {job.id}: {e}")
+                    errors.append(f"{job.id}: {str(e)}")
+        
+        return {
+            "requeued_count": len(requeued),
+            "requeued_jobs": requeued,
+            "errors": errors,
+            "message": f"Requeued {len(requeued)} orphaned job(s)",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Failed to requeue orphaned jobs: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get(
     "/workers/stuck-check",
     response_model=Dict[str, Any],

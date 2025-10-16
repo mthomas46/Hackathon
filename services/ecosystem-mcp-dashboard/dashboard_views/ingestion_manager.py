@@ -905,14 +905,20 @@ docker exec ecosystem-mcp-service df -h
                                 
                                 # Fetch current progress from job data (non-blocking)
                                 processed = first_job.get('processed_documents', 0)
-                                total = first_job.get('total_documents', 0)
+                                
+                                # Get total from metadata (set during processing) or fall back to total_documents (set on completion)
+                                job_metadata = first_job.get('job_metadata', {})
+                                total = job_metadata.get('total_files_in_commit', first_job.get('total_documents', 0))
+                                
                                 skipped = first_job.get('skipped_documents', 0)
                                 failed = first_job.get('failed_documents', 0)
                                 embeddings = first_job.get('embeddings_generated', 0)
                                 started_at = first_job.get('started_at', '')
                                 
                                 # Calculate progress and time metrics
-                                progress_pct = (processed / total * 100) if total > 0 else 0
+                                # Use total_examined (all files looked at) for progress, not just new docs
+                                total_examined = processed + skipped + failed
+                                progress_pct = (total_examined / total * 100) if total > 0 else 0
                                 
                                 # Calculate time elapsed and processing rate
                                 try:
@@ -922,11 +928,12 @@ docker exec ecosystem-mcp-service df -h
                                     elapsed_minutes = elapsed_seconds / 60
                                     
                                     # Processing rate (files per minute)
-                                    rate = processed / elapsed_minutes if elapsed_minutes > 0 else 0
+                                    rate = total_examined / elapsed_minutes if elapsed_minutes > 0 else 0
                                     
                                     # Estimated time remaining
                                     if total > 0 and rate > 0:
-                                        remaining_files = total - processed
+                                        # Use total_examined to calculate remaining, not just processed
+                                        remaining_files = total - total_examined
                                         eta_minutes = remaining_files / rate
                                         eta_hours = int(eta_minutes // 60)
                                         eta_mins = int(eta_minutes % 60)
@@ -1025,22 +1032,82 @@ docker exec ecosystem-mcp-service df -h
                                     logger.debug(f"Could not fetch current file from logs: {e}")
                                     pass
                                 
-                                # Display current metrics prominently
-                                metric_cols = st.columns(4)
+                                # Display current metrics prominently with enhanced visuals
+                                st.markdown("#### 📊 Processing Metrics")
+                                
+                                # Primary metrics row
+                                metric_cols = st.columns(5)
                                 with metric_cols[0]:
-                                    st.metric("📄 Processed", processed)
+                                    st.metric(
+                                        "📄 New Docs", 
+                                        f"{processed:,}",
+                                        help="Unique documents added to database"
+                                    )
                                 with metric_cols[1]:
-                                    st.metric("📊 Total", total if total > 0 else "Calculating...")
+                                    st.metric(
+                                        "📊 Total Files", 
+                                        f"{total:,}" if total > 0 else "Calculating...",
+                                        help="Total files in commit"
+                                    )
                                 with metric_cols[2]:
-                                    st.metric("⏭️ Skipped", skipped)
+                                    st.metric(
+                                        "🔍 Examined", 
+                                        f"{total_examined:,}",
+                                        help="Files processed (new + skipped + failed)"
+                                    )
                                 with metric_cols[3]:
-                                    st.metric("❌ Failed", failed)
+                                    st.metric(
+                                        "⏭️ Duplicates", 
+                                        f"{skipped:,}",
+                                        delta=f"{(skipped/total_examined*100):.0f}%" if total_examined > 0 else None,
+                                        delta_color="off",
+                                        help="Files skipped (already in database)"
+                                    )
+                                with metric_cols[4]:
+                                    st.metric(
+                                        "❌ Errors", 
+                                        f"{failed:,}",
+                                        delta=f"{(failed/total_examined*100):.1f}%" if total_examined > 0 else None,
+                                        delta_color="inverse",
+                                        help="Files that failed to process"
+                                    )
+                                
+                                # Performance metrics row
+                                st.markdown("---")
+                                perf_cols = st.columns(4)
+                                with perf_cols[0]:
+                                    st.metric(
+                                        "⚡ Processing Rate",
+                                        f"{rate:.1f} files/min" if rate > 0 else "Calculating...",
+                                        help="Files examined per minute"
+                                    )
+                                with perf_cols[1]:
+                                    st.metric(
+                                        "⏱️ Elapsed Time",
+                                        elapsed_str,
+                                        help="Time since job started"
+                                    )
+                                with perf_cols[2]:
+                                    st.metric(
+                                        "⏳ ETA",
+                                        eta_str,
+                                        help="Estimated time to completion"
+                                    )
+                                with perf_cols[3]:
+                                    efficiency_pct = (processed / total_examined * 100) if total_examined > 0 else 0
+                                    st.metric(
+                                        "💎 Uniqueness",
+                                        f"{efficiency_pct:.1f}%",
+                                        help="Percentage of unique documents found"
+                                    )
                                 
                                 # Display progress bar with enhanced text
                                 st.markdown("---")
+                                st.markdown("#### 📈 Progress Overview")
+                                
                                 if total > 0:
                                     # Show progress with percentage and ETA
-                                    progress_text = f"{processed}/{total} documents ({progress_pct:.1f}%)"
+                                    progress_text = f"Examined: {total_examined:,}/{total:,} files ({progress_pct:.1f}%)"
                                     if eta_str != "Calculating...":
                                         progress_text += f" • ETA: {eta_str}"
                                     if rate > 0:
@@ -1051,16 +1118,34 @@ docker exec ecosystem-mcp-service df -h
                                         text=progress_text
                                     )
                                     
+                                    # Visual breakdown chart
+                                    if total_examined > 0:
+                                        st.markdown("**File Distribution:**")
+                                        breakdown_cols = st.columns(3)
+                                        
+                                        new_pct = (processed / total_examined * 100) if total_examined > 0 else 0
+                                        dup_pct = (skipped / total_examined * 100) if total_examined > 0 else 0
+                                        err_pct = (failed / total_examined * 100) if total_examined > 0 else 0
+                                        
+                                        with breakdown_cols[0]:
+                                            st.metric("📄 New", f"{new_pct:.1f}%", delta=f"{processed} files", help="Unique documents")
+                                        with breakdown_cols[1]:
+                                            st.metric("⏭️ Duplicate", f"{dup_pct:.1f}%", delta=f"{skipped} files", delta_color="off", help="Already in database")
+                                        with breakdown_cols[2]:
+                                            st.metric("❌ Errors", f"{err_pct:.1f}%", delta=f"{failed} files", delta_color="inverse", help="Processing failures")
+                                    
                                     # Visual milestone indicators
                                     if progress_pct >= 75:
-                                        st.info("🎉 Almost done! Over 75% complete")
+                                        st.success("🎉 Almost done! Over 75% complete")
                                     elif progress_pct >= 50:
                                         st.info("💪 Halfway there! 50% complete")
                                     elif progress_pct >= 25:
                                         st.info("🚀 Making progress! 25% complete")
+                                    elif progress_pct < 5:
+                                        st.info("🔄 Just getting started...")
                                 else:
                                     # Scanning phase
-                                    progress_text = f"Scanning repository... ({processed} documents found"
+                                    progress_text = f"Scanning repository... ({total_examined} files examined"
                                     if rate > 0:
                                         progress_text += f", {rate:.1f} files/min"
                                     progress_text += ")"

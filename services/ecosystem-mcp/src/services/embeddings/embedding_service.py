@@ -1,13 +1,14 @@
 """
 Embedding Service
 
-Service for generating embeddings from text using Ollama.
-Handles batching, retry logic, and cost tracking.
+Service for generating embeddings from text.
+Supports both Ollama (legacy) and FastEmbed service (10-50× faster).
 """
 
 import logging
 from typing import List, Dict, Any, Optional
 import time
+import os
 
 from ..models.ollama_client import get_ollama_client
 
@@ -34,22 +35,52 @@ class EmbeddingService:
     """
     Service for generating text embeddings.
     
+    Supports two backends:
+    - FastEmbed service (default, 10-50× faster)
+    - Ollama (legacy fallback)
+    
     Features:
     - Single and batch embedding generation
-    - Automatic retry with exponential backoff
+    - Automatic backend selection
+    - Fallback on failure
     - Cost tracking
     - Performance optimization
-    - Circuit breaker integration (via OllamaClient)
     """
     
-    def __init__(self):
-        """Initialize the embedding service."""
-        self.ollama_client = get_ollama_client()
-        logger.info("EmbeddingService initialized")
+    def __init__(self, backend: str = None):
+        """
+        Initialize the embedding service.
+        
+        Args:
+            backend: "service" (FastEmbed) or "ollama" (legacy)
+                     If None, uses EMBEDDING_BACKEND env var (defaults to "service")
+        """
+        # Determine backend
+        if backend is None:
+            backend = os.getenv("EMBEDDING_BACKEND", "service")
+        
+        self.backend = backend
+        self.ollama_client = None
+        self.embedding_client = None
+        
+        if self.backend == "service":
+            try:
+                from .embedding_client import get_embedding_client
+                self.embedding_client = get_embedding_client()
+                logger.info("✅ EmbeddingService initialized with FastEmbed backend (10-50× faster)")
+            except Exception as e:
+                logger.warning(f"⚠️  Failed to initialize FastEmbed client, falling back to Ollama: {e}")
+                self.backend = "ollama"
+                self.ollama_client = get_ollama_client()
+        else:
+            self.ollama_client = get_ollama_client()
+            logger.info("ℹ️  EmbeddingService initialized with Ollama backend (legacy)")
     
     async def generate_embedding(self, text: str) -> Dict[str, Any]:
         """
         Generate embedding for a single text.
+        
+        Routes to appropriate backend (FastEmbed service or Ollama).
         
         Args:
             text: Text to generate embedding for
@@ -63,6 +94,26 @@ class EmbeddingService:
                 "model": str
             }
         """
+        # Route to appropriate backend
+        if self.backend == "service" and self.embedding_client:
+            try:
+                result = await self.embedding_client.generate_embedding(text)
+                return {
+                    "embedding": result["embedding"],
+                    "tokens": result["tokens"],
+                    "cost": 0.0,  # Local and free
+                    "model": result["model"],
+                    "duration": result["duration_ms"] / 1000
+                }
+            except Exception as e:
+                logger.error(f"❌ FastEmbed service failed, falling back to Ollama: {e}")
+                # Fall through to Ollama fallback
+        
+        # Ollama fallback
+        return await self._generate_with_ollama(text)
+    
+    async def _generate_with_ollama(self, text: str) -> Dict[str, Any]:
+        """Generate embedding using Ollama (legacy)."""
         start_time = time.time()
         
         try:
@@ -102,13 +153,14 @@ class EmbeddingService:
     async def generate_batch(
         self,
         texts: List[str],
-        batch_size: int = 10
+        batch_size: int = 32
     ) -> List[Dict[str, Any]]:
         """
-        Generate embeddings for multiple texts in batches (PARALLEL).
+        Generate embeddings for multiple texts in batches.
         
-        ⚡ OPTIMIZED: Processes embeddings in parallel using asyncio.gather()
-        Performance: 10x faster than sequential (2s → 0.2s for 10 texts)
+        Routes to appropriate backend:
+        - FastEmbed service: TRUE batch processing (ONNX-optimized, 10-50× faster)
+        - Ollama: Parallel async processing (10× faster than sequential)
         
         Args:
             texts: List of texts to generate embeddings for
@@ -117,6 +169,26 @@ class EmbeddingService:
         Returns:
             List of embedding results
         """
+        if not texts:
+            return []
+        
+        # Route to FastEmbed service for TRUE batch processing
+        if self.backend == "service" and self.embedding_client:
+            try:
+                results = await self.embedding_client.generate_batch(texts)
+                # Convert to expected format
+                return [{
+                    "embedding": r["embedding"],
+                    "tokens": r["tokens"],
+                    "cost": 0.0,
+                    "model": r["model"],
+                    "duration": r["duration_ms"] / 1000
+                } for r in results]
+            except Exception as e:
+                logger.error(f"❌ FastEmbed batch failed, falling back to Ollama: {e}")
+                # Fall through to Ollama fallback
+        
+        # Ollama fallback: parallel processing
         import asyncio
         
         results = []
@@ -126,7 +198,7 @@ class EmbeddingService:
             logger.info(f"Processing embedding batch {i//batch_size + 1}/{(len(texts)-1)//batch_size + 1} (PARALLEL)")
             
             # ⚡ OPTIMIZED: Process entire batch in parallel instead of sequentially
-            batch_tasks = [self.generate_embedding(text) for text in batch]
+            batch_tasks = [self._generate_with_ollama(text) for text in batch]
             batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
             
             # Handle results and errors

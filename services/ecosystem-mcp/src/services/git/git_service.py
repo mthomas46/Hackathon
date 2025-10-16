@@ -127,6 +127,48 @@ class GitService:
             commit_sha
         )
     
+    async def get_file_size_at_commit(
+        self,
+        commit_sha: str,
+        file_path: str
+    ) -> Optional[int]:
+        """
+        PHASE 3: Get file size without reading content.
+        
+        Uses Git's blob size info which is very fast - doesn't require reading file content.
+        This enables early filtering of empty or oversized files before wasting I/O.
+        
+        Args:
+            commit_sha: Git commit SHA
+            file_path: Relative path to file
+        
+        Returns:
+            File size in bytes, or None if file not found
+        """
+        return await asyncio.to_thread(
+            self._get_file_size_sync,
+            commit_sha,
+            file_path
+        )
+    
+    def _get_file_size_sync(self, commit_sha: str, file_path: str) -> Optional[int]:
+        """Get file size from Git blob (synchronous helper)."""
+        try:
+            commit = self.repo.commit(commit_sha)
+            
+            # Navigate to the blob in the tree
+            blob = commit.tree / file_path
+            
+            # Return blob size (Git stores this metadata efficiently)
+            return blob.size
+        except (KeyError, AttributeError):
+            # File not found in commit or not a blob
+            logger.debug(f"Could not get size for {file_path} at {commit_sha[:8]}")
+            return None
+        except Exception as e:
+            logger.warning(f"Error getting size for {file_path}: {e}")
+            return None
+    
     def _get_file_at_commit_sync(
         self,
         file_path: str,

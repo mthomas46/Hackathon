@@ -88,12 +88,12 @@ class CheckpointManager:
     - Validate checkpoint integrity
     """
     
-    def __init__(self, checkpoint_interval: int = 50):
+    def __init__(self, checkpoint_interval: int = 5):
         """
         Initialize checkpoint manager.
         
         Args:
-            checkpoint_interval: Save checkpoint every N files
+            checkpoint_interval: Save checkpoint every N files (default: 5 for more frequent updates)
         """
         self.checkpoint_interval = checkpoint_interval
         logger.info(f"CheckpointManager initialized (interval: {checkpoint_interval} files)")
@@ -348,12 +348,12 @@ class CheckpointManager:
 _checkpoint_manager: Optional[CheckpointManager] = None
 
 
-def get_checkpoint_manager(checkpoint_interval: int = 50) -> CheckpointManager:
+def get_checkpoint_manager(checkpoint_interval: int = 5) -> CheckpointManager:
     """
     Get the global checkpoint manager instance.
     
     Args:
-        checkpoint_interval: Save checkpoint every N files
+        checkpoint_interval: Save checkpoint every N files (default: 5 for more frequent updates)
     
     Returns:
         CheckpointManager instance
