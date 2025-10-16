@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from ...storage.redis_client import get_redis_client
+from ...utils.redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)
 

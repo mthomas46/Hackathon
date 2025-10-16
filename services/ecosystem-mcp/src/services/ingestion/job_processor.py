@@ -23,7 +23,7 @@ from ...storage import get_database
 from ...storage.repositories import DocumentRepository
 from ...storage.chromadb_client import get_chroma_client
 from .commit_optimizer import get_commit_optimizer
-from ...storage.redis_client import get_redis_client
+from ...utils.redis_client import get_redis_client
 from ..git.git_error_handler import get_git_error_handler, GitCorruptionError
 
 logger = logging.getLogger(__name__)
