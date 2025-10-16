@@ -7,7 +7,7 @@ Provides operational control and monitoring.
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Body, Query
@@ -608,6 +608,120 @@ async def requeue_missing_jobs():
     
     except Exception as e:
         logger.error(f"Failed to re-queue missing jobs: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/metrics/database-updates",
+    response_model=Dict[str, Any],
+    summary="Get database update metrics",
+    description="Get metrics on database update failures and rates"
+)
+async def get_database_update_metrics():
+    """
+    Get database update failure metrics.
+    
+    Returns metrics including:
+    - Failure counts (last minute, 5min, 15min, hour)
+    - Failure rates per minute
+    - Alert status
+    - Top failing tables/operations
+    - Top error types
+    
+    Example Response:
+        {
+            "alert_active": false,
+            "alert_threshold": 10,
+            "total_tracked_failures": 42,
+            "last_minute_count": 0,
+            "last_5_minutes_count": 2,
+            "last_hour_count": 8,
+            "last_hour_rate": 0.13,
+            "top_failing_tables": {"ingestion_jobs": 5},
+            "top_failing_operations": {"update": 6},
+            "top_error_types": {"Connection": 3}
+        }
+    """
+    try:
+        from ...utils.database_update_monitor import get_update_metrics
+        metrics = await get_update_metrics()
+        return metrics
+    
+    except Exception as e:
+        logger.error(f"Failed to get update metrics: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/metrics/database-failures",
+    response_model=List[Dict[str, Any]],
+    summary="Get recent database failures",
+    description="Get detailed list of recent database update failures"
+)
+async def get_recent_database_failures(
+    limit: int = Query(50, ge=1, le=500, description="Max failures to return"),
+    minutes: Optional[int] = Query(None, ge=1, le=1440, description="Time window in minutes")
+):
+    """
+    Get recent database update failures.
+    
+    Args:
+        limit: Maximum number of failures (1-500)
+        minutes: Optional time window (1-1440 minutes)
+    
+    Returns:
+        List of failure details
+    
+    Example Response:
+        [
+            {
+                "timestamp": "2025-10-16T01:30:00",
+                "operation": "update",
+                "table": "ingestion_jobs",
+                "error": "Connection timeout",
+                "job_id": "abc123...",
+                "retry_count": 2
+            }
+        ]
+    """
+    try:
+        from ...utils.database_update_monitor import get_recent_update_failures
+        failures = await get_recent_update_failures(limit, minutes)
+        return failures
+    
+    except Exception as e:
+        logger.error(f"Failed to get recent failures: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/metrics/clear-alert",
+    response_model=Dict[str, Any],
+    summary="Clear database update alert",
+    description="Clear active database update failure alert"
+)
+async def clear_database_alert():
+    """
+    Clear active database update alert.
+    
+    Use after resolving database issues and verifying
+    update operations are working correctly.
+    
+    Returns:
+        Confirmation message
+    """
+    try:
+        from ...utils.database_update_monitor import get_monitor
+        monitor = get_monitor()
+        await monitor.clear_alert()
+        
+        return {
+            "status": "success",
+            "message": "Database update alert cleared"
+        }
+    
+    except Exception as e:
+        logger.error(f"Failed to clear alert: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

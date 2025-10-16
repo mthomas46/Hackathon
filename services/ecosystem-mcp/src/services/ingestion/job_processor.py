@@ -226,6 +226,18 @@ class JobProcessor:
                 logger.error(f"Job ID: {current_job.id}")
                 logger.error(f"Job metadata type: {type(current_job.job_metadata)}")
                 logger.error(f"Job metadata value: {current_job.job_metadata}")
+            
+            # Record failure in monitoring system
+            try:
+                from ...utils.database_update_monitor import record_update_failure
+                await record_update_failure(
+                    operation="update",
+                    table="ingestion_jobs",
+                    error=e,
+                    job_id=str(job.id)
+                )
+            except Exception as monitor_error:
+                logger.debug(f"Failed to record monitoring failure: {monitor_error}")
     
     async def process(self, job: IngestionJobModel) -> Dict[str, Any]:
         """
