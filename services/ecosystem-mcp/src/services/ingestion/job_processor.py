@@ -53,6 +53,11 @@ class JobProcessor:
         self.git_service = None  # Initialized per job
         self.normalizer_factory = NormalizerFactory()
         self.embedding_service = EmbeddingService()
+        
+        # Checkpoint manager for job recovery
+        from .checkpoint_manager import get_checkpoint_manager
+        self.checkpoint_manager = get_checkpoint_manager(checkpoint_interval=50)
+        
         logger.info(f"JobProcessor initialized (worker: {worker_id})")
     
     async def _check_job_timeout(self, job: IngestionJobModel) -> bool:
@@ -299,6 +304,9 @@ class JobProcessor:
             result["total_documents"] = result["processed_documents"] + result["failed_documents"] + result["skipped_documents"]
             result["success"] = True
             
+            # Clear checkpoint after successful completion
+            await self.checkpoint_manager.clear_checkpoint(job.id)
+            
             logger.info(
                 f"✅ Job {job.id} processing complete: "
                 f"{result['processed_documents']}/{result['total_documents']} documents, "
@@ -371,10 +379,37 @@ class JobProcessor:
             # Filter files (only documentation and code)
             filtered_files = self._filter_files(files)
             
-            logger.info(f"Commit {commit.sha[:8]}: {len(filtered_files)}/{len(files)} files to process")
+            # Check for checkpoint and resume if applicable
+            checkpoint = None
+            start_index = 0
+            if await self.checkpoint_manager.should_resume(job.id):
+                checkpoint = await self.checkpoint_manager.load_checkpoint(job.id)
+                if checkpoint and checkpoint.commit_sha == commit.sha:
+                    start_index = checkpoint.current_file_index
+                    result["processed"] = checkpoint.processed_count
+                    result["skipped"] = checkpoint.skipped_count
+                    result["failed"] = checkpoint.failed_count
+                    result["embeddings"] = checkpoint.embeddings_count
+                    
+                    await self.checkpoint_manager.mark_resumed(job.id)
+                    
+                    resume_info = self.checkpoint_manager.get_resume_info(checkpoint)
+                    logger.info(
+                        f"📂 Resuming job {job.id} from checkpoint: "
+                        f"file {start_index}/{len(filtered_files)} "
+                        f"({resume_info['progress_percent']}% complete)"
+                    )
             
-            # Process each file
+            logger.info(
+                f"Commit {commit.sha[:8]}: {len(filtered_files)}/{len(files)} files to process"
+                + (f" (resuming from file {start_index})" if start_index > 0 else "")
+            )
+            
+            # Process each file (starting from checkpoint if resuming)
             for idx, file_change in enumerate(filtered_files):
+                # Skip files that were already processed (checkpoint resume)
+                if idx < start_index:
+                    continue
                 # Check if job still exists in database every 10 files (graceful shutdown)
                 if idx > 0 and idx % 10 == 0:
                     try:
@@ -408,6 +443,27 @@ class JobProcessor:
                 # Update worker heartbeat every 30 files (detect stuck workers)
                 if idx > 0 and idx % 30 == 0:
                     await self._update_worker_heartbeat(job)
+                
+                # Save checkpoint every N files (enable job recovery)
+                if self.checkpoint_manager.should_save_checkpoint(idx + 1):
+                    # Collect processed file paths for checkpoint
+                    processed_files = []
+                    for proc_idx in range(min(idx + 1, len(filtered_files))):
+                        proc_file = filtered_files[proc_idx]
+                        proc_path = proc_file if isinstance(proc_file, str) else proc_file.path
+                        processed_files.append(proc_path)
+                    
+                    await self.checkpoint_manager.save_checkpoint(
+                        job_id=job.id,
+                        commit_sha=commit.sha,
+                        processed_files=processed_files,
+                        current_file_index=idx + 1,
+                        total_files=len(filtered_files),
+                        processed_count=result["processed"],
+                        skipped_count=result["skipped"],
+                        failed_count=result["failed"],
+                        embeddings_count=result["embeddings"]
+                    )
                 
                 # Get file path for logging
                 file_path_str = file_change if isinstance(file_change, str) else file_change.path
