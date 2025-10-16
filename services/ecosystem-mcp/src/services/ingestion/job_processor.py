@@ -48,7 +48,7 @@ class JobProcessor:
     """
     
     def __init__(self, worker_id: str = "unknown", use_batch_optimization: bool = True,
-                 max_concurrent_commits: int = 3):
+                 max_concurrent_commits: int = None):
         """
         Initialize the job processor.
         
@@ -56,6 +56,7 @@ class JobProcessor:
             worker_id: Unique identifier for the worker instance
             use_batch_optimization: Enable Phase 1 optimizations (batch embeddings, connection pooling, caching)
             max_concurrent_commits: Maximum number of commits to process in parallel (Phase 2)
+                                   If None, automatically determined based on CPU count (2× cores, max 20)
         """
         self.worker_id = worker_id
         self.git_service = None  # Initialized per job
@@ -72,10 +73,18 @@ class JobProcessor:
         # Phase 1 optimizations flag
         self.use_batch_optimization = use_batch_optimization
         
-        # Phase 2: Parallel commit processing
-        self.max_concurrent_commits = max_concurrent_commits
+        # Phase 2: Parallel commit processing (auto-tune based on CPU count)
+        import os
         import asyncio
-        self.commit_semaphore = asyncio.Semaphore(max_concurrent_commits)
+        if max_concurrent_commits is None:
+            # Auto-tune: 2× CPU cores, capped at 20
+            cpu_count = os.cpu_count() or 4
+            self.max_concurrent_commits = min(cpu_count * 2, 20)
+            logger.info(f"🎯 Auto-tuned parallelism: {self.max_concurrent_commits} concurrent commits (CPU count: {cpu_count})")
+        else:
+            self.max_concurrent_commits = max_concurrent_commits
+        
+        self.commit_semaphore = asyncio.Semaphore(self.max_concurrent_commits)
         
         # Real-time progress tracking
         self.redis_client = None  # Initialized per job

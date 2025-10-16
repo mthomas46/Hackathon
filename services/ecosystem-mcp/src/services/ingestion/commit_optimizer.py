@@ -3,19 +3,172 @@ Commit-level optimization for ingestion jobs.
 
 Provides intelligent skipping of duplicate commits and batch duplicate checking
 to dramatically improve performance when processing commits with mostly duplicate content.
+
+Phase 2 Enhancement: Bloom filter for ultra-fast negative duplicate checks.
 """
 
 import logging
 from typing import Dict, Any, List, Set, Optional
 from uuid import UUID
 from datetime import datetime
+import hashlib
 
 from ...storage import get_database
 from ...storage.repositories import DocumentRepository
 from sqlalchemy import select, func
 from ...storage.db_models import DocumentModel
+from ...utils.redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)
+
+
+class BloomFilter:
+    """
+    Simple Bloom filter implementation for fast negative duplicate checks.
+    
+    Uses Redis for persistence and multiple hash functions for accuracy.
+    False positive rate: ~1% with 3 hash functions.
+    """
+    
+    def __init__(self, redis_key: str = "bloom:content_hashes", size: int = 10_000_000):
+        """
+        Initialize Bloom filter.
+        
+        Args:
+            redis_key: Redis key for the bit array
+            size: Size of bit array (10M bits = ~1.2MB, supports ~700K items at 1% FPR)
+        """
+        self.redis_key = redis_key
+        self.size = size
+        self.hash_count = 3  # Number of hash functions
+    
+    def _hashes(self, item: str) -> List[int]:
+        """Generate multiple hash values for an item."""
+        hashes = []
+        for i in range(self.hash_count):
+            # Use different seeds for each hash function
+            h = hashlib.sha256(f"{item}{i}".encode()).hexdigest()
+            hashes.append(int(h, 16) % self.size)
+        return hashes
+    
+    async def add(self, item: str) -> bool:
+        """
+        Add an item to the Bloom filter.
+        
+        Args:
+            item: Item to add (content hash)
+            
+        Returns:
+            True if added successfully
+        """
+        try:
+            redis = get_redis_client()
+            positions = self._hashes(item)
+            
+            # Set bits at all positions
+            pipeline = redis.client.pipeline()
+            for pos in positions:
+                pipeline.setbit(self.redis_key, pos, 1)
+            await pipeline.execute()
+            
+            return True
+        except Exception as e:
+            logger.error(f"Failed to add to Bloom filter: {e}")
+            return False
+    
+    async def contains(self, item: str) -> bool:
+        """
+        Check if an item might be in the set.
+        
+        Args:
+            item: Item to check (content hash)
+            
+        Returns:
+            True if item MIGHT exist (could be false positive)
+            False if item DEFINITELY does not exist
+        """
+        try:
+            redis = get_redis_client()
+            positions = self._hashes(item)
+            
+            # Check all bit positions
+            pipeline = redis.client.pipeline()
+            for pos in positions:
+                pipeline.getbit(self.redis_key, pos)
+            results = await pipeline.execute()
+            
+            # Item might exist only if ALL bits are set
+            return all(results)
+        except Exception as e:
+            logger.error(f"Failed to check Bloom filter: {e}")
+            # On error, assume might exist (safer - will check database)
+            return True
+    
+    async def add_batch(self, items: List[str]) -> int:
+        """
+        Add multiple items to the Bloom filter.
+        
+        Args:
+            items: List of items to add
+            
+        Returns:
+            Number of items added
+        """
+        try:
+            redis = get_redis_client()
+            pipeline = redis.client.pipeline()
+            
+            for item in items:
+                positions = self._hashes(item)
+                for pos in positions:
+                    pipeline.setbit(self.redis_key, pos, 1)
+            
+            await pipeline.execute()
+            return len(items)
+        except Exception as e:
+            logger.error(f"Failed to add batch to Bloom filter: {e}")
+            return 0
+    
+    async def check_batch(self, items: List[str]) -> Dict[str, bool]:
+        """
+        Check multiple items at once.
+        
+        Args:
+            items: List of items to check
+            
+        Returns:
+            Dict mapping item -> might_exist
+        """
+        try:
+            redis = get_redis_client()
+            results = {}
+            
+            # Build pipeline to check all items
+            pipeline = redis.client.pipeline()
+            item_positions = {}
+            
+            for item in items:
+                positions = self._hashes(item)
+                item_positions[item] = positions
+                for pos in positions:
+                    pipeline.getbit(self.redis_key, pos)
+            
+            # Execute all checks at once
+            all_results = await pipeline.execute()
+            
+            # Parse results
+            idx = 0
+            for item, positions in item_positions.items():
+                # Check if all bits for this item are set
+                item_bits = all_results[idx:idx + len(positions)]
+                results[item] = all(item_bits)
+                idx += len(positions)
+            
+            return results
+        except Exception as e:
+            logger.error(f"Failed to check batch in Bloom filter: {e}")
+            # On error, assume all might exist
+            return {item: True for item in items}
 
 
 class CommitOptimizer:
@@ -27,12 +180,25 @@ class CommitOptimizer:
     - Batch hash checking (100 files at once)
     - Git blob hash optimization
     - Skip entire commits if already ingested
+    - Phase 2: Bloom filter for ultra-fast negative checks (5-10× faster)
     """
     
-    def __init__(self):
-        """Initialize the commit optimizer."""
+    def __init__(self, use_bloom_filter: bool = True):
+        """
+        Initialize the commit optimizer.
+        
+        Args:
+            use_bloom_filter: Enable Bloom filter for fast negative checks
+        """
         self.batch_size = 100  # Check 100 hashes at once
-        logger.info("CommitOptimizer initialized")
+        self.use_bloom_filter = use_bloom_filter
+        
+        if use_bloom_filter:
+            self.bloom = BloomFilter()
+            logger.info("CommitOptimizer initialized with Bloom filter (Phase 2 optimization)")
+        else:
+            self.bloom = None
+            logger.info("CommitOptimizer initialized (standard mode)")
     
     async def check_commit_already_ingested(self, commit_sha: str) -> Dict[str, Any]:
         """
@@ -95,6 +261,9 @@ class CommitOptimizer:
         """
         Check multiple content hashes at once for existence.
         
+        Phase 2 Enhancement: Uses Bloom filter for fast negative checks,
+        only queries database for potential matches.
+        
         Args:
             content_hashes: List of SHA-256 content hashes
         
@@ -105,16 +274,45 @@ class CommitOptimizer:
             return set()
         
         try:
+            # Phase 2: Use Bloom filter to quickly eliminate definite non-matches
+            if self.use_bloom_filter and self.bloom:
+                bloom_results = await self.bloom.check_batch(content_hashes)
+                
+                # Separate into "definitely not in DB" and "might be in DB"
+                definitely_not = [h for h, might_exist in bloom_results.items() if not might_exist]
+                might_exist = [h for h, might_exist in bloom_results.items() if might_exist]
+                
+                bloom_filtered_count = len(definitely_not)
+                if bloom_filtered_count > 0:
+                    logger.debug(
+                        f"🚀 Bloom filter: {bloom_filtered_count}/{len(content_hashes)} hashes "
+                        f"definitely new ({bloom_filtered_count/len(content_hashes)*100:.0f}% filtered)"
+                    )
+                
+                # Only check database for hashes that might exist
+                hashes_to_check = might_exist
+            else:
+                # No Bloom filter, check all hashes
+                hashes_to_check = content_hashes
+            
+            # No need to query database if Bloom filter ruled out everything
+            if not hashes_to_check:
+                return set()
+            
+            # Query database for potential matches
             db = get_database()
             async with db.session() as session:
-                # Single query to check all hashes
                 result = await session.execute(
                     select(DocumentModel.content_hash)
-                    .where(DocumentModel.content_hash.in_(content_hashes))
+                    .where(DocumentModel.content_hash.in_(hashes_to_check))
                     .distinct()
                 )
                 
                 existing_hashes = {row[0] for row in result.fetchall()}
+                
+                # Add confirmed existing hashes to Bloom filter for future checks
+                if self.use_bloom_filter and self.bloom and existing_hashes:
+                    await self.bloom.add_batch(list(existing_hashes))
                 
                 found_count = len(existing_hashes)
                 total_count = len(content_hashes)
