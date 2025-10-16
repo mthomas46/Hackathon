@@ -11,6 +11,7 @@ from typing import Dict, Any, List
 from pathlib import Path
 from datetime import datetime
 from uuid import UUID
+from sqlalchemy.orm.attributes import flag_modified
 
 from ...storage.db_models import IngestionJobModel
 from ..git.git_service import GitService
@@ -84,29 +85,36 @@ class JobProcessor:
                     return
                 
                 # Update metadata
-                if current_job.job_metadata is None:
-                    current_job.job_metadata = {}
-                
-                current_job.job_metadata["last_processed_file"] = last_file
-                current_job.job_metadata["current_commit"] = current_commit
-                current_job.job_metadata["last_update"] = datetime.utcnow().isoformat()
-                current_job.job_metadata["current_file_index"] = current_file_index
-                current_job.job_metadata["total_files_in_commit"] = total_files
-                current_job.job_metadata["progress_pct"] = round((current_file_index / total_files * 100) if total_files > 0 else 0, 1)
+                # IMPORTANT: Create new dict to ensure SQLAlchemy detects the change
+                metadata = current_job.job_metadata.copy() if current_job.job_metadata else {}
+                metadata["last_processed_file"] = last_file
+                metadata["current_commit"] = current_commit
+                metadata["last_update"] = datetime.utcnow().isoformat()
+                metadata["current_file_index"] = current_file_index
+                metadata["total_files_in_commit"] = total_files
+                metadata["progress_pct"] = round((current_file_index / total_files * 100) if total_files > 0 else 0, 1)
+                current_job.job_metadata = metadata  # Assign new dict to trigger change detection
                 
                 # Update counters
                 current_job.processed_documents = processed
                 current_job.skipped_documents = skipped
                 current_job.failed_documents = failed
                 
+                # Mark the JSONB column as modified so SQLAlchemy knows to update it
+                flag_modified(current_job, "job_metadata")
+                
                 await repo.update(current_job)
                 await session.commit()
                 
-                logger.debug(f"Updated job progress: {current_file_index}/{total_files} files ({current_job.job_metadata['progress_pct']}%)")
+                logger.debug(f"Updated job progress: {current_file_index}/{total_files} files ({metadata.get('progress_pct', 0)}%)")
                 
         except Exception as e:
             # Don't fail the job if metadata update fails
-            logger.warning(f"Failed to update job progress metadata: {e}")
+            logger.error(f"Failed to update job progress metadata: {type(e).__name__}: {e}", exc_info=True)
+            if 'current_job' in locals():
+                logger.error(f"Job ID: {current_job.id}")
+                logger.error(f"Job metadata type: {type(current_job.job_metadata)}")
+                logger.error(f"Job metadata value: {current_job.job_metadata}")
     
     async def process(self, job: IngestionJobModel) -> Dict[str, Any]:
         """
