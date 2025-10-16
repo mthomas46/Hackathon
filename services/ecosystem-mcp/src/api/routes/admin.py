@@ -12,6 +12,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Body, Query
 from pydantic import BaseModel, Field
+from sqlalchemy.orm.attributes import flag_modified
 
 from ...utils.redis_client import get_redis_client
 from ...storage.chromadb_client import get_chroma_client
@@ -59,6 +60,11 @@ class JobStatus(BaseModel):
     embeddings_generated: int
     total_cost_usd: float
     error_message: Optional[str]
+
+
+class FailJobRequest(BaseModel):
+    """Request to fail a job."""
+    error: Optional[str] = Field(default="Job manually failed", description="Reason for failure")
 
 
 # ============================================================================
@@ -312,6 +318,10 @@ async def cancel_job(job_id: UUID):
             job.completed_at = datetime.utcnow()
             job.error_message = "Job cancelled by user"
             
+            # Mark JSONB metadata as modified
+            if job.job_metadata:
+                flag_modified(job, "job_metadata")
+            
             await job_repo.update(job)
             await session.commit()
             
@@ -319,7 +329,7 @@ async def cancel_job(job_id: UUID):
             
             return {
                 "job_id": str(job_id),
-                "status": "cancelled",
+                "status": "failed",
                 "message": f"Job {job_id} has been cancelled",
                 "note": "Currently processing documents may complete. Job marked as failed."
             }
@@ -328,6 +338,90 @@ async def cancel_job(job_id: UUID):
         raise
     except Exception as e:
         logger.error(f"Failed to cancel job {job_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/ingest/{job_id}/fail",
+    response_model=Dict[str, Any],
+    summary="Fail ingestion job",
+    description="Mark a job as failed with a custom error message"
+)
+async def fail_job(job_id: UUID, request: FailJobRequest = Body(...)):
+    """
+    Manually fail an ingestion job.
+    
+    Args:
+        job_id: Job UUID to fail
+        request: Failure request with optional error message
+    
+    Returns:
+        Updated job status
+    
+    Note:
+        - Can only fail jobs with status 'processing' or 'queued'
+        - Job will be marked as 'failed' with provided error message
+        - Worker will detect and stop processing within 10 files
+        - Useful for stuck jobs or jobs that should be terminated
+    
+    Example:
+        POST /api/v1/admin/ingest/{job_id}/fail
+        {
+            "error": "Job taking too long, manually terminating"
+        }
+    """
+    try:
+        db = get_database()
+        async with db.session() as session:
+            job_repo = IngestionJobRepository(session)
+            job = await job_repo.get_by_id(job_id)
+            
+            if not job:
+                raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+            
+            # Check if job can be failed
+            if job.status not in ["processing", "queued"]:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Cannot fail job with status '{job.status}'. Only 'processing' or 'queued' jobs can be failed."
+                )
+            
+            # Update job to failed status
+            job.status = "failed"
+            job.completed_at = datetime.utcnow()
+            job.error_message = request.error or "Job manually failed"
+            
+            # Update metadata with failure info
+            if job.job_metadata:
+                metadata = job.job_metadata.copy()
+            else:
+                metadata = {}
+            
+            metadata["failed_at"] = datetime.utcnow().isoformat()
+            metadata["failed_by"] = "manual_api_call"
+            metadata["failure_reason"] = request.error or "Job manually failed"
+            job.job_metadata = metadata
+            
+            # Mark JSONB metadata as modified
+            flag_modified(job, "job_metadata")
+            
+            await job_repo.update(job)
+            await session.commit()
+            
+            logger.warning(f"Job {job_id} manually failed: {request.error}")
+            
+            return {
+                "job_id": str(job_id),
+                "status": "failed",
+                "message": f"Job {job_id} has been marked as failed",
+                "error": request.error,
+                "note": "Worker will detect failure and stop processing within 10 files (due to periodic existence check)."
+            }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to fail job {job_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
