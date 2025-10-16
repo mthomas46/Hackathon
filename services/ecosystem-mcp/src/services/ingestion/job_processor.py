@@ -244,6 +244,28 @@ class JobProcessor:
             
             # Process each file
             for idx, file_change in enumerate(filtered_files):
+                # Check if job still exists in database every 10 files (graceful shutdown)
+                if idx > 0 and idx % 10 == 0:
+                    try:
+                        # Refresh job from database to check if it was cancelled
+                        db = self.db_service
+                        async with db.session() as session:
+                            from ...storage.repositories.ingestion_job_repository import IngestionJobRepository
+                            job_repo = IngestionJobRepository(session)
+                            current_job = await job_repo.get_by_id(job.id)
+                            
+                            if not current_job:
+                                logger.warning(f"Job {job.id} no longer exists in database, stopping processing")
+                                result["skipped"] += len(filtered_files) - idx
+                                break
+                            
+                            if current_job.status == "failed":
+                                logger.warning(f"Job {job.id} was marked as failed, stopping processing")
+                                result["skipped"] += len(filtered_files) - idx
+                                break
+                    except Exception as e:
+                        logger.debug(f"Could not check job status: {e}")
+                
                 # Get file path for logging
                 file_path_str = file_change if isinstance(file_change, str) else file_change.path
                 
