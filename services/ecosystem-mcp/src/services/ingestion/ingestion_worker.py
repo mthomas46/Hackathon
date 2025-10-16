@@ -40,7 +40,7 @@ class IngestionWorker:
         self.worker_id = str(uuid4())[:8]  # Short unique ID for this worker instance
         self.running = False
         self._task: Optional[asyncio.Task] = None
-        self.job_processor = JobProcessor()
+        self.job_processor = JobProcessor(worker_id=self.worker_id)
         logger.info(f"IngestionWorker initialized (ID: {self.worker_id})")
     
     async def start(self):

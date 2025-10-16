@@ -425,6 +425,82 @@ async def fail_job(job_id: UUID, request: FailJobRequest = Body(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get(
+    "/workers/stuck-check",
+    response_model=Dict[str, Any],
+    summary="Check for stuck workers",
+    description="Detect workers that have stopped sending heartbeats"
+)
+async def check_stuck_workers_endpoint():
+    """
+    Check for stuck workers by monitoring heartbeats.
+    
+    A worker is considered stuck if:
+    - No heartbeat for >10 minutes
+    - Job has been running >5 minutes with no heartbeat at all
+    
+    Returns:
+        Detection results with list of stuck jobs
+    
+    Example Response:
+        {
+            "total_processing": 2,
+            "stuck_workers": 1,
+            "stuck_jobs": [
+                {
+                    "job_id": "abc123...",
+                    "worker_id": "52701e80",
+                    "last_heartbeat": "2025-10-16T01:00:00",
+                    "heartbeat_age_minutes": 15.5,
+                    "reason": "heartbeat_stale"
+                }
+            ],
+            "warnings": [...]
+        }
+    """
+    try:
+        from ...services.ingestion.stuck_worker_monitor import check_stuck_workers
+        result = await check_stuck_workers()
+        return result
+    
+    except Exception as e:
+        logger.error(f"Failed to check stuck workers: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/workers/health-summary",
+    response_model=Dict[str, Any],
+    summary="Get worker health summary",
+    description="Get overview of worker health across all jobs"
+)
+async def get_worker_health_summary_endpoint():
+    """
+    Get summary of worker health.
+    
+    Returns:
+        Health summary including heartbeat statistics
+    
+    Example Response:
+        {
+            "total_jobs": 5,
+            "with_heartbeat": 4,
+            "without_heartbeat": 1,
+            "recent_heartbeat": 3,
+            "stale_heartbeat": 1,
+            "workers": ["52701e80", "abc12345"]
+        }
+    """
+    try:
+        from ...services.ingestion.stuck_worker_monitor import get_worker_health_summary
+        summary = await get_worker_health_summary()
+        return summary
+    
+    except Exception as e:
+        logger.error(f"Failed to get worker health summary: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.delete(
     "/jobs/completed",
     response_model=Dict[str, Any],

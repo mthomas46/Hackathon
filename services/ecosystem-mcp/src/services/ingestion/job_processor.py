@@ -42,12 +42,18 @@ class JobProcessor:
     - Performance optimization
     """
     
-    def __init__(self):
-        """Initialize the job processor."""
+    def __init__(self, worker_id: str = "unknown"):
+        """
+        Initialize the job processor.
+        
+        Args:
+            worker_id: Unique identifier for the worker instance
+        """
+        self.worker_id = worker_id
         self.git_service = None  # Initialized per job
         self.normalizer_factory = NormalizerFactory()
         self.embedding_service = EmbeddingService()
-        logger.info("JobProcessor initialized")
+        logger.info(f"JobProcessor initialized (worker: {worker_id})")
     
     async def _check_job_timeout(self, job: IngestionJobModel) -> bool:
         """
@@ -113,6 +119,46 @@ class JobProcessor:
             return True
         
         return False
+    
+    async def _update_worker_heartbeat(self, job: IngestionJobModel):
+        """
+        Update worker heartbeat in job metadata.
+        
+        Called every 30 files to indicate worker is alive and processing.
+        Used to detect truly stuck workers.
+        
+        Args:
+            job: The ingestion job
+        """
+        try:
+            db = get_database()
+            async with db.session() as session:
+                from ...storage.repositories import IngestionJobRepository
+                repo = IngestionJobRepository(session)
+                current_job = await repo.get_by_id(job.id)
+                
+                if not current_job:
+                    return
+                
+                # Update heartbeat in metadata
+                if current_job.job_metadata:
+                    metadata = current_job.job_metadata.copy()
+                else:
+                    metadata = {}
+                
+                metadata["worker_heartbeat"] = datetime.utcnow().isoformat()
+                metadata["worker_id"] = self.worker_id
+                current_job.job_metadata = metadata
+                
+                flag_modified(current_job, "job_metadata")
+                await repo.update(current_job)
+                await session.commit()
+                
+                logger.debug(f"Worker heartbeat updated for job {job.id}")
+        
+        except Exception as e:
+            # Don't fail job if heartbeat update fails
+            logger.debug(f"Failed to update worker heartbeat: {e}")
     
     async def _update_job_progress(
         self,
@@ -346,6 +392,10 @@ class JobProcessor:
                         result["error"] = "Job timeout exceeded"
                         result["skipped"] += len(filtered_files) - idx
                         break
+                
+                # Update worker heartbeat every 30 files (detect stuck workers)
+                if idx > 0 and idx % 30 == 0:
+                    await self._update_worker_heartbeat(job)
                 
                 # Get file path for logging
                 file_path_str = file_change if isinstance(file_change, str) else file_change.path
