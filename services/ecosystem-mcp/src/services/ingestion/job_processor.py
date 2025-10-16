@@ -49,6 +49,71 @@ class JobProcessor:
         self.embedding_service = EmbeddingService()
         logger.info("JobProcessor initialized")
     
+    async def _check_job_timeout(self, job: IngestionJobModel) -> bool:
+        """
+        Check if job has exceeded maximum runtime.
+        
+        Args:
+            job: The ingestion job to check
+        
+        Returns:
+            True if job exceeded timeout, False otherwise
+        """
+        from datetime import timedelta
+        
+        MAX_JOB_RUNTIME = timedelta(hours=24)
+        
+        if not job.started_at:
+            return False
+        
+        runtime = datetime.utcnow() - job.started_at
+        
+        if runtime > MAX_JOB_RUNTIME:
+            logger.error(
+                f"Job {job.id} exceeded timeout: {runtime} > {MAX_JOB_RUNTIME}"
+            )
+            
+            # Fail the job in database
+            try:
+                db = get_database()
+                async with db.session() as session:
+                    from ...storage.repositories import IngestionJobRepository
+                    repo = IngestionJobRepository(session)
+                    current_job = await repo.get_by_id(job.id)
+                    
+                    if current_job and current_job.status == "processing":
+                        current_job.status = "failed"
+                        current_job.error_message = (
+                            f"Job timeout: exceeded maximum runtime of {MAX_JOB_RUNTIME} "
+                            f"(actual: {runtime})"
+                        )
+                        current_job.completed_at = datetime.utcnow()
+                        
+                        # Update metadata
+                        if current_job.job_metadata:
+                            metadata = current_job.job_metadata.copy()
+                        else:
+                            metadata = {}
+                        
+                        metadata["timeout_detected_at"] = datetime.utcnow().isoformat()
+                        metadata["runtime_seconds"] = runtime.total_seconds()
+                        metadata["max_runtime_seconds"] = MAX_JOB_RUNTIME.total_seconds()
+                        metadata["timeout_reason"] = "exceeded_max_runtime"
+                        current_job.job_metadata = metadata
+                        
+                        flag_modified(current_job, "job_metadata")
+                        await repo.update(current_job)
+                        await session.commit()
+                        
+                        logger.warning(f"Job {job.id} marked as failed due to timeout")
+            
+            except Exception as e:
+                logger.error(f"Failed to update job timeout status: {e}", exc_info=True)
+            
+            return True
+        
+        return False
+    
     async def _update_job_progress(
         self,
         job: IngestionJobModel,
@@ -110,18 +175,11 @@ class JobProcessor:
                 
         except Exception as e:
             # Don't fail the job if metadata update fails
-            # DEBUG: Write to file since logging isn't working
-            import traceback
-            with open('/tmp/job_update_error.log', 'a') as f:
-                f.write(f"\n{'='*50}\n")
-                f.write(f"Exception type: {type(e).__name__}\n")
-                f.write(f"Exception message: {e}\n")
-                f.write(f"Full traceback:\n{traceback.format_exc()}\n")
-                if 'current_job' in locals():
-                    f.write(f"Job ID: {current_job.id}\n")
-                    f.write(f"Job metadata: {current_job.job_metadata}\n")
-            
             logger.error(f"Failed to update job progress metadata: {type(e).__name__}: {e}", exc_info=True)
+            if 'current_job' in locals():
+                logger.error(f"Job ID: {current_job.id}")
+                logger.error(f"Job metadata type: {type(current_job.job_metadata)}")
+                logger.error(f"Job metadata value: {current_job.job_metadata}")
     
     async def process(self, job: IngestionJobModel) -> Dict[str, Any]:
         """
@@ -280,6 +338,14 @@ class JobProcessor:
                                 break
                     except Exception as e:
                         logger.debug(f"Could not check job status: {e}")
+                
+                # Check job timeout every 100 files (prevent indefinite runs)
+                if idx > 0 and idx % 100 == 0:
+                    if await self._check_job_timeout(job):
+                        logger.error(f"Job {job.id} exceeded timeout, stopping processing")
+                        result["error"] = "Job timeout exceeded"
+                        result["skipped"] += len(filtered_files) - idx
+                        break
                 
                 # Get file path for logging
                 file_path_str = file_change if isinstance(file_change, str) else file_change.path

@@ -172,6 +172,13 @@ async def lifespan(app: FastAPI):
         await init_redis()
         logger.info("  ✅ Redis initialized")
         
+        # Verify Redis persistence
+        from ..utils.redis_persistence_checker import verify_redis_persistence
+        redis_check = await verify_redis_persistence()
+        if redis_check["warnings"]:
+            for warning in redis_check["warnings"]:
+                logger.warning(f"  ⚠️  Redis: {warning}")
+        
         # Start ingestion worker
         from ..services.ingestion import get_ingestion_worker
         ingestion_worker = get_ingestion_worker()
