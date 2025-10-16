@@ -725,6 +725,56 @@ async def clear_database_alert():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get(
+    "/code-quality/validate-jsonb",
+    response_model=Dict[str, Any],
+    summary="Validate JSONB field usage",
+    description="Check codebase for JSONB fields modified without flag_modified()"
+)
+async def validate_jsonb_usage():
+    """
+    Validate JSONB field usage in codebase.
+    
+    Checks for:
+    - JSONB field assignments without flag_modified()
+    - In-place modifications (update, pop, etc.)
+    - Item assignments (field['key'] = value)
+    
+    Returns:
+        Validation results with violations
+    
+    Example Response:
+        {
+            "files_checked": 50,
+            "files_with_violations": 2,
+            "total_violations": 5,
+            "errors": 3,
+            "warnings": 2,
+            "violations": [
+                {
+                    "file": "src/.../job_processor.py",
+                    "line": 123,
+                    "code": "job.job_metadata = metadata",
+                    "field": "job_metadata",
+                    "severity": "error",
+                    "message": "JSONB field 'job_metadata' assigned without flag_modified() call"
+                }
+            ]
+        }
+    """
+    try:
+        from ...utils.jsonb_validator import validate_codebase
+        
+        # Run validation
+        results = validate_codebase()
+        
+        return results
+    
+    except Exception as e:
+        logger.error(f"Failed to validate JSONB usage: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.delete(
     "/jobs/completed",
     response_model=Dict[str, Any],
