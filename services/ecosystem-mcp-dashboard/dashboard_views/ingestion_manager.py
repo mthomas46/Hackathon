@@ -915,7 +915,6 @@ docker exec ecosystem-mcp-service df -h
                                 progress_pct = (processed / total * 100) if total > 0 else 0
                                 
                                 # Calculate time elapsed and processing rate
-                                from datetime import datetime
                                 try:
                                     start_time = datetime.fromisoformat(started_at.replace('Z', '+00:00'))
                                     elapsed = datetime.utcnow().replace(tzinfo=start_time.tzinfo) - start_time
