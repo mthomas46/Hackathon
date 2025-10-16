@@ -2251,7 +2251,7 @@ networks:
     networks:
       - mcp_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8015/_stcore/health"\]
+      test: ["CMD", "curl", "-f", "http://localhost:8015/_stcore/health"]
       interval: 30s
       timeout: 10s
       retries: 3
