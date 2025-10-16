@@ -13,6 +13,7 @@ from datetime import datetime
 
 from ...config import settings
 from ...utils.redis_client import get_redis_client
+from ...utils.graceful_shutdown import get_shutdown_handler, is_shutdown_requested
 from ...storage import get_database
 from ...storage.repositories import IngestionJobRepository
 from .job_processor import JobProcessor
@@ -41,6 +42,8 @@ class IngestionWorker:
         self.running = False
         self._task: Optional[asyncio.Task] = None
         self.job_processor = JobProcessor(worker_id=self.worker_id)
+        self.shutdown_handler = None
+        self.current_job_id: Optional[UUID] = None
         logger.info(f"IngestionWorker initialized (ID: {self.worker_id})")
     
     async def start(self):
@@ -53,9 +56,16 @@ class IngestionWorker:
             logger.warning("IngestionWorker already running")
             return
         
+        # Setup graceful shutdown handler
+        self.shutdown_handler = get_shutdown_handler(
+            max_shutdown_time=60,
+            checkpoint_callback=self._save_checkpoint,
+            cleanup_callback=self._cleanup
+        )
+        
         self.running = True
         self._task = asyncio.create_task(self._worker_loop())
-        logger.info("✅ IngestionWorker started")
+        logger.info("✅ IngestionWorker started with graceful shutdown handler")
     
     async def stop(self):
         """
@@ -89,12 +99,26 @@ class IngestionWorker:
         
         while self.running:
             try:
+                # Check for shutdown request
+                if is_shutdown_requested():
+                    logger.info("🛑 Shutdown requested, stopping worker loop")
+                    if self.shutdown_handler:
+                        await self.shutdown_handler.shutdown()
+                    break
+                
                 # Get next job from Redis stream
                 result = await self._get_next_job()
                 
                 if result:
                     message_id, job_id = result
+                    self.current_job_id = job_id
+                    
                     logger.info(f"Processing job: {job_id}")
+                    
+                    # Mark that we're finishing current work
+                    if self.shutdown_handler and is_shutdown_requested():
+                        await self.shutdown_handler.finish_current_work(f"job {job_id}")
+                    
                     await self._process_job(job_id)
                     
                     # ✅ CRITICAL: ACK the message after processing
@@ -105,6 +129,8 @@ class IngestionWorker:
                         message_id
                     )
                     logger.debug(f"✅ ACK'd message {message_id}")
+                    
+                    self.current_job_id = None
                 else:
                     # No jobs available, wait before checking again
                     await asyncio.sleep(5)
@@ -112,6 +138,8 @@ class IngestionWorker:
             except Exception as e:
                 logger.error(f"Error in worker loop: {e}", exc_info=True)
                 await asyncio.sleep(10)  # Back off on errors
+        
+        logger.info("✅ Worker loop stopped")
     
     async def _get_next_job(self) -> Optional[tuple[str, UUID]]:
         """
@@ -215,6 +243,61 @@ class IngestionWorker:
                         await session.commit()
                 except Exception as update_error:
                     logger.error(f"Failed to update job status: {update_error}")
+    
+    async def _save_checkpoint(self):
+        """
+        Save checkpoint for current job.
+        
+        Called during graceful shutdown to preserve job state.
+        """
+        if not self.current_job_id:
+            logger.debug("No current job to checkpoint")
+            return
+        
+        try:
+            logger.info(f"💾 Saving checkpoint for job {self.current_job_id}")
+            
+            async with get_database().session() as session:
+                repo = IngestionJobRepository(session)
+                job = await repo.get_by_id(self.current_job_id)
+                
+                if job:
+                    # Update metadata with shutdown info
+                    from sqlalchemy.orm.attributes import flag_modified
+                    
+                    metadata = job.job_metadata.copy() if job.job_metadata else {}
+                    metadata['checkpoint_saved_at'] = datetime.utcnow().isoformat()
+                    metadata['shutdown_requested'] = True
+                    metadata['worker_id'] = self.worker_id
+                    job.job_metadata = metadata
+                    flag_modified(job, 'job_metadata')
+                    
+                    await repo.update(job)
+                    await session.commit()
+                    
+                    logger.info(f"✅ Checkpoint saved for job {self.current_job_id}")
+        
+        except Exception as e:
+            logger.error(f"Failed to save checkpoint: {e}", exc_info=True)
+    
+    async def _cleanup(self):
+        """
+        Cleanup tasks before shutdown.
+        
+        Called during graceful shutdown.
+        """
+        try:
+            logger.info("🧹 Running cleanup tasks...")
+            
+            # Log worker status
+            logger.info(f"Worker {self.worker_id} shutdown complete")
+            
+            # Future: Close any open connections, flush buffers, etc.
+            
+            logger.info("✅ Cleanup complete")
+        
+        except Exception as e:
+            logger.error(f"Failed to run cleanup: {e}", exc_info=True)
 
 
 # Global worker instance
