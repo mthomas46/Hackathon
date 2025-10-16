@@ -250,12 +250,35 @@ def show(api_base_url: str):
                         except Exception as e:
                             st.error(f"❌ Error: {str(e)}")
             else:
+                st.info("""
+                💡 **Using Container Path Mode**
+                
+                For subdirectory filtering and git detection, switch to **Host Machine Path** mode above.
+                
+                Container paths are assumed to be pre-resolved and won't show git detection options.
+                """)
+                
                 repo_path = st.text_input(
                     "Repository Path",
                     value="/app",
-                    help="Path inside the container (e.g., /app)"
+                    help="Path inside the container (e.g., /app, /repo)"
                 )
                 resolve_host_path = False
+                
+                # Optional: Allow manual subdirectory specification for container paths
+                with st.expander("🎯 Advanced: Manual Subdirectory Filter"):
+                    manual_subdir = st.text_input(
+                        "Target Subdirectory",
+                        value="",
+                        placeholder="e.g., services/ecosystem-mcp-dashboard",
+                        help="Specify a subdirectory to filter files (relative to repo root)"
+                    )
+                    if manual_subdir:
+                        st.info(f"✅ Will filter to: `{manual_subdir}`")
+                        # Store for later use
+                        st.session_state.manual_target_subdirectory = manual_subdir.strip('/')
+                    else:
+                        st.session_state.manual_target_subdirectory = None
             
             # Ingestion mode
             mode = st.selectbox(
@@ -552,8 +575,15 @@ def show(api_base_url: str):
                     }
                     
                     # Add target_subdirectory if user confirmed subdirectory-only ingestion
+                    # Check both confirmed_target_subdir (from host path) and manual_target_subdirectory (from container path)
+                    target_subdir = None
                     if hasattr(st.session_state, 'confirmed_target_subdir') and st.session_state.confirmed_target_subdir:
-                        request_data["target_subdirectory"] = st.session_state.confirmed_target_subdir
+                        target_subdir = st.session_state.confirmed_target_subdir
+                    elif hasattr(st.session_state, 'manual_target_subdirectory') and st.session_state.manual_target_subdirectory:
+                        target_subdir = st.session_state.manual_target_subdirectory
+                    
+                    if target_subdir:
+                        request_data["target_subdirectory"] = target_subdir
                     
                     # 🔍 DEBUGGING: Log final request
                     logger.info(f"Final request_data: {request_data}")
