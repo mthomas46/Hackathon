@@ -1,0 +1,32 @@
+# Dockerfile for running tests in the embedding service
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install all dependencies including test dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install additional test dependencies
+RUN pip install --no-cache-dir \
+    pytest>=7.4.0 \
+    pytest-asyncio>=0.21.0 \
+    pytest-cov>=4.1.0 \
+    pytest-timeout>=2.1.0 \
+    pytest-html>=4.0.0
+
+# Copy application code
+COPY src/ ./src/
+COPY tests/ ./tests/
+COPY pytest.ini ./
+
+# Run tests by default
+CMD ["pytest", "tests/", "-v", "--cov=src", "--cov-report=html", "--cov-report=term", "--html=test_results.html", "--self-contained-html"]
+

@@ -15,7 +15,8 @@ import structlog
 from .config.settings import settings
 from .services.fastembed_service import get_fastembed_service
 from .services.cache_service import get_cache_service
-from .api.routes import embeddings
+from .services.cache_warming import get_cache_warming_service
+from .api.routes import embeddings, analytics
 from .models.schemas import HealthResponse
 
 # Configure logging
@@ -63,6 +64,12 @@ async def lifespan(app: FastAPI):
         logger.info("Connecting to Redis...")
         cache = get_cache_service()
         await cache.connect()
+        
+        # Warm cache with common embeddings
+        if cache.enabled:
+            logger.info("Warming cache...")
+            warming_service = get_cache_warming_service()
+            await warming_service.warm_cache()
         
         logger.info(f"✅ {settings.service_name} started successfully!")
         logger.info(f"   Model: {settings.model_name}")
@@ -115,6 +122,10 @@ app = FastAPI(
             "description": "Generate text embeddings with caching"
         },
         {
+            "name": "analytics",
+            "description": "Cache analytics and embedding quality metrics"
+        },
+        {
             "name": "health",
             "description": "Health checks and service information"
         }
@@ -132,6 +143,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(embeddings.router)
+app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 
 
 @app.get("/health", response_model=HealthResponse)

@@ -7,11 +7,13 @@ and storage operations.
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from pathlib import Path
 from datetime import datetime
 from uuid import UUID
 from sqlalchemy.orm.attributes import flag_modified
+import asyncio
+import json
 
 from ...storage.db_models import IngestionJobModel
 from ..git.git_service import GitService
@@ -21,6 +23,8 @@ from ...storage import get_database
 from ...storage.repositories import DocumentRepository
 from ...storage.chromadb_client import get_chroma_client
 from .commit_optimizer import get_commit_optimizer
+from ...storage.redis_client import get_redis_client
+from ..git.git_error_handler import get_git_error_handler, GitCorruptionError
 
 logger = logging.getLogger(__name__)
 
@@ -73,11 +77,64 @@ class JobProcessor:
         import asyncio
         self.commit_semaphore = asyncio.Semaphore(max_concurrent_commits)
         
+        # Real-time progress tracking
+        self.redis_client = None  # Initialized per job
+        self.current_job_id: Optional[str] = None
+        
+        # Error handling
+        self.git_error_handler = get_git_error_handler()
+        
+        # Timeout configuration (per commit)
+        self.commit_timeout_seconds = 600  # 10 minutes per commit max
+        
         logger.info(
             f"JobProcessor initialized (worker: {worker_id}, "
             f"batch_optimization: {'✅ ENABLED' if use_batch_optimization else '❌ DISABLED'}, "
-            f"parallel_commits: {max_concurrent_commits})"
+            f"parallel_commits: {max_concurrent_commits}, "
+            f"commit_timeout: {self.commit_timeout_seconds}s)"
         )
+    
+    async def _init_progress_tracking(self, job_id: str):
+        """Initialize real-time progress tracking for a job."""
+        self.current_job_id = job_id
+        try:
+            self.redis_client = get_redis_client()
+            logger.info(f"✅ Real-time progress tracking initialized for job {job_id}")
+        except Exception as e:
+            logger.warning(f"⚠️  Could not initialize Redis progress tracking: {e}")
+            self.redis_client = None
+    
+    async def _update_progress(self, phase: str, current: int, total: int, **extra_data):
+        """Update real-time progress in Redis."""
+        if not self.redis_client or not self.current_job_id:
+            return
+        
+        try:
+            progress_key = f"job_progress:{self.current_job_id}"
+            progress_data = {
+                "job_id": self.current_job_id,
+                "phase": phase,
+                "current": current,
+                "total": total,
+                "percentage": round((current / total * 100) if total > 0 else 0, 2),
+                "timestamp": datetime.utcnow().isoformat(),
+                **extra_data
+            }
+            
+            await self.redis_client.set(
+                progress_key,
+                json.dumps(progress_data),
+                ex=3600  # Expire after 1 hour
+            )
+            
+            # Also publish to pub/sub for real-time updates
+            await self.redis_client.publish(
+                f"job_progress_channel:{self.current_job_id}",
+                json.dumps(progress_data)
+            )
+            
+        except Exception as e:
+            logger.debug(f"Could not update progress: {e}")
     
     def calculate_optimal_batch_size(self, files: List[Dict[str, Any]]) -> int:
         """
@@ -375,6 +432,9 @@ class JobProcessor:
         """
         logger.info(f"Processing job {job.id}: mode={job.mode}, repo={job.repo_path}")
         
+        # Initialize real-time progress tracking
+        await self._init_progress_tracking(str(job.id))
+        
         result = {
             "success": False,
             "processed_documents": 0,
@@ -388,16 +448,20 @@ class JobProcessor:
         
         try:
             # Initialize Git service for this job
+            await self._update_progress("initializing", 0, 100, message="Initializing Git service...")
             self.git_service = GitService(repo_path=job.repo_path)
             
             # Get commits based on mode
+            await self._update_progress("scanning", 10, 100, message="Scanning repository for commits...")
             commits = await self._get_commits_for_mode(job.mode)
             
             if not commits:
                 result["error"] = "No commits found"
+                await self._update_progress("failed", 0, 0, message="No commits found")
                 return result
             
             logger.info(f"Found {len(commits)} commits to process")
+            await self._update_progress("processing", 0, len(commits), message=f"Found {len(commits)} commits")
             
             # PHASE 2: Process commits in PARALLEL if enabled and multiple commits
             if self.use_batch_optimization and len(commits) > 1:
@@ -427,12 +491,32 @@ class JobProcessor:
                         result["skipped_documents"] += commit_result.get("skipped", 0)
                         result["embeddings_generated"] += commit_result["embeddings"]
                         result["total_cost_usd"] += commit_result.get("cost", 0.0)
+                    
+                    # Update progress after each commit
+                    await self._update_progress(
+                        "processing",
+                        idx,
+                        len(commits),
+                        message=f"Processed {idx}/{len(commits)} commits",
+                        processed=result["processed_documents"],
+                        failed=result["failed_documents"],
+                        skipped=result["skipped_documents"],
+                        embeddings=result["embeddings_generated"]
+                    )
             else:
                 # Fallback to sequential processing for single commit or non-batch mode
                 logger.info(f"Processing {len(commits)} commits sequentially")
                 
                 for i, commit in enumerate(commits, 1):
                     logger.info(f"Processing commit {i}/{len(commits)}: {commit.sha[:8]}")
+                    
+                    await self._update_progress(
+                        "processing",
+                        i - 1,
+                        len(commits),
+                        message=f"Processing commit {i}/{len(commits)}: {commit.sha[:8]}",
+                        current_commit=commit.sha[:8]
+                    )
                     
                     # Use optimized batch processing if enabled
                     if self.use_batch_optimization:
@@ -448,12 +532,40 @@ class JobProcessor:
                     result["skipped_documents"] += commit_result.get("skipped", 0)
                     result["embeddings_generated"] += commit_result["embeddings"]
                     result["total_cost_usd"] += commit_result.get("cost", 0.0)
+                    
+                    # Update progress after each commit
+                    await self._update_progress(
+                        "processing",
+                        i,
+                        len(commits),
+                        message=f"Processed {i}/{len(commits)} commits",
+                        processed=result["processed_documents"],
+                        failed=result["failed_documents"],
+                        skipped=result["skipped_documents"],
+                        embeddings=result["embeddings_generated"]
+                    )
             
             result["total_documents"] = result["processed_documents"] + result["failed_documents"] + result["skipped_documents"]
             result["success"] = True
             
             # Clear checkpoint after successful completion
             await self.checkpoint_manager.clear_checkpoint(job.id)
+            
+            # Update final progress
+            await self._update_progress(
+                "completed",
+                result["total_documents"],
+                result["total_documents"],
+                message=f"Completed: {result['processed_documents']} processed, {result['embeddings_generated']} embeddings",
+                processed=result["processed_documents"],
+                failed=result["failed_documents"],
+                skipped=result["skipped_documents"],
+                embeddings=result["embeddings_generated"],
+                cost=result["total_cost_usd"]
+            )
+            
+            # Log git error summary
+            self.git_error_handler.log_error_summary()
             
             logger.info(
                 f"✅ Job {job.id} processing complete: "
@@ -465,6 +577,17 @@ class JobProcessor:
         except Exception as e:
             logger.error(f"Error processing job {job.id}: {e}", exc_info=True)
             result["error"] = str(e)
+            
+            # Log git error summary even on failure
+            self.git_error_handler.log_error_summary()
+            
+            await self._update_progress(
+                "failed",
+                0,
+                0,
+                message=f"Failed: {str(e)}",
+                error=str(e)
+            )
         
         return result
     
@@ -742,10 +865,11 @@ class JobProcessor:
         total_commits: int
     ) -> Dict[str, Any]:
         """
-        PHASE 2: Process a single commit with concurrency control.
+        PHASE 2: Process a single commit with concurrency control and timeout protection.
         
         Uses semaphore to limit number of concurrent commits being processed.
         Wraps the optimized batch processing with parallel execution support.
+        Includes timeout protection and git error handling.
         
         Args:
             commit: GitCommit object
@@ -760,13 +884,19 @@ class JobProcessor:
             logger.info(f"🔄 Starting commit {commit_num}/{total_commits}: {commit.sha[:8]}")
             
             try:
-                # Use existing optimized batch processing
+                # Add timeout protection
                 if self.use_batch_optimization:
-                    result = await self._process_commit_with_batch_optimization(
+                    process_task = self._process_commit_with_batch_optimization(
                         commit, job, batch_size=20
                     )
                 else:
-                    result = await self._process_commit(commit, job)
+                    process_task = self._process_commit(commit, job)
+                
+                # Apply timeout
+                result = await asyncio.wait_for(
+                    process_task,
+                    timeout=self.commit_timeout_seconds
+                )
                 
                 logger.info(
                     f"✅ Completed commit {commit_num}/{total_commits}: {commit.sha[:8]} "
@@ -774,14 +904,59 @@ class JobProcessor:
                 )
                 return result
                 
-            except Exception as e:
-                logger.error(f"❌ Failed commit {commit_num}/{total_commits}: {commit.sha[:8]} - {e}", exc_info=True)
+            except asyncio.TimeoutError:
+                logger.error(
+                    f"⏱️  TIMEOUT: Commit {commit_num}/{total_commits}: {commit.sha[:8]} "
+                    f"exceeded {self.commit_timeout_seconds}s timeout"
+                )
                 return {
                     "processed": 0,
                     "failed": 1,
                     "skipped": 0,
                     "embeddings": 0,
-                    "cost": 0.0
+                    "cost": 0.0,
+                    "error": f"Timeout after {self.commit_timeout_seconds}s"
+                }
+                
+            except GitCorruptionError as e:
+                logger.error(
+                    f"🔴 GIT CORRUPTION in commit {commit_num}/{total_commits}: {commit.sha[:8]} - {e}"
+                )
+                return {
+                    "processed": 0,
+                    "failed": 1,
+                    "skipped": 0,
+                    "embeddings": 0,
+                    "cost": 0.0,
+                    "error": f"Git corruption: {str(e)}"
+                }
+                
+            except Exception as e:
+                # Classify the error
+                error_classification = self.git_error_handler.classify_error(
+                    e,
+                    {
+                        "commit_sha": commit.sha,
+                        "operation": "process_commit",
+                        "commit_num": commit_num,
+                        "total_commits": total_commits
+                    }
+                )
+                
+                logger.error(
+                    f"❌ Failed commit {commit_num}/{total_commits}: {commit.sha[:8]} - "
+                    f"{error_classification['category']}: {e}",
+                    exc_info=True
+                )
+                
+                return {
+                    "processed": 0,
+                    "failed": 1,
+                    "skipped": 0,
+                    "embeddings": 0,
+                    "cost": 0.0,
+                    "error": str(e),
+                    "error_category": error_classification['category']
                 }
     
     async def _process_commit_with_batch_optimization(
@@ -825,9 +1000,31 @@ class JobProcessor:
                 result["skipped"] = commit_check["document_count"]
                 return result
             
-            # Get and filter files
+            # Get and filter files with error handling
             target_subdirectory = job.job_metadata.get('target_subdirectory') if job.job_metadata else None
-            files = await self.git_service.get_commit_files(commit.sha, target_subdirectory)
+            
+            try:
+                files = await self.git_service.get_commit_files(commit.sha, target_subdirectory)
+            except Exception as e:
+                # Classify git error
+                error_classification = self.git_error_handler.classify_error(
+                    e,
+                    {
+                        "commit_sha": commit.sha,
+                        "operation": "get_commit_files",
+                        "subdirectory": target_subdirectory
+                    }
+                )
+                
+                if self.git_error_handler.should_skip_commit(error_classification):
+                    logger.warning(
+                        f"⏭️  Skipping corrupt commit {commit.sha[:8]}: {error_classification['error_message']}"
+                    )
+                    result["failed"] = 1
+                    result["error"] = error_classification['error_message']
+                    return result
+                else:
+                    raise
             
             if not files:
                 return result

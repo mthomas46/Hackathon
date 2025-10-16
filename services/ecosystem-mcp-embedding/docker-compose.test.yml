@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Redis for testing
+  redis-test:
+    image: redis:7-alpine
+    container_name: embedding-test-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - test-network
+
+  # Test runner
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: embedding-test-runner
+    environment:
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      MODEL_NAME: "BAAI/bge-small-en-v1.5"  # Smaller model for faster tests
+      MODEL_DIMENSIONS: 384
+      CACHE_TTL: 3600
+      CACHE_ENABLED: "true"
+      LOG_LEVEL: DEBUG
+      MIN_DISK_SPACE_GB: 0  # Disable for tests
+    volumes:
+      - ./test_results:/app/htmlcov  # Export coverage reports
+      - ./test_results:/app  # Export HTML test results
+    depends_on:
+      redis-test:
+        condition: service_healthy
+    networks:
+      - test-network
+    command: >
+      sh -c "
+        echo '🧪 Starting test suite...' &&
+        pytest tests/ -v 
+          --cov=src 
+          --cov-report=html 
+          --cov-report=term-missing 
+          --html=test_results.html 
+          --self-contained-html 
+          --junit-xml=test_results.xml
+          -x
+          --tb=short &&
+        echo '✅ Tests complete! Results in ./test_results/'
+      "
+
+networks:
+  test-network:
+    driver: bridge
+
