@@ -228,8 +228,11 @@ class JobProcessor:
         }
         
         try:
-            # Get files changed in this commit
-            files = await self.git_service.get_commit_files(commit.sha)
+            # Get target_subdirectory from job metadata if specified
+            target_subdirectory = job.job_metadata.get('target_subdirectory') if job.job_metadata else None
+            
+            # Get files changed in this commit (filtered by subdirectory if specified)
+            files = await self.git_service.get_commit_files(commit.sha, target_subdirectory)
             
             if not files:
                 return result

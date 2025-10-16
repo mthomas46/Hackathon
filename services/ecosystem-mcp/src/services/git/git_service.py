@@ -228,7 +228,8 @@ class GitService:
     
     async def get_commit_files(
         self,
-        commit_sha: str
+        commit_sha: str,
+        target_subdirectory: Optional[str] = None
     ) -> List[str]:
         """
         Get list of all files at a specific commit.
@@ -237,42 +238,70 @@ class GitService:
         
         Args:
             commit_sha: Git commit SHA
+            target_subdirectory: Optional subdirectory to filter files (e.g., "services/ecosystem-mcp")
         
         Returns:
-            List of file paths
+            List of file paths (filtered by subdirectory if specified)
         """
-        return await self.get_files_at_commit(commit_sha)
+        return await self.get_files_at_commit(commit_sha, target_subdirectory)
     
     async def get_files_at_commit(
         self,
-        commit_sha: str
+        commit_sha: str,
+        target_subdirectory: Optional[str] = None
     ) -> List[str]:
         """
         Get list of all files at a specific commit.
         
         Args:
             commit_sha: Git commit SHA
+            target_subdirectory: Optional subdirectory to filter files (e.g., "services/ecosystem-mcp")
         
         Returns:
-            List of file paths
+            List of file paths (filtered by subdirectory if specified)
         """
         return await asyncio.to_thread(
             self._get_files_at_commit_sync,
-            commit_sha
+            commit_sha,
+            target_subdirectory
         )
     
     def _get_files_at_commit_sync(
         self,
-        commit_sha: str
+        commit_sha: str,
+        target_subdirectory: Optional[str] = None
     ) -> List[str]:
-        """Synchronous implementation of get_files_at_commit."""
+        """
+        Synchronous implementation of get_files_at_commit.
+        
+        Args:
+            commit_sha: Git commit SHA
+            target_subdirectory: Optional subdirectory to filter files
+        
+        Returns:
+            List of file paths (filtered by subdirectory if specified)
+        """
         try:
             commit = self.repo.commit(commit_sha)
             files = []
             
+            # Normalize target_subdirectory (remove leading/trailing slashes)
+            if target_subdirectory:
+                target_subdirectory = target_subdirectory.strip('/')
+                logger.info(f"Filtering files for subdirectory: {target_subdirectory}")
+            
             for item in commit.tree.traverse():
                 if item.type == 'blob':  # File (not directory)
-                    files.append(item.path)
+                    # If target_subdirectory specified, only include files in that directory
+                    if target_subdirectory:
+                        # Check if file path starts with target subdirectory
+                        if item.path.startswith(target_subdirectory + '/') or item.path == target_subdirectory:
+                            files.append(item.path)
+                    else:
+                        files.append(item.path)
+            
+            if target_subdirectory:
+                logger.info(f"Found {len(files)} files in {target_subdirectory}")
             
             return files
         except git.BadName:

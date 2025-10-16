@@ -30,7 +30,8 @@ class IngestionJobRepository(BaseRepository[IngestionJobModel]):
         self,
         mode: str,
         status: str = "running",
-        repo_path: Optional[str] = None
+        repo_path: Optional[str] = None,
+        job_metadata: Optional[dict] = None
     ) -> IngestionJobModel:
         """
         Create new ingestion job.
@@ -39,6 +40,7 @@ class IngestionJobRepository(BaseRepository[IngestionJobModel]):
             mode: Ingestion mode (quick, full, etc.)
             status: Initial status (default: running)
             repo_path: Repository path if applicable
+            job_metadata: Optional metadata (e.g., target_subdirectory)
         
         Returns:
             Created job model
@@ -51,7 +53,8 @@ class IngestionJobRepository(BaseRepository[IngestionJobModel]):
             processed_documents=0,
             failed_documents=0,
             embeddings_generated=0,
-            total_cost_usd=0.0
+            total_cost_usd=0.0,
+            job_metadata=job_metadata or {}
         )
         return await self.create(job)
     

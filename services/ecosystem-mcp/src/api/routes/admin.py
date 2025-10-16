@@ -126,6 +126,12 @@ async def start_ingestion(
                     detail=f"Repository path does not exist: {request.repo_path}"
                 )
         
+        # Prepare job metadata
+        job_metadata = {}
+        if request.target_subdirectory:
+            job_metadata['target_subdirectory'] = request.target_subdirectory
+            logger.info(f"Job will target subdirectory: {request.target_subdirectory}")
+        
         # Create job in database
         db = get_database()
         async with db.session() as session:
@@ -133,7 +139,8 @@ async def start_ingestion(
             job = await job_repo.create_job(
                 mode=request.mode,
                 status="queued",
-                repo_path=str(repo_path)
+                repo_path=str(repo_path),
+                job_metadata=job_metadata
             )
             await session.commit()
             

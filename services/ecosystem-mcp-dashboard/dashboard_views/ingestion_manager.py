@@ -432,17 +432,19 @@ def show(api_base_url: str):
                         ingestion_scope = st.radio(
                             "What would you like to ingest?",
                             options=[
-                                f"🎯 Just this subdirectory: {git_info['target_subdir']}",
-                                f"📦 Entire git repository: {git_info['git_root']}",
+                                f"🎯 Only files in: {git_info['target_subdir']}",
+                                f"📦 All files in entire repository: {git_info['git_root']}",
                             ],
-                            index=0,  # Default to subdirectory
-                            key="ingestion_scope_choice"
+                            index=0,  # Default to subdirectory (what you entered!)
+                            key="ingestion_scope_choice",
+                            help="Choose which files to process. Git metadata (commits, history) will always come from the repository root."
                         )
                         
                         # Update target based on choice
                         if ingestion_scope.startswith("📦"):
                             # User chose entire repo
-                            st.info("✅ Will ingest the **entire git repository**")
+                            st.success(f"✅ **Scope:** ALL files in `{git_info['git_root']}`")
+                            st.info("📊 Git metadata will be read from repository root")
                             target_subdirectory = None
                             # Update resolved_path to point to git root, not subdirectory
                             # Find the git root in container (remove the subdirectory part)
@@ -450,14 +452,16 @@ def show(api_base_url: str):
                                 old_resolved = resolved_path
                                 # Remove subdirectory from container path
                                 resolved_path = resolved_path[:-len(git_info["target_subdir"])].rstrip("/")
-                                st.info(f"📂 Using git root path: `{resolved_path}`")
+                                st.caption(f"📂 Repository path: `{resolved_path}`")
                                 logger.info(f"User chose full repo: {old_resolved} → {resolved_path}")
                         else:
                             # User chose subdirectory
-                            st.info(f"✅ Will ingest only the **`{git_info['target_subdir']}`** subdirectory")
+                            st.success(f"✅ **Scope:** ONLY files in `{git_info['target_subdir']}/`")
+                            st.info("📊 Git metadata will be read from repository root (for versioning)")
                             target_subdirectory = git_info["target_subdir"]
                             logger.info(f"User chose subdirectory: {resolved_path} with target_subdir={target_subdirectory}")
                             # resolved_path already points to subdirectory from validation
+                            st.caption(f"📂 Filtered to: `{resolved_path}/{target_subdirectory}`")
                         
                         # Warning for nested git repos
                         st.warning("""
