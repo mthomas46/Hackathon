@@ -501,6 +501,116 @@ async def get_worker_health_summary_endpoint():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get(
+    "/queue/health",
+    response_model=Dict[str, Any],
+    summary="Check Redis queue health",
+    description="Verify Redis queue matches PostgreSQL job state"
+)
+async def check_queue_health():
+    """
+    Check Redis queue health and consistency.
+    
+    Verifies:
+    - Job count matches between PostgreSQL and Redis
+    - No orphaned Redis messages
+    - No missing Redis messages for queued jobs
+    - Consumer group status
+    
+    Returns:
+        Health check results with warnings and recommendations
+    
+    Example Response:
+        {
+            "healthy": true,
+            "postgres_queued": 3,
+            "postgres_processing": 2,
+            "redis_messages": 3,
+            "redis_pending": 2,
+            "orphaned_messages": [],
+            "missing_messages": [],
+            "warnings": [],
+            "recommendations": []
+        }
+    """
+    try:
+        from ...utils.redis_queue_health_checker import check_redis_queue_health
+        result = await check_redis_queue_health()
+        return result
+    
+    except Exception as e:
+        logger.error(f"Failed to check queue health: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/queue/cleanup-orphaned",
+    response_model=Dict[str, Any],
+    summary="Clean up orphaned Redis messages",
+    description="Remove Redis messages that don't correspond to PostgreSQL jobs"
+)
+async def cleanup_orphaned_messages():
+    """
+    Clean up orphaned messages in Redis stream.
+    
+    Removes messages for jobs that:
+    - Don't exist in PostgreSQL
+    - Are completed/failed (not queued/processing)
+    
+    Returns:
+        Cleanup results
+    
+    Example Response:
+        {
+            "messages_checked": 100,
+            "messages_removed": 5,
+            "errors": []
+        }
+    """
+    try:
+        from ...utils.redis_queue_health_checker import cleanup_orphaned_redis_messages
+        result = await cleanup_orphaned_redis_messages()
+        return result
+    
+    except Exception as e:
+        logger.error(f"Failed to cleanup orphaned messages: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/queue/requeue-missing",
+    response_model=Dict[str, Any],
+    summary="Re-queue jobs missing Redis messages",
+    description="Add Redis messages for queued jobs that don't have them"
+)
+async def requeue_missing_jobs():
+    """
+    Re-queue jobs that are missing Redis messages.
+    
+    For jobs with status='queued' but no Redis message:
+    - Adds message back to Redis stream
+    - Job will be picked up by worker
+    
+    Returns:
+        Re-queue results
+    
+    Example Response:
+        {
+            "jobs_checked": 10,
+            "jobs_requeued": 2,
+            "errors": []
+        }
+    """
+    try:
+        from ...utils.redis_queue_health_checker import requeue_missing_jobs
+        result = await requeue_missing_jobs()
+        return result
+    
+    except Exception as e:
+        logger.error(f"Failed to re-queue missing jobs: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.delete(
     "/jobs/completed",
     response_model=Dict[str, Any],
