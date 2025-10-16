@@ -902,7 +902,6 @@ docker exec ecosystem-mcp-service df -h
                             
                             with st.expander("📡 Live Progress Stream", expanded=True):
                                 st.markdown(f"**Job:** `{job_id[:12]}...`")
-                                st.markdown(f"**Status:** 🟢 Processing")
                                 
                                 # Fetch current progress from job data (non-blocking)
                                 processed = first_job.get('processed_documents', 0)
@@ -910,11 +909,53 @@ docker exec ecosystem-mcp-service df -h
                                 skipped = first_job.get('skipped_documents', 0)
                                 failed = first_job.get('failed_documents', 0)
                                 embeddings = first_job.get('embeddings_generated', 0)
+                                started_at = first_job.get('started_at', '')
                                 
-                                # Calculate progress
+                                # Calculate progress and time metrics
                                 progress_pct = (processed / total * 100) if total > 0 else 0
                                 
-                                # Live ticker - show currently processing file
+                                # Calculate time elapsed and processing rate
+                                from datetime import datetime
+                                try:
+                                    start_time = datetime.fromisoformat(started_at.replace('Z', '+00:00'))
+                                    elapsed = datetime.utcnow().replace(tzinfo=start_time.tzinfo) - start_time
+                                    elapsed_seconds = elapsed.total_seconds()
+                                    elapsed_minutes = elapsed_seconds / 60
+                                    
+                                    # Processing rate (files per minute)
+                                    rate = processed / elapsed_minutes if elapsed_minutes > 0 else 0
+                                    
+                                    # Estimated time remaining
+                                    if total > 0 and rate > 0:
+                                        remaining_files = total - processed
+                                        eta_minutes = remaining_files / rate
+                                        eta_hours = int(eta_minutes // 60)
+                                        eta_mins = int(eta_minutes % 60)
+                                        eta_str = f"{eta_hours}h {eta_mins}m" if eta_hours > 0 else f"{eta_mins}m"
+                                    else:
+                                        eta_str = "Calculating..."
+                                    
+                                    # Format elapsed time
+                                    elapsed_hours = int(elapsed_minutes // 60)
+                                    elapsed_mins = int(elapsed_minutes % 60)
+                                    elapsed_str = f"{elapsed_hours}h {elapsed_mins}m" if elapsed_hours > 0 else f"{elapsed_mins}m"
+                                    
+                                except Exception:
+                                    rate = 0
+                                    eta_str = "Unknown"
+                                    elapsed_str = "Unknown"
+                                
+                                # Status header with key metrics
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.markdown(f"**Status:** 🟢 Processing")
+                                with col2:
+                                    st.markdown(f"**⏱️ Elapsed:** {elapsed_str}")
+                                with col3:
+                                    if rate > 0:
+                                        st.markdown(f"**📈 Rate:** {rate:.1f} files/min")
+                                
+                                # Live ticker - show currently processing file and recent files
                                 # Parse from Docker logs for real-time feedback
                                 try:
                                     import subprocess
@@ -922,7 +963,7 @@ docker exec ecosystem-mcp-service df -h
                                     
                                     # Get last few log lines to find current file
                                     result = subprocess.run(
-                                        ['docker', 'logs', 'ecosystem-mcp-service', '--tail', '50'],
+                                        ['docker', 'logs', 'ecosystem-mcp-service', '--tail', '100'],
                                         capture_output=True,
                                         text=True,
                                         timeout=2
@@ -931,28 +972,52 @@ docker exec ecosystem-mcp-service df -h
                                     # Look for processing messages: 📄 Processing [N/M]: filename
                                     log_lines = result.stdout.split('\n') + result.stderr.split('\n')
                                     
-                                    # Find the most recent processing message
+                                    # Find all recent processing messages
                                     processing_pattern = r'📄 Processing \[(\d+)/(\d+)\]: (.+)'
-                                    last_match = None
+                                    matches = []
                                     
                                     for line in reversed(log_lines):
                                         match = re.search(processing_pattern, line)
                                         if match:
-                                            last_match = match
-                                            break
+                                            matches.append(match)
+                                            if len(matches) >= 6:  # Get last 6 files
+                                                break
                                     
-                                    if last_match:
+                                    if matches:
+                                        last_match = matches[0]
                                         current_num = last_match.group(1)
                                         total_num = last_match.group(2)
                                         filename = last_match.group(3).strip()
+                                        
+                                        # Update total if we got it from logs
+                                        if total == 0:
+                                            try:
+                                                total = int(total_num)
+                                                progress_pct = (processed / total * 100) if total > 0 else 0
+                                            except:
+                                                pass
                                         
                                         # Truncate long paths
                                         display_file = filename
                                         if len(display_file) > 70:
                                             display_file = "..." + display_file[-67:]
                                         
-                                        # Show as a ticker with animation emoji
-                                        st.success(f"🎬 **Currently Processing #{current_num}:** `{display_file}`")
+                                        # Show current file with ETA
+                                        if eta_str != "Calculating..." and total > 0:
+                                            st.success(f"🎬 **Processing #{current_num}/{total}:** `{display_file}` | ⏱️ ETA: {eta_str}")
+                                        else:
+                                            st.success(f"🎬 **Currently Processing #{current_num}:** `{display_file}`")
+                                        
+                                        # Show recent files list
+                                        if len(matches) > 1:
+                                            with st.expander("📜 Recent Files (Last 5)", expanded=False):
+                                                for i, match in enumerate(matches[1:6]):
+                                                    num = match.group(1)
+                                                    file = match.group(3).strip()
+                                                    # Truncate for display
+                                                    if len(file) > 60:
+                                                        file = "..." + file[-57:]
+                                                    st.caption(f"#{num}: {file}")
                                     else:
                                         st.info("🎬 **Status:** Scanning files and starting processing...")
                                         
@@ -972,14 +1037,37 @@ docker exec ecosystem-mcp-service df -h
                                 with metric_cols[3]:
                                     st.metric("❌ Failed", failed)
                                 
-                                # Display progress bar
+                                # Display progress bar with enhanced text
+                                st.markdown("---")
                                 if total > 0:
+                                    # Show progress with percentage and ETA
+                                    progress_text = f"{processed}/{total} documents ({progress_pct:.1f}%)"
+                                    if eta_str != "Calculating...":
+                                        progress_text += f" • ETA: {eta_str}"
+                                    if rate > 0:
+                                        progress_text += f" • {rate:.1f} files/min"
+                                    
                                     st.progress(
                                         min(progress_pct / 100, 1.0),
-                                        text=f"{processed}/{total} documents ({progress_pct:.1f}%)"
+                                        text=progress_text
                                     )
+                                    
+                                    # Visual milestone indicators
+                                    if progress_pct >= 75:
+                                        st.info("🎉 Almost done! Over 75% complete")
+                                    elif progress_pct >= 50:
+                                        st.info("💪 Halfway there! 50% complete")
+                                    elif progress_pct >= 25:
+                                        st.info("🚀 Making progress! 25% complete")
                                 else:
-                                    st.progress(0, text=f"Processing... ({processed} documents so far, total being calculated)")
+                                    # Scanning phase
+                                    progress_text = f"Scanning repository... ({processed} documents found"
+                                    if rate > 0:
+                                        progress_text += f", {rate:.1f} files/min"
+                                    progress_text += ")"
+                                    
+                                    st.progress(0, text=progress_text)
+                                    st.info("🔍 Discovering files in repository...")
                                 
                                 # Try to get last file from metadata (non-blocking single request)
                                 try:
