@@ -10,7 +10,7 @@
 
 | Phase | Status | Progress | Start Date | End Date |
 |-------|--------|----------|------------|----------|
-| **Phase 1: Discovery Engine** | 🟢 Core Complete | 60% | 2025-10-20 | TBD |
+| **Phase 1: Discovery Engine** | 🟢 Nearly Complete | 90% | 2025-10-20 | TBD |
 | Phase 2: Sub-Job System | ⚪ Not Started | 0% | - | - |
 | Phase 3: Multi-File Analysis | ⚪ Not Started | 0% | - | - |
 | Phase 4: Multi-Pass Documentation | ⚪ Not Started | 0% | - | - |
@@ -50,15 +50,26 @@ Add intelligent repository scanning, file classification, and processing plan ge
 - [x] **Fixed Import Issues** - Made discovery module standalone
 
 #### 🟡 In Progress
-- [ ] **Database Migration** (`src/storage/migrations/002_add_discovery_and_sub_jobs.py`)
-  - Status: Next priority
-- [ ] **API Endpoint** (`src/api/routes/discovery.py`)
-  - Status: Next priority
+- [x] **Database Migration** (`src/storage/migrations/002_add_discovery_and_sub_jobs.py`)
+  - ✅ 143 lines, complete
+  - ✅ Creates processing_plans, sub_jobs, file_classifications tables
+  - ✅ Performance indexes added
+  - ⏳ Needs to be run on database
+- [x] **Database Models** (`src/storage/models_discovery.py`)
+  - ✅ 103 lines, complete
+  - ✅ ProcessingPlanModel, SubJobModel, FileClassificationModel
+  - ✅ Relationships configured
+- [x] **API Endpoint** (`src/api/routes/discovery.py`)
+  - ✅ 346 lines, complete
+  - ✅ POST /api/v1/discovery/scan - Scan repository
+  - ✅ GET /api/v1/discovery/plans - List plans
+  - ✅ GET /api/v1/discovery/plans/{id} - Get plan details
+  - ✅ Registered in main app
+  - ⏳ Needs API testing
 
 #### ⚪ Not Started
 - [ ] **EnhancedJobProcessor** (`src/services/ingestion/enhanced_job_processor.py`)
 - [ ] **Full Test Suite** (`tests/discovery/`) - needs pytest fixtures
-- [ ] API documentation
 - [ ] Dashboard integration
 
 ---
@@ -121,6 +132,52 @@ Add intelligent repository scanning, file classification, and processing plan ge
 
 #### Blockers:
 - None - all core components working!
+
+---
+
+### Session 2: 2025-10-20 (Current) ✅ DATABASE & API COMPLETE
+
+**Time:** ~1 hour  
+**Focus:** Database migration and API endpoints
+
+#### Completed:
+1. ✅ Created database migration (`002_add_discovery_and_sub_jobs.py` - 143 lines)
+   - `processing_plans` table with metadata
+   - `sub_jobs` table with relationships
+   - `file_classifications` table for detailed file info
+   - Performance indexes on all tables
+   - Upgrade and downgrade functions
+2. ✅ Created database models (`models_discovery.py` - 103 lines)
+   - ProcessingPlanModel with relationships
+   - SubJobModel with foreign keys
+   - FileClassificationModel with file details
+   - Full SQLAlchemy models
+3. ✅ Created API endpoint (`routes/discovery.py` - 346 lines)
+   - POST /api/v1/discovery/scan - Scan repository and create plan
+   - GET /api/v1/discovery/plans - List all processing plans
+   - GET /api/v1/discovery/plans/{id} - Get plan details
+   - Pydantic models for request/response
+   - Full error handling
+4. ✅ Registered discovery router in main app
+5. ✅ Created migration script (`run_discovery_migration.py`)
+6. ✅ Created API test script (`test_discovery_api.py`)
+
+#### Code Statistics (Session 2):
+- **Total Lines:** ~592 lines of production code
+- **Files Created:** 4 new files
+- **API Endpoints:** 3 endpoints
+- **Database Tables:** 3 tables + 8 indexes
+
+#### Next Steps:
+1. Run migration script to create tables
+2. Start/restart ecosystem-mcp service
+3. Run API test script
+4. Test via Swagger UI
+5. Git commit
+6. Create EnhancedJobProcessor (Phase 1 final component)
+
+#### Blockers:
+- None
 
 ---
 
