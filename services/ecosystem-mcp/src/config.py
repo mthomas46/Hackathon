@@ -108,6 +108,12 @@ class Settings(BaseSettings):
 
     # Anthropic
     anthropic_api_key: Optional[str] = Field(default=None)
+    
+    # Embedding Service (FastEmbed microservice)
+    embedding_service_url: str = Field(
+        default="http://ecosystem-mcp-embedding:8000",
+        description="FastEmbed embedding service URL"
+    )
 
     # Git
     git_repo_path: Path = Field(

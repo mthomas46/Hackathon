@@ -38,7 +38,7 @@ class CacheWarmingService:
         Args:
             warmup_texts: Optional list of texts to warm up. If None, uses defaults.
         """
-        if not self.settings.CACHE_ENABLED:
+        if not self.settings.cache_enabled:
             logger.info("⏭️  Cache warming skipped (caching disabled)")
             return
             

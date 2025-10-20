@@ -648,7 +648,7 @@ def display_deduplication_stats():
                 )
             
             # Progress bar for deduplication
-            st.progress(data['deduplication_ratio'] / 100, text=f"{data['deduplication_ratio']:.1f}% storage efficiency")
+            st.progress(min(data['deduplication_ratio'] / 100, 1.0), text=f"{data['deduplication_ratio']:.1f}% storage efficiency")  # Cap at 1.0
             
         else:
             st.warning(f"Could not fetch deduplication stats (HTTP {response.status_code})")

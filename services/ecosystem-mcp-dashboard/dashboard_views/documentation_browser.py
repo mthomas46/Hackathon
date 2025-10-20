@@ -14,9 +14,10 @@ import httpx
 import pandas as pd
 from datetime import datetime
 import json
+import os
 
-# Get API URL from session state or environment
-API_URL = st.session_state.get("api_url", "http://localhost:8000")
+# Get API URL from session state, environment, or default
+API_URL = st.session_state.get("api_url") or os.getenv("API_BASE_URL", "http://ecosystem-mcp-service:8000")
 
 
 def show():

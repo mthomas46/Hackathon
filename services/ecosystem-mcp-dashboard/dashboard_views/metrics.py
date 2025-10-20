@@ -182,7 +182,7 @@ def show(api_base_url: str):
                     )
                 
                 # Progress bar
-                st.progress(embedded_percent / 100)
+                st.progress(min(embedded_percent / 100, 1.0))  # Cap at 1.0 (100%)
                 
                 if embedded_percent == 100:
                     st.success("✅ All documents have embeddings!")

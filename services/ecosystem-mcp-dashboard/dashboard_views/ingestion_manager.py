@@ -61,7 +61,7 @@ def display_active_job(job, api_base_url):
         col1, col2, col3 = st.columns([2, 1, 1])
         with col1:
             if total_docs and total_docs > 0:
-                progress = processed / total_docs
+                progress = min(processed / total_docs, 1.0)  # Cap at 1.0 (100%)
                 st.progress(progress)
                 st.caption(f"{processed}/{total_docs} documents ({progress*100:.1f}%)")
             else:
@@ -253,15 +253,15 @@ def show(api_base_url: str):
                 st.info("""
                 💡 **Using Container Path Mode**
                 
-                For subdirectory filtering and git detection, switch to **Host Machine Path** mode above.
+                Use `/host` for the full project repository.
                 
                 Container paths are assumed to be pre-resolved and won't show git detection options.
                 """)
                 
                 repo_path = st.text_input(
                     "Repository Path",
-                    value="/app",
-                    help="Path inside the container (e.g., /app, /repo)"
+                    value="/host",
+                    help="Path inside the container. Use /host for the mounted project directory."
                 )
                 resolve_host_path = False
                 
@@ -1282,7 +1282,7 @@ docker exec ecosystem-mcp-service df -h
                             
                             # Progress bar for processing jobs
                             if status == 'processing' and total_docs and total_docs > 0:
-                                progress = processed / total_docs
+                                progress = min(processed / total_docs, 1.0)  # Cap at 1.0 (100%)
                                 st.progress(progress)
                                 st.caption(f"Progress: {processed}/{total_docs} documents ({progress*100:.1f}%)")
                             

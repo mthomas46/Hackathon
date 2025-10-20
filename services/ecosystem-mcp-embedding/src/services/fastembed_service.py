@@ -209,17 +209,28 @@ class FastEmbedService:
     
     def _ensure_loaded(self):
         """Ensure model is loaded (lazy loading support - Phase 3)."""
-        if self.model is None:
-            if self.lazy_loading:
-                logger.info("📦 Lazy loading model on first use")
-            self.load_model()
-        
-        # Update last use time
-        self._last_use_time = time.time()
-        
-        # Reschedule auto-unload
-        if self.auto_unload_timeout > 0:
-            self._schedule_auto_unload()
+        with self._model_lock:
+            if self.model is None:
+                logger.warning(
+                    "🔄 Model was unloaded, reloading now... "
+                    "(This may cause a delay on first request after inactivity)"
+                )
+                try:
+                    self.load_model()
+                    logger.info("✅ Model reloaded successfully")
+                except Exception as e:
+                    logger.error(
+                        f"❌ Failed to reload model: {e}",
+                        exc_info=True
+                    )
+                    raise RuntimeError(f"Failed to reload FastEmbed model: {e}")
+            
+            # Update last use time
+            self._last_use_time = time.time()
+            
+            # Reschedule auto-unload
+            if self.auto_unload_timeout > 0:
+                self._schedule_auto_unload()
     
     @property
     def dimensions(self) -> int:

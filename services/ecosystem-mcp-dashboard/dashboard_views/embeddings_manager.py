@@ -122,7 +122,7 @@ def show(api_base_url: str):
                     progress_col1, progress_col2 = st.columns([3, 1])
                     
                     with progress_col1:
-                        st.progress(coverage / 100.0, text=f"{coverage:.1f}% - {stats['total_embeddings']}/{stats['total_documents']} documents embedded")
+                        st.progress(min(coverage / 100.0, 1.0), text=f"{coverage:.1f}% - {stats['total_embeddings']}/{stats['total_documents']} documents embedded")  # Cap at 1.0
                     
                     with progress_col2:
                         if stats['missing_embeddings'] > 0:

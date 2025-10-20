@@ -94,7 +94,7 @@ def show_job_status_tab(api_url: str):
                         
                         if total > 0:
                             progress_pct = (completed / total) * 100
-                            st.progress(progress_pct / 100)
+                            st.progress(min(progress_pct / 100, 1.0))  # Cap at 1.0 (100%)
                             st.caption(f"{completed}/{total} checkpoints completed ({progress_pct:.1f}%)")
                         
                         # Last checkpoint info

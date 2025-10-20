@@ -246,7 +246,7 @@ def show(api_base_url: str):
         try:
             if total_docs > 0 and total_embeddings > 0:
                 coverage_pct = (total_embeddings / total_docs * 100)
-                st.progress(coverage_pct / 100)
+                st.progress(min(coverage_pct / 100, 1.0))  # Cap at 1.0 (100%)
                 st.caption(f"{total_embeddings:,} / {total_docs:,} documents have embeddings ({coverage_pct:.1f}%)")
                 
                 if coverage_pct < 100:

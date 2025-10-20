@@ -64,7 +64,11 @@ def show(api_base_url: str):
     st.markdown("---")
     st.subheader("🔬 Configure Multi-Pass Analysis")
     
-    with st.form("rag_multi_pass_form_unique"):
+    # Use session state to ensure unique form key
+    if 'multi_pass_form_counter' not in st.session_state:
+        st.session_state.multi_pass_form_counter = 0
+    
+    with st.form(f"rag_multi_pass_form_{st.session_state.multi_pass_form_counter}"):
         # Query input
         query = st.text_area(
             "📝 Your Complex Query",
