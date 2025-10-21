@@ -282,18 +282,25 @@ class RecoverableDocGenerator(RecoverableJob):
         self,
         question: str,
         tier: str = "auto",
-        max_retries: int = 3
+        max_retries: int = 3,
+        timeout_seconds: float = 120.0  # PHASE 10 (Day 2 - Task 2.2): LLM timeout
     ) -> str:
         """
-        Query RAG system with retry logic.
+        Query RAG system with retry logic and timeout protection.
+        
+        PHASE 10 (Day 2 - Task 2.2): Enhanced with timeout protection for LLM calls.
         
         Args:
             question: Question to ask
             tier: LLM tier (desktop, docker, auto)
             max_retries: Maximum retry attempts
+            timeout_seconds: Timeout for query (default 120s for LLM calls)
         
         Returns:
             Answer text
+        
+        Raises:
+            asyncio.TimeoutError: If query exceeds timeout
         """
         from ..query.enhanced_query import EnhancedQueryService
         
@@ -301,13 +308,30 @@ class RecoverableDocGenerator(RecoverableJob):
         
         for attempt in range(max_retries):
             try:
-                result = await query_service.query(
-                    query=question,
-                    tier=tier,
-                    max_results=5
+                # PHASE 10: Apply timeout to LLM query
+                result = await asyncio.wait_for(
+                    query_service.query(
+                        query=question,
+                        tier=tier,
+                        max_results=5
+                    ),
+                    timeout=timeout_seconds
                 )
                 
                 return result.get("answer", "")
+            
+            except asyncio.TimeoutError:
+                logger.error(
+                    f"⏱️  Query timeout ({timeout_seconds}s) on attempt {attempt + 1}: {question[:50]}..."
+                )
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.info(f"   Retrying in {wait_time}s with longer timeout...")
+                    await asyncio.sleep(wait_time)
+                    # Increase timeout for retry
+                    timeout_seconds *= 1.5
+                else:
+                    raise
             
             except Exception as e:
                 if attempt < max_retries - 1:

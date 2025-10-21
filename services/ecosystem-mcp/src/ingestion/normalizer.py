@@ -2,12 +2,17 @@
 Document normalizer for converting various formats to markdown.
 
 Ensures consistent format for embedding and search.
+PHASE 10 (Day 2 - Task 2.2): Enhanced with timeout protection.
 """
 
 import logging
 from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
+
+# Note: Normalization is typically fast (<1s), but we add this constant
+# for future async normalizers that might need timeout protection
+NORMALIZE_TIMEOUT_SECONDS = 30.0
 
 
 class DocumentNormalizer:
