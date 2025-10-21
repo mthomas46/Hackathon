@@ -13,6 +13,7 @@ from .doc_orchestrator import (
     DocConfig,
     get_doc_orchestrator
 )
+from .architecture_generator import ArchitectureGenerator
 
 __all__ = [
     "DocumentationOrchestrator",
@@ -22,5 +23,6 @@ __all__ = [
     "DocStatus",
     "DocConfig",
     "get_doc_orchestrator",
+    "ArchitectureGenerator",
 ]
 
