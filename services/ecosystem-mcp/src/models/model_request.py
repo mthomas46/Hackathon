@@ -19,6 +19,7 @@ class ModelType(str, Enum):
     # Ollama (local)
     OLLAMA_LLAMA3_8B = "ollama_llama3_8b"
     OLLAMA_MISTRAL_7B = "ollama_mistral_7b"
+    OLLAMA_CODELLAMA_13B = "ollama_codellama_13b"  # Phase 9: Code-specific model
     OLLAMA_EMBED = "ollama_embed"
     
     # OpenAI

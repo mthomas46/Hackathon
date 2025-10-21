@@ -140,23 +140,34 @@ class ModelRouter:
         """
         Select optimal model based on task characteristics.
         
-        Decision tree:
-        1. Metadata extraction → Ollama (local, fast, free)
-        2. Simple summarization → Ollama (local, fast, free)
-        3. Code analysis → Cursor or Claude Haiku
-        4. Pattern recognition → Claude Sonnet
+        Decision tree (Phase 9 Enhanced):
+        1. Code analysis → CodeLlama (specialized for code)
+        2. Metadata extraction → Ollama (local, fast, free)
+        3. Simple summarization → Ollama (local, fast, free)
+        4. Pattern recognition → Claude Sonnet or Mistral
         5. Complex refactoring → Claude Opus
         """
         from ..config import settings
         
         complexity = self._calculate_complexity(task)
         
+        # PHASE 9: Prioritize CodeLlama for code analysis tasks
+        if task.type == TaskType.CODE_ANALYSIS:
+            logger.debug(f"Code analysis task: Routing to CodeLlama")
+            if self.ollama.is_available():
+                return ModelType.OLLAMA_CODELLAMA_13B
+        
         # OLLAMA-ONLY MODE: Always use Ollama regardless of complexity
         if settings.is_ollama_only:
             logger.debug(f"Ollama-only mode: Using Ollama (complexity: {complexity:.2f})")
             if self.ollama.is_available():
-                # Use Mistral for more complex tasks, Llama3 for simpler
-                return ModelType.OLLAMA_MISTRAL_7B if complexity > 0.5 else ModelType.OLLAMA_LLAMA3_8B
+                # Use CodeLlama for code, Mistral for complex, Llama3 for simple
+                if task.type == TaskType.CODE_ANALYSIS:
+                    return ModelType.OLLAMA_CODELLAMA_13B
+                elif complexity > 0.5:
+                    return ModelType.OLLAMA_MISTRAL_7B
+                else:
+                    return ModelType.OLLAMA_LLAMA3_8B
             else:
                 from ..utils.exceptions import ModelError
         raise ModelError("Ollama not available in ollama-only mode")
@@ -260,13 +271,14 @@ class ModelRouter:
     ) -> ModelResponse:
         """Execute task with specific model."""
         
-        # Ollama models
-        if model in [ModelType.OLLAMA_LLAMA3_8B, ModelType.OLLAMA_MISTRAL_7B]:
-            model_name = (
-                "llama3.1:8b-instruct-q8_0"
-                if model == ModelType.OLLAMA_LLAMA3_8B
-                else "mistral:7b-instruct-q8_0"
-            )
+        # Ollama models (Phase 9: Added CodeLlama)
+        if model in [ModelType.OLLAMA_LLAMA3_8B, ModelType.OLLAMA_MISTRAL_7B, ModelType.OLLAMA_CODELLAMA_13B]:
+            if model == ModelType.OLLAMA_LLAMA3_8B:
+                model_name = "llama3.1:8b-instruct-q8_0"
+            elif model == ModelType.OLLAMA_MISTRAL_7B:
+                model_name = "mistral:7b-instruct-q8_0"
+            else:  # OLLAMA_CODELLAMA_13B
+                model_name = "codellama:13b-instruct"
             
             result = await self.ollama.generate(
                 prompt=task.prompt,
