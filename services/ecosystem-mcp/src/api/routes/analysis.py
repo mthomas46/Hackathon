@@ -28,6 +28,11 @@ from ...storage.models_analysis import (
     DetectedServiceModel
 )
 from ...services.analysis import get_analysis_engine, get_context_generator
+from ...services.analysis.hierarchical_context_manager import (
+    get_hierarchical_context_manager,
+    HierarchicalContext,
+    ContextLevel
+)
 
 logger = logging.getLogger(__name__)
 
@@ -635,4 +640,258 @@ async def generate_context(
     except Exception as e:
         logger.error(f"❌ Failed to generate context: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Context generation failed: {str(e)}")
+
+
+# ============================================================================
+# Hierarchical Context Endpoints (Week 2, Day 5-6)
+# ============================================================================
+
+class HierarchicalContextResponse(BaseModel):
+    """Hierarchical context response."""
+    repo_id: str
+    repo_name: str
+    parent_id: Optional[str]
+    children: List[str]
+    level: str
+    full_path: str
+    file_patterns: List[str]
+    level_files: int
+    primary_language: Optional[str]
+    endpoint_count: int
+    brief_description: str
+
+
+@router.get(
+    "/analysis/contexts/hierarchical/{repo_id}",
+    response_model=HierarchicalContextResponse,
+    summary="Get hierarchical context",
+    description="Build and return hierarchical context structure for a repository"
+)
+async def get_hierarchical_context(
+    repo_id: str,
+    session: AsyncSession = Depends(get_session)
+):
+    """Get hierarchical context for repository."""
+    try:
+        logger.info(f"🌳 Building hierarchical context for {repo_id}")
+        
+        # Get base context
+        result = await session.execute(
+            select(RepositoryContextModel).where(RepositoryContextModel.repo_id == repo_id)
+        )
+        base_context_model = result.scalar_one_or_none()
+        
+        if not base_context_model:
+            raise HTTPException(status_code=404, detail=f"Context not found for repo {repo_id}")
+        
+        # Convert to RepositoryContext
+        base_context_dict = base_context_model.to_dict()
+        
+        # Get analysis report
+        result = await session.execute(
+            select(AnalysisResultModel).where(AnalysisResultModel.repo_id == repo_id).order_by(desc(AnalysisResultModel.created_at))
+        )
+        analysis_model = result.first()
+        
+        if not analysis_model:
+            raise HTTPException(status_code=404, detail=f"Analysis not found for repo {repo_id}")
+        
+        analysis_report = analysis_model[0].to_analysis_report()
+        
+        # Build hierarchy
+        from ...services.analysis.context_generator import RepositoryContext
+        base_context = RepositoryContext(**base_context_dict)
+        
+        manager = get_hierarchical_context_manager()
+        root_context = await manager.build_hierarchy(base_context, analysis_report)
+        
+        logger.info(f"✅ Built hierarchy with {len(manager.contexts)} contexts")
+        
+        return HierarchicalContextResponse(
+            repo_id=root_context.repo_id,
+            repo_name=root_context.repo_name,
+            parent_id=root_context.parent_id,
+            children=root_context.children,
+            level=root_context.level.name,
+            full_path=root_context.full_path,
+            file_patterns=root_context.file_patterns,
+            level_files=root_context.level_files,
+            primary_language=root_context.primary_language,
+            endpoint_count=root_context.endpoint_count,
+            brief_description=root_context.brief_description
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to get hierarchical context: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Hierarchical context failed: {str(e)}")
+
+
+@router.get(
+    "/analysis/contexts/hierarchical/{repo_id}/children",
+    response_model=List[HierarchicalContextResponse],
+    summary="Get child contexts",
+    description="Get all child contexts for a given context"
+)
+async def get_child_contexts(
+    repo_id: str,
+    session: AsyncSession = Depends(get_session)
+):
+    """Get child contexts."""
+    try:
+        # First build/get hierarchy
+        await get_hierarchical_context(repo_id, session)
+        
+        manager = get_hierarchical_context_manager()
+        children = manager.get_children(repo_id)
+        
+        return [
+            HierarchicalContextResponse(
+                repo_id=ctx.repo_id,
+                repo_name=ctx.repo_name,
+                parent_id=ctx.parent_id,
+                children=ctx.children,
+                level=ctx.level.name,
+                full_path=ctx.full_path,
+                file_patterns=ctx.file_patterns,
+                level_files=ctx.level_files,
+                primary_language=ctx.primary_language,
+                endpoint_count=ctx.endpoint_count,
+                brief_description=ctx.brief_description
+            )
+            for ctx in children
+        ]
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to get child contexts: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get children: {str(e)}")
+
+
+@router.get(
+    "/analysis/contexts/hierarchical/{repo_id}/path",
+    response_model=List[HierarchicalContextResponse],
+    summary="Get path to root",
+    description="Get path from context to root"
+)
+async def get_context_path(
+    repo_id: str,
+    session: AsyncSession = Depends(get_session)
+):
+    """Get path from context to root."""
+    try:
+        # Extract root repo_id
+        root_repo_id = repo_id.split('/')[0]
+        
+        # Build hierarchy
+        await get_hierarchical_context(root_repo_id, session)
+        
+        manager = get_hierarchical_context_manager()
+        path = manager.get_path_to_root(repo_id)
+        
+        return [
+            HierarchicalContextResponse(
+                repo_id=ctx.repo_id,
+                repo_name=ctx.repo_name,
+                parent_id=ctx.parent_id,
+                children=ctx.children,
+                level=ctx.level.name,
+                full_path=ctx.full_path,
+                file_patterns=ctx.file_patterns,
+                level_files=ctx.level_files,
+                primary_language=ctx.primary_language,
+                endpoint_count=ctx.endpoint_count,
+                brief_description=ctx.brief_description
+            )
+            for ctx in path
+        ]
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to get context path: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get path: {str(e)}")
+
+
+@router.get(
+    "/analysis/contexts/hierarchical/search",
+    response_model=List[HierarchicalContextResponse],
+    summary="Search contexts",
+    description="Search contexts by path or name"
+)
+async def search_contexts(
+    query: str = Query(..., description="Search query"),
+    level: Optional[str] = Query(None, description="Filter by level (ROOT, SERVICE, MODULE, COMPONENT)"),
+    session: AsyncSession = Depends(get_session)
+):
+    """Search hierarchical contexts."""
+    try:
+        logger.info(f"🔍 Searching contexts: query={query}, level={level}")
+        
+        # Get all root contexts first
+        result = await session.execute(
+            select(RepositoryContextModel).order_by(desc(RepositoryContextModel.created_at))
+        )
+        contexts = result.scalars().all()
+        
+        if not contexts:
+            return []
+        
+        # Build hierarchies for all repositories
+        manager = get_hierarchical_context_manager()
+        all_contexts = []
+        
+        for ctx_model in contexts:
+            try:
+                # Build hierarchy for this repo
+                base_context_dict = ctx_model.to_dict()
+                
+                # Get analysis report
+                analysis_result = await session.execute(
+                    select(AnalysisResultModel).where(AnalysisResultModel.repo_id == ctx_model.repo_id).order_by(desc(AnalysisResultModel.created_at))
+                )
+                analysis_model = analysis_result.first()
+                
+                if analysis_model:
+                    from ...services.analysis.context_generator import RepositoryContext
+                    base_context = RepositoryContext(**base_context_dict)
+                    analysis_report = analysis_model[0].to_analysis_report()
+                    
+                    await manager.build_hierarchy(base_context, analysis_report)
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to build hierarchy for {ctx_model.repo_id}: {e}")
+                continue
+        
+        # Search across all contexts
+        for context in manager.contexts.values():
+            # Match query
+            if query.lower() in context.repo_name.lower() or query.lower() in context.full_path.lower():
+                # Filter by level if specified
+                if level and context.level.name != level:
+                    continue
+                
+                all_contexts.append(
+                    HierarchicalContextResponse(
+                        repo_id=context.repo_id,
+                        repo_name=context.repo_name,
+                        parent_id=context.parent_id,
+                        children=context.children,
+                        level=context.level.name,
+                        full_path=context.full_path,
+                        file_patterns=context.file_patterns,
+                        level_files=context.level_files,
+                        primary_language=context.primary_language,
+                        endpoint_count=context.endpoint_count,
+                        brief_description=context.brief_description
+                    )
+                )
+        
+        logger.info(f"✅ Found {len(all_contexts)} matching contexts")
+        return all_contexts
+    
+    except Exception as e:
+        logger.error(f"❌ Failed to search contexts: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
