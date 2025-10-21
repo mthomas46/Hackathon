@@ -89,6 +89,7 @@ page = st.sidebar.radio(
         # Data Management
         "📚 Documents",
         "📥 Ingestion Manager",
+        "⚡ Mode Comparison",  # Phase 8: Processing mode comparison
         "📖 Documentation Generator",
         "📚 Documentation Browser",
         "🎯 Embeddings Manager",
@@ -219,6 +220,9 @@ elif page == "📚 Documents":
 elif page == "📥 Ingestion Manager":
     from dashboard_views import ingestion_manager
     ingestion_manager.show(api_base_url)
+elif page == "⚡ Mode Comparison":
+    from dashboard_views import mode_comparison
+    mode_comparison.show(api_base_url)
 elif page == "📖 Documentation Generator":
     from dashboard_views import doc_generator
     doc_generator.show(api_base_url)

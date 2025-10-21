@@ -280,9 +280,60 @@ def show(api_base_url: str):
                     else:
                         st.session_state.manual_target_subdirectory = None
             
-            # Ingestion mode
+            # Phase 8: Processing mode selector (snapshot vs git_history)
+            st.markdown("### ⚡ Processing Mode")
+            
+            processing_mode = st.radio(
+                "Choose processing mode",
+                options=["snapshot", "git_history"],
+                format_func=lambda x: {
+                    "snapshot": "🚀 Snapshot Mode (Fast: 5-15 min for 5K files)",
+                    "git_history": "📚 Git History Mode (Complete: 2-4 hours for 5K files)"
+                }[x],
+                help="""
+                **Snapshot Mode (Recommended for most use cases):**
+                - ⚡ 10-100× faster processing
+                - 📸 Processes current file state only
+                - ✅ Perfect for: Initial setup, periodic updates, non-Git repos
+                - ❌ No historical version tracking
+                
+                **Git History Mode (For complete versioning):**
+                - 📚 Full commit history processing
+                - 🕐 Version tracking for all changes
+                - ✅ Perfect for: Historical analysis, version tracking
+                - ⚠️  Significantly slower (2-4 hours vs 5-15 min)
+                """
+            )
+            
+            # Show speed comparison
+            if processing_mode == "snapshot":
+                st.success("""
+                ✅ **Snapshot Mode Selected**
+                
+                **Expected Speed for Your Repository:**
+                - 1,000 files: ~2-3 minutes
+                - 5,000 files: ~5-15 minutes
+                - 10,000 files: ~10-30 minutes
+                - 50,000 files: ~1-2 hours
+                
+                **10-100× faster than Git History mode!**
+                """)
+            else:
+                st.info("""
+                📚 **Git History Mode Selected**
+                
+                **Expected Speed for Your Repository:**
+                - 1,000 files: ~30-45 minutes
+                - 5,000 files: ~2-4 hours
+                - 10,000 files: ~4-8 hours
+                - 50,000 files: ~20-40 hours
+                
+                Processes full Git commit history for complete versioning.
+                """)
+            
+            # Ingestion mode (quick/full/incremental - existing)
             mode = st.selectbox(
-                "Ingestion Mode",
+                "Ingestion Type",
                 options=["quick", "full", "incremental"],
                 help="""
                 - **quick**: Fast ingestion, skip embeddings
@@ -571,6 +622,7 @@ def show(api_base_url: str):
                     request_data = {
                         "repo_path": resolved_path,
                         "mode": mode,
+                        "processing_mode": processing_mode,  # Phase 8: snapshot vs git_history
                         "resolve_host_path": False  # Already resolved, don't re-resolve
                     }
                     
@@ -1243,7 +1295,13 @@ docker exec ecosystem-mcp-service df -h
                             header_col1, header_col2, header_col3 = st.columns([3, 1, 1])
                             with header_col1:
                                 st.markdown(f"**Job ID:** `{job.get('job_id')}`")
-                                st.markdown(f"**Mode:** {mode}")
+                                
+                                # Phase 8: Show processing mode with appropriate icon
+                                processing_mode = job.get('processing_mode', 'git_history')  # Default for old jobs
+                                mode_icon = "🚀" if processing_mode == "snapshot" else "📚"
+                                mode_label = "Snapshot (Fast)" if processing_mode == "snapshot" else "Git History (Complete)"
+                                st.markdown(f"**Processing:** {mode_icon} {mode_label}")
+                                st.markdown(f"**Type:** {mode}")
                             with header_col2:
                                 # Copy job ID button
                                 if st.button("📋 Copy ID", key=f"copy_{idx}"):
