@@ -3,7 +3,14 @@ Unit tests for Dependency Manager (Phase 2)
 """
 
 import pytest
-from src.services.orchestration.dependency_manager import DependencyManager
+import sys
+from pathlib import Path
+
+# Add src to path to avoid database imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+
+# Import just the dependency manager module directly
+from services.orchestration.dependency_manager import DependencyManager
 
 
 class TestDependencyManager:
@@ -168,4 +175,3 @@ class TestDependencyManager:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

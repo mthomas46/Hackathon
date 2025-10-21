@@ -5,9 +5,8 @@ Unit tests for Repository Scanner (Phase 1)
 import pytest
 from pathlib import Path
 import tempfile
-import os
 
-from src.services.discovery.repository_scanner import RepositoryScanner
+from src.services.discovery.repository_scanner import RepositoryScanner, RepositoryInventory
 
 
 class TestRepositoryScanner:
@@ -35,97 +34,131 @@ class TestRepositoryScanner:
             (repo_path / "__pycache__").mkdir()
             (repo_path / "__pycache__" / "test.pyc").write_text("bytecode")
             
-            yield str(repo_path)
+            yield repo_path
     
     def test_scanner_initialization(self):
         """Test scanner initializes correctly."""
-        scanner = RepositoryScanner("/tmp/test")
-        assert scanner.repo_path == "/tmp/test"
-        assert scanner.files == []
+        scanner = RepositoryScanner()
+        assert scanner is not None
+        assert len(scanner.ignore_patterns) > 0
+        assert len(scanner.code_extensions) > 0
     
-    def test_scan_repository(self, temp_repo):
+    @pytest.mark.asyncio
+    async def test_scan_repository(self, temp_repo):
         """Test scanning a repository."""
-        scanner = RepositoryScanner(temp_repo)
-        result = scanner.scan()
+        scanner = RepositoryScanner()
+        inventory = await scanner.scan(temp_repo)
         
-        assert result["success"] is True
-        assert result["total_files"] > 0
-        assert result["total_size"] > 0
-        assert len(result["files"]) > 0
+        assert isinstance(inventory, RepositoryInventory)
+        assert inventory.total_files > 0
+        assert inventory.total_size_bytes > 0
+        assert len(inventory.files) > 0
     
-    def test_scan_ignores_patterns(self, temp_repo):
+    @pytest.mark.asyncio
+    async def test_scan_ignores_patterns(self, temp_repo):
         """Test that .git and __pycache__ are ignored."""
-        scanner = RepositoryScanner(temp_repo)
-        result = scanner.scan()
+        scanner = RepositoryScanner()
+        inventory = await scanner.scan(temp_repo)
         
         # Check that ignored patterns are not in results
-        file_paths = [f["path"] for f in result["files"]]
+        file_paths = [str(f.relative_path) for f in inventory.files]
         assert not any(".git" in p for p in file_paths)
         assert not any("__pycache__" in p for p in file_paths)
     
-    def test_detect_file_type(self):
-        """Test file type detection."""
-        scanner = RepositoryScanner("/tmp/test")
+    def test_classify_file(self):
+        """Test file classification."""
+        scanner = RepositoryScanner()
         
-        assert scanner._detect_file_type("test.py") == "python"
-        assert scanner._detect_file_type("test.js") == "javascript"
-        assert scanner._detect_file_type("test.md") == "markdown"
-        assert scanner._detect_file_type("test.json") == "json"
-        assert scanner._detect_file_type("test.unknown") == "other"
+        # Test code file
+        is_code, is_test, is_doc, is_config = scanner._classify_file(
+            Path("src/main.py"), "main.py"
+        )
+        assert is_code is True
+        assert is_test is False
+        
+        # Test test file
+        is_code, is_test, is_doc, is_config = scanner._classify_file(
+            Path("tests/test_main.py"), "test_main.py"
+        )
+        assert is_code is True
+        assert is_test is True
+        
+        # Test doc file
+        is_code, is_test, is_doc, is_config = scanner._classify_file(
+            Path("README.md"), "README.md"
+        )
+        assert is_doc is True
+        assert is_code is False
+        
+        # Test config file
+        is_code, is_test, is_doc, is_config = scanner._classify_file(
+            Path("config.json"), "config.json"
+        )
+        assert is_config is True
     
     def test_detect_language(self):
         """Test language detection."""
-        scanner = RepositoryScanner("/tmp/test")
+        scanner = RepositoryScanner()
         
-        assert scanner._detect_language("test.py") == "python"
-        assert scanner._detect_language("test.js") == "javascript"
-        assert scanner._detect_language("test.go") == "go"
-        assert scanner._detect_language("test.rs") == "rust"
-        assert scanner._detect_language("test.md") is None
+        assert scanner._detect_language(".py") == "python"
+        assert scanner._detect_language(".js") == "javascript"
+        assert scanner._detect_language(".go") == "go"
+        assert scanner._detect_language(".rs") == "rust"
+        assert scanner._detect_language(".md") == ""
     
     def test_should_ignore(self):
         """Test ignore pattern matching."""
-        scanner = RepositoryScanner("/tmp/test")
+        scanner = RepositoryScanner()
         
-        assert scanner._should_ignore(".git/config") is True
-        assert scanner._should_ignore("__pycache__/test.pyc") is True
-        assert scanner._should_ignore("node_modules/package.json") is True
-        assert scanner._should_ignore("src/test.py") is False
+        assert scanner._should_ignore(Path(".git/config")) is True
+        assert scanner._should_ignore(Path("__pycache__/test.pyc")) is True
+        assert scanner._should_ignore(Path("node_modules/package.json")) is True
+        assert scanner._should_ignore(Path("src/test.py")) is False
     
-    def test_scan_empty_directory(self):
+    @pytest.mark.asyncio
+    async def test_scan_empty_directory(self):
         """Test scanning an empty directory."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            scanner = RepositoryScanner(tmpdir)
-            result = scanner.scan()
+            scanner = RepositoryScanner()
+            inventory = await scanner.scan(Path(tmpdir))
             
-            assert result["success"] is True
-            assert result["total_files"] == 0
-            assert len(result["files"]) == 0
+            assert inventory.total_files == 0
+            assert len(inventory.files) == 0
     
-    def test_scan_nonexistent_directory(self):
+    @pytest.mark.asyncio
+    async def test_scan_nonexistent_directory(self):
         """Test scanning a nonexistent directory."""
-        scanner = RepositoryScanner("/nonexistent/path")
-        result = scanner.scan()
+        scanner = RepositoryScanner()
         
-        assert result["success"] is False
-        assert "error" in result
+        with pytest.raises(Exception):
+            await scanner.scan(Path("/nonexistent/path"))
     
-    def test_file_metadata(self, temp_repo):
+    @pytest.mark.asyncio
+    async def test_file_metadata(self, temp_repo):
         """Test that file metadata is captured correctly."""
-        scanner = RepositoryScanner(temp_repo)
-        result = scanner.scan()
+        scanner = RepositoryScanner()
+        inventory = await scanner.scan(temp_repo)
         
-        files = result["files"]
+        files = inventory.files
         assert len(files) > 0
         
         # Check first file has required fields
         file_info = files[0]
-        assert "path" in file_info
-        assert "size" in file_info
-        assert "file_type" in file_info
-        assert "language" in file_info or file_info["file_type"] != "code"
+        assert file_info.path is not None
+        assert file_info.size_bytes >= 0
+        assert file_info.extension is not None
+        assert isinstance(file_info.is_code, bool)
+    
+    @pytest.mark.asyncio
+    async def test_language_detection_in_scan(self, temp_repo):
+        """Test that languages are detected during scan."""
+        scanner = RepositoryScanner()
+        inventory = await scanner.scan(temp_repo)
+        
+        # Should detect Python files
+        assert "python" in inventory.languages
+        assert inventory.languages["python"] > 0
 
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-
