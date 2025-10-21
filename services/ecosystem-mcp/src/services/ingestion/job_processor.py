@@ -456,7 +456,18 @@ class JobProcessor:
                 logger.info(f"📝 Repository too small for orchestration, using standard processing")
             else:
                 logger.info(f"📝 Using standard processing (orchestration not requested)")
-            return await self._process_standard(job)
+        
+        # If not using orchestration, continue with standard processing below
+        if not (use_subjobs and await self._should_use_orchestration(job)):
+            # Continue with existing standard processing logic
+            pass
+        else:
+            # Return orchestration result
+            return await self._process_with_orchestration(job)
+        
+        # ========================================================================
+        # STANDARD PROCESSING (Existing Logic Below)
+        # ========================================================================
         
         # Initialize real-time progress tracking
         await self._init_progress_tracking(str(job.id))
@@ -1844,6 +1855,196 @@ class JobProcessor:
             file_path_display = file_change if isinstance(file_change, str) else file_change.path
             logger.error(f"Error processing file {file_path_display}: {e}", exc_info=True)
             result["error"] = str(e)
+        
+        return result
+    
+    # ============================================================================
+    # PHASE 10: Sub-Job Orchestration Integration
+    # ============================================================================
+    
+    async def _should_use_orchestration(self, job: IngestionJobModel) -> bool:
+        """
+        Determine if job should use sub-job orchestration.
+        
+        Criteria:
+        - Repository has enough files (>500 files worth orchestration overhead)
+        - Not in quick mode (quick mode is already fast)
+        
+        Args:
+            job: Ingestion job
+        
+        Returns:
+            True if orchestration should be used
+        """
+        try:
+            # Quick mode doesn't benefit from orchestration
+            if job.mode == "quick":
+                logger.info("Quick mode doesn't use orchestration (already optimized)")
+                return False
+            
+            # Check repository size
+            # For now, use a simple file count heuristic
+            # TODO: Could be more sophisticated (check git history size, etc.)
+            try:
+                from pathlib import Path
+                repo_path = Path(job.repo_path)
+                
+                if not repo_path.exists():
+                    logger.warning(f"Repository path doesn't exist: {job.repo_path}")
+                    return False
+                
+                # Count files (simple heuristic)
+                file_count = sum(1 for _ in repo_path.rglob('*') if _.is_file())
+                
+                logger.info(f"Repository has ~{file_count} files")
+                
+                # Use orchestration if >500 files
+                if file_count > 500:
+                    logger.info(f"✅ Repository large enough for orchestration ({file_count} files)")
+                    return True
+                else:
+                    logger.info(f"📝 Repository too small for orchestration ({file_count} files, need >500)")
+                    return False
+                    
+            except Exception as e:
+                logger.warning(f"Could not count files: {e}, using orchestration anyway")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Error determining orchestration: {e}", exc_info=True)
+            # On error, default to standard processing (safer)
+            return False
+    
+    async def _process_with_orchestration(self, job: IngestionJobModel) -> Dict[str, Any]:
+        """
+        Process job using sub-job orchestration for parallel processing.
+        
+        Pipeline:
+        1. Discovery: Scan and classify files
+        2. Planning: Create sub-jobs with priorities
+        3. Orchestration: Execute sub-jobs in parallel
+        4. Aggregation: Combine results
+        
+        Args:
+            job: Ingestion job
+        
+        Returns:
+            Processing results with orchestration metrics
+        """
+        logger.info(f"🚀 Starting orchestrated processing for job {job.id}")
+        
+        result = {
+            "success": False,
+            "processed_documents": 0,
+            "total_documents": 0,
+            "failed_documents": 0,
+            "skipped_documents": 0,
+            "embeddings_generated": 0,
+            "total_cost_usd": 0.0,
+            "subjobs_executed": 0,
+            "subjobs_failed": 0,
+            "error": None
+        }
+        
+        try:
+            # Initialize progress tracking
+            await self._update_progress("orchestration_init", 0, 100, message="Initializing orchestration...")
+            
+            # Phase 1: Discovery (scan and classify files)
+            logger.info("📊 Phase 1/3: Discovery and classification")
+            await self._update_progress("discovery", 10, 100, message="Scanning repository...")
+            
+            try:
+                from ..discovery.discovery_engine import get_discovery_engine
+                from ..discovery.repository_scanner import get_repository_scanner
+                from ..discovery.file_classifier import get_file_classifier
+                
+                # Scan repository
+                scanner = get_repository_scanner()
+                inventory = await scanner.scan(job.repo_path)
+                
+                logger.info(f"   Scanned {inventory.total_files} files")
+                result["total_documents"] = inventory.total_files
+                
+                # Classify files by importance
+                classifier = get_file_classifier()
+                classified_files = await classifier.classify(inventory.files)
+                
+                logger.info(f"   Classified {len(classified_files)} files")
+                
+            except Exception as e:
+                logger.error(f"❌ Discovery failed: {e}", exc_info=True)
+                result["error"] = f"Discovery failed: {str(e)}"
+                return result
+            
+            # Phase 2: Planning (create processing plan with sub-jobs)
+            logger.info("📋 Phase 2/3: Creating processing plan")
+            await self._update_progress("planning", 30, 100, message="Creating sub-jobs...")
+            
+            try:
+                from ..discovery.processing_planner import get_processing_planner
+                
+                planner = get_processing_planner()
+                plan = await planner.create_plan(
+                    inventory=inventory,
+                    classified_files=classified_files,
+                    repo_path=job.repo_path
+                )
+                
+                logger.info(f"   Created plan with {len(plan.sub_jobs)} sub-jobs")
+                logger.info(f"   Estimated time: {plan.estimated_time_minutes:.1f} minutes")
+                
+            except Exception as e:
+                logger.error(f"❌ Planning failed: {e}", exc_info=True)
+                result["error"] = f"Planning failed: {str(e)}"
+                return result
+            
+            # Phase 3: Orchestration (execute sub-jobs in parallel)
+            logger.info("⚡ Phase 3/3: Executing sub-jobs in parallel")
+            await self._update_progress("orchestration", 50, 100, message=f"Executing {len(plan.sub_jobs)} sub-jobs...")
+            
+            try:
+                from ..orchestration.job_orchestrator import JobOrchestrator
+                
+                # Create orchestrator with parallelism
+                max_concurrent = 5  # TODO: Make configurable
+                orchestrator = JobOrchestrator(max_concurrent=max_concurrent)
+                
+                logger.info(f"   Orchestrator initialized (max {max_concurrent} concurrent)")
+                
+                # Execute plan
+                exec_result = await orchestrator.execute_plan(plan.id)
+                
+                # Aggregate results
+                result["success"] = exec_result.status == "completed"
+                result["processed_documents"] = exec_result.total_files_processed
+                result["failed_documents"] = exec_result.total_files_failed
+                result["skipped_documents"] = exec_result.total_files_skipped
+                result["subjobs_executed"] = exec_result.sub_jobs_completed
+                result["subjobs_failed"] = exec_result.sub_jobs_failed
+                
+                # Calculate embeddings (approximate from sub-jobs)
+                # TODO: Could track more precisely
+                result["embeddings_generated"] = int(exec_result.total_files_processed * 0.8)  # Estimate
+                
+                logger.info(
+                    f"✅ Orchestration complete: "
+                    f"{result['processed_documents']}/{result['total_documents']} documents processed "
+                    f"({result['subjobs_executed']} sub-jobs completed, "
+                    f"{result['subjobs_failed']} failed)"
+                )
+                
+                await self._update_progress("completed", 100, 100, message="Orchestration complete")
+                
+            except Exception as e:
+                logger.error(f"❌ Orchestration failed: {e}", exc_info=True)
+                result["error"] = f"Orchestration failed: {str(e)}"
+                return result
+            
+        except Exception as e:
+            logger.error(f"❌ Orchestrated processing failed: {e}", exc_info=True)
+            result["error"] = str(e)
+            await self._update_progress("failed", 0, 0, message=f"Failed: {str(e)}")
         
         return result
 
