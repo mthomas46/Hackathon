@@ -36,6 +36,7 @@ class DependencyGraph:
     edges: List[Dependency]
     cycles: List[List[str]]
     metrics: Dict[str, any]
+    topological_order: Optional[List[str]] = None  # PHASE 10 (Gap #2): Processing order
     
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
@@ -43,7 +44,8 @@ class DependencyGraph:
             'nodes': self.nodes,
             'edges': [e.to_dict() for e in self.edges],
             'cycles': self.cycles,
-            'metrics': self.metrics
+            'metrics': self.metrics,
+            'topological_order': self.topological_order  # PHASE 10
         }
 
 
@@ -118,17 +120,23 @@ class DependencyAnalyzer:
         # Calculate metrics
         metrics = await self._calculate_metrics()
         
+        # PHASE 10 (Gap #2): Calculate topological order
+        topological_order = await self._compute_topological_order(nodes)
+        
         graph = DependencyGraph(
             nodes=nodes,
             edges=self.dependencies,
             cycles=cycles,
-            metrics=metrics
+            metrics=metrics,
+            topological_order=topological_order  # PHASE 10
         )
         
         logger.info(
             f"✅ Dependency analysis complete: {len(nodes)} nodes, "
             f"{len(self.dependencies)} dependencies, {len(cycles)} cycles"
         )
+        if topological_order:
+            logger.info(f"   📋 Topological order computed: {len(topological_order)} files")
         
         return graph
     
@@ -367,6 +375,92 @@ class DependencyAnalyzer:
         # Only analyze code files
         is_code = file_info.get('is_code', False)
         return is_code
+    
+    async def _compute_topological_order(self, nodes: List[str]) -> Optional[List[str]]:
+        """
+        Compute topological order for file processing (PHASE 10 - Gap #2).
+        
+        Uses Kahn's algorithm for topological sorting. Files with no dependencies
+        come first, followed by files that depend on them.
+        
+        Args:
+            nodes: List of file paths
+        
+        Returns:
+            List of files in topological order, or None if cyclic dependencies exist
+        """
+        try:
+            logger.info("📊 Computing topological order...")
+            
+            # If no dependencies, return original order
+            if not self.dependencies:
+                logger.info("   No dependencies found, using natural order")
+                return nodes
+            
+            # Build adjacency list and in-degree map
+            adj_list: Dict[str, Set[str]] = defaultdict(set)
+            in_degree: Dict[str, int] = defaultdict(int)
+            
+            # Initialize all nodes with 0 in-degree
+            for node in nodes:
+                if node not in in_degree:
+                    in_degree[node] = 0
+            
+            # Build graph (edge from dependency target to source)
+            # If A depends on B, edge is B -> A (B must be processed before A)
+            for dep in self.dependencies:
+                source = dep.source_file
+                target = dep.target_file
+                
+                # Skip self-references
+                if source == target:
+                    continue
+                
+                # Edge: target -> source (target must come before source)
+                if source not in adj_list[target]:
+                    adj_list[target].add(source)
+                    in_degree[source] += 1
+            
+            # Kahn's algorithm
+            queue = [node for node in nodes if in_degree[node] == 0]
+            topological_order = []
+            
+            while queue:
+                # Sort for deterministic behavior
+                queue.sort()
+                
+                # Pop node with no incoming edges
+                node = queue.pop(0)
+                topological_order.append(node)
+                
+                # Reduce in-degree for neighbors
+                for neighbor in adj_list[node]:
+                    in_degree[neighbor] -= 1
+                    if in_degree[neighbor] == 0:
+                        queue.append(neighbor)
+            
+            # Check if all nodes were processed
+            if len(topological_order) < len(nodes):
+                # Cyclic dependencies exist
+                unprocessed = set(nodes) - set(topological_order)
+                logger.warning(
+                    f"   ⚠️  Cyclic dependencies detected, "
+                    f"{len(unprocessed)} files not in topological order"
+                )
+                # Add remaining files in arbitrary order
+                topological_order.extend(sorted(unprocessed))
+            
+            logger.info(
+                f"   ✅ Topological order computed: {len(topological_order)} files "
+                f"({len(topological_order) - len([n for n in nodes if in_degree[n] == 0])} ordered by dependencies)"
+            )
+            
+            return topological_order
+            
+        except Exception as e:
+            logger.error(f"Failed to compute topological order: {e}", exc_info=True)
+            # Fallback to original order
+            return nodes
 
 
 # Singleton

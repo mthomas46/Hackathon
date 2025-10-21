@@ -393,11 +393,19 @@ class JobOrchestrator:
                     total_files=total
                 )
             
+            # PHASE 10 (Gap #2): Get dependency order from plan
+            dependency_order = None
+            if plan and plan.processing_order:
+                dependency_order = plan.processing_order.get('topological_order')
+                if dependency_order:
+                    logger.info(f"   📋 Using dependency order: {len(dependency_order)} files")
+            
             # Execute sub-job with actual file processing
             stats = await self.sub_job_executor.execute_sub_job(
                 sub_job=sub_job,
                 repo_path=repo_path,
-                progress_callback=progress_callback
+                progress_callback=progress_callback,
+                dependency_order=dependency_order  # PHASE 10 (Gap #2)
             )
             
             # Update execution state

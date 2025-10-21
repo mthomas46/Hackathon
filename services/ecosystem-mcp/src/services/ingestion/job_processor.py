@@ -1978,9 +1978,10 @@ class JobProcessor:
                 return result
             
             # Phase 2: Planning (create processing plan with sub-jobs)
-            logger.info("📋 Phase 2/3: Creating processing plan")
-            await self._update_progress("planning", 30, 100, message="Creating sub-jobs...")
+            logger.info("📋 Phase 2/4: Creating processing plan")
+            await self._update_progress("planning", 25, 100, message="Creating sub-jobs...")
             
+            plan = None
             try:
                 from ..discovery.processing_planner import get_processing_planner
                 
@@ -1999,9 +2000,46 @@ class JobProcessor:
                 result["error"] = f"Planning failed: {str(e)}"
                 return result
             
-            # Phase 3: Orchestration (execute sub-jobs in parallel)
-            logger.info("⚡ Phase 3/3: Executing sub-jobs in parallel")
-            await self._update_progress("orchestration", 50, 100, message=f"Executing {len(plan.sub_jobs)} sub-jobs...")
+            # Phase 3: Analysis (PHASE 10 - Gap #2: Get dependency order)
+            logger.info("🔬 Phase 3/4: Analyzing dependencies")
+            await self._update_progress("analysis", 45, 100, message="Analyzing dependencies...")
+            
+            topological_order = None
+            try:
+                from ..analysis.analysis_engine import get_analysis_engine
+                
+                # Perform analysis
+                analysis_engine = get_analysis_engine()
+                file_dicts = [{'path': f.file_path, 'language': f.language or 'unknown'} 
+                             for f in classified_files]
+                
+                analysis_report = await analysis_engine.analyze(
+                    plan_id=str(plan.id) if hasattr(plan, 'id') else "temp",
+                    files=file_dicts,
+                    repo_path=job.repo_path
+                )
+                
+                # Extract topological order
+                if analysis_report and analysis_report.dependency_graph:
+                    topological_order = analysis_report.dependency_graph.topological_order
+                    if topological_order:
+                        logger.info(f"   ✅ Dependency order computed: {len(topological_order)} files")
+                        
+                        # Store in plan metadata for orchestrator to use
+                        if not hasattr(plan, 'processing_order') or not plan.processing_order:
+                            plan.processing_order = {}
+                        if isinstance(plan.processing_order, dict):
+                            plan.processing_order['topological_order'] = topological_order
+                    else:
+                        logger.info(f"   No dependency order computed (no dependencies)")
+                
+            except Exception as e:
+                logger.warning(f"⚠️ Analysis failed (continuing without dependency order): {e}")
+                # Continue without dependency order - not critical
+            
+            # Phase 4: Orchestration (execute sub-jobs in parallel)
+            logger.info("⚡ Phase 4/4: Executing sub-jobs in parallel")
+            await self._update_progress("orchestration", 60, 100, message=f"Executing {len(plan.sub_jobs)} sub-jobs...")
             
             try:
                 from ..orchestration.job_orchestrator import JobOrchestrator

@@ -56,7 +56,8 @@ class SubJobExecutor:
         self,
         sub_job: SubJobModel,
         repo_path: str,
-        progress_callback: Optional[callable] = None
+        progress_callback: Optional[callable] = None,
+        dependency_order: Optional[List[str]] = None  # PHASE 10 (Gap #2): Topological order
     ) -> Dict[str, int]:
         """
         Execute a sub-job by processing its files.
@@ -65,6 +66,7 @@ class SubJobExecutor:
             sub_job: Sub-job to execute
             repo_path: Repository path
             progress_callback: Optional callback for progress updates
+            dependency_order: PHASE 10 - Optional topological order for file processing
         
         Returns:
             Dictionary with execution statistics
@@ -85,6 +87,11 @@ class SubJobExecutor:
             if not files:
                 logger.warning(f"No files found for sub-job {sub_job.sub_job_id}")
                 return stats
+            
+            # PHASE 10 (Gap #2): Order files by dependencies if provided
+            if dependency_order:
+                files = self._order_files_by_dependencies(files, dependency_order)
+                logger.info(f"   📋 Using dependency-based processing order")
             
             logger.info(f"Processing {len(files)} files for sub-job {sub_job.sub_job_id}")
             
@@ -467,6 +474,55 @@ class SubJobExecutor:
                 
         except Exception as e:
             logger.error(f"Failed to store embedding in ChromaDB: {e}")
+    
+    def _order_files_by_dependencies(
+        self,
+        files: List[FileClassificationModel],
+        dependency_order: List[str]
+    ) -> List[FileClassificationModel]:
+        """
+        Order files according to dependency topological order (PHASE 10 - Gap #2).
+        
+        Files that appear in the dependency order are processed in that order.
+        Files not in the order are appended at the end.
+        
+        Args:
+            files: List of file classifications
+            dependency_order: Topological order of files
+        
+        Returns:
+            Ordered list of file classifications
+        """
+        try:
+            # Create mapping of file path to file classification
+            file_map = {f.file_path: f for f in files}
+            
+            # Build ordered list
+            ordered_files = []
+            processed_paths = set()
+            
+            # First, add files in dependency order
+            for path in dependency_order:
+                if path in file_map:
+                    ordered_files.append(file_map[path])
+                    processed_paths.add(path)
+            
+            # Then, add remaining files (not in dependency order)
+            remaining = [f for f in files if f.file_path not in processed_paths]
+            ordered_files.extend(remaining)
+            
+            logger.debug(
+                f"   Ordered {len(ordered_files)} files: "
+                f"{len(processed_paths)} by dependency, "
+                f"{len(remaining)} remaining"
+            )
+            
+            return ordered_files
+            
+        except Exception as e:
+            logger.error(f"Error ordering files by dependencies: {e}", exc_info=True)
+            # Fallback to original order
+            return files
 
 
 # Singleton instance
