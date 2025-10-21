@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 
-from ...storage.db import get_session
+from ...storage import get_database, get_session
 from ...storage.models_discovery import ProcessingPlanModel
 from ...storage.models_analysis import (
     AnalysisResultModel,

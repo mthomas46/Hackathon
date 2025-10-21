@@ -7,6 +7,13 @@ Provides database access through repository pattern.
 from .database import Database, get_database
 from .chromadb_client import ChromaDBClient, get_chroma_client
 
+# FastAPI dependency for getting database session
+async def get_session():
+    """FastAPI dependency that provides a database session."""
+    db = get_database()
+    async with db.session() as session:
+        yield session
+
 # Placeholder functions for lifecycle management
 async def init_database():
     """Initialize database connection and create tables.
@@ -68,6 +75,7 @@ async def close_chroma():
 __all__ = [
     "Database",
     "get_database",
+    "get_session",
     "ChromaDBClient",
     "get_chroma_client",
     "init_database",
