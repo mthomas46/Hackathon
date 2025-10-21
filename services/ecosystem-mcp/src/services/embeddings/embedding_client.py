@@ -2,6 +2,7 @@
 HTTP client for embedding service.
 
 Provides a clean interface to the FastEmbed embedding service.
+PHASE 10 (Day 2): Enhanced with circuit breaker and timeout protection.
 """
 
 import logging
@@ -9,6 +10,12 @@ from typing import List, Dict, Any, Optional
 import httpx
 
 from ...config import settings
+from ...utils.resilience import (  # PHASE 10 (Day 2)
+    get_embedding_circuit_breaker,
+    resilient,
+    with_timeout,
+    FallbackStrategies
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +47,18 @@ class EmbeddingClient:
         """Close the HTTP client."""
         await self.client.aclose()
     
+    @resilient(
+        circuit_breaker_name="embedding_service",
+        timeout_seconds=30.0,
+        fallback=None,  # Re-raise on failure (embeddings are critical)
+        failure_threshold=10,
+        breaker_timeout=30.0
+    )
     async def generate_embedding(self, text: str, model: Optional[str] = None) -> Dict[str, Any]:
         """
         Generate embedding for a single text.
+        
+        PHASE 10 (Day 2): Protected by circuit breaker and timeout.
         
         Args:
             text: Text to embed
@@ -53,6 +69,8 @@ class EmbeddingClient:
         
         Raises:
             Exception: If embedding generation fails
+            TimeoutError: If operation exceeds 30s
+            CircuitBreakerOpenError: If circuit breaker is open
         """
         try:
             payload = {"text": text}
@@ -82,6 +100,13 @@ class EmbeddingClient:
             logger.error(f"❌ Unexpected error in embedding client: {e}")
             raise
     
+    @resilient(
+        circuit_breaker_name="embedding_service",
+        timeout_seconds=60.0,  # Longer timeout for batch
+        fallback=None,
+        failure_threshold=10,
+        breaker_timeout=30.0
+    )
     async def generate_batch(
         self,
         texts: List[str],
@@ -89,6 +114,8 @@ class EmbeddingClient:
     ) -> List[Dict[str, Any]]:
         """
         Generate embeddings for multiple texts (TRUE batch processing).
+        
+        PHASE 10 (Day 2): Protected by circuit breaker and timeout.
         
         Args:
             texts: List of texts to embed
@@ -98,6 +125,8 @@ class EmbeddingClient:
             List of embedding dicts
         
         Raises:
+            TimeoutError: If batch exceeds 60s
+            CircuitBreakerOpenError: If circuit breaker is open
             Exception: If batch embedding fails
         """
         if not texts:
