@@ -480,7 +480,7 @@ async def get_context(request: Request, context_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to get context: {str(e)}")
 
 
-@router.get("/contexts/{context_id}/documents", response_model=List[DocumentResponse], tags=["contexts"])
+@router.get("/contexts/{context_id}/documents", response_model=List[DocumentResult], tags=["contexts"])
 @limiter.limit("30/minute")
 async def get_context_documents(
     request: Request,
@@ -509,7 +509,7 @@ async def get_context_documents(
             logger.info(f"📄 Retrieved {len(documents)} documents for context {context_id}")
             
             return [
-                DocumentResponse(
+                DocumentResult(
                     id=str(doc.id),
                     service_name=doc.service_name,
                     file_path=doc.file_path,

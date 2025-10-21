@@ -17,6 +17,8 @@ COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker
 RUN apt-get update && apt-get install -y \
     curl \
     git \
+    build-essential \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file

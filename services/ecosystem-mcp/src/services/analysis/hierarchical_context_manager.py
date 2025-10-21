@@ -18,7 +18,7 @@ from enum import Enum
 
 from .context_generator import RepositoryContext
 from .analysis_engine import AnalysisReport
-from .service_analyzer import ServiceMap
+from .service_detector import ServiceMap
 
 logger = logging.getLogger(__name__)
 
