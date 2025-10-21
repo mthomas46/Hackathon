@@ -18,7 +18,7 @@ from ...services.documentation import (
     DocumentationSet
 )
 from ...services.analysis.analysis_engine import AnalysisEngine
-from ...storage.db_manager import get_db_session
+from ...storage import get_session
 from ...storage.models_documentation import DocumentationRunModel, DocumentationArtifactModel
 from ...storage.models_analysis import AnalysisResultModel
 from sqlalchemy import select, desc
@@ -101,7 +101,7 @@ class PassResultResponse(BaseModel):
 )
 async def generate_documentation(
     request: GenerateDocsRequest,
-    session: AsyncSession = Depends(get_db_session)
+    session: AsyncSession = Depends(get_session)
 ) -> DocumentationRunResponse:
     """
     Generate comprehensive documentation for a repository.
@@ -236,7 +236,7 @@ async def list_documentation_runs(
     limit: int = 50,
     offset: int = 0,
     status: Optional[str] = None,
-    session: AsyncSession = Depends(get_db_session)
+    session: AsyncSession = Depends(get_session)
 ) -> List[DocumentationRunResponse]:
     """List documentation runs with pagination."""
     try:
@@ -283,7 +283,7 @@ async def list_documentation_runs(
 )
 async def get_documentation_run(
     run_id: str,
-    session: AsyncSession = Depends(get_db_session)
+    session: AsyncSession = Depends(get_session)
 ) -> DocumentationRunResponse:
     """Get documentation run details."""
     try:
@@ -331,7 +331,7 @@ async def get_run_artifacts(
     run_id: str,
     artifact_type: Optional[str] = None,
     pass_type: Optional[str] = None,
-    session: AsyncSession = Depends(get_db_session)
+    session: AsyncSession = Depends(get_session)
 ) -> List[ArtifactResponse]:
     """Get artifacts for a documentation run."""
     try:
@@ -384,7 +384,7 @@ async def get_run_artifacts(
 )
 async def get_artifact(
     artifact_id: str,
-    session: AsyncSession = Depends(get_db_session)
+    session: AsyncSession = Depends(get_session)
 ) -> ArtifactResponse:
     """Get a single artifact."""
     try:
@@ -430,7 +430,7 @@ async def get_artifact(
 )
 async def delete_documentation_run(
     run_id: str,
-    session: AsyncSession = Depends(get_db_session)
+    session: AsyncSession = Depends(get_session)
 ) -> Dict:
     """Delete a documentation run."""
     try:
