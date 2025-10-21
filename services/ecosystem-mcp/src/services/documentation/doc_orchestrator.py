@@ -374,14 +374,17 @@ class DocumentationOrchestrator:
         """Generate API reference documentation (Pass 3)."""
         logger.info("   🔌 Generating API reference...")
         
-        # Placeholder
-        artifacts = [{
-            'type': 'api_reference',
-            'title': 'API Reference',
-            'content': '# API Reference\n\n*To be generated*',
-            'format': 'markdown',
-            'word_count': 50
-        }]
+        # Use APIReferenceGenerator
+        from .api_generator import APIReferenceGenerator
+        
+        generator = APIReferenceGenerator(model_router=getattr(self, 'model_router', None))
+        analysis = context['analysis_report']
+        
+        artifacts = await generator.generate(
+            analysis_report=analysis,
+            context=context,
+            config=config
+        )
         
         return artifacts
     
