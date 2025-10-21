@@ -32,6 +32,11 @@ from .analysis_engine import (
     AnalysisReport,
     get_analysis_engine
 )
+from .context_generator import (
+    ContextGenerator,
+    RepositoryContext,
+    get_context_generator
+)
 
 __all__ = [
     # Dependency Analysis
@@ -61,4 +66,9 @@ __all__ = [
     "AnalysisEngine",
     "AnalysisReport",
     "get_analysis_engine",
+    
+    # Context Generator (RAG)
+    "ContextGenerator",
+    "RepositoryContext",
+    "get_context_generator",
 ]

@@ -27,7 +27,7 @@ from ...storage.models_analysis import (
     RepositoryContextModel,
     DetectedServiceModel
 )
-from ...services.analysis import get_analysis_engine
+from ...services.analysis import get_analysis_engine, get_context_generator
 
 logger = logging.getLogger(__name__)
 
@@ -476,4 +476,163 @@ async def get_context(
     except Exception as e:
         logger.error(f"❌ Failed to get context: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/analysis/contexts/generate/{plan_id}",
+    response_model=RepositoryContextResponse,
+    summary="Generate repository context",
+    description="Generate and store repository context from analysis report"
+)
+async def generate_context(
+    plan_id: str,
+    session: AsyncSession = Depends(get_session)
+):
+    """Generate repository context from analysis report."""
+    try:
+        logger.info(f"🎯 Generating context for plan {plan_id}")
+        
+        # Get analysis report
+        result = await session.execute(
+            select(AnalysisResultModel).where(AnalysisResultModel.plan_id == plan_id)
+        )
+        analysis = result.scalar_one_or_none()
+        
+        if not analysis:
+            raise HTTPException(status_code=404, detail=f"Analysis not found for plan {plan_id}")
+        
+        # Convert to AnalysisReport format
+        from ...services.analysis.analysis_engine import AnalysisReport
+        from ...services.analysis import get_dependency_analyzer, get_stack_detector, get_architecture_detector, get_service_detector
+        
+        # Reconstruct report components
+        dep_graph = None
+        if analysis.dependency_graph:
+            from ...services.analysis.dependency_analyzer import DependencyGraph
+            dep_graph = DependencyGraph(
+                nodes=analysis.dependency_graph.get('nodes', []),
+                edges=analysis.dependency_graph.get('edges', []),
+                circular_dependencies=analysis.dependency_graph.get('circular_dependencies', []),
+                topological_order=analysis.dependency_graph.get('topological_order', []),
+                metrics=analysis.dependency_graph.get('metrics', {})
+            )
+        
+        tech_stack = None
+        if analysis.technology_stack:
+            from ...services.analysis.stack_detector import TechnologyStack
+            tech_stack = TechnologyStack(
+                languages=analysis.technology_stack.get('languages', {}),
+                frameworks=analysis.technology_stack.get('frameworks', {}),
+                databases=analysis.technology_stack.get('databases', []),
+                tools=analysis.technology_stack.get('tools', []),
+                deployment=analysis.technology_stack.get('deployment', []),
+                testing=analysis.technology_stack.get('testing', [])
+            )
+        
+        arch_analysis = None
+        if analysis.architecture_analysis:
+            from ...services.analysis.architecture_detector import ArchitectureAnalysis, ArchitecturePattern
+            
+            primary_pattern = None
+            if analysis.architecture_analysis.get('primary_pattern'):
+                pp = analysis.architecture_analysis['primary_pattern']
+                primary_pattern = ArchitecturePattern(
+                    name=pp['name'],
+                    confidence=pp['confidence'],
+                    evidence=pp.get('evidence', []),
+                    components=pp.get('components', []),
+                    description=pp.get('description', '')
+                )
+            
+            arch_analysis = ArchitectureAnalysis(
+                primary_pattern=primary_pattern,
+                secondary_patterns=[],
+                layers=analysis.architecture_analysis.get('layers', []),
+                entry_points=analysis.architecture_analysis.get('entry_points', []),
+                dependencies_flow='unknown',
+                modularity_score=analysis.modularity_score or 0.5
+            )
+        
+        service_map = None
+        if analysis.service_map:
+            from ...services.analysis.service_detector import ServiceMap, Service
+            services = [
+                Service(
+                    name=s['name'],
+                    root_path=s['root_path'],
+                    files=s['files'],
+                    file_count=s['file_count'],
+                    entry_point=s.get('entry_point'),
+                    internal_dependencies=s.get('internal_dependencies', []),
+                    external_dependencies=s.get('external_dependencies', []),
+                    languages=s.get('languages', []),
+                    frameworks=s.get('frameworks', []),
+                    databases=s.get('databases', []),
+                    has_api=s.get('has_api', False),
+                    endpoints=s.get('endpoints', []),
+                    has_dockerfile=s.get('has_dockerfile', False),
+                    has_k8s_config=s.get('has_k8s_config', False)
+                )
+                for s in analysis.service_map.get('services', [])
+            ]
+            service_map = ServiceMap(
+                services=services,
+                dependencies=analysis.service_map.get('dependencies', {}),
+                service_count=len(services)
+            )
+        
+        report = AnalysisReport(
+            plan_id=analysis.plan_id,
+            repo_path=analysis.repo_path,
+            dependency_graph=dep_graph,
+            technology_stack=tech_stack,
+            architecture=arch_analysis,
+            service_map=service_map,
+            total_files=analysis.total_files,
+            total_languages=analysis.total_languages,
+            total_frameworks=analysis.total_frameworks,
+            total_services=analysis.total_services,
+            modularity_score=analysis.modularity_score or 0.5,
+            analysis_complete=analysis.analysis_complete,
+            errors=analysis.errors or []
+        )
+        
+        # Generate context
+        context_gen = get_context_generator()
+        context = await context_gen.generate_context(report)
+        
+        # Store in database
+        result = await session.execute(
+            select(RepositoryContextModel).where(RepositoryContextModel.repo_id == context.repo_id)
+        )
+        existing = result.scalar_one_or_none()
+        
+        if existing:
+            # Update
+            existing.brief_description = context.brief_description
+            existing.key_features = context.key_features
+            existing.technical_highlights = context.technical_highlights
+            existing.updated_at = datetime.utcnow()
+            await session.commit()
+            logger.info(f"✅ Updated context for {context.repo_id}")
+            return RepositoryContextResponse(**existing.to_dict())
+        
+        logger.info(f"✅ Generated context for {context.repo_id}")
+        
+        # Return existing context if it was created by run_analysis
+        result = await session.execute(
+            select(RepositoryContextModel).where(RepositoryContextModel.repo_id == context.repo_id)
+        )
+        ctx_model = result.scalar_one_or_none()
+        
+        if ctx_model:
+            return RepositoryContextResponse(**ctx_model.to_dict())
+        else:
+            raise HTTPException(status_code=404, detail="Context not found after generation")
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to generate context: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Context generation failed: {str(e)}")
 
