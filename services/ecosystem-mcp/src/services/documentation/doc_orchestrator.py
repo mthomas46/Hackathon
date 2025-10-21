@@ -53,6 +53,8 @@ class DocConfig:
     # Quality configuration
     validate_between_passes: bool = True
     min_quality_score: float = 0.7
+    enable_quality_validation: bool = True  # Enable Phase 5 quality checks
+    auto_queue_for_review: bool = True      # Auto-queue low-confidence docs
     
     # LLM configuration
     model: str = "llama3.2:latest"
@@ -245,6 +247,24 @@ class DocumentationOrchestrator:
             logger.info(f"   Total words: {total_words:,}")
             logger.info(f"   Quality score: {overall_quality:.2f}/1.0")
             logger.info(f"{'='*60}")
+            
+            # Run Phase 5 quality validation if enabled
+            if config.enable_quality_validation and final_status == DocStatus.COMPLETED:
+                logger.info("\n🔍 Running quality validation (Phase 5)...")
+                try:
+                    quality_results = await self._run_quality_validation(
+                        doc_set=doc_set,
+                        analysis_report=analysis_report,
+                        config=config
+                    )
+                    logger.info(f"   ✅ Quality validation complete")
+                    logger.info(f"   📊 Avg Completeness: {quality_results['avg_completeness']:.2f}")
+                    logger.info(f"   📊 Avg Accuracy: {quality_results['avg_accuracy']:.2f}")
+                    logger.info(f"   📊 Avg Confidence: {quality_results['avg_confidence']:.2f}")
+                    if quality_results['requiring_review'] > 0:
+                        logger.info(f"   ⚠️  Requiring review: {quality_results['requiring_review']}/{total_artifacts}")
+                except Exception as e:
+                    logger.warning(f"   ⚠️  Quality validation failed: {e}")
             
             return doc_set
         
@@ -447,6 +467,119 @@ class DocumentationOrchestrator:
             return 0.75
         else:
             return 0.9
+    
+    async def _run_quality_validation(
+        self,
+        doc_set: DocumentationSet,
+        analysis_report: AnalysisReport,
+        config: DocConfig
+    ) -> Dict:
+        """
+        Run Phase 5 quality validation on generated documentation.
+        
+        Args:
+            doc_set: Generated documentation set
+            analysis_report: Analysis report from Phase 3
+            config: Documentation configuration
+        
+        Returns:
+            Dictionary of quality metrics
+        """
+        from ..quality import (
+            get_completeness_checker,
+            get_accuracy_validator,
+            get_confidence_scorer,
+            get_review_workflow_manager,
+            get_quality_reporter
+        )
+        
+        completeness_checker = get_completeness_checker()
+        accuracy_validator = get_accuracy_validator()
+        confidence_scorer = get_confidence_scorer()
+        review_manager = get_review_workflow_manager()
+        quality_reporter = get_quality_reporter()
+        
+        completeness_results = []
+        accuracy_results = []
+        confidence_scores = []
+        requiring_review = 0
+        
+        # Validate each artifact
+        for pass_result in doc_set.pass_results:
+            for artifact in pass_result.artifacts:
+                try:
+                    # Run completeness check
+                    comp_result = await completeness_checker.check(artifact)
+                    completeness_results.append(comp_result)
+                    
+                    # Run accuracy validation
+                    # Convert analysis_report to dict for validation
+                    analysis_dict = {
+                        'api_endpoints': getattr(analysis_report.service_map, 'endpoints', [])
+                        if analysis_report.service_map else [],
+                        'modularity_score': analysis_report.modularity_score
+                    }
+                    acc_result = await accuracy_validator.validate(
+                        artifact,
+                        analysis_report=analysis_dict
+                    )
+                    accuracy_results.append(acc_result)
+                    
+                    # Calculate confidence score
+                    conf_score = await confidence_scorer.score(
+                        artifact,
+                        comp_result,
+                        acc_result,
+                        source_quality=analysis_report.modularity_score,
+                        analysis_report=analysis_dict
+                    )
+                    confidence_scores.append(conf_score)
+                    
+                    # Queue for review if needed
+                    if config.auto_queue_for_review and conf_score.requires_review:
+                        await review_manager.queue_for_review(
+                            artifact_id=artifact.get('id', 'unknown'),
+                            artifact_title=artifact.get('title', 'Untitled'),
+                            confidence_score=conf_score.overall_confidence,
+                            priority=conf_score.review_priority,
+                            issues=(
+                                comp_result.missing_sections[:3] +
+                                acc_result.code_example_issues[:3]
+                            ),
+                            recommendations=comp_result.recommendations[:5]
+                        )
+                        requiring_review += 1
+                
+                except Exception as e:
+                    logger.warning(f"Failed to validate artifact {artifact.get('title', 'unknown')}: {e}")
+                    continue
+        
+        # Generate quality report
+        if completeness_results and accuracy_results and confidence_scores:
+            quality_report = await quality_reporter.generate_report(
+                run_id=doc_set.run_id,
+                completeness_results=completeness_results,
+                accuracy_results=accuracy_results,
+                confidence_scores=confidence_scores
+            )
+            
+            return {
+                'avg_completeness': quality_report.average_completeness,
+                'avg_accuracy': quality_report.average_accuracy,
+                'avg_confidence': quality_report.average_confidence,
+                'requiring_review': requiring_review,
+                'total_issues': quality_report.total_issues,
+                'critical_issues': quality_report.critical_issues
+            }
+        else:
+            return {
+                'avg_completeness': 0.0,
+                'avg_accuracy': 0.0,
+                'avg_confidence': 0.0,
+                'requiring_review': 0,
+                'total_issues': 0,
+                'critical_issues': 0
+            }
 
 
 # Singleton
