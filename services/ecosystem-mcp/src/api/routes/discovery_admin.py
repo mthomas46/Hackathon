@@ -187,3 +187,87 @@ async def rollback_execution_migration(db: AsyncSession = Depends(get_database))
             detail=f"Rollback failed: {str(e)}"
         )
 
+
+@router.post(
+    "/migrate-documentation",
+    summary="Run documentation database migration",
+    description="Creates tables for documentation runs and artifacts (Phase 4)"
+)
+async def run_documentation_migration(db: AsyncSession = Depends(get_database)):
+    """
+    Run documentation database migration.
+    
+    Creates:
+    - documentation_runs table
+    - documentation_artifacts table
+    - Performance indexes
+    """
+    try:
+        logger.info("🔄 Running documentation migration...")
+        
+        # Lazy import to avoid circular dependency
+        from ...storage.migrations import add_documentation_tables
+        
+        async with db.session() as session:
+            await add_documentation_tables.upgrade(session)
+        
+        logger.info("✅ Documentation migration complete")
+        
+        return {
+            "success": True,
+            "message": "Documentation migration completed successfully",
+            "tables_created": [
+                "documentation_runs",
+                "documentation_artifacts"
+            ],
+            "indexes_created": 8
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Migration failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Migration failed: {str(e)}"
+        )
+
+
+@router.post(
+    "/rollback-documentation",
+    summary="Rollback documentation database migration",
+    description="Drops all documentation tables and indexes"
+)
+async def rollback_documentation_migration(db: AsyncSession = Depends(get_database)):
+    """
+    Rollback documentation database migration.
+    
+    Drops:
+    - documentation_runs table
+    - documentation_artifacts table
+    - All indexes
+    """
+    try:
+        logger.info("🔄 Rolling back documentation migration...")
+        
+        # Lazy import to avoid circular dependency
+        from ...storage.migrations import add_documentation_tables
+        
+        async with db.session() as session:
+            await add_documentation_tables.downgrade(session)
+        
+        logger.info("✅ Documentation migration rollback complete")
+        
+        return {
+            "success": True,
+            "message": "Documentation migration rolled back successfully",
+            "tables_dropped": [
+                "documentation_runs",
+                "documentation_artifacts"
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Rollback failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Rollback failed: {str(e)}"
+        )

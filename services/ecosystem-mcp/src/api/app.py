@@ -26,7 +26,7 @@ from ..utils.redis_client import get_redis_client
 from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
-from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, embeddings_admin, job_recovery, path_resolver, temporal_versioning, documentation_runs, job_progress, performance_optimization, cache_analytics, discovery, discovery_admin, orchestration, analysis
+from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, embeddings_admin, job_recovery, path_resolver, temporal_versioning, documentation_runs, job_progress, performance_optimization, cache_analytics, discovery, discovery_admin, orchestration, analysis, documentation
 # embeddings import moved below to handle conditional loading
 from .middleware import RequestIDMiddleware, TimeoutMiddleware, MetricsMiddleware
 from .exception_handlers import register_exception_handlers
@@ -414,6 +414,9 @@ def create_app() -> FastAPI:
     
     # Multi-file analysis (Phase 3)
     app.include_router(analysis.router, prefix="/api/v1", tags=["Analysis"])
+    
+    # Multi-pass documentation (Phase 4)
+    app.include_router(documentation.router, prefix="/api/v1", tags=["Documentation"])
     
     app.include_router(metrics.router, tags=["Metrics"])
     
