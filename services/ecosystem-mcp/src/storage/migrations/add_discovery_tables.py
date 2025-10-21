@@ -84,17 +84,19 @@ async def upgrade(session: AsyncSession):
     """))
     logger.info("  ✅ Created file_classifications table")
     
-    # Create indexes for performance
-    await session.execute(text("""
-        CREATE INDEX IF NOT EXISTS idx_sub_jobs_plan_id ON sub_jobs (plan_id);
-        CREATE INDEX IF NOT EXISTS idx_sub_jobs_status ON sub_jobs (status);
-        CREATE INDEX IF NOT EXISTS idx_sub_jobs_priority ON sub_jobs (priority);
-        CREATE INDEX IF NOT EXISTS idx_file_classifications_plan_id ON file_classifications (plan_id);
-        CREATE INDEX IF NOT EXISTS idx_file_classifications_importance ON file_classifications (importance_level);
-        CREATE INDEX IF NOT EXISTS idx_file_classifications_priority ON file_classifications (priority);
-        CREATE INDEX IF NOT EXISTS idx_processing_plans_status ON processing_plans (status);
-        CREATE INDEX IF NOT EXISTS idx_processing_plans_created_at ON processing_plans (created_at);
-    """))
+    # Create indexes for performance (one at a time for asyncpg)
+    indexes = [
+        "CREATE INDEX IF NOT EXISTS idx_sub_jobs_plan_id ON sub_jobs (plan_id)",
+        "CREATE INDEX IF NOT EXISTS idx_sub_jobs_status ON sub_jobs (status)",
+        "CREATE INDEX IF NOT EXISTS idx_sub_jobs_priority ON sub_jobs (priority)",
+        "CREATE INDEX IF NOT EXISTS idx_file_classifications_plan_id ON file_classifications (plan_id)",
+        "CREATE INDEX IF NOT EXISTS idx_file_classifications_importance ON file_classifications (importance_level)",
+        "CREATE INDEX IF NOT EXISTS idx_file_classifications_priority ON file_classifications (priority)",
+        "CREATE INDEX IF NOT EXISTS idx_processing_plans_status ON processing_plans (status)",
+        "CREATE INDEX IF NOT EXISTS idx_processing_plans_created_at ON processing_plans (created_at)"
+    ]
+    for index_sql in indexes:
+        await session.execute(text(index_sql))
     logger.info("  ✅ Created performance indexes")
     
     await session.commit()
@@ -105,17 +107,19 @@ async def downgrade(session: AsyncSession):
     """Revert the database schema upgrade."""
     logger.info("Reverting migration: 002_add_discovery_and_sub_jobs")
     
-    # Drop indexes first
-    await session.execute(text("""
-        DROP INDEX IF EXISTS idx_sub_jobs_plan_id;
-        DROP INDEX IF EXISTS idx_sub_jobs_status;
-        DROP INDEX IF EXISTS idx_sub_jobs_priority;
-        DROP INDEX IF EXISTS idx_file_classifications_plan_id;
-        DROP INDEX IF EXISTS idx_file_classifications_importance;
-        DROP INDEX IF EXISTS idx_file_classifications_priority;
-        DROP INDEX IF EXISTS idx_processing_plans_status;
-        DROP INDEX IF EXISTS idx_processing_plans_created_at;
-    """))
+    # Drop indexes first (one at a time for asyncpg)
+    indexes = [
+        "DROP INDEX IF EXISTS idx_sub_jobs_plan_id",
+        "DROP INDEX IF EXISTS idx_sub_jobs_status",
+        "DROP INDEX IF EXISTS idx_sub_jobs_priority",
+        "DROP INDEX IF EXISTS idx_file_classifications_plan_id",
+        "DROP INDEX IF EXISTS idx_file_classifications_importance",
+        "DROP INDEX IF EXISTS idx_file_classifications_priority",
+        "DROP INDEX IF EXISTS idx_processing_plans_status",
+        "DROP INDEX IF EXISTS idx_processing_plans_created_at"
+    ]
+    for index_sql in indexes:
+        await session.execute(text(index_sql))
     logger.info("  ✅ Dropped performance indexes")
     
     # Drop tables (in reverse order due to foreign keys)
