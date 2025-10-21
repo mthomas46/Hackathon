@@ -1,0 +1,498 @@
+"""
+Synthesis Generator
+
+Synthesizes all documentation and creates final index.
+Pass 5 (final) of multi-pass documentation generation.
+"""
+
+import logging
+from typing import Dict, List
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+
+class SynthesisGenerator:
+    """
+    Synthesizes documentation from all previous passes.
+    
+    Creates:
+    - Master index/README
+    - Cross-references
+    - Documentation map
+    - Glossary
+    - Final polish
+    """
+    
+    def __init__(self, model_router=None):
+        """
+        Initialize synthesis generator.
+        
+        Args:
+            model_router: Optional ModelRouter for LLM access
+        """
+        self.model_router = model_router
+        logger.info("SynthesisGenerator initialized")
+    
+    async def generate(
+        self,
+        analysis_report,
+        context: Dict,
+        config: Dict
+    ) -> List[Dict]:
+        """
+        Generate synthesis documentation.
+        
+        Args:
+            analysis_report: Analysis results from Phase 3
+            context: Generation context with all previous passes
+            config: Generation configuration
+        
+        Returns:
+            List of documentation artifacts
+        """
+        logger.info("✨ Synthesizing documentation...")
+        
+        artifacts = []
+        
+        # 1. Master README/Index
+        readme = await self._generate_master_readme(analysis_report, context)
+        artifacts.append(readme)
+        
+        # 2. Documentation Map
+        doc_map = await self._generate_documentation_map(context)
+        artifacts.append(doc_map)
+        
+        # 3. Glossary
+        glossary = await self._generate_glossary(analysis_report)
+        artifacts.append(glossary)
+        
+        logger.info(f"   ✅ Generated {len(artifacts)} synthesis artifacts")
+        
+        return artifacts
+    
+    async def _generate_master_readme(self, analysis, context: Dict) -> Dict:
+        """Generate master README/index."""
+        
+        # Count artifacts from previous passes
+        total_artifacts = sum(
+            len(pr.artifacts)
+            for pr in context.get('previous_passes', [])
+        )
+        
+        content = f"""# Documentation Index
+
+> Comprehensive documentation for {analysis.repo_path}
+
+**Generated:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}  
+**Total Documents:** {total_artifacts}
+
+## Overview
+
+This documentation provides a complete reference for the system, including architecture,
+components, APIs, and usage examples.
+
+## Quick Links
+
+### Getting Started
+- [Quick Start Guide](./quick-start-guide.md) - Get up and running quickly
+- [Installation](./quick-start-guide.md#installation) - Installation instructions
+- [Configuration](./quick-start-guide.md#configuration) - Configuration guide
+
+### Architecture
+- [System Architecture Overview](./system-architecture-overview.md) - High-level architecture
+- [Architecture Pattern Analysis](./architecture-pattern-analysis.md) - Detailed pattern analysis
+- [Technology Stack](./technology-stack.md) - Technologies used
+
+### Components
+{self._generate_component_links(context)}
+
+### API Reference
+{self._generate_api_links(context)}
+
+### Examples & Guides
+- [Usage Examples](./usage-examples.md) - Common usage patterns
+- [Integration Guide](./integration-guide.md) - Integration instructions
+- [Common Workflows](./common-workflows.md) - Step-by-step workflows
+
+## System Summary
+
+{self._generate_system_summary(analysis)}
+
+## Documentation Structure
+
+```
+docs/
+├── README.md                          # This file
+├── architecture/                      # Architecture documentation
+│   ├── system-architecture-overview.md
+│   ├── architecture-pattern-analysis.md
+│   ├── technology-stack.md
+│   ├── component-architecture.md
+│   └── service-architecture.md
+│
+├── components/                        # Component documentation
+│   └── [service-specific docs]
+│
+├── api/                              # API reference
+│   ├── api-reference-overview.md
+│   ├── authentication.md
+│   ├── error-handling.md
+│   └── [service-api docs]
+│
+├── guides/                           # Usage guides
+│   ├── quick-start-guide.md
+│   ├── usage-examples.md
+│   ├── integration-guide.md
+│   └── common-workflows.md
+│
+└── reference/                        # Reference materials
+    ├── documentation-map.md
+    └── glossary.md
+```
+
+## Key Metrics
+
+{self._generate_key_metrics(analysis)}
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on contributing to this project.
+
+## Support
+
+For support and questions:
+- Check the [documentation](./documentation-map.md)
+- Review [common workflows](./common-workflows.md)
+- See [troubleshooting guide](./quick-start-guide.md#troubleshooting)
+
+## License
+
+See [LICENSE](../LICENSE) file for license information.
+
+---
+
+**Documentation Quality Score:** {self._calculate_overall_quality(context):.1%}
+
+*Generated by Ecosystem MCP Documentation System*
+"""
+        
+        return {
+            'type': 'synthesis',
+            'title': 'Documentation Index',
+            'content': content,
+            'format': 'markdown',
+            'word_count': len(content.split())
+        }
+    
+    async def _generate_documentation_map(self, context: Dict) -> Dict:
+        """Generate documentation map."""
+        
+        previous_passes = context.get('previous_passes', [])
+        
+        content = f"""# Documentation Map
+
+This document provides a complete map of all available documentation.
+
+## Documentation Organization
+
+Total Passes: {len(previous_passes)}  
+Total Artifacts: {sum(len(pr.artifacts) for pr in previous_passes)}
+
+{self._map_all_artifacts(previous_passes)}
+
+## Document Types
+
+{self._categorize_documents(previous_passes)}
+
+## Navigation Guide
+
+### By Topic
+
+{self._generate_topic_navigation(previous_passes)}
+
+### By Document Type
+
+{self._generate_type_navigation(previous_passes)}
+
+## Search Tips
+
+- Use your IDE's search to find specific topics
+- Check the glossary for term definitions
+- Follow cross-references for related content
+
+---
+*Generated by Ecosystem MCP - Synthesis Generator*
+"""
+        
+        return {
+            'type': 'synthesis',
+            'title': 'Documentation Map',
+            'content': content,
+            'format': 'markdown',
+            'word_count': len(content.split())
+        }
+    
+    async def _generate_glossary(self, analysis) -> Dict:
+        """Generate glossary of terms."""
+        
+        content = f"""# Glossary
+
+## Technical Terms
+
+### Architecture Patterns
+
+**Microservices**
+: A distributed architecture pattern where the system is decomposed into small, independent services.
+
+**Layered Architecture**
+: A hierarchical architecture organized into layers with specific responsibilities.
+
+**MVC (Model-View-Controller)**
+: Pattern separating data (Model), presentation (View), and logic (Controller).
+
+### API Terms
+
+**REST (Representational State Transfer)**
+: Architectural style for designing networked applications using HTTP.
+
+**Endpoint**
+: A specific URL where an API can access resources.
+
+**Authentication**
+: Process of verifying the identity of a user or system.
+
+**Bearer Token**
+: Access token that grants access to resources, typically in JWT format.
+
+**Rate Limiting**
+: Controlling the number of requests a client can make in a time period.
+
+### Development Terms
+
+**CI/CD (Continuous Integration/Continuous Deployment)**
+: Automated process of integrating code changes and deploying to production.
+
+**Docker**
+: Platform for developing, shipping, and running applications in containers.
+
+**Container**
+: Lightweight, standalone executable package of software.
+
+### System Metrics
+
+**Modularity Score**
+: Measure of how well-separated components are (0-1 scale).
+
+**Coupling**
+: Degree of interdependence between software modules.
+
+**Cohesion**
+: Degree to which elements within a module belong together.
+
+## Technology Stack
+
+{self._generate_tech_glossary(analysis)}
+
+## Acronyms
+
+**API** - Application Programming Interface  
+**HTTP** - Hypertext Transfer Protocol  
+**HTTPS** - HTTP Secure  
+**JSON** - JavaScript Object Notation  
+**REST** - Representational State Transfer  
+**SDK** - Software Development Kit  
+**URL** - Uniform Resource Locator  
+**UUID** - Universally Unique Identifier
+
+## Framework-Specific Terms
+
+{self._generate_framework_glossary(analysis)}
+
+---
+*Generated by Ecosystem MCP - Synthesis Generator*
+"""
+        
+        return {
+            'type': 'synthesis',
+            'title': 'Glossary',
+            'content': content,
+            'format': 'markdown',
+            'word_count': len(content.split())
+        }
+    
+    # ========================================================================
+    # Helper Methods
+    # ========================================================================
+    
+    def _generate_component_links(self, context: Dict) -> str:
+        """Generate links to component documentation."""
+        previous_passes = context.get('previous_passes', [])
+        
+        component_artifacts = []
+        for pass_result in previous_passes:
+            for artifact in pass_result.artifacts:
+                if artifact.get('type') == 'component':
+                    title = artifact.get('title', 'Component')
+                    component_artifacts.append(f"- [{title}](./{self._slugify(title)}.md)")
+        
+        if not component_artifacts:
+            return "*Component documentation in progress*"
+        
+        return '\n'.join(component_artifacts[:10])  # Limit to 10
+    
+    def _generate_api_links(self, context: Dict) -> str:
+        """Generate links to API documentation."""
+        return """- [API Reference Overview](./api-reference-overview.md) - Complete API reference
+- [Authentication](./authentication.md) - Authentication guide
+- [Error Handling](./error-handling.md) - Error handling reference
+- [API Best Practices](./api-best-practices.md) - Best practices guide"""
+    
+    def _generate_system_summary(self, analysis) -> str:
+        """Generate system summary."""
+        return f"""### Repository
+{analysis.repo_path}
+
+### Scale
+- **Files:** {analysis.total_files:,}
+- **Languages:** {analysis.total_languages}
+- **Services:** {len(analysis.service_map.services) if analysis.service_map else 0}
+
+### Architecture
+- **Pattern:** {analysis.architecture.primary_pattern.name if analysis.architecture and analysis.architecture.primary_pattern else 'N/A'}
+- **Modularity:** {analysis.modularity_score:.2f}/1.0
+
+### Technology
+- **Primary Stack:** {self._get_primary_stack(analysis)}
+"""
+    
+    def _generate_key_metrics(self, analysis) -> str:
+        """Generate key metrics table."""
+        return f"""| Metric | Value |
+|--------|-------|
+| Total Files | {analysis.total_files:,} |
+| Languages | {analysis.total_languages} |
+| Services | {len(analysis.service_map.services) if analysis.service_map else 0} |
+| Modularity Score | {analysis.modularity_score:.2f}/1.0 |
+| Architecture Pattern | {analysis.architecture.primary_pattern.name if analysis.architecture and analysis.architecture.primary_pattern else 'N/A'} |"""
+    
+    def _calculate_overall_quality(self, context: Dict) -> float:
+        """Calculate overall documentation quality."""
+        previous_passes = context.get('previous_passes', [])
+        
+        if not previous_passes:
+            return 0.0
+        
+        total_score = sum(pr.quality_score for pr in previous_passes)
+        return total_score / len(previous_passes)
+    
+    def _map_all_artifacts(self, previous_passes: List) -> str:
+        """Map all artifacts by pass."""
+        lines = []
+        
+        for idx, pass_result in enumerate(previous_passes, 1):
+            pass_name = pass_result.pass_type.value
+            artifact_count = len(pass_result.artifacts)
+            
+            lines.append(f"### Pass {idx}: {pass_name.title()}")
+            lines.append(f"Artifacts: {artifact_count}\n")
+            
+            for artifact in pass_result.artifacts[:5]:  # Show first 5
+                title = artifact.get('title', 'Untitled')
+                lines.append(f"- {title}")
+            
+            if len(pass_result.artifacts) > 5:
+                lines.append(f"- *...and {len(pass_result.artifacts) - 5} more*")
+            
+            lines.append("")
+        
+        return '\n'.join(lines)
+    
+    def _categorize_documents(self, previous_passes: List) -> str:
+        """Categorize documents by type."""
+        categories = {}
+        
+        for pass_result in previous_passes:
+            for artifact in pass_result.artifacts:
+                doc_type = artifact.get('type', 'unknown')
+                if doc_type not in categories:
+                    categories[doc_type] = []
+                categories[doc_type].append(artifact.get('title', 'Untitled'))
+        
+        lines = []
+        for doc_type, titles in sorted(categories.items()):
+            lines.append(f"### {doc_type.title()}")
+            lines.append(f"Count: {len(titles)}\n")
+        
+        return '\n'.join(lines)
+    
+    def _generate_topic_navigation(self, previous_passes: List) -> str:
+        """Generate topic-based navigation."""
+        return """- **Architecture** - System design and patterns
+- **Components** - Individual services and modules
+- **API** - REST API reference
+- **Integration** - Integration guides
+- **Examples** - Usage examples and workflows"""
+    
+    def _generate_type_navigation(self, previous_passes: List) -> str:
+        """Generate type-based navigation."""
+        return """- **Overviews** - High-level system overviews
+- **References** - Detailed API and component references
+- **Guides** - Step-by-step guides and tutorials
+- **Examples** - Code samples and usage examples"""
+    
+    def _generate_tech_glossary(self, analysis) -> str:
+        """Generate technology-specific glossary."""
+        if not analysis.technology_stack:
+            return "*Technology stack not analyzed*"
+        
+        lines = []
+        
+        # Add framework definitions
+        if analysis.technology_stack.frameworks:
+            for fw in list(analysis.technology_stack.frameworks.keys())[:5]:
+                lines.append(f"**{fw}**")
+                lines.append(f": {self._get_framework_description(fw)}\n")
+        
+        return '\n'.join(lines) if lines else "*No specific technologies to define*"
+    
+    def _generate_framework_glossary(self, analysis) -> str:
+        """Generate framework-specific glossary."""
+        if not analysis.technology_stack or not analysis.technology_stack.frameworks:
+            return "*No framework-specific terms*"
+        
+        return "*Framework-specific terms are documented in component guides*"
+    
+    def _get_primary_stack(self, analysis) -> str:
+        """Get primary technology stack."""
+        if not analysis.technology_stack:
+            return "N/A"
+        
+        langs = []
+        if analysis.technology_stack.languages:
+            top_langs = sorted(
+                analysis.technology_stack.languages.items(),
+                key=lambda x: x[1],
+                reverse=True
+            )[:2]
+            langs = [lang for lang, _ in top_langs]
+        
+        return ', '.join(langs) if langs else "N/A"
+    
+    def _slugify(self, text: str) -> str:
+        """Convert text to slug."""
+        return text.lower().replace(' ', '-').replace(':', '').replace('/', '-')
+    
+    def _get_framework_description(self, framework: str) -> str:
+        """Get framework description."""
+        descriptions = {
+            'FastAPI': 'Modern, fast web framework for building APIs with Python',
+            'Flask': 'Lightweight WSGI web application framework',
+            'Django': 'High-level Python web framework',
+            'React': 'JavaScript library for building user interfaces',
+            'Vue': 'Progressive JavaScript framework',
+            'Express': 'Fast, unopinionated web framework for Node.js',
+            'Streamlit': 'Framework for creating data apps in Python'
+        }
+        return descriptions.get(framework, f'{framework} framework')
+

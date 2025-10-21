@@ -396,14 +396,17 @@ class DocumentationOrchestrator:
         """Generate examples and guides (Pass 4)."""
         logger.info("   📚 Generating examples and guides...")
         
-        # Placeholder
-        artifacts = [{
-            'type': 'examples',
-            'title': 'Examples & Guides',
-            'content': '# Examples\n\n*To be generated*',
-            'format': 'markdown',
-            'word_count': 50
-        }]
+        # Use ExamplesGenerator
+        from .examples_generator import ExamplesGenerator
+        
+        generator = ExamplesGenerator(model_router=getattr(self, 'model_router', None))
+        analysis = context['analysis_report']
+        
+        artifacts = await generator.generate(
+            analysis_report=analysis,
+            context=context,
+            config=config
+        )
         
         return artifacts
     
@@ -415,14 +418,17 @@ class DocumentationOrchestrator:
         """Synthesize and polish documentation (Pass 5)."""
         logger.info("   ✨ Synthesizing and polishing documentation...")
         
-        # Placeholder
-        artifacts = [{
-            'type': 'synthesis',
-            'title': 'Documentation Index',
-            'content': '# Documentation Index\n\n*To be generated*',
-            'format': 'markdown',
-            'word_count': 100
-        }]
+        # Use SynthesisGenerator
+        from .synthesis_generator import SynthesisGenerator
+        
+        generator = SynthesisGenerator(model_router=getattr(self, 'model_router', None))
+        analysis = context['analysis_report']
+        
+        artifacts = await generator.generate(
+            analysis_report=analysis,
+            context=context,
+            config=config
+        )
         
         return artifacts
     

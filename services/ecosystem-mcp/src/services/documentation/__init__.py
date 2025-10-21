@@ -16,6 +16,8 @@ from .doc_orchestrator import (
 from .architecture_generator import ArchitectureGenerator
 from .component_generator import ComponentGenerator
 from .api_generator import APIReferenceGenerator
+from .examples_generator import ExamplesGenerator
+from .synthesis_generator import SynthesisGenerator
 
 __all__ = [
     "DocumentationOrchestrator",
@@ -28,5 +30,7 @@ __all__ = [
     "ArchitectureGenerator",
     "ComponentGenerator",
     "APIReferenceGenerator",
+    "ExamplesGenerator",
+    "SynthesisGenerator",
 ]
 
