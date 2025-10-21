@@ -25,10 +25,11 @@ def show(api_base_url: str):
         st.session_state.generating = False
     
     # Create tabs
-    tab1, tab2, tab3 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([
         "⚙️ Configure",
         "📊 Generate",
-        "📄 Results"
+        "📄 Results",
+        "🎯 Quality Metrics"
     ])
     
     # ============================================================================
@@ -597,6 +598,84 @@ def show(api_base_url: str):
             # Detailed metrics
             with st.expander("📈 Detailed Metrics"):
                 st.json(st.session_state.generation_metrics)
+    
+    # ============================================================================
+    # Tab 4: Quality Metrics
+    # ============================================================================
+    with tab4:
+        st.header("🎯 Quality Metrics")
+        st.markdown("Validate and monitor documentation quality after generation")
+        
+        # Check if documentation has been generated
+        if not st.session_state.generation_results:
+            st.info("📭 No documentation generated yet. Generate documentation first in the Generate tab.")
+        else:
+            st.success(f"📊 {len(st.session_state.generation_results)} section(s) available for validation")
+            
+            # Quick validation info
+            st.markdown("""
+            ### 🔍 Quality Validation
+            
+            Documentation quality is assessed across three dimensions:
+            - **Completeness**: Are all required sections present?
+            - **Accuracy**: Is the technical content correct?
+            - **Confidence**: Overall quality score
+            """)
+            
+            # Link to full quality dashboard
+            st.info("""
+            💡 **For comprehensive quality analysis:**
+            
+            Navigate to **🎯 Quality Dashboard** in the sidebar to:
+            - Run full validation on saved documentation runs
+            - View detailed quality reports
+            - Manage review queue
+            - Track quality metrics over time
+            """)
+            
+            # Quality targets
+            st.markdown("---")
+            st.subheader("🎯 Quality Targets")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Completeness Target", "≥ 85%")
+                st.caption("All required sections present with sufficient content")
+            
+            with col2:
+                st.metric("Accuracy Target", "≥ 90%")
+                st.caption("Technical correctness and valid code examples")
+            
+            with col3:
+                st.metric("Confidence Target", "≥ 85%")
+                st.caption("Overall quality score for production readiness")
+            
+            # Quality tips
+            st.markdown("---")
+            st.subheader("💡 Tips for High-Quality Documentation")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("""
+                **Improve Completeness:**
+                - ✅ Include all key sections (Overview, Architecture, Setup, Examples)
+                - ✅ Add code examples for each major feature
+                - ✅ Provide step-by-step setup instructions
+                - ✅ Include troubleshooting section
+                - ✅ Ensure sections have sufficient detail (50+ words)
+                """)
+            
+            with col2:
+                st.markdown("""
+                **Improve Accuracy:**
+                - ✅ Verify all code examples for syntax correctness
+                - ✅ Test API endpoints and request/response formats
+                - ✅ Validate technical details against source code
+                - ✅ Ensure consistent terminology
+                - ✅ Avoid vague language (maybe, might, probably)
+                """)
 
 
 def generate_pass(api_base_url: str, section: str, pass_name: str, config: Dict[str, Any]) -> str:
