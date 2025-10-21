@@ -1,0 +1,404 @@
+"""
+Unit Tests for Incremental Documentation (Option C, Phase 2, Day 5)
+
+Tests:
+- Git diff detection
+- Change tracking
+- Update plan generation
+- Snapshot management
+- Speedup estimation
+"""
+
+import pytest
+from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from datetime import datetime
+from pathlib import Path
+
+from src.services.documentation.incremental_doc_manager import (
+    IncrementalDocManager,
+    FileChange,
+    DocumentationSnapshot,
+    IncrementalUpdatePlan,
+    get_incremental_doc_manager
+)
+
+
+@pytest.fixture
+def mock_repo():
+    """Create mock Git repository."""
+    repo = MagicMock()
+    
+    # Mock commit
+    commit = MagicMock()
+    commit.hexsha = "abc123def456"
+    commit.committed_date = 1697900000
+    
+    repo.commit.return_value = commit
+    
+    return repo
+
+
+@pytest.fixture
+def manager_with_mock_repo(mock_repo):
+    """Create manager with mocked repo."""
+    manager = IncrementalDocManager("/test/repo")
+    manager.repo = mock_repo
+    return manager
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestIncrementalDocManager:
+    """Test IncrementalDocManager class."""
+    
+    def test_initialization(self):
+        """Test manager initialization."""
+        manager = IncrementalDocManager("/test/repo")
+        
+        assert manager.repo_path == "/test/repo"
+        assert manager.repo is None
+        assert manager.last_snapshot is None
+    
+    async def test_get_changed_files_no_base(self, manager_with_mock_repo):
+        """Test getting changed files with no base commit."""
+        manager = manager_with_mock_repo
+        
+        # Mock get_all_files_as_changes
+        with patch.object(manager, '_get_all_files_as_changes', new_callable=AsyncMock) as mock_all:
+            mock_all.return_value = [
+                FileChange("file1.py", "added"),
+                FileChange("file2.py", "added")
+            ]
+            
+            changes = await manager.get_changed_files(base_commit=None, target_commit="HEAD")
+            
+            assert len(changes) == 2
+            assert changes[0].change_type == "added"
+    
+    async def test_process_diff_added_file(self, manager_with_mock_repo):
+        """Test processing diff for added file."""
+        manager = manager_with_mock_repo
+        
+        # Mock diff for added file
+        diff = MagicMock()
+        diff.new_file = True
+        diff.deleted_file = False
+        diff.renamed_file = False
+        diff.b_path = "new_file.py"
+        diff.b_blob = MagicMock()
+        diff.b_blob.data_stream.read.return_value = b"print('hello')"
+        
+        change = await manager._process_diff(diff, manager.repo)
+        
+        assert change is not None
+        assert change.change_type == "added"
+        assert change.file_path == "new_file.py"
+        assert change.content_hash is not None
+    
+    async def test_process_diff_modified_file(self, manager_with_mock_repo):
+        """Test processing diff for modified file."""
+        manager = manager_with_mock_repo
+        
+        diff = MagicMock()
+        diff.new_file = False
+        diff.deleted_file = False
+        diff.renamed_file = False
+        diff.b_path = "modified_file.py"
+        diff.b_blob = MagicMock()
+        diff.b_blob.data_stream.read.return_value = b"print('modified')"
+        
+        change = await manager._process_diff(diff, manager.repo)
+        
+        assert change is not None
+        assert change.change_type == "modified"
+        assert change.file_path == "modified_file.py"
+    
+    async def test_process_diff_deleted_file(self, manager_with_mock_repo):
+        """Test processing diff for deleted file."""
+        manager = manager_with_mock_repo
+        
+        diff = MagicMock()
+        diff.new_file = False
+        diff.deleted_file = True
+        diff.renamed_file = False
+        diff.a_path = "deleted_file.py"
+        
+        change = await manager._process_diff(diff, manager.repo)
+        
+        assert change is not None
+        assert change.change_type == "deleted"
+        assert change.file_path == "deleted_file.py"
+    
+    async def test_process_diff_renamed_file(self, manager_with_mock_repo):
+        """Test processing diff for renamed file."""
+        manager = manager_with_mock_repo
+        
+        diff = MagicMock()
+        diff.new_file = False
+        diff.deleted_file = False
+        diff.renamed_file = True
+        diff.a_path = "old_name.py"
+        diff.b_path = "new_name.py"
+        diff.b_blob = MagicMock()
+        diff.b_blob.data_stream.read.return_value = b"content"
+        
+        change = await manager._process_diff(diff, manager.repo)
+        
+        assert change is not None
+        assert change.change_type == "renamed"
+        assert change.file_path == "new_name.py"
+        assert change.old_path == "old_name.py"
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestUpdatePlanGeneration:
+    """Test update plan generation."""
+    
+    async def test_create_update_plan_added_files(self, manager_with_mock_repo):
+        """Test creating plan with added files."""
+        manager = manager_with_mock_repo
+        
+        changes = [
+            FileChange("new1.py", "added"),
+            FileChange("new2.py", "added")
+        ]
+        existing_docs = {"old1.py": "hash1", "old2.py": "hash2"}
+        
+        plan = await manager.create_update_plan(changes, existing_docs)
+        
+        assert len(plan.files_to_add) == 2
+        assert len(plan.files_to_update) == 0
+        assert len(plan.files_to_delete) == 0
+        assert plan.files_unchanged == 2  # old1.py, old2.py
+    
+    async def test_create_update_plan_modified_files(self, manager_with_mock_repo):
+        """Test creating plan with modified files."""
+        manager = manager_with_mock_repo
+        
+        changes = [
+            FileChange("file1.py", "modified"),
+            FileChange("file2.py", "modified")
+        ]
+        existing_docs = {"file1.py": "hash1", "file2.py": "hash2"}
+        
+        plan = await manager.create_update_plan(changes, existing_docs)
+        
+        assert len(plan.files_to_add) == 0
+        assert len(plan.files_to_update) == 2
+        assert len(plan.files_to_delete) == 0
+    
+    async def test_create_update_plan_deleted_files(self, manager_with_mock_repo):
+        """Test creating plan with deleted files."""
+        manager = manager_with_mock_repo
+        
+        changes = [
+            FileChange("file1.py", "deleted"),
+            FileChange("file2.py", "deleted")
+        ]
+        existing_docs = {"file1.py": "hash1", "file2.py": "hash2"}
+        
+        plan = await manager.create_update_plan(changes, existing_docs)
+        
+        assert len(plan.files_to_add) == 0
+        assert len(plan.files_to_update) == 0
+        assert len(plan.files_to_delete) == 2
+    
+    async def test_create_update_plan_renamed_files(self, manager_with_mock_repo):
+        """Test creating plan with renamed files."""
+        manager = manager_with_mock_repo
+        
+        changes = [
+            FileChange("new_name.py", "renamed", old_path="old_name.py")
+        ]
+        existing_docs = {"old_name.py": "hash1"}
+        
+        plan = await manager.create_update_plan(changes, existing_docs)
+        
+        assert len(plan.files_to_add) == 1  # New name added
+        assert len(plan.files_to_delete) == 1  # Old name deleted
+    
+    async def test_speedup_estimation(self, manager_with_mock_repo):
+        """Test speedup estimation calculation."""
+        manager = manager_with_mock_repo
+        
+        # 100 total files, 10 changed
+        changes = [FileChange(f"file{i}.py", "modified") for i in range(10)]
+        existing_docs = {f"file{i}.py": f"hash{i}" for i in range(100)}
+        
+        plan = await manager.create_update_plan(changes, existing_docs)
+        
+        # Speedup should be ~10× (100 total / 10 changed)
+        assert plan.estimated_speedup == pytest.approx(10.0, rel=0.1)
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestSnapshotManagement:
+    """Test snapshot management."""
+    
+    async def test_save_snapshot(self, manager_with_mock_repo):
+        """Test saving documentation snapshot."""
+        manager = manager_with_mock_repo
+        
+        documented_files = {
+            "file1.py": "hash1",
+            "file2.py": "hash2",
+            "file3.py": "hash3"
+        }
+        
+        snapshot = await manager.save_snapshot(
+            "abc123",
+            documented_files,
+            None  # session
+        )
+        
+        assert snapshot.commit_sha == "abc123"
+        assert snapshot.total_files == 3
+        assert len(snapshot.documented_files) == 3
+        assert manager.last_snapshot == snapshot
+    
+    async def test_load_last_snapshot(self, manager_with_mock_repo):
+        """Test loading last snapshot."""
+        manager = manager_with_mock_repo
+        
+        # Create and save a snapshot first
+        documented_files = {"file1.py": "hash1"}
+        saved_snapshot = await manager.save_snapshot("abc123", documented_files, None)
+        
+        # Load it back
+        loaded_snapshot = await manager.load_last_snapshot("test_repo", None)
+        
+        assert loaded_snapshot is not None
+        assert loaded_snapshot.commit_sha == "abc123"
+        assert loaded_snapshot.total_files == 1
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestDependencyAwareness:
+    """Test dependency-aware updates."""
+    
+    async def test_get_affected_dependencies_no_graph(self, manager_with_mock_repo):
+        """Test with no dependency graph."""
+        manager = manager_with_mock_repo
+        
+        changes = [FileChange("file1.py", "modified")]
+        
+        affected = await manager.get_affected_dependencies(changes, None)
+        
+        assert len(affected) == 0
+    
+    async def test_get_affected_dependencies_with_graph(self, manager_with_mock_repo):
+        """Test with dependency graph."""
+        manager = manager_with_mock_repo
+        
+        changes = [FileChange("utils.py", "modified")]
+        dependency_graph = {
+            "utils.py": ["service.py", "handler.py"],  # These depend on utils.py
+            "service.py": ["api.py"]
+        }
+        
+        affected = await manager.get_affected_dependencies(changes, dependency_graph)
+        
+        assert len(affected) == 2
+        assert "service.py" in affected
+        assert "handler.py" in affected
+
+
+@pytest.mark.unit
+class TestIncrementalDecision:
+    """Test incremental vs full decision logic."""
+    
+    def test_should_use_incremental_low_change_ratio(self):
+        """Test incremental recommended for low change ratio."""
+        manager = IncrementalDocManager("/test/repo")
+        
+        # 10% changed
+        use_incremental = manager.should_use_incremental(
+            total_files=1000,
+            changed_files=100,
+            threshold=0.2
+        )
+        
+        assert use_incremental is True
+    
+    def test_should_use_incremental_high_change_ratio(self):
+        """Test full regeneration for high change ratio."""
+        manager = IncrementalDocManager("/test/repo")
+        
+        # 50% changed
+        use_incremental = manager.should_use_incremental(
+            total_files=1000,
+            changed_files=500,
+            threshold=0.2
+        )
+        
+        assert use_incremental is False
+    
+    def test_should_use_incremental_threshold_boundary(self):
+        """Test at threshold boundary."""
+        manager = IncrementalDocManager("/test/repo")
+        
+        # Exactly at 20% threshold
+        use_incremental = manager.should_use_incremental(
+            total_files=1000,
+            changed_files=200,
+            threshold=0.2
+        )
+        
+        assert use_incremental is False  # At threshold, use full
+
+
+@pytest.mark.unit
+class TestManagerSingleton:
+    """Test manager singleton pattern."""
+    
+    def test_singleton_same_path(self):
+        """Test same path returns same instance."""
+        manager1 = get_incremental_doc_manager("/test/repo")
+        manager2 = get_incremental_doc_manager("/test/repo")
+        
+        assert manager1 is manager2
+    
+    def test_singleton_different_paths(self):
+        """Test different paths return different instances."""
+        manager1 = get_incremental_doc_manager("/test/repo1")
+        manager2 = get_incremental_doc_manager("/test/repo2")
+        
+        assert manager1 is not manager2
+
+
+@pytest.mark.unit
+class TestFileChange:
+    """Test FileChange dataclass."""
+    
+    def test_file_change_added(self):
+        """Test FileChange for added file."""
+        change = FileChange(
+            file_path="new_file.py",
+            change_type="added",
+            content_hash="abc123",
+            size_bytes=1000
+        )
+        
+        assert change.file_path == "new_file.py"
+        assert change.change_type == "added"
+        assert change.old_path is None
+    
+    def test_file_change_renamed(self):
+        """Test FileChange for renamed file."""
+        change = FileChange(
+            file_path="new_name.py",
+            change_type="renamed",
+            old_path="old_name.py",
+            content_hash="abc123"
+        )
+        
+        assert change.file_path == "new_name.py"
+        assert change.old_path == "old_name.py"
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v", "-s"])
+
