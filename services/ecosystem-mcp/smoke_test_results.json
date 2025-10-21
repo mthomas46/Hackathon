@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-10-21T03:15:35.237088",
+  "timestamp": "2025-10-21T03:17:16.775093",
   "results": [
     {
       "service": "ecosystem-mcp",
@@ -29,7 +29,7 @@
       "service": "ecosystem-mcp-embedding",
       "phase": "documentation",
       "status": "failed",
-      "error": "'AnalysisEngine' object has no attribute 'analyze_repository'"
+      "error": "'str' object has no attribute 'rglob'"
     }
   ],
   "summary": {

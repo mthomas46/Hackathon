@@ -93,12 +93,12 @@ async def run_phase1_smoke_test():
         try:
             # Test scanning
             scanner = RepositoryScanner()
-            inventory = await scanner.scan(path)
-            print_success(f"Scanned {len(inventory['files'])} files")
+            inventory = await scanner.scan(Path(path))
+            print_success(f"Scanned {len(inventory.files)} files")
             
             # Test classification
             classifier = FileClassifier()
-            sample_files = inventory['files'][:10]
+            sample_files = inventory.files[:10]
             classifications = []
             for file_info in sample_files:
                 result = await classifier.classify(file_info)
@@ -107,14 +107,14 @@ async def run_phase1_smoke_test():
             
             # Test planning
             planner = ProcessingPlanner()
-            plan = await planner.create_plan(path, inventory, classifications)
+            plan = await planner.create_plan(Path(path), inventory, classifications)
             print_success(f"Created plan with {len(plan['sub_jobs'])} sub-jobs")
             
             results.append({
                 'service': service_name,
                 'phase': 'discovery',
                 'status': 'passed',
-                'files': len(inventory['files']),
+                'files': len(inventory.files),
                 'sub_jobs': len(plan['sub_jobs'])
             })
             
@@ -155,7 +155,7 @@ async def run_phase3_smoke_test():
     try:
         # Scan first
         scanner = RepositoryScanner()
-        inventory = await scanner.scan(test_path)
+        inventory = await scanner.scan(Path(test_path))
         
         # Test stack detection
         stack_detector = get_stack_detector()
@@ -171,7 +171,7 @@ async def run_phase3_smoke_test():
         
         # Test full analysis using correct API
         analysis_engine = AnalysisEngine()
-        files_list = [{'path': f['path'], 'size': f.get('size', 0)} for f in inventory['files']]
+        files_list = [f.to_dict() for f in inventory.files]
         report = await analysis_engine.analyze(
             plan_id="smoke_test",
             files=files_list,
@@ -228,12 +228,12 @@ async def run_phase4_smoke_test(save_output=False):
         # Scan first
         print_info("Scanning repository...")
         scanner = RepositoryScanner()
-        inventory = await scanner.scan(test_path)
+        inventory = await scanner.scan(Path(test_path))
         
         # Run analysis
         print_info("Running analysis...")
         analysis_engine = AnalysisEngine()
-        files_list = [{'path': f['path'], 'size': f.get('size', 0)} for f in inventory['files']]
+        files_list = [f.to_dict() for f in inventory.files]
         analysis_report = await analysis_engine.analyze(
             plan_id="smoke_test_phase4",
             files=files_list,
@@ -341,9 +341,9 @@ async def run_integration_smoke_test():
         # Step 2: Analysis
         print_info("Step 2: Analysis")
         scanner = RepositoryScanner()
-        inventory = await scanner.scan(test_path)
+        inventory = await scanner.scan(Path(test_path))
         analysis_engine = AnalysisEngine()
-        files_list = [{'path': f['path'], 'size': f.get('size', 0)} for f in inventory['files']]
+        files_list = [f.to_dict() for f in inventory.files]
         analysis_report = await analysis_engine.analyze(
             plan_id="integration_test",
             files=files_list,
