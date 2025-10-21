@@ -68,6 +68,12 @@ async def run_phase1_smoke_test():
     """Run Phase 1 (Discovery) smoke tests."""
     print_header("Phase 1: Discovery Engine - Smoke Tests")
     
+    import sys
+    from pathlib import Path
+    
+    # Ensure proper import path
+    sys.path.insert(0, str(Path(__file__).parent))
+    
     from src.services.discovery.repository_scanner import RepositoryScanner
     from src.services.discovery.file_classifier import FileClassifier
     from src.services.discovery.processing_planner import ProcessingPlanner
@@ -128,8 +134,14 @@ async def run_phase3_smoke_test():
     """Run Phase 3 (Analysis) smoke tests."""
     print_header("Phase 3: Multi-File Analysis - Smoke Tests")
     
-    from src.services.analysis.stack_detector import TechnologyStackDetector
-    from src.services.analysis.architecture_detector import ArchitectureDetector
+    import sys
+    from pathlib import Path as PathLib
+    
+    # Ensure proper import path
+    sys.path.insert(0, str(PathLib(__file__).parent))
+    
+    from src.services.analysis.stack_detector import get_stack_detector
+    from src.services.analysis.architecture_detector import get_architecture_detector
     from src.services.analysis.analysis_engine import AnalysisEngine
     from src.services.discovery.repository_scanner import RepositoryScanner
     
@@ -146,20 +158,25 @@ async def run_phase3_smoke_test():
         inventory = await scanner.scan(test_path)
         
         # Test stack detection
-        stack_detector = TechnologyStackDetector()
+        stack_detector = get_stack_detector()
         stack = await stack_detector.detect(test_path, inventory)
         print_success(f"Detected {len(stack.languages)} languages")
         print_success(f"Detected {len(stack.frameworks)} frameworks")
         
         # Test architecture detection
-        arch_detector = ArchitectureDetector()
+        arch_detector = get_architecture_detector()
         architecture = await arch_detector.detect(test_path, inventory)
         print_success(f"Pattern: {architecture.primary_pattern.name}")
         print_success(f"Confidence: {architecture.primary_pattern.confidence:.1%}")
         
-        # Test full analysis
+        # Test full analysis using correct API
         analysis_engine = AnalysisEngine()
-        report = await analysis_engine.analyze_repository(test_path)
+        files_list = [{'path': f['path'], 'size': f.get('size', 0)} for f in inventory['files']]
+        report = await analysis_engine.analyze(
+            plan_id="smoke_test",
+            files=files_list,
+            repo_path=test_path
+        )
         print_success(f"Complete analysis generated")
         print_success(f"Modularity score: {report.modularity_score:.2f}")
         
@@ -189,8 +206,15 @@ async def run_phase4_smoke_test(save_output=False):
     """Run Phase 4 (Documentation) smoke tests."""
     print_header("Phase 4: Documentation Generation - Smoke Tests")
     
+    import sys
+    from pathlib import Path as PathLib
+    
+    # Ensure proper import path
+    sys.path.insert(0, str(PathLib(__file__).parent))
+    
     from src.services.documentation import get_doc_orchestrator, DocConfig
     from src.services.analysis.analysis_engine import AnalysisEngine
+    from src.services.discovery.repository_scanner import RepositoryScanner
     
     # Test on smallest service for speed
     test_path = "/Users/mykalthomas/Documents/work/Hackathon/services/ecosystem-mcp-embedding"
@@ -201,10 +225,20 @@ async def run_phase4_smoke_test(save_output=False):
     results = []
     
     try:
-        # Run analysis first
+        # Scan first
+        print_info("Scanning repository...")
+        scanner = RepositoryScanner()
+        inventory = await scanner.scan(test_path)
+        
+        # Run analysis
         print_info("Running analysis...")
         analysis_engine = AnalysisEngine()
-        analysis_report = await analysis_engine.analyze_repository(test_path)
+        files_list = [{'path': f['path'], 'size': f.get('size', 0)} for f in inventory['files']]
+        analysis_report = await analysis_engine.analyze(
+            plan_id="smoke_test_phase4",
+            files=files_list,
+            repo_path=test_path
+        )
         print_success("Analysis complete")
         
         # Generate documentation
@@ -271,9 +305,16 @@ async def run_integration_smoke_test():
     """Run complete pipeline integration test."""
     print_header("Complete Pipeline Integration - Smoke Test")
     
+    import sys
+    from pathlib import Path as PathLib
+    
+    # Ensure proper import path
+    sys.path.insert(0, str(PathLib(__file__).parent))
+    
     from src.services.discovery.discovery_engine import DiscoveryEngine
     from src.services.analysis.analysis_engine import AnalysisEngine
     from src.services.documentation import get_doc_orchestrator, DocConfig
+    from src.services.discovery.repository_scanner import RepositoryScanner
     
     # Test on embedding service (smallest)
     test_path = "/Users/mykalthomas/Documents/work/Hackathon/services/ecosystem-mcp-embedding"
@@ -299,8 +340,15 @@ async def run_integration_smoke_test():
         
         # Step 2: Analysis
         print_info("Step 2: Analysis")
+        scanner = RepositoryScanner()
+        inventory = await scanner.scan(test_path)
         analysis_engine = AnalysisEngine()
-        analysis_report = await analysis_engine.analyze_repository(test_path)
+        files_list = [{'path': f['path'], 'size': f.get('size', 0)} for f in inventory['files']]
+        analysis_report = await analysis_engine.analyze(
+            plan_id="integration_test",
+            files=files_list,
+            repo_path=test_path
+        )
         print_success(f"Pattern: {analysis_report.architecture.primary_pattern.name}, "
                      f"Modularity: {analysis_report.modularity_score:.2f}")
         results['steps'].append({'analysis': 'passed'})

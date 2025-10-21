@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-10-21T03:15:35.237088",
+  "results": [
+    {
+      "service": "ecosystem-mcp",
+      "phase": "discovery",
+      "status": "failed",
+      "error": "'str' object has no attribute 'rglob'"
+    },
+    {
+      "service": "ecosystem-mcp-dashboard",
+      "phase": "discovery",
+      "status": "failed",
+      "error": "'str' object has no attribute 'rglob'"
+    },
+    {
+      "service": "ecosystem-mcp-embedding",
+      "phase": "discovery",
+      "status": "failed",
+      "error": "'str' object has no attribute 'rglob'"
+    },
+    {
+      "service": "ecosystem-mcp",
+      "phase": "analysis",
+      "status": "failed",
+      "error": "'str' object has no attribute 'rglob'"
+    },
+    {
+      "service": "ecosystem-mcp-embedding",
+      "phase": "documentation",
+      "status": "failed",
+      "error": "'AnalysisEngine' object has no attribute 'analyze_repository'"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "passed": 0,
+    "failed": 5
+  }
+}
