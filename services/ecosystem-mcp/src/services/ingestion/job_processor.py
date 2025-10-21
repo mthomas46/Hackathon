@@ -424,6 +424,8 @@ class JobProcessor:
         """
         Process a single ingestion job.
         
+        PHASE 10 ENHANCEMENT: Supports sub-job orchestration for parallel processing.
+        
         Args:
             job: Ingestion job to process
         
@@ -436,10 +438,25 @@ class JobProcessor:
                 "failed_documents": int,
                 "embeddings_generated": int,
                 "total_cost_usd": float,
-                "error": Optional[str]
+                "error": Optional[str],
+                "subjobs_executed": Optional[int],  # NEW (if orchestration used)
+                "subjobs_failed": Optional[int]  # NEW (if orchestration used)
             }
         """
         logger.info(f"Processing job {job.id}: mode={job.mode}, repo={job.repo_path}")
+        
+        # PHASE 10: Check if sub-job orchestration requested
+        use_subjobs = job.job_metadata.get('use_subjobs', False) if job.job_metadata else False
+        
+        if use_subjobs and await self._should_use_orchestration(job):
+            logger.info(f"🚀 Using sub-job orchestration for job {job.id}")
+            return await self._process_with_orchestration(job)
+        else:
+            if use_subjobs:
+                logger.info(f"📝 Repository too small for orchestration, using standard processing")
+            else:
+                logger.info(f"📝 Using standard processing (orchestration not requested)")
+            return await self._process_standard(job)
         
         # Initialize real-time progress tracking
         await self._init_progress_tracking(str(job.id))
