@@ -106,6 +106,7 @@ page = st.sidebar.radio(
         "⚡ Cache Performance",
         "📊 Metrics & Analytics",
         "📋 Logs Viewer",
+        "🎯 Quality Dashboard",
         
         # Tools & Configuration
         "🔌 API Explorer",
@@ -248,6 +249,9 @@ elif page == "🔌 LLM Tier Management":
 elif page == "🔧 Settings":
     from dashboard_views import settings
     settings.show(api_base_url)
+elif page == "🎯 Quality Dashboard":
+    from dashboard_views import quality_dashboard
+    quality_dashboard.show(api_base_url)
 
 # Footer
 st.sidebar.markdown("---")
