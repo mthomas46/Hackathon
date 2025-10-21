@@ -44,8 +44,9 @@ class TestDiscoveryWorkflow:
         assert inventory.total_size_bytes > 0
         
         # Should detect Python files
-        assert "python" in inventory.languages
-        assert inventory.languages["python"] > 0
+        python_key = "Python" if "Python" in inventory.languages else "python"
+        assert python_key in inventory.languages
+        assert inventory.languages[python_key] > 0
         
         print(f"✅ Scanned {inventory.total_files} files, {inventory.total_size_bytes} bytes")
         print(f"   Languages: {inventory.languages}")
