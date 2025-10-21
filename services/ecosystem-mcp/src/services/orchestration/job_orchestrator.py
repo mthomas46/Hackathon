@@ -16,6 +16,7 @@ from .dependency_manager import get_dependency_manager
 from .resource_allocator import get_resource_allocator
 from .sub_job_executor import get_sub_job_executor
 from .progress_tracker import get_progress_tracker
+from .execution_monitor import get_execution_monitor
 from ...storage import get_database
 from ...storage.models_discovery import ProcessingPlanModel, SubJobModel
 
@@ -87,6 +88,7 @@ class JobOrchestrator:
         self.resource_allocator = get_resource_allocator(max_concurrent=max_concurrent)
         self.sub_job_executor = get_sub_job_executor()
         self.progress_tracker = get_progress_tracker()
+        self.execution_monitor = get_execution_monitor()
         
         # Active executions
         self.active_executions: Dict[str, ExecutionResult] = {}
@@ -142,6 +144,9 @@ class JobOrchestrator:
                 total_files=plan.total_files,
                 sub_jobs_total=len(sub_jobs)
             )
+            
+            # Start execution monitoring
+            await self.execution_monitor.start_monitoring(plan_id)
             
             # Build dependency graph
             sub_job_dicts = [
@@ -219,6 +224,9 @@ class JobOrchestrator:
         finally:
             # Stop progress tracking
             await self.progress_tracker.stop_tracking(plan_id)
+            
+            # Stop execution monitoring
+            await self.execution_monitor.stop_monitoring(plan_id)
             
             # Cleanup
             if plan_id in self.active_executions:

@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import logging
 
-from ...services.orchestration import get_job_orchestrator, get_progress_tracker
+from ...services.orchestration import get_job_orchestrator, get_progress_tracker, get_execution_monitor
 from ...services.orchestration.job_orchestrator import ExecutionStatus
 
 logger = logging.getLogger(__name__)
@@ -316,5 +316,66 @@ async def get_metrics():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get metrics: {str(e)}"
+        )
+
+
+@router.get(
+    "/monitor/{plan_id}",
+    summary="Get execution monitoring metrics",
+    description="Get real-time performance metrics and anomaly alerts"
+)
+async def get_monitoring_metrics(plan_id: str):
+    """Get execution monitoring metrics for a plan."""
+    try:
+        monitor = get_execution_monitor()
+        
+        # Get current metrics
+        current_metrics = await monitor.get_current_metrics(plan_id)
+        
+        # Get metrics history
+        history = await monitor.get_metrics_history(plan_id, limit=50)
+        
+        # Get alerts
+        alerts = await monitor.get_alerts(plan_id, limit=20)
+        
+        return {
+            "success": True,
+            "plan_id": plan_id,
+            "current_metrics": current_metrics.to_dict() if current_metrics else None,
+            "metrics_history": history,
+            "alerts": alerts,
+            "alert_count": len(alerts)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get monitoring metrics: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get monitoring metrics: {str(e)}"
+        )
+
+
+@router.get(
+    "/alerts",
+    summary="Get all anomaly alerts",
+    description="Get recent anomaly alerts across all plans"
+)
+async def get_all_alerts(limit: int = 50):
+    """Get all recent anomaly alerts."""
+    try:
+        monitor = get_execution_monitor()
+        alerts = await monitor.get_alerts(limit=limit)
+        
+        return {
+            "success": True,
+            "alerts": alerts,
+            "count": len(alerts)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get alerts: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get alerts: {str(e)}"
         )
 
