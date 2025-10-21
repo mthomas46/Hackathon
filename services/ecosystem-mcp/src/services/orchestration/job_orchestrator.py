@@ -14,6 +14,8 @@ from enum import Enum
 
 from .dependency_manager import get_dependency_manager
 from .resource_allocator import get_resource_allocator
+from .sub_job_executor import get_sub_job_executor
+from .progress_tracker import get_progress_tracker
 from ...storage import get_database
 from ...storage.models_discovery import ProcessingPlanModel, SubJobModel
 
@@ -83,6 +85,8 @@ class JobOrchestrator:
         self.max_concurrent = max_concurrent
         self.dependency_manager = get_dependency_manager()
         self.resource_allocator = get_resource_allocator(max_concurrent=max_concurrent)
+        self.sub_job_executor = get_sub_job_executor()
+        self.progress_tracker = get_progress_tracker()
         
         # Active executions
         self.active_executions: Dict[str, ExecutionResult] = {}
@@ -131,6 +135,13 @@ class JobOrchestrator:
             
             # Update plan status
             await self._update_plan_status(plan_id, "processing")
+            
+            # Start progress tracking
+            await self.progress_tracker.start_tracking(
+                plan_id=plan_id,
+                total_files=plan.total_files,
+                sub_jobs_total=len(sub_jobs)
+            )
             
             # Build dependency graph
             sub_job_dicts = [
@@ -206,6 +217,9 @@ class JobOrchestrator:
             return result
         
         finally:
+            # Stop progress tracking
+            await self.progress_tracker.stop_tracking(plan_id)
+            
             # Cleanup
             if plan_id in self.active_executions:
                 del self.active_executions[plan_id]
@@ -348,12 +362,40 @@ class JobOrchestrator:
             # Update database status
             await self._update_sub_job_status(sub_job.id, "processing", start_time)
             
-            # TODO: Actual file processing will be implemented in Sub-Job Executor
-            # For now, simulate processing
-            await asyncio.sleep(0.5)  # Simulate work
+            # Mark sub-job as active in progress tracker
+            await self.progress_tracker.mark_sub_job_active(plan_id, sub_job_id)
             
-            # Mark as skipped for now (no actual processing yet)
-            execution.files_skipped = sub_job.file_count
+            # Get repository path from plan
+            plan, _ = await self._load_plan(plan_id)
+            repo_path = plan.repository_path if plan else "/app"
+            
+            # Progress callback for real-time updates
+            async def progress_callback(processed, failed, skipped, total):
+                execution.files_processed = processed
+                execution.files_failed = failed
+                execution.files_skipped = skipped
+                
+                # Update progress tracker
+                await self.progress_tracker.update_sub_job_progress(
+                    plan_id=plan_id,
+                    sub_job_id=sub_job_id,
+                    files_processed=processed,
+                    files_failed=failed,
+                    files_skipped=skipped,
+                    total_files=total
+                )
+            
+            # Execute sub-job with actual file processing
+            stats = await self.sub_job_executor.execute_sub_job(
+                sub_job=sub_job,
+                repo_path=repo_path,
+                progress_callback=progress_callback
+            )
+            
+            # Update execution state
+            execution.files_processed = stats["processed"]
+            execution.files_failed = stats["failed"]
+            execution.files_skipped = stats["skipped"]
             execution.status = ExecutionStatus.COMPLETED
             execution.end_time = datetime.utcnow()
             
@@ -365,6 +407,9 @@ class JobOrchestrator:
                 execution.files_skipped,
                 execution.end_time
             )
+            
+            # Mark sub-job as complete in progress tracker
+            await self.progress_tracker.mark_sub_job_complete(plan_id, sub_job_id, success=True)
             
             # Update plan result
             if plan_id in self.active_executions:
@@ -395,6 +440,9 @@ class JobOrchestrator:
                 execution.end_time,
                 str(e)
             )
+            
+            # Mark sub-job as failed in progress tracker
+            await self.progress_tracker.mark_sub_job_complete(plan_id, sub_job_id, success=False)
             
             # Update plan result
             if plan_id in self.active_executions:
