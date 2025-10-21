@@ -351,3 +351,181 @@ async def export_documents(
             
             return {"content": output.getvalue()}
 
+
+# ============================================================================
+# PHASE 9: Repository Context API Endpoints
+# ============================================================================
+
+class ContextResponse(BaseModel):
+    """Repository context response."""
+    context_id: str = Field(..., description="Unique context identifier")
+    repo_name: str = Field(..., description="Repository name")
+    repo_path: str = Field(..., description="Repository path")
+    languages: List[str] = Field(..., description="Programming languages")
+    primary_language: Optional[str] = Field(None, description="Primary language")
+    frameworks: List[str] = Field(..., description="Frameworks used")
+    databases: List[str] = Field(..., description="Databases used")
+    architecture_type: Optional[str] = Field(None, description="Architecture type")
+    service_count: int = Field(..., description="Number of services")
+    endpoint_count: int = Field(..., description="Number of API endpoints")
+    total_files: int = Field(..., description="Total files")
+    code_files: int = Field(..., description="Code files")
+    brief_description: str = Field(..., description="Brief description")
+
+
+@router.get("/contexts", response_model=List[ContextResponse], tags=["contexts"])
+@limiter.limit("30/minute")
+async def list_contexts(request: Request):
+    """
+    List all repository contexts (Phase 9).
+    
+    Repository contexts enable context-aware RAG queries by grouping
+    documents by repository/service for more focused results.
+    
+    Returns:
+        List of repository contexts with metadata
+    """
+    try:
+        async with get_database() as db:
+            # Query distinct repositories from documents table
+            from sqlalchemy import text
+            
+            query = text("""
+                SELECT DISTINCT
+                    d.service_name,
+                    d.repo_path,
+                    COUNT(DISTINCT d.id) as total_docs,
+                    COUNT(DISTINCT d.file_path) as total_files,
+                    array_agg(DISTINCT d.file_type) FILTER (WHERE d.file_type IS NOT NULL) as file_types
+                FROM documents d
+                WHERE d.is_latest = true
+                GROUP BY d.service_name, d.repo_path
+                ORDER BY total_docs DESC
+            """)
+            
+            result = await db.execute(query)
+            rows = result.fetchall()
+            
+            contexts = []
+            for row in rows:
+                service_name = row[0] or "unknown"
+                repo_path = row[1] or "/app"
+                total_docs = row[2]
+                total_files = row[3]
+                file_types = row[4] or []
+                
+                # Generate context ID
+                context_id = f"ctx_{service_name}_{hash(repo_path) % 10000}"
+                
+                # Detect languages from file types
+                languages = []
+                if ".py" in str(file_types):
+                    languages.append("Python")
+                if ".js" in str(file_types) or ".ts" in str(file_types):
+                    languages.append("JavaScript/TypeScript")
+                if ".java" in str(file_types):
+                    languages.append("Java")
+                
+                contexts.append(ContextResponse(
+                    context_id=context_id,
+                    repo_name=service_name,
+                    repo_path=repo_path,
+                    languages=languages,
+                    primary_language=languages[0] if languages else None,
+                    frameworks=[],  # TODO: Enhance with actual detection
+                    databases=[],   # TODO: Enhance with actual detection
+                    architecture_type=None,
+                    service_count=1,
+                    endpoint_count=0,
+                    total_files=total_files,
+                    code_files=total_files,
+                    brief_description=f"Repository context for {service_name}"
+                ))
+            
+            logger.info(f"📁 Listed {len(contexts)} repository contexts")
+            return contexts
+            
+    except Exception as e:
+        logger.error(f"Error listing contexts: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to list contexts: {str(e)}")
+
+
+@router.get("/contexts/{context_id}", response_model=ContextResponse, tags=["contexts"])
+@limiter.limit("60/minute")
+async def get_context(request: Request, context_id: str):
+    """
+    Get specific repository context by ID (Phase 9).
+    
+    Args:
+        context_id: Context identifier
+    
+    Returns:
+        Repository context details
+    """
+    try:
+        # For now, return from list (TODO: implement proper context storage)
+        contexts = await list_contexts(request)
+        
+        for ctx in contexts:
+            if ctx.context_id == context_id:
+                logger.info(f"📁 Retrieved context: {context_id}")
+                return ctx
+        
+        raise HTTPException(status_code=404, detail=f"Context not found: {context_id}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting context {context_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get context: {str(e)}")
+
+
+@router.get("/contexts/{context_id}/documents", response_model=List[DocumentResponse], tags=["contexts"])
+@limiter.limit("30/minute")
+async def get_context_documents(
+    request: Request,
+    context_id: str,
+    limit: int = Query(50, ge=1, le=500, description="Maximum results")
+):
+    """
+    Get documents within a specific context (Phase 9).
+    
+    Args:
+        context_id: Context identifier
+        limit: Maximum number of documents to return
+    
+    Returns:
+        List of documents in the context
+    """
+    try:
+        # Get context to extract service_name
+        context = await get_context(request, context_id)
+        
+        # Query documents for this context
+        async with get_database() as db:
+            doc_repo = DocumentRepository(db)
+            documents = await doc_repo.get_by_service(context.repo_name, limit=limit)
+            
+            logger.info(f"📄 Retrieved {len(documents)} documents for context {context_id}")
+            
+            return [
+                DocumentResponse(
+                    id=str(doc.id),
+                    service_name=doc.service_name,
+                    file_path=doc.file_path,
+                    file_type=doc.file_type,
+                    content_preview=doc.normalized_content[:500] if doc.normalized_content else "",
+                    word_count=len(doc.normalized_content.split()) if doc.normalized_content else 0,
+                    has_embedding=doc.embedding_id is not None,
+                    created_at=doc.created_at.isoformat(),
+                    updated_at=doc.updated_at.isoformat() if doc.updated_at else None
+                )
+                for doc in documents
+            ]
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting context documents: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get context documents: {str(e)}")
+

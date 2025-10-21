@@ -58,6 +58,10 @@ class EnhancedQueryRequest(BaseModel):
         default=TierPreference.AUTO,
         description="LLM tier: 'auto', 'cursor', 'desktop', or 'docker'"
     )
+    context_id: Optional[str] = Field(
+        default=None,
+        description="[PHASE 9] Repository context ID for filtered queries (optional)"
+    )
     n_results: int = Field(
         default=10,
         ge=1,
