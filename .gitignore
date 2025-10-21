@@ -1,30 +1,59 @@
-# LLM Documentation Ecosystem .gitignore
-# Comprehensive ignore file for Python microservices project
+# ============================================================================
+# LLM Documentation Ecosystem - Comprehensive .gitignore
+# ============================================================================
+# Keep ONLY source code, configuration, and documentation
+# Exclude ALL data, models, caches, builds, and generated files
+# ============================================================================
 
-## Python
+# ============================================================================
+# CRITICAL: Large Data Directories (21GB+ total)
+# ============================================================================
+# Docker persistent data volumes
+services/ecosystem-mcp/data/
+services/ecosystem-mcp-embedding/models/
+services/ecosystem-mcp-dashboard/cache/
+
+# Ollama models (21GB)
+**/data/ollama/
+
+# ChromaDB vector database (362MB)
+**/data/chroma_db/
+
+# PostgreSQL data (243MB)
+**/data/postgresql/
+
+# Embedding models (224MB)
+**/data/embedding_models/
+
+# Redis persistence (45MB)
+**/data/redis/
+
+# Service data directories
+**/data/backups/
+
+# ============================================================================
+# Python: Virtual Environments & Caches (1600+ directories)
+# ============================================================================
 # Virtual environments
-.venv/
 venv/
+.venv/
 env/
 ENV/
 .ci_test/
+venv_*/
+demo_venv/
+test_env/
+**/venv/
+**/.venv/
 
-# Byte-compiled / optimized / DLL files
+# Python cache files
 __pycache__/
 **/__pycache__/
-**/**/__pycache__/
-**/**/**/__pycache__/
-**/**/**/**/__pycache__/
 *.py[cod]
 *$py.class
 *.pyc
 *.pyd
 *.pyo
-__pycache__/*
-**/__pycache__/*
-**/**/__pycache__/*
-**/**/**/__pycache__/*
-**/**/**/**/__pycache__/*
 
 # C extensions
 *.so
@@ -48,107 +77,64 @@ wheels/
 *.egg
 MANIFEST
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# ============================================================================
+# Testing & Coverage
+# ============================================================================
+# Pytest
+.pytest_cache/
+**/.pytest_cache/
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
+# Coverage reports
 htmlcov/
-.tox/
-.nox/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
-.pytest_cache/
+.tox/
+.nox/
+.cache/
+nosetests.xml
 
-# Translations
-*.mo
-*.pot
+# Test databases
+test_*.db
+test_*.sqlite*
+*_test.db
 
-# Django stuff:
+# ============================================================================
+# Logs (All types)
+# ============================================================================
+logs/
 *.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+*.log.*
+**/*.log
+log.txt
+error.log
+access.log
+debug.log
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Flask stuff:
-instance/
-.webassets-cache
+# Service logs
+services/*/logs/
+services/*/*.log
 
-# Scrapy stuff:
-.scrapy
+# Demo logs
+*_demo*.log
+horus_*.log
 
-# Sphinx documentation
-docs/_build/
+# ============================================================================
+# IDEs and Editors
+# ============================================================================
+# VS Code
+.vscode/
+*.code-workspace
 
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-.conda/
-.env.local
-.env.development
-.env.test
-.env.production
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-## IDEs and Editors
-# PyCharm
+# PyCharm / IntelliJ
 .idea/
 *.iml
 *.ipr
 *.iws
-
-# VS Code
-.vscode/
-*.code-workspace
 
 # Sublime Text
 *.sublime-project
@@ -157,17 +143,19 @@ dmypy.json
 # Vim
 *.swp
 *.swo
+*.un~
 *~
+Session.vim
+.netrwhist
 
 # Emacs
-*~
 \#*\#
+.#*
 /.emacs.desktop
 /.emacs.desktop.lock
 *.elc
 auto-save-list
 tramp
-.\#*
 
 # Atom
 .atom/
@@ -177,15 +165,15 @@ tramp
 .pydevproject
 .settings/
 
-## OS Generated Files
+# ============================================================================
+# Operating Systems
+# ============================================================================
 # macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
-ehthumbs.db
-Thumbs.db
 
 # Windows
 Thumbs.db
@@ -200,59 +188,49 @@ $RECYCLE.BIN/
 *.lnk
 
 # Linux
-*~
 .fuse_hidden*
 .directory
 .Trash-*
 .nfs*
 
-## Database Files
-# SQLite databases
+# ============================================================================
+# Docker & Containers
+# ============================================================================
+docker-compose.override.yml
+.dockerignore
+.env.docker
+
+# ============================================================================
+# Database Files
+# ============================================================================
+# SQLite
 *.db
 *.sqlite
 *.sqlite3
 *.sqlite3-journal
 *.db-journal
 
-# PostgreSQL
+# PostgreSQL configs
 postgresql.conf
 pg_hba.conf
 pg_ident.conf
 
-# Redis
+# Redis dumps
 dump.rdb
 *.rdb
+appendonly.aof*
 
-## Logs
-logs/
-*.log
-*.log.*
-log.txt
-error.log
-access.log
-debug.log
+# ============================================================================
+# Environment & Secrets
+# ============================================================================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*
 
-# Service-specific logs
-services/*/logs/
-services/*/*.log
-
-# Generated reports
-reports/config_drift/
-reports/health_validation/
-
-## Temporary Files
-tmp/
-temp/
-.tmp/
-*.tmp
-*.temp
-*.bak
-*.backup
-*.old
-*.orig
-
-## Secrets and Credentials
-# API keys, tokens, passwords
+# Credentials
 secrets/
 credentials/
 *.key
@@ -263,27 +241,15 @@ credentials/
 *.jks
 *.keystore
 
-# AWS
+# Cloud credentials
 .aws/
 .aws-credentials
-
-# Google Cloud
 gcp-credentials.json
-*.p12
-
-# Azure
 .azure/
 
-## Docker
-.dockerignore
-docker-compose.override.yml
-.env.docker
-
-## Kubernetes
-*.yaml.bak
-kustomization.yaml.bak
-
-## Node.js and Frontend
+# ============================================================================
+# Node.js & Frontend
+# ============================================================================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -296,83 +262,82 @@ package-lock.json
 elm-stuff/
 elm.js
 repl-temp-*
-
-# Frontend build artifacts
 services/frontend/static/elm.js
 services/frontend/elm-stuff/
 
-## Build Artifacts
-# Compiled services
+# ============================================================================
+# Build Artifacts & Compiled
+# ============================================================================
+# Service builds
 services/*/dist/
 services/*/build/
+target/
 
-# Docker images (local)
+# Docker images
 docker-images/
 
-## Testing
-# Test databases
-test_*.db
-test_*.sqlite*
-*_test.db
+# Compiled services
+*.manifest
+*.spec
 
-# Test coverage
-.coverage.*
-coverage/
-htmlcov/
-.tox/
-.cache/
+# ============================================================================
+# Temporary & Backup Files
+# ============================================================================
+tmp/
+temp/
+.tmp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
 
-# Test fixtures (if they contain sensitive data)
-tests/fixtures/sensitive/
-
-## Documentation
-# Auto-generated docs
-docs/auto-generated/
-docs/api/
-
-# MkDocs
-site/
-
-## CI/CD
-.github/workflows/*.log
-.github/workflows/logs/
-
-## Development Tools
-# Pre-commit
-.pre-commit-config.yaml.bak
-
-# Black formatting
-.black
-
-# isort
-.isort.cfg.bak
-
-## Backups
+# Archives
 *.tar.gz
 *.zip
 backup/
 backups/
 
-## Performance and Profiling
-.prof
-*.prof
-profile_output/
-benchmark_results/
+# ============================================================================
+# Documentation (Generated only)
+# ============================================================================
+# Auto-generated docs
+docs/_build/
+docs/auto-generated/
+docs/api/
+site/
 
-## Local Configuration Overrides
-# Local config files
-config/local/
-services/*/config/local/
-*.local.yaml
-*.local.yml
-*.dev.yaml
-*.dev.yml
+# MkDocs
+/site/
 
-# Personal settings
-.user.ini
-.personal/
+# ============================================================================
+# CI/CD
+# ============================================================================
+.github/workflows/*.log
+.github/workflows/logs/
+ci_reports/
 
-## Cloud and Infrastructure
+# ============================================================================
+# Development Tools
+# ============================================================================
+# Black formatting
+.black
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# isort
+.isort.cfg.bak
+
+# Pre-commit
+.pre-commit-config.yaml.bak
+
+# ============================================================================
+# Cloud & Infrastructure
+# ============================================================================
 # Terraform
 .terraform/
 *.tfstate
@@ -388,65 +353,130 @@ ansible.retry
 # Vagrant
 .vagrant/
 
-## Security Scanning
-# Trivy, Clair, etc.
+# ============================================================================
+# Performance & Profiling
+# ============================================================================
+.prof
+*.prof
+profile_output/
+benchmark_results/
+
+# ============================================================================
+# Security Scanning
+# ============================================================================
 security-scan-results/
 vulnerability-reports/
 
-## Miscellaneous
-# Editor directories and files
+# ============================================================================
+# Demo & Test Outputs (Keep reports, exclude data)
+# ============================================================================
+# Demo data directories
+demo_output/data/
+accuracy_audit_demo/data/
+api_gateway_demo/data/
+audit_pass1_verification/data/
+cats_effect_crud_demo/data/
+consistency_test/data/
+scala_elm_crud_*/data/
+service_offline_test/data/
+services_test/data/
+test_option_b/data/
+test_prompt_demo/data/
+transparency_test_demo/data/
+validation_demo/data/
+visual_enhanced_demo/data/
+workflow_f_*/data/
+
+# Old demo iterations
+scala_elm_crud_CONNECTIVITY_TEST/
+scala_elm_crud_demo_PROOF_OF_PERSISTENCE/
+scala_elm_crud_demo_v*/
+
+# ============================================================================
+# Audit & Report Data (Keep summaries, exclude raw data)
+# ============================================================================
+audit_results/*.json
+audit-results/**/*.json
+
+# ============================================================================
+# Local Configuration Overrides
+# ============================================================================
+config/local/
+services/*/config/local/
+*.local.yaml
+*.local.yml
+*.dev.yaml
+*.dev.yml
+.user.ini
+.personal/
+
+# ============================================================================
+# Miscellaneous
+# ============================================================================
 .history/
 .vscode-test/
 
-# Package directories
-.pytest_cache/
-.mypy_cache/
-.dmypy.json
+# Python type checking
+.pyre/
+.pytype/
 
-# Service-specific Python cache
-services/**/__pycache__/
-tests/**/__pycache__/
+# Jupyter
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
 
-# OS generated files
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
+# pyenv
+.python-version
 
-# Temporary Vim files
-*.swp
-*.swo
-*.un~
-Session.vim
-.netrwhist
+# Celery
+celerybeat-schedule
 
-# Emacs lock files
-.#*
-#*#
+# SageMath
+*.sage.py
 
-## Demo and Test Outputs
-# Scala/Elm CRUD demo directories (various iterations)
-scala_elm_crud_CONNECTIVITY_TEST/
-scala_elm_crud_demo/
-scala_elm_crud_demo_PROOF_OF_PERSISTENCE/
-scala_elm_crud_demo_v2/
-scala_elm_crud_demo_v3/
-scala_elm_crud_demo_v4/
-scala_elm_crud_demo_v5/
-scala_elm_crud_demo_v6/
-scala_elm_crud_demo_v7/
-/services/ecosystem-mcp/data/ollama/models/blobs
-/services/ecosystem-mcp/data/ollama/models
-/services/ecosystem-mcp/data/postgresql/pgdata
-/services/ecosystem-mcp/data/postgresql
+# Rope
+.ropeproject
 
-# Large data files that should never be committed
-services/ecosystem-mcp/data/ollama/
-services/ecosystem-mcp/data/redis/
-services/ecosystem-mcp/data/chroma_db/
-services/ecosystem-mcp/data/embedding_models/
-services/doc-store/db.sqlite3
-*.aof
-*.bin
-*-results.json
-config_drift_report_*.json
+# Spyder
+.spyderproject
+.spyproject
+
+# Django
+*.pot
+*.mo
+local_settings.py
+
+# Flask
+instance/
+.webassets-cache
+
+# Scrapy
+.scrapy
+
+# Translations
+*.mo
+*.pot
+
+# ============================================================================
+# END OF .gitignore
+# ============================================================================
+# Summary of excluded patterns:
+# - All data directories (~22GB)
+# - All Python caches (1600+ dirs)
+# - All virtual environments (7+ dirs)
+# - All logs and test outputs
+# - All IDE configurations
+# - All OS-generated files
+# - All secrets and credentials
+# - All build artifacts
+# - All temporary files
+#
+# KEPT for version control:
+# - All source code (*.py, *.js, etc.)
+# - Configuration templates
+# - Documentation (*.md)
+# - Requirements files
+# - Docker configurations
+# - Test files (not test data)
+# - Scripts
+# ============================================================================

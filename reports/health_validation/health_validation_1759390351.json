@@ -1,0 +1,636 @@
+{
+  "total_endpoints": 27,
+  "successful_checks": 26,
+  "failed_checks": 1,
+  "total_response_time": 0.39287805557250977,
+  "average_response_time": 0.01455103909527814,
+  "min_response_time": 0.009634017944335938,
+  "max_response_time": 0.021661758422851562,
+  "availability_percentage": 96.29629629629629,
+  "validation_timestamp": 1759390351.704729,
+  "detailed_results": [
+    {
+      "service_name": "orchestrator",
+      "url": "http://localhost:8085/health",
+      "success": true,
+      "response_time": 0.015449762344360352,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "orchestrator",
+        "version": "1.0.0",
+        "timestamp": 1759390351.6946383,
+        "uptime_seconds": 0
+      },
+      "error_message": null,
+      "timestamp": 1759390351.696623,
+      "attempts": 1
+    },
+    {
+      "service_name": "doc_store",
+      "url": "http://localhost:8086/health",
+      "success": true,
+      "response_time": 0.018979787826538086,
+      "status_code": 200,
+      "response_body": {
+        "status": "success",
+        "message": "Service is healthy",
+        "data": {
+          "status": "healthy",
+          "service": "doc_store",
+          "version": "1.0.0",
+          "database_status": "healthy",
+          "features": {
+            "document_storage": true,
+            "search": true,
+            "analytics": true,
+            "versioning": true,
+            "tagging": true
+          }
+        },
+        "timestamp": "2025-10-02T07:32:31.697542+00:00"
+      },
+      "error_message": null,
+      "timestamp": 1759390351.700449,
+      "attempts": 1
+    },
+    {
+      "service_name": "analysis-service",
+      "url": "http://localhost:8087/health",
+      "success": true,
+      "response_time": 0.009634017944335938,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "analysis-service",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.687666+00:00",
+        "uptime_seconds": 11850.567711,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": true,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
+      },
+      "error_message": null,
+      "timestamp": 1759390351.6912808,
+      "attempts": 1
+    },
+    {
+      "service_name": "source-agent",
+      "url": "http://localhost:8088/health",
+      "success": true,
+      "response_time": 0.014258861541748047,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "source-agent",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.694318+00:00",
+        "uptime_seconds": 11856.490719,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
+      },
+      "error_message": null,
+      "timestamp": 1759390351.695997,
+      "attempts": 1
+    },
+    {
+      "service_name": "frontend",
+      "url": "http://localhost:8089/health",
+      "success": true,
+      "response_time": 0.017633914947509766,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "frontend",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.698059Z",
+        "environment": "development"
+      },
+      "error_message": null,
+      "timestamp": 1759390351.699501,
+      "attempts": 1
+    },
+    {
+      "service_name": "ollama",
+      "url": "http://localhost:8090/health",
+      "success": false,
+      "response_time": 0.012578725814819336,
+      "status_code": 404,
+      "response_body": {
+        "raw_response": "404 page not found"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1759390351.694644,
+      "attempts": 1
+    },
+    {
+      "service_name": "summarizer-hub",
+      "url": "http://localhost:5160/health",
+      "success": true,
+      "response_time": 0.01648116111755371,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "summarizer-hub",
+        "version": "1.0.0",
+        "timestamp": 1759390351.6971786,
+        "environment": "development",
+        "llm_gateway_url": "http://llm-gateway:5055"
+      },
+      "error_message": null,
+      "timestamp": 1759390351.698616,
+      "attempts": 1
+    },
+    {
+      "service_name": "architecture-digitizer",
+      "url": "http://localhost:8091/health",
+      "success": true,
+      "response_time": 0.014877080917358398,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "architecture-digitizer",
+        "version": "1.0.0",
+        "uptime_seconds": 11856.5,
+        "last_health_check": "2025-10-02T07:32:31.695802Z",
+        "supported_systems_count": 6,
+        "file_formats_supported": 8,
+        "normalization_engine_active": true
+      },
+      "error_message": null,
+      "timestamp": 1759390351.697109,
+      "attempts": 1
+    },
+    {
+      "service_name": "bedrock-proxy",
+      "url": "http://localhost:5002/health",
+      "success": true,
+      "response_time": 0.017014026641845703,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "bedrock-proxy",
+        "version": "1.0.0"
+      },
+      "error_message": null,
+      "timestamp": 1759390351.6993868,
+      "attempts": 1
+    },
+    {
+      "service_name": "llm-gateway",
+      "url": "http://localhost:8092/health",
+      "success": true,
+      "response_time": 0.021661758422851562,
+      "status_code": 200,
+      "response_body": {
+        "success": false,
+        "message": "Health check failed: create_success_response() got an unexpected keyword argument 'message'",
+        "error_code": "HEALTH_CHECK_FAILED",
+        "details": {
+          "error": "create_success_response() got an unexpected keyword argument 'message'"
+        }
+      },
+      "error_message": null,
+      "timestamp": 1759390351.704386,
+      "attempts": 1
+    },
+    {
+      "service_name": "mock-data-generator",
+      "url": "http://localhost:8093/health",
+      "success": true,
+      "response_time": 0.013106107711791992,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "mock-data-generator",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.694349+00:00",
+        "uptime_seconds": 11846.067126,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": 5,
+        "email_configured": null,
+        "analysis_ready": null
+      },
+      "error_message": null,
+      "timestamp": 1759390351.695939,
+      "attempts": 1
+    },
+    {
+      "service_name": "github-mcp",
+      "url": "http://localhost:8094/health",
+      "success": true,
+      "response_time": 0.012140035629272461,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "github-mcp",
+        "version": "1.0.0",
+        "description": "GitHub MCP service is operational"
+      },
+      "error_message": null,
+      "timestamp": 1759390351.695059,
+      "attempts": 1
+    },
+    {
+      "service_name": "memory-agent",
+      "url": "http://localhost:5090/health",
+      "success": true,
+      "response_time": 0.012714147567749023,
+      "status_code": 200,
+      "response_body": {
+        "success": true,
+        "message": "Memory agent operational with active memory management",
+        "data": {
+          "status": "healthy",
+          "service": "memory-agent",
+          "version": "1.0.0",
+          "timestamp": "2025-10-02T07:32:31.694338",
+          "environment": "development",
+          "memory_count": 0,
+          "memory_capacity": 0,
+          "memory_usage_percent": 0,
+          "ttl_seconds": 0
+        }
+      },
+      "error_message": null,
+      "timestamp": 1759390351.6958878,
+      "attempts": 1
+    },
+    {
+      "service_name": "discovery-agent",
+      "url": "http://localhost:8095/health",
+      "success": true,
+      "response_time": 0.01298379898071289,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "discovery-agent",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.694387+00:00",
+        "uptime_seconds": 3035.25617,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
+      },
+      "error_message": null,
+      "timestamp": 1759390351.696218,
+      "attempts": 1
+    },
+    {
+      "service_name": "notification-service",
+      "url": "http://localhost:8096/health",
+      "success": true,
+      "response_time": 0.01629018783569336,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "notification-service",
+        "version": "1.0.0",
+        "description": "Notification service is operational"
+      },
+      "error_message": null,
+      "timestamp": 1759390351.699608,
+      "attempts": 1
+    },
+    {
+      "service_name": "prompt_store",
+      "url": "http://localhost:8097/health",
+      "success": true,
+      "response_time": 0.011697769165039062,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "prompt-store",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.692807+00:00",
+        "uptime_seconds": 3035.153503,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
+      },
+      "error_message": null,
+      "timestamp": 1759390351.695101,
+      "attempts": 1
+    },
+    {
+      "service_name": "interpreter",
+      "url": "http://localhost:8098/health",
+      "success": true,
+      "response_time": 0.013077974319458008,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "interpreter",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.694635+00:00",
+        "uptime_seconds": 11850.599173,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
+      },
+      "error_message": null,
+      "timestamp": 1759390351.696566,
+      "attempts": 1
+    },
+    {
+      "service_name": "cli",
+      "url": "http://localhost:8110/health",
+      "success": true,
+      "response_time": 0.011174917221069336,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "cli-service",
+        "architecture": "ddd",
+        "version": "1.0.0"
+      },
+      "error_message": null,
+      "timestamp": 1759390351.694761,
+      "attempts": 1
+    },
+    {
+      "service_name": "project-simulation",
+      "url": "http://localhost:8099/health",
+      "success": true,
+      "response_time": 0.012606143951416016,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "shared",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.694532+00:00",
+        "uptime_seconds": 11845.128156,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
+      },
+      "error_message": null,
+      "timestamp": 1759390351.696251,
+      "attempts": 1
+    },
+    {
+      "service_name": "simulation-dashboard",
+      "url": "http://localhost:8100/health",
+      "success": true,
+      "response_time": 0.013831138610839844,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "simulation-dashboard",
+        "timestamp": "2025-10-02T07:32:31.695925",
+        "version": "1.0.0"
+      },
+      "error_message": null,
+      "timestamp": 1759390351.697567,
+      "attempts": 1
+    },
+    {
+      "service_name": "unified-api-dashboard",
+      "url": "http://localhost:8101/health",
+      "success": true,
+      "response_time": 0.015134096145629883,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "timestamp": "2025-10-02T07:32:31.697844",
+        "version": "1.0.0",
+        "services": [
+          "cache_manager",
+          "discovery_client",
+          "catalog_manager",
+          "health_monitor",
+          "api_tester",
+          "usage_analytics",
+          "performance_insights",
+          "error_tracking",
+          "usage_patterns",
+          "client_generator",
+          "api_validator",
+          "integration_tester",
+          "topology_analyzer",
+          "topology_visualizer",
+          "graph_builder",
+          "topology_metrics",
+          "auth_manager",
+          "authorization_manager",
+          "access_control",
+          "audit_logger",
+          "security_monitor",
+          "performance_monitor",
+          "bottleneck_detector"
+        ]
+      },
+      "error_message": null,
+      "timestamp": 1759390351.698924,
+      "attempts": 1
+    },
+    {
+      "service_name": "code-analyzer",
+      "url": "http://localhost:8102/health",
+      "success": true,
+      "response_time": 0.01596522331237793,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "code-analyzer",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.698665+00:00",
+        "uptime_seconds": 1561.153925,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": true
+      },
+      "error_message": null,
+      "timestamp": 1759390351.699797,
+      "attempts": 1
+    },
+    {
+      "service_name": "secure-analyzer",
+      "url": "http://localhost:8103/health",
+      "success": true,
+      "response_time": 0.013160228729248047,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "secure-analyzer",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.695378",
+        "circuit_breaker_open": false,
+        "description": "Secure analyzer service is operational"
+      },
+      "error_message": null,
+      "timestamp": 1759390351.697016,
+      "attempts": 1
+    },
+    {
+      "service_name": "log-collector",
+      "url": "http://localhost:8104/health",
+      "success": true,
+      "response_time": 0.014903783798217773,
+      "status_code": 200,
+      "response_body": {
+        "status": "degraded",
+        "service": "log-collector",
+        "version": "1.0.0",
+        "count": 973,
+        "description": "Log collection operational but 4 services unhealthy",
+        "monitoring": {
+          "status": "healthy",
+          "service": "log-collector",
+          "timestamp": "2025-10-02T07:32:31.697310",
+          "metrics": {
+            "cpu_percent": 0.6,
+            "memory_percent": 37.1,
+            "disk_usage_percent": 37.2,
+            "active_threads": 7,
+            "request_count": 838,
+            "error_count": 0,
+            "error_rate": 0.0
+          },
+          "uptime_seconds": 13229.697321
+        },
+        "service_health": {
+          "total_services": 25,
+          "healthy": 21,
+          "unhealthy": 4,
+          "unknown": 0,
+          "last_updated": 1759390329.7017906
+        }
+      },
+      "error_message": null,
+      "timestamp": 1759390351.698806,
+      "attempts": 1
+    },
+    {
+      "service_name": "external-service-store",
+      "url": "http://localhost:8105/health",
+      "success": true,
+      "response_time": 0.014447212219238281,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "external-service-store",
+        "version": "1.0.0",
+        "uptime_seconds": 11851.37021780014,
+        "database": "sqlite"
+      },
+      "error_message": null,
+      "timestamp": 1759390351.69838,
+      "attempts": 1
+    },
+    {
+      "service_name": "user-store",
+      "url": "http://localhost:8106/health",
+      "success": true,
+      "response_time": 0.015146255493164062,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "user-store",
+        "version": "1.0.0",
+        "uptime_seconds": -2.384185791015625e-07
+      },
+      "error_message": null,
+      "timestamp": 1759390351.6990871,
+      "attempts": 1
+    },
+    {
+      "service_name": "project-planning-service",
+      "url": "http://localhost:5170/health",
+      "success": true,
+      "response_time": 0.0159299373626709,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "project-planning-service",
+        "version": "1.0.0",
+        "timestamp": "2025-10-02T07:32:31.698782+00:00",
+        "uptime_seconds": 11851.100771,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
+      },
+      "error_message": null,
+      "timestamp": 1759390351.69997,
+      "attempts": 1
+    }
+  ],
+  "critical_failures": [
+    {
+      "service_name": "ollama",
+      "url": "http://localhost:8090/health",
+      "error_message": "Validation failed",
+      "response_time": 0.012578725814819336
+    }
+  ],
+  "recommendations": [
+    "\ud83d\udfe1 WARNING: Service availability is below 99% - monitor closely",
+    "\ud83d\udfe1 WARNING: ollama health check failed - review logs",
+    "\u2139\ufe0f INFO: Consider implementing circuit breakers for dependent services",
+    "\u2139\ufe0f INFO: Add health check monitoring to alerting systems",
+    "\u2139\ufe0f INFO: Implement health check caching to reduce load"
+  ]
+}
