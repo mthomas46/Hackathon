@@ -23,7 +23,8 @@ class DocumentModel(Base):
     """
     Document table model.
     
-    Stores documents with full metadata and git linkage.
+    Stores documents with full metadata and optional git linkage.
+    Supports both 'snapshot' and 'git_history' ingestion modes.
     """
     __tablename__ = "documents"
     
@@ -34,9 +35,17 @@ class DocumentModel(Base):
     original_content = Column(Text, nullable=False)
     normalized_content = Column(Text, nullable=False)
     content_hash = Column(String(64), nullable=False, index=True)
+    
+    # Phase 8: Snapshot mode support
+    ingestion_mode = Column(String(20), nullable=False, default='git_history', index=True)
+    version = Column(Integer, nullable=False, default=1)
+    
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-    git_commit_sha = Column(String(40), ForeignKey("git_commits.sha"), index=True)
+    
+    # Now nullable for snapshot mode
+    git_commit_sha = Column(String(40), ForeignKey("git_commits.sha"), nullable=True, index=True)
+    
     is_latest = Column(Boolean, nullable=False, default=True, index=True)
     embedding_id = Column(UUID(as_uuid=True), ForeignKey("embeddings.id"))
     doc_metadata = Column(JSONB, nullable=False, default=dict)
@@ -48,9 +57,13 @@ class DocumentModel(Base):
     
     # Constraints
     __table_args__ = (
-        UniqueConstraint("file_path", "git_commit_sha", name="uq_document_file_commit"),
+        # Updated constraint for snapshot mode (uses content_hash instead of git_commit_sha)
+        UniqueConstraint("file_path", "content_hash", name="uq_document_file_hash"),
         Index("idx_documents_service_latest", "service_name", "is_latest"),
         Index("idx_documents_content_hash", "content_hash"),
+        Index("idx_documents_mode", "ingestion_mode"),
+        Index("idx_documents_mode_latest", "ingestion_mode", "is_latest"),
+        Index("idx_documents_version", "version"),
     )
 
 
