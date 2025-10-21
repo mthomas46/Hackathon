@@ -13,8 +13,8 @@ from pathlib import Path
 
 from ...storage import get_database
 from ...storage.models_discovery import SubJobModel, FileClassificationModel
-from ..ingestion.normalizer_manager import get_normalizer_manager
-from ..ingestion.git_manager import GitManager
+from ..processing.normalizer_factory import NormalizerFactory
+from ..git.git_service import GitService
 from ...utils.redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class SubJobExecutor:
     """
     
     def __init__(self):
-        self.normalizer_manager = get_normalizer_manager()
+        self.normalizer_factory = NormalizerFactory()
         self.redis = get_redis_client()
         
         # Embedding service integration
@@ -96,7 +96,7 @@ class SubJobExecutor:
             logger.info(f"Processing {len(files)} files for sub-job {sub_job.sub_job_id}")
             
             # Initialize Git manager
-            git_manager = GitManager(repo_path)
+            git_manager = GitService(repo_path)
             
             # Process files
             for idx, file_class in enumerate(files):
@@ -203,7 +203,7 @@ class SubJobExecutor:
         self,
         file_class: FileClassificationModel,
         repo_path: str,
-        git_manager: GitManager
+        git_manager: GitService
     ) -> Dict:
         """
         Process a single file through the ingestion pipeline.
@@ -287,11 +287,11 @@ class SubJobExecutor:
         """
         try:
             # Get appropriate normalizer
-            normalizer = self.normalizer_manager.get_normalizer(file_type)
+            normalizer = self.normalizer_factory.get_normalizer(file_type)
             
             if not normalizer:
                 # Use markdown normalizer as fallback
-                normalizer = self.normalizer_manager.get_normalizer("markdown")
+                normalizer = self.normalizer_factory.get_normalizer(".md")
             
             # Normalize
             result = await normalizer.normalize(
@@ -344,7 +344,7 @@ class SubJobExecutor:
     async def _get_git_metadata(
         self,
         file_path: str,
-        git_manager: GitManager
+        git_manager: GitService
     ) -> Dict:
         """
         Get Git metadata for a file.
