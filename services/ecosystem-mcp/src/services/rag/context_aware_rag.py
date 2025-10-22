@@ -359,6 +359,134 @@ class ContextAwareRAG:
             "services": context.services,
             "description": context.description
         }
+    
+    async def query_period(
+        self,
+        query: str,
+        timeline_id: str,
+        period_id: str,
+        limit: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Query documents within a specific timeline period.
+        
+        This is a convenience method that wraps the TemporalRAGService
+        for basic temporal queries within a known period.
+        
+        Args:
+            query: Query text
+            timeline_id: Timeline identifier
+            period_id: Period identifier
+            limit: Max results
+        
+        Returns:
+            Query results filtered to the specific period
+        """
+        from .temporal_rag_service import TemporalRAGService
+        from uuid import UUID
+        
+        logger.info(f"🕐 Period query: {query[:100]} (period={period_id})")
+        
+        temporal_rag = TemporalRAGService()
+        
+        # Get period details and query
+        from ...storage import get_database
+        from ...storage.repositories.timeline_repository import TimePeriodRepository
+        
+        async with get_database().session() as session:
+            period_repo = TimePeriodRepository(session)
+            period = await period_repo.get_by_id(UUID(period_id))
+            
+            if not period:
+                raise ValueError(f"Period not found: {period_id}")
+            
+            # Use the period's midpoint as the "as of" date
+            midpoint = period.start_date + (period.end_date - period.start_date) / 2
+            
+            return await temporal_rag.query_as_of(
+                query=query,
+                as_of_date=midpoint,
+                timeline_id=UUID(timeline_id),
+                limit=limit
+            )
+    
+    async def query_evolution(
+        self,
+        topic: str,
+        timeline_id: str,
+        service_name: Optional[str] = None,
+        limit_per_period: int = 3
+    ) -> Dict[str, Any]:
+        """
+        Track how information about a topic evolved over time.
+        
+        This method queries each period in a timeline and shows how
+        the information changed across periods.
+        
+        Args:
+            topic: Topic to track
+            timeline_id: Timeline identifier
+            service_name: Optional service filter
+            limit_per_period: Max results per period
+        
+        Returns:
+            Evolution timeline showing changes across periods
+        """
+        from .temporal_rag_service import TemporalRAGService
+        from uuid import UUID
+        
+        logger.info(f"📈 Evolution query: {topic[:100]} (timeline={timeline_id})")
+        
+        temporal_rag = TemporalRAGService()
+        return await temporal_rag.query_evolution(
+            topic=topic,
+            timeline_id=UUID(timeline_id),
+            limit_per_period=limit_per_period
+        )
+    
+    async def query_comparison(
+        self,
+        query: str,
+        start_date: datetime,
+        end_date: datetime,
+        timeline_id: Optional[str] = None,
+        service_name: Optional[str] = None,
+        limit: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Compare information between two time periods.
+        
+        This method detects changes in documentation about a specific
+        topic between two dates.
+        
+        Args:
+            query: Topic to compare
+            start_date: Start of comparison range
+            end_date: End of comparison range
+            timeline_id: Optional timeline identifier
+            service_name: Optional service filter
+            limit: Max results per period
+        
+        Returns:
+            Comparison showing changes between periods
+        """
+        from .temporal_rag_service import TemporalRAGService
+        from uuid import UUID
+        
+        logger.info(
+            f"⚖️ Comparison query: {query[:100]} "
+            f"({start_date.date()} to {end_date.date()})"
+        )
+        
+        temporal_rag = TemporalRAGService()
+        return await temporal_rag.query_what_changed(
+            query=query,
+            start_date=start_date,
+            end_date=end_date,
+            timeline_id=UUID(timeline_id) if timeline_id else None,
+            service_name=service_name,
+            limit=limit
+        )
 
 
 # Singleton

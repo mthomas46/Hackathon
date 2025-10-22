@@ -218,3 +218,152 @@ class ModelRequestModel(Base):
         Index("idx_requests_task_type", "task_type"),
     )
 
+
+# ==========================================
+# Timeline Analysis Models (Phase 1)
+# ==========================================
+
+class TimelineModel(Base):
+    """
+    Timeline table model.
+    
+    Represents a timeline for a specific repository/service with temporal periods.
+    Supports confidence-based operation based on ingestion mode distribution.
+    """
+    __tablename__ = "timelines"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    name = Column(String(255), nullable=False, index=True)
+    description = Column(Text)
+    service_name = Column(String(255), nullable=False, index=True)
+    repo_path = Column(Text, nullable=False)
+    
+    # Timeline range
+    start_date = Column(DateTime, nullable=False, index=True)
+    end_date = Column(DateTime, nullable=False, index=True)
+    
+    # Confidence tracking
+    confidence_level = Column(String(20), nullable=False, index=True)  # HIGH, MEDIUM, LOW, NONE
+    confidence_metadata = Column(JSONB, nullable=False, default=dict)  # Detailed confidence info
+    
+    # Period generation strategy
+    period_strategy = Column(String(50), nullable=False, default='adaptive')  # monthly, quarterly, adaptive
+    
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = Column(String(255))
+    
+    # Metadata
+    timeline_metadata = Column(JSONB, default=dict)
+    
+    # Relationships
+    periods = relationship("TimePeriodModel", back_populates="timeline", cascade="all, delete-orphan")
+    
+    # Constraints
+    __table_args__ = (
+        CheckConstraint("start_date <= end_date", name="ck_timeline_date_range"),
+        CheckConstraint("confidence_level IN ('HIGH', 'MEDIUM', 'LOW', 'NONE')", name="ck_confidence_level"),
+        Index("idx_timelines_service", "service_name"),
+        Index("idx_timelines_confidence", "confidence_level"),
+        Index("idx_timelines_dates", "start_date", "end_date"),
+        Index("idx_timelines_created", "created_at"),
+    )
+
+
+class TimePeriodModel(Base):
+    """
+    Time period table model.
+    
+    Represents a discrete time period within a timeline (e.g., Q1 2025, Oct 2025).
+    Contains documents placed in this period based on commit dates or creation dates.
+    """
+    __tablename__ = "time_periods"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    timeline_id = Column(UUID(as_uuid=True), ForeignKey("timelines.id"), nullable=False, index=True)
+    
+    # Period identification
+    name = Column(String(255), nullable=False)  # e.g., "Q1 2025", "Oct 2025", "Major Release v2.0"
+    description = Column(Text)
+    
+    # Period range
+    start_date = Column(DateTime, nullable=False, index=True)
+    end_date = Column(DateTime, nullable=False, index=True)
+    
+    # Ordering
+    sequence_number = Column(Integer, nullable=False)  # Order within timeline
+    
+    # Statistics
+    document_count = Column(Integer, nullable=False, default=0)
+    commit_count = Column(Integer, nullable=False, default=0)
+    
+    # Metadata
+    period_metadata = Column(JSONB, default=dict)
+    
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    timeline = relationship("TimelineModel", back_populates="periods")
+    document_placements = relationship("DocumentPlacementModel", back_populates="period", cascade="all, delete-orphan")
+    
+    # Constraints
+    __table_args__ = (
+        CheckConstraint("start_date <= end_date", name="ck_period_date_range"),
+        CheckConstraint("sequence_number >= 1", name="ck_sequence_positive"),
+        CheckConstraint("document_count >= 0", name="ck_document_count_nonnegative"),
+        CheckConstraint("commit_count >= 0", name="ck_commit_count_nonnegative"),
+        UniqueConstraint("timeline_id", "sequence_number", name="uq_period_timeline_sequence"),
+        Index("idx_periods_timeline", "timeline_id"),
+        Index("idx_periods_dates", "start_date", "end_date"),
+        Index("idx_periods_sequence", "timeline_id", "sequence_number"),
+    )
+
+
+class DocumentPlacementModel(Base):
+    """
+    Document placement table model.
+    
+    Links documents to specific time periods within a timeline.
+    Supports both git_history mode (based on commit dates) and snapshot mode (based on created_at).
+    """
+    __tablename__ = "document_placements"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    period_id = Column(UUID(as_uuid=True), ForeignKey("time_periods.id"), nullable=False, index=True)
+    document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id"), nullable=False, index=True)
+    
+    # Placement details
+    placement_date = Column(DateTime, nullable=False, index=True)  # Date used for placement
+    placement_source = Column(String(50), nullable=False)  # 'git_commit', 'created_at', 'manual'
+    
+    # Git information (if applicable)
+    git_commit_sha = Column(String(40), ForeignKey("git_commits.sha"), nullable=True, index=True)
+    
+    # Relevance and confidence
+    relevance_score = Column(Float, default=1.0)  # How relevant is this doc to the period
+    
+    # Metadata
+    placement_metadata = Column(JSONB, default=dict)
+    
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    
+    # Relationships
+    period = relationship("TimePeriodModel", back_populates="document_placements")
+    document = relationship("DocumentModel")
+    commit = relationship("GitCommitModel")
+    
+    # Constraints
+    __table_args__ = (
+        CheckConstraint("relevance_score >= 0.0 AND relevance_score <= 1.0", name="ck_relevance_range"),
+        CheckConstraint("placement_source IN ('git_commit', 'created_at', 'manual')", name="ck_placement_source"),
+        UniqueConstraint("period_id", "document_id", name="uq_placement_period_document"),
+        Index("idx_placements_period", "period_id"),
+        Index("idx_placements_document", "document_id"),
+        Index("idx_placements_date", "placement_date"),
+        Index("idx_placements_commit", "git_commit_sha"),
+    )
+
