@@ -13,11 +13,15 @@ from .confidence_calculator import TemporalConfidenceCalculator
 from .timeline_manager import TimelineManager
 from .period_generator import PeriodGenerator
 from .document_placer import DocumentPlacer
+from .gap_analyzer import GapAnalyzer
+from .drift_detector import DriftDetector
 
 __all__ = [
     "TemporalConfidenceCalculator",
     "TimelineManager",
     "PeriodGenerator",
     "DocumentPlacer",
+    "GapAnalyzer",
+    "DriftDetector",
 ]
 

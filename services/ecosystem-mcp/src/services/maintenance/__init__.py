@@ -19,6 +19,7 @@ from .automated_refresher import AutomatedRefresher
 from .quality_dashboard import QualityDashboard
 from .dependency_tracker import DependencyTracker
 from .version_comparator import VersionComparator
+from .export_service import ExportService
 
 __all__ = [
     "StalenessDetector",
@@ -28,5 +29,6 @@ __all__ = [
     "QualityDashboard",
     "DependencyTracker",
     "VersionComparator",
+    "ExportService",
 ]
 
