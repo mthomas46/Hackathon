@@ -15,6 +15,8 @@ from .period_generator import PeriodGenerator
 from .document_placer import DocumentPlacer
 from .gap_analyzer import GapAnalyzer
 from .drift_detector import DriftDetector
+from .report_generator import ReportGenerator, ReportType, ReportFormat
+from .document_consolidator import DocumentConsolidator
 
 __all__ = [
     "TemporalConfidenceCalculator",
@@ -23,5 +25,9 @@ __all__ = [
     "DocumentPlacer",
     "GapAnalyzer",
     "DriftDetector",
+    "ReportGenerator",
+    "ReportType",
+    "ReportFormat",
+    "DocumentConsolidator",
 ]
 
