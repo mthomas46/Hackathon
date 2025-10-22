@@ -56,6 +56,13 @@ class DocConfig:
     enable_quality_validation: bool = True  # Enable Phase 5 quality checks
     auto_queue_for_review: bool = True      # Auto-queue low-confidence docs
     
+    # Temporal context configuration (Phase 5)
+    include_evolution: bool = False  # Include temporal evolution in documentation
+    timeline_id: Optional[str] = None  # Timeline to use for temporal context
+    include_breaking_changes: bool = True  # Highlight breaking changes in API docs
+    include_deprecation_history: bool = True  # Show deprecation timeline
+    include_migration_history: bool = True  # Include migration history
+    
     # LLM configuration
     model: str = "llama3.2:latest"
     temperature: float = 0.7
@@ -175,6 +182,13 @@ class DocumentationOrchestrator:
             'analysis_report': analysis_report,
             'previous_passes': []
         }
+        
+        # Inject temporal context if requested (Phase 5)
+        if config.include_evolution and config.timeline_id:
+            logger.info(f"   🕰️ Fetching temporal context for timeline {config.timeline_id}")
+            temporal_context = await self._fetch_temporal_context(config.timeline_id)
+            context['temporal'] = temporal_context
+            logger.info(f"   ✅ Temporal context loaded: {len(temporal_context.get('periods', []))} periods")
         
         try:
             # Execute each pass in sequence
@@ -588,6 +602,54 @@ class DocumentationOrchestrator:
                 'total_issues': 0,
                 'critical_issues': 0
             }
+    
+    async def _fetch_temporal_context(self, timeline_id: str) -> Dict:
+        """
+        Fetch temporal context for a timeline (Phase 5).
+        
+        Args:
+            timeline_id: Timeline ID to fetch
+        
+        Returns:
+            Temporal context dictionary with periods and evolution data
+        """
+        try:
+            from ...storage.repositories import TimelineRepository
+            from ...storage.database import get_db_session
+            
+            async with get_db_session() as session:
+                repo = TimelineRepository(session)
+                timeline = await repo.get_by_id(timeline_id)
+                
+                if not timeline:
+                    logger.warning(f"Timeline {timeline_id} not found")
+                    return {}
+                
+                # Get periods
+                periods = await repo.get_periods(timeline_id)
+                
+                # Build temporal context
+                return {
+                    'timeline_id': timeline_id,
+                    'timeline_name': timeline.name,
+                    'service_name': timeline.service_name,
+                    'start_date': timeline.start_date,
+                    'end_date': timeline.end_date,
+                    'confidence': timeline.confidence,
+                    'periods': [
+                        {
+                            'id': str(p.id),
+                            'name': p.name,
+                            'start_date': p.start_date,
+                            'end_date': p.end_date,
+                            'document_count': p.document_count
+                        }
+                        for p in periods
+                    ]
+                }
+        except Exception as e:
+            logger.error(f"Error fetching temporal context: {e}")
+            return {}
 
 
 # Singleton

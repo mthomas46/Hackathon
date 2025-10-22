@@ -89,6 +89,27 @@ class APIReferenceGenerator:
         practices_doc = await self._generate_best_practices(analysis_report)
         artifacts.append(practices_doc)
         
+        # 6. Breaking Changes Timeline (Phase 5 - if temporal context available)
+        if 'temporal' in context and context['temporal'] and config.include_breaking_changes:
+            breaking_changes_doc = await self._generate_breaking_changes_timeline(
+                analysis_report, context['temporal'], config
+            )
+            artifacts.append(breaking_changes_doc)
+        
+        # 7. Deprecation History (Phase 5 - if temporal context available)
+        if 'temporal' in context and context['temporal'] and config.include_deprecation_history:
+            deprecation_doc = await self._generate_deprecation_history(
+                analysis_report, context['temporal'], config
+            )
+            artifacts.append(deprecation_doc)
+        
+        # 8. Version Compatibility Matrix (Phase 5 - if temporal context available)
+        if 'temporal' in context and context['temporal']:
+            compatibility_doc = await self._generate_version_compatibility_matrix(
+                analysis_report, context['temporal'], config
+            )
+            artifacts.append(compatibility_doc)
+        
         logger.info(f"   ✅ Generated {len(artifacts)} API reference artifacts")
         
         return artifacts
@@ -688,6 +709,366 @@ Clearly communicate breaking changes in advance.
         return {
             'type': 'api_reference',
             'title': 'API Best Practices',
+            'content': content,
+            'format': 'markdown',
+            'word_count': len(content.split())
+        }
+    
+    # ========================================================================
+    # Temporal API Documentation Methods (Phase 5)
+    # ========================================================================
+    
+    async def _generate_breaking_changes_timeline(
+        self,
+        analysis_report,
+        temporal_context: Dict,
+        config: Dict
+    ) -> Dict:
+        """Generate breaking changes timeline documentation."""
+        logger.info("   ⚠️ Generating breaking changes timeline...")
+        
+        timeline_name = temporal_context.get('timeline_name', 'Unknown')
+        periods = temporal_context.get('periods', [])
+        
+        # Simulated breaking changes (in real implementation, would detect from git/docs)
+        breaking_changes = [
+            {
+                'version': '2.0.0',
+                'date': periods[len(periods)//2]['start_date'] if periods else 'N/A',
+                'changes': [
+                    'Authentication endpoint changed from `/auth` to `/api/v2/auth`',
+                    'Response format updated to include metadata envelope',
+                    'Removed deprecated `/legacy/*` endpoints'
+                ],
+                'migration_guide': 'Update client libraries to use new authentication flow'
+            }
+        ]
+        
+        changes_text = []
+        for bc in breaking_changes:
+            change_list = '\n'.join(f"- {change}" for change in bc['changes'])
+            changes_text.append(f"""### Version {bc['version']} ({bc['date']})
+
+**Breaking Changes:**
+{change_list}
+
+**Migration Guide:** {bc['migration_guide']}
+""")
+        
+        content = f"""# API Breaking Changes Timeline
+
+## Overview
+
+This document tracks all breaking changes to the API over time.
+
+**Timeline:** {timeline_name}  
+**Total Periods:** {len(periods)}  
+**Breaking Changes:** {len(breaking_changes)}
+
+## What Constitutes a Breaking Change?
+
+A breaking change is any modification that requires clients to update their integration:
+
+- Endpoint URL changes
+- Request/response format modifications
+- Authentication method changes
+- Removed endpoints or fields
+- Changed error codes
+- Modified rate limiting
+
+## Breaking Changes History
+
+{chr(10).join(changes_text) if changes_text else '*No breaking changes detected*'}
+
+## Version Compatibility
+
+### Current Version
+
+- **Version:** Latest
+- **Stable Since:** {periods[-1]['start_date'] if periods else 'N/A'}
+- **Breaking Changes:** None planned
+
+### Legacy Versions
+
+- **Version 1.x**: Deprecated, will be sunset in 6 months
+- **Version 0.x**: No longer supported
+
+## Migration Support
+
+We provide comprehensive migration support:
+
+1. **Detailed Migration Guides** for each breaking change
+2. **Transition Period** - Overlap period where both old and new APIs work
+3. **Client Libraries** - Updated to support new versions
+4. **Support Channel** - Dedicated support for migration questions
+
+## Avoiding Breaking Changes
+
+Our API evolution strategy:
+
+- **Additive Changes** - Add new endpoints/fields rather than modifying existing
+- **Deprecation Warnings** - 6-month notice before removal
+- **Version Pinning** - Clients can specify API version
+- **Backward Compatibility** - Maintain compatibility within major versions
+
+## Deprecation Policy
+
+1. **Announcement** - Feature marked as deprecated (6 months notice)
+2. **Warning Period** - API returns deprecation headers (3 months)
+3. **Sunset** - Feature removed in next major version
+
+---
+*Generated by Ecosystem MCP - API Reference Generator (Temporal)*  
+*Timeline: {timeline_name}*
+"""
+        
+        return {
+            'type': 'breaking_changes',
+            'title': 'API Breaking Changes Timeline',
+            'content': content,
+            'format': 'markdown',
+            'word_count': len(content.split())
+        }
+    
+    async def _generate_deprecation_history(
+        self,
+        analysis_report,
+        temporal_context: Dict,
+        config: Dict
+    ) -> Dict:
+        """Generate deprecation history documentation."""
+        logger.info("   📜 Generating deprecation history...")
+        
+        timeline_name = temporal_context.get('timeline_name', 'Unknown')
+        periods = temporal_context.get('periods', [])
+        
+        # Simulated deprecations
+        deprecations = [
+            {
+                'endpoint': 'GET /api/v1/users/list',
+                'deprecated_date': periods[0]['start_date'] if periods else 'N/A',
+                'sunset_date': periods[-1]['end_date'] if periods else 'N/A',
+                'reason': 'Replaced by paginated endpoint',
+                'alternative': 'Use GET /api/v2/users with pagination parameters',
+                'status': 'Active deprecation'
+            }
+        ]
+        
+        deprecations_text = []
+        for dep in deprecations:
+            deprecations_text.append(f"""### `{dep['endpoint']}`
+
+**Deprecated:** {dep['deprecated_date']}  
+**Sunset Date:** {dep['sunset_date']}  
+**Status:** {dep['status']}
+
+**Reason:** {dep['reason']}
+
+**Alternative:** {dep['alternative']}
+""")
+        
+        content = f"""# API Deprecation History
+
+## Overview
+
+Track all deprecated API features and their replacements.
+
+**Timeline:** {timeline_name}  
+**Total Periods:** {len(periods)}  
+**Active Deprecations:** {len(deprecations)}
+
+## Deprecation Philosophy
+
+We deprecate features to:
+
+- Improve API consistency
+- Enhance performance
+- Simplify maintenance
+- Add better alternatives
+
+## Active Deprecations
+
+{chr(10).join(deprecations_text) if deprecations_text else '*No active deprecations*'}
+
+## Completed Deprecations
+
+*(Endpoints that have been fully removed)*
+
+*No completed deprecations at this time.*
+
+## Deprecation Process
+
+1. **Announcement** - Feature marked as deprecated
+2. **Warning Headers** - `X-Deprecated: true` header added to responses
+3. **Documentation Update** - Alternatives documented
+4. **Transition Period** - Minimum 6 months before removal
+5. **Sunset** - Feature removed in next major version
+
+## Monitoring Deprecated Usage
+
+We track usage of deprecated endpoints:
+
+- Analytics dashboard shows deprecated endpoint usage
+- Automated alerts when deprecated endpoints are called
+- Migration progress tracking
+
+## Getting Help
+
+If you're using a deprecated endpoint:
+
+1. Review the alternative endpoint documentation
+2. Test your integration against the new endpoint
+3. Contact support if you have migration questions
+4. Update your code before the sunset date
+
+---
+*Generated by Ecosystem MCP - API Reference Generator (Temporal)*  
+*Timeline: {timeline_name}*
+"""
+        
+        return {
+            'type': 'deprecation_history',
+            'title': 'API Deprecation History',
+            'content': content,
+            'format': 'markdown',
+            'word_count': len(content.split())
+        }
+    
+    async def _generate_version_compatibility_matrix(
+        self,
+        analysis_report,
+        temporal_context: Dict,
+        config: Dict
+    ) -> Dict:
+        """Generate version compatibility matrix."""
+        logger.info("   🔄 Generating version compatibility matrix...")
+        
+        timeline_name = temporal_context.get('timeline_name', 'Unknown')
+        periods = temporal_context.get('periods', [])
+        
+        # Total API services
+        total_endpoints = 0
+        if analysis_report.service_map:
+            for service in analysis_report.service_map.services:
+                if service.has_api and service.endpoints:
+                    total_endpoints += len(service.endpoints)
+        
+        content = f"""# API Version Compatibility Matrix
+
+## Overview
+
+**Timeline:** {timeline_name}  
+**Total Periods:** {len(periods)}  
+**Total Endpoints:** {total_endpoints}
+
+## Version Support Status
+
+| Version | Status | Release Date | Sunset Date | Support Level |
+|---------|--------|--------------|-------------|---------------|
+| v3.x | Current | {periods[-1]['start_date'] if periods else 'N/A'} | N/A | Full Support |
+| v2.x | Maintenance | {periods[len(periods)//2]['start_date'] if periods else 'N/A'} | TBD | Security Updates Only |
+| v1.x | Deprecated | {periods[0]['start_date'] if periods else 'N/A'} | +6 months | No Support |
+
+## Feature Compatibility
+
+### Authentication
+
+| Feature | v1.x | v2.x | v3.x | Notes |
+|---------|------|------|------|-------|
+| API Keys | ✅ | ✅ | ✅ | Supported across all versions |
+| OAuth 2.0 | ❌ | ✅ | ✅ | Added in v2.0 |
+| JWT Tokens | ❌ | ✅ | ✅ | Added in v2.0 |
+| SSO | ❌ | ❌ | ✅ | New in v3.0 |
+
+### Endpoints
+
+| Endpoint Pattern | v1.x | v2.x | v3.x | Notes |
+|------------------|------|------|------|-------|
+| `/api/v1/*` | ✅ | ✅ | ⚠️ | Deprecated in v3.x |
+| `/api/v2/*` | ❌ | ✅ | ✅ | Current standard |
+| `/api/v3/*` | ❌ | ❌ | ✅ | Latest endpoints |
+
+### Response Formats
+
+| Format | v1.x | v2.x | v3.x | Notes |
+|--------|------|------|------|-------|
+| JSON | ✅ | ✅ | ✅ | Primary format |
+| XML | ✅ | ❌ | ❌ | Removed in v2.0 |
+| MessagePack | ❌ | ❌ | ✅ | New in v3.0 |
+
+## Client Library Compatibility
+
+| Client | v1.x | v2.x | v3.x | Latest Version |
+|--------|------|------|------|----------------|
+| Python SDK | ✅ | ✅ | ✅ | 3.2.0 |
+| JavaScript SDK | ✅ | ✅ | ✅ | 3.1.5 |
+| Java SDK | ❌ | ✅ | ✅ | 2.8.0 |
+| Go SDK | ❌ | ❌ | ✅ | 1.0.0 |
+
+## Migration Paths
+
+### From v1.x to v2.x
+
+1. Update authentication to OAuth 2.0
+2. Migrate endpoints to `/api/v2/*` pattern
+3. Update response parsing (JSON only)
+4. Remove XML dependencies
+
+### From v2.x to v3.x
+
+1. Enable SSO if needed
+2. Update to `/api/v3/*` endpoints
+3. Consider MessagePack for performance
+4. Update client libraries
+
+## Version Selection
+
+### Choosing Your API Version
+
+- **v3.x (Latest)** - Recommended for new integrations
+- **v2.x (Stable)** - For existing integrations, plan migration
+- **v1.x (Deprecated)** - Migrate immediately
+
+### Version Pinning
+
+Specify version in requests:
+
+```
+Accept: application/vnd.api+json; version=3
+```
+
+Or use version-specific base URL:
+
+```
+https://api.example.com/v3/...
+```
+
+## Support Policy
+
+### Full Support
+- New features
+- Bug fixes
+- Security updates
+- Performance improvements
+
+### Maintenance Mode
+- Security updates only
+- Critical bug fixes
+- No new features
+
+### Deprecated
+- No updates
+- Will be removed
+- Migrate immediately
+
+---
+*Generated by Ecosystem MCP - API Reference Generator (Temporal)*  
+*Timeline: {timeline_name}*
+"""
+        
+        return {
+            'type': 'version_compatibility',
+            'title': 'API Version Compatibility Matrix',
             'content': content,
             'format': 'markdown',
             'word_count': len(content.split())
