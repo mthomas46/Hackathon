@@ -1,0 +1,87 @@
+# AUTO-GENERATED FIXES FOR MODEL MAPPING ISSUES
+# ======================================================================
+
+# Fix #1: AnalysisReport -> AnalysisResultModel
+# Issue: Field "technology_stack" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #2: AnalysisReport -> AnalysisResultModel
+# Issue: Field "repo_path" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #3: AnalysisReport -> AnalysisResultModel
+# Issue: Field "analysis_complete" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #4: AnalysisReport -> AnalysisResultModel
+# Issue: Field "errors" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #5: AnalysisReport -> AnalysisResultModel
+# Issue: Field "total_files" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #6: AnalysisReport -> AnalysisResultModel
+# Issue: Field "modularity_score" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #7: AnalysisReport -> AnalysisResultModel
+# Issue: Field "total_frameworks" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #8: AnalysisReport -> AnalysisResultModel
+# Issue: Field "service_map" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #9: AnalysisReport -> AnalysisResultModel
+# Issue: Field "architecture" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #10: AnalysisReport -> AnalysisResultModel
+# Issue: Field "total_languages" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #11: AnalysisReport -> AnalysisResultModel
+# Issue: Field "dependency_graph" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #12: AnalysisReport -> AnalysisResultModel
+# Issue: Field "total_services" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #13: AnalysisReport -> AnalysisResultModel
+# Issue: Field "plan_id" in source not in target
+# Location: to_model_kwargs() method
+# Suggested Fix: May need to calculate or map differently
+
+# Fix #14: TechnologyStack
+# Issue: Missing primary_language field
+# Location: to_model_kwargs() method
+# Suggested Fix: Calculate from languages dict: max(tech_stack.languages.items(), key=lambda x: x[1])[0]
+
+# Fix #15: ServiceMap
+# Issue: Missing is_microservices field
+# Location: to_model_kwargs() method
+# Suggested Fix: Calculate from service_count: (svc_map.service_count > 1)
+
+# Fix #16: ServiceMap
+# Issue: Field name mismatch: service_graph vs dependencies
+# Location: to_model_kwargs() method
+# Suggested Fix: Use svc_map.dependencies instead of svc_map.service_graph
+
+# Fix #17: ProcessingPlanModel
+# Issue: No direct files attribute, use file_classifications relationship
+# Location: Query with selectinload(ProcessingPlanModel.file_classifications)
+# Suggested Fix: Access via plan.file_classifications instead of plan.files

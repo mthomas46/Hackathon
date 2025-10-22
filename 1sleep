@@ -1,0 +1,8 @@
+  File "<string>", line 27
+    print(f'\n🎉🎉🎉 SUCCESSdocker logs ecosystem-mcp-service 2>&1 | grep -A 15 Pass
+  File "<string>", line 27
+    print(f'\n🎉🎉🎉 SUCCESSdocker logs ecosystem-mcp-service 2>&1 | grep -A 15 Pass
+          ^
+SyntaxError: unterminated f-string literal (detected at line 27)
+          ^
+SyntaxError: unterminated f-string literal (detected at line 27)

@@ -22,9 +22,11 @@ from ...storage import get_session
 from ...storage.models_documentation import DocumentationRunModel, DocumentationArtifactModel
 from ...storage.models_analysis import AnalysisResultModel
 from sqlalchemy import select, desc
+from ...utils.enhanced_logging import create_pipeline_logger, log_execution_time
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+pipeline_logger = create_pipeline_logger(__name__)
 
 
 # ============================================================================
@@ -43,6 +45,7 @@ class GenerateDocsRequest(BaseModel):
     include_examples: bool = Field(True, description="Include examples")
     validate_between_passes: bool = Field(True, description="Validate quality between passes")
     min_quality_score: float = Field(0.7, description="Minimum quality score", ge=0.0, le=1.0)
+    skip_review: bool = Field(False, description="Skip automatic review queue for low-confidence artifacts")
 
 
 class DocumentationRunResponse(BaseModel):
@@ -115,32 +118,145 @@ async def generate_documentation(
     try:
         logger.info(f"📚 Documentation generation requested for plan {request.plan_id}")
         
-        # 1. Get or create analysis
+        # 1. Get the processing plan with file classifications eagerly loaded
+        from ...storage.models_discovery import ProcessingPlanModel
+        from sqlalchemy.orm import selectinload
+        
+        stmt = select(ProcessingPlanModel).where(
+            ProcessingPlanModel.id == request.plan_id
+        ).options(selectinload(ProcessingPlanModel.file_classifications))
+        result = await session.execute(stmt)
+        plan = result.scalar_one_or_none()
+        
+        if not plan:
+            raise HTTPException(status_code=404, detail=f"Processing plan {request.plan_id} not found")
+        
+        # 2. Get or create analysis
         analysis_engine = AnalysisEngine()
         
-        # Check if analysis exists
+        # Check if analysis exists for this plan
         stmt = select(AnalysisResultModel).where(
-            AnalysisResultModel.repo_path == request.repo_path
+            AnalysisResultModel.plan_id == request.plan_id
         ).order_by(desc(AnalysisResultModel.created_at)).limit(1)
         result = await session.execute(stmt)
         analysis_record = result.scalar_one_or_none()
         
         if not analysis_record:
             logger.info("   No existing analysis found, running analysis...")
-            analysis_report = await analysis_engine.analyze_repository(request.repo_path)
             
-            # Store analysis
+            # Get files from plan's file classifications
+            file_classifications = plan.file_classifications or []
+            if not file_classifications:
+                raise HTTPException(status_code=400, detail="Processing plan has no classified files")
+            
+            # Convert file classifications to file list for analysis
+            files = [{
+                "file_path": fc.file_path,
+                "relative_path": fc.relative_path,
+                "size_bytes": fc.size_bytes,
+                "extension": fc.extension,
+                "language": fc.language,
+                "is_code": fc.is_code,
+                "is_test": fc.is_test,
+                "is_doc": fc.is_doc,
+                "importance_level": fc.importance_level,
+                "importance_score": fc.importance_score
+            } for fc in file_classifications]
+            
+            logger.info(f"   Loaded {len(files)} files for analysis")
+            
+            # Run analysis
+            pipeline_logger.log_step("Running analysis engine",
+                plan_id=request.plan_id,
+                files=len(files)
+            )
+            
+            analysis_report = await analysis_engine.analyze(
+                plan_id=request.plan_id,
+                files=files,
+                repo_path=request.repo_path
+            )
+            
+            pipeline_logger.log_checkpoint("Analysis complete",
+                files_analyzed=analysis_report.total_files,
+                services_detected=analysis_report.total_services
+            )
+            
+            # Generate repo_id
+            repo_id = request.repo_path.replace("/", "_").replace("\\", "_")[-500:]
+            
+            # Ensure repository context exists (required for foreign key)
+            from ...storage.models_analysis import RepositoryContextModel
+            
+            stmt_repo = select(RepositoryContextModel).where(
+                RepositoryContextModel.repo_id == repo_id
+            )
+            result_repo = await session.execute(stmt_repo)
+            repo_context = result_repo.scalar_one_or_none()
+            
+            if not repo_context:
+                logger.info(f"   Creating repository context for {repo_id}...")
+                repo_context = RepositoryContextModel(
+                    repo_id=repo_id,
+                    repo_name=repo_id.split("_")[-1] if "_" in repo_id else repo_id,
+                    architecture_type="unknown",
+                    service_count=1,
+                    endpoint_count=0,
+                    has_rest_api=False
+                )
+                session.add(repo_context)
+                await session.flush()  # Flush to get the repo in DB before FK reference
+                logger.info(f"   ✅ Repository context created")
+            
+            # Store analysis using proper field mapping
+            logger.info(f"   Storing analysis results to database...")
             analysis_record = AnalysisResultModel(
+                plan_id=request.plan_id,
+                repo_id=repo_id,
                 repo_path=request.repo_path,
-                analysis_data=analysis_report.to_dict()
+                **analysis_report.to_model_kwargs()  # Use helper method for correct field mapping
             )
             session.add(analysis_record)
             await session.commit()
+            logger.info(f"   ✅ Analysis complete and stored")
         else:
             logger.info("   Using existing analysis")
-            # Reconstruct analysis report from stored data
-            from ...services.analysis.analysis_engine import AnalysisReport
-            analysis_report = AnalysisReport(**analysis_record.analysis_data)
+            # Reconstruct analysis report from stored model data
+            from ...services.analysis.analysis_engine import (
+                AnalysisReport,
+                DependencyGraph,
+                TechnologyStack,
+                ArchitectureAnalysis,
+                ServiceMap
+            )
+            
+            # Reconstruct components from JSON fields
+            dep_graph = DependencyGraph(**analysis_record.dependency_graph) if analysis_record.dependency_graph else None
+            tech_stack = TechnologyStack(**analysis_record.technology_stack) if analysis_record.technology_stack else None
+            arch = ArchitectureAnalysis(**analysis_record.architecture_analysis) if analysis_record.architecture_analysis else None
+            svc_map = ServiceMap(**analysis_record.service_map) if analysis_record.service_map else None
+            
+            # Build AnalysisReport from model fields
+            analysis_report = AnalysisReport(
+                plan_id=analysis_record.plan_id,
+                repo_path=analysis_record.repo_path,
+                dependency_graph=dep_graph,
+                technology_stack=tech_stack,
+                architecture=arch,
+                service_map=svc_map,
+                total_files=analysis_record.total_files or 0,
+                total_languages=analysis_record.total_languages or 0,
+                total_frameworks=analysis_record.total_frameworks or 0,
+                total_services=analysis_record.total_services or 1,
+                modularity_score=analysis_record.modularity_score or 0.5,
+                analysis_complete=analysis_record.analysis_complete,
+                errors=analysis_record.errors or []
+            )
+            
+            pipeline_logger.log_checkpoint("Loaded existing analysis",
+                plan_id=analysis_record.plan_id,
+                services=analysis_report.total_services
+            )
         
         # 2. Configure documentation generation
         config = DocConfig(
@@ -149,7 +265,8 @@ async def generate_documentation(
             include_diagrams=request.include_diagrams,
             include_examples=request.include_examples,
             validate_between_passes=request.validate_between_passes,
-            min_quality_score=request.min_quality_score
+            min_quality_score=request.min_quality_score,
+            auto_queue_for_review=not request.skip_review  # Invert: skip_review=True means auto_queue=False
         )
         
         # 3. Generate documentation

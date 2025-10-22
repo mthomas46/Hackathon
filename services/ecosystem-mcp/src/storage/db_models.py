@@ -179,8 +179,8 @@ class IngestionJobModel(Base):
     
     # Constraints
     __table_args__ = (
-        CheckConstraint("documents_processed >= 0", name="ck_processed_nonnegative"),
-        CheckConstraint("documents_failed >= 0", name="ck_failed_nonnegative"),
+        CheckConstraint("processed_documents >= 0", name="ck_processed_nonnegative"),
+        CheckConstraint("failed_documents >= 0", name="ck_failed_nonnegative"),
         CheckConstraint("embeddings_generated >= 0", name="ck_embeddings_nonnegative"),
         CheckConstraint("total_cost_usd >= 0.0", name="ck_cost_nonnegative"),
         Index("idx_jobs_status_started", "status", "started_at"),

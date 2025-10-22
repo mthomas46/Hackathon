@@ -13,7 +13,7 @@ from slowapi.util import get_remote_address
 from ...storage import get_database
 from ...storage.chromadb_client import get_chroma_client
 from ...storage.repositories import DocumentRepository
-from ...services.models.ollama_client import get_ollama_client
+from ...services.embeddings.embedding_service import get_embedding_service
 from ...utils.cache_decorator import cache
 
 logger = logging.getLogger(__name__)
@@ -85,28 +85,27 @@ async def search_documents(search_request: SearchRequest, request: Request):
         HTTPException: If embedding generation or search fails
     """
     try:
-        # Step 1: Generate embedding for query using Ollama
+        # Step 1: Generate embedding for query using EmbeddingService
+        # This ensures we use the SAME model as ingestion (FastEmbed/BAAI or Ollama fallback)
         logger.info(f"Generating embedding for query: {search_request.query[:50]}...")
-        ollama = get_ollama_client()
+        embedding_service = get_embedding_service()
         
-        if not await ollama.is_available():
-            raise HTTPException(
-                status_code=503, 
-                detail="Ollama service unavailable - cannot generate query embedding"
-            )
+        # Generate query embedding with same backend as ingestion
+        embedding_result = await embedding_service.generate_embedding(search_request.query)
+        query_embedding = embedding_result["embedding"]
         
-        # Generate query embedding
-        query_embedding = await ollama.embed(
-            search_request.query
-        )
-
         if not query_embedding:
             raise HTTPException(
                 status_code=500,
                 detail="Failed to generate query embedding"
             )
 
-        logger.info(f"Query embedding generated: {len(query_embedding)} dimensions")
+        logger.info(
+            f"Query embedding generated: {len(query_embedding)} dimensions, "
+            f"model={embedding_result.get('model')}, "
+            f"backend={embedding_result.get('backend')}, "
+            f"duration={embedding_result.get('duration', 0):.3f}s"
+        )
 
         # Step 2: Search ChromaDB for similar vectors
         logger.info(f"Searching ChromaDB for {search_request.limit} similar documents...")

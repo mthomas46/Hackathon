@@ -251,6 +251,8 @@ class DocumentationOrchestrator:
             # Run Phase 5 quality validation if enabled
             if config.enable_quality_validation and final_status == DocStatus.COMPLETED:
                 logger.info("\n🔍 Running quality validation (Phase 5)...")
+                if not config.auto_queue_for_review:
+                    logger.info("   ⏭️  Review queue disabled - artifacts will not be queued for review")
                 try:
                     quality_results = await self._run_quality_validation(
                         doc_set=doc_set,
@@ -536,19 +538,25 @@ class DocumentationOrchestrator:
                     confidence_scores.append(conf_score)
                     
                     # Queue for review if needed
-                    if config.auto_queue_for_review and conf_score.requires_review:
-                        await review_manager.queue_for_review(
-                            artifact_id=artifact.get('id', 'unknown'),
-                            artifact_title=artifact.get('title', 'Untitled'),
-                            confidence_score=conf_score.overall_confidence,
-                            priority=conf_score.review_priority,
-                            issues=(
-                                comp_result.missing_sections[:3] +
-                                acc_result.code_example_issues[:3]
-                            ),
-                            recommendations=comp_result.recommendations[:5]
-                        )
-                        requiring_review += 1
+                    if conf_score.requires_review:
+                        if config.auto_queue_for_review:
+                            await review_manager.queue_for_review(
+                                artifact_id=artifact.get('id', 'unknown'),
+                                artifact_title=artifact.get('title', 'Untitled'),
+                                confidence_score=conf_score.overall_confidence,
+                                priority=conf_score.review_priority,
+                                issues=(
+                                    comp_result.missing_sections[:3] +
+                                    acc_result.code_example_issues[:3]
+                                ),
+                                recommendations=comp_result.recommendations[:5]
+                            )
+                            logger.info(f"📋 Queued for review: {artifact.get('title', 'Untitled')} (confidence: {conf_score.overall_confidence:.2f}, priority: {conf_score.review_priority})")
+                            requiring_review += 1
+                        else:
+                            logger.info(f"⏭️  Skipped review queue: {artifact.get('title', 'Untitled')} (confidence: {conf_score.overall_confidence:.2f}) - review disabled by request")
+                            # Still count as requiring review for metrics, but don't queue
+                            requiring_review += 1
                 
                 except Exception as e:
                     logger.warning(f"Failed to validate artifact {artifact.get('title', 'unknown')}: {e}")

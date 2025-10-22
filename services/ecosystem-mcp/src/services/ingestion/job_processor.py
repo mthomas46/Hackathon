@@ -492,6 +492,15 @@ class JobProcessor:
             await self._update_progress("scanning", 10, 100, message="Scanning repository for commits...")
             commits = await self._get_commits_for_mode(job.mode)
             
+            # Special handling for snapshot mode (no git history)
+            if job.mode == "snapshot" and not commits:
+                logger.info("📸 Snapshot mode: processing current filesystem state without git history")
+                await self._update_progress("processing", 0, 1, message="Processing current filesystem state (snapshot mode)")
+                
+                # Process current filesystem directly
+                snapshot_result = await self._process_snapshot_mode(job)
+                return snapshot_result
+            
             if not commits:
                 result["error"] = "No commits found"
                 await self._update_progress("failed", 0, 0, message="No commits found")
@@ -628,17 +637,488 @@ class JobProcessor:
         
         return result
     
+    async def _process_snapshot_mode(self, job: IngestionJobModel) -> Dict[str, Any]:
+        """
+        Process files in snapshot mode (no git history).
+        
+        Scans the current filesystem and processes all files directly without
+        accessing git history. This is useful for:
+        - Repositories with git corruption
+        - Quick ingestion without historical context
+        - Non-git directories (if supported)
+        
+        Args:
+            job: The ingestion job
+        
+        Returns:
+            Result dictionary with processing statistics
+        """
+        from pathlib import Path
+        import os
+        
+        result = {
+            "success": False,
+            "processed_documents": 0,
+            "total_documents": 0,
+            "failed_documents": 0,
+            "skipped_documents": 0,
+            "embeddings_generated": 0,
+            "embeddings_failed": 0,
+            "embeddings_skipped": 0,
+            "total_cost_usd": 0.0,
+            "error": None
+        }
+        
+        # Initialize embedding error tracking
+        self._embedding_errors = []
+        
+        try:
+            repo_path = Path(job.repo_path)
+            
+            # Scan for all files - NOW WITH ASYNC YIELDING
+            logger.info(f"📂 Scanning directory: {repo_path}")
+            all_files = []
+            
+            file_count = 0
+            for root, dirs, files in os.walk(repo_path):
+                # Skip common directories that shouldn't be processed
+                dirs[:] = [d for d in dirs if d not in {
+                    '.git', '__pycache__', 'node_modules', 'venv', 'env',
+                    '.venv', '.tox', 'dist', 'build', '.egg-info',
+                    'htmlcov', '.pytest_cache', '.mypy_cache', 'data',
+                    'pgdata', 'pg_wal', 'chroma_db', 'postgresql', 'redis',
+                    'backups', '.pytest_cache', '.mypy_cache', 'htmlcov',
+                    'node_modules', 'venv_audit', 'venv_hardening', 'venv_validation',
+                    'test_env', 'demo_venv', '.venv', 'logs'
+                }]
+                
+                # Yield control every 100 files to prevent blocking
+                for file in files:
+                    file_count += 1
+                    if file_count % 100 == 0:
+                        await asyncio.sleep(0)  # Yield control to event loop
+                        logger.debug(f"📂 Scanned {file_count} files...")
+                    file_path = Path(root) / file
+                    
+                    # Skip symlinks and special files
+                    if file_path.is_symlink() or not file_path.is_file():
+                        logger.debug(f"Skipping symlink/special file: {file}")
+                        continue
+                    
+                    # Skip binary files by extension
+                    binary_extensions = {
+                        '.so', '.pyc', '.pyd', '.dll', '.exe', '.bin', '.dat',
+                        '.db', '.sqlite', '.sqlite3', '.whl', '.egg', '.jar',
+                        '.class', '.o', '.a', '.dylib', '.png', '.jpg', '.jpeg',
+                        '.gif', '.ico', '.pdf', '.zip', '.tar', '.gz', '.bz2',
+                        '.7z', '.rar', '.mp3', '.mp4', '.avi', '.mov', '.woff',
+                        '.woff2', '.ttf', '.eot', '.otf', '.npz', '.npy'
+                    }
+                    
+                    if file_path.suffix.lower() in binary_extensions:
+                        logger.debug(f"Skipping binary file: {file}")
+                        continue
+                    
+                    # Skip files with no extension that are likely binary
+                    try:
+                        if not file_path.suffix and file_path.stat().st_size > 1024 * 1024:  # 1MB
+                            logger.debug(f"Skipping large file without extension: {file}")
+                            continue
+                    except (OSError, FileNotFoundError):
+                        logger.debug(f"Skipping inaccessible file: {file}")
+                        continue
+                    
+                    # Get relative path from repo root
+                    try:
+                        rel_path = file_path.relative_to(repo_path)
+                        all_files.append(str(rel_path))
+                    except ValueError:
+                        continue
+            
+            logger.info(f"📊 Found {len(all_files)} files to process")
+            
+            # 🛡️  SAFETY: Limit maximum files to prevent runaway processing
+            MAX_FILES_PER_JOB = 10000
+            if len(all_files) > MAX_FILES_PER_JOB:
+                logger.warning(
+                    f"⚠️  Too many files ({len(all_files)})! Limiting to {MAX_FILES_PER_JOB}. "
+                    f"Please use a more specific directory path."
+                )
+                all_files = all_files[:MAX_FILES_PER_JOB]
+            
+            result["total_documents"] = len(all_files)
+            
+            if not all_files:
+                result["success"] = True
+                result["error"] = "No files found in directory"
+                await self._update_progress("completed", 0, 0, message="No files found")
+                return result
+            
+            await self._update_progress("processing", 0, len(all_files), message=f"Processing {len(all_files)} files")
+            
+            # Process files in batches
+            batch_size = 50
+            for i in range(0, len(all_files), batch_size):
+                batch = all_files[i:i + batch_size]
+                
+                for file_path in batch:
+                    try:
+                        full_path = repo_path / file_path
+                        
+                        # Read file content
+                        try:
+                            content = full_path.read_text(encoding='utf-8', errors='ignore')
+                        except Exception as e:
+                            logger.debug(f"Skipping binary/unreadable file: {file_path}")
+                            result["skipped_documents"] += 1
+                            continue
+                        
+                        # Process the document
+                        doc_result = await self._process_snapshot_document(
+                            file_path=str(file_path),
+                            content=content,
+                            job=job
+                        )
+                        
+                        if doc_result["success"]:
+                            # Check if it was skipped (duplicate)
+                            if doc_result.get("skipped"):
+                                result["skipped_documents"] += 1
+                                # Track if duplicate had embedding
+                                if doc_result.get("embedding_exists"):
+                                    result["embeddings_skipped"] += 1
+                            else:
+                                result["processed_documents"] += 1
+                                # Track embedding results
+                                if doc_result.get("embedding_generated"):
+                                    result["embeddings_generated"] += 1
+                                elif doc_result.get("embedding_error"):
+                                    result["embeddings_failed"] += 1
+                                    logger.warning(f"⚠️  Embedding failed for {file_path}: {doc_result['embedding_error']}")
+                        else:
+                            result["failed_documents"] += 1
+                            if doc_result.get("embedding_error"):
+                                result["embeddings_failed"] += 1
+                    
+                    except Exception as e:
+                        logger.error(f"Error processing {file_path}: {e}")
+                        result["failed_documents"] += 1
+                
+                # Update progress after each batch
+                processed_so_far = min(i + batch_size, len(all_files))
+                await self._update_progress(
+                    "processing",
+                    processed_so_far,
+                    len(all_files),
+                    message=f"Processed {processed_so_far}/{len(all_files)} files",
+                    processed=result["processed_documents"],
+                    failed=result["failed_documents"],
+                    skipped=result["skipped_documents"],
+                    embeddings=result["embeddings_generated"]
+                )
+            
+            result["success"] = True
+            await self._update_progress(
+                "completed",
+                result["total_documents"],
+                result["total_documents"],
+                message=f"Snapshot complete: {result['processed_documents']} processed",
+                processed=result["processed_documents"],
+                failed=result["failed_documents"],
+                skipped=result["skipped_documents"],
+                embeddings=result["embeddings_generated"]
+            )
+            
+            # Calculate embedding coverage
+            embedding_coverage = 0
+            if result['processed_documents'] > 0:
+                embedding_coverage = (result['embeddings_generated'] / result['processed_documents']) * 100
+            
+            logger.info(
+                f"✅ Snapshot mode complete: "
+                f"{result['processed_documents']}/{result['total_documents']} documents, "
+                f"{result['skipped_documents']} skipped"
+            )
+            logger.info(
+                f"📊 Embeddings: {result['embeddings_generated']} generated, "
+                f"{result['embeddings_failed']} failed, "
+                f"{result['embeddings_skipped']} skipped (duplicates), "
+                f"coverage: {embedding_coverage:.1f}%"
+            )
+            
+            # Log embedding errors summary if any
+            if self._embedding_errors:
+                logger.error(f"⚠️  Embedding errors encountered: {len(self._embedding_errors)} total")
+                error_types = {}
+                for err in self._embedding_errors[:10]:  # Show first 10
+                    error_type = err.get("error_type", "unknown")
+                    error_types[error_type] = error_types.get(error_type, 0) + 1
+                    logger.error(f"   - {err['file_path']}: {err['error'][:100]}")
+                
+                if len(self._embedding_errors) > 10:
+                    logger.error(f"   ... and {len(self._embedding_errors) - 10} more")
+                
+                logger.error(f"📊 Error types: {error_types}")
+        
+        except Exception as e:
+            logger.error(f"Error in snapshot mode: {e}", exc_info=True)
+            result["error"] = str(e)
+            await self._update_progress("failed", 0, 0, message=f"Failed: {str(e)}", error=str(e))
+        
+        return result
+    
+    async def _process_snapshot_document(
+        self,
+        file_path: str,
+        content: str,
+        job: IngestionJobModel
+    ) -> Dict[str, Any]:
+        """
+        Process a single document in snapshot mode.
+        
+        Args:
+            file_path: Relative path to file
+            content: File content
+            job: The ingestion job
+        
+        Returns:
+            Result dictionary
+        """
+        from ...storage.repositories import DocumentRepository
+        from ...storage import get_database
+        from ...storage.db_models import DocumentModel
+        import hashlib
+        
+        try:
+            # Generate content hash for deduplication
+            content_hash = hashlib.sha256(content.encode()).hexdigest()
+            
+            # Normalize the document
+            from ..processing.normalizer_factory import NormalizerFactory
+            normalizer_factory = NormalizerFactory()
+            
+            file_extension = Path(file_path).suffix
+            if not file_extension:
+                file_extension = '.txt'  # Default for files without extension
+            
+            normalizer = normalizer_factory.get_normalizer(file_extension)
+            
+            # Call with correct signature: content, file_path, metadata
+            norm_result = await normalizer.normalize(
+                content=content,
+                file_path=file_path,
+                metadata={"ingestion_job_id": str(job.id), "mode": "snapshot"}
+            )
+            normalized_content = norm_result["content"]
+            
+            # Store in database
+            db = get_database()
+            async with db.session() as session:
+                doc_repo = DocumentRepository(session)
+                
+                # Check for duplicates (handle multiple rows gracefully)
+                from sqlalchemy import select
+                result_query = await session.execute(
+                    select(DocumentModel)
+                    .where(DocumentModel.content_hash == content_hash)
+                    .where(DocumentModel.is_latest == True)
+                    .limit(1)
+                )
+                existing = result_query.scalar_one_or_none()
+                
+                # Check for duplicates and handle missing embeddings
+                if existing:
+                    # Check if embedding is missing
+                    needs_embedding = not existing.embedding_id
+                    
+                    if needs_embedding:
+                        logger.warning(
+                            f"⚠️  Document exists but MISSING EMBEDDING: {file_path} "
+                            f"(doc_id: {existing.id}) - will generate embedding"
+                        )
+                        # Use existing document and generate embedding
+                        document = existing
+                        should_generate_embedding = True
+                        is_new_document = False
+                    else:
+                        logger.debug(f"⏭️  Skipping duplicate with embedding: {file_path}")
+                        return {
+                            "success": True,
+                            "duplicate": True,
+                            "skipped": True,
+                            "embedding_generated": False,
+                            "embedding_exists": True
+                        }
+                else:
+                    # Create new document
+                    document = DocumentModel(
+                        service_name="snapshot",
+                        file_path=file_path,
+                        original_format=file_extension,
+                        original_content=content[:10000] if len(content) <= 10000 else content[:10000] + "...",
+                        normalized_content=normalized_content,
+                        content_hash=content_hash,
+                        ingestion_mode="snapshot",
+                        version=1,
+                        is_latest=True,
+                        doc_metadata={
+                            "ingestion_job_id": str(job.id),
+                            "mode": "snapshot",
+                            "snapshot": True,
+                            "word_count": len(normalized_content.split())
+                        }
+                    )
+                    document = await doc_repo.create(document)
+                    await session.commit()
+                    should_generate_embedding = True
+                    is_new_document = True
+                
+                # Generate embedding if needed
+                embedding_generated = False
+                embedding_error = None
+                
+                if should_generate_embedding and self.embedding_service:
+                    try:
+                        # Log embedding attempt
+                        logger.debug(f"🔄 Attempting embedding generation for {file_path} ({len(normalized_content)} chars)")
+                        
+                        # Generate embedding vector with timing
+                        import time
+                        start_time = time.time()
+                        embedding_result = await self.embedding_service.generate_embedding(normalized_content)
+                        duration = time.time() - start_time
+                        
+                        logger.debug(f"✅ Embedding generated in {duration:.2f}s for {file_path}")
+                        
+                        # Extract and validate embedding vector
+                        if isinstance(embedding_result, dict):
+                            embedding_vector = embedding_result.get("embedding")
+                            if not embedding_vector:
+                                raise ValueError("Embedding result missing 'embedding' key")
+                            model = embedding_result.get("model", "unknown")
+                        else:
+                            embedding_vector = embedding_result
+                            model = "unknown"
+                        
+                        if not embedding_vector or len(embedding_vector) == 0:
+                            raise ValueError(f"Empty embedding vector returned (type: {type(embedding_vector)})")
+                        
+                        logger.debug(f"📊 Embedding vector: {len(embedding_vector)} dimensions, model: {model}")
+                        
+                        # Store in ChromaDB
+                        chroma = get_chroma_client()
+                        
+                        logger.debug(f"💾 Storing embedding in ChromaDB for {file_path}")
+                        await chroma.add_embeddings(
+                            embeddings=[embedding_vector],
+                            metadatas=[{
+                                "id": str(document.id),
+                                "file_path": file_path,
+                                "service_name": "snapshot",
+                                "ingestion_mode": "snapshot",
+                                "content_hash": content_hash,
+                                "job_id": str(job.id),
+                                "content": normalized_content[:1000],
+                                "embedding_duration_sec": duration,
+                                "embedding_model": model,
+                                "timestamp": time.time()
+                            }],
+                            ids=[str(document.id)]
+                        )
+                        
+                        logger.debug(f"✅ Stored embedding in ChromaDB for {file_path}")
+                        
+                        # Create entry in embeddings table
+                        from ...storage.db_models import EmbeddingModel
+                        from uuid import uuid4
+                        
+                        embedding_record = EmbeddingModel(
+                            id=uuid4(),
+                            document_id=document.id,
+                            chroma_id=str(document.id),
+                            model=model,
+                            dimensions=len(embedding_vector),
+                            token_count=len(normalized_content.split()),
+                            cost_usd=0.0,  # Local embeddings are free
+                            extra_metadata={
+                                "duration_sec": duration,
+                                "backend": "fastembed" if "BAAI" in model else "ollama"
+                            }
+                        )
+                        session.add(embedding_record)
+                        await session.flush()  # Get the ID
+                        
+                        # Update document with embedding reference
+                        document.embedding_id = embedding_record.id
+                        await session.commit()
+                        
+                        embedding_generated = True
+                        logger.info(
+                            f"✅ EMBEDDING SUCCESS: {file_path} "
+                            f"({duration:.2f}s, {len(embedding_vector)} dims, model: {model})"
+                        )
+                        
+                    except Exception as e:
+                        embedding_error = str(e)
+                        error_type = type(e).__name__
+                        
+                        # Check if it's a circuit breaker error
+                        if "CircuitBreaker" in error_type or "circuit" in str(e).lower():
+                            logger.error(f"🔴 EMBEDDING BLOCKED (circuit breaker): {file_path}")
+                            logger.error(f"   Reason: {embedding_error}")
+                        else:
+                            logger.error(f"❌ EMBEDDING FAILED: {file_path}")
+                            logger.error(f"   Error type: {error_type}")
+                            logger.error(f"   Error message: {embedding_error}")
+                            logger.error(f"   Content length: {len(normalized_content)} chars")
+                            logger.error(f"   Content preview: {normalized_content[:100]}...")
+                        
+                        # Track embedding errors for summary
+                        if not hasattr(self, '_embedding_errors'):
+                            self._embedding_errors = []
+                        self._embedding_errors.append({
+                            "file_path": file_path,
+                            "error": embedding_error,
+                            "error_type": error_type,
+                            "timestamp": time.time()
+                        })
+                elif not self.embedding_service:
+                    logger.warning(f"⚠️  No embedding service configured - skipping embedding for {file_path}")
+            
+            return {
+                "success": True,
+                "duplicate": False,
+                "skipped": False,
+                "embedding_generated": embedding_generated,
+                "embedding_error": embedding_error,
+                "is_new_document": is_new_document
+            }
+        
+        except Exception as e:
+            logger.error(f"❌ Error processing snapshot document {file_path}: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": str(e),
+                "embedding_generated": False,
+                "embedding_error": str(e),
+                "skipped": False
+            }
+    
     async def _get_commits_for_mode(self, mode: str) -> List[Any]:
         """
         Get commits based on ingestion mode.
         
         Args:
-            mode: Ingestion mode (quick, full, incremental, recent)
+            mode: Ingestion mode (quick, full, incremental, recent, snapshot)
         
         Returns:
-            List of GitCommit objects
+            List of GitCommit objects (empty list for snapshot mode)
         """
-        if mode == "quick":
+        if mode == "snapshot":
+            # Snapshot mode: no git history, just current state
+            logger.info("📸 Snapshot mode: skipping git history, will process current files only")
+            return []  # Empty list signals to use current filesystem state
+        elif mode == "quick":
             # Last 10 commits
             return await self.git_service.get_recent_commits(limit=10)
         elif mode == "recent":

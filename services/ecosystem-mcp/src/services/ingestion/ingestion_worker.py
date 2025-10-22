@@ -52,20 +52,36 @@ class IngestionWorker:
         
         Begins polling Redis streams for ingestion jobs and processing them.
         """
+        logger.info(f"🚀 start() called, current running state: {self.running}")
+        
         if self.running:
             logger.warning("IngestionWorker already running")
             return
         
         # Setup graceful shutdown handler
+        logger.info("🔧 Setting up graceful shutdown handler...")
         self.shutdown_handler = get_shutdown_handler(
             max_shutdown_time=60,
             checkpoint_callback=self._save_checkpoint,
             cleanup_callback=self._cleanup
         )
+        logger.info("✅ Shutdown handler setup complete")
         
         self.running = True
+        logger.info(f"🚀 Creating worker loop task...")
         self._task = asyncio.create_task(self._worker_loop())
+        logger.info(f"✅ Task created: {self._task}")
         logger.info("✅ IngestionWorker started with graceful shutdown handler")
+        
+        # Give the task a moment to start
+        await asyncio.sleep(0.1)
+        logger.info(f"🔍 Task status after 0.1s: {self._task}")
+        if self._task.done():
+            try:
+                result = self._task.result()
+                logger.error(f"❌ Task completed immediately with result: {result}")
+            except Exception as e:
+                logger.error(f"❌ Task failed immediately: {e}", exc_info=True)
     
     async def stop(self):
         """
@@ -95,9 +111,15 @@ class IngestionWorker:
         
         Continuously polls Redis streams for new jobs and processes them.
         """
-        logger.info("Worker loop started")
+        logger.info("🔄 Worker loop started")
+        logger.info(f"🔄 Worker ID: {self.worker_id}")
+        logger.info(f"🔄 Running flag: {self.running}")
         
+        loop_count = 0
         while self.running:
+            loop_count += 1
+            logger.info(f"🔄 Worker loop iteration #{loop_count}")
+            
             try:
                 # Check for shutdown request
                 if is_shutdown_requested():
@@ -107,19 +129,43 @@ class IngestionWorker:
                     break
                 
                 # Get next job from Redis stream
+                logger.info(f"📡 Calling _get_next_job()...")
                 result = await self._get_next_job()
+                logger.info(f"📡 _get_next_job() returned: {result}")
                 
                 if result:
                     message_id, job_id = result
                     self.current_job_id = job_id
                     
-                    logger.info(f"Processing job: {job_id}")
+                    logger.info(f"🎯 Processing job: {job_id}")
                     
                     # Mark that we're finishing current work
                     if self.shutdown_handler and is_shutdown_requested():
                         await self.shutdown_handler.finish_current_work(f"job {job_id}")
                     
-                    await self._process_job(job_id)
+                    # Add timeout to prevent jobs from blocking forever
+                    try:
+                        logger.info(f"⏱️  Starting job processing with 10 minute timeout...")
+                        await asyncio.wait_for(
+                            self._process_job(job_id),
+                            timeout=600  # 10 minutes max per job
+                        )
+                        logger.info(f"✅ Job processing completed: {job_id}")
+                    except asyncio.TimeoutError:
+                        logger.error(f"⏰ Job {job_id} timed out after 10 minutes!")
+                        # Mark job as failed due to timeout
+                        async with get_database().session() as session:
+                            from ...storage.repositories import IngestionJobRepository
+                            from datetime import datetime
+                            repo = IngestionJobRepository(session)
+                            job = await repo.get_by_id(job_id)
+                            if job:
+                                job.status = "failed"
+                                job.completed_at = datetime.utcnow()
+                                job.error_message = "Job timed out after 10 minutes"
+                                await repo.update(job)
+                                await session.commit()
+                                logger.info(f"✅ Marked job {job_id} as failed due to timeout")
                     
                     # ✅ CRITICAL: ACK the message after processing
                     redis = get_redis_client()
@@ -133,13 +179,17 @@ class IngestionWorker:
                     self.current_job_id = None
                 else:
                     # No jobs available, wait before checking again
+                    logger.info(f"😴 No jobs available, sleeping 5s...")
                     await asyncio.sleep(5)
             
             except Exception as e:
-                logger.error(f"Error in worker loop: {e}", exc_info=True)
+                logger.error(f"❌ Error in worker loop: {e}", exc_info=True)
+                logger.error(f"❌ Exception type: {type(e).__name__}")
+                logger.error(f"❌ Sleeping 10s before retry...")
                 await asyncio.sleep(10)  # Back off on errors
         
-        logger.info("✅ Worker loop stopped")
+        logger.info(f"✅ Worker loop stopped after {loop_count} iterations")
+        logger.info(f"✅ Final running flag: {self.running}")
     
     async def _get_next_job(self) -> Optional[tuple[str, UUID]]:
         """
@@ -149,9 +199,18 @@ class IngestionWorker:
             Tuple of (message_id, job_id) if available, None otherwise
         """
         try:
+            logger.info(f"🔍 _get_next_job() START")
             redis = get_redis_client()
+            logger.info(f"🔍 Got Redis client: {redis}")
+            logger.info(f"🔍 Redis connected: {redis._connected}")
+            
+            # 🔍 Enhanced logging to debug Redis stream issues
+            logger.info(f"🔍 Stream name: {redis.INGESTION_STREAM}")
+            logger.info(f"🔍 Consumer group: {redis.CONSUMER_GROUP}")
+            logger.info(f"🔍 Consumer name: worker-{self.worker_id}")
             
             # Read from ingestion stream
+            logger.info(f"🔍 Calling redis.read_from_stream()...")
             messages = await redis.read_from_stream(
                 stream=redis.INGESTION_STREAM,
                 consumer_name=f"worker-{self.worker_id}",
@@ -159,19 +218,26 @@ class IngestionWorker:
                 block=1000  # Block for 1 second
             )
             
+            logger.info(f"🔍 Redis returned {len(messages) if messages else 0} messages")
+            logger.info(f"🔍 Messages: {messages}")
+            
             if messages:
                 # Extract message_id and job_id from message
                 # messages is a list of (message_id, data) tuples
                 message_id, data = messages[0]
+                logger.info(f"📨 Received message {message_id}: {data}")
                 job_id_str = data.get("job_id")
                 
                 if job_id_str:
+                    logger.info(f"✅ Found job_id: {job_id_str}")
                     return (message_id, UUID(job_id_str))  # ✅ Return both!
+                else:
+                    logger.warning(f"⚠️  Message {message_id} missing job_id: {data}")
             
             return None
         
         except Exception as e:
-            logger.error(f"Error reading from Redis stream: {e}", exc_info=True)
+            logger.error(f"❌ Error reading from Redis stream: {e}", exc_info=True)
             return None
     
     async def _process_job(self, job_id: UUID):
@@ -181,28 +247,37 @@ class IngestionWorker:
         Args:
             job_id: ID of the job to process
         """
+        logger.info(f"📍 _process_job START: {job_id}")
+        
         async with get_database().session() as session:
             repo = IngestionJobRepository(session)
             
             try:
                 # Get job from database
+                logger.info(f"📍 Fetching job from database...")
                 job = await repo.get_by_id(job_id)
+                logger.info(f"📍 Job fetched: {job}")
                 
                 if not job:
-                    logger.error(f"Job not found: {job_id}")
+                    logger.error(f"❌ Job not found: {job_id}")
                     return
                 
                 # Update status to processing
+                logger.info(f"📍 Updating job status to 'processing'...")
                 job.status = "processing"
                 await repo.update(job)
                 await session.commit()
+                logger.info(f"📍 Status updated successfully")
                 
-                logger.info(f"Starting job {job_id}: mode={job.mode}, repo={job.repo_path}")
+                logger.info(f"📍 Starting job processor: mode={job.mode}, repo={job.repo_path}")
                 
                 # Process the job using JobProcessor
+                logger.info(f"📍 Calling job_processor.process()...")
                 result = await self.job_processor.process(job)
+                logger.info(f"📍 Job processor returned: success={result.get('success')}, processed={result.get('processed_documents')}")
                 
                 # Update job with results
+                logger.info(f"📍 Updating job with results...")
                 job.status = "completed" if result["success"] else "failed"
                 job.completed_at = datetime.utcnow()
                 job.processed_documents = result.get("processed_documents", 0)
@@ -215,8 +290,10 @@ class IngestionWorker:
                 if not result["success"]:
                     job.error_message = result.get("error", "Unknown error")
                 
+                logger.info(f"📍 Saving job updates to database...")
                 await repo.update(job)
                 await session.commit()
+                logger.info(f"📍 Job updates saved")
                 
                 if result["success"]:
                     logger.info(
@@ -228,6 +305,8 @@ class IngestionWorker:
                     )
                 else:
                     logger.error(f"❌ Job {job_id} failed: {result.get('error')}")
+                
+                logger.info(f"📍 _process_job END: {job_id}")
             
             except Exception as e:
                 logger.error(f"Error processing job {job_id}: {e}", exc_info=True)

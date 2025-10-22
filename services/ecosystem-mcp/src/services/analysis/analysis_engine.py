@@ -57,6 +57,58 @@ class AnalysisReport:
             'errors': self.errors
         }
         return result
+    
+    def to_model_kwargs(self) -> Dict:
+        """
+        Convert to kwargs for AnalysisResultModel constructor.
+        
+        Maps AnalysisReport fields to AnalysisResultModel column names.
+        Used when storing analysis results in the database.
+        """
+        dep_graph = self.dependency_graph
+        tech_stack = self.technology_stack
+        arch = self.architecture
+        svc_map = self.service_map
+        
+        return {
+            # Analysis Status
+            'analysis_complete': self.analysis_complete,
+            'errors': self.errors if self.errors else None,
+            
+            # Dependency Analysis
+            'has_dependency_graph': dep_graph is not None,
+            'total_nodes': len(dep_graph.nodes) if dep_graph else 0,
+            'total_edges': len(dep_graph.edges) if dep_graph else 0,
+            'circular_dependencies': dep_graph.cycles if dep_graph else None,
+            'topological_order': dep_graph.topological_order if dep_graph else None,
+            
+            # Technology Stack
+            'primary_language': max(tech_stack.languages.items(), key=lambda x: x[1])[0] if (tech_stack and tech_stack.languages) else None,
+            'total_languages': len(tech_stack.languages) if (tech_stack and tech_stack.languages) else 0,
+            'total_frameworks': len(tech_stack.frameworks) if (tech_stack and tech_stack.frameworks) else 0,
+            'total_databases': len(tech_stack.databases) if (tech_stack and tech_stack.databases) else 0,
+            
+            # Architecture
+            'primary_architecture': arch.primary_pattern.name if arch else None,
+            'architecture_confidence': arch.primary_pattern.confidence if arch else 0.0,
+            'secondary_architectures': [p.name for p in arch.secondary_patterns] if arch else None,
+            'detected_layers': arch.layers if arch else None,
+            
+            # Services
+            'total_services': svc_map.service_count if svc_map else 1,
+            'is_microservices': (svc_map.service_count > 1) if svc_map else False,
+            'service_dependencies': svc_map.dependencies if svc_map else None,
+            
+            # Summary Metrics
+            'total_files': self.total_files,
+            'modularity_score': self.modularity_score,
+            
+            # Full Reports (JSONB columns)
+            'dependency_graph': dep_graph.to_dict() if dep_graph else None,
+            'technology_stack': tech_stack.to_dict() if tech_stack else None,
+            'architecture_analysis': arch.to_dict() if arch else None,
+            'service_map': svc_map.to_dict() if svc_map else None
+        }
 
 
 class AnalysisEngine:
@@ -104,9 +156,9 @@ class AnalysisEngine:
         dependency_graph = None
         try:
             logger.info("📊 Step 1/4: Dependency analysis...")
-            dependency_graph = await self.dependency_analyzer.analyze_repository(
-                repo_path=repo_path,
-                files=files
+            dependency_graph = await self.dependency_analyzer.analyze_dependencies(
+                files=files,
+                repo_path=repo_path
             )
             logger.info(
                 f"   ✅ Found {len(dependency_graph.nodes)} nodes, "

@@ -106,6 +106,10 @@ class ArchitectureGenerator:
             )
             top_languages = [lang for lang, _ in sorted_langs[:3]]
         
+        # Format total_lines with proper handling
+        total_lines = getattr(analysis, 'total_lines', None)
+        total_lines_str = f"{total_lines:,}" if isinstance(total_lines, (int, float)) else "N/A"
+        
         content = f"""# System Architecture Overview
 
 ## Executive Summary
@@ -119,7 +123,7 @@ class ArchitectureGenerator:
 | Metric | Value |
 |--------|-------|
 | Total Files | {analysis.total_files:,} |
-| Lines of Code | {getattr(analysis, 'total_lines', 'N/A'):,} |
+| Lines of Code | {total_lines_str} |
 | Languages | {analysis.total_languages} |
 | Services | {total_services} |
 | Modularity Score | {analysis.modularity_score:.2f}/1.0 |
@@ -313,9 +317,9 @@ Total Components: {analysis.total_files if analysis.total_files < 100 else '100+
 
 ## Dependency Metrics
 
-- **Total Dependencies:** {len(dep_graph.dependencies)}
-- **Circular Dependencies:** {len(dep_graph.circular_dependencies)}
-- **Average Coupling:** {dep_graph.avg_coupling:.2f}
+- **Total Dependencies:** {len(dep_graph.edges)}
+- **Circular Dependencies:** {len(dep_graph.cycles)}
+- **Average Coupling:** {dep_graph.metrics.get('average_dependencies_per_file', 0):.2f}
 
 ## Dependency Graph
 
@@ -424,7 +428,7 @@ Total Services: {len(service_map.services)}
         if not analysis.dependency_graph:
             return "N/A"
         
-        avg_coupling = analysis.dependency_graph.avg_coupling
+        avg_coupling = analysis.dependency_graph.metrics.get('average_dependencies_per_file', 0)
         if avg_coupling <= 2:
             return "Low coupling - Well isolated components"
         elif avg_coupling <= 5:
@@ -505,8 +509,8 @@ Key indicators:
         
         if analysis.modularity_score < 0.5:
             issues.append("- High coupling between components")
-        if analysis.dependency_graph and len(analysis.dependency_graph.circular_dependencies) > 0:
-            issues.append(f"- {len(analysis.dependency_graph.circular_dependencies)} circular dependencies detected")
+        if analysis.dependency_graph and len(analysis.dependency_graph.cycles) > 0:
+            issues.append(f"- {len(analysis.dependency_graph.cycles)} circular dependencies detected")
         
         return '\n'.join(issues) if issues else "- No significant issues detected"
     
@@ -554,26 +558,29 @@ Key indicators:
         return '\n'.join(f"- **{fw}** ({count} file{'s' if count != 1 else ''})" 
                         for fw, count in list(frameworks.items())[:15])
     
-    def _format_databases(self, databases: Dict) -> str:
+    def _format_databases(self, databases: List) -> str:
         """Format databases."""
         if not databases:
             return "*No databases detected*"
         
-        return '\n'.join(f"- {db}" for db in databases.keys())
+        # databases is a list, not a dict
+        return '\n'.join(f"- {db}" for db in databases)
     
-    def _format_tools(self, tools: Dict) -> str:
+    def _format_tools(self, tools: List) -> str:
         """Format development tools."""
         if not tools:
             return "*No tools detected*"
         
-        return '\n'.join(f"- {tool}" for tool in list(tools.keys())[:10])
+        # tools is a list, not a dict
+        return '\n'.join(f"- {tool}" for tool in tools[:10])
     
-    def _format_deployment(self, deployment: Dict) -> str:
+    def _format_deployment(self, deployment: List) -> str:
         """Format deployment platforms."""
         if not deployment:
             return "*No deployment configuration detected*"
         
-        return '\n'.join(f"- {platform}" for platform in deployment.keys())
+        # deployment is a list, not a dict
+        return '\n'.join(f"- {platform}" for platform in deployment)
     
     def _assess_technology_choices(self, stack) -> str:
         """Assess technology choices."""
@@ -605,31 +612,33 @@ Consider reviewing for:
     def _describe_relationships(self, analysis) -> str:
         """Describe component relationships."""
         if analysis.dependency_graph:
-            return f"Components interact through {len(analysis.dependency_graph.dependencies)} dependencies."
+            return f"Components interact through {len(analysis.dependency_graph.edges)} dependencies."
         return "*Relationship analysis in progress*"
     
     def _format_dependency_graph(self, dep_graph) -> str:
         """Format dependency graph."""
-        if not dep_graph.dependencies:
+        if not dep_graph.edges:
             return "*No dependencies detected*"
         
-        sample = list(dep_graph.dependencies.items())[:5]
-        return '\n'.join(f"- `{src}` → {', '.join(f'`{d}`' for d in deps)}"
-                        for src, deps in sample)
+        # Take first 5 edges as samples
+        sample = dep_graph.edges[:5]
+        return '\n'.join(f"- `{edge.source_file}` → `{edge.target_file}` ({edge.import_type})"
+                        for edge in sample)
     
     def _format_circular_dependencies(self, dep_graph) -> str:
         """Format circular dependencies."""
-        if not dep_graph.circular_dependencies:
+        if not dep_graph.cycles:
             return "✅ No circular dependencies detected"
         
         return '\n'.join(f"- {' ↔ '.join(cycle)}" 
-                        for cycle in dep_graph.circular_dependencies[:5])
+                        for cycle in dep_graph.cycles[:5])
     
     def _analyze_coupling(self, dep_graph) -> str:
         """Analyze coupling metrics."""
-        return f"""Average coupling: {dep_graph.avg_coupling:.2f} dependencies per component
+        avg_coupling = dep_graph.metrics.get('average_dependencies_per_file', 0)
+        return f"""Average coupling: {avg_coupling:.2f} dependencies per component
 
-{self._describe_coupling_level(dep_graph.avg_coupling)}"""
+{self._describe_coupling_level(avg_coupling)}"""
     
     def _describe_coupling_level(self, avg_coupling: float) -> str:
         """Describe coupling level."""
@@ -642,7 +651,7 @@ Consider reviewing for:
     
     def _dependency_recommendations(self, dep_graph) -> str:
         """Generate dependency recommendations."""
-        if dep_graph.circular_dependencies:
+        if dep_graph.cycles:
             return "- Resolve circular dependencies to improve maintainability\n- Consider dependency injection"
         return "- Maintain current dependency structure"
     

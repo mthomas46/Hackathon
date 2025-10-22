@@ -9,8 +9,10 @@ import logging
 from typing import List, Dict, Any, Optional
 import time
 import os
+import httpx
 
 from ..models.ollama_client import get_ollama_client
+from ...utils.circuit_breaker import CircuitBreakerOpenError
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +62,15 @@ class EmbeddingService:
             backend = os.getenv("EMBEDDING_BACKEND", "service")
         
         self.backend = backend
-        self.ollama_client = None
         self.embedding_client = None
+        
+        # ALWAYS initialize Ollama client as fallback (even when using FastEmbed)
+        try:
+            self.ollama_client = get_ollama_client()
+            logger.debug("✅ Ollama client initialized as fallback")
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to initialize Ollama client: {e}")
+            self.ollama_client = None
         
         if self.backend == "service":
             try:
@@ -71,16 +80,15 @@ class EmbeddingService:
             except Exception as e:
                 logger.warning(f"⚠️  Failed to initialize FastEmbed client, falling back to Ollama: {e}")
                 self.backend = "ollama"
-                self.ollama_client = get_ollama_client()
         else:
-            self.ollama_client = get_ollama_client()
             logger.info("ℹ️  EmbeddingService initialized with Ollama backend (legacy)")
     
     async def generate_embedding(self, text: str) -> Dict[str, Any]:
         """
-        Generate embedding for a single text.
+        Generate embedding for a single text with smart retry.
         
         Routes to appropriate backend (FastEmbed service or Ollama).
+        Includes smart retry logic with health checks to auto-recover from transient failures.
         
         Args:
             text: Text to generate embedding for
@@ -91,29 +99,92 @@ class EmbeddingService:
                 "embedding": List[float],
                 "tokens": int,
                 "cost": float,
-                "model": str
+                "model": str,
+                "dimensions": int,
+                "backend": str
             }
         """
+        logger.debug(f"🔄 Generating embedding: text_len={len(text)}, backend={self.backend}")
+        start_time = time.time()
+        
         # Route to appropriate backend
         if self.backend == "service" and self.embedding_client:
             try:
                 result = await self.embedding_client.generate_embedding(text)
+                embedding = result["embedding"]
+                model = result["model"]
+                dimensions = len(embedding)
+                duration = time.time() - start_time
+                
+                logger.info(
+                    f"✅ FastEmbed embedding generated: "
+                    f"model={model}, dims={dimensions}, duration={duration:.3f}s"
+                )
+                
                 return {
-                    "embedding": result["embedding"],
+                    "embedding": embedding,
                     "tokens": result["tokens"],
                     "cost": 0.0,  # Local and free
-                    "model": result["model"],
-                    "duration": result["duration_ms"] / 1000
+                    "model": model,
+                    "dimensions": dimensions,
+                    "backend": "fastembed",
+                    "duration": duration
                 }
+            except CircuitBreakerOpenError as e:
+                # Smart retry: Check if service is actually healthy
+                logger.warning(f"⚠️  Circuit breaker OPEN for FastEmbed, checking health...")
+                
+                if await self._check_fastembed_health():
+                    logger.info(f"✅ FastEmbed service is healthy, resetting circuit breaker...")
+                    try:
+                        # Reset circuit breaker and retry
+                        await self.embedding_client.circuit_breaker.reset()
+                        result = await self.embedding_client.generate_embedding(text)
+                        logger.info(f"✅ Smart retry successful!")
+                        return {
+                            "embedding": result["embedding"],
+                            "tokens": result["tokens"],
+                            "cost": 0.0,
+                            "model": result["model"],
+                            "duration": result["duration_ms"] / 1000
+                        }
+                    except Exception as retry_error:
+                        logger.error(f"❌ Smart retry failed: {retry_error}")
+                        # Fall through to Ollama fallback
+                else:
+                    logger.warning(f"⚠️  FastEmbed service is unhealthy, falling back to Ollama")
+                    # Fall through to Ollama fallback
+                    
             except Exception as e:
                 logger.error(f"❌ FastEmbed service failed, falling back to Ollama: {e}")
                 # Fall through to Ollama fallback
         
-        # Ollama fallback
-        return await self._generate_with_ollama(text)
+        # Ollama fallback with smart retry
+        try:
+            return await self._generate_with_ollama(text)
+        except CircuitBreakerOpenError:
+            logger.warning(f"⚠️  Circuit breaker OPEN for Ollama, checking health...")
+            
+            if await self._check_ollama_health():
+                logger.info(f"✅ Ollama is healthy, resetting circuit breaker...")
+                try:
+                    await self.ollama_client.circuit_breaker.reset()
+                    return await self._generate_with_ollama(text)
+                except Exception as retry_error:
+                    logger.error(f"❌ Ollama smart retry failed: {retry_error}")
+                    raise
+            else:
+                logger.error(f"❌ Ollama is unhealthy and circuit breaker is OPEN")
+                raise
     
     async def _generate_with_ollama(self, text: str) -> Dict[str, Any]:
         """Generate embedding using Ollama (legacy)."""
+        # Check if Ollama client is available
+        if self.ollama_client is None:
+            error_msg = "Ollama client not initialized and FastEmbed unavailable"
+            logger.error(f"❌ {error_msg}")
+            raise RuntimeError(error_msg)
+        
         start_time = time.time()
         
         try:
@@ -136,13 +207,20 @@ class EmbeddingService:
             cost = 0.0  # Ollama is local and free
             
             duration = time.time() - start_time
-            logger.debug(f"Generated embedding: {len(embedding)} dimensions, {tokens} tokens, {duration:.2f}s")
+            dimensions = len(embedding)
+            
+            logger.info(
+                f"✅ Ollama embedding generated: "
+                f"model=nomic-embed-text, dims={dimensions}, tokens={tokens}, duration={duration:.3f}s"
+            )
             
             return {
                 "embedding": embedding,
                 "tokens": tokens,
                 "cost": cost,
                 "model": "nomic-embed-text",
+                "dimensions": dimensions,
+                "backend": "ollama",
                 "duration": duration
             }
         
@@ -239,4 +317,57 @@ class EmbeddingService:
             Estimated token count
         """
         return len(text) // 4
+    
+    async def _check_fastembed_health(self) -> bool:
+        """
+        Check if FastEmbed service is healthy.
+        
+        Returns:
+            True if service is reachable and healthy, False otherwise
+        """
+        if not self.embedding_client:
+            return False
+        
+        try:
+            # Get service URL from embedding client
+            service_url = os.getenv("EMBEDDING_SERVICE_URL", "http://ecosystem-mcp-embedding:8001")
+            
+            async with httpx.AsyncClient(timeout=2.0) as client:
+                response = await client.get(f"{service_url}/health")
+                
+                if response.status_code == 200:
+                    logger.info(f"✅ FastEmbed service health check: OK")
+                    return True
+                else:
+                    logger.warning(f"⚠️  FastEmbed service health check: HTTP {response.status_code}")
+                    return False
+                    
+        except Exception as e:
+            logger.warning(f"⚠️  FastEmbed service health check failed: {e}")
+            return False
+    
+    async def _check_ollama_health(self) -> bool:
+        """
+        Check if Ollama is healthy and accessible.
+        
+        Returns:
+            True if Ollama is reachable and healthy, False otherwise
+        """
+        if not self.ollama_client:
+            return False
+        
+        try:
+            # Check if Ollama is available
+            is_available = await self.ollama_client.is_available()
+            
+            if is_available:
+                logger.info(f"✅ Ollama health check: OK")
+                return True
+            else:
+                logger.warning(f"⚠️  Ollama health check: Not available")
+                return False
+                
+        except Exception as e:
+            logger.warning(f"⚠️  Ollama health check failed: {e}")
+            return False
 

@@ -157,13 +157,19 @@ async def start_ingestion(
         
         # Ensure Redis is connected (lazy connection)
         if not redis._connected or redis.client is None:
-            logger.warning("Redis not connected, connecting now...")
+            logger.warning("⚠️  Redis not connected, connecting now...")
             await redis.connect()
+            logger.info(f"✅ Redis connected: {redis._connected}")
         
-        await redis.add_to_stream(
+        # 🔍 Enhanced logging for Redis stream operations
+        logger.info(f"📤 Adding job to Redis stream: {redis.INGESTION_STREAM}")
+        logger.info(f"📤 Job data: job_id={job_id}, mode={request.mode}, repo_path={repo_path}")
+        
+        message_id = await redis.add_to_stream(
             stream=redis.INGESTION_STREAM,
             data={"job_id": job_id, "mode": request.mode, "repo_path": str(repo_path)}
         )
+        logger.info(f"✅ Job added to Redis stream with message_id: {message_id}")
         logger.info(f"✅ Ingestion job {job_id} created and queued for {repo_path}")
         
         return IngestResponse(
@@ -550,6 +556,76 @@ async def requeue_orphaned_jobs_endpoint(
     
     except Exception as e:
         logger.error(f"Failed to requeue orphaned jobs: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/redis/stream-status",
+    response_model=Dict[str, Any],
+    summary="Get Redis stream status",
+    description="Check the status of Redis streams for debugging"
+)
+async def get_redis_stream_status():
+    """
+    Get detailed status of Redis streams.
+    
+    Useful for debugging ingestion pipeline issues.
+    """
+    try:
+        redis = get_redis_client()
+        
+        if not redis._connected:
+            await redis.connect()
+        
+        status = {}
+        
+        # Check ingestion stream
+        try:
+            info = await redis.client.xinfo_stream(redis.INGESTION_STREAM)
+            status["ingestion_stream"] = {
+                "exists": True,
+                "length": info.get("length", 0),
+                "first_entry": info.get("first-entry"),
+                "last_entry": info.get("last-entry"),
+                "groups": info.get("groups", 0)
+            }
+            
+            # Get consumer group info
+            try:
+                group_info = await redis.client.xinfo_groups(redis.INGESTION_STREAM)
+                status["consumer_groups"] = [
+                    {
+                        "name": group["name"],
+                        "consumers": group.get("consumers", 0),
+                        "pending": group.get("pending", 0),
+                        "last_delivered_id": group.get("last-delivered-id")
+                    }
+                    for group in group_info
+                ]
+            except Exception as e:
+                status["consumer_groups"] = f"Error: {str(e)}"
+                
+        except Exception as e:
+            status["ingestion_stream"] = {"exists": False, "error": str(e)}
+        
+        # Check for pending messages
+        try:
+            pending = await redis.client.xpending(redis.INGESTION_STREAM, redis.CONSUMER_GROUP)
+            status["pending_messages"] = {
+                "count": pending.get("pending", 0) if isinstance(pending, dict) else pending,
+                "details": str(pending)
+            }
+        except Exception as e:
+            status["pending_messages"] = {"error": str(e)}
+        
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "redis_connected": redis._connected,
+            "status": status
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get Redis stream status: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -351,9 +351,10 @@ class ComponentGenerator:
         
         # Check if service has dependencies
         service_deps = []
-        for src, deps in analysis_report.dependency_graph.dependencies.items():
-            if service.root_path in src:
-                service_deps.extend(deps)
+        # dependency_graph.edges is a list of Dependency objects
+        for edge in analysis_report.dependency_graph.edges:
+            if service.root_path in edge.source_file:
+                service_deps.append(edge.target_file)
         
         if not service_deps:
             return "*No external dependencies detected*"

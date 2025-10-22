@@ -26,10 +26,11 @@ class CircuitState(Enum):
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker."""
-    failure_threshold: int = 5          # Failures before opening
-    success_threshold: int = 2          # Successes to close from half-open
-    timeout: float = 60.0               # Seconds before trying again (open -> half-open)
+    failure_threshold: int = 15         # Failures before opening (increased for stability)
+    success_threshold: int = 3          # Successes to close from half-open (increased)
+    timeout: float = 120.0              # Seconds before trying again (increased for recovery)
     expected_exception: type = Exception  # Which exceptions to count
+    startup_grace_period: float = 90.0  # Seconds to ignore failures during startup
     
 
 @dataclass
@@ -66,10 +67,11 @@ class CircuitBreaker:
     def __init__(
         self,
         name: str,
-        failure_threshold: int = 5,
-        success_threshold: int = 2,
-        timeout: float = 60.0,
-        expected_exception: type = Exception
+        failure_threshold: int = 15,
+        success_threshold: int = 3,
+        timeout: float = 120.0,
+        expected_exception: type = Exception,
+        startup_grace_period: float = 90.0
     ):
         """
         Initialize circuit breaker.
@@ -78,6 +80,7 @@ class CircuitBreaker:
             name: Name for logging
             failure_threshold: Consecutive failures before opening
             success_threshold: Successes in half-open to close
+            startup_grace_period: Seconds to ignore failures during startup
             timeout: Seconds to wait before trying again
             expected_exception: Exception type to catch
         """
@@ -86,15 +89,18 @@ class CircuitBreaker:
             failure_threshold=failure_threshold,
             success_threshold=success_threshold,
             timeout=timeout,
-            expected_exception=expected_exception
+            expected_exception=expected_exception,
+            startup_grace_period=startup_grace_period
         )
         self.stats = CircuitBreakerStats()
         self._lock = asyncio.Lock()
+        self._startup_time = time.time()  # Track when circuit breaker was created
         
         logger.info(
             f"Circuit breaker '{name}' initialized: "
             f"failure_threshold={failure_threshold}, "
-            f"timeout={timeout}s"
+            f"timeout={timeout}s, "
+            f"startup_grace_period={startup_grace_period}s"
         )
     
     def __call__(self, func: Callable) -> Callable:
@@ -186,6 +192,15 @@ class CircuitBreaker:
     async def _record_failure(self):
         """Record failed call."""
         async with self._lock:
+            # Check if we're in startup grace period
+            time_since_startup = time.time() - self._startup_time
+            if time_since_startup < self.config.startup_grace_period:
+                logger.debug(
+                    f"Circuit breaker '{self.name}': Ignoring failure during startup grace period "
+                    f"({time_since_startup:.1f}s / {self.config.startup_grace_period}s)"
+                )
+                return  # Don't count failures during startup
+            
             self.stats.failure_count += 1
             self.stats.total_failures += 1
             self.stats.last_failure_time = time.time()
@@ -225,6 +240,15 @@ class CircuitBreaker:
     
     def _record_failure_sync(self):
         """Record failed call (sync)."""
+        # Check if we're in startup grace period
+        time_since_startup = time.time() - self._startup_time
+        if time_since_startup < self.config.startup_grace_period:
+            logger.debug(
+                f"Circuit breaker '{self.name}': Ignoring failure during startup grace period "
+                f"({time_since_startup:.1f}s / {self.config.startup_grace_period}s)"
+            )
+            return  # Don't count failures during startup
+        
         self.stats.failure_count += 1
         self.stats.total_failures += 1
         self.stats.last_failure_time = time.time()
