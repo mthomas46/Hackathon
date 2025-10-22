@@ -439,3 +439,14 @@ scala_elm_crud_demo_v7/
 /services/ecosystem-mcp/data/ollama/models
 /services/ecosystem-mcp/data/postgresql/pgdata
 /services/ecosystem-mcp/data/postgresql
+
+# Large data files that should never be committed
+services/ecosystem-mcp/data/ollama/
+services/ecosystem-mcp/data/redis/
+services/ecosystem-mcp/data/chroma_db/
+services/ecosystem-mcp/data/embedding_models/
+services/doc-store/db.sqlite3
+*.aof
+*.bin
+*-results.json
+config_drift_report_*.json
