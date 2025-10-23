@@ -457,6 +457,7 @@ class TestEdgeCases:
         """Test timeline with no periods."""
         from src.storage.repositories import TimelineRepository, TimePeriodRepository
         from src.services.timeline import TimelineManager, PeriodGenerator
+        from src.models.timeline import TimelineCreate
         
         timeline_repo = TimelineRepository(clean_database)
         period_repo = TimePeriodRepository(clean_database)
@@ -464,15 +465,15 @@ class TestEdgeCases:
         period_generator = PeriodGenerator(period_repo)
         
         # Create timeline with same start/end date
-        timeline_data = {
-            "name": f"zero_period_{test_session_id[:8]}",
-            "service_name": "zero-test",
-            "repo_path": "/test",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2024, 1, 1),  # Same date
-            "strategy": "monthly",
-            "metadata": {"_test_data_marker": True}
-        }
+        timeline_data = TimelineCreate(
+            name=f"zero_period_{test_session_id[:8]}",
+            service_name="zero-test",
+            repo_path="/test",
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 1),  # Same date
+            strategy="monthly",
+            metadata={"_test_data_marker": True}
+        )
         timeline = await timeline_manager.create_timeline(timeline_data)
         
         # Try to generate periods
