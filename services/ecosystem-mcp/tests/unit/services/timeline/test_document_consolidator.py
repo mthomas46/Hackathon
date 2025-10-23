@@ -20,6 +20,7 @@ def sample_documents():
             "path": "/docs/auth.md",
             "content": "Authentication documentation for OAuth2",
             "last_modified": datetime(2024, 1, 1, tzinfo=timezone.utc),
+            "updated_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
             "content_hash": "abc123"
         },
         {
@@ -27,6 +28,7 @@ def sample_documents():
             "path": "/docs/authentication.md",
             "content": "Authentication documentation for OAuth2",
             "last_modified": datetime(2024, 1, 2, tzinfo=timezone.utc),
+            "updated_at": datetime(2024, 1, 2, tzinfo=timezone.utc),
             "content_hash": "abc123"  # Same hash = duplicate
         },
         {
@@ -34,6 +36,7 @@ def sample_documents():
             "path": "/docs/api.md",
             "content": "API documentation with endpoints",
             "last_modified": datetime(2024, 1, 3, tzinfo=timezone.utc),
+            "updated_at": datetime(2024, 1, 3, tzinfo=timezone.utc),
             "content_hash": "def456"
         },
         {
@@ -41,6 +44,7 @@ def sample_documents():
             "path": "/docs/api_guide.md",
             "content": "API documentation with endpoint descriptions",
             "last_modified": datetime(2024, 1, 4, tzinfo=timezone.utc),
+            "updated_at": datetime(2024, 1, 4, tzinfo=timezone.utc),
             "content_hash": "def789"  # Similar but not identical
         }
     ]
@@ -174,15 +178,15 @@ class TestMergeRecommendations:
             
             if len(recommendations) > 0:
                 rec = recommendations[0]
-                assert "source_ids" in rec or "target_id" in rec or "documents" in rec
+                assert "source_document" in rec or "target_document" in rec or "similarity" in rec
     
     async def test_merge_recommendations_include_rationale(self):
         """Test that merge recommendations include reasoning."""
         consolidator = DocumentConsolidator()
         
         docs = [
-            {"id": 1, "content": "Same content", "content_hash": "same", "path": "/docs/1.md"},
-            {"id": 2, "content": "Same content", "content_hash": "same", "path": "/docs/2.md"}
+            {"id": 1, "content": "Same content", "content_hash": "same", "path": "/docs/1.md", "updated_at": datetime(2024, 1, 1, tzinfo=timezone.utc)},
+            {"id": 2, "content": "Same content", "content_hash": "same", "path": "/docs/2.md", "updated_at": datetime(2024, 1, 2, tzinfo=timezone.utc)}
         ]
         
         with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
@@ -374,11 +378,11 @@ class TestConsolidationPriority:
         
         # Many duplicates of one doc = high impact
         docs = [
-            {"id": i, "content": "Popular doc", "content_hash": "pop", "path": f"/docs/pop_{i}.md"}
+            {"id": i, "content": "Popular doc", "content_hash": "pop", "path": f"/docs/pop_{i}.md", "updated_at": datetime(2024, 1, i+1, tzinfo=timezone.utc)}
             for i in range(5)
         ] + [
-            {"id": 10, "content": "Rare doc 1", "content_hash": "r1", "path": "/docs/rare1.md"},
-            {"id": 11, "content": "Rare doc 2", "content_hash": "r2", "path": "/docs/rare2.md"}
+            {"id": 10, "content": "Rare doc 1", "content_hash": "r1", "path": "/docs/rare1.md", "updated_at": datetime(2024, 1, 10, tzinfo=timezone.utc)},
+            {"id": 11, "content": "Rare doc 2", "content_hash": "r2", "path": "/docs/rare2.md", "updated_at": datetime(2024, 1, 11, tzinfo=timezone.utc)}
         ]
         
         with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
@@ -399,14 +403,16 @@ class TestConsolidationPriority:
                 "content": "Large content " * 1000,
                 "content_hash": "large",
                 "size": 10000,
-                "path": "/docs/large1.md"
+                "path": "/docs/large1.md",
+                "updated_at": datetime(2024, 1, 1, tzinfo=timezone.utc)
             },
             {
                 "id": 2,
                 "content": "Large content " * 1000,
                 "content_hash": "large",
                 "size": 10000,
-                "path": "/docs/large2.md"
+                "path": "/docs/large2.md",
+                "updated_at": datetime(2024, 1, 2, tzinfo=timezone.utc)
             }
         ]
         
