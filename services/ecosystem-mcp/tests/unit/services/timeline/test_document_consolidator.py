@@ -131,21 +131,27 @@ class TestSimilarityDetection:
         ]
         
         # High threshold - should not match
-        consolidator_strict = DocumentConsolidator(similarity_threshold=0.95)
+        consolidator_strict = DocumentConsolidator()
         
         with patch.object(consolidator_strict, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = docs
             
-            result_strict = await consolidator_strict.analyze_consolidation_opportunities(service_name="test-service")
+            result_strict = await consolidator_strict.analyze_consolidation_opportunities(
+                service_name="test-service", 
+                similarity_threshold=0.95
+            )
             assert result_strict is not None
         
         # Low threshold - should match
-        consolidator_lenient = DocumentConsolidator(similarity_threshold=0.5)
+        consolidator_lenient = DocumentConsolidator()
         
         with patch.object(consolidator_lenient, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = docs
             
-            result_lenient = await consolidator_lenient.analyze_consolidation_opportunities(service_name="test-service")
+            result_lenient = await consolidator_lenient.analyze_consolidation_opportunities(
+                service_name="test-service",
+                similarity_threshold=0.5
+            )
             assert result_lenient is not None
 
 
@@ -174,8 +180,8 @@ class TestMergeRecommendations:
         consolidator = DocumentConsolidator()
         
         docs = [
-            {"id": 1, "content": "Same content", "content_hash": "same"},
-            {"id": 2, "content": "Same content", "content_hash": "same"}
+            {"id": 1, "content": "Same content", "content_hash": "same", "path": "/docs/1.md"},
+            {"id": 2, "content": "Same content", "content_hash": "same", "path": "/docs/2.md"}
         ]
         
         with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
@@ -230,9 +236,9 @@ class TestConsolidationMetrics:
         consolidator = DocumentConsolidator()
         
         docs = [
-            {"id": 1, "content": "Same", "content_hash": "same"},
-            {"id": 2, "content": "Same", "content_hash": "same"},
-            {"id": 3, "content": "Different", "content_hash": "diff"}
+            {"id": 1, "content": "Same", "content_hash": "same", "path": "/docs/1.md"},
+            {"id": 2, "content": "Same", "content_hash": "same", "path": "/docs/2.md"},
+            {"id": 3, "content": "Different", "content_hash": "diff", "path": "/docs/3.md"}
         ]
         
         with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
@@ -303,7 +309,7 @@ class TestRedundancyScore:
     async def test_high_redundancy_when_many_duplicates(self):
         """Test high redundancy score with many duplicates."""
         duplicates = [
-            {"id": i, "content": "Same", "content_hash": "same"}
+            {"id": i, "content": "Same", "content_hash": "same", "path": f"/docs/{i}.md"}
             for i in range(10)
         ]
         
@@ -367,11 +373,11 @@ class TestConsolidationPriority:
         
         # Many duplicates of one doc = high impact
         docs = [
-            {"id": i, "content": "Popular doc", "content_hash": "pop"}
+            {"id": i, "content": "Popular doc", "content_hash": "pop", "path": f"/docs/pop_{i}.md"}
             for i in range(5)
         ] + [
-            {"id": 10, "content": "Rare doc 1", "content_hash": "r1"},
-            {"id": 11, "content": "Rare doc 2", "content_hash": "r2"}
+            {"id": 10, "content": "Rare doc 1", "content_hash": "r1", "path": "/docs/rare1.md"},
+            {"id": 11, "content": "Rare doc 2", "content_hash": "r2", "path": "/docs/rare2.md"}
         ]
         
         with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
@@ -391,13 +397,15 @@ class TestConsolidationPriority:
                 "id": 1,
                 "content": "Large content " * 1000,
                 "content_hash": "large",
-                "size": 10000
+                "size": 10000,
+                "path": "/docs/large1.md"
             },
             {
                 "id": 2,
                 "content": "Large content " * 1000,
                 "content_hash": "large",
-                "size": 10000
+                "size": 10000,
+                "path": "/docs/large2.md"
             }
         ]
         
@@ -425,7 +433,7 @@ class TestConsolidationInsights:
             
             # Should include insights or recommendations
             assert result is not None
-            assert "insights" in result or "recommendations" in result or "duplicates" in result
+            assert "consolidation_recommendations" in result
     
     async def test_identify_consolidation_patterns(self):
         """Test identifying patterns in duplication."""
