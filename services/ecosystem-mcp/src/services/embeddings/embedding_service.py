@@ -371,3 +371,19 @@ class EmbeddingService:
             logger.warning(f"⚠️  Ollama health check failed: {e}")
             return False
 
+
+# Module-level convenience function for backward compatibility and testing
+async def generate_embedding(text: str) -> List[float]:
+    """
+    Generate embedding for text (convenience function).
+    
+    Args:
+        text: Text to embed
+    
+    Returns:
+        Embedding vector
+    """
+    service = get_embedding_service()
+    result = await service.generate_embedding(text)
+    return result["embedding"]
+

@@ -196,3 +196,9 @@ async def close_database():
         _database = None
     logger.info("Database closed")
 
+
+# Re-export DatabaseSession for convenience
+from .database_session import DatabaseSession, get_database_session
+
+__all__ = ["Database", "get_database", "DatabaseSession", "get_database_session"]
+

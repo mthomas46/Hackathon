@@ -160,6 +160,33 @@ class IngestionService:
                 logger.warning(f"⚠️ Failed to cancel job: {job_id}")
             
             return success
+    
+    async def ingest(
+        self,
+        repo_path: str,
+        mode: str = "standard",
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Ingest documents from a repository (convenience method).
+        
+        Args:
+            repo_path: Path to repository
+            mode: Ingestion mode
+            metadata: Optional metadata
+        
+        Returns:
+            Ingestion result
+        """
+        logger.info(f"Starting ingestion: repo={repo_path}, mode={mode}")
+        
+        # Create job
+        job = await self.create_job(repo_path, mode, metadata)
+        
+        # Process job
+        result = await self.process_job(job)
+        
+        return result
 
 
 # Singleton instance
