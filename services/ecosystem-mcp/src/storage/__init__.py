@@ -6,6 +6,7 @@ Provides database access through repository pattern.
 
 from .database import Database, get_database
 from .chromadb_client import ChromaDBClient, get_chroma_client
+from .database_session import DatabaseSession, get_database_session
 
 # FastAPI dependency for getting database session
 async def get_session():
@@ -76,6 +77,8 @@ __all__ = [
     "Database",
     "get_database",
     "get_session",
+    "DatabaseSession",
+    "get_database_session",
     "ChromaDBClient",
     "get_chroma_client",
     "init_database",
