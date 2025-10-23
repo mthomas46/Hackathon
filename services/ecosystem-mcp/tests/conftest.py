@@ -8,12 +8,16 @@ import os
 import sys
 import pytest
 import asyncio
+import logging
 from pathlib import Path
 from typing import AsyncGenerator
 
 # Add src to path
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 # Load test environment
 from dotenv import load_dotenv
@@ -66,18 +70,31 @@ async def test_redis_url() -> str:
     return os.getenv("REDIS_URL", "redis://localhost:6380/0")
 
 
+# Global flag to track if tables have been created
+_tables_created = False
+
+
 @pytest.fixture(scope="function")
 async def db_session(test_database_url: str) -> AsyncGenerator:
     """
     Provide a database session for tests.
     
     Automatically rolls back after each test to ensure isolation.
+    Creates tables on first run.
     """
+    global _tables_created
+    from src.storage.database import init_database, close_database, get_database
+    
     try:
-        from src.storage.database import init_database, close_database, get_database
-        
         # Initialize database
         await init_database()
+        
+        # Create tables once
+        if not _tables_created:
+            db = get_database()
+            await db.create_tables()
+            _tables_created = True
+            logger.info("✅ Test database tables created")
         
         # Get database instance and create session
         db = get_database()

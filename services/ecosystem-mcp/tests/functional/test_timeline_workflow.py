@@ -1,530 +1,814 @@
 """
-Functional tests for timeline workflow.
+Timeline Workflow Functional Tests
 
-Tests the complete timeline analysis pipeline:
-1. Create timelines from ingested documents
-2. Generate time periods (monthly, quarterly, adaptive)
-3. Place documents in correct periods
-4. Calculate temporal confidence
-5. Query timeline data
-6. Detect gaps and overlaps
+Tests the complete timeline workflow with real database:
+- Timeline creation with confidence validation
+- Period generation
+- Document placement
+- Gap and drift detection
+- Report generation
+
+These tests validate the full Phase 1-3 implementation using real database.
 """
 
 import pytest
+import asyncio
 from datetime import datetime, timedelta
+from typing import List
 from uuid import uuid4
 
-# Mark all tests in this module as functional and asyncio
-pytestmark = [pytest.mark.functional, pytest.mark.asyncio]
+# Import timeline services
+from src.services.timeline import (
+    TemporalConfidenceCalculator,
+    TimelineManager,
+    PeriodGenerator,
+    DocumentPlacer,
+    GapAnalyzer,
+    DriftDetector,
+    ReportGenerator,
+    DocumentConsolidator,
+)
+
+# Import models
+from src.models.timeline import (
+    Timeline,
+    TimelineCreate,
+    TimePeriod,
+    TemporalConfidence,
+    PeriodStrategy,
+)
+
+# Import storage
+from src.storage.repositories.document_repository import DocumentRepository
+from src.storage.repositories.timeline_repository import TimelineRepository
+
+# Import test helpers
+from tests.utils.test_helpers import create_test_document
 
 
-class TestTimelineCreation:
-    """Test timeline creation from ingested documents."""
+@pytest.mark.functional
+@pytest.mark.asyncio
+class TestTimelineWorkflow:
+    """Functional tests for timeline workflow with real database."""
     
-    async def test_create_timeline_from_documents(
+    async def _create_test_documents(
         self,
-        clean_database,
-        ecosystem_mcp_src_dir,
-        test_session_id
-    ):
+        db_session,
+        service_name: str,
+        git_history_count: int = 95,
+        snapshot_count: int = 5
+    ) -> List:
         """
-        Test creating a timeline from ingested documents.
+        Helper to create test documents in the database.
+        
+        Args:
+            db_session: Database session
+            service_name: Service name for documents
+            git_history_count: Number of documents with git history
+            snapshot_count: Number of snapshot documents
+            
+        Returns:
+            List of created document IDs
+        """
+        from src.storage.db_models import GitCommitModel
+        doc_repo = DocumentRepository(db_session)
+        doc_ids = []
+        
+        # Create documents with git history
+        for i in range(git_history_count):
+            # Create git commit first
+            commit_sha = f"abc{i:03d}"
+            commit_date = datetime.now() - timedelta(days=365-i)
+            
+            # Check if commit already exists
+            from sqlalchemy import select
+            result = await db_session.execute(
+                select(GitCommitModel).where(GitCommitModel.sha == commit_sha)
+            )
+            existing_commit = result.scalar_one_or_none()
+            
+            if not existing_commit:
+                commit = GitCommitModel(
+                    sha=commit_sha,
+                    author="Test Author",
+                    author_email="test@example.com",
+                    date=commit_date,
+                    message=f"Test commit {i}",
+                    commit_metadata={}
+                )
+                db_session.add(commit)
+                await db_session.flush()
+            
+            # Create document
+            doc = create_test_document(
+                content=f"# Test Document {i}\n\nContent for document {i}",
+                file_path=f"src/file_{i}.py",
+                file_type="python",
+                service_name=service_name,
+                ingestion_mode="git_history",
+                git_commit_sha=commit_sha,
+            )
+            created_doc = await doc_repo.create(doc)
+            doc_ids.append(created_doc.id)
+        
+        # Create snapshot documents
+        for i in range(snapshot_count):
+            doc = create_test_document(
+                content=f"# Snapshot Document {i}\n\nSnapshot content {i}",
+                file_path=f"docs/readme_{i}.md",
+                file_type="markdown",
+                service_name=service_name,
+                ingestion_mode="snapshot",
+                git_commit_sha=None,
+            )
+            created_doc = await doc_repo.create(doc)
+            doc_ids.append(created_doc.id)
+        
+        await db_session.commit()
+        return doc_ids
+    
+    # =========================================================================
+    # PHASE 1: CORE TIMELINE TESTS (Confidence, Periods, Placement)
+    # =========================================================================
+    
+    async def test_confidence_calculation_high(self, db_session):
+        """
+        Test confidence calculation with high confidence documents (95% git history).
         
         Validates:
-        - Timeline creation with metadata
-        - Period generation
-        - Document placement
-        - Confidence calculation
+        - Confidence level is HIGH
+        - Score >= 0.9
+        - Correct counts for git_history vs snapshot
+        - Fallback strategy is "none_needed"
+        - All capabilities enabled
         """
-        from src.storage.repositories import DocumentRepository
-        from src.services.timeline import TimelineManager, PeriodGenerator, DocumentPlacer
-        from src.models.timeline import TimelineCreate
-        from tests.utils.test_helpers import create_test_document
+        service_name = f"test-service-high-{uuid4().hex[:8]}"
         
-        # Setup - pass session directly to services
-        doc_repo = DocumentRepository(clean_database)
-        timeline_manager = TimelineManager(clean_database)
-        
-        # Ingest test documents
-        python_files = list(ecosystem_mcp_src_dir.rglob("*.py"))[:10]
-        docs = []
-        
-        for file_path in python_files:
-            content = file_path.read_text(encoding='utf-8', errors='ignore')
-            doc_model = create_test_document(
-                content=content,
-                file_path=str(file_path.relative_to(ecosystem_mcp_src_dir.parent)),
-                service_name="ecosystem-mcp-test",
-                session_id=test_session_id
-            )
-            doc = await doc_repo.create(doc_model)
-            docs.append(doc)
-        
-        assert len(docs) == 10
-        
-        # Create timeline using TimelineCreate model
-        timeline_data = TimelineCreate(
-            name=f"test_timeline_{test_session_id[:8]}",
-            service_name="ecosystem-mcp-test",
-            repo_path=str(ecosystem_mcp_src_dir.parent),
-            start_date=datetime.now() - timedelta(days=365),
-            end_date=datetime.now(),
-            period_strategy=PeriodStrategy.MONTHLY
+        # Create 95 git_history + 5 snapshot documents
+        await self._create_test_documents(
+            db_session,
+            service_name=service_name,
+            git_history_count=95,
+            snapshot_count=5
         )
         
-        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
+        # Calculate confidence
+        calculator = TemporalConfidenceCalculator(db_session=db_session)
+        result = await calculator.calculate_confidence(service_name=service_name)
         
-        # Verify timeline created
-        assert timeline is not None
-        assert timeline.id is not None
-        assert timeline.name == timeline_data.name
-        assert timeline.service_name == "ecosystem-mcp-test"
-        assert timeline.period_strategy == "monthly"
+        # Validate results
+        assert result.confidence_level == TemporalConfidence.HIGH
+        assert result.confidence_score >= 0.9
+        assert result.git_history_count == 95
+        assert result.snapshot_count == 5
+        assert result.total_documents == 100
+        assert result.fallback_strategy == "none_needed"
+        assert result.capabilities["timeline_creation"] is True
+        assert result.capabilities["temporal_rag"] is True
+        assert result.capabilities["gap_analysis"] is True
+        assert result.capabilities["drift_detection"] is True
     
-    async def test_create_timeline_with_metadata(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test timeline creation with custom metadata."""
-        from src.services.timeline import TimelineManager
-        from src.models.timeline import TimelineCreate
+    async def test_confidence_calculation_medium(self, db_session):
+        """
+        Test confidence calculation with medium confidence documents (60% git history).
         
-        # Repository created internally by TimelineManager
-        timeline_manager = TimelineManager(clean_database)
+        Validates:
+        - Confidence level is MEDIUM
+        - Score between 0.5 and 0.8
+        - Correct counts
+        - Fallback strategy is "hybrid"
+        - Some capabilities enabled
+        """
+        service_name = f"test-service-medium-{uuid4().hex[:8]}"
         
-        from src.models.timeline import TimelineMetadata
-        
-        timeline_data = TimelineCreate(
-            name=f"test_timeline_metadata_{test_session_id[:8]}",
-            service_name="test-service",
-            repo_path="/test/repo",
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 12, 31),
-            period_strategy=PeriodStrategy.QUARTERLY,
-            metadata=TimelineMetadata(
-                extra={
-                    "purpose": "testing",
-                    "created_by": "functional_test",
-                    "_test_data_marker": True,
-                    "_test_session_id": test_session_id
-                }
-            )
+        # Create 60 git_history + 40 snapshot documents
+        await self._create_test_documents(
+            db_session,
+            service_name=service_name,
+            git_history_count=60,
+            snapshot_count=40
         )
         
-        # Skip confidence check for tests
-        timeline = await timeline_manager.create_timeline(
-            timeline_data,
-            skip_confidence_check=True
-        )
+        # Calculate confidence
+        calculator = TemporalConfidenceCalculator(db_session=db_session)
+        result = await calculator.calculate_confidence(service_name=service_name)
         
-        assert timeline.metadata is not None
-        assert timeline.metadata.extra.get("purpose") == "testing"
-        assert timeline.metadata.extra.get("_test_data_marker") is True
+        # Validate results
+        assert result.confidence_level == TemporalConfidence.MEDIUM
+        assert 0.5 <= result.confidence_score < 0.8
+        assert result.git_history_count == 60
+        assert result.snapshot_count == 40
+        assert result.total_documents == 100
+        assert result.fallback_strategy == "hybrid"
+        assert result.capabilities["timeline_creation"] is True
+        assert result.capabilities["temporal_rag"] is True
     
-    async def test_create_multiple_timelines(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test creating multiple timelines for same service."""
-        from src.storage.repositories import TimelineRepository
-        from src.services.timeline import TimelineManager
-        from src.models.timeline import TimelineCreate, TimelineMetadata, PeriodStrategy
+    async def test_confidence_calculation_low(self, db_session):
+        """
+        Test confidence calculation with low confidence documents (30% git history).
         
-        # Repository created internally by TimelineManager
-        timeline_manager = TimelineManager(clean_database)
+        Validates:
+        - Confidence level is LOW
+        - Score between 0.2 and 0.5
+        - Correct counts
+        - Fallback strategy is "prefer_alternatives"
+        - Limited capabilities
+        """
+        service_name = f"test-service-low-{uuid4().hex[:8]}"
         
-        # Create 3 timelines
-        timelines = []
-        for i in range(3):
-            timeline_data = TimelineCreate(
-                name=f"test_timeline_{i}_{test_session_id[:8]}",
-                service_name="test-service",
-                repo_path="/test/repo",
-                start_date=datetime(2024, 1, 1),
-                end_date=datetime(2024, 12, 31),
-                period_strategy=PeriodStrategy.MONTHLY,
-                metadata=TimelineMetadata(extra={"_test_data_marker": True})
-            )
-            timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
-            timelines.append(timeline)
-        
-        assert len(timelines) == 3
-        assert all(t.id is not None for t in timelines)
-        assert all(t.service_name == "test-service" for t in timelines)
-
-
-from src.models.timeline import PeriodStrategy
-
-class TestPeriodGeneration:
-    """Test time period generation strategies."""
-    
-    async def test_generate_monthly_periods(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test generating monthly periods."""
-        from src.storage.repositories import TimelineRepository, TimePeriodRepository
-        from src.services.timeline import TimelineManager, PeriodGenerator
-        from src.models.timeline import TimelineCreate, TimelineMetadata, PeriodStrategy
-        
-        # Repository created internally by TimelineManager
-        # Repository created internally by PeriodGenerator
-        timeline_manager = TimelineManager(clean_database)
-        period_generator = PeriodGenerator(clean_database)
-        
-        # Create timeline
-        timeline_data = TimelineCreate(
-            name=f"monthly_timeline_{test_session_id[:8]}",
-            service_name="test-service",
-            repo_path="/test/repo",
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 3, 31),  # 3 months
-            period_strategy=PeriodStrategy.MONTHLY,
-            metadata=TimelineMetadata(extra={"_test_data_marker": True})
+        # Create 30 git_history + 70 snapshot documents
+        await self._create_test_documents(
+            db_session,
+            service_name=service_name,
+            git_history_count=30,
+            snapshot_count=70
         )
-        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
         
-        # Generate periods
-        periods = await period_generator.generate_periods(
-            timeline_id=timeline.id,
-            service_name=timeline.service_name,
-            start_date=timeline.start_date,
-            end_date=timeline.end_date,
+        # Calculate confidence
+        calculator = TemporalConfidenceCalculator(db_session=db_session)
+        result = await calculator.calculate_confidence(service_name=service_name)
+        
+        # Validate results
+        assert result.confidence_level == TemporalConfidence.LOW
+        assert 0.2 <= result.confidence_score < 0.5
+        assert result.git_history_count == 30
+        assert result.snapshot_count == 70
+        assert result.total_documents == 100
+        assert result.fallback_strategy == "prefer_alternatives"
+        assert result.capabilities["timeline_creation"] is False
+        assert result.capabilities["temporal_rag"] is False
+    
+    async def test_confidence_calculation_none(self, db_session):
+        """
+        Test confidence calculation with no confidence documents (100% snapshot).
+        
+        Validates:
+        - Confidence level is NONE
+        - Score is 0.0
+        - All documents are snapshot
+        - Fallback strategy is "use_alternatives_only"
+        - No capabilities enabled
+        """
+        service_name = f"test-service-none-{uuid4().hex[:8]}"
+        
+        # Create 0 git_history + 100 snapshot documents
+        await self._create_test_documents(
+            db_session,
+            service_name=service_name,
+            git_history_count=0,
+            snapshot_count=100
+        )
+        
+        # Calculate confidence
+        calculator = TemporalConfidenceCalculator(db_session=db_session)
+        result = await calculator.calculate_confidence(service_name=service_name)
+        
+        # Validate results
+        assert result.confidence_level == TemporalConfidence.NONE
+        assert result.confidence_score == 0.0
+        assert result.git_history_count == 0
+        assert result.snapshot_count == 100
+        assert result.total_documents == 100
+        assert result.fallback_strategy == "use_alternatives_only"
+        assert result.capabilities["timeline_creation"] is False
+        assert result.capabilities["temporal_rag"] is False
+        assert result.capabilities["gap_analysis"] is False
+        assert result.capabilities["drift_detection"] is False
+    
+    async def test_period_generation_monthly(self, db_session):
+        """
+        Test monthly period generation.
+        
+        Validates:
+        - Correct number of periods (12 for full year)
+        - Period names are correct
+        - No gaps between periods
+        - Periods cover full date range
+        """
+        generator = PeriodGenerator(db_session=db_session)
+        
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2024, 12, 31)
+        
+        periods = await generator.generate_periods(
+            start_date=start_date,
+            end_date=end_date,
             strategy=PeriodStrategy.MONTHLY
         )
         
-        # Should have 3 periods (Jan, Feb, Mar)
-        assert len(periods) >= 3
-        assert all(p.timeline_id == timeline.id for p in periods)
+        # Validate period count
+        assert len(periods) == 12
+        
+        # Validate period names
+        assert periods[0].name == "January 2024"
+        assert periods[11].name == "December 2024"
+        
+        # Verify no gaps between periods
+        for i in range(len(periods) - 1):
+            assert periods[i].end_date == periods[i+1].start_date
+        
+        # Verify full coverage
+        assert periods[0].start_date == start_date
+        assert periods[-1].end_date >= end_date
     
-    async def test_generate_quarterly_periods(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test generating quarterly periods."""
-        from src.storage.repositories import TimelineRepository, TimePeriodRepository
-        from src.services.timeline import TimelineManager, PeriodGenerator
+    async def test_period_generation_quarterly(self, db_session):
+        """
+        Test quarterly period generation.
         
-        # Repository created internally by TimelineManager
-        # Repository created internally by PeriodGenerator
-        timeline_manager = TimelineManager(clean_database)
-        period_generator = PeriodGenerator(clean_database)
+        Validates:
+        - Correct number of periods (4 for full year)
+        - Period names are correct
+        - No gaps between periods
+        """
+        generator = PeriodGenerator(db_session=db_session)
         
-        # Create timeline
-        timeline_data = {
-            "name": f"quarterly_timeline_{test_session_id[:8]}",
-            "service_name": "test-service",
-            "repo_path": "/test/repo",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2024, 12, 31),  # 1 year
-            "strategy": "quarterly",
-            "metadata": {"_test_data_marker": True}
-        }
-        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2024, 12, 31)
         
-        # Generate periods
-        periods = await period_generator.generate_periods(
-            timeline_id=timeline.id,
-            service_name=timeline.service_name,
-            start_date=timeline.start_date,
-            end_date=timeline.end_date,
+        periods = await generator.generate_periods(
+            start_date=start_date,
+            end_date=end_date,
             strategy=PeriodStrategy.QUARTERLY
         )
         
-        # Should have 4 periods (Q1-Q4)
-        assert len(periods) >= 4
+        # Validate period count
+        assert len(periods) == 4
+        
+        # Validate period names
+        assert "Q1" in periods[0].name
+        assert "Q4" in periods[3].name
+        
+        # Verify no gaps
+        for i in range(len(periods) - 1):
+            assert periods[i].end_date == periods[i+1].start_date
     
-    async def test_generate_adaptive_periods(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test generating adaptive periods based on document density."""
-        from src.storage.repositories import TimelineRepository, TimePeriodRepository
-        from src.services.timeline import TimelineManager, PeriodGenerator
+    async def test_period_generation_yearly(self, db_session):
+        """
+        Test yearly period generation.
         
-        # Repository created internally by TimelineManager
-        # Repository created internally by PeriodGenerator
-        timeline_manager = TimelineManager(clean_database)
-        period_generator = PeriodGenerator(clean_database)
+        Validates:
+        - Single period for one year
+        - Multiple periods for multi-year range
+        """
+        generator = PeriodGenerator(db_session=db_session)
         
-        # Create timeline
-        timeline_data = {
-            "name": f"adaptive_timeline_{test_session_id[:8]}",
-            "service_name": "test-service",
-            "repo_path": "/test/repo",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2024, 12, 31),
-            "strategy": "adaptive",
-            "metadata": {"_test_data_marker": True}
-        }
-        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
-        
-        # Generate periods
-        periods = await period_generator.generate_periods(
-            timeline_id=timeline.id,
-            service_name=timeline.service_name,
-            start_date=timeline.start_date,
-            end_date=timeline.end_date,
-            strategy=PeriodStrategy.ADAPTIVE
+        # Single year
+        periods = await generator.generate_periods(
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 12, 31),
+            strategy=PeriodStrategy.YEARLY
         )
+        assert len(periods) == 1
+        assert "2024" in periods[0].name
         
-        # Should have at least some periods
-        assert len(periods) > 0
+        # Multi-year
+        periods = await generator.generate_periods(
+            start_date=datetime(2022, 1, 1),
+            end_date=datetime(2024, 12, 31),
+            strategy=PeriodStrategy.YEARLY
+        )
+        assert len(periods) == 3
     
-    async def test_period_sequence_numbers(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test that periods have correct sequence numbers."""
-        from src.storage.repositories import TimelineRepository, TimePeriodRepository
-        from src.services.timeline import TimelineManager, PeriodGenerator
+    async def test_timeline_creation_end_to_end(self, db_session):
+        """
+        Test complete timeline creation workflow.
         
-        # Repository created internally by TimelineManager
-        # Repository created internally by PeriodGenerator
-        timeline_manager = TimelineManager(clean_database)
-        period_generator = PeriodGenerator(clean_database)
-        
-        # Create timeline
-        timeline_data = {
-            "name": f"sequence_timeline_{test_session_id[:8]}",
-            "service_name": "test-service",
-            "repo_path": "/test/repo",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2024, 6, 30),
-            "strategy": "monthly",
-            "metadata": {"_test_data_marker": True}
-        }
-        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
-        
-        # Generate periods
-        periods = await period_generator.generate_periods(
-            timeline_id=timeline.id,
-            service_name=timeline.service_name,
-            start_date=timeline.start_date,
-            end_date=timeline.end_date,
-            strategy=PeriodStrategy.MONTHLY
-        )
-        
-        # Verify sequence numbers are consecutive
-        sequence_numbers = sorted([p.sequence_number for p in periods])
-        assert sequence_numbers == list(range(len(periods)))
-
-
-class TestDocumentPlacement:
-    """Test placing documents in time periods."""
-    
-    async def test_place_documents_in_periods(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test placing documents in appropriate time periods."""
-        from src.storage.repositories import (
-            DocumentRepository,
-            TimelineRepository,
-            TimePeriodRepository,
-            DocumentPlacementRepository
-        )
-        from src.services.timeline import TimelineManager, PeriodGenerator, DocumentPlacer
-        from tests.utils.test_helpers import create_test_document
-        
-        # Setup repositories
-        doc_repo = DocumentRepository(clean_database)
-        # Repository created internally by TimelineManager
-        # Repository created internally by PeriodGenerator
-        # Repository created internally by DocumentPlacer
-        
-        # Setup services
-        timeline_manager = TimelineManager(clean_database)
-        period_generator = PeriodGenerator(clean_database)
-        document_placer = DocumentPlacer(clean_database)
-        
-        # Create timeline
-        timeline_data = {
-            "name": f"placement_timeline_{test_session_id[:8]}",
-            "service_name": "test-service",
-            "repo_path": "/test/repo",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2024, 12, 31),
-            "strategy": "monthly",
-            "metadata": {"_test_data_marker": True}
-        }
-        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
-        
-        # Generate periods
-        periods = await period_generator.generate_periods(
-            timeline_id=timeline.id,
-            service_name=timeline.service_name,
-            start_date=timeline.start_date,
-            end_date=timeline.end_date,
-            strategy=PeriodStrategy.MONTHLY
-        )
+        Validates:
+        - Timeline is created in database
+        - Confidence is calculated
+        - Periods are generated
+        - Documents are placed in periods
+        - Timeline can be retrieved
+        """
+        service_name = f"test-service-e2e-{uuid4().hex[:8]}"
         
         # Create test documents
-        docs = []
-        for i in range(5):
-            doc_data = create_test_document(
-                content=f"Test content {i}",
-                file_path=f"test_{i}.py",
-                service_name="test-service",
-                session_id=test_session_id
+        await self._create_test_documents(
+            db_session,
+            service_name=service_name,
+            git_history_count=80,
+            snapshot_count=20
+        )
+        
+        # Create timeline
+        timeline_manager = TimelineManager(db_session=db_session)
+        timeline_create = TimelineCreate(
+            name=f"test-timeline-{uuid4().hex[:8]}",
+            service_name=service_name,
+            strategy=PeriodStrategy.MONTHLY,
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 12, 31),
+        )
+        
+        timeline = await timeline_manager.create_timeline(timeline_create)
+        
+        # Validate timeline
+        assert timeline.id is not None
+        assert timeline.name == timeline_create.name
+        assert timeline.service_name == service_name
+        assert timeline.confidence_metadata is not None
+        assert timeline.confidence_metadata.confidence_level == TemporalConfidence.HIGH
+        assert len(timeline.periods) == 12  # Monthly for full year
+        
+        # Validate timeline can be retrieved
+        timeline_repo = TimelineRepository(db_session)
+        retrieved = await timeline_repo.get_by_id(timeline.id)
+        assert retrieved is not None
+        assert retrieved.id == timeline.id
+    
+    # =========================================================================
+    # PHASE 2: TEMPORAL RAG TESTS (Time-travel queries)
+    # =========================================================================
+    
+    async def test_temporal_rag_query_as_of(self, db_session):
+        """
+        Test time-travel RAG query (query as of specific date).
+        
+        Validates:
+        - Can query documents as they existed at a specific date
+        - Only documents before the date are included
+        - Results are relevant to the query
+        """
+        # This test will be implemented when TemporalRAGService is integrated
+        # For now, we'll mark it as a placeholder
+        pytest.skip("TemporalRAGService integration pending")
+    
+    async def test_temporal_rag_query_evolution(self, db_session):
+        """
+        Test evolution query (how topic evolved over time).
+        
+        Validates:
+        - Can track how a topic/concept evolved
+        - Results are ordered chronologically
+        - Changes are highlighted
+        """
+        pytest.skip("TemporalRAGService integration pending")
+    
+    async def test_temporal_rag_query_what_changed(self, db_session):
+        """
+        Test what-changed query (what changed between two dates).
+        
+        Validates:
+        - Can identify changes between two points in time
+        - Additions, modifications, deletions are tracked
+        - Results are accurate
+        """
+        pytest.skip("TemporalRAGService integration pending")
+    
+    # =========================================================================
+    # PHASE 3: GAP/DRIFT TESTS (Advanced analysis)
+    # =========================================================================
+    
+    async def test_gap_analysis(self, db_session):
+        """
+        Test gap analysis (identify periods with no activity).
+        
+        Validates:
+        - Can identify gaps in timeline
+        - Gap duration is calculated correctly
+        - Recommendations are provided
+        """
+        service_name = f"test-service-gaps-{uuid4().hex[:8]}"
+        
+        # Create documents with intentional gaps
+        from src.storage.db_models import GitCommitModel
+        from sqlalchemy import select
+        doc_repo = DocumentRepository(db_session)
+        
+        # Documents in January
+        for i in range(10):
+            commit_sha = f"jan{i:03d}"
+            commit_date = datetime(2024, 1, 15) + timedelta(hours=i)
+            
+            # Create commit
+            result = await db_session.execute(
+                select(GitCommitModel).where(GitCommitModel.sha == commit_sha)
             )
-            doc = await doc_repo.create(doc_data)
-            docs.append(doc)
+            if not result.scalar_one_or_none():
+                commit = GitCommitModel(
+                    sha=commit_sha,
+                    author="Test Author",
+                    author_email="test@example.com",
+                    date=commit_date,
+                    message=f"January commit {i}",
+                    commit_metadata={}
+                )
+                db_session.add(commit)
+                await db_session.flush()
+            
+            doc = create_test_document(
+                content=f"# January Document {i}",
+                file_path=f"src/jan_{i}.py",
+                service_name=service_name,
+                ingestion_mode="git_history",
+                git_commit_sha=commit_sha,
+            )
+            await doc_repo.create(doc)
         
-        # Place documents in periods
-        placements = await document_placer.place_documents(
-            timeline_id=timeline.id,
-            document_ids=[d.id for d in docs],
-            periods=periods
+        # Gap: February-March (no documents)
+        
+        # Documents in April
+        for i in range(10):
+            commit_sha = f"apr{i:03d}"
+            commit_date = datetime(2024, 4, 15) + timedelta(hours=i)
+            
+            # Create commit
+            result = await db_session.execute(
+                select(GitCommitModel).where(GitCommitModel.sha == commit_sha)
+            )
+            if not result.scalar_one_or_none():
+                commit = GitCommitModel(
+                    sha=commit_sha,
+                    author="Test Author",
+                    author_email="test@example.com",
+                    date=commit_date,
+                    message=f"April commit {i}",
+                    commit_metadata={}
+                )
+                db_session.add(commit)
+                await db_session.flush()
+            
+            doc = create_test_document(
+                content=f"# April Document {i}",
+                file_path=f"src/apr_{i}.py",
+                service_name=service_name,
+                ingestion_mode="git_history",
+                git_commit_sha=commit_sha,
+            )
+            await doc_repo.create(doc)
+        
+        await db_session.commit()
+        
+        # Create timeline
+        timeline_manager = TimelineManager(db_session=db_session)
+        timeline = await timeline_manager.create_timeline(
+            TimelineCreate(
+                name=f"gap-test-{uuid4().hex[:8]}",
+                service_name=service_name,
+                strategy=PeriodStrategy.MONTHLY,
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+            )
         )
         
-        # Verify placements
-        assert len(placements) > 0
-        assert all(p.timeline_id == timeline.id for p in placements)
-
-
-class TestTimelineQueries:
-    """Test querying timeline data."""
+        # Analyze gaps
+        gap_analyzer = GapAnalyzer(db_session=db_session)
+        gaps = await gap_analyzer.analyze_gaps(timeline_id=timeline.id)
+        
+        # Validate gaps
+        assert len(gaps) > 0
+        # Should find February-March gap
+        feb_mar_gaps = [g for g in gaps if "February" in g.period_name or "March" in g.period_name]
+        assert len(feb_mar_gaps) >= 2
     
-    async def test_query_timeline_by_service(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test querying timelines by service name."""
-        from src.storage.repositories import TimelineRepository
-        from src.services.timeline import TimelineManager
+    async def test_drift_detection(self, db_session):
+        """
+        Test drift detection (identify API/data contract changes).
         
-        # Repository created internally by TimelineManager
-        timeline_manager = TimelineManager(clean_database)
+        Validates:
+        - Can detect changes in API signatures
+        - Can detect data contract changes
+        - Severity is assessed correctly
+        """
+        service_name = f"test-service-drift-{uuid4().hex[:8]}"
         
-        # Create multiple timelines for same service
-        service_name = f"query_service_{test_session_id[:8]}"
-        for i in range(3):
-            timeline_data = {
-                "name": f"timeline_{i}",
-                "service_name": service_name,
-                "repo_path": "/test/repo",
-                "start_date": datetime(2024, 1, 1),
-                "end_date": datetime(2024, 12, 31),
-                "strategy": "monthly",
-                "metadata": {"_test_data_marker": True}
-            }
-            await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
+        # Create documents showing API evolution
+        from src.storage.db_models import GitCommitModel
+        from sqlalchemy import select
+        doc_repo = DocumentRepository(db_session)
         
-        # Query timelines
-        timelines = await timeline_repo.get_by_service(service_name)
-        
-        assert len(timelines) >= 3
-        assert all(t.service_name == service_name for t in timelines)
-    
-    async def test_get_timeline_summary(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test getting timeline summary with statistics."""
-        from src.storage.repositories import TimelineRepository, TimePeriodRepository
-        from src.services.timeline import TimelineManager, PeriodGenerator
-        
-        # Repository created internally by TimelineManager
-        # Repository created internally by PeriodGenerator
-        timeline_manager = TimelineManager(clean_database)
-        period_generator = PeriodGenerator(clean_database)
-        
-        # Create timeline with periods
-        timeline_data = {
-            "name": f"summary_timeline_{test_session_id[:8]}",
-            "service_name": "test-service",
-            "repo_path": "/test/repo",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2024, 3, 31),
-            "strategy": "monthly",
-            "metadata": {"_test_data_marker": True}
-        }
-        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
-        
-        # Generate periods
-        await period_generator.generate_periods(
-            timeline_id=timeline.id,
-            start_date=timeline.start_date,
-            end_date=timeline.end_date,
-            strategy=PeriodStrategy.MONTHLY
+        # Version 1: Original API
+        commit_sha_v1 = "v1"
+        result = await db_session.execute(
+            select(GitCommitModel).where(GitCommitModel.sha == commit_sha_v1)
         )
+        if not result.scalar_one_or_none():
+            commit1 = GitCommitModel(
+                sha=commit_sha_v1,
+                author="Test Author",
+                author_email="test@example.com",
+                date=datetime(2024, 1, 1),
+                message="API v1",
+                commit_metadata={}
+            )
+            db_session.add(commit1)
+            await db_session.flush()
         
-        # Get summary
-        summary = await timeline_manager.get_timeline_summary(timeline.id)
-        
-        assert summary is not None
-        assert "timeline" in summary
-        assert "period_count" in summary or "periods" in summary
-
-
-class TestConfidenceCalculation:
-    """Test temporal confidence calculation."""
-    
-    async def test_calculate_confidence_high(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test calculating HIGH confidence for git history ingestion."""
-        from src.storage.repositories import TimelineRepository
-        from src.services.timeline import TimelineManager, TemporalConfidenceCalculator
-        
-        # Repository created internally by TimelineManager
-        timeline_manager = TimelineManager(clean_database)
-        confidence_calc = TemporalConfidenceCalculator()
-        
-        # Create timeline (simulating git history)
-        timeline_data = {
-            "name": f"high_confidence_{test_session_id[:8]}",
-            "service_name": "test-service",
-            "repo_path": "/test/repo",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2024, 12, 31),
-            "strategy": "monthly",
-            "metadata": {
-                "_test_data_marker": True,
-                "ingestion_mode": "git_history"  # Should give HIGH confidence
-            }
-        }
-        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
-        
-        # Calculate confidence
-        confidence = confidence_calc.calculate_confidence(
+        doc1 = create_test_document(
+            content="""
+# API Version 1
+def get_user(user_id: int) -> User:
+    return User(id=user_id)
+""",
+            file_path="src/api.py",
+            service_name=service_name,
             ingestion_mode="git_history",
-            has_commit_history=True
+            git_commit_sha=commit_sha_v1,
+        )
+        await doc_repo.create(doc1)
+        
+        # Version 2: API changed (breaking change)
+        commit_sha_v2 = "v2"
+        result = await db_session.execute(
+            select(GitCommitModel).where(GitCommitModel.sha == commit_sha_v2)
+        )
+        if not result.scalar_one_or_none():
+            commit2 = GitCommitModel(
+                sha=commit_sha_v2,
+                author="Test Author",
+                author_email="test@example.com",
+                date=datetime(2024, 6, 1),
+                message="API v2 - breaking changes",
+                commit_metadata={}
+            )
+            db_session.add(commit2)
+            await db_session.flush()
+        
+        doc2 = create_test_document(
+            content="""
+# API Version 2
+def get_user(user_uuid: str, include_details: bool = False) -> UserDetails:
+    return UserDetails(uuid=user_uuid, details=include_details)
+""",
+            file_path="src/api.py",
+            service_name=service_name,
+            ingestion_mode="git_history",
+            git_commit_sha=commit_sha_v2,
+        )
+        await doc_repo.create(doc2)
+        
+        await db_session.commit()
+        
+        # Create timeline
+        timeline_manager = TimelineManager(db_session=db_session)
+        timeline = await timeline_manager.create_timeline(
+            TimelineCreate(
+                name=f"drift-test-{uuid4().hex[:8]}",
+                service_name=service_name,
+                strategy=PeriodStrategy.MONTHLY,
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+            )
         )
         
-        assert confidence == "HIGH"
+        # Detect drift
+        drift_detector = DriftDetector(db_session=db_session)
+        drifts = await drift_detector.detect_drift(
+            timeline_id=timeline.id,
+            file_path="src/api.py"
+        )
+        
+        # Validate drift detection
+        assert len(drifts) > 0
+        # Should detect parameter changes
+        param_drifts = [d for d in drifts if "parameter" in d.change_type.lower()]
+        assert len(param_drifts) > 0
     
-    async def test_calculate_confidence_low(
-        self,
-        clean_database,
-        test_session_id
-    ):
-        """Test calculating LOW/NONE confidence for snapshot ingestion."""
-        from src.services.timeline import TemporalConfidenceCalculator
+    async def test_report_generation(self, db_session):
+        """
+        Test report generation (progression, gap, drift reports).
         
-        confidence_calc = TemporalConfidenceCalculator()
+        Validates:
+        - Can generate progression report
+        - Can generate gap report
+        - Can generate drift report
+        - Reports are well-formatted and citable
+        """
+        service_name = f"test-service-report-{uuid4().hex[:8]}"
         
-        # Calculate confidence for snapshot (no history)
-        confidence = confidence_calc.calculate_confidence(
-            ingestion_mode="snapshot",
-            has_commit_history=False
+        # Create test documents
+        await self._create_test_documents(
+            db_session,
+            service_name=service_name,
+            git_history_count=50,
+            snapshot_count=10
         )
         
-        assert confidence in ["LOW", "NONE"]
+        # Create timeline
+        timeline_manager = TimelineManager(db_session=db_session)
+        timeline = await timeline_manager.create_timeline(
+            TimelineCreate(
+                name=f"report-test-{uuid4().hex[:8]}",
+                service_name=service_name,
+                strategy=PeriodStrategy.QUARTERLY,
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+            )
+        )
+        
+        # Generate progression report
+        report_generator = ReportGenerator(db_session=db_session)
+        report = await report_generator.generate_progression_report(
+            timeline_id=timeline.id,
+            topic="test service development"
+        )
+        
+        # Validate report
+        assert report is not None
+        assert report.timeline_id == timeline.id
+        assert report.report_type == "progression"
+        assert len(report.content) > 0
+        assert len(report.citations) > 0
+    
+    async def test_document_consolidation(self, db_session):
+        """
+        Test document consolidation (identify consolidation opportunities).
+        
+        Validates:
+        - Can identify duplicate/similar documents
+        - Can identify outdated documents
+        - Consolidation recommendations are provided
+        """
+        service_name = f"test-service-consolidate-{uuid4().hex[:8]}"
+        
+        # Create similar documents
+        from src.storage.db_models import GitCommitModel
+        from sqlalchemy import select
+        doc_repo = DocumentRepository(db_session)
+        
+        for i in range(5):
+            commit_sha = f"auth{i:03d}"
+            commit_date = datetime(2024, 1, 1) + timedelta(days=i*30)
+            
+            # Create commit
+            result = await db_session.execute(
+                select(GitCommitModel).where(GitCommitModel.sha == commit_sha)
+            )
+            if not result.scalar_one_or_none():
+                commit = GitCommitModel(
+                    sha=commit_sha,
+                    author="Test Author",
+                    author_email="test@example.com",
+                    date=commit_date,
+                    message=f"Auth docs v{i}",
+                    commit_metadata={}
+                )
+                db_session.add(commit)
+                await db_session.flush()
+            
+            doc = create_test_document(
+                content=f"# User Authentication\n\nThis document describes user authentication. Version {i}.",
+                file_path=f"docs/auth_{i}.md",
+                service_name=service_name,
+                ingestion_mode="git_history",
+                git_commit_sha=commit_sha,
+            )
+            await doc_repo.create(doc)
+        
+        await db_session.commit()
+        
+        # Analyze consolidation opportunities
+        consolidator = DocumentConsolidator(db_session=db_session)
+        opportunities = await consolidator.analyze_consolidation_opportunities(
+            service_name=service_name,
+            topic="authentication"
+        )
+        
+        # Validate opportunities
+        assert len(opportunities) > 0
+        # Should identify similar documents
+        similar_groups = [o for o in opportunities if o.opportunity_type == "similar_documents"]
+        assert len(similar_groups) > 0
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v", "-m", "functional"])
+# =========================================================================
+# HELPER TESTS (Validate test infrastructure)
+# =========================================================================
 
+@pytest.mark.functional
+@pytest.mark.asyncio
+class TestTimelineTestInfrastructure:
+    """Validate that test infrastructure is working correctly."""
+    
+    async def test_database_connection(self, db_session):
+        """Verify database connection works."""
+        assert db_session is not None
+        # Try a simple query
+        from sqlalchemy import text
+        result = await db_session.execute(text("SELECT 1"))
+        assert result.scalar() == 1
+    
+    async def test_test_document_creation(self, db_session):
+        """Verify test document creation works."""
+        doc_repo = DocumentRepository(db_session)
+        
+        doc = create_test_document(
+            content="# Test\n\nTest content",
+            file_path="test.py",
+            service_name="test-service",
+        )
+        
+        created = await doc_repo.create(doc)
+        await db_session.commit()
+        
+        assert created.id is not None
+        assert created.file_path == "test.py"
+        assert created.service_name == "test-service"
+    
+    async def test_timeline_repository(self, db_session):
+        """Verify timeline repository works."""
+        timeline_repo = TimelineRepository(db_session)
+        
+        # Should be able to query (even if empty)
+        timelines = await timeline_repo.get_all()
+        assert isinstance(timelines, list)
