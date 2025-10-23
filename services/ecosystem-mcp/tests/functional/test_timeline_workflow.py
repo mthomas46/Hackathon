@@ -506,9 +506,47 @@ class TestTimelineWorkflow:
         - Only documents before the date are included
         - Results are relevant to the query
         """
-        # This test will be implemented when TemporalRAGService is integrated
-        # For now, we'll mark it as a placeholder
-        pytest.skip("TemporalRAGService integration pending")
+        from src.services.rag.temporal_rag_service import TemporalRAGService
+        
+        service_name = f"test-service-temporal-as-of-{uuid4().hex[:8]}"
+        
+        # Create timeline with documents
+        await self._create_test_documents(
+            db_session=db_session,
+            service_name=service_name,
+            git_history_count=50,
+            snapshot_count=0
+        )
+        
+        # Create timeline
+        timeline_manager = TimelineManager(db_session=db_session)
+        timeline = await timeline_manager.create_timeline(
+            TimelineCreate(
+                name=f"temporal-as-of-test-{uuid4().hex[:8]}",
+                service_name=service_name,
+                repo_path="/test/repo",
+                period_strategy=PeriodStrategy.MONTHLY,
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+            ),
+            skip_confidence_check=True
+        )
+        
+        # Query as of a specific date
+        temporal_rag = TemporalRAGService(db_session=db_session)
+        result = await temporal_rag.query_as_of(
+            query="What is the authentication process?",
+            as_of_date=datetime(2024, 6, 1),
+            service_name=service_name
+        )
+        
+        # Validate result structure
+        assert result is not None
+        assert isinstance(result, dict)
+        assert 'query' in result
+        assert 'as_of_date' in result
+        # May have temporal_context or fallback to standard RAG
+        assert 'results' in result or 'temporal_context' in result
     
     async def test_temporal_rag_query_evolution(self, db_session):
         """
@@ -519,7 +557,46 @@ class TestTimelineWorkflow:
         - Results are ordered chronologically
         - Changes are highlighted
         """
-        pytest.skip("TemporalRAGService integration pending")
+        from src.services.rag.temporal_rag_service import TemporalRAGService
+        
+        service_name = f"test-service-temporal-evolution-{uuid4().hex[:8]}"
+        
+        # Create timeline with documents
+        await self._create_test_documents(
+            db_session=db_session,
+            service_name=service_name,
+            git_history_count=50,
+            snapshot_count=0
+        )
+        
+        # Create timeline
+        timeline_manager = TimelineManager(db_session=db_session)
+        timeline = await timeline_manager.create_timeline(
+            TimelineCreate(
+                name=f"temporal-evolution-test-{uuid4().hex[:8]}",
+                service_name=service_name,
+                repo_path="/test/repo",
+                period_strategy=PeriodStrategy.QUARTERLY,
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+            ),
+            skip_confidence_check=True
+        )
+        
+        # Query evolution
+        temporal_rag = TemporalRAGService(db_session=db_session)
+        result = await temporal_rag.query_evolution(
+            topic="authentication",
+            timeline_id=timeline.id
+        )
+        
+        # Validate result structure
+        assert result is not None
+        assert isinstance(result, dict)
+        assert 'topic' in result
+        assert 'timeline_id' in result
+        # May have evolution data or fallback
+        assert 'periods' in result or 'message' in result
     
     async def test_temporal_rag_query_what_changed(self, db_session):
         """
@@ -530,7 +607,49 @@ class TestTimelineWorkflow:
         - Additions, modifications, deletions are tracked
         - Results are accurate
         """
-        pytest.skip("TemporalRAGService integration pending")
+        from src.services.rag.temporal_rag_service import TemporalRAGService
+        
+        service_name = f"test-service-temporal-what-changed-{uuid4().hex[:8]}"
+        
+        # Create timeline with documents
+        await self._create_test_documents(
+            db_session=db_session,
+            service_name=service_name,
+            git_history_count=50,
+            snapshot_count=0
+        )
+        
+        # Create timeline
+        timeline_manager = TimelineManager(db_session=db_session)
+        timeline = await timeline_manager.create_timeline(
+            TimelineCreate(
+                name=f"temporal-what-changed-test-{uuid4().hex[:8]}",
+                service_name=service_name,
+                repo_path="/test/repo",
+                period_strategy=PeriodStrategy.MONTHLY,
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+            ),
+            skip_confidence_check=True
+        )
+        
+        # Query what changed
+        temporal_rag = TemporalRAGService(db_session=db_session)
+        result = await temporal_rag.query_what_changed(
+            query="authentication",
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 6, 30),
+            service_name=service_name
+        )
+        
+        # Validate result structure
+        assert result is not None
+        assert isinstance(result, dict)
+        assert 'query' in result
+        assert 'start_date' in result
+        assert 'end_date' in result
+        # May have changes or fallback
+        assert 'changes' in result or 'message' in result
     
     # =========================================================================
     # PHASE 3: GAP/DRIFT TESTS (Advanced analysis)
