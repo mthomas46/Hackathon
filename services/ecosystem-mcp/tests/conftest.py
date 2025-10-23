@@ -79,12 +79,14 @@ async def db_session(test_database_url: str) -> AsyncGenerator:
         # Initialize database
         await init_database()
         
-        # Get session
-        async with get_database() as session:
-            yield session
-            
-            # Rollback after test
-            await session.rollback()
+        # Get database instance and create session
+        db = get_database()
+        async with db.session() as session:
+            try:
+                yield session
+            finally:
+                # Rollback after test to ensure isolation
+                await session.rollback()
     finally:
         await close_database()
 
@@ -107,29 +109,15 @@ async def redis_client(test_redis_url: str):
 
 
 @pytest.fixture(scope="function")
-def clean_database(test_database_url: str):
+async def clean_database(db_session):
     """
-    Clean all tables in the test database.
+    Provide a clean database session for functional tests.
     
-    Use this fixture for tests that need a completely clean slate.
+    Returns the db_session which automatically rolls back after each test.
+    This ensures test isolation without needing to truncate tables.
     """
-    import subprocess
-    
-    # Truncate all tables
-    subprocess.run([
-        "docker", "exec", "-i", "ecosystem-mcp-postgres-test",
-        "psql", "-U", "test_user", "-d", "ecosystem_mcp_test",
-        "-c", """
-        DO $$
-        DECLARE
-            r RECORD;
-        BEGIN
-            FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-                EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' CASCADE';
-            END LOOP;
-        END $$;
-        """
-    ], check=False)
+    # Simply return the db_session which handles rollback automatically
+    return db_session
 
 
 @pytest.fixture(scope="session")
@@ -141,20 +129,21 @@ def check_test_database():
     """
     import subprocess
     
+    # Check if PostgreSQL is accessible (works with local or Docker)
     result = subprocess.run(
-        ["docker", "ps", "--filter", "name=ecosystem-mcp-postgres-test", "--filter", "health=healthy"],
+        ["pg_isready", "-h", "localhost", "-p", "5432"],
         capture_output=True,
         text=True
     )
     
-    if "ecosystem-mcp-postgres-test" not in result.stdout:
+    if result.returncode != 0:
         pytest.fail(
-            "\n❌ Test database is not running!\n"
-            "   Start it with: ./scripts/test-db.sh start\n"
-            "   Or run: docker-compose -f docker-compose.test.yml up -d\n"
+            "\n❌ PostgreSQL database is not running!\n"
+            "   Start local PostgreSQL: brew services start postgresql@14\n"
+            "   Or use Docker: docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16\n"
         )
     
-    print("✅ Test database is running")
+    print("✅ PostgreSQL database is running")
     return True
 
 
@@ -168,18 +157,18 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(skip_integration)
         return
     
-    # Check if database is running
+    # Check if PostgreSQL is running (works with local or Docker)
     import subprocess
     result = subprocess.run(
-        ["docker", "ps", "--filter", "name=ecosystem-mcp-postgres-test"],
+        ["pg_isready", "-h", "localhost", "-p", "5432"],
         capture_output=True,
         text=True
     )
     
-    if "ecosystem-mcp-postgres-test" not in result.stdout:
-        skip_db = pytest.mark.skip(reason="Test database not running (use ./scripts/test-db.sh start)")
+    if result.returncode != 0:
+        skip_db = pytest.mark.skip(reason="PostgreSQL not running (start with: brew services start postgresql@14)")
         for item in items:
-            if "integration" in item.keywords or "e2e" in item.keywords:
+            if "integration" in item.keywords or "e2e" in item.keywords or "functional" in item.keywords:
                 item.add_marker(skip_db)
 
 

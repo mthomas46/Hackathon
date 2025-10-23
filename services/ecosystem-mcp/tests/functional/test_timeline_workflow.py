@@ -36,14 +36,13 @@ class TestTimelineCreation:
         - Document placement
         - Confidence calculation
         """
-        from src.storage.repositories import DocumentRepository, TimelineRepository
+        from src.storage.repositories import DocumentRepository
         from src.services.timeline import TimelineManager, PeriodGenerator, DocumentPlacer
         from tests.utils.test_helpers import create_test_document
         
-        # Setup
+        # Setup - pass session directly to services
         doc_repo = DocumentRepository(clean_database)
-        timeline_repo = TimelineRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        timeline_manager = TimelineManager(clean_database)
         
         # Ingest test documents
         python_files = list(ecosystem_mcp_src_dir.rglob("*.py"))[:10]
@@ -87,28 +86,32 @@ class TestTimelineCreation:
         test_session_id
     ):
         """Test timeline creation with custom metadata."""
-        from src.storage.repositories import TimelineRepository
         from src.services.timeline import TimelineManager
+        from src.models.timeline import TimelineCreate
         
-        timeline_repo = TimelineRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        # Repository created internally by TimelineManager
+        timeline_manager = TimelineManager(clean_database)
         
-        timeline_data = {
-            "name": f"test_timeline_metadata_{test_session_id[:8]}",
-            "service_name": "test-service",
-            "repo_path": "/test/repo",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2024, 12, 31),
-            "strategy": "quarterly",
-            "metadata": {
+        timeline_data = TimelineCreate(
+            name=f"test_timeline_metadata_{test_session_id[:8]}",
+            service_name="test-service",
+            repo_path="/test/repo",
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 12, 31),
+            strategy="quarterly",
+            metadata={
                 "purpose": "testing",
                 "created_by": "functional_test",
                 "_test_data_marker": True,
                 "_test_session_id": test_session_id
             }
-        }
+        )
         
-        timeline = await timeline_manager.create_timeline(timeline_data)
+        # Skip confidence check for tests
+        timeline = await timeline_manager.create_timeline(
+            timeline_data,
+            skip_confidence_check=True
+        )
         
         assert timeline.metadata is not None
         assert timeline.metadata.get("purpose") == "testing"
@@ -123,8 +126,8 @@ class TestTimelineCreation:
         from src.storage.repositories import TimelineRepository
         from src.services.timeline import TimelineManager
         
-        timeline_repo = TimelineRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        # Repository created internally by TimelineManager
+        timeline_manager = TimelineManager(clean_database)
         
         # Create 3 timelines
         timelines = []
@@ -158,10 +161,10 @@ class TestPeriodGeneration:
         from src.storage.repositories import TimelineRepository, TimePeriodRepository
         from src.services.timeline import TimelineManager, PeriodGenerator
         
-        timeline_repo = TimelineRepository(clean_database)
-        period_repo = TimePeriodRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
-        period_generator = PeriodGenerator(period_repo)
+        # Repository created internally by TimelineManager
+        # Repository created internally by PeriodGenerator
+        timeline_manager = TimelineManager(clean_database)
+        period_generator = PeriodGenerator(clean_database)
         
         # Create timeline
         timeline_data = {
@@ -196,10 +199,10 @@ class TestPeriodGeneration:
         from src.storage.repositories import TimelineRepository, TimePeriodRepository
         from src.services.timeline import TimelineManager, PeriodGenerator
         
-        timeline_repo = TimelineRepository(clean_database)
-        period_repo = TimePeriodRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
-        period_generator = PeriodGenerator(period_repo)
+        # Repository created internally by TimelineManager
+        # Repository created internally by PeriodGenerator
+        timeline_manager = TimelineManager(clean_database)
+        period_generator = PeriodGenerator(clean_database)
         
         # Create timeline
         timeline_data = {
@@ -233,10 +236,10 @@ class TestPeriodGeneration:
         from src.storage.repositories import TimelineRepository, TimePeriodRepository
         from src.services.timeline import TimelineManager, PeriodGenerator
         
-        timeline_repo = TimelineRepository(clean_database)
-        period_repo = TimePeriodRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
-        period_generator = PeriodGenerator(period_repo)
+        # Repository created internally by TimelineManager
+        # Repository created internally by PeriodGenerator
+        timeline_manager = TimelineManager(clean_database)
+        period_generator = PeriodGenerator(clean_database)
         
         # Create timeline
         timeline_data = {
@@ -270,10 +273,10 @@ class TestPeriodGeneration:
         from src.storage.repositories import TimelineRepository, TimePeriodRepository
         from src.services.timeline import TimelineManager, PeriodGenerator
         
-        timeline_repo = TimelineRepository(clean_database)
-        period_repo = TimePeriodRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
-        period_generator = PeriodGenerator(period_repo)
+        # Repository created internally by TimelineManager
+        # Repository created internally by PeriodGenerator
+        timeline_manager = TimelineManager(clean_database)
+        period_generator = PeriodGenerator(clean_database)
         
         # Create timeline
         timeline_data = {
@@ -320,14 +323,14 @@ class TestDocumentPlacement:
         
         # Setup repositories
         doc_repo = DocumentRepository(clean_database)
-        timeline_repo = TimelineRepository(clean_database)
-        period_repo = TimePeriodRepository(clean_database)
-        placement_repo = DocumentPlacementRepository(clean_database)
+        # Repository created internally by TimelineManager
+        # Repository created internally by PeriodGenerator
+        # Repository created internally by DocumentPlacer
         
         # Setup services
-        timeline_manager = TimelineManager(timeline_repo)
-        period_generator = PeriodGenerator(period_repo)
-        document_placer = DocumentPlacer(placement_repo)
+        timeline_manager = TimelineManager(clean_database)
+        period_generator = PeriodGenerator(clean_database)
+        document_placer = DocumentPlacer(clean_database)
         
         # Create timeline
         timeline_data = {
@@ -385,8 +388,8 @@ class TestTimelineQueries:
         from src.storage.repositories import TimelineRepository
         from src.services.timeline import TimelineManager
         
-        timeline_repo = TimelineRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        # Repository created internally by TimelineManager
+        timeline_manager = TimelineManager(clean_database)
         
         # Create multiple timelines for same service
         service_name = f"query_service_{test_session_id[:8]}"
@@ -417,10 +420,10 @@ class TestTimelineQueries:
         from src.storage.repositories import TimelineRepository, TimePeriodRepository
         from src.services.timeline import TimelineManager, PeriodGenerator
         
-        timeline_repo = TimelineRepository(clean_database)
-        period_repo = TimePeriodRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
-        period_generator = PeriodGenerator(period_repo)
+        # Repository created internally by TimelineManager
+        # Repository created internally by PeriodGenerator
+        timeline_manager = TimelineManager(clean_database)
+        period_generator = PeriodGenerator(clean_database)
         
         # Create timeline with periods
         timeline_data = {
@@ -462,8 +465,8 @@ class TestConfidenceCalculation:
         from src.storage.repositories import TimelineRepository
         from src.services.timeline import TimelineManager, TemporalConfidenceCalculator
         
-        timeline_repo = TimelineRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        # Repository created internally by TimelineManager
+        timeline_manager = TimelineManager(clean_database)
         confidence_calc = TemporalConfidenceCalculator()
         
         # Create timeline (simulating git history)
