@@ -85,6 +85,11 @@ async def db_session(test_database_url: str) -> AsyncGenerator:
     global _tables_created
     from src.storage.database import init_database, close_database, get_database
     
+    # Import all models to ensure they're registered with Base.metadata
+    from src.storage import db_models  # noqa: F401
+    from src.storage import models_documentation  # noqa: F401
+    from src.storage import models_analysis  # noqa: F401
+    
     try:
         # Initialize database
         await init_database()
@@ -98,6 +103,10 @@ async def db_session(test_database_url: str) -> AsyncGenerator:
                 from sqlalchemy import text
                 async with db.engine.begin() as conn:
                     # Drop tables in reverse dependency order with CASCADE
+                    await conn.execute(text("DROP TABLE IF EXISTS documentation_artifacts CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS documentation_runs CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS hierarchical_contexts CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS repository_contexts CASCADE"))
                     await conn.execute(text("DROP TABLE IF EXISTS document_placements CASCADE"))
                     await conn.execute(text("DROP TABLE IF EXISTS time_periods CASCADE"))
                     await conn.execute(text("DROP TABLE IF EXISTS timelines CASCADE"))

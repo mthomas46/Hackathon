@@ -24,7 +24,7 @@ class DocumentationRunModel(Base):
     # Primary key
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     plan_id = Column(String(500), index=True)
-    repo_id = Column(String(500), ForeignKey("repository_contexts.repo_id", ondelete="CASCADE"), index=True)
+    repo_id = Column(String(500), ForeignKey("repository_contexts.repo_id", ondelete="CASCADE"), nullable=True, index=True)
     
     # Run configuration
     passes_completed = Column(Integer, default=0)
