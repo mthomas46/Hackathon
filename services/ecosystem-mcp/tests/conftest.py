@@ -89,12 +89,20 @@ async def db_session(test_database_url: str) -> AsyncGenerator:
         # Initialize database
         await init_database()
         
-        # Create tables once
+        # Drop and recreate tables once per session to ensure fresh schema
         if not _tables_created:
             db = get_database()
+            try:
+                logger.info("🔄 Dropping existing tables to ensure fresh schema...")
+                await db.drop_tables()
+                logger.info("✅ Tables dropped")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not drop tables (may not exist): {e}")
+            
+            logger.info("📝 Creating tables with current schema...")
             await db.create_tables()
             _tables_created = True
-            logger.info("✅ Test database tables created")
+            logger.info("✅ Test database tables created with fresh schema")
         
         # Get database instance and create session
         db = get_database()
