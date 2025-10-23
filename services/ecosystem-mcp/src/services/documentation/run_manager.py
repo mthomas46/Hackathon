@@ -1,105 +1,22 @@
 """
 Documentation Run Manager
 
-Manages documentation generation runs, persisting configuration,
-progress, and generated documents.
+Manages documentation generation runs, including creation, tracking,
+artifact association, and lifecycle management.
 """
 
-import hashlib
 import logging
-from datetime import datetime
-from typing import List, Dict, Optional
+from typing import Optional, List, Dict, Any
 from uuid import UUID, uuid4
-from pathlib import Path
+from datetime import datetime
 
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...storage.models_documentation import DocumentationRunModel as DBDocumentationRunModel
+from ...storage.models_documentation import DocumentationArtifactModel as DBDocumentationArtifactModel
+from ...storage.repositories import DocumentationRunRepository
+
 logger = logging.getLogger(__name__)
-
-
-class DocumentationRun:
-    """Represents a documentation generation run."""
-    
-    def __init__(
-        self,
-        id: UUID,
-        name: str,
-        description: str,
-        status: str,
-        source_directory: str,
-        output_format: str,
-        response_size: Optional[str],
-        tier: Optional[str],
-        num_passes: int,
-        questions_per_pass: int,
-        started_at: Optional[datetime],
-        completed_at: Optional[datetime],
-        duration_seconds: Optional[int],
-        total_documents: int,
-        successful_documents: int,
-        failed_documents: int,
-        output_directory: Optional[str],
-        created_by: Optional[str],
-        created_at: datetime,
-        metadata: Optional[Dict] = None
-    ):
-        self.id = id
-        self.name = name
-        self.description = description
-        self.status = status
-        self.source_directory = source_directory
-        self.output_format = output_format
-        self.response_size = response_size
-        self.tier = tier
-        self.num_passes = num_passes
-        self.questions_per_pass = questions_per_pass
-        self.started_at = started_at
-        self.completed_at = completed_at
-        self.duration_seconds = duration_seconds
-        self.total_documents = total_documents
-        self.successful_documents = successful_documents
-        self.failed_documents = failed_documents
-        self.output_directory = output_directory
-        self.created_by = created_by
-        self.created_at = created_at
-        self.metadata = metadata or {}
-
-
-class GeneratedDocument:
-    """Represents a generated document."""
-    
-    def __init__(
-        self,
-        id: UUID,
-        run_id: UUID,
-        title: str,
-        filename: str,
-        file_path: str,
-        content: str,
-        content_hash: str,
-        content_size: int,
-        pass_number: Optional[int],
-        question: Optional[str],
-        status: str,
-        generation_time_seconds: Optional[float],
-        word_count: Optional[int],
-        created_at: datetime
-    ):
-        self.id = id
-        self.run_id = run_id
-        self.title = title
-        self.filename = filename
-        self.file_path = file_path
-        self.content = content
-        self.content_hash = content_hash
-        self.content_size = content_size
-        self.pass_number = pass_number
-        self.question = question
-        self.status = status
-        self.generation_time_seconds = generation_time_seconds
-        self.word_count = word_count
-        self.created_at = created_at
 
 
 class DocumentationRunManager:
@@ -107,365 +24,298 @@ class DocumentationRunManager:
     Manages documentation generation runs.
     
     Features:
-    - Create and track runs
-    - Store generated documents
-    - Real-time progress updates
-    - Run history and statistics
+    - Run creation and lifecycle management
+    - Artifact association
+    - Status tracking
+    - Metadata management
+    - Query and retrieval
     """
     
-    def __init__(self, db_session: AsyncSession):
-        self.db = db_session
-        self.logger = logging.getLogger(__name__)
+    def __init__(self, session: AsyncSession, repository: Optional[DocumentationRunRepository] = None):
+        """
+        Initialize documentation run manager.
+        
+        Args:
+            session: Database session
+            repository: Optional repository (creates if not provided)
+        """
+        self.session = session
+        self.repository = repository or DocumentationRunRepository(session)
+        logger.info("DocumentationRunManager initialized")
     
     async def create_run(
         self,
-        name: str,
-        description: str,
-        source_directory: str,
-        output_format: str = "markdown",
-        response_size: Optional[str] = None,
-        tier: Optional[str] = None,
-        num_passes: int = 3,
-        questions_per_pass: int = 5,
-        created_by: Optional[str] = None,
-        metadata: Optional[Dict] = None
-    ) -> UUID:
+        repo_path: str,
+        config: Dict[str, Any],
+        snapshot_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        test_session_id: Optional[str] = None
+    ) -> DBDocumentationRunModel:
         """
         Create a new documentation run.
         
-        Returns:
-            UUID of the created run
-        """
-        try:
-            run_id = uuid4()
-            
-            # Calculate config hash for deduplication
-            config_str = f"{source_directory}:{output_format}:{response_size}:{tier}:{num_passes}:{questions_per_pass}"
-            config_hash = hashlib.sha256(config_str.encode()).hexdigest()
-            
-            query = text("""
-                INSERT INTO documentation_runs (
-                    id, name, description, status, source_directory, output_format,
-                    response_size, tier, num_passes, questions_per_pass,
-                    config_hash, created_by, metadata
-                )
-                VALUES (
-                    :id, :name, :description, :status, :source_directory, :output_format,
-                    :response_size, :tier, :num_passes, :questions_per_pass,
-                    :config_hash, :created_by, :metadata
-                )
-                RETURNING id
-            """)
-            
-            result = await self.db.execute(
-                query,
-                {
-                    "id": run_id,
-                    "name": name,
-                    "description": description,
-                    "status": "pending",
-                    "source_directory": source_directory,
-                    "output_format": output_format,
-                    "response_size": response_size,
-                    "tier": tier,
-                    "num_passes": num_passes,
-                    "questions_per_pass": questions_per_pass,
-                    "config_hash": config_hash,
-                    "created_by": created_by,
-                    "metadata": metadata
-                }
-            )
-            
-            await self.db.commit()
-            
-            self.logger.info(f"Created documentation run: {run_id} - {name}")
-            return run_id
-            
-        except Exception as e:
-            await self.db.rollback()
-            self.logger.error(f"Failed to create run: {e}", exc_info=True)
-            raise
-    
-    async def start_run(self, run_id: UUID, output_directory: str):
-        """Mark run as started."""
-        try:
-            query = text("""
-                UPDATE documentation_runs
-                SET status = 'running', started_at = NOW(), output_directory = :output_dir
-                WHERE id = :run_id
-            """)
-            
-            await self.db.execute(query, {"run_id": run_id, "output_dir": output_directory})
-            await self.db.commit()
-            
-            self.logger.info(f"Started run: {run_id}")
-            
-        except Exception as e:
-            await self.db.rollback()
-            self.logger.error(f"Failed to start run: {e}", exc_info=True)
-            raise
-    
-    async def complete_run(
-        self,
-        run_id: UUID,
-        status: str = "completed",
-        total_docs: Optional[int] = None,
-        successful_docs: Optional[int] = None,
-        failed_docs: Optional[int] = None
-    ):
-        """Mark run as completed or failed."""
-        try:
-            query = text("""
-                SELECT update_documentation_run_status(
-                    :run_id, :status, :total_docs, :successful_docs, :failed_docs
-                )
-            """)
-            
-            await self.db.execute(
-                query,
-                {
-                    "run_id": run_id,
-                    "status": status,
-                    "total_docs": total_docs,
-                    "successful_docs": successful_docs,
-                    "failed_docs": failed_docs
-                }
-            )
-            
-            await self.db.commit()
-            
-            self.logger.info(f"Completed run: {run_id} with status: {status}")
-            
-        except Exception as e:
-            await self.db.rollback()
-            self.logger.error(f"Failed to complete run: {e}", exc_info=True)
-            raise
-    
-    async def add_document(
-        self,
-        run_id: UUID,
-        title: str,
-        filename: str,
-        content: str,
-        pass_number: Optional[int] = None,
-        question: Optional[str] = None,
-        generation_time_seconds: Optional[float] = None,
-        source_files: Optional[List[str]] = None
-    ) -> UUID:
-        """
-        Add a generated document to a run.
+        Args:
+            repo_path: Repository path
+            config: Run configuration
+            snapshot_id: Optional snapshot ID
+            metadata: Optional metadata
+            test_session_id: Optional test session ID
         
         Returns:
-            UUID of the created document
+            Created run model
         """
-        try:
-            doc_id = uuid4()
-            
-            # Calculate content hash and metrics
-            content_hash = hashlib.sha256(content.encode()).hexdigest()
-            content_size = len(content.encode())
-            word_count = len(content.split())
-            
-            # Determine file path
-            file_path = f"{filename}"
-            
-            query = text("""
-                INSERT INTO generated_documents (
-                    id, run_id, title, filename, file_path, content,
-                    content_hash, content_size, pass_number, question,
-                    generation_time_seconds, word_count, source_files, status
-                )
-                VALUES (
-                    :id, :run_id, :title, :filename, :file_path, :content,
-                    :content_hash, :content_size, :pass_number, :question,
-                    :generation_time, :word_count, :source_files, :status
-                )
-                RETURNING id
-            """)
-            
-            await self.db.execute(
-                query,
-                {
-                    "id": doc_id,
-                    "run_id": run_id,
-                    "title": title,
-                    "filename": filename,
-                    "file_path": file_path,
-                    "content": content,
-                    "content_hash": content_hash,
-                    "content_size": content_size,
-                    "pass_number": pass_number,
-                    "question": question,
-                    "generation_time": generation_time_seconds,
-                    "word_count": word_count,
-                    "source_files": source_files,
-                    "status": "generated"
-                }
-            )
-            
-            await self.db.commit()
-            
-            self.logger.info(f"Added document to run {run_id}: {filename}")
-            return doc_id
-            
-        except Exception as e:
-            await self.db.rollback()
-            self.logger.error(f"Failed to add document: {e}", exc_info=True)
-            raise
+        logger.info(f"Creating documentation run: repo={repo_path}")
+        
+        # Prepare metadata
+        run_metadata = metadata or {}
+        if snapshot_id:
+            run_metadata["snapshot_id"] = snapshot_id
+        if test_session_id:
+            run_metadata["test_session_id"] = test_session_id
+        
+        # Generate plan_id and repo_id from repo_path
+        plan_id = snapshot_id or str(uuid4())
+        repo_id = repo_path  # Use repo_path as repo_id
+        
+        # Extract total_passes from config
+        total_passes = config.get("passes", 5)
+        
+        # Create run using actual repository API
+        run = await self.repository.create_run(
+            plan_id=plan_id,
+            repo_id=repo_id,
+            status="pending",
+            total_passes=total_passes,
+            config=config
+        )
+        
+        # Update metadata if provided
+        if run_metadata:
+            run.metadata = run_metadata
+            await self.session.flush()
+        
+        await self.session.commit()
+        logger.info(f"✅ Created documentation run: {run.id}")
+        
+        return run
     
-    async def update_progress(
+    async def get_run(self, run_id: UUID) -> Optional[DBDocumentationRunModel]:
+        """
+        Get run by ID.
+        
+        Args:
+            run_id: Run UUID
+        
+        Returns:
+            Run model or None
+        """
+        return await self.repository.get_run(run_id)
+    
+    async def get_runs_by_repo(
+        self,
+        repo_path: str,
+        limit: int = 100
+    ) -> List[DBDocumentationRunModel]:
+        """
+        Get runs by repository path.
+        
+        Args:
+            repo_path: Repository path
+            limit: Max results
+        
+        Returns:
+            List of runs
+        """
+        return await self.repository.get_runs_by_repo(repo_path, limit=limit)
+    
+    async def get_runs_by_snapshot(
+        self,
+        snapshot_id: str
+    ) -> List[DBDocumentationRunModel]:
+        """
+        Get runs by snapshot ID.
+        
+        Args:
+            snapshot_id: Snapshot ID
+        
+        Returns:
+            List of runs
+        """
+        return await self.repository.get_runs_by_snapshot(snapshot_id)
+    
+    async def update_status(
         self,
         run_id: UUID,
-        current_pass: int,
-        total_passes: int,
-        current_question: int,
-        total_questions: int,
-        current_operation: str,
-        docs_generated: int,
-        docs_failed: int
-    ):
-        """Update real-time progress for a run."""
-        try:
-            query = text("""
-                SELECT update_run_progress(
-                    :run_id, :current_pass, :total_passes, :current_question,
-                    :total_questions, :current_operation, :docs_generated, :docs_failed
-                )
-            """)
-            
-            await self.db.execute(
-                query,
-                {
-                    "run_id": run_id,
-                    "current_pass": current_pass,
-                    "total_passes": total_passes,
-                    "current_question": current_question,
-                    "total_questions": total_questions,
-                    "current_operation": current_operation,
-                    "docs_generated": docs_generated,
-                    "docs_failed": docs_failed
-                }
-            )
-            
-            await self.db.commit()
-            
-        except Exception as e:
-            await self.db.rollback()
-            self.logger.error(f"Failed to update progress: {e}", exc_info=True)
-            # Don't raise - progress updates are non-critical
+        status: str,
+        error_message: Optional[str] = None
+    ) -> bool:
+        """
+        Update run status.
+        
+        Args:
+            run_id: Run UUID
+            status: New status
+            error_message: Optional error message
+        
+        Returns:
+            True if updated
+        """
+        logger.info(f"Updating run status: {run_id} -> {status}")
+        
+        success = await self.repository.update_status(
+            run_id=run_id,
+            status=status,
+            error_message=error_message
+        )
+        
+        await self.session.commit()
+        
+        if success:
+            logger.info(f"✅ Updated run status: {run_id}")
+        else:
+            logger.warning(f"⚠️ Failed to update run status: {run_id}")
+        
+        return success
     
-    async def get_run(self, run_id: UUID) -> Optional[Dict]:
-        """Get run details."""
-        try:
-            query = text("""
-                SELECT * FROM documentation_runs WHERE id = :run_id
-            """)
-            
-            result = await self.db.execute(query, {"run_id": run_id})
-            row = result.fetchone()
-            
-            if not row:
-                return None
-            
-            return dict(row._mapping)
-            
-        except Exception as e:
-            self.logger.error(f"Failed to get run: {e}", exc_info=True)
-            raise
-    
-    async def list_runs(
-        self,
-        status: Optional[str] = None,
-        limit: int = 50,
-        offset: int = 0
-    ) -> List[Dict]:
-        """List documentation runs."""
-        try:
-            if status:
-                query = text("""
-                    SELECT * FROM documentation_run_summary
-                    WHERE status = :status
-                    ORDER BY created_at DESC
-                    LIMIT :limit OFFSET :offset
-                """)
-                params = {"status": status, "limit": limit, "offset": offset}
-            else:
-                query = text("""
-                    SELECT * FROM documentation_run_summary
-                    ORDER BY created_at DESC
-                    LIMIT :limit OFFSET :offset
-                """)
-                params = {"limit": limit, "offset": offset}
-            
-            result = await self.db.execute(query, params)
-            rows = result.fetchall()
-            
-            return [dict(row._mapping) for row in rows]
-            
-        except Exception as e:
-            self.logger.error(f"Failed to list runs: {e}", exc_info=True)
-            raise
-    
-    async def get_run_documents(
+    async def add_artifact(
         self,
         run_id: UUID,
-        limit: int = 100,
-        offset: int = 0
-    ) -> List[Dict]:
-        """Get documents for a run."""
-        try:
-            query = text("""
-                SELECT * FROM generated_documents
-                WHERE run_id = :run_id
-                ORDER BY created_at ASC
-                LIMIT :limit OFFSET :offset
-            """)
-            
-            result = await self.db.execute(
-                query,
-                {"run_id": run_id, "limit": limit, "offset": offset}
-            )
-            rows = result.fetchall()
-            
-            return [dict(row._mapping) for row in rows]
-            
-        except Exception as e:
-            self.logger.error(f"Failed to get run documents: {e}", exc_info=True)
-            raise
+        document_type: str,
+        file_path: str,
+        content: str,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> DBDocumentationArtifactModel:
+        """
+        Add artifact to run.
+        
+        Args:
+            run_id: Run UUID
+            document_type: Document type
+            file_path: File path
+            content: Document content
+            metadata: Optional metadata
+        
+        Returns:
+            Created artifact
+        """
+        logger.info(f"Adding artifact to run: {run_id} - {document_type}")
+        
+        artifact = await self.repository.add_artifact(
+            run_id=run_id,
+            document_type=document_type,
+            file_path=file_path,
+            content=content,
+            metadata=metadata or {}
+        )
+        
+        await self.session.commit()
+        logger.info(f"✅ Added artifact: {artifact.id}")
+        
+        return artifact
     
-    async def get_run_progress(self, run_id: UUID) -> Optional[Dict]:
-        """Get current progress for a run."""
-        try:
-            query = text("""
-                SELECT * FROM documentation_run_progress WHERE run_id = :run_id
-            """)
-            
-            result = await self.db.execute(query, {"run_id": run_id})
-            row = result.fetchone()
-            
-            if not row:
-                return None
-            
-            return dict(row._mapping)
-            
-        except Exception as e:
-            self.logger.error(f"Failed to get run progress: {e}", exc_info=True)
-            raise
+    async def get_artifacts(
+        self,
+        run_id: UUID
+    ) -> List[DBDocumentationArtifactModel]:
+        """
+        Get artifacts for run.
+        
+        Args:
+            run_id: Run UUID
+        
+        Returns:
+            List of artifacts
+        """
+        return await self.repository.get_artifacts(run_id)
     
-    async def delete_run(self, run_id: UUID):
-        """Delete a run and all its documents."""
-        try:
-            query = text("""
-                DELETE FROM documentation_runs WHERE id = :run_id
-            """)
-            
-            await self.db.execute(query, {"run_id": run_id})
-            await self.db.commit()
-            
-            self.logger.info(f"Deleted run: {run_id}")
-            
-        except Exception as e:
-            await self.db.rollback()
-            self.logger.error(f"Failed to delete run: {e}", exc_info=True)
-            raise
+    async def get_artifact(
+        self,
+        artifact_id: UUID
+    ) -> Optional[DBDocumentationArtifactModel]:
+        """
+        Get artifact by ID.
+        
+        Args:
+            artifact_id: Artifact UUID
+        
+        Returns:
+            Artifact or None
+        """
+        return await self.repository.get_artifact(artifact_id)
+    
+    async def update_metadata(
+        self,
+        run_id: UUID,
+        metadata: Dict[str, Any]
+    ) -> bool:
+        """
+        Update run metadata.
+        
+        Args:
+            run_id: Run UUID
+            metadata: New metadata
+        
+        Returns:
+            True if updated
+        """
+        logger.info(f"Updating run metadata: {run_id}")
+        
+        success = await self.repository.update_metadata(run_id, metadata)
+        await self.session.commit()
+        
+        return success
+    
+    async def delete_run(self, run_id: UUID) -> bool:
+        """
+        Delete run and its artifacts.
+        
+        Args:
+            run_id: Run UUID
+        
+        Returns:
+            True if deleted
+        """
+        logger.info(f"Deleting run: {run_id}")
+        
+        success = await self.repository.delete_run(run_id)
+        await self.session.commit()
+        
+        if success:
+            logger.info(f"✅ Deleted run: {run_id}")
+        else:
+            logger.warning(f"⚠️ Failed to delete run: {run_id}")
+        
+        return success
+    
+    async def get_run_statistics(self, run_id: UUID) -> Dict[str, Any]:
+        """
+        Get statistics for a run.
+        
+        Args:
+            run_id: Run UUID
+        
+        Returns:
+            Statistics dictionary
+        """
+        return await self.repository.get_run_statistics(run_id)
 
+
+# Singleton instance (optional)
+_run_manager: Optional[DocumentationRunManager] = None
+
+
+def get_run_manager(
+    session: AsyncSession,
+    repository: Optional[DocumentationRunRepository] = None
+) -> DocumentationRunManager:
+    """
+    Get documentation run manager.
+    
+    Args:
+        session: Database session
+        repository: Optional repository
+    
+    Returns:
+        DocumentationRunManager instance
+    """
+    return DocumentationRunManager(session, repository)

@@ -1,36 +1,12 @@
 """
-Documentation Generation Services (Phase 4)
+Documentation services for Ecosystem MCP.
 
-Multi-pass documentation generation for codebases.
+Provides documentation generation and run management.
 """
 
-from .doc_orchestrator import (
-    DocumentationOrchestrator,
-    DocumentationSet,
-    PassResult,
-    PassType,
-    DocStatus,
-    DocConfig,
-    get_doc_orchestrator
-)
-from .architecture_generator import ArchitectureGenerator
-from .component_generator import ComponentGenerator
-from .api_generator import APIReferenceGenerator
-from .examples_generator import ExamplesGenerator
-from .synthesis_generator import SynthesisGenerator
+from .run_manager import DocumentationRunManager, get_run_manager
 
 __all__ = [
-    "DocumentationOrchestrator",
-    "DocumentationSet",
-    "PassResult",
-    "PassType",
-    "DocStatus",
-    "DocConfig",
-    "get_doc_orchestrator",
-    "ArchitectureGenerator",
-    "ComponentGenerator",
-    "APIReferenceGenerator",
-    "ExamplesGenerator",
-    "SynthesisGenerator",
+    "DocumentationRunManager",
+    "get_run_manager",
 ]
-
