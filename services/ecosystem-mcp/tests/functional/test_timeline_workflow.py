@@ -38,6 +38,7 @@ class TestTimelineCreation:
         """
         from src.storage.repositories import DocumentRepository
         from src.services.timeline import TimelineManager, PeriodGenerator, DocumentPlacer
+        from src.models.timeline import TimelineCreate
         from tests.utils.test_helpers import create_test_document
         
         # Setup - pass session directly to services
@@ -50,35 +51,35 @@ class TestTimelineCreation:
         
         for file_path in python_files:
             content = file_path.read_text(encoding='utf-8', errors='ignore')
-            doc_data = create_test_document(
+            doc_model = create_test_document(
                 content=content,
                 file_path=str(file_path.relative_to(ecosystem_mcp_src_dir.parent)),
                 service_name="ecosystem-mcp-test",
                 session_id=test_session_id
             )
-            doc = await doc_repo.create(doc_data)
+            doc = await doc_repo.create(doc_model)
             docs.append(doc)
         
         assert len(docs) == 10
         
-        # Create timeline
-        timeline_data = {
-            "name": f"test_timeline_{test_session_id[:8]}",
-            "service_name": "ecosystem-mcp-test",
-            "repo_path": str(ecosystem_mcp_src_dir.parent),
-            "start_date": datetime.now() - timedelta(days=365),
-            "end_date": datetime.now(),
-            "strategy": "monthly",
-        }
+        # Create timeline using TimelineCreate model
+        timeline_data = TimelineCreate(
+            name=f"test_timeline_{test_session_id[:8]}",
+            service_name="ecosystem-mcp-test",
+            repo_path=str(ecosystem_mcp_src_dir.parent),
+            start_date=datetime.now() - timedelta(days=365),
+            end_date=datetime.now(),
+            period_strategy="monthly"
+        )
         
-        timeline = await timeline_manager.create_timeline(timeline_data)
+        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
         
         # Verify timeline created
         assert timeline is not None
         assert timeline.id is not None
-        assert timeline.name == timeline_data["name"]
+        assert timeline.name == timeline_data.name
         assert timeline.service_name == "ecosystem-mcp-test"
-        assert timeline.strategy == "monthly"
+        assert timeline.period_strategy == "monthly"
     
     async def test_create_timeline_with_metadata(
         self,
