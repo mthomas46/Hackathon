@@ -99,10 +99,10 @@ class TestTimelineWorkflow:
                 db_session.add(commit)
                 await db_session.flush()
             
-            # Create document
+            # Create document with unique file path per service
             doc = create_test_document(
-                content=f"# Test Document {i}\n\nContent for document {i}",
-                file_path=f"src/file_{i}.py",
+                content=f"# Test Document {i}\n\nContent for document {i} in {service_name}",
+                file_path=f"{service_name}/src/file_{i}.py",
                 file_type="python",
                 service_name=service_name,
                 ingestion_mode="git_history",
@@ -114,8 +114,8 @@ class TestTimelineWorkflow:
         # Create snapshot documents
         for i in range(snapshot_count):
             doc = create_test_document(
-                content=f"# Snapshot Document {i}\n\nSnapshot content {i}",
-                file_path=f"docs/readme_{i}.md",
+                content=f"# Snapshot Document {i}\n\nSnapshot content {i} in {service_name}",
+                file_path=f"{service_name}/docs/readme_{i}.md",
                 file_type="markdown",
                 service_name=service_name,
                 ingestion_mode="snapshot",

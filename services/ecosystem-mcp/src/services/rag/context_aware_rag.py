@@ -105,7 +105,8 @@ class ContextAwareRAG:
             logger.info(f"   🎯 Filters: {list(where.keys())}")
         
         # Generate query embedding
-        query_embedding = await self.embedding_service.generate_embedding(query)
+        embedding_result = await self.embedding_service.generate_embedding(query)
+        query_embedding = embedding_result["embedding"] if isinstance(embedding_result, dict) else embedding_result
         
         # Query ChromaDB with context
         try:
