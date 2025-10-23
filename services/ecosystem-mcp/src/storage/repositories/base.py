@@ -3,6 +3,7 @@ Base repository with enhanced patterns for bulk operations,
 transactions, streaming, and complex filtering.
 
 Provides common database operations with performance optimizations.
+Includes Layer 5 data isolation: automatic test data filtering in production.
 """
 
 import logging
@@ -13,6 +14,9 @@ from contextlib import asynccontextmanager
 from sqlalchemy import select, update, delete, func, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase
+
+from src.utils.environment_config import get_database_config
+from src.utils.test_data_marker import TestDataMarker
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +35,7 @@ class BaseRepository(Generic[ModelType]):
     - Complex filtering
     - Transaction support
     - Performance optimizations
+    - Layer 5 Data Isolation: Auto-filter test data in production
     """
     
     def __init__(self, session: AsyncSession, model_class: type[ModelType]):
@@ -43,6 +48,63 @@ class BaseRepository(Generic[ModelType]):
         """
         self.session = session
         self.model_class = model_class
+        self.config = get_database_config()
+    
+    # ========================================================================
+    # Layer 5: Test Data Isolation (NEW)
+    # ========================================================================
+    
+    def _should_filter_test_data(self) -> bool:
+        """
+        Check if test data should be filtered from queries.
+        
+        Test data is filtered in all non-test environments to ensure
+        production users never see test data, even if it accidentally
+        exists in the database.
+        
+        Returns:
+            True if test data should be filtered (production/staging)
+            False if test data is allowed (test/development)
+        """
+        return not self.config.get("allow_test_data", False)
+    
+    def _filter_test_data(self, query: Select) -> Select:
+        """
+        Apply test data filtering to query (Layer 5 protection).
+        
+        In production/staging environments, automatically filters out
+        any records marked as test data. This acts as a safety net
+        if test data accidentally ends up in production database.
+        
+        Args:
+            query: SQLAlchemy query to filter
+        
+        Returns:
+            Query with test data filter applied (if needed)
+        
+        Example:
+            # In production: filters out test data automatically
+            # In test: includes test data
+            query = select(DocumentModel)
+            query = self._filter_test_data(query)
+            # Now safe for production use
+        """
+        if not self._should_filter_test_data():
+            # Test/dev environment: allow test data
+            return query
+        
+        # Production/staging: filter out test data
+        # Check if model has metadata field (JSONB)
+        if hasattr(self.model_class, 'metadata'):
+            # Filter out records where metadata contains test marker
+            query = query.where(
+                ~self.model_class.metadata.contains({
+                    TestDataMarker.TEST_MARKER_KEY: True
+                })
+            )
+            logger.debug(f"Applied test data filter to {self.model_class.__name__} query")
+        
+        return query
     
     # ========================================================================
     # Basic CRUD Operations
@@ -71,14 +133,17 @@ class BaseRepository(Generic[ModelType]):
         """
         Get all entities.
         
+        Automatically filters test data in production (Layer 5 protection).
+        
         Args:
             limit: Maximum number of results
             offset: Number of results to skip
         
         Returns:
-            List of entities
+            List of entities (excluding test data in production)
         """
         query = select(self.model_class)
+        query = self._filter_test_data(query)  # Layer 5 protection
         
         if offset:
             query = query.offset(offset)
@@ -131,13 +196,23 @@ class BaseRepository(Generic[ModelType]):
         """
         Count entities.
         
+        Automatically filters test data in production (Layer 5 protection).
+        
         Args:
             filters: Optional filters
         
         Returns:
-            Entity count
+            Entity count (excluding test data in production)
         """
         query = select(func.count()).select_from(self.model_class)
+        
+        # Apply test data filter first
+        if hasattr(self.model_class, 'metadata') and self._should_filter_test_data():
+            query = query.where(
+                ~self.model_class.metadata.contains({
+                    TestDataMarker.TEST_MARKER_KEY: True
+                })
+            )
         
         if filters:
             query = self._apply_filters(query, filters)
@@ -278,6 +353,7 @@ class BaseRepository(Generic[ModelType]):
         """
         Stream entities without loading all into memory.
         
+        Automatically filters test data in production (Layer 5 protection).
         Useful for processing large datasets.
         
         Args:
@@ -285,7 +361,7 @@ class BaseRepository(Generic[ModelType]):
             batch_size: Number of entities per fetch
         
         Yields:
-            Entity instances one at a time
+            Entity instances one at a time (excluding test data in production)
         
         Example:
             async for document in repo.stream_all():
@@ -295,6 +371,7 @@ class BaseRepository(Generic[ModelType]):
         
         while True:
             query = select(self.model_class)
+            query = self._filter_test_data(query)  # Layer 5 protection
             
             if filters:
                 query = self._apply_filters(query, filters)
@@ -321,18 +398,21 @@ class BaseRepository(Generic[ModelType]):
         """
         Stream filtered entities.
         
+        Automatically filters test data in production (Layer 5 protection).
+        
         Args:
             filters: Filters to apply
             order_by: Field to order by
             batch_size: Number of entities per fetch
         
         Yields:
-            Filtered entity instances
+            Filtered entity instances (excluding test data in production)
         """
         offset = 0
         
         while True:
             query = select(self.model_class)
+            query = self._filter_test_data(query)  # Layer 5 protection
             query = self._apply_filters(query, filters)
             
             if order_by:
@@ -433,6 +513,8 @@ class BaseRepository(Generic[ModelType]):
         """
         Find entities with complex filters.
         
+        Automatically filters test data in production (Layer 5 protection).
+        
         Args:
             filters: Filter dict
             order_by: Field to order by
@@ -440,7 +522,7 @@ class BaseRepository(Generic[ModelType]):
             offset: Results to skip
         
         Returns:
-            List of matching entities
+            List of matching entities (excluding test data in production)
         
         Example:
             # Find documents created in last 7 days
@@ -450,6 +532,7 @@ class BaseRepository(Generic[ModelType]):
             }, order_by="created_at", limit=100)
         """
         query = select(self.model_class)
+        query = self._filter_test_data(query)  # Layer 5 protection
         query = self._apply_filters(query, filters)
         
         if order_by:
@@ -484,13 +567,24 @@ class BaseRepository(Generic[ModelType]):
         """
         Check if entity exists with filters.
         
+        Automatically filters test data in production (Layer 5 protection).
+        
         Args:
             filters: Filter dict
         
         Returns:
-            True if entity exists
+            True if entity exists (excluding test data in production)
         """
         query = select(func.count()).select_from(self.model_class)
+        
+        # Apply test data filter first
+        if hasattr(self.model_class, 'metadata') and self._should_filter_test_data():
+            query = query.where(
+                ~self.model_class.metadata.contains({
+                    TestDataMarker.TEST_MARKER_KEY: True
+                })
+            )
+        
         query = self._apply_filters(query, filters)
         
         result = await self.session.execute(query)
