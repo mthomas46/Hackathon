@@ -105,6 +105,63 @@ def reset_singleton():
         pass  # Module not available, skip reset
 
 
+# Helper functions for service availability checks
+async def _check_services_available():
+    """
+    Check if required services are available for testing.
+    
+    Returns:
+        bool: True if services are available, False otherwise
+    """
+    import httpx
+    
+    services = [
+        "http://localhost:8000",  # ecosystem-mcp
+    ]
+    
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            for service_url in services:
+                try:
+                    response = await client.get(f"{service_url}/health")
+                    if response.status_code != 200:
+                        return False
+                except (httpx.ConnectError, httpx.TimeoutException):
+                    return False
+        return True
+    except Exception:
+        return False
+
+
+async def _check_all_services_available():
+    """
+    Check if all services (including optional ones) are available.
+    
+    Returns:
+        bool: True if all services are available, False otherwise
+    """
+    import httpx
+    
+    services = [
+        "http://localhost:8000",  # ecosystem-mcp
+        "http://localhost:8501",  # dashboard
+        "http://localhost:8002",  # embedding service
+    ]
+    
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            for service_url in services:
+                try:
+                    response = await client.get(f"{service_url}/health")
+                    if response.status_code != 200:
+                        return False
+                except (httpx.ConnectError, httpx.TimeoutException):
+                    return False
+        return True
+    except Exception:
+        return False
+
+
 # Performance test configuration
 @pytest.fixture
 def performance_threshold():
