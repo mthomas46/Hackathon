@@ -17,6 +17,8 @@ class EmbeddingMetadata(BaseModel):
     Metadata about the embedding generation.
     """
     
+    model_config = {"protected_namespaces": ()}  # Allow 'model_' prefix
+    
     model_name: str = Field(
         description="Model used to generate embedding"
     )
