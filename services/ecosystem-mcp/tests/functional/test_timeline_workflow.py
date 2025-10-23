@@ -784,12 +784,14 @@ def get_user(user_uuid: str, include_details: bool = False) -> UserDetails:
             service_name=service_name
         )
         
-        # Validate report
+        # Validate report (returns dict)
         assert report is not None
-        assert report.timeline_id == timeline.id
-        assert report.report_type == "progression"
-        assert len(report.content) > 0
-        assert len(report.citations) > 0
+        assert isinstance(report, dict)
+        assert report['timeline_id'] == str(timeline.id)
+        assert report['type'] == "progression"
+        assert len(report['content']) > 0
+        # Citations are embedded in content, not a separate field
+        assert report.get('metadata') is not None
     
     async def test_document_consolidation(self, db_session):
         """

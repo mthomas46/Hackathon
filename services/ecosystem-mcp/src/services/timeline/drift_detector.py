@@ -267,10 +267,10 @@ class DriftDetector:
             ]
             
             for doc in documents:
-                if not doc.content:
+                if not doc.normalized_content:
                     continue
                 
-                content_lower = doc.content.lower()
+                content_lower = doc.normalized_content.lower()
                 
                 # Check for outdated markers
                 for marker in outdated_markers:
@@ -341,27 +341,21 @@ class DriftDetector:
         document: DocumentModel
     ) -> Optional[datetime]:
         """Find last code change related to document."""
-        from pathlib import Path
-        from sqlalchemy import select, or_
+        from sqlalchemy import select
         
-        # Extract path components
-        file_path = Path(document.file_path)
-        
-        # Try to find commits
-        stmt = select(GitCommitModel).where(
-            or_(
-                GitCommitModel.file_path.like(f"%{file_path.stem}%"),
-                GitCommitModel.file_path.like(f"%{file_path.parent}%")
+        # If document has a git commit, use that commit's date
+        if document.git_commit_sha:
+            stmt = select(GitCommitModel).where(
+                GitCommitModel.sha == document.git_commit_sha
             )
-        ).order_by(GitCommitModel.commit_date.desc()).limit(1)
+            result = await session.execute(stmt)
+            commit = result.scalar_one_or_none()
+            
+            if commit:
+                return commit.date
         
-        result = await session.execute(stmt)
-        commit = result.scalar_one_or_none()
-        
-        if commit:
-            return commit.commit_date
-        
-        return None
+        # For snapshot mode documents, use created_at
+        return document.created_at
     
     def _deduplicate_drifts(
         self,
