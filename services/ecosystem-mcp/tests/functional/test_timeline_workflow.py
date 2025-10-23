@@ -69,7 +69,7 @@ class TestTimelineCreation:
             repo_path=str(ecosystem_mcp_src_dir.parent),
             start_date=datetime.now() - timedelta(days=365),
             end_date=datetime.now(),
-            period_strategy="monthly"
+            period_strategy=PeriodStrategy.MONTHLY
         )
         
         timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
@@ -101,7 +101,7 @@ class TestTimelineCreation:
             repo_path="/test/repo",
             start_date=datetime(2024, 1, 1),
             end_date=datetime(2024, 12, 31),
-            period_strategy="quarterly",
+            period_strategy=PeriodStrategy.QUARTERLY,
             metadata=TimelineMetadata(
                 extra={
                     "purpose": "testing",
@@ -130,6 +130,7 @@ class TestTimelineCreation:
         """Test creating multiple timelines for same service."""
         from src.storage.repositories import TimelineRepository
         from src.services.timeline import TimelineManager
+        from src.models.timeline import TimelineCreate, TimelineMetadata, PeriodStrategy
         
         # Repository created internally by TimelineManager
         timeline_manager = TimelineManager(clean_database)
@@ -137,22 +138,24 @@ class TestTimelineCreation:
         # Create 3 timelines
         timelines = []
         for i in range(3):
-            timeline_data = {
-                "name": f"test_timeline_{i}_{test_session_id[:8]}",
-                "service_name": "test-service",
-                "repo_path": "/test/repo",
-                "start_date": datetime(2024, 1, 1),
-                "end_date": datetime(2024, 12, 31),
-                "strategy": "monthly",
-                "metadata": {"_test_data_marker": True}
-            }
-            timeline = await timeline_manager.create_timeline(timeline_data)
+            timeline_data = TimelineCreate(
+                name=f"test_timeline_{i}_{test_session_id[:8]}",
+                service_name="test-service",
+                repo_path="/test/repo",
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+                period_strategy=PeriodStrategy.MONTHLY,
+                metadata=TimelineMetadata(extra={"_test_data_marker": True})
+            )
+            timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
             timelines.append(timeline)
         
         assert len(timelines) == 3
         assert all(t.id is not None for t in timelines)
         assert all(t.service_name == "test-service" for t in timelines)
 
+
+from src.models.timeline import PeriodStrategy
 
 class TestPeriodGeneration:
     """Test time period generation strategies."""
@@ -165,6 +168,7 @@ class TestPeriodGeneration:
         """Test generating monthly periods."""
         from src.storage.repositories import TimelineRepository, TimePeriodRepository
         from src.services.timeline import TimelineManager, PeriodGenerator
+        from src.models.timeline import TimelineCreate, TimelineMetadata, PeriodStrategy
         
         # Repository created internally by TimelineManager
         # Repository created internally by PeriodGenerator
@@ -172,23 +176,24 @@ class TestPeriodGeneration:
         period_generator = PeriodGenerator(clean_database)
         
         # Create timeline
-        timeline_data = {
-            "name": f"monthly_timeline_{test_session_id[:8]}",
-            "service_name": "test-service",
-            "repo_path": "/test/repo",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2024, 3, 31),  # 3 months
-            "strategy": "monthly",
-            "metadata": {"_test_data_marker": True}
-        }
-        timeline = await timeline_manager.create_timeline(timeline_data)
+        timeline_data = TimelineCreate(
+            name=f"monthly_timeline_{test_session_id[:8]}",
+            service_name="test-service",
+            repo_path="/test/repo",
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 3, 31),  # 3 months
+            period_strategy=PeriodStrategy.MONTHLY,
+            metadata=TimelineMetadata(extra={"_test_data_marker": True})
+        )
+        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
         
         # Generate periods
         periods = await period_generator.generate_periods(
             timeline_id=timeline.id,
+            service_name=timeline.service_name,
             start_date=timeline.start_date,
             end_date=timeline.end_date,
-            strategy="monthly"
+            strategy=PeriodStrategy.MONTHLY
         )
         
         # Should have 3 periods (Jan, Feb, Mar)
@@ -219,14 +224,15 @@ class TestPeriodGeneration:
             "strategy": "quarterly",
             "metadata": {"_test_data_marker": True}
         }
-        timeline = await timeline_manager.create_timeline(timeline_data)
+        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
         
         # Generate periods
         periods = await period_generator.generate_periods(
             timeline_id=timeline.id,
+            service_name=timeline.service_name,
             start_date=timeline.start_date,
             end_date=timeline.end_date,
-            strategy="quarterly"
+            strategy=PeriodStrategy.QUARTERLY
         )
         
         # Should have 4 periods (Q1-Q4)
@@ -256,14 +262,15 @@ class TestPeriodGeneration:
             "strategy": "adaptive",
             "metadata": {"_test_data_marker": True}
         }
-        timeline = await timeline_manager.create_timeline(timeline_data)
+        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
         
         # Generate periods
         periods = await period_generator.generate_periods(
             timeline_id=timeline.id,
+            service_name=timeline.service_name,
             start_date=timeline.start_date,
             end_date=timeline.end_date,
-            strategy="adaptive"
+            strategy=PeriodStrategy.ADAPTIVE
         )
         
         # Should have at least some periods
@@ -293,14 +300,15 @@ class TestPeriodGeneration:
             "strategy": "monthly",
             "metadata": {"_test_data_marker": True}
         }
-        timeline = await timeline_manager.create_timeline(timeline_data)
+        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
         
         # Generate periods
         periods = await period_generator.generate_periods(
             timeline_id=timeline.id,
+            service_name=timeline.service_name,
             start_date=timeline.start_date,
             end_date=timeline.end_date,
-            strategy="monthly"
+            strategy=PeriodStrategy.MONTHLY
         )
         
         # Verify sequence numbers are consecutive
@@ -347,14 +355,15 @@ class TestDocumentPlacement:
             "strategy": "monthly",
             "metadata": {"_test_data_marker": True}
         }
-        timeline = await timeline_manager.create_timeline(timeline_data)
+        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
         
         # Generate periods
         periods = await period_generator.generate_periods(
             timeline_id=timeline.id,
+            service_name=timeline.service_name,
             start_date=timeline.start_date,
             end_date=timeline.end_date,
-            strategy="monthly"
+            strategy=PeriodStrategy.MONTHLY
         )
         
         # Create test documents
@@ -408,7 +417,7 @@ class TestTimelineQueries:
                 "strategy": "monthly",
                 "metadata": {"_test_data_marker": True}
             }
-            await timeline_manager.create_timeline(timeline_data)
+            await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
         
         # Query timelines
         timelines = await timeline_repo.get_by_service(service_name)
@@ -440,14 +449,14 @@ class TestTimelineQueries:
             "strategy": "monthly",
             "metadata": {"_test_data_marker": True}
         }
-        timeline = await timeline_manager.create_timeline(timeline_data)
+        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
         
         # Generate periods
         await period_generator.generate_periods(
             timeline_id=timeline.id,
             start_date=timeline.start_date,
             end_date=timeline.end_date,
-            strategy="monthly"
+            strategy=PeriodStrategy.MONTHLY
         )
         
         # Get summary
@@ -487,7 +496,7 @@ class TestConfidenceCalculation:
                 "ingestion_mode": "git_history"  # Should give HIGH confidence
             }
         }
-        timeline = await timeline_manager.create_timeline(timeline_data)
+        timeline = await timeline_manager.create_timeline(timeline_data, skip_confidence_check=True)
         
         # Calculate confidence
         confidence = confidence_calc.calculate_confidence(
