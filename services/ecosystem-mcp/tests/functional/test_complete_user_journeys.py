@@ -66,7 +66,7 @@ class TestDocumentLifecycle:
         assert len(results) >= 5
         
         # Step 4: Verify can access content for answer generation
-        assert all(d.content is not None for d in results)
+        assert all(d.normalized_content is not None for d in results)
         
         # Journey complete!
     
@@ -89,6 +89,7 @@ class TestDocumentLifecycle:
             TimePeriodRepository
         )
         from src.services.timeline import TimelineManager, PeriodGenerator
+        from src.models.timeline import TimelineCreate
         from tests.utils.test_helpers import create_test_document
         
         doc_repo = DocumentRepository(clean_database)
@@ -110,15 +111,15 @@ class TestDocumentLifecycle:
             await doc_repo.create(doc_data)
         
         # Step 2: Create timeline
-        timeline_data = {
-            "name": f"journey_timeline_{test_session_id[:8]}",
-            "service_name": "timeline-journey",
-            "repo_path": "/test/repo",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2024, 12, 31),
-            "strategy": "monthly",
-            "metadata": {"_test_data_marker": True}
-        }
+        timeline_data = TimelineCreate(
+            name=f"journey_timeline_{test_session_id[:8]}",
+            service_name="timeline-journey",
+            repo_path="/test/repo",
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 12, 31),
+            strategy="monthly",
+            metadata={"_test_data_marker": True}
+        )
         timeline = await timeline_manager.create_timeline(timeline_data)
         assert timeline is not None
         
@@ -170,8 +171,7 @@ class TestDocumentLifecycle:
         
         # Step 2: Detect stale documents
         stale_results = await staleness_detector.detect_stale_documents(
-            service_name="maintenance-journey",
-            staleness_threshold_days=90
+            service_name="maintenance-journey"
         )
         assert stale_results is not None
         
@@ -245,6 +245,7 @@ class TestMultiServiceIntegration:
         """
         from src.storage.repositories import TimelineRepository
         from src.services.timeline import TimelineManager
+        from src.models.timeline import TimelineCreate
         
         timeline_repo = TimelineRepository(clean_database)
         timeline_manager = TimelineManager(timeline_repo)
@@ -254,15 +255,15 @@ class TestMultiServiceIntegration:
         timelines = []
         
         for service in services:
-            timeline_data = {
-                "name": f"{service}_timeline",
-                "service_name": service,
-                "repo_path": f"/test/{service}",
-                "start_date": datetime(2024, 1, 1),
-                "end_date": datetime(2024, 12, 31),
-                "strategy": "monthly",
-                "metadata": {"_test_data_marker": True}
-            }
+            timeline_data = TimelineCreate(
+                name=f"{service}_timeline",
+                service_name=service,
+                repo_path=f"/test/{service}",
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+                strategy="monthly",
+                metadata={"_test_data_marker": True}
+            )
             timeline = await timeline_manager.create_timeline(timeline_data)
             timelines.append(timeline)
         
@@ -305,7 +306,7 @@ class TestMultiServiceIntegration:
             await doc_repo.create(doc_data)
         
         # Generate dashboard
-        dashboard = await quality_dashboard.get_quality_metrics(
+        dashboard = await quality_dashboard.get_quality_overview(
             service_name=service_name
         )
         
@@ -420,6 +421,7 @@ class TestComplexWorkflows:
         from src.storage.repositories import DocumentRepository, TimelineRepository
         from src.services.timeline import TimelineManager
         from src.services.maintenance import QualityDashboard
+        from src.models.timeline import TimelineCreate
         from tests.utils.test_helpers import create_test_document
         
         doc_repo = DocumentRepository(clean_database)
@@ -439,20 +441,20 @@ class TestComplexWorkflows:
         await doc_repo.create(doc_data)
         
         # Step 2: Create timeline
-        timeline_data = {
-            "name": f"lifecycle_timeline_{test_session_id[:8]}",
-            "service_name": service_name,
-            "repo_path": "/test/repo",
-            "start_date": datetime.now() - timedelta(days=365),
-            "end_date": datetime.now(),
-            "strategy": "monthly",
-            "metadata": {"_test_data_marker": True}
-        }
+        timeline_data = TimelineCreate(
+            name=f"lifecycle_timeline_{test_session_id[:8]}",
+            service_name=service_name,
+            repo_path="/test/repo",
+            start_date=datetime.now() - timedelta(days=365),
+            end_date=datetime.now(),
+            strategy="monthly",
+            metadata={"_test_data_marker": True}
+        )
         timeline = await timeline_manager.create_timeline(timeline_data)
         assert timeline is not None
         
         # Step 3: Check quality
-        dashboard = await quality_dashboard.get_quality_metrics(
+        dashboard = await quality_dashboard.get_quality_overview(
             service_name=service_name
         )
         assert dashboard is not None
@@ -550,7 +552,7 @@ class TestComplexWorkflows:
         assert len(docs) >= 3
         
         # Should be able to see progression
-        stages = [d.metadata.get("stage") for d in docs if d.metadata]
+        stages = [d.metadata.get("stage") for d in docs if d.metadata and isinstance(d.metadata, dict)]
         assert "alpha" in stages or "beta" in stages or "release" in stages
 
 
