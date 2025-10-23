@@ -57,29 +57,29 @@ class TestDocumentIngestionWorkflow:
             content = file_path.read_text(encoding='utf-8', errors='ignore')
             
             # Create test document (automatically marked)
-            doc_data = create_test_document(
+            doc_model = create_test_document(
                 content=content,
                 file_path=str(file_path.relative_to(ecosystem_mcp_src_dir.parent)),
                 file_type="python",
                 service_name="ecosystem-mcp-test",
                 session_id=test_session_id,
-                repo_path=str(ecosystem_mcp_src_dir.parent),
                 ingestion_mode="snapshot"
             )
             
             # Verify it's marked as test data
-            verify_test_data_marked(doc_data)
+            verify_test_data_marked(doc_model)
             
             # Store in database
-            doc = await doc_repo.create(doc_data)
+            doc = await doc_repo.create(doc_model)
             assert doc is not None
             assert doc.id is not None
-            assert doc.file_path == doc_data["file_path"]
+            assert doc.file_path == doc_model.file_path
             assert doc.service_name == "ecosystem-mcp-test"
             
-            # Verify test markers in stored document
-            assert doc.metadata.get("_test_data_marker") == True
-            assert doc.metadata.get("_test_session_id") == test_session_id
+            # Verify test markers in stored document (they're nested under 'metadata' key)
+            test_markers = doc.doc_metadata.get("metadata", {})
+            assert test_markers.get("_test_data_marker") == True
+            assert test_markers.get("_test_session_id") == test_session_id
             
             ingested_count += 1
         
@@ -93,15 +93,16 @@ class TestDocumentIngestionWorkflow:
         # Validate first document in detail
         first_doc = all_docs[0]
         assert first_doc.file_path is not None
-        assert first_doc.content is not None
+        assert first_doc.original_content is not None
         assert first_doc.service_name == "ecosystem-mcp-test"
-        assert first_doc.file_type == "python"
+        assert first_doc.original_format == "python"
         assert first_doc.created_at is not None
         
-        # Verify all docs are marked as test data
+        # Verify all docs are marked as test data (nested under 'metadata' key)
         for doc in all_docs:
-            assert doc.metadata.get("_test_data_marker") == True
-            assert doc.metadata.get("_test_session_id") == test_session_id
+            test_markers = doc.doc_metadata.get("metadata", {})
+            assert test_markers.get("_test_data_marker") == True
+            assert test_markers.get("_test_session_id") == test_session_id
     
     async def test_ingest_markdown_files(
         self,

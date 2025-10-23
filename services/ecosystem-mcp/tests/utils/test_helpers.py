@@ -8,8 +8,10 @@ to ensure proper isolation.
 from typing import Dict, Any, Optional
 from datetime import datetime
 import uuid
+import hashlib
 
 from src.utils.test_data_marker import TestDataMarker, get_current_test_name
+from src.storage.db_models import DocumentModel
 
 
 def create_test_document(
@@ -19,7 +21,7 @@ def create_test_document(
     service_name: str = "test-service",
     session_id: Optional[str] = None,
     **kwargs
-) -> Dict[str, Any]:
+) -> DocumentModel:
     """
     Create a test document with automatic test data marking.
     
@@ -32,32 +34,43 @@ def create_test_document(
         **kwargs: Additional document fields
         
     Returns:
-        Dict[str, Any]: Document data marked as test data
+        DocumentModel: Document model marked as test data
     """
     if not file_path:
         file_path = f"test_{uuid.uuid4().hex[:8]}.{file_type}"
     
-    doc_data = {
-        "file_path": file_path,
-        "content": content,
-        "file_type": file_type,
-        "service_name": service_name,
-        "repo_path": "/test/repo",
-        "ingestion_mode": "snapshot",
-        "metadata": {
-            "language": file_type,
-            "size": len(content),
-            "lines": content.count('\n') + 1,
-        },
-        **kwargs
+    # Calculate content hash
+    content_hash = hashlib.sha256(content.encode()).hexdigest()
+    
+    # Create base metadata
+    metadata = {
+        "language": file_type,
+        "size": len(content),
+        "lines": content.count('\n') + 1,
     }
     
-    # Mark as test data
-    return TestDataMarker.mark_as_test_data(
-        doc_data,
+    # Add test markers (TestDataMarker nests them under 'metadata' key - that's expected)
+    marked_data = TestDataMarker.mark_as_test_data(
+        metadata,
         session_id=session_id,
         test_name=get_current_test_name()
     )
+    
+    # Create DocumentModel instance
+    doc = DocumentModel(
+        file_path=file_path,
+        original_format=file_type,
+        original_content=content,
+        normalized_content=content,  # For tests, use same content
+        content_hash=content_hash,
+        service_name=service_name,
+        ingestion_mode=kwargs.get("ingestion_mode", "snapshot"),
+        doc_metadata=marked_data,  # Contains nested 'metadata' with test markers
+        is_latest=True,
+        **{k: v for k, v in kwargs.items() if k != "ingestion_mode"}
+    )
+    
+    return doc
 
 
 def create_test_timeline(
@@ -137,12 +150,12 @@ def create_test_commit(
     )
 
 
-def verify_test_data_marked(data: Dict[str, Any]) -> bool:
+def verify_test_data_marked(data) -> bool:
     """
     Verify that data is properly marked as test data.
     
     Args:
-        data: Data to verify
+        data: Data to verify (dict or model with doc_metadata attribute)
         
     Returns:
         bool: True if properly marked
@@ -150,8 +163,16 @@ def verify_test_data_marked(data: Dict[str, Any]) -> bool:
     Raises:
         AssertionError: If data is not properly marked
     """
-    assert TestDataMarker.is_test_data(data), "Data is not marked as test data"
-    assert TestDataMarker.get_test_session(data) is not None, "Missing test session ID"
-    assert TestDataMarker.get_test_created_at(data) is not None, "Missing creation timestamp"
+    # Get metadata from model or dict
+    if hasattr(data, 'doc_metadata'):
+        metadata = data.doc_metadata
+    elif hasattr(data, 'metadata'):
+        metadata = data.metadata
+    else:
+        metadata = data
+    
+    assert TestDataMarker.is_test_data(metadata), "Data is not marked as test data"
+    assert TestDataMarker.get_test_session(metadata) is not None, "Missing test session ID"
+    assert TestDataMarker.get_test_created_at(metadata) is not None, "Missing creation timestamp"
     return True
 
