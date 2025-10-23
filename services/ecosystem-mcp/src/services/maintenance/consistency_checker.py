@@ -161,12 +161,12 @@ class ConsistencyChecker:
         doc_paths = {doc.file_path: doc for doc in documents}
         
         for doc in documents:
-            if not doc.content:
+            if not doc.normalized_content:
                 continue
             
             # Find all links
-            links = link_pattern.findall(doc.content)
-            refs = ref_pattern.findall(doc.content)
+            links = link_pattern.findall(doc.normalized_content)
+            refs = ref_pattern.findall(doc.normalized_content)
             
             # Check if referenced files exist
             for text, path in links:
@@ -208,14 +208,14 @@ class ConsistencyChecker:
         term_usage = {}
         
         for doc in documents:
-            if not doc.content:
+            if not doc.normalized_content:
                 continue
             
             for canonical, variants in terminology_variants.items():
                 found_variants = []
                 for variant in variants:
                     # Case-sensitive search
-                    if re.search(r'\b' + re.escape(variant) + r'\b', doc.content):
+                    if re.search(r'\b' + re.escape(variant) + r'\b', doc.normalized_content):
                         found_variants.append(variant)
                 
                 if len(found_variants) > 1:
@@ -257,18 +257,18 @@ class ConsistencyChecker:
         seen_content_hashes = {}
         
         for doc in documents:
-            if not doc.content or len(doc.content) < 100:
+            if not doc.normalized_content or len(doc.normalized_content) < 100:
                 continue
             
             # Simple content hash (first 200 chars)
-            content_sample = doc.content[:200].lower().strip()
+            content_sample = doc.normalized_content[:200].lower().strip()
             
             if content_sample in seen_content_hashes:
                 # Potential duplicate or conflict
                 other_doc = seen_content_hashes[content_sample]
                 
                 # Check if content is different beyond the sample
-                if doc.content != other_doc.content:
+                if doc.normalized_content != other_doc.normalized_content:
                     issues.append(InconsistencyIssue(
                         issue_type="potential_conflict",
                         severity="MEDIUM",
@@ -357,12 +357,12 @@ class ConsistencyChecker:
                 # Find term usages
                 usages = []
                 for doc in documents:
-                    if not doc.content:
+                    if not doc.normalized_content:
                         continue
                     
                     # Find all occurrences (case-insensitive)
                     pattern = re.compile(r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
-                    matches = pattern.findall(doc.content)
+                    matches = pattern.findall(doc.normalized_content)
                     
                     if matches:
                         usages.append({

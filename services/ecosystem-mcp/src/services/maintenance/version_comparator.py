@@ -155,7 +155,7 @@ class VersionComparator:
             # In production, you'd use git history or version storage
             return {
                 "date": doc.updated_at or doc.created_at,
-                "content": doc.content or "",
+                "content": doc.normalized_content or "",
                 "commit": None
             }
     

@@ -131,11 +131,11 @@ class DependencyTracker:
         code_ref_pattern = re.compile(r'see `([^`]+)`|refer to `([^`]+)`', re.IGNORECASE)
         
         for doc in documents:
-            if not doc.content:
+            if not doc.normalized_content:
                 continue
             
             # Find markdown links
-            links = link_pattern.findall(doc.content)
+            links = link_pattern.findall(doc.normalized_content)
             for text, path in links:
                 if path.startswith(('http://', 'https://', '#')):
                     continue  # Skip external links and anchors
@@ -151,7 +151,7 @@ class DependencyTracker:
                     ))
             
             # Find code references
-            refs = code_ref_pattern.findall(doc.content)
+            refs = code_ref_pattern.findall(doc.normalized_content)
             for ref_groups in refs:
                 for ref in ref_groups:
                     if ref:  # Non-empty capture group

@@ -105,7 +105,7 @@ class TestPerformanceBenchmarks:
         
         timeline_repo = TimelineRepository(clean_database)
         period_repo = TimePeriodRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        timeline_manager = TimelineManager(clean_database)
         period_generator = PeriodGenerator(period_repo)
         
         # Create timeline
@@ -123,11 +123,13 @@ class TestPerformanceBenchmarks:
         timeline = await timeline_manager.create_timeline(timeline_data)
         
         # Generate periods
+        from src.models.timeline import PeriodStrategy
         periods = await period_generator.generate_periods(
             timeline_id=timeline.id,
+            service_name=timeline.service_name,
             start_date=timeline.start_date,
             end_date=timeline.end_date,
-            strategy="monthly"
+            strategy=PeriodStrategy.MONTHLY
         )
         elapsed_time = time.time() - start_time
         
@@ -148,16 +150,21 @@ class TestPerformanceBenchmarks:
         from tests.utils.test_helpers import create_test_document
         import asyncio
         
-        doc_repo = DocumentRepository(clean_database)
-        
+        # Use session-per-operation for concurrent operations
         async def create_doc(i):
-            doc_data = create_test_document(
-                content=f"Concurrent perf doc {i}",
-                file_path=f"concurrent_{i}.py",
-                service_name="concurrent-perf-test",
-                session_id=test_session_id
-            )
-            return await doc_repo.create(doc_data)
+            from src.storage import get_database
+            db = get_database()
+            async with db.session() as session:
+                doc_repo = DocumentRepository(session)
+                doc_data = create_test_document(
+                    content=f"Concurrent perf doc {i}",
+                    file_path=f"concurrent_{i}.py",
+                    service_name="concurrent-perf-test",
+                    session_id=test_session_id
+                )
+                doc = await doc_repo.create(doc_data)
+                await session.commit()
+                return doc
         
         start_time = time.time()
         tasks = [create_doc(i) for i in range(10)]
@@ -350,7 +357,7 @@ class TestErrorHandling:
         from pydantic import ValidationError
         
         timeline_repo = TimelineRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        timeline_manager = TimelineManager(clean_database)
         
         # Try to create timeline with invalid dates
         # Should handle gracefully
@@ -461,7 +468,7 @@ class TestEdgeCases:
         
         timeline_repo = TimelineRepository(clean_database)
         period_repo = TimePeriodRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        timeline_manager = TimelineManager(clean_database)
         period_generator = PeriodGenerator(period_repo)
         
         # Create timeline with same start/end date
@@ -477,11 +484,13 @@ class TestEdgeCases:
         timeline = await timeline_manager.create_timeline(timeline_data)
         
         # Try to generate periods
+        from src.models.timeline import PeriodStrategy
         periods = await period_generator.generate_periods(
             timeline_id=timeline.id,
+            service_name=timeline.service_name,
             start_date=timeline.start_date,
             end_date=timeline.end_date,
-            strategy="monthly"
+            strategy=PeriodStrategy.MONTHLY
         )
         
         # Should handle gracefully (may return empty list or single period)

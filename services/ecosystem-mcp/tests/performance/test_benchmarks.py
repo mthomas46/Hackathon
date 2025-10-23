@@ -21,8 +21,8 @@ from pathlib import Path
 
 from src.services.ingestion.job_processor import JobProcessor
 from src.services.embeddings.embedding_client import EmbeddingClient
-from src.services.query.query_service import QueryService
-from src.services.documentation.doc_generator import DocGenerator
+from src.services.rag.rag_service import RAGService
+from src.services.documentation.recoverable_doc_generator import RecoverableDocGenerator
 
 
 class PerformanceBenchmark:

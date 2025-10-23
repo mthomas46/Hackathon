@@ -220,7 +220,7 @@ class ExportService:
                     "id": str(doc.id),
                     "file_path": doc.file_path,
                     "service_name": doc.service_name,
-                    "content": doc.content,
+                    "content": doc.normalized_content,
                     "created_at": doc.created_at.isoformat() if doc.created_at else None,
                     "updated_at": doc.updated_at.isoformat() if doc.updated_at else None,
                     "metadata": {
@@ -302,7 +302,7 @@ class ExportService:
         
         # Content
         content.append("## Content\n\n")
-        content.append(doc.content or "No content available")
+        content.append(doc.normalized_content or "No content available")
         
         return "\n".join(content)
     
@@ -334,7 +334,7 @@ class ExportService:
             <h1>{Path(doc.file_path).stem}</h1>
             {metadata_html}
             <div class="content">
-                <pre>{doc.content or 'No content available'}</pre>
+                <pre>{doc.normalized_content or 'No content available'}</pre>
             </div>
         </body>
         </html>

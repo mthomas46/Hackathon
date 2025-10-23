@@ -278,7 +278,8 @@ class TemporalConfidenceCalculator:
     async def check_pre_flight(
         self,
         service_name: str,
-        minimum_confidence: TemporalConfidence = TemporalConfidence.MEDIUM
+        minimum_confidence: TemporalConfidence = TemporalConfidence.MEDIUM,
+        auto_adjust: bool = True
     ) -> Dict[str, any]:
         """
         Pre-flight check before creating a timeline.
@@ -289,6 +290,7 @@ class TemporalConfidenceCalculator:
         Args:
             service_name: Service to check
             minimum_confidence: Minimum required confidence level
+            auto_adjust: If True, automatically allow NONE confidence for snapshot-only services
         
         Returns:
             Dict with:
@@ -331,8 +333,19 @@ class TemporalConfidenceCalculator:
             
             can_proceed = confidence_order[actual_confidence] >= confidence_order[minimum_confidence]
             
-            # Generate recommendation
-            if can_proceed:
+            # Auto-adjust for snapshot-only services
+            if not can_proceed and auto_adjust and actual_confidence == TemporalConfidence.NONE:
+                self.logger.warning(
+                    f"Service '{service_name}' has no git history (snapshot-only). "
+                    f"Auto-adjusting to allow timeline creation with limited temporal features."
+                )
+                can_proceed = True
+                recommendation = (
+                    f"⚠️  Service has {actual_confidence.value} confidence (snapshot-only data). "
+                    f"Timeline created with limited temporal features. "
+                    f"For full temporal analysis, consider re-ingesting with git_history mode."
+                )
+            elif can_proceed:
                 recommendation = f"✅ Service has {actual_confidence.value} confidence. Proceed with timeline creation."
             else:
                 recommendation = (

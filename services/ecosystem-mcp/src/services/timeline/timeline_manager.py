@@ -86,7 +86,8 @@ class TimelineManager:
             if not skip_confidence_check:
                 pre_flight = await self.confidence_calculator.check_pre_flight(
                     service_name=timeline_create.service_name,
-                    minimum_confidence=minimum_confidence
+                    minimum_confidence=minimum_confidence,
+                    auto_adjust=True  # Gracefully handle snapshot-only services
                 )
                 
                 if not pre_flight["can_proceed"]:

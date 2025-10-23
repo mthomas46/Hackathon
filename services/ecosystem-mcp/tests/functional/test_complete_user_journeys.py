@@ -95,7 +95,7 @@ class TestDocumentLifecycle:
         doc_repo = DocumentRepository(clean_database)
         timeline_repo = TimelineRepository(clean_database)
         period_repo = TimePeriodRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        timeline_manager = TimelineManager(clean_database)
         period_generator = PeriodGenerator(period_repo)
         
         # Step 1: Ingest versioned documents
@@ -124,17 +124,19 @@ class TestDocumentLifecycle:
         assert timeline is not None
         
         # Step 3: Generate periods
+        from src.models.timeline import PeriodStrategy
         periods = await period_generator.generate_periods(
             timeline_id=timeline.id,
+            service_name=timeline.service_name,
             start_date=timeline.start_date,
             end_date=timeline.end_date,
-            strategy="monthly"
+            strategy=PeriodStrategy.MONTHLY
         )
         assert len(periods) > 0
         
         # Step 4: Query timeline
-        summary = await timeline_manager.get_timeline_summary(timeline.id)
-        assert summary is not None
+        stats = await timeline_manager.get_timeline_statistics(timeline.id)
+        assert stats is not None
         
         # Journey complete!
     
@@ -176,9 +178,9 @@ class TestDocumentLifecycle:
         assert stale_results is not None
         
         # Step 3: Trigger refresh
-        refresh_result = await automated_refresher.refresh_stale_documents(
+        refresh_result = await automated_refresher.refresh_documentation(
             service_name="maintenance-journey",
-            force=True
+            strategy="full"
         )
         assert refresh_result is not None
         
@@ -248,7 +250,7 @@ class TestMultiServiceIntegration:
         from src.models.timeline import TimelineCreate
         
         timeline_repo = TimelineRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        timeline_manager = TimelineManager(clean_database)
         
         # Create timelines for multiple services
         services = ["service-x", "service-y"]
@@ -271,8 +273,8 @@ class TestMultiServiceIntegration:
         
         # Verify can retrieve each timeline
         for timeline in timelines:
-            summary = await timeline_manager.get_timeline_summary(timeline.id)
-            assert summary is not None
+            stats = await timeline_manager.get_timeline_statistics(timeline.id)
+            assert stats is not None
     
     async def test_integrated_quality_monitoring(
         self,
@@ -426,7 +428,7 @@ class TestComplexWorkflows:
         
         doc_repo = DocumentRepository(clean_database)
         timeline_repo = TimelineRepository(clean_database)
-        timeline_manager = TimelineManager(timeline_repo)
+        timeline_manager = TimelineManager(clean_database)
         quality_dashboard = QualityDashboard()
         
         service_name = "lifecycle-test"
@@ -491,17 +493,22 @@ class TestComplexWorkflows:
         from tests.utils.test_helpers import create_test_document
         import asyncio
         
-        doc_repo = DocumentRepository(clean_database)
-        
-        # Create multiple documents concurrently
+        # Create multiple documents concurrently with separate sessions
         async def create_doc(i):
-            doc_data = create_test_document(
-                content=f"Concurrent doc {i}",
-                file_path=f"concurrent_{i}.py",
-                service_name="concurrent-test",
-                session_id=test_session_id
-            )
-            return await doc_repo.create(doc_data)
+            # Create a new session for each concurrent operation
+            from src.storage import get_database
+            db = get_database()
+            async with db.session() as session:
+                doc_repo = DocumentRepository(session)
+                doc_data = create_test_document(
+                    content=f"Concurrent doc {i}",
+                    file_path=f"concurrent_{i}.py",
+                    service_name="concurrent-test",
+                    session_id=test_session_id
+                )
+                doc = await doc_repo.create(doc_data)
+                await session.commit()
+                return doc
         
         # Create 5 documents concurrently
         tasks = [create_doc(i) for i in range(5)]

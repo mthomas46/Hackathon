@@ -299,32 +299,43 @@ class TestDynamicTimeline:
     ):
         """Test constructing timeline from query results."""
         from src.services.dynamic_rag import DynamicTimelineConstructor
+        from src.services.dynamic_rag.document_finder import RelevantDocument
         from tests.utils.test_helpers import create_test_document
         
         constructor = DynamicTimelineConstructor()
         
-        # Create mock documents
+        # Create mock RelevantDocument objects
         mock_docs = [
-            {
-                "id": str(uuid4()),
-                "content": "Test content 1",
-                "created_at": datetime(2024, 1, 1),
-                "_test_data_marker": True
-            },
-            {
-                "id": str(uuid4()),
-                "content": "Test content 2",
-                "created_at": datetime(2024, 6, 1),
-                "_test_data_marker": True
-            }
+            RelevantDocument(
+                document_id=str(uuid4()),
+                file_path="test1.py",
+                content="Test content 1",
+                relevance_score=0.9,
+                commit_count=5,
+                last_modified=datetime(2024, 1, 1),
+                ingestion_mode="git_history",
+                matched_topics=["test", "topic"]
+            ),
+            RelevantDocument(
+                document_id=str(uuid4()),
+                file_path="test2.py",
+                content="Test content 2",
+                relevance_score=0.8,
+                commit_count=3,
+                last_modified=datetime(2024, 6, 1),
+                ingestion_mode="git_history",
+                matched_topics=["test"]
+            )
         ]
         
         # Construct timeline
-        timeline = constructor.construct_timeline(query="test topic"
+        timeline = await constructor.construct_timeline(
+            documents=mock_docs,
+            timeline_name="test topic"
         )
         
         assert timeline is not None
-        assert len(timeline.get("documents", [])) == 2
+        assert len(timeline.documents) == 2
     
     async def test_topic_extraction_from_query(
         self,
@@ -340,7 +351,8 @@ class TestDynamicTimeline:
         topics = extractor.extract(query)
         
         assert topics is not None
-        assert "endpoints" in topics or "services" in topics or "concepts" in topics
+        assert hasattr(topics, "endpoints") or hasattr(topics, "services") or hasattr(topics, "concepts")
+        assert len(topics.all_topics) > 0
     
     async def test_timeline_confidence_calculation(
         self,
@@ -349,20 +361,33 @@ class TestDynamicTimeline:
     ):
         """Test calculating confidence for dynamic timeline."""
         from src.services.dynamic_rag import DynamicTimelineConstructor
+        from src.services.dynamic_rag.document_finder import RelevantDocument
         
         constructor = DynamicTimelineConstructor()
         
         # Mock documents with varying data quality
         high_quality_docs = [
-            {"id": str(uuid4()), "content": "content", "created_at": datetime.now()}
-            for _ in range(10)
+            RelevantDocument(
+                document_id=str(uuid4()),
+                file_path=f"test{i}.py",
+                content="content",
+                relevance_score=0.9,
+                commit_count=5,
+                last_modified=datetime.now(),
+                ingestion_mode="git_history",
+                matched_topics=["test"]
+            )
+            for i in range(10)
         ]
         
-        timeline = constructor.construct_timeline(query="test"
+        timeline = await constructor.construct_timeline(
+            documents=high_quality_docs,
+            timeline_name="test"
         )
         
         # Should have confidence score
-        assert "confidence" in timeline or "confidence_level" in timeline
+        assert hasattr(timeline, "confidence")
+        assert timeline.confidence in ["HIGH", "MEDIUM", "LOW", "NONE"]
 
 
 class TestAnswerSynthesis:
@@ -374,46 +399,51 @@ class TestAnswerSynthesis:
         test_session_id
     ):
         """Test synthesizing answer from multiple documents."""
-        from src.services.dynamic_rag import TemporalAnswerSynthesizer
-        from src.models.timeline import Timeline, TemporalConfidence, ConfidenceMetadata
+        from src.services.dynamic_rag import TemporalAnswerSynthesizer, DynamicTimelineConstructor
+        from src.services.dynamic_rag.document_finder import RelevantDocument
         from datetime import datetime
         
         synthesizer = TemporalAnswerSynthesizer()
+        constructor = DynamicTimelineConstructor()
         
         query = "What is document ingestion?"
+        
+        # Create RelevantDocument objects
         documents = [
-            {
-                "content": "Document ingestion is the process of importing files",
-                "source": "ingestion.py",
-                "relevance": 0.9
-            },
-            {
-                "content": "Files are parsed and indexed for search",
-                "source": "parser.py",
-                "relevance": 0.7
-            }
+            RelevantDocument(
+                document_id=str(uuid4()),
+                file_path="ingestion.py",
+                content="Document ingestion is the process of importing files",
+                relevance_score=0.9,
+                commit_count=5,
+                last_modified=datetime(2024, 6, 1),
+                ingestion_mode="git_history",
+                matched_topics=["ingestion"]
+            ),
+            RelevantDocument(
+                document_id=str(uuid4()),
+                file_path="parser.py",
+                content="Files are parsed and indexed for search",
+                relevance_score=0.7,
+                commit_count=3,
+                last_modified=datetime(2024, 7, 1),
+                ingestion_mode="git_history",
+                matched_topics=["parser"]
+            )
         ]
         
-        # Create mock timeline
-        timeline = Timeline(
-            name="test_timeline",
-            service_name="test-service",
-            repo_path="/test",
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 12, 31),
-            confidence_level=TemporalConfidence.HIGH,
-            confidence_metadata=ConfidenceMetadata(
-                total_documents=2,
-                documents_with_git_history=2,
-                git_coverage_percentage=100.0
-            )
+        # Create dynamic timeline
+        timeline = await constructor.construct_timeline(
+            documents=documents,
+            timeline_name="test_timeline"
         )
         
         # Synthesize answer
         answer = await synthesizer.synthesize_answer(query, timeline, documents)
         
         assert answer is not None
-        assert "answer" in answer or "text" in answer or "content" in answer
+        assert hasattr(answer, "answer")
+        assert len(answer.answer) > 0
     
     async def test_synthesize_with_temporal_context(
         self,
@@ -421,40 +451,43 @@ class TestAnswerSynthesis:
         test_session_id
     ):
         """Test synthesis includes temporal context."""
-        from src.services.dynamic_rag import TemporalAnswerSynthesizer
-        from src.models.timeline import Timeline, TemporalConfidence, ConfidenceMetadata
+        from src.services.dynamic_rag import TemporalAnswerSynthesizer, DynamicTimelineConstructor
+        from src.services.dynamic_rag.document_finder import RelevantDocument
         from datetime import datetime
         
         synthesizer = TemporalAnswerSynthesizer()
+        constructor = DynamicTimelineConstructor()
         
         query = "How has the system evolved?"
+        
+        # Create RelevantDocument objects
         documents = [
-            {
-                "content": "Initial version used simple parsing",
-                "source": "v1/parser.py",
-                "created_at": "2023-01-01",
-                "relevance": 0.8
-            },
-            {
-                "content": "Now uses advanced NLP",
-                "source": "v2/parser.py",
-                "created_at": "2024-01-01",
-                "relevance": 0.9
-            }
+            RelevantDocument(
+                document_id=str(uuid4()),
+                file_path="v1/parser.py",
+                content="Initial version used simple parsing",
+                relevance_score=0.8,
+                commit_count=10,
+                last_modified=datetime(2023, 1, 1),
+                ingestion_mode="git_history",
+                matched_topics=["parser", "v1"]
+            ),
+            RelevantDocument(
+                document_id=str(uuid4()),
+                file_path="v2/parser.py",
+                content="Now uses advanced NLP",
+                relevance_score=0.9,
+                commit_count=5,
+                last_modified=datetime(2024, 1, 1),
+                ingestion_mode="git_history",
+                matched_topics=["parser", "v2", "nlp"]
+            )
         ]
         
-        timeline = Timeline(
-            name="evolution_timeline",
-            service_name="test-service",
-            repo_path="/test",
-            start_date=datetime(2023, 1, 1),
-            end_date=datetime(2024, 12, 31),
-            confidence_level=TemporalConfidence.HIGH,
-            confidence_metadata=ConfidenceMetadata(
-                total_documents=2,
-                documents_with_git_history=2,
-                git_coverage_percentage=100.0
-            )
+        # Create dynamic timeline
+        timeline = await constructor.construct_timeline(
+            documents=documents,
+            timeline_name="evolution_timeline"
         )
         
         answer = await synthesizer.synthesize_answer(query, timeline, documents)
@@ -476,20 +509,26 @@ class TestCitationGeneration:
         
         sources = [
             {
-                "source": "document.py",
-                "line_range": "10-20",
+                "index": 1,
+                "file_path": "document.py",
                 "relevance_score": 0.9,
-                "last_modified": "2024-01-01"
+                "last_modified": "2024-01-01",
+                "matched_topics": ["test"],
+                "document_id": str(uuid4())
             }
         ]
         
-        # Create mock answer
-        answer = {
-            "answer": "Test answer",
-            "sources": sources
-        }
+        # Create mock TemporalAnswer
+        from src.services.dynamic_rag.answer_synthesizer import TemporalAnswer
+        answer = TemporalAnswer(
+            answer="Test answer",
+            sources=sources,
+            confidence=0.9,
+            timeline_id="test_timeline",
+            temporal_insights=["Recent changes"]
+        )
         
-        citations = formatter.format_citations(citation_format="markdown")
+        citations = formatter.format_citations(answer=answer, format_type="markdown")
         
         assert citations is not None
         assert hasattr(citations, "citation_text") or isinstance(citations, dict)
@@ -506,17 +545,26 @@ class TestCitationGeneration:
         
         sources = [
             {
-                "source": "document.py",
-                "relevance_score": 0.8
+                "index": 1,
+                "file_path": "document.py",
+                "relevance_score": 0.8,
+                "last_modified": "2024-01-01",
+                "matched_topics": ["test"],
+                "document_id": str(uuid4())
             }
         ]
         
-        answer = {
-            "answer": "Test answer",
-            "sources": sources
-        }
+        # Create mock TemporalAnswer
+        from src.services.dynamic_rag.answer_synthesizer import TemporalAnswer
+        answer = TemporalAnswer(
+            answer="Test answer",
+            sources=sources,
+            confidence=0.9,
+            timeline_id="test_timeline",
+            temporal_insights=["Recent changes"]
+        )
         
-        citations = formatter.format_citations(citation_format="html")
+        citations = formatter.format_citations(answer=answer, format_type="html")
         assert citations is not None
     
     async def test_citations_with_temporal_attribution(
@@ -531,19 +579,26 @@ class TestCitationGeneration:
         
         sources = [
             {
-                "source": "document.py",
+                "index": 1,
+                "file_path": "document.py",
+                "relevance_score": 0.9,
                 "last_modified": "2024-01-01",
-                "period": "2024-Q1",
-                "relevance_score": 0.9
+                "matched_topics": ["test", "2024-Q1"],
+                "document_id": str(uuid4())
             }
         ]
         
-        answer = {
-            "answer": "Test answer",
-            "sources": sources
-        }
+        # Create mock TemporalAnswer
+        from src.services.dynamic_rag.answer_synthesizer import TemporalAnswer
+        answer = TemporalAnswer(
+            answer="Test answer",
+            sources=sources,
+            confidence=0.9,
+            timeline_id="test_timeline",
+            temporal_insights=["2024-Q1"]
+        )
         
-        citations = formatter.format_citations(citation_format="markdown")
+        citations = formatter.format_citations(answer=answer, format_type="markdown")
         assert citations is not None
 
 
