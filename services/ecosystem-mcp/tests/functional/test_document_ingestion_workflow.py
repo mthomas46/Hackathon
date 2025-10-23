@@ -118,6 +118,7 @@ class TestDocumentIngestionWorkflow:
         - Documentation classification
         """
         from src.storage.repositories import DocumentRepository
+        from tests.utils.test_helpers import create_test_document
         
         doc_repo = DocumentRepository(clean_database)
         
@@ -131,32 +132,26 @@ class TestDocumentIngestionWorkflow:
         sample_file = markdown_files[0]
         content = sample_file.read_text(encoding='utf-8', errors='ignore')
         
-        doc_data = {
-            "file_path": sample_file.name,
-            "content": content,
-            "file_type": "markdown",
-            "service_name": "ecosystem-mcp",
-            "repo_path": str(test_data_dir),
-            "ingestion_mode": "snapshot",
-            "metadata": {
-                "language": "markdown",
-                "size": len(content),
-                "lines": content.count('\n') + 1,
-                "is_documentation": True
-            }
-        }
+        # Create document model (automatically marked as test data)
+        doc_model = create_test_document(
+            content=content,
+            file_path=sample_file.name,
+            file_type="markdown",
+            service_name="ecosystem-mcp-test",
+            ingestion_mode="snapshot"
+        )
         
         # Store in database
-        doc = await doc_repo.create(doc_data)
+        doc = await doc_repo.create(doc_model)
         assert doc is not None
-        assert doc.file_type == "markdown"
-        assert doc.content == content
+        assert doc.original_format == "markdown"
+        assert doc.original_content == content
         
         # Retrieve and validate
         retrieved = await doc_repo.get_by_id(doc.id)
         assert retrieved is not None
         assert retrieved.file_path == sample_file.name
-        assert retrieved.content == content
+        assert retrieved.original_content == content
     
     async def test_ingest_multiple_file_types(
         self,
@@ -173,6 +168,7 @@ class TestDocumentIngestionWorkflow:
         - Type-specific processing
         """
         from src.storage.repositories import DocumentRepository
+        from tests.utils.test_helpers import create_test_document
         
         doc_repo = DocumentRepository(clean_database)
         
@@ -194,20 +190,16 @@ class TestDocumentIngestionWorkflow:
         for file_path, file_type in files_to_ingest:
             content = file_path.read_text(encoding='utf-8', errors='ignore')
             
-            doc_data = {
-                "file_path": str(file_path.name),
-                "content": content,
-                "file_type": file_type,
-                "service_name": "ecosystem-mcp",
-                "repo_path": str(test_data_dir),
-                "ingestion_mode": "snapshot",
-                "metadata": {
-                    "language": file_type,
-                    "size": len(content)
-                }
-            }
+            # Create document model
+            doc_model = create_test_document(
+                content=content,
+                file_path=str(file_path.name),
+                file_type=file_type,
+                service_name="ecosystem-mcp-test",
+                ingestion_mode="snapshot"
+            )
             
-            doc = await doc_repo.create(doc_data)
+            doc = await doc_repo.create(doc_model)
             assert doc is not None
             ingested_docs.append(doc)
         
@@ -215,11 +207,11 @@ class TestDocumentIngestionWorkflow:
         assert len(ingested_docs) == len(files_to_ingest)
         
         # Verify we can retrieve by service
-        all_service_docs = await doc_repo.get_by_service("ecosystem-mcp", limit=100)
+        all_service_docs = await doc_repo.get_by_service("ecosystem-mcp-test", limit=100)
         assert len(all_service_docs) >= len(ingested_docs)
         
         # Verify different file types are present
-        file_types = set(doc.file_type for doc in ingested_docs)
+        file_types = set(doc.original_format for doc in ingested_docs)
         assert len(file_types) > 1, "Should have multiple file types"
     
     async def test_document_metadata_completeness(
@@ -236,6 +228,7 @@ class TestDocumentIngestionWorkflow:
         - Timestamps accurate
         """
         from src.storage.repositories import DocumentRepository
+        from tests.utils.test_helpers import create_test_document
         
         doc_repo = DocumentRepository(clean_database)
         
@@ -243,39 +236,32 @@ class TestDocumentIngestionWorkflow:
         sample_file = list(ecosystem_mcp_src_dir.rglob("*.py"))[0]
         content = sample_file.read_text(encoding='utf-8', errors='ignore')
         
-        doc_data = {
-            "file_path": str(sample_file.relative_to(ecosystem_mcp_src_dir.parent)),
-            "content": content,
-            "file_type": "python",
-            "service_name": "ecosystem-mcp",
-            "repo_path": str(ecosystem_mcp_src_dir.parent),
-            "ingestion_mode": "snapshot",
-            "metadata": {
-                "language": "python",
-                "size": len(content),
-                "lines": content.count('\n') + 1,
-                "parser_version": "1.0"
-            }
-        }
+        # Create document model
+        doc_model = create_test_document(
+            content=content,
+            file_path=str(sample_file.relative_to(ecosystem_mcp_src_dir.parent)),
+            file_type="python",
+            service_name="ecosystem-mcp-test",
+            ingestion_mode="snapshot"
+        )
         
-        doc = await doc_repo.create(doc_data)
+        doc = await doc_repo.create(doc_model)
         
         # Validate all required fields
         assert doc.id is not None
         assert doc.file_path is not None
-        assert doc.content is not None
-        assert doc.file_type == "python"
-        assert doc.service_name == "ecosystem-mcp"
-        assert doc.repo_path is not None
+        assert doc.original_content is not None
+        assert doc.original_format == "python"
+        assert doc.service_name == "ecosystem-mcp-test"
         assert doc.ingestion_mode == "snapshot"
         assert doc.created_at is not None
         assert doc.updated_at is not None
         
         # Validate metadata structure
-        assert doc.metadata is not None
-        assert "language" in doc.metadata
-        assert "size" in doc.metadata
-        assert "lines" in doc.metadata
+        assert doc.doc_metadata is not None
+        assert "language" in doc.doc_metadata
+        assert "size" in doc.doc_metadata
+        assert "lines" in doc.doc_metadata
     
     async def test_duplicate_document_handling(
         self,
@@ -291,36 +277,45 @@ class TestDocumentIngestionWorkflow:
         - Data consistency
         """
         from src.storage.repositories import DocumentRepository
+        from tests.utils.test_helpers import create_test_document
         
         doc_repo = DocumentRepository(clean_database)
         
         # Ingest a file
         sample_file = list(ecosystem_mcp_src_dir.rglob("*.py"))[0]
         content = sample_file.read_text(encoding='utf-8', errors='ignore')
-        
-        doc_data = {
-            "file_path": str(sample_file.relative_to(ecosystem_mcp_src_dir.parent)),
-            "content": content,
-            "file_type": "python",
-            "service_name": "ecosystem-mcp",
-            "repo_path": str(ecosystem_mcp_src_dir.parent),
-            "ingestion_mode": "snapshot"
-        }
+        file_path = str(sample_file.relative_to(ecosystem_mcp_src_dir.parent))
         
         # First ingestion
-        doc1 = await doc_repo.create(doc_data)
+        doc_model1 = create_test_document(
+            content=content,
+            file_path=file_path,
+            file_type="python",
+            service_name="ecosystem-mcp-test",
+            ingestion_mode="snapshot"
+        )
+        
+        doc1 = await doc_repo.create(doc_model1)
         first_id = doc1.id
         first_created = doc1.created_at
         
         # Try to ingest same file again with modified content
-        doc_data["content"] = content + "\n# Modified"
-        doc2 = await doc_repo.create(doc_data)
+        modified_content = content + "\n# Modified"
+        doc_model2 = create_test_document(
+            content=modified_content,
+            file_path=file_path,
+            file_type="python",
+            service_name="ecosystem-mcp-test",
+            ingestion_mode="snapshot"
+        )
+        
+        doc2 = await doc_repo.create(doc_model2)
         
         # Should create a new document (or update existing depending on implementation)
         assert doc2 is not None
         
         # Verify data integrity
-        all_docs = await doc_repo.get_by_service("ecosystem-mcp", limit=100)
+        all_docs = await doc_repo.get_by_service("ecosystem-mcp-test", limit=100)
         assert len(all_docs) > 0
 
 
@@ -337,26 +332,29 @@ class TestIngestionErrorHandling:
         - Error logging
         """
         from src.storage.repositories import DocumentRepository
+        from src.storage.db_models import DocumentModel
         
         doc_repo = DocumentRepository(clean_database)
         
-        # Try to ingest with invalid data
-        invalid_doc_data = {
-            "file_path": "invalid.txt",
-            "content": None,  # Invalid: None content
-            "file_type": "text",
-            "service_name": "test"
-        }
-        
-        # Should handle gracefully (may raise exception or return None)
+        # Try to ingest with invalid data (manually create invalid model)
         try:
-            doc = await doc_repo.create(invalid_doc_data)
+            # DocumentModel requires content, so this should fail validation
+            invalid_doc = DocumentModel(
+                file_path="invalid.txt",
+                original_format="text",
+                original_content=None,  # Invalid: None content
+                normalized_content=None,
+                content_hash="invalid",
+                service_name="test",
+                ingestion_mode="snapshot"
+            )
+            doc = await doc_repo.create(invalid_doc)
             # If it doesn't raise, verify it handled it gracefully
             if doc is None:
                 pytest.skip("Service returns None for invalid data")
         except Exception as e:
             # Expected: should raise validation error
-            assert "content" in str(e).lower() or "required" in str(e).lower()
+            assert "not" in str(e).lower() or "null" in str(e).lower() or "required" in str(e).lower()
     
     async def test_large_file_handling(
         self,
@@ -372,26 +370,26 @@ class TestIngestionErrorHandling:
         - Performance
         """
         from src.storage.repositories import DocumentRepository
+        from tests.utils.test_helpers import create_test_document
         
         doc_repo = DocumentRepository(clean_database)
         
         # Create a large content string (1MB)
         large_content = "x" * (1024 * 1024)
         
-        doc_data = {
-            "file_path": "large_file.txt",
-            "content": large_content,
-            "file_type": "text",
-            "service_name": "test",
-            "repo_path": str(ecosystem_mcp_src_dir),
-            "ingestion_mode": "snapshot",
-            "metadata": {"size": len(large_content)}
-        }
+        # Create document model
+        doc_model = create_test_document(
+            content=large_content,
+            file_path="large_file.txt",
+            file_type="text",
+            service_name="test",
+            ingestion_mode="snapshot"
+        )
         
         # Should handle large files
-        doc = await doc_repo.create(doc_data)
+        doc = await doc_repo.create(doc_model)
         assert doc is not None
-        assert len(doc.content) == len(large_content)
+        assert len(doc.original_content) == len(large_content)
 
 
 if __name__ == "__main__":
