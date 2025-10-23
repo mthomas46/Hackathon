@@ -106,7 +106,7 @@ class TestPhase1Discovery:
             # Check for core files
             core_files = [
                 f for f, c in classifications.items() 
-                if c['importance'] == 'core'
+                if c.importance_level.value == 'core'
             ]
             assert len(core_files) > 0, f"No core files identified in {target['name']}"
             
