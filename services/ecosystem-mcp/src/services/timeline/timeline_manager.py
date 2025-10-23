@@ -131,7 +131,7 @@ class TimelineManager:
                 start_date=timeline_create.start_date,
                 end_date=timeline_create.end_date,
                 confidence_level=actual_confidence,
-                confidence_metadata=confidence_metadata.model_dump(mode='json'),
+""                confidence_metadata=confidence_metadata.model_dump(mode='json'),
                 period_strategy=timeline_create.period_strategy.value,
                 created_by=timeline_create.created_by,
                 timeline_metadata=timeline_create.metadata.model_dump(mode='json')
