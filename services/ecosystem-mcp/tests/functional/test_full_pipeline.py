@@ -64,18 +64,18 @@ class TestPhase1Discovery:
             
             # Validate results
             assert inventory is not None, f"Scan failed for {target['name']}"
-            assert len(inventory['files']) >= target['expected_min_files'], \
+            assert len(inventory.files) >= target['expected_min_files'], \
                 f"Expected at least {target['expected_min_files']} files in {target['name']}"
             
             # Check language detection
-            detected_languages = set(inventory['languages'].keys())
+            detected_languages = set(inventory.languages.keys())
             for lang in target['expected_languages']:
                 assert lang in detected_languages, \
                     f"Expected language {lang} not detected in {target['name']}"
             
-            print(f"   ✅ Found {len(inventory['files'])} files")
-            print(f"   ✅ Languages: {list(inventory['languages'].keys())}")
-            print(f"   ✅ Frameworks: {list(inventory.get('frameworks', {}).keys())}")
+            print(f"   ✅ Found {len(inventory.files)} files")
+            print(f"   ✅ Languages: {list(inventory.languages.keys())}")
+            print(f"   ✅ Frameworks: {inventory.frameworks}")
     
     @pytest.mark.asyncio
     @pytest.mark.functional
@@ -95,9 +95,10 @@ class TestPhase1Discovery:
             classifier = FileClassifier()
             classifications = {}
             
-            for file_info in inventory['files'][:20]:  # Test first 20 files
-                result = await classifier.classify(file_info)
-                classifications[file_info['path']] = result
+            for file_info in inventory.files[:20]:  # Test first 20 files
+                result = await classifier.classify([file_info])
+                if result:
+                    classifications[str(file_info.path)] = result[0]
             
             # Validate
             assert len(classifications) > 0, f"No files classified in {target['name']}"
@@ -128,28 +129,26 @@ class TestPhase1Discovery:
             inventory = await scanner.scan(target['path'])
             
             classifier = FileClassifier()
-            classifications = []
-            for file_info in inventory['files'][:50]:
-                result = await classifier.classify(file_info)
-                classifications.append(result)
+            file_list = inventory.files[:50]
+            classifications = await classifier.classify(file_list)
             
             # Create plan
             planner = ProcessingPlanner()
             plan = await planner.create_plan(
-                repo_path=target['path'],
                 inventory=inventory,
-                classifications=classifications
+                classified_files=classifications,
+                repo_path=target['path']
             )
             
             # Validate
             assert plan is not None, f"Plan creation failed for {target['name']}"
-            assert len(plan['sub_jobs']) > 0, f"No sub-jobs created for {target['name']}"
-            assert 'estimated_time' in plan
-            assert 'max_parallel' in plan
+            assert len(plan.sub_jobs) > 0, f"No sub-jobs created for {target['name']}"
+            assert plan.estimated_total_time_minutes is not None
+            assert plan.max_parallelization is not None
             
-            print(f"   ✅ Created {len(plan['sub_jobs'])} sub-jobs")
-            print(f"   ✅ Estimated time: {plan['estimated_time']:.1f}s")
-            print(f"   ✅ Max parallel: {plan['max_parallel']}")
+            print(f"   ✅ Created {len(plan.sub_jobs)} sub-jobs")
+            print(f"   ✅ Estimated time: {plan.estimated_total_time_minutes:.1f}min")
+            print(f"   ✅ Max parallel: {plan.max_parallelization}")
 
 
 class TestPhase3Analysis:
@@ -171,9 +170,14 @@ class TestPhase3Analysis:
             
             # Detect stack
             detector = TechnologyStackDetector()
-            stack = await detector.detect(
-                repo_path=target['path'],
-                file_inventory=inventory
+            # Convert inventory.files to list of dicts
+            file_dicts = [
+                {'path': str(f.path), 'type': f.extension}
+                for f in inventory.files
+            ]
+            stack = await detector.detect_stack(
+                files=file_dicts,
+                repo_path=target['path']
             )
             
             # Validate
@@ -206,9 +210,14 @@ class TestPhase3Analysis:
             
             # Detect architecture
             detector = ArchitectureDetector()
-            architecture = await detector.detect(
-                repo_path=target['path'],
-                file_inventory=inventory
+            # Convert inventory.files to list of dicts
+            file_dicts = [
+                {'path': str(f.path), 'type': f.extension}
+                for f in inventory.files
+            ]
+            architecture = await detector.detect_architecture(
+                files=file_dicts,
+                repo_path=target['path']
             )
             
             # Validate
@@ -237,9 +246,14 @@ class TestPhase3Analysis:
         
         # Detect services
         detector = ServiceBoundaryDetector()
-        service_map = await detector.detect(
-            repo_path=target['path'],
-            file_inventory=inventory
+        # Convert inventory.files to list of dicts
+        file_dicts = [
+            {'path': str(f.path), 'type': f.extension}
+            for f in inventory.files
+        ]
+        service_map = await detector.detect_services(
+            files=file_dicts,
+            repo_path=target['path']
         )
         
         # Validate
