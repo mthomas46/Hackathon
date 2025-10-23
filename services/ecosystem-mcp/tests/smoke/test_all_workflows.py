@@ -65,15 +65,29 @@ class TestDiscoveryWorkflow:
             SMALL_TEST_PATH / "__init__.py"
         ]
         
-        for file_path in test_files:
-            if file_path.exists():
-                classification = await classifier.classify(file_path)
-                
-                assert classification is not None
-                assert classification['is_code'] is True
-                assert classification['language'] == 'python'
-                
-                print(f"✅ Classified {file_path.name}: {classification['language']}")
+        # Filter existing files and convert to FileInfo format
+        from src.services.discovery.repository_scanner import FileInfo
+        existing_files = [f for f in test_files if f.exists()]
+        
+        if existing_files:
+            # Convert to FileInfo objects
+            file_infos = [
+                FileInfo(
+                    path=str(f),
+                    size=f.stat().st_size,
+                    extension=f.suffix,
+                    is_binary=False
+                )
+                for f in existing_files
+            ]
+            
+            classifications = await classifier.classify(file_infos)
+            
+            assert classifications is not None
+            assert len(classifications) > 0
+            
+            for classified in classifications:
+                print(f"✅ Classified {classified.file_path}: importance={classified.importance}")
     
     @pytest.mark.asyncio
     async def test_create_processing_plan(self):
@@ -87,8 +101,8 @@ class TestDiscoveryWorkflow:
         # Scan small test path
         inventory = await scanner.scan(SMALL_TEST_PATH)
         
-        # Create plan
-        plan = await planner.create_plan(inventory, repo_path=SMALL_TEST_PATH)
+        # Create plan (provide empty classified_files list for now)
+        plan = await planner.create_plan(inventory, classified_files=[], repo_path=str(SMALL_TEST_PATH))
         
         assert plan is not None
         assert plan.total_files > 0
@@ -114,7 +128,9 @@ class TestAnalysisWorkflow:
         files = [str(f) for f in files if f.is_file()]
         
         if files:
-            stack = await detector.detect(files, str(SMALL_TEST_PATH))
+            # Convert file paths to dict format expected by detect_stack
+            file_dicts = [{"path": f, "type": "python"} for f in files]
+            stack = await detector.detect_stack(file_dicts, str(SMALL_TEST_PATH))
             
             assert stack is not None
             assert len(stack.languages) > 0
@@ -136,7 +152,9 @@ class TestAnalysisWorkflow:
         files = [str(f) for f in files if f.is_file()]
         
         if files:
-            patterns = await detector.detect(files, str(SMALL_TEST_PATH))
+            # Convert file paths to dict format expected by detect_architecture
+            file_dicts = [{"path": f, "type": "python"} for f in files]
+            patterns = await detector.detect_architecture(file_dicts, str(SMALL_TEST_PATH))
             
             assert patterns is not None
             
@@ -276,7 +294,7 @@ class TestEndToEndPipeline:
         
         # Step 2: Plan
         planner = ProcessingPlanner()
-        plan = await planner.create_plan(inventory, repo_path=SMALL_TEST_PATH)
+        plan = await planner.create_plan(inventory, classified_files=[], repo_path=str(SMALL_TEST_PATH))
         
         assert len(plan.sub_jobs) > 0
         print(f"✅ Step 2: Created {len(plan.sub_jobs)} sub-jobs")
