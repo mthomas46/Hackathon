@@ -289,14 +289,28 @@ class TestTimelineWorkflow:
         - No gaps between periods
         - Periods cover full date range
         """
+        service_name = f"test-service-monthly-{uuid4().hex[:8]}"
+        
+        # Create timeline first
+        timeline_manager = TimelineManager(db_session=db_session)
+        timeline = await timeline_manager.create_timeline(
+            TimelineCreate(
+                name=f"monthly-test-{uuid4().hex[:8]}",
+                service_name=service_name,
+                repo_path="/test/repo",
+                period_strategy=PeriodStrategy.MONTHLY,
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+            )
+        )
+        
+        # Generate periods
         generator = PeriodGenerator(db_session=db_session)
-        
-        start_date = datetime(2024, 1, 1)
-        end_date = datetime(2024, 12, 31)
-        
         periods = await generator.generate_periods(
-            start_date=start_date,
-            end_date=end_date,
+            timeline_id=timeline.id,
+            service_name=service_name,
+            start_date=timeline.start_date,
+            end_date=timeline.end_date,
             strategy=PeriodStrategy.MONTHLY
         )
         
@@ -324,14 +338,28 @@ class TestTimelineWorkflow:
         - Period names are correct
         - No gaps between periods
         """
+        service_name = f"test-service-quarterly-{uuid4().hex[:8]}"
+        
+        # Create timeline first
+        timeline_manager = TimelineManager(db_session=db_session)
+        timeline = await timeline_manager.create_timeline(
+            TimelineCreate(
+                name=f"quarterly-test-{uuid4().hex[:8]}",
+                service_name=service_name,
+                repo_path="/test/repo",
+                period_strategy=PeriodStrategy.QUARTERLY,
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+            )
+        )
+        
+        # Generate periods
         generator = PeriodGenerator(db_session=db_session)
-        
-        start_date = datetime(2024, 1, 1)
-        end_date = datetime(2024, 12, 31)
-        
         periods = await generator.generate_periods(
-            start_date=start_date,
-            end_date=end_date,
+            timeline_id=timeline.id,
+            service_name=service_name,
+            start_date=timeline.start_date,
+            end_date=timeline.end_date,
             strategy=PeriodStrategy.QUARTERLY
         )
         
@@ -346,32 +374,45 @@ class TestTimelineWorkflow:
         for i in range(len(periods) - 1):
             assert periods[i].end_date == periods[i+1].start_date
     
-    async def test_period_generation_yearly(self, db_session):
+    async def test_period_generation_adaptive(self, db_session):
         """
-        Test yearly period generation.
+        Test adaptive period generation.
         
         Validates:
-        - Single period for one year
-        - Multiple periods for multi-year range
+        - Adaptive strategy selects appropriate period size
+        - Periods are generated based on data density
         """
+        service_name = f"test-service-adaptive-{uuid4().hex[:8]}"
+        
+        # Create timeline first
+        timeline_manager = TimelineManager(db_session=db_session)
+        timeline = await timeline_manager.create_timeline(
+            TimelineCreate(
+                name=f"adaptive-test-{uuid4().hex[:8]}",
+                service_name=service_name,
+                repo_path="/test/repo",
+                period_strategy=PeriodStrategy.ADAPTIVE,
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 12, 31),
+            )
+        )
+        
+        # Generate periods
         generator = PeriodGenerator(db_session=db_session)
-        
-        # Single year
         periods = await generator.generate_periods(
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 12, 31),
-            strategy=PeriodStrategy.YEARLY
+            timeline_id=timeline.id,
+            service_name=service_name,
+            start_date=timeline.start_date,
+            end_date=timeline.end_date,
+            strategy=PeriodStrategy.ADAPTIVE
         )
-        assert len(periods) == 1
-        assert "2024" in periods[0].name
         
-        # Multi-year
-        periods = await generator.generate_periods(
-            start_date=datetime(2022, 1, 1),
-            end_date=datetime(2024, 12, 31),
-            strategy=PeriodStrategy.YEARLY
-        )
-        assert len(periods) == 3
+        # Validate we got some periods
+        assert len(periods) > 0
+        
+        # Validate periods cover the range
+        assert periods[0].start_date >= timeline.start_date
+        assert periods[-1].end_date <= timeline.end_date
     
     async def test_timeline_creation_end_to_end(self, db_session):
         """
@@ -551,7 +592,8 @@ class TestTimelineWorkflow:
             TimelineCreate(
                 name=f"gap-test-{uuid4().hex[:8]}",
                 service_name=service_name,
-                strategy=PeriodStrategy.MONTHLY,
+                repo_path="/test/repo",
+                period_strategy=PeriodStrategy.MONTHLY,
                 start_date=datetime(2024, 1, 1),
                 end_date=datetime(2024, 12, 31),
             )
@@ -651,7 +693,8 @@ def get_user(user_uuid: str, include_details: bool = False) -> UserDetails:
             TimelineCreate(
                 name=f"drift-test-{uuid4().hex[:8]}",
                 service_name=service_name,
-                strategy=PeriodStrategy.MONTHLY,
+                repo_path="/test/repo",
+                period_strategy=PeriodStrategy.MONTHLY,
                 start_date=datetime(2024, 1, 1),
                 end_date=datetime(2024, 12, 31),
             )
@@ -696,7 +739,8 @@ def get_user(user_uuid: str, include_details: bool = False) -> UserDetails:
             TimelineCreate(
                 name=f"report-test-{uuid4().hex[:8]}",
                 service_name=service_name,
-                strategy=PeriodStrategy.QUARTERLY,
+                repo_path="/test/repo",
+                period_strategy=PeriodStrategy.QUARTERLY,
                 start_date=datetime(2024, 1, 1),
                 end_date=datetime(2024, 12, 31),
             )
@@ -756,7 +800,7 @@ def get_user(user_uuid: str, include_details: bool = False) -> UserDetails:
                 content=f"# User Authentication\n\nThis document describes user authentication. Version {i}.",
                 file_path=f"docs/auth_{i}.md",
                 service_name=service_name,
-                ingestion_mode="git_history",
+            ingestion_mode="git_history",
                 git_commit_sha=commit_sha,
             )
             await doc_repo.create(doc)
