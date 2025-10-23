@@ -1,0 +1,61 @@
+{
+  "session_id": "20251023_122529",
+  "start_time": "2025-10-23T12:25:29.764450",
+  "baseline": {
+    "passed": 0,
+    "failed": 0,
+    "errors": 0,
+    "total": 0,
+    "pass_rate": 0
+  },
+  "fixes": [
+    {
+      "timestamp": "2025-10-23T12:25:31.354936",
+      "test_name": "test_performance_and_errors.py",
+      "category": "Attribute Error",
+      "description": "Changed doc.content to doc.normalized_content"
+    },
+    {
+      "timestamp": "2025-10-23T12:25:31.366447",
+      "test_name": "test_maintenance_workflow.py",
+      "category": "API Parameter",
+      "description": "Fixed parameter names to match actual API"
+    },
+    {
+      "timestamp": "2025-10-23T12:25:31.366653",
+      "test_name": "test_rag_workflow.py",
+      "category": "API Parameter",
+      "description": "Fixed parameter names to match actual API"
+    },
+    {
+      "timestamp": "2025-10-23T12:25:31.372006",
+      "test_name": "test_maintenance_workflow.py",
+      "category": "Method Name",
+      "description": "Fixed method names to match actual implementation"
+    },
+    {
+      "timestamp": "2025-10-23T12:25:31.372488",
+      "test_name": "test_complete_user_journeys.py",
+      "category": "Method Name",
+      "description": "Fixed method names to match actual implementation"
+    }
+  ],
+  "current": {
+    "passed": 0,
+    "failed": 0,
+    "errors": 0,
+    "total": 0,
+    "pass_rate": 0,
+    "improvement": 0,
+    "tests_fixed": 0
+  },
+  "history": [
+    {
+      "timestamp": "2025-10-23T12:25:32.469420",
+      "passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "pass_rate": 0
+    }
+  ]
+}

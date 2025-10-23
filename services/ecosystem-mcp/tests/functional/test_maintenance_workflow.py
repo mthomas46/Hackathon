@@ -287,7 +287,7 @@ class TestDependencyTracking:
         await doc_repo.create(doc2_data)
         
         # Track dependencies
-        dependencies = await dependency_tracker.track_dependencies(
+        dependencies = await dependency_tracker.analyze_dependencies(
             service_name="test-service"
         )
         
@@ -304,7 +304,7 @@ class TestDependencyTracking:
         dependency_tracker = DependencyTracker()
         
         # Analyze impact of changing a document
-        impact = await dependency_tracker.analyze_impact(
+        impact = await dependency_tracker.get_impact_analysis(
             service_name="test-service",
             document_id=str(uuid4())
         )
@@ -415,7 +415,7 @@ class TestQualityDashboard:
             await doc_repo.create(doc_data)
         
         # Generate dashboard
-        dashboard = await quality_dashboard.generate_dashboard(
+        dashboard = await quality_dashboard.get_quality_metrics(
             service_name="dashboard-test"
         )
         
@@ -433,7 +433,7 @@ class TestQualityDashboard:
         quality_dashboard = QualityDashboard()
         
         # Generate dashboard (includes quality score)
-        dashboard = await quality_dashboard.generate_dashboard(
+        dashboard = await quality_dashboard.get_quality_metrics(
             service_name="test-service"
         )
         
@@ -455,7 +455,7 @@ class TestAutomatedRefresh:
         automated_refresher = AutomatedRefresher()
         
         # Trigger refresh
-        result = await automated_refresher.trigger_refresh(
+        result = await automated_refresher.refresh_stale_documents(
             service_name="test-service",
             force=True
         )
@@ -474,9 +474,7 @@ class TestAutomatedRefresh:
         automated_refresher = AutomatedRefresher()
         
         # Schedule refresh
-        schedule = await automated_refresher.schedule_refresh(
-            service_name="test-service",
-            interval_days=7
+        schedule = await automated_refresher.schedule_refresh(interval_hours=7
         )
         
         # Should return schedule info

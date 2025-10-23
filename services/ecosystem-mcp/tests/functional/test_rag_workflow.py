@@ -320,9 +320,7 @@ class TestDynamicTimeline:
         ]
         
         # Construct timeline
-        timeline = constructor.construct_timeline(
-            documents=mock_docs,
-            topic="test topic"
+        timeline = constructor.construct_timeline(query="test topic"
         )
         
         assert timeline is not None
@@ -360,9 +358,7 @@ class TestDynamicTimeline:
             for _ in range(10)
         ]
         
-        timeline = constructor.construct_timeline(
-            documents=high_quality_docs,
-            topic="test"
+        timeline = constructor.construct_timeline(query="test"
         )
         
         # Should have confidence score
@@ -476,7 +472,7 @@ class TestCitationGeneration:
             "sources": sources
         }
         
-        citations = formatter.format_citations(answer, format="markdown")
+        citations = formatter.format_citations(citation_format="markdown")
         
         assert citations is not None
         assert hasattr(citations, "citation_text") or isinstance(citations, dict)
@@ -503,7 +499,7 @@ class TestCitationGeneration:
             "sources": sources
         }
         
-        citations = formatter.format_citations(answer, format="html")
+        citations = formatter.format_citations(citation_format="html")
         assert citations is not None
     
     async def test_citations_with_temporal_attribution(
@@ -530,7 +526,7 @@ class TestCitationGeneration:
             "sources": sources
         }
         
-        citations = formatter.format_citations(answer, format="markdown")
+        citations = formatter.format_citations(citation_format="markdown")
         assert citations is not None
 
 

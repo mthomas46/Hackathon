@@ -176,7 +176,7 @@ class TestDocumentLifecycle:
         assert stale_results is not None
         
         # Step 3: Trigger refresh
-        refresh_result = await automated_refresher.trigger_refresh(
+        refresh_result = await automated_refresher.refresh_stale_documents(
             service_name="maintenance-journey",
             force=True
         )
@@ -305,7 +305,7 @@ class TestMultiServiceIntegration:
             await doc_repo.create(doc_data)
         
         # Generate dashboard
-        dashboard = await quality_dashboard.generate_dashboard(
+        dashboard = await quality_dashboard.get_quality_metrics(
             service_name=service_name
         )
         
@@ -452,7 +452,7 @@ class TestComplexWorkflows:
         assert timeline is not None
         
         # Step 3: Check quality
-        dashboard = await quality_dashboard.generate_dashboard(
+        dashboard = await quality_dashboard.get_quality_metrics(
             service_name=service_name
         )
         assert dashboard is not None

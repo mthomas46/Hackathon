@@ -153,7 +153,7 @@ class TimelineManager:
             raise
         except Exception as e:
             self.logger.error(f"Failed to create timeline: {e}", exc_info=True)
-            await self.db.rollback()
+            await self.db.session.rollback()
             raise
     
     async def get_timeline(
