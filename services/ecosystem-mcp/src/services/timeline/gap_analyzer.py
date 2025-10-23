@@ -73,11 +73,12 @@ class GapAnalyzer:
     - Confidence-based recommendations
     """
     
-    def __init__(self):
+    def __init__(self, db_session: AsyncSession = None):
         """Initialize gap analyzer."""
         self.logger = logging.getLogger(__name__)
+        self.db_session = db_session
         self.coverage_analyzer = CoverageAnalyzer()
-        self.confidence_calculator = TemporalConfidenceCalculator()
+        self.confidence_calculator = TemporalConfidenceCalculator(db_session) if db_session else None
     
     async def analyze_gaps(
         self,

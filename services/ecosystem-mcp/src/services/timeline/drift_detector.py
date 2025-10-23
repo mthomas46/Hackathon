@@ -80,10 +80,11 @@ class DriftDetector:
     - Multiple detection strategies
     """
     
-    def __init__(self):
+    def __init__(self, db_session: AsyncSession = None):
         """Initialize drift detector."""
         self.logger = logging.getLogger(__name__)
-        self.confidence_calculator = TemporalConfidenceCalculator()
+        self.db_session = db_session
+        self.confidence_calculator = TemporalConfidenceCalculator(db_session) if db_session else None
     
     async def detect_drift(
         self,

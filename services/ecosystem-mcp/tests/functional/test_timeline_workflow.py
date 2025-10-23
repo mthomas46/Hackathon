@@ -747,7 +747,7 @@ def get_user(user_uuid: str, include_details: bool = False) -> UserDetails:
         )
         
         # Generate progression report
-        report_generator = ReportGenerator(db_session=db_session)
+        report_generator = ReportGenerator()
         report = await report_generator.generate_progression_report(
             timeline_id=timeline.id,
             topic="test service development"
@@ -808,10 +808,10 @@ def get_user(user_uuid: str, include_details: bool = False) -> UserDetails:
         await db_session.commit()
         
         # Analyze consolidation opportunities
-        consolidator = DocumentConsolidator(db_session=db_session)
+        consolidator = DocumentConsolidator()
         opportunities = await consolidator.analyze_consolidation_opportunities(
             service_name=service_name,
-            topic="authentication"
+            similarity_threshold=0.7
         )
         
         # Validate opportunities
