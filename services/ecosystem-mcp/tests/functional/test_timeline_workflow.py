@@ -92,19 +92,23 @@ class TestTimelineCreation:
         # Repository created internally by TimelineManager
         timeline_manager = TimelineManager(clean_database)
         
+        from src.models.timeline import TimelineMetadata
+        
         timeline_data = TimelineCreate(
             name=f"test_timeline_metadata_{test_session_id[:8]}",
             service_name="test-service",
             repo_path="/test/repo",
             start_date=datetime(2024, 1, 1),
             end_date=datetime(2024, 12, 31),
-            strategy="quarterly",
-            metadata={
-                "purpose": "testing",
-                "created_by": "functional_test",
-                "_test_data_marker": True,
-                "_test_session_id": test_session_id
-            }
+            period_strategy="quarterly",
+            metadata=TimelineMetadata(
+                extra={
+                    "purpose": "testing",
+                    "created_by": "functional_test",
+                    "_test_data_marker": True,
+                    "_test_session_id": test_session_id
+                }
+            )
         )
         
         # Skip confidence check for tests
@@ -114,8 +118,8 @@ class TestTimelineCreation:
         )
         
         assert timeline.metadata is not None
-        assert timeline.metadata.get("purpose") == "testing"
-        assert timeline.metadata.get("_test_data_marker") is True
+        assert timeline.metadata.extra.get("purpose") == "testing"
+        assert timeline.metadata.extra.get("_test_data_marker") is True
     
     async def test_create_multiple_timelines(
         self,
