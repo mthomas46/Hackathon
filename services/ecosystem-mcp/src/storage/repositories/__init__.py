@@ -8,6 +8,7 @@ from .base import BaseRepository
 from .document_repository import DocumentRepository
 from .embedding_repository import EmbeddingRepository
 from .ingestion_job_repository import IngestionJobRepository
+from .documentation_run_repository import DocumentationRunRepository
 from .timeline_repository import (
     TimelineRepository,
     TimePeriodRepository,
@@ -19,6 +20,7 @@ __all__ = [
     "DocumentRepository",
     "EmbeddingRepository",
     "IngestionJobRepository",
+    "DocumentationRunRepository",
     "TimelineRepository",
     "TimePeriodRepository",
     "DocumentPlacementRepository",
