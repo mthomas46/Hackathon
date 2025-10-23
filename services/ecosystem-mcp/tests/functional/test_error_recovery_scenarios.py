@@ -14,8 +14,8 @@ from typing import List, Dict, Any
 from unittest.mock import patch, AsyncMock, MagicMock
 import psycopg2
 
-from src.models.ingestion import IngestionJobModel, JobStatus
-from src.repositories.ingestion_job_repository import IngestionJobRepository
+from src.storage.db_models import IngestionJobModel
+from src.storage.repositories import IngestionJobRepository
 from tests.utils.test_helpers import create_test_document
 
 
