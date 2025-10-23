@@ -145,12 +145,20 @@ class TestProgressionReportGeneration:
         """Test generating progression report in Markdown format."""
         generator = ReportGenerator()
         
-        # Mock the database queries - returns dict, not tuple
+        # Mock the database queries - returns dict with dict representation of periods
         with patch.object(generator, '_fetch_timeline_data', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = {
                 'timeline_name': sample_timeline.name,
-                'periods': sample_periods,
-                'placements': sample_placements,
+                'periods': [
+                    {
+                        'id': str(p.id),
+                        'name': p.name,
+                        'start_date': p.start_date,
+                        'end_date': p.end_date,
+                        'document_count': p.document_count
+                    }
+                    for p in sample_periods
+                ],
                 'confidence': sample_timeline.confidence_level
             }
             
@@ -176,8 +184,16 @@ class TestProgressionReportGeneration:
         with patch.object(generator, '_fetch_timeline_data', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = {
                 'timeline_name': sample_timeline.name,
-                'periods': sample_periods,
-                'placements': [],
+                'periods': [
+                    {
+                        'id': str(p.id),
+                        'name': p.name,
+                        'start_date': p.start_date,
+                        'end_date': p.end_date,
+                        'document_count': p.document_count
+                    }
+                    for p in sample_periods
+                ],
                 'confidence': sample_timeline.confidence_level
             }
             
@@ -254,7 +270,7 @@ class TestGapReportGeneration:
             ]
         }
         
-        with patch('src.services.timeline.report_generator.GapAnalyzer') as MockGapAnalyzer:
+        with patch('src.services.timeline.gap_analyzer.GapAnalyzer') as MockGapAnalyzer:
             mock_analyzer = AsyncMock()
             MockGapAnalyzer.return_value = mock_analyzer
             mock_analyzer.analyze_gaps.return_value = gaps
@@ -314,7 +330,7 @@ class TestDriftReportGeneration:
             "confidence": 0.85
         }
         
-        with patch('src.services.timeline.report_generator.DriftDetector') as MockDriftDetector:
+        with patch('src.services.timeline.drift_detector.DriftDetector') as MockDriftDetector:
             mock_detector = AsyncMock()
             MockDriftDetector.return_value = mock_detector
             mock_detector.detect_drift.return_value = drift_data

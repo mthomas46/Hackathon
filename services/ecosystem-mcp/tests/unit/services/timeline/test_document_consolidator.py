@@ -17,31 +17,31 @@ def sample_documents():
     return [
         {
             "id": 1,
-            "file_path": "/docs/auth.md",
+            "path": "/docs/auth.md",
             "content": "Authentication documentation for OAuth2",
             "last_modified": datetime(2024, 1, 1, tzinfo=timezone.utc),
-            "hash": "abc123"
+            "content_hash": "abc123"
         },
         {
             "id": 2,
-            "file_path": "/docs/authentication.md",
+            "path": "/docs/authentication.md",
             "content": "Authentication documentation for OAuth2",
             "last_modified": datetime(2024, 1, 2, tzinfo=timezone.utc),
-            "hash": "abc123"  # Same hash = duplicate
+            "content_hash": "abc123"  # Same hash = duplicate
         },
         {
             "id": 3,
-            "file_path": "/docs/api.md",
+            "path": "/docs/api.md",
             "content": "API documentation with endpoints",
             "last_modified": datetime(2024, 1, 3, tzinfo=timezone.utc),
-            "hash": "def456"
+            "content_hash": "def456"
         },
         {
             "id": 4,
-            "file_path": "/docs/api_guide.md",
+            "path": "/docs/api_guide.md",
             "content": "API documentation with endpoint descriptions",
             "last_modified": datetime(2024, 1, 4, tzinfo=timezone.utc),
-            "hash": "def789"  # Similar but not identical
+            "content_hash": "def789"  # Similar but not identical
         }
     ]
 
@@ -58,9 +58,8 @@ class TestDocumentConsolidatorInstantiation:
     def test_consolidator_has_methods(self):
         """Test that DocumentConsolidator has required methods."""
         consolidator = DocumentConsolidator()
-        assert hasattr(consolidator, 'analyze_consolidation')
+        assert hasattr(consolidator, 'analyze_consolidation_opportunities')
         assert hasattr(consolidator, 'recommend_merges')
-        assert hasattr(consolidator, 'get_consolidation_metrics')
 
 
 @pytest.mark.unit
@@ -71,10 +70,10 @@ class TestDuplicateDetection:
         """Test detecting documents with identical content hashes."""
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = sample_documents
             
-            result = await consolidator.analyze_consolidation(timeline_id=1)
+            result = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             assert result is not None
             assert "duplicates" in result
@@ -99,10 +98,10 @@ class TestDuplicateDetection:
         
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = unique_docs
             
-            result = await consolidator.analyze_consolidation(timeline_id=1)
+            result = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             # Should find no or minimal duplicates
             assert "duplicates" in result
@@ -114,12 +113,12 @@ class TestSimilarityDetection:
     
     async def test_detect_similar_documents(self, sample_documents):
         """Test detecting documents with similar content."""
-        consolidator = DocumentConsolidator(similarity_threshold=0.8)
+        consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = sample_documents
             
-            result = await consolidator.analyze_consolidation(timeline_id=1)
+            result = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             assert result is not None
             assert "similar_groups" in result or "duplicates" in result
@@ -134,19 +133,19 @@ class TestSimilarityDetection:
         # High threshold - should not match
         consolidator_strict = DocumentConsolidator(similarity_threshold=0.95)
         
-        with patch.object(consolidator_strict, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator_strict, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = docs
             
-            result_strict = await consolidator_strict.analyze_consolidation(timeline_id=1)
+            result_strict = await consolidator_strict.analyze_consolidation_opportunities(service_name="test-service")
             assert result_strict is not None
         
         # Low threshold - should match
         consolidator_lenient = DocumentConsolidator(similarity_threshold=0.5)
         
-        with patch.object(consolidator_lenient, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator_lenient, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = docs
             
-            result_lenient = await consolidator_lenient.analyze_consolidation(timeline_id=1)
+            result_lenient = await consolidator_lenient.analyze_consolidation_opportunities(service_name="test-service")
             assert result_lenient is not None
 
 
@@ -158,10 +157,10 @@ class TestMergeRecommendations:
         """Test generating merge recommendations for duplicates."""
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = sample_documents
             
-            recommendations = await consolidator.recommend_merges(timeline_id=1)
+            recommendations = await consolidator.recommend_merges(service_name="test-service")
             
             assert recommendations is not None
             assert isinstance(recommendations, list)
@@ -179,10 +178,10 @@ class TestMergeRecommendations:
             {"id": 2, "content": "Same content", "hash": "same"}
         ]
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = docs
             
-            recommendations = await consolidator.recommend_merges(timeline_id=1)
+            recommendations = await consolidator.recommend_merges(service_name="test-service")
             
             assert isinstance(recommendations, list)
             # Should explain why merge is recommended
@@ -199,10 +198,10 @@ class TestMergeRecommendations:
         
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = unique_docs
             
-            recommendations = await consolidator.recommend_merges(timeline_id=1)
+            recommendations = await consolidator.recommend_merges(service_name="test-service")
             
             # Should return empty list or minimal recommendations
             assert isinstance(recommendations, list)
@@ -216,10 +215,10 @@ class TestConsolidationMetrics:
         """Test retrieving consolidation metrics."""
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = sample_documents
             
-            metrics = await consolidator.get_consolidation_metrics(timeline_id=1)
+            metrics = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             assert metrics is not None
             assert isinstance(metrics, dict)
@@ -236,10 +235,10 @@ class TestConsolidationMetrics:
             {"id": 3, "content": "Different", "hash": "diff"}
         ]
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = docs
             
-            metrics = await consolidator.get_consolidation_metrics(timeline_id=1)
+            metrics = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             # Should show potential reduction
             assert "total_documents" in metrics
@@ -275,10 +274,10 @@ class TestVersionClustering:
         
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = versions
             
-            result = await consolidator.analyze_consolidation(timeline_id=1)
+            result = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             # Should identify version clusters
             assert result is not None
@@ -293,10 +292,10 @@ class TestRedundancyScore:
         """Test redundancy score calculation."""
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = sample_documents
             
-            metrics = await consolidator.get_consolidation_metrics(timeline_id=1)
+            metrics = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             # Should include redundancy score (0-1 or 0-100)
             assert "redundancy_score" in metrics or "total_documents" in metrics
@@ -310,10 +309,10 @@ class TestRedundancyScore:
         
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = duplicates
             
-            metrics = await consolidator.get_consolidation_metrics(timeline_id=1)
+            metrics = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             # High redundancy expected
             assert "total_documents" in metrics
@@ -328,10 +327,10 @@ class TestConsolidationErrorHandling:
         """Test handling empty document set."""
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = []
             
-            result = await consolidator.analyze_consolidation(timeline_id=1)
+            result = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             # Should handle gracefully
             assert result is not None
@@ -341,7 +340,7 @@ class TestConsolidationErrorHandling:
         """Test handling invalid timeline ID."""
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.side_effect = ValueError("Timeline not found")
             
             with pytest.raises(ValueError):
@@ -351,11 +350,11 @@ class TestConsolidationErrorHandling:
         """Test handling database errors."""
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.side_effect = Exception("Database error")
             
             with pytest.raises(Exception):
-                await consolidator.analyze_consolidation(timeline_id=1)
+                await consolidator.analyze_consolidation_opportunities(service_name="test-service")
 
 
 @pytest.mark.unit
@@ -375,10 +374,10 @@ class TestConsolidationPriority:
             {"id": 11, "content": "Rare doc 2", "hash": "r2"}
         ]
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = docs
             
-            recommendations = await consolidator.recommend_merges(timeline_id=1)
+            recommendations = await consolidator.recommend_merges(service_name="test-service")
             
             # Should prioritize the 5 duplicates
             assert isinstance(recommendations, list)
@@ -402,10 +401,10 @@ class TestConsolidationPriority:
             }
         ]
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = large_duplicates
             
-            recommendations = await consolidator.recommend_merges(timeline_id=1)
+            recommendations = await consolidator.recommend_merges(service_name="test-service")
             
             # Should identify as high-priority consolidation
             assert isinstance(recommendations, list)
@@ -419,10 +418,10 @@ class TestConsolidationInsights:
         """Test generating actionable insights."""
         consolidator = DocumentConsolidator()
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = sample_documents
             
-            result = await consolidator.analyze_consolidation(timeline_id=1)
+            result = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             # Should include insights or recommendations
             assert result is not None
@@ -438,10 +437,10 @@ class TestConsolidationInsights:
             for i in range(5)
         ]
         
-        with patch.object(consolidator, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(consolidator, '_fetch_service_documents', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = docs
             
-            result = await consolidator.analyze_consolidation(timeline_id=1)
+            result = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             # Should detect versioning pattern
             assert result is not None
