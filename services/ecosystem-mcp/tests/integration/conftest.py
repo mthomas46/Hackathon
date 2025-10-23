@@ -20,9 +20,10 @@ def app():
     Get FastAPI application instance.
     
     This fixture creates the app once per test module for efficiency.
+    Uses the create_app() factory function.
     """
-    from src.api.app import app as fastapi_app
-    return fastapi_app
+    from src.api.app import create_app
+    return create_app()
 
 
 @pytest.fixture(scope="function")
@@ -55,7 +56,9 @@ async def async_test_client(app) -> AsyncGenerator[AsyncClient, None]:
             response = await async_test_client.get("/api/v1/health")
             assert response.status_code == 200
     """
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    from httpx import ASGITransport
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
 
 
