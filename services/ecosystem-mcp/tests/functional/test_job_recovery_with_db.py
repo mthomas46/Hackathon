@@ -3,34 +3,28 @@ Functional tests for job recovery with real database checkpoints.
 
 These tests validate that jobs can be recovered after crashes or restarts
 using real checkpoint data stored in the test database.
+
+ADAPTED to match actual JobRecoveryManager API.
 """
 
 import pytest
 import asyncio
 from datetime import datetime, timedelta
-from uuid import uuid4
+from uuid import uuid4, UUID
 from typing import List, Dict, Any
 
-from src.models.ingestion import IngestionJobModel, JobStatus
-from src.repositories.ingestion_job_repository import IngestionJobRepository
-from src.services.job_recovery.checkpoint_manager import CheckpointManager
-from src.services.job_recovery.recovery_service import RecoveryService
-from tests.utils.test_helpers import create_test_document
+from src.utils.job_recovery import JobRecoveryManager, JobType, CheckpointStatus, JobCheckpoint
+from src.storage.db_models import IngestionJobModel
+from src.storage.repositories import IngestionJobRepository
 
 
 pytestmark = pytest.mark.functional
 
 
 @pytest.fixture
-async def checkpoint_manager(clean_database):
-    """Checkpoint manager with test database."""
-    return CheckpointManager(clean_database)
-
-
-@pytest.fixture
-async def recovery_service(clean_database, checkpoint_manager):
-    """Recovery service with test database."""
-    return RecoveryService(clean_database, checkpoint_manager)
+async def recovery_manager(clean_database):
+    """Job recovery manager with test database."""
+    return JobRecoveryManager(clean_database)
 
 
 @pytest.fixture
@@ -39,538 +33,577 @@ async def job_repo(clean_database):
     return IngestionJobRepository(clean_database)
 
 
-class TestJobRecoveryBasics:
-    """Test basic job recovery functionality."""
+@pytest.fixture
+async def test_job(job_repo):
+    """Create a test ingestion job."""
+    created_job = await job_repo.create_job(
+        mode="standard",
+        status="running",
+        repo_path="/test/repo",
+        job_metadata={}
+    )
+    return created_job
 
-    async def test_save_and_load_checkpoint(
-        self,
-        checkpoint_manager,
-        job_repo,
-        test_session_id
-    ):
-        """Test saving and loading checkpoint data."""
-        # Create job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
 
-        # Save checkpoint
-        checkpoint_data = {
+# ============================================================================
+# Test 1: Create and Retrieve Checkpoint
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_create_checkpoint(recovery_manager, test_job):
+    """Test creating a checkpoint and retrieving it."""
+    job_id = str(test_job.id)
+    
+    # Create checkpoint
+    checkpoint = await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="checkpoint_1",
+        data={
             "processed_files": ["file1.py", "file2.py"],
-            "failed_files": ["file3.py"],
-            "current_file": "file4.py",
-            "total_files": 10,
-            "progress": 0.3
+            "current_index": 2,
+            "total_files": 10
         }
-        await checkpoint_manager.save_checkpoint(job_id, checkpoint_data)
+    )
+    
+    # Verify checkpoint was created
+    assert checkpoint is not None
+    assert checkpoint.job_id == job_id
+    assert checkpoint.job_type == JobType.INGESTION
+    assert checkpoint.checkpoint_id == "checkpoint_1"
+    assert checkpoint.sequence == 0  # First checkpoint
+    assert checkpoint.status == CheckpointStatus.PENDING
+    assert checkpoint.data["processed_files"] == ["file1.py", "file2.py"]
+    
+    # Retrieve last checkpoint
+    last_checkpoint = await recovery_manager.get_last_checkpoint(job_id)
+    assert last_checkpoint is not None
+    assert last_checkpoint.checkpoint_id == "checkpoint_1"
 
-        # Load checkpoint
-        loaded = await checkpoint_manager.load_checkpoint(job_id)
 
-        assert loaded is not None
-        assert loaded["processed_files"] == checkpoint_data["processed_files"]
-        assert loaded["failed_files"] == checkpoint_data["failed_files"]
-        assert loaded["current_file"] == checkpoint_data["current_file"]
-        assert loaded["progress"] == checkpoint_data["progress"]
+# ============================================================================
+# Test 2: Multiple Checkpoints with Sequence
+# ============================================================================
 
-    async def test_recover_job_from_checkpoint(
-        self,
-        recovery_service,
-        job_repo,
-        checkpoint_manager,
-        test_session_id
-    ):
-        """Test recovering a job from checkpoint."""
-        # Create job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            test_session_id=test_session_id
+@pytest.mark.asyncio
+async def test_multiple_checkpoints_sequence(recovery_manager, test_job):
+    """Test creating multiple checkpoints maintains correct sequence."""
+    job_id = str(test_job.id)
+    
+    # Create multiple checkpoints
+    cp1 = await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp1",
+        data={"index": 1}
+    )
+    
+    cp2 = await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp2",
+        data={"index": 2}
+    )
+    
+    cp3 = await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp3",
+        data={"index": 3}
+    )
+    
+    # Verify sequences
+    assert cp1.sequence == 0
+    assert cp2.sequence == 1
+    assert cp3.sequence == 2
+    
+    # Get last checkpoint
+    last = await recovery_manager.get_last_checkpoint(job_id)
+    assert last.checkpoint_id == "cp3"
+    assert last.sequence == 2
+
+
+# ============================================================================
+# Test 3: Update Checkpoint Status
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_update_checkpoint_status(recovery_manager, test_job):
+    """Test updating checkpoint status."""
+    job_id = str(test_job.id)
+    
+    # Create checkpoint
+    checkpoint = await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp1",
+        data={"files": 10}
+    )
+    
+    assert checkpoint.status == CheckpointStatus.PENDING
+    assert checkpoint.completed_at is None
+    
+    # Update to IN_PROGRESS
+    await recovery_manager.update_checkpoint_status(
+        job_id=job_id,
+        checkpoint_id="cp1",
+        status=CheckpointStatus.IN_PROGRESS
+    )
+    
+    # Verify update
+    last = await recovery_manager.get_last_checkpoint(job_id)
+    assert last.status == CheckpointStatus.IN_PROGRESS
+    
+    # Update to COMPLETED
+    await recovery_manager.update_checkpoint_status(
+        job_id=job_id,
+        checkpoint_id="cp1",
+        status=CheckpointStatus.COMPLETED,
+        data={"final_count": 15}
+    )
+    
+    # Verify completion
+    last = await recovery_manager.get_last_checkpoint(job_id)
+    assert last.status == CheckpointStatus.COMPLETED
+    assert last.data["final_count"] == 15
+    assert last.completed_at is not None
+
+
+# ============================================================================
+# Test 4: Get Incomplete Checkpoints
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_get_incomplete_checkpoints(recovery_manager, test_job):
+    """Test retrieving incomplete checkpoints."""
+    job_id = str(test_job.id)
+    
+    # Create checkpoints with different statuses
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp1",
+        data={}
+    )
+    await recovery_manager.update_checkpoint_status(
+        job_id, "cp1", CheckpointStatus.COMPLETED
+    )
+    
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp2",
+        data={}
+    )
+    # cp2 stays PENDING
+    
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp3",
+        data={}
+    )
+    await recovery_manager.update_checkpoint_status(
+        job_id, "cp3", CheckpointStatus.IN_PROGRESS
+    )
+    
+    # Get incomplete checkpoints
+    incomplete = await recovery_manager.get_incomplete_checkpoints(job_id)
+    
+    # Should have cp2 (PENDING) and cp3 (IN_PROGRESS)
+    assert len(incomplete) == 2
+    checkpoint_ids = [cp.checkpoint_id for cp in incomplete]
+    assert "cp2" in checkpoint_ids
+    assert "cp3" in checkpoint_ids
+
+
+# ============================================================================
+# Test 5: Can Resume Check
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_can_resume(recovery_manager, test_job):
+    """Test checking if a job can be resumed."""
+    job_id = str(test_job.id)
+    
+    # No checkpoints - cannot resume
+    can_resume = await recovery_manager.can_resume(job_id)
+    assert can_resume is False
+    
+    # Create checkpoint but don't complete it
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp1",
+        data={}
+    )
+    
+    # Still cannot resume (no completed checkpoints)
+    can_resume = await recovery_manager.can_resume(job_id)
+    assert can_resume is False
+    
+    # Complete the checkpoint
+    await recovery_manager.update_checkpoint_status(
+        job_id, "cp1", CheckpointStatus.COMPLETED
+    )
+    
+    # Now can resume
+    can_resume = await recovery_manager.can_resume(job_id)
+    assert can_resume is True
+
+
+# ============================================================================
+# Test 6: Get Resume State
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_get_resume_state(recovery_manager, test_job):
+    """Test getting resume state for a job."""
+    job_id = str(test_job.id)
+    
+    # No checkpoints
+    state = await recovery_manager.get_resume_state(job_id)
+    assert state["can_resume"] is False
+    assert "reason" in state
+    
+    # Create and complete checkpoints
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp1",
+        data={"processed": 10}
+    )
+    await recovery_manager.update_checkpoint_status(
+        job_id, "cp1", CheckpointStatus.COMPLETED
+    )
+    
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp2",
+        data={"processed": 20}
+    )
+    await recovery_manager.update_checkpoint_status(
+        job_id, "cp2", CheckpointStatus.COMPLETED
+    )
+    
+    # Get resume state
+    state = await recovery_manager.get_resume_state(job_id)
+    assert state["can_resume"] is True
+    assert "last_checkpoint" in state
+    assert state["last_checkpoint"]["checkpoint_id"] == "cp2"
+    assert state["resume_from_sequence"] == 2  # Next sequence after 1 (cp2 is at sequence 1)
+    assert "progress" in state
+
+
+# ============================================================================
+# Test 7: Cleanup Old Checkpoints
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_cleanup_checkpoints(recovery_manager, test_job):
+    """Test cleaning up old checkpoints."""
+    job_id = str(test_job.id)
+    
+    # Create 10 checkpoints
+    for i in range(10):
+        await recovery_manager.create_checkpoint(
+            job_id=job_id,
+            job_type=JobType.INGESTION,
+            checkpoint_id=f"cp{i}",
+            data={"index": i}
         )
-        await job_repo.create(job)
+    
+    # Verify all 10 exist
+    checkpoints = recovery_manager.checkpoints.get(job_id, [])
+    assert len(checkpoints) == 10
+    
+    # Cleanup, keeping last 3
+    await recovery_manager.cleanup_checkpoints(job_id, keep_last=3)
+    
+    # Verify only 3 remain
+    checkpoints = recovery_manager.checkpoints.get(job_id, [])
+    assert len(checkpoints) == 3
+    
+    # Verify they are the last 3
+    assert checkpoints[0].checkpoint_id == "cp7"
+    assert checkpoints[1].checkpoint_id == "cp8"
+    assert checkpoints[2].checkpoint_id == "cp9"
 
-        # Save checkpoint
-        checkpoint_data = {
-            "processed_files": ["file1.py", "file2.py"],
-            "failed_files": [],
-            "current_file": "file3.py",
-            "total_files": 5,
-            "progress": 0.4
+
+# ============================================================================
+# Test 8: Filter Checkpoints by Status
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_filter_checkpoints_by_status(recovery_manager, test_job):
+    """Test filtering checkpoints by status."""
+    job_id = str(test_job.id)
+    
+    # Create checkpoints with different statuses
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp1",
+        data={}
+    )
+    await recovery_manager.update_checkpoint_status(
+        job_id, "cp1", CheckpointStatus.COMPLETED
+    )
+    
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp2",
+        data={}
+    )
+    await recovery_manager.update_checkpoint_status(
+        job_id, "cp2", CheckpointStatus.FAILED
+    )
+    
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp3",
+        data={}
+    )
+    # cp3 stays PENDING
+    
+    # Get last completed checkpoint
+    last_completed = await recovery_manager.get_last_checkpoint(
+        job_id, status=CheckpointStatus.COMPLETED
+    )
+    assert last_completed is not None
+    assert last_completed.checkpoint_id == "cp1"
+    
+    # Get last pending checkpoint
+    last_pending = await recovery_manager.get_last_checkpoint(
+        job_id, status=CheckpointStatus.PENDING
+    )
+    assert last_pending is not None
+    assert last_pending.checkpoint_id == "cp3"
+
+
+# ============================================================================
+# Test 9: Checkpoint Data Persistence
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_checkpoint_data_persistence(recovery_manager, test_job, job_repo):
+    """Test that checkpoint data is persisted to database."""
+    job_id = str(test_job.id)
+    
+    # Create checkpoint with data
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp1",
+        data={
+            "processed_files": ["a.py", "b.py"],
+            "metrics": {"count": 100}
         }
-        await checkpoint_manager.save_checkpoint(job_id, checkpoint_data)
+    )
+    
+    # Retrieve job from database
+    job = await job_repo.get_by_id(UUID(job_id))
+    
+    # Verify checkpoint is in metadata
+    assert job is not None
+    assert job.job_metadata is not None
+    assert "checkpoints" in job.job_metadata
+    assert len(job.job_metadata["checkpoints"]) == 1
+    
+    checkpoint_data = job.job_metadata["checkpoints"][0]
+    assert checkpoint_data["checkpoint_id"] == "cp1"
+    assert checkpoint_data["data"]["processed_files"] == ["a.py", "b.py"]
 
-        # Recover job
-        recovered_job = await recovery_service.recover_job(job_id)
 
-        assert recovered_job is not None
-        assert recovered_job.id == job_id
-        assert recovered_job.status == JobStatus.PROCESSING
-        assert len(recovered_job.processed_files) == 2
+# ============================================================================
+# Test 10: Concurrent Checkpoint Creation
+# ============================================================================
 
-    async def test_checkpoint_updates_incrementally(
-        self,
-        checkpoint_manager,
-        job_repo,
-        test_session_id
-    ):
-        """Test that checkpoints update incrementally."""
-        # Create job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            test_session_id=test_session_id
+@pytest.mark.asyncio
+async def test_concurrent_checkpoint_creation(recovery_manager, test_job):
+    """Test creating checkpoints concurrently."""
+    job_id = str(test_job.id)
+    
+    # Create checkpoints concurrently
+    tasks = [
+        recovery_manager.create_checkpoint(
+            job_id=job_id,
+            job_type=JobType.INGESTION,
+            checkpoint_id=f"cp{i}",
+            data={"index": i}
         )
-        await job_repo.create(job)
-
-        # Save initial checkpoint
-        await checkpoint_manager.save_checkpoint(job_id, {
-            "processed_files": ["file1.py"],
-            "progress": 0.2
-        })
-
-        # Update checkpoint
-        await checkpoint_manager.save_checkpoint(job_id, {
-            "processed_files": ["file1.py", "file2.py"],
-            "progress": 0.4
-        })
-
-        # Load and verify
-        loaded = await checkpoint_manager.load_checkpoint(job_id)
-        assert len(loaded["processed_files"]) == 2
-        assert loaded["progress"] == 0.4
+        for i in range(5)
+    ]
+    
+    checkpoints = await asyncio.gather(*tasks)
+    
+    # Verify all created
+    assert len(checkpoints) == 5
+    
+    # Verify sequences are unique
+    sequences = [cp.sequence for cp in checkpoints]
+    assert len(set(sequences)) == 5  # All unique
 
 
-class TestJobRecoveryAfterCrash:
-    """Test job recovery after simulated crashes."""
+# ============================================================================
+# Test 11: Checkpoint to_dict and from_dict
+# ============================================================================
 
-    async def test_recover_after_worker_crash(
-        self,
-        recovery_service,
-        job_repo,
-        checkpoint_manager,
-        test_session_id
-    ):
-        """Test recovery after worker process crashes."""
-        # Create job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            started_at=datetime.utcnow() - timedelta(minutes=10),
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Simulate partial progress before crash
-        checkpoint_data = {
-            "processed_files": ["file1.py", "file2.py", "file3.py"],
-            "failed_files": ["file4.py"],
-            "current_file": "file5.py",
-            "total_files": 10,
-            "progress": 0.4,
-            "last_checkpoint": datetime.utcnow().isoformat()
-        }
-        await checkpoint_manager.save_checkpoint(job_id, checkpoint_data)
-
-        # Simulate crash (job status still PROCESSING but no activity)
-        # Recovery service should detect and recover
-
-        # Recover job
-        recovered_job = await recovery_service.recover_job(job_id)
-
-        assert recovered_job is not None
-        assert recovered_job.id == job_id
-        assert len(recovered_job.processed_files) == 3
-        assert len(recovered_job.failed_files) == 1
-        # Job should resume from file5.py
-
-    async def test_recover_multiple_jobs_after_crash(
-        self,
-        recovery_service,
-        job_repo,
-        checkpoint_manager,
-        test_session_id
-    ):
-        """Test recovering multiple jobs after crash."""
-        # Create multiple jobs
-        job_ids = [str(uuid4()) for _ in range(3)]
-        for job_id in job_ids:
-            job = IngestionJobModel(
-                id=job_id,
-                repo_path=f"/test/repo{job_id}",
-                status=JobStatus.PROCESSING,
-                test_session_id=test_session_id
-            )
-            await job_repo.create(job)
-
-            # Save checkpoint for each
-            await checkpoint_manager.save_checkpoint(job_id, {
-                "processed_files": [f"file{i}.py" for i in range(3)],
-                "progress": 0.3
-            })
-
-        # Recover all jobs
-        recovered_jobs = await recovery_service.recover_all_jobs()
-
-        assert len(recovered_jobs) >= 3
-        recovered_ids = [job.id for job in recovered_jobs]
-        for job_id in job_ids:
-            assert job_id in recovered_ids
-
-    async def test_no_recovery_for_completed_jobs(
-        self,
-        recovery_service,
-        job_repo,
-        checkpoint_manager,
-        test_session_id
-    ):
-        """Test that completed jobs are not recovered."""
-        # Create completed job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.COMPLETED,
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Save checkpoint (shouldn't be used)
-        await checkpoint_manager.save_checkpoint(job_id, {
-            "processed_files": ["file1.py"],
-            "progress": 0.5
-        })
-
-        # Try to recover
-        recovered_job = await recovery_service.recover_job(job_id)
-
-        # Should return None or indicate no recovery needed
-        assert recovered_job is None or recovered_job.status == JobStatus.COMPLETED
+@pytest.mark.asyncio
+async def test_checkpoint_serialization(recovery_manager, test_job):
+    """Test checkpoint serialization and deserialization."""
+    job_id = str(test_job.id)
+    
+    # Create checkpoint
+    original = await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp1",
+        data={"test": "data"}
+    )
+    
+    # Serialize
+    checkpoint_dict = original.to_dict()
+    
+    # Verify dict structure
+    assert checkpoint_dict["job_id"] == job_id
+    assert checkpoint_dict["job_type"] == "ingestion"
+    assert checkpoint_dict["checkpoint_id"] == "cp1"
+    assert checkpoint_dict["data"]["test"] == "data"
+    
+    # Deserialize
+    restored = JobCheckpoint.from_dict(checkpoint_dict)
+    
+    # Verify restoration
+    assert restored.job_id == original.job_id
+    assert restored.job_type == original.job_type
+    assert restored.checkpoint_id == original.checkpoint_id
+    assert restored.data == original.data
 
 
-class TestCheckpointFrequency:
-    """Test checkpoint frequency and timing."""
+# ============================================================================
+# Test 12: Different Job Types
+# ============================================================================
 
-    async def test_checkpoint_every_n_files(
-        self,
-        checkpoint_manager,
-        job_repo,
-        test_session_id
-    ):
-        """Test checkpointing every N files."""
-        # Create job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Simulate processing with checkpoints every 5 files
-        checkpoint_frequency = 5
-        processed_files = []
-
-        for i in range(15):
-            processed_files.append(f"file{i}.py")
-
-            if (i + 1) % checkpoint_frequency == 0:
-                await checkpoint_manager.save_checkpoint(job_id, {
-                    "processed_files": processed_files.copy(),
-                    "progress": (i + 1) / 15
-                })
-
-        # Load final checkpoint
-        loaded = await checkpoint_manager.load_checkpoint(job_id)
-        assert len(loaded["processed_files"]) == 15
-        assert loaded["progress"] == 1.0
-
-    async def test_checkpoint_on_error(
-        self,
-        checkpoint_manager,
-        job_repo,
-        test_session_id
-    ):
-        """Test checkpointing when errors occur."""
-        # Create job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Process files with some failures
-        processed_files = ["file1.py", "file2.py"]
-        failed_files = ["file3.py"]  # This file failed
-
-        # Save checkpoint after error
-        await checkpoint_manager.save_checkpoint(job_id, {
-            "processed_files": processed_files,
-            "failed_files": failed_files,
-            "last_error": "Parse error in file3.py",
-            "progress": 0.3
-        })
-
-        # Load and verify
-        loaded = await checkpoint_manager.load_checkpoint(job_id)
-        assert len(loaded["failed_files"]) == 1
-        assert "last_error" in loaded
+@pytest.mark.asyncio
+async def test_different_job_types(recovery_manager, test_job):
+    """Test checkpoints for different job types."""
+    job_id = str(test_job.id)
+    
+    # Create checkpoints for different job types
+    ingestion_cp = await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="ingestion_cp",
+        data={}
+    )
+    
+    embedding_cp = await recovery_manager.create_checkpoint(
+        job_id=f"{job_id}_embedding",
+        job_type=JobType.EMBEDDING,
+        checkpoint_id="embedding_cp",
+        data={}
+    )
+    
+    doc_cp = await recovery_manager.create_checkpoint(
+        job_id=f"{job_id}_doc",
+        job_type=JobType.DOCUMENTATION,
+        checkpoint_id="doc_cp",
+        data={}
+    )
+    
+    # Verify job types
+    assert ingestion_cp.job_type == JobType.INGESTION
+    assert embedding_cp.job_type == JobType.EMBEDDING
+    assert doc_cp.job_type == JobType.DOCUMENTATION
 
 
-class TestRecoveryStrategies:
-    """Test different recovery strategies."""
+# ============================================================================
+# Test 13: Empty Job ID Handling
+# ============================================================================
 
-    async def test_resume_from_last_checkpoint(
-        self,
-        recovery_service,
-        job_repo,
-        checkpoint_manager,
-        test_session_id
-    ):
-        """Test resuming from last checkpoint."""
-        # Create job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Save checkpoint
-        checkpoint_data = {
-            "processed_files": ["file1.py", "file2.py"],
-            "pending_files": ["file3.py", "file4.py", "file5.py"],
-            "progress": 0.4
-        }
-        await checkpoint_manager.save_checkpoint(job_id, checkpoint_data)
-
-        # Recover and resume
-        recovered_job = await recovery_service.recover_job(job_id)
-        resume_point = await recovery_service.get_resume_point(job_id)
-
-        assert resume_point["next_file"] == "file3.py"
-        assert len(resume_point["remaining_files"]) == 3
-
-    async def test_skip_failed_files_on_recovery(
-        self,
-        recovery_service,
-        job_repo,
-        checkpoint_manager,
-        test_session_id
-    ):
-        """Test that failed files are skipped on recovery."""
-        # Create job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Save checkpoint with failed files
-        checkpoint_data = {
-            "processed_files": ["file1.py"],
-            "failed_files": ["file2.py", "file3.py"],
-            "pending_files": ["file4.py", "file5.py"],
-            "progress": 0.3
-        }
-        await checkpoint_manager.save_checkpoint(job_id, checkpoint_data)
-
-        # Recover
-        recovered_job = await recovery_service.recover_job(job_id)
-        resume_point = await recovery_service.get_resume_point(job_id)
-
-        # Should skip failed files
-        assert "file2.py" not in resume_point["remaining_files"]
-        assert "file3.py" not in resume_point["remaining_files"]
-        assert "file4.py" in resume_point["remaining_files"]
-
-    async def test_retry_failed_files_with_flag(
-        self,
-        recovery_service,
-        job_repo,
-        checkpoint_manager,
-        test_session_id
-    ):
-        """Test retrying failed files when retry flag is set."""
-        # Create job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Save checkpoint with failed files
-        checkpoint_data = {
-            "processed_files": ["file1.py"],
-            "failed_files": ["file2.py"],
-            "pending_files": ["file3.py"],
-            "progress": 0.5
-        }
-        await checkpoint_manager.save_checkpoint(job_id, checkpoint_data)
-
-        # Recover with retry flag
-        recovered_job = await recovery_service.recover_job(job_id, retry_failed=True)
-        resume_point = await recovery_service.get_resume_point(job_id, retry_failed=True)
-
-        # Should include failed files for retry
-        all_files = resume_point["remaining_files"]
-        assert "file2.py" in all_files or "file3.py" in all_files
+@pytest.mark.asyncio
+async def test_empty_job_handling(recovery_manager):
+    """Test handling of non-existent job."""
+    fake_job_id = str(uuid4())
+    
+    # Try to get checkpoints for non-existent job
+    last = await recovery_manager.get_last_checkpoint(fake_job_id)
+    assert last is None
+    
+    incomplete = await recovery_manager.get_incomplete_checkpoints(fake_job_id)
+    assert len(incomplete) == 0
+    
+    can_resume = await recovery_manager.can_resume(fake_job_id)
+    assert can_resume is False
 
 
-class TestCheckpointCleanup:
-    """Test checkpoint cleanup and maintenance."""
+# ============================================================================
+# Test 14: Checkpoint Status Transitions
+# ============================================================================
 
-    async def test_cleanup_old_checkpoints(
-        self,
-        checkpoint_manager,
-        job_repo,
-        test_session_id
-    ):
-        """Test cleaning up old checkpoints."""
-        # Create completed job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.COMPLETED,
-            completed_at=datetime.utcnow() - timedelta(days=8),
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Save checkpoint
-        await checkpoint_manager.save_checkpoint(job_id, {
-            "processed_files": ["file1.py"],
-            "progress": 1.0
-        })
-
-        # Cleanup checkpoints older than 7 days
-        await checkpoint_manager.cleanup_old_checkpoints(days=7)
-
-        # Checkpoint should be deleted
-        loaded = await checkpoint_manager.load_checkpoint(job_id)
-        assert loaded is None or len(loaded) == 0
-
-    async def test_keep_recent_checkpoints(
-        self,
-        checkpoint_manager,
-        job_repo,
-        test_session_id
-    ):
-        """Test that recent checkpoints are kept."""
-        # Create recent job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Save checkpoint
-        checkpoint_data = {
-            "processed_files": ["file1.py"],
-            "progress": 0.5
-        }
-        await checkpoint_manager.save_checkpoint(job_id, checkpoint_data)
-
-        # Cleanup old checkpoints
-        await checkpoint_manager.cleanup_old_checkpoints(days=7)
-
-        # Checkpoint should still exist
-        loaded = await checkpoint_manager.load_checkpoint(job_id)
-        assert loaded is not None
-        assert loaded["progress"] == 0.5
+@pytest.mark.asyncio
+async def test_checkpoint_status_transitions(recovery_manager, test_job):
+    """Test valid checkpoint status transitions."""
+    job_id = str(test_job.id)
+    
+    # Create checkpoint
+    await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="cp1",
+        data={}
+    )
+    
+    # PENDING -> IN_PROGRESS
+    await recovery_manager.update_checkpoint_status(
+        job_id, "cp1", CheckpointStatus.IN_PROGRESS
+    )
+    cp = await recovery_manager.get_last_checkpoint(job_id)
+    assert cp.status == CheckpointStatus.IN_PROGRESS
+    
+    # IN_PROGRESS -> COMPLETED
+    await recovery_manager.update_checkpoint_status(
+        job_id, "cp1", CheckpointStatus.COMPLETED
+    )
+    cp = await recovery_manager.get_last_checkpoint(job_id)
+    assert cp.status == CheckpointStatus.COMPLETED
+    assert cp.completed_at is not None
 
 
-class TestConcurrentRecovery:
-    """Test recovery with concurrent operations."""
+# ============================================================================
+# Test 15: Large Checkpoint Data
+# ============================================================================
 
-    async def test_concurrent_checkpoint_saves(
-        self,
-        checkpoint_manager,
-        job_repo,
-        test_session_id
-    ):
-        """Test concurrent checkpoint saves."""
-        # Create job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Simulate concurrent saves
-        async def save_checkpoint(file_num):
-            await checkpoint_manager.save_checkpoint(job_id, {
-                "processed_files": [f"file{i}.py" for i in range(file_num)],
-                "progress": file_num / 10
-            })
-
-        # Save concurrently
-        await asyncio.gather(*[save_checkpoint(i) for i in range(1, 6)])
-
-        # Load final state
-        loaded = await checkpoint_manager.load_checkpoint(job_id)
-        assert loaded is not None
-        # Should have the last saved state
-
-    async def test_recovery_during_active_processing(
-        self,
-        recovery_service,
-        job_repo,
-        checkpoint_manager,
-        test_session_id
-    ):
-        """Test that recovery doesn't interfere with active processing."""
-        # Create active job
-        job_id = str(uuid4())
-        job = IngestionJobModel(
-            id=job_id,
-            repo_path="/test/repo",
-            status=JobStatus.PROCESSING,
-            started_at=datetime.utcnow(),  # Just started
-            test_session_id=test_session_id
-        )
-        await job_repo.create(job)
-
-        # Save recent checkpoint
-        await checkpoint_manager.save_checkpoint(job_id, {
-            "processed_files": ["file1.py"],
-            "progress": 0.1,
-            "last_checkpoint": datetime.utcnow().isoformat()
-        })
-
-        # Try to recover (should detect job is still active)
-        recovered_job = await recovery_service.recover_job(job_id)
-
-        # Should either return None or indicate job is active
-        if recovered_job:
-            assert recovered_job.status == JobStatus.PROCESSING
+@pytest.mark.asyncio
+async def test_large_checkpoint_data(recovery_manager, test_job):
+    """Test checkpoint with large data payload."""
+    job_id = str(test_job.id)
+    
+    # Create large data
+    large_data = {
+        "processed_files": [f"file{i}.py" for i in range(1000)],
+        "metrics": {f"metric{i}": i * 100 for i in range(100)},
+        "metadata": {"description": "x" * 10000}
+    }
+    
+    # Create checkpoint with large data
+    checkpoint = await recovery_manager.create_checkpoint(
+        job_id=job_id,
+        job_type=JobType.INGESTION,
+        checkpoint_id="large_cp",
+        data=large_data
+    )
+    
+    # Verify data is preserved
+    assert len(checkpoint.data["processed_files"]) == 1000
+    assert len(checkpoint.data["metrics"]) == 100
+    assert len(checkpoint.data["metadata"]["description"]) == 10000
+    
+    # Retrieve and verify
+    last = await recovery_manager.get_last_checkpoint(job_id)
+    assert len(last.data["processed_files"]) == 1000
 
