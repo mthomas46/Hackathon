@@ -6,12 +6,13 @@ Tests the actual API layer with real HTTP requests.
 
 import pytest
 from fastapi.testclient import TestClient
-from src.api.app import app
+from src.api.app import create_app
 
 
 @pytest.fixture
 def client():
     """Create a test client for the API."""
+    app = create_app()
     return TestClient(app)
 
 

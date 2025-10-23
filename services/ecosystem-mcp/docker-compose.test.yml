@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # Test PostgreSQL Database
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: ecosystem-mcp-postgres-test
+    environment:
+      POSTGRES_DB: ecosystem_mcp_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    tmpfs:
+      - /var/lib/postgresql/data:rw  # Use tmpfs for speed (in-memory)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d ecosystem_mcp_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - test-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "1"
+    # Optimizations for test performance
+    command:
+      - "postgres"
+      - "-c"
+      - "fsync=off"  # Disable fsync for speed (test data is disposable)
+      - "-c"
+      - "synchronous_commit=off"
+      - "-c"
+      - "full_page_writes=off"
+      - "-c"
+      - "max_connections=100"
+      - "-c"
+      - "shared_buffers=256MB"
+
+  # Test Redis Cache
+  redis-test:
+    image: redis:7-alpine
+    container_name: ecosystem-mcp-redis-test
+    command: redis-server --appendonly no --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    tmpfs:
+      - /data:rw  # Use tmpfs for speed
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+    networks:
+      - test-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "1"
+
+  # Test ChromaDB (if needed for embedding tests)
+  chroma-test:
+    image: chromadb/chroma:latest
+    container_name: ecosystem-mcp-chroma-test
+    environment:
+      - IS_PERSISTENT=FALSE  # In-memory for tests
+      - ANONYMIZED_TELEMETRY=False
+    ports:
+      - "8001:8000"  # Different port
+    tmpfs:
+      - /chroma/chroma:rw
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - test-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "1"
+
+networks:
+  test-network:
+    name: ecosystem-mcp-test
+    driver: bridge
+
+# Note: No volumes defined - all data is temporary in tmpfs
+# This ensures fast performance and clean state for each test run
+

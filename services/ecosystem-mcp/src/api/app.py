@@ -434,9 +434,6 @@ def create_app() -> FastAPI:
     # Orchestration and parallel execution (Phase 2)
     app.include_router(orchestration.router, prefix="/api/v1", tags=["Orchestration"])
     
-    # Multi-file analysis (Phase 3)
-    app.include_router(analysis.router, prefix="/api/v1", tags=["Analysis"])
-    
     # Multi-pass documentation (Phase 4)
     app.include_router(documentation.router, prefix="/api/v1", tags=["Documentation"])
     

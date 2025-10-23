@@ -67,7 +67,7 @@ class JsonbFieldValidator:
         'setdefault',     # obj.field.setdefault(...)
         'item_assign',    # obj.field['key'] = value
         'item_delete',    # del obj.field['key']
-    }
+    ]
     
     def __init__(self, strict: bool = False):
         """
