@@ -96,9 +96,13 @@ def reset_singleton():
     """Reset embedding service singleton between tests."""
     yield
     
-    # Reset singleton
-    import services.doc_store.domain.embeddings.service as embedding_module
-    embedding_module._embedding_service = None
+    # Reset singleton (skip if module not available)
+    try:
+        import services.doc_store.domain.embeddings.service as embedding_module
+        if hasattr(embedding_module, '_embedding_service'):
+            embedding_module._embedding_service = None
+    except (ModuleNotFoundError, ImportError):
+        pass  # Module not available, skip reset
 
 
 # Performance test configuration
