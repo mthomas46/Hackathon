@@ -178,7 +178,8 @@ class TestDynamicRAGCapabilitiesEndpoint:
         assert "document_search" in capabilities
         assert "timeline_construction" in capabilities
         assert "answer_synthesis" in capabilities
-        assert "citation_formatting" in capabilities
+        assert "citation_formats" in capabilities  # Fixed: plural, not "citation_formatting"
+        assert "streaming" in capabilities
         
         print(f"✅ Capabilities: {list(capabilities.keys())}")
 
@@ -226,16 +227,24 @@ class TestDynamicRAGHealthEndpoint:
         assert data["success"] is True
         assert "components" in data
         
-        # Should have 6 components
+        # Should have 6 components (dict format: name -> status)
         components = data["components"]
         assert len(components) == 6
         
-        # All components should have status
-        for component in components:
-            assert "name" in component
-            assert "status" in component
+        # All components should have operational status
+        expected_components = [
+            'topic_extractor',
+            'document_finder',
+            'timeline_constructor',
+            'answer_synthesizer',
+            'citation_formatter',
+            'orchestrator'
+        ]
+        for component_name in expected_components:
+            assert component_name in components
+            assert components[component_name] == 'operational'
         
-        print(f"✅ Health check: {len(components)} components")
+        print(f"✅ Health check: {len(components)} components operational")
 
 
 @pytest.mark.integration
