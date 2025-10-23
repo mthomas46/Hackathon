@@ -13,10 +13,36 @@ from typing import List, Dict, Any
 from src.models.documentation import DocumentationRunModel, RunStatus, GeneratedDocumentModel
 from src.repositories.documentation_run_repository import DocumentationRunRepository
 from src.services.documentation.run_manager import DocumentationRunManager
+from src.storage.models_analysis import RepositoryContextModel
 from tests.utils.test_helpers import create_test_document
 
 
 pytestmark = pytest.mark.functional
+
+
+@pytest.fixture(scope="function")
+async def repository_context(db_session):
+    """Create a repository context for testing."""
+    # Check if it already exists
+    from sqlalchemy import select, insert
+    
+    stmt = select(RepositoryContextModel).where(RepositoryContextModel.repo_id == "/test/repo")
+    result = await db_session.execute(stmt)
+    existing = result.scalar_one_or_none()
+    
+    if not existing:
+        # Create repository context
+        stmt = insert(RepositoryContextModel).values(
+            repo_id="/test/repo",
+            repo_name="test-repo",
+            languages={"python": 100},
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        await db_session.execute(stmt)
+        await db_session.commit()
+    
+    return "/test/repo"
 
 
 @pytest.fixture
@@ -26,7 +52,7 @@ async def run_repo(clean_database):
 
 
 @pytest.fixture
-async def run_manager(clean_database, run_repo):
+async def run_manager(clean_database, run_repo, repository_context):
     """Documentation run manager with test database."""
     return DocumentationRunManager(clean_database, run_repo)
 

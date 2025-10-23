@@ -11,10 +11,9 @@ from uuid import uuid4
 from typing import List, Dict, Any
 import hashlib
 
-from src.models.document import DocumentModel, IngestionMode
-from src.repositories.document_repository import DocumentRepository
-from src.services.versioning.content_addressable_storage import ContentAddressableStorage
-from src.services.versioning.temporal_version_manager import TemporalVersionManager
+from src.models.document import Document
+from src.models.ingestion import IngestionMode
+from src.storage.db_models import DocumentModel
 from tests.utils.test_helpers import create_test_document
 
 
