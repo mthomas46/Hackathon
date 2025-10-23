@@ -18,20 +18,6 @@ from src.services.analysis import (
 )
 
 
-@pytest.fixture
-def sample_repository(tmp_path):
-    """Create a sample repository structure."""
-    # Create microservices structure
-    (tmp_path / "services" / "api").mkdir(parents=True)
-    (tmp_path / "services" / "auth").mkdir(parents=True)
-    (tmp_path / "frontend").mkdir()
-    
-    # API service
-    (tmp_path / "services" / "api" / "main.py").write_text("""
-from fastapi import FastAPI
-from sqlalchemy import create_engine
-import redis
-
 app = FastAPI()
 
 @app.get("/api/v1/users")
@@ -105,36 +91,6 @@ redis
     
     return tmp_path
 
-
-@pytest.fixture
-def sample_files(sample_repository):
-    """Generate file list from sample repository."""
-    files = []
-    
-    for path in sample_repository.rglob("*"):
-        if path.is_file():
-            rel_path = str(path.relative_to(sample_repository))
-            
-            # Determine language and type
-            suffix = path.suffix
-            language_map = {
-                '.py': 'python',
-                '.tsx': 'typescript',
-                '.yml': 'yaml',
-                '.txt': 'text',
-                '.json': 'json',
-                '': 'dockerfile'
-            }
-            
-            files.append({
-                'path': rel_path,
-                'language': language_map.get(suffix, 'unknown'),
-                'is_code': suffix in ['.py', '.tsx'],
-                'is_test': 'test' in rel_path.lower(),
-                'is_config': suffix in ['.yml', '.json', '.txt']
-            })
-    
-    return files
 
 
 @pytest.mark.asyncio

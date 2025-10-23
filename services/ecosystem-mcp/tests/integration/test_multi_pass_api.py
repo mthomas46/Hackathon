@@ -5,21 +5,9 @@ Tests API endpoints, request/response handling, and tier integration.
 """
 
 import pytest
-import httpx
 from datetime import datetime
 
 
-@pytest.fixture
-def api_client():
-    """HTTP client for API testing."""
-    return httpx.AsyncClient(base_url="http://localhost:8000", timeout=900.0)
-
-
-@pytest.fixture
-async def cleanup_client(api_client):
-    """Cleanup client after tests."""
-    yield api_client
-    await api_client.aclose()
 
 
 class TestMultiPassEndpoint:

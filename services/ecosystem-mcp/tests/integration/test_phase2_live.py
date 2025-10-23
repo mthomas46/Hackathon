@@ -6,7 +6,6 @@ Run with: pytest tests/integration/test_phase2_live.py -v
 """
 
 import pytest
-import httpx
 import time
 
 

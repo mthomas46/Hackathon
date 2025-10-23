@@ -12,36 +12,6 @@ from fastapi.testclient import TestClient
 from src.api.middleware.request_id import RequestIDMiddleware
 
 
-@pytest.fixture
-def app_with_logging():
-    """Create test app with request ID middleware and structured logging."""
-    from src.utils.logging_config import configure_structured_logging
-    
-    # Configure structured logging for test
-    configure_structured_logging(log_level="INFO", json_logs=False)
-    
-    app = FastAPI()
-    app.add_middleware(RequestIDMiddleware)
-    
-    @app.get("/test-logging")
-    async def test_endpoint(request: Request):
-        """Test endpoint that logs with structlog."""
-        import structlog as struct_logger
-        import structlog.contextvars as ctx_vars
-        
-        logger = struct_logger.get_logger(__name__)
-        logger.info("test.message", action="testing", value=123)
-        
-        # Check that request_id is in context
-        ctx = ctx_vars.get_contextvars()
-        
-        return {
-            "request_id": request.state.request_id,
-            "context_vars": ctx
-        }
-    
-    return app
-
 
 def test_request_id_in_context(app_with_logging):
     """Test that request ID is available in context vars."""

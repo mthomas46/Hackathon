@@ -5,7 +5,6 @@ Tests all 11 hardening features to ensure they work correctly.
 """
 
 import pytest
-import httpx
 import json
 import os
 import logging
@@ -14,15 +13,6 @@ import tempfile
 from unittest.mock import patch, MagicMock
 
 # Test fixtures
-@pytest.fixture
-def client():
-    """Create test client for FastAPI app."""
-    from src.api.app import create_app
-    from fastapi.testclient import TestClient
-    
-    app = create_app()
-    return TestClient(app)
-
 
 class TestStructuredLogging:
     """Test structured logging functionality."""

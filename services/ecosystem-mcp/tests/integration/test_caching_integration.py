@@ -7,7 +7,6 @@ Tests end-to-end caching behavior across the full stack.
 
 import asyncio
 import time
-import httpx
 import pytest
 
 BASE_URL = "http://localhost:8000"

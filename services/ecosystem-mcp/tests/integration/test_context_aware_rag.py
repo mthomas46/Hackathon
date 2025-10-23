@@ -24,45 +24,6 @@ from src.services.analysis.hierarchical_context_manager import (
 )
 
 
-@pytest.fixture
-def mock_context():
-    """Create mock hierarchical context."""
-    return HierarchicalContext(
-        id="test-context",
-        name="Test Service",
-        repo_id="test-repo",
-        technologies=["python", "fastapi"],
-        primary_language="python",
-        services=["api-service"],
-        description="Test service description",
-        level=ContextLevel.SERVICE,
-        full_path="test-repo/services/api",
-        file_paths=["api/handler.py", "api/service.py"],
-        level_files=2,
-        level_lines=500
-    )
-
-
-@pytest.fixture
-def mock_rag():
-    """Create mock RAG instance with mocked dependencies."""
-    rag = ContextAwareRAG()
-    
-    # Mock context manager
-    rag.context_manager = Mock()
-    rag.context_manager.get_context = AsyncMock()
-    rag.context_manager.search_contexts = AsyncMock()
-    rag.context_manager.get_children = AsyncMock(return_value=[])
-    
-    # Mock ChromaDB
-    rag.chromadb = Mock()
-    rag.chromadb.query = AsyncMock()
-    
-    # Mock embedding service
-    rag.embedding_service = Mock()
-    rag.embedding_service.generate_embedding = AsyncMock(return_value=[0.1] * 384)
-    
-    return rag
 
 
 @pytest.mark.integration

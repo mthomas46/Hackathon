@@ -5,7 +5,6 @@ Tests every endpoint with actual requests to ensure complete coverage.
 """
 
 import pytest
-import httpx
 from uuid import uuid4
 import asyncio
 

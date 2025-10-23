@@ -5,7 +5,6 @@ Tests health check enhancements, error handling, timeouts, and middleware.
 """
 
 import pytest
-import httpx
 import asyncio
 from fastapi.testclient import TestClient
 
@@ -306,22 +305,4 @@ class TestRootEndpoint:
 
 
 # Fixtures
-@pytest.fixture
-def client():
-    """Create test client."""
-    from src.api.app import create_app
-    
-    app = create_app()
-    with TestClient(app) as client:
-        yield client
-
-
-@pytest.fixture
-async def async_client():
-    """Create async test client."""
-    from src.api.app import create_app
-    
-    app = create_app()
-    async with httpx.AsyncClient(app=app, base_url="http://test") as client:
-        yield client
 

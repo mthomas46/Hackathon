@@ -5,17 +5,10 @@ Tests the full flow of API requests through all layers.
 """
 
 import pytest
-from httpx import AsyncClient
 from fastapi.testclient import TestClient
 
 from src.api.app import create_app
 
-
-@pytest.fixture
-def client():
-    """Create test client."""
-    app = create_app()
-    return TestClient(app)
 
 
 def test_health_endpoint(client):

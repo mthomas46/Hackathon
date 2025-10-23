@@ -5,14 +5,8 @@ Tests document listing, retrieval, and ensures unique IDs for Streamlit compatib
 """
 
 import pytest
-import httpx
 from typing import Dict, Any
 
-
-@pytest.fixture
-def api_base_url():
-    """Base URL for the API."""
-    return "http://localhost:8000"
 
 
 class TestDocumentList:

@@ -5,21 +5,10 @@ Tests the subprocess-based Docker CLI implementation for managing containers.
 """
 
 import pytest
-import httpx
 from typing import Dict, Any
 import time
 
 
-@pytest.fixture
-def api_base_url():
-    """Base URL for the API."""
-    return "http://localhost:8000"
-
-
-@pytest.fixture
-def test_container_name():
-    """Name of a container we know exists for testing."""
-    return "ecosystem-mcp-redis"
 
 
 class TestContainerList:

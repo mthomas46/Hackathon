@@ -9,12 +9,6 @@ from fastapi.testclient import TestClient
 from src.api.app import create_app
 
 
-@pytest.fixture
-def client():
-    """Create a test client for the API."""
-    app = create_app()
-    return TestClient(app)
-
 
 @pytest.mark.integration
 class TestDynamicRAGQueryEndpoint:

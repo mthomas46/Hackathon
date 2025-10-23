@@ -17,11 +17,6 @@ from src.services.llm import (
 )
 
 
-@pytest.fixture
-def integration():
-    """Get model router integration instance."""
-    return get_model_router_integration()
-
 
 @pytest.mark.integration
 class TestModelRouterIntegration:
