@@ -375,6 +375,8 @@ class TestAnswerSynthesis:
     ):
         """Test synthesizing answer from multiple documents."""
         from src.services.dynamic_rag import TemporalAnswerSynthesizer
+        from src.models.timeline import Timeline, TemporalConfidence, ConfidenceMetadata
+        from datetime import datetime
         
         synthesizer = TemporalAnswerSynthesizer()
         
@@ -393,11 +395,19 @@ class TestAnswerSynthesis:
         ]
         
         # Create mock timeline
-        timeline = {
-            "name": "test_timeline",
-            "documents": documents,
-            "periods": []
-        }
+        timeline = Timeline(
+            name="test_timeline",
+            service_name="test-service",
+            repo_path="/test",
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 12, 31),
+            confidence_level=TemporalConfidence.HIGH,
+            confidence_metadata=ConfidenceMetadata(
+                total_documents=2,
+                documents_with_git_history=2,
+                git_coverage_percentage=100.0
+            )
+        )
         
         # Synthesize answer
         answer = await synthesizer.synthesize_answer(query, timeline, documents)
@@ -412,6 +422,8 @@ class TestAnswerSynthesis:
     ):
         """Test synthesis includes temporal context."""
         from src.services.dynamic_rag import TemporalAnswerSynthesizer
+        from src.models.timeline import Timeline, TemporalConfidence, ConfidenceMetadata
+        from datetime import datetime
         
         synthesizer = TemporalAnswerSynthesizer()
         
@@ -431,14 +443,19 @@ class TestAnswerSynthesis:
             }
         ]
         
-        timeline = {
-            "name": "evolution_timeline",
-            "documents": documents,
-            "periods": [
-                {"start": "2023-01-01", "end": "2023-12-31"},
-                {"start": "2024-01-01", "end": "2024-12-31"}
-            ]
-        }
+        timeline = Timeline(
+            name="evolution_timeline",
+            service_name="test-service",
+            repo_path="/test",
+            start_date=datetime(2023, 1, 1),
+            end_date=datetime(2024, 12, 31),
+            confidence_level=TemporalConfidence.HIGH,
+            confidence_metadata=ConfidenceMetadata(
+                total_documents=2,
+                documents_with_git_history=2,
+                git_coverage_percentage=100.0
+            )
+        )
         
         answer = await synthesizer.synthesize_answer(query, timeline, documents)
         assert answer is not None
