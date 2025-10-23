@@ -6,7 +6,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-COMPOSE_FILE="$PROJECT_ROOT/docker-compose.test.yml"
+COMPOSE_FILE="$PROJECT_ROOT/docker compose.test.yml"
 
 # Colors
 RED='\033[0;31m'
@@ -41,12 +41,12 @@ print_info() {
 # Command handlers
 cmd_start() {
     print_header "Starting Test Database"
-    docker-compose -f "$COMPOSE_FILE" up -d
+    docker compose -f "$COMPOSE_FILE" up -d
     
     print_info "Waiting for services to be healthy..."
     sleep 5
     
-    if docker-compose -f "$COMPOSE_FILE" ps | grep -q "Up (healthy)"; then
+    if docker compose -f "$COMPOSE_FILE" ps | grep -q "Up (healthy)"; then
         print_success "Test database is running!"
         print_info "PostgreSQL: localhost:5433"
         print_info "Redis: localhost:6380"
@@ -61,7 +61,7 @@ cmd_start() {
 
 cmd_stop() {
     print_header "Stopping Test Database"
-    docker-compose -f "$COMPOSE_FILE" down
+    docker compose -f "$COMPOSE_FILE" down
     print_success "Test database stopped"
 }
 
@@ -75,7 +75,7 @@ cmd_restart() {
 cmd_reset() {
     print_header "Resetting Test Database"
     print_warning "This will destroy all test data!"
-    docker-compose -f "$COMPOSE_FILE" down -v
+    docker compose -f "$COMPOSE_FILE" down -v
     sleep 2
     cmd_start
     print_success "Test database reset complete"
@@ -83,12 +83,12 @@ cmd_reset() {
 
 cmd_logs() {
     print_header "Test Database Logs"
-    docker-compose -f "$COMPOSE_FILE" logs -f
+    docker compose -f "$COMPOSE_FILE" logs -f
 }
 
 cmd_status() {
     print_header "Test Database Status"
-    docker-compose -f "$COMPOSE_FILE" ps
+    docker compose -f "$COMPOSE_FILE" ps
     echo ""
     
     # Check health
