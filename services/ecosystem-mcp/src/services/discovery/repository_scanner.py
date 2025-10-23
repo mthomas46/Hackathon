@@ -99,6 +99,10 @@ class RepositoryScanner:
         """
         logger.info(f"🔍 Scanning repository: {repo_path}")
         
+        # Convert to Path if string
+        if isinstance(repo_path, str):
+            repo_path = Path(repo_path)
+        
         files = []
         total_size = 0
         languages = {}
