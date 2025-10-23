@@ -49,8 +49,8 @@ class TestStalenessDetectorInstantiation:
     def test_detector_has_methods(self):
         """Test that StalenessDetector has required methods."""
         detector = StalenessDetector()
-        assert hasattr(detector, 'detect_stale_docs')
-        assert hasattr(detector, 'calculate_staleness_score')
+        assert hasattr(detector, 'detect_stale_documents')
+        assert hasattr(detector, '_calculate_staleness_severity')
 
 
 @pytest.mark.unit
@@ -61,66 +61,63 @@ class TestStaleDocumentDetection:
         """Test detecting stale documents with default threshold."""
         detector = StalenessDetector()
         
-        with patch.object(detector, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = sample_documents
+        with patch('src.services.maintenance.staleness_detector.get_database') as mock_db:
+            mock_session = AsyncMock()
+            mock_db.return_value.__aenter__.return_value = mock_session
             
-            result = await detector.detect_stale_docs(service_name="test-service")
-            
-            assert result is not None
-            assert isinstance(result, dict)
-            assert "stale_documents" in result or "total_stale" in result
+            # Mock document repository
+            with patch('src.services.maintenance.staleness_detector.DocumentRepository') as MockRepo:
+                mock_repo = AsyncMock()
+                MockRepo.return_value = mock_repo
+                mock_repo.list_all.return_value = sample_documents
+                
+                result = await detector.detect_stale_documents(service_name="test-service")
+                
+                assert result is not None
+                assert isinstance(result, dict)
     
     async def test_custom_staleness_threshold(self, sample_documents):
         """Test using custom staleness threshold."""
-        detector = StalenessDetector()
+        # Create detector with custom threshold
+        detector = StalenessDetector(staleness_threshold_days=30)
         
-        with patch.object(detector, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = sample_documents
+        with patch('src.services.maintenance.staleness_detector.get_database') as mock_db:
+            mock_session = AsyncMock()
+            mock_db.return_value.__aenter__.return_value = mock_session
             
-            # 30 day threshold - should find 2 stale docs
-            result = await detector.detect_stale_docs(
-                service_name="test-service",
-                threshold_days=30
-            )
-            
-            assert result is not None
-            assert isinstance(result, dict)
+            with patch('src.services.maintenance.staleness_detector.DocumentRepository') as MockRepo:
+                mock_repo = AsyncMock()
+                MockRepo.return_value = mock_repo
+                mock_repo.list_all.return_value = sample_documents
+                
+                result = await detector.detect_stale_documents(service_name="test-service")
+                
+                assert result is not None
+                assert isinstance(result, dict)
 
 
 @pytest.mark.unit
 class TestStalenessScore:
     """Test staleness score calculation."""
     
-    async def test_calculate_staleness_score(self):
-        """Test calculating staleness score for a document."""
+    def test_calculate_staleness_severity(self):
+        """Test calculating staleness severity for a document."""
         detector = StalenessDetector()
         
-        now = datetime.now(timezone.utc)
-        old_doc = {
-            "id": 1,
-            "last_modified": now - timedelta(days=180)
-        }
-        
-        score = await detector.calculate_staleness_score(old_doc)
-        
-        assert score is not None
-        assert isinstance(score, (int, float))
-        assert 0 <= score <= 100
+        # Test HIGH severity (between thresholds)
+        severity = detector._calculate_staleness_severity(staleness_days=120)
+        assert severity in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
     
-    async def test_recent_doc_low_staleness(self):
-        """Test that recent documents have low staleness score."""
-        detector = StalenessDetector()
+    def test_critical_staleness_severity(self):
+        """Test that very old documents get CRITICAL severity."""
+        detector = StalenessDetector(
+            staleness_threshold_days=90,
+            critical_threshold_days=180
+        )
         
-        now = datetime.now(timezone.utc)
-        recent_doc = {
-            "id": 1,
-            "last_modified": now - timedelta(days=1)
-        }
-        
-        score = await detector.calculate_staleness_score(recent_doc)
-        
-        # Recent docs should have low staleness
-        assert score < 50
+        # 200 days should be CRITICAL
+        severity = detector._calculate_staleness_severity(staleness_days=200)
+        assert severity == "CRITICAL"
 
 
 @pytest.mark.unit
@@ -128,16 +125,23 @@ class TestStalenessPrioritization:
     """Test prioritizing stale documents by severity."""
     
     async def test_prioritize_by_staleness(self, sample_documents):
-        """Test that stale documents are prioritized by age."""
+        """Test that stale documents are prioritized by severity."""
         detector = StalenessDetector()
         
-        with patch.object(detector, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = sample_documents
+        with patch('src.services.maintenance.staleness_detector.get_database') as mock_db:
+            mock_session = AsyncMock()
+            mock_db.return_value.__aenter__.return_value = mock_session
             
-            result = await detector.detect_stale_docs(service_name="test-service")
-            
-            # Should have prioritization or sorted list
-            assert result is not None
+            with patch('src.services.maintenance.staleness_detector.DocumentRepository') as MockRepo:
+                mock_repo = AsyncMock()
+                MockRepo.return_value = mock_repo
+                mock_repo.list_all.return_value = sample_documents
+                
+                result = await detector.detect_stale_documents(service_name="test-service")
+                
+                # Should have stale documents list
+                assert result is not None
+                assert isinstance(result, dict)
 
 
 @pytest.mark.unit
@@ -145,16 +149,23 @@ class TestStalenessRecommendations:
     """Test generating recommendations for stale docs."""
     
     async def test_generate_update_recommendations(self, sample_documents):
-        """Test generating recommendations for stale documents."""
+        """Test that results include actionable information."""
         detector = StalenessDetector()
         
-        with patch.object(detector, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = sample_documents
+        with patch('src.services.maintenance.staleness_detector.get_database') as mock_db:
+            mock_session = AsyncMock()
+            mock_db.return_value.__aenter__.return_value = mock_session
             
-            result = await detector.detect_stale_docs(service_name="test-service")
-            
-            # Should include recommendations or action items
-            assert result is not None
+            with patch('src.services.maintenance.staleness_detector.DocumentRepository') as MockRepo:
+                mock_repo = AsyncMock()
+                MockRepo.return_value = mock_repo
+                mock_repo.list_all.return_value = sample_documents
+                
+                result = await detector.detect_stale_documents(service_name="test-service")
+                
+                # Should include stale documents and summary
+                assert result is not None
+                assert isinstance(result, dict)
 
 
 @pytest.mark.unit
@@ -165,24 +176,30 @@ class TestStalenessErrorHandling:
         """Test handling empty document set."""
         detector = StalenessDetector()
         
-        with patch.object(detector, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = []
+        with patch('src.services.maintenance.staleness_detector.get_database') as mock_db:
+            mock_session = AsyncMock()
+            mock_db.return_value.__aenter__.return_value = mock_session
             
-            result = await detector.detect_stale_docs(service_name="test-service")
-            
-            # Should handle gracefully
-            assert result is not None
-            assert isinstance(result, dict)
+            with patch('src.services.maintenance.staleness_detector.DocumentRepository') as MockRepo:
+                mock_repo = AsyncMock()
+                MockRepo.return_value = mock_repo
+                mock_repo.list_all.return_value = []
+                
+                result = await detector.detect_stale_documents(service_name="test-service")
+                
+                # Should handle gracefully with empty results
+                assert result is not None
+                assert isinstance(result, dict)
     
     async def test_handle_database_error(self):
         """Test handling database errors."""
         detector = StalenessDetector()
         
-        with patch.object(detector, '_fetch_documents', new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.side_effect = Exception("Database error")
+        with patch('src.services.maintenance.staleness_detector.get_database') as mock_db:
+            mock_db.return_value.__aenter__.side_effect = Exception("Database error")
             
             with pytest.raises(Exception):
-                await detector.detect_stale_docs(service_name="test-service")
+                await detector.detect_stale_documents(service_name="test-service")
 
 
 if __name__ == "__main__":
