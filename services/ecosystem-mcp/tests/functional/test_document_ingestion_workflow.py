@@ -24,7 +24,8 @@ class TestDocumentIngestionWorkflow:
     async def test_ingest_python_files_from_src(
         self,
         clean_database,
-        ecosystem_mcp_src_dir
+        ecosystem_mcp_src_dir,
+        test_session_id
     ):
         """
         Test ingesting Python files from services/ecosystem-mcp/src.
@@ -34,13 +35,13 @@ class TestDocumentIngestionWorkflow:
         - Content extraction
         - Metadata parsing
         - Database storage
+        - Test data marking
         """
-        # Import services we need
-        from src.services.ingestion import DocumentIngestionService
+        # Import services and helpers
         from src.storage.repositories import DocumentRepository
+        from tests.utils.test_helpers import create_test_document, verify_test_data_marked
         
         # Initialize services
-        ingestion_service = DocumentIngestionService()
         doc_repo = DocumentRepository(clean_database)
         
         # Find Python files in src directory
@@ -55,27 +56,30 @@ class TestDocumentIngestionWorkflow:
             # Read file content
             content = file_path.read_text(encoding='utf-8', errors='ignore')
             
-            # Create document record
-            doc_data = {
-                "file_path": str(file_path.relative_to(ecosystem_mcp_src_dir.parent)),
-                "content": content,
-                "file_type": "python",
-                "service_name": "ecosystem-mcp",
-                "repo_path": str(ecosystem_mcp_src_dir.parent),
-                "ingestion_mode": "snapshot",
-                "metadata": {
-                    "language": "python",
-                    "size": len(content),
-                    "lines": content.count('\n') + 1
-                }
-            }
+            # Create test document (automatically marked)
+            doc_data = create_test_document(
+                content=content,
+                file_path=str(file_path.relative_to(ecosystem_mcp_src_dir.parent)),
+                file_type="python",
+                service_name="ecosystem-mcp-test",
+                session_id=test_session_id,
+                repo_path=str(ecosystem_mcp_src_dir.parent),
+                ingestion_mode="snapshot"
+            )
+            
+            # Verify it's marked as test data
+            verify_test_data_marked(doc_data)
             
             # Store in database
             doc = await doc_repo.create(doc_data)
             assert doc is not None
             assert doc.id is not None
             assert doc.file_path == doc_data["file_path"]
-            assert doc.service_name == "ecosystem-mcp"
+            assert doc.service_name == "ecosystem-mcp-test"
+            
+            # Verify test markers in stored document
+            assert doc.metadata.get("_test_data_marker") == True
+            assert doc.metadata.get("_test_session_id") == test_session_id
             
             ingested_count += 1
         
@@ -83,16 +87,21 @@ class TestDocumentIngestionWorkflow:
         assert ingested_count == len(sample_files)
         
         # Retrieve and validate
-        all_docs = await doc_repo.get_by_service("ecosystem-mcp", limit=100)
+        all_docs = await doc_repo.get_by_service("ecosystem-mcp-test", limit=100)
         assert len(all_docs) >= ingested_count
         
         # Validate first document in detail
         first_doc = all_docs[0]
         assert first_doc.file_path is not None
         assert first_doc.content is not None
-        assert first_doc.service_name == "ecosystem-mcp"
+        assert first_doc.service_name == "ecosystem-mcp-test"
         assert first_doc.file_type == "python"
         assert first_doc.created_at is not None
+        
+        # Verify all docs are marked as test data
+        for doc in all_docs:
+            assert doc.metadata.get("_test_data_marker") == True
+            assert doc.metadata.get("_test_session_id") == test_session_id
     
     async def test_ingest_markdown_files(
         self,
