@@ -121,13 +121,14 @@ class TestSimilarityDetection:
             result = await consolidator.analyze_consolidation_opportunities(service_name="test-service")
             
             assert result is not None
-            assert "similar_groups" in result or "duplicates" in result
+            assert "redundant_groups" in result  # API returns redundant_groups
+            assert isinstance(result["redundant_groups"], list)
     
     async def test_similarity_threshold(self):
         """Test that similarity threshold affects detection."""
         docs = [
-            {"id": 1, "content": "API authentication guide", "content_hash": "h1"},
-            {"id": 2, "content": "API authentication documentation", "content_hash": "h2"}
+            {"id": 1, "content": "API authentication guide", "content_hash": "h1", "path": "/docs/guide.md"},
+            {"id": 2, "content": "API authentication documentation", "content_hash": "h2", "path": "/docs/doc.md"}
         ]
         
         # High threshold - should not match
@@ -198,8 +199,8 @@ class TestMergeRecommendations:
     async def test_no_merge_recommendations_when_no_duplicates(self):
         """Test that no merges recommended when no duplicates."""
         unique_docs = [
-            {"id": 1, "content": "Unique 1", "content_hash": "h1"},
-            {"id": 2, "content": "Unique 2", "content_hash": "h2"}
+            {"id": 1, "content": "Unique 1", "content_hash": "h1", "path": "/docs/unique1.md"},
+            {"id": 2, "content": "Unique 2", "content_hash": "h2", "path": "/docs/unique2.md"}
         ]
         
         consolidator = DocumentConsolidator()
