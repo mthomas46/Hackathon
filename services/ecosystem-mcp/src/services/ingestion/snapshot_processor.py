@@ -20,7 +20,7 @@ from datetime import datetime
 
 from ...storage import get_database
 from ...storage.db_models import DocumentModel
-from ..normalization.normalizer_factory import get_normalizer
+from ..processing.normalizer_factory import get_normalizer
 from ...utils.redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)

@@ -14,6 +14,27 @@ from .text_normalizer import TextNormalizer
 
 logger = logging.getLogger(__name__)
 
+# Global factory instance
+_factory_instance = None
+
+
+def get_normalizer(file_ext: str) -> BaseNormalizer:
+    """
+    Get the appropriate normalizer for a file extension.
+    
+    Convenience function that uses a singleton factory instance.
+    
+    Args:
+        file_ext: File extension (with leading dot, e.g., '.py')
+    
+    Returns:
+        Normalizer instance
+    """
+    global _factory_instance
+    if _factory_instance is None:
+        _factory_instance = NormalizerFactory()
+    return _factory_instance.get_normalizer(file_ext)
+
 
 class NormalizerFactory:
     """
