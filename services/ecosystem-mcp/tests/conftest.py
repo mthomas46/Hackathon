@@ -93,9 +93,21 @@ async def db_session(test_database_url: str) -> AsyncGenerator:
         if not _tables_created:
             db = get_database()
             try:
-                logger.info("🔄 Dropping existing tables to ensure fresh schema...")
-                await db.drop_tables()
-                logger.info("✅ Tables dropped")
+                logger.info("🔄 Dropping existing tables with CASCADE to handle foreign keys...")
+                # Use CASCADE to handle foreign key dependencies
+                from sqlalchemy import text
+                async with db.engine.begin() as conn:
+                    # Drop tables in reverse dependency order with CASCADE
+                    await conn.execute(text("DROP TABLE IF EXISTS document_placements CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS time_periods CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS timelines CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS document_versions CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS embeddings CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS documents CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS ingestion_jobs CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS git_commits CASCADE"))
+                    await conn.execute(text("DROP TABLE IF EXISTS model_requests CASCADE"))
+                logger.info("✅ Tables dropped with CASCADE")
             except Exception as e:
                 logger.warning(f"⚠️ Could not drop tables (may not exist): {e}")
             

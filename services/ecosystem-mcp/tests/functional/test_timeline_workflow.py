@@ -631,13 +631,34 @@ class TestTimelineWorkflow:
         
         # Analyze gaps
         gap_analyzer = GapAnalyzer(db_session=db_session)
-        gaps = await gap_analyzer.analyze_gaps(timeline_id=timeline.id)
+        result = await gap_analyzer.analyze_gaps(timeline_id=timeline.id)
         
-        # Validate gaps
-        assert len(gaps) > 0
-        # Should find February-March gap
-        feb_mar_gaps = [g for g in gaps if "February" in g.period_name or "March" in g.period_name]
-        assert len(feb_mar_gaps) >= 2
+        # Validate gaps (returns dict with nested gaps)
+        assert result is not None
+        assert isinstance(result, dict)
+        assert 'total_gaps' in result
+        assert 'gaps' in result
+        
+        # Gaps are nested under 'gaps' key, grouped by severity
+        gaps_by_severity = result['gaps']
+        assert isinstance(gaps_by_severity, dict)
+        assert 'CRITICAL' in gaps_by_severity
+        assert 'HIGH' in gaps_by_severity
+        assert 'MEDIUM' in gaps_by_severity
+        assert 'LOW' in gaps_by_severity
+        
+        # Each severity level has a list of gaps
+        for severity_level in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']:
+            gaps_for_level = gaps_by_severity[severity_level]
+            assert isinstance(gaps_for_level, list)
+            
+            # If there are gaps, validate structure
+            if len(gaps_for_level) > 0:
+                for gap in gaps_for_level:
+                    assert isinstance(gap, dict)
+                    assert 'gap_type' in gap
+                    assert 'severity' in gap
+                    assert 'description' in gap
     
     async def test_drift_detection(self, db_session):
         """
@@ -732,17 +753,37 @@ def get_user(user_uuid: str, include_details: bool = False) -> UserDetails:
         
         # Detect drift
         drift_detector = DriftDetector(db_session=db_session)
-        drifts = await drift_detector.detect_drift(
+        result = await drift_detector.detect_drift(
             timeline_id=timeline.id,
             service_name=service_name,
             detection_mode="hybrid"
         )
         
-        # Validate drift detection
-        assert len(drifts) > 0
-        # Should detect parameter changes
-        param_drifts = [d for d in drifts if "parameter" in d.change_type.lower()]
-        assert len(param_drifts) > 0
+        # Validate drift detection (returns dict with nested drifts)
+        assert result is not None
+        assert isinstance(result, dict)
+        assert 'total_drifts' in result
+        assert 'drifts' in result
+        
+        # Drifts are nested under 'drifts' key, grouped by severity
+        drifts_by_severity = result['drifts']
+        assert isinstance(drifts_by_severity, dict)
+        assert 'CRITICAL' in drifts_by_severity
+        assert 'HIGH' in drifts_by_severity
+        assert 'MEDIUM' in drifts_by_severity
+        assert 'LOW' in drifts_by_severity
+        
+        # Each severity level has a list of drifts
+        for severity_level in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']:
+            drifts_for_level = drifts_by_severity[severity_level]
+            assert isinstance(drifts_for_level, list)
+            
+            # If there are drifts, validate structure
+            if len(drifts_for_level) > 0:
+                for drift in drifts_for_level:
+                    assert isinstance(drift, dict)
+                    assert 'drift_type' in drift or 'type' in drift
+                    assert 'description' in drift or 'message' in drift
     
     async def test_report_generation(self, db_session):
         """

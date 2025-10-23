@@ -89,7 +89,7 @@ class ReportGenerator:
                 'metadata': {
                     'timeline_name': timeline_data.get('timeline_name'),
                     'period_count': len(timeline_data.get('periods', [])),
-                    'confidence': timeline_data.get('confidence'),
+                    'period_strategy': timeline_data.get('period_strategy'),
                     'total_documents': progression_analysis.get('total_documents', 0)
                 }
             }
@@ -215,27 +215,31 @@ class ReportGenerator:
     async def _fetch_timeline_data(self, timeline_id: str) -> Optional[Dict]:
         """Fetch timeline data from repository."""
         try:
-            from ...storage.repositories import TimelineRepository
-            from ...storage.database import get_db_session
+            from ...storage.repositories import TimelineRepository, TimePeriodRepository
+            from ...storage import get_database
+            from uuid import UUID
             
-            async with get_db_session() as session:
-                repo = TimelineRepository(session)
-                timeline = await repo.get_by_id(timeline_id)
+            db = get_database()
+            async with db.session() as session:
+                timeline_repo = TimelineRepository(session)
+                period_repo = TimePeriodRepository(session)
+                
+                timeline = await timeline_repo.get_by_id(UUID(timeline_id) if isinstance(timeline_id, str) else timeline_id)
                 
                 if not timeline:
                     return None
                 
                 # Get periods
-                periods = await repo.get_periods(timeline_id)
+                periods = await period_repo.get_by_timeline(timeline.id)
                 
                 # Build timeline data
                 return {
-                    'timeline_id': timeline_id,
+                    'timeline_id': str(timeline.id),
                     'timeline_name': timeline.name,
                     'service_name': timeline.service_name,
                     'start_date': timeline.start_date,
                     'end_date': timeline.end_date,
-                    'confidence': timeline.confidence,
+                    'period_strategy': timeline.period_strategy,
                     'periods': [
                         {
                             'id': str(p.id),
