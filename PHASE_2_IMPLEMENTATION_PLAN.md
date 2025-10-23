@@ -1,399 +1,405 @@
-# 🚀 Phase 2: Sub-Job Execution System - Implementation Plan
-
-**Start Date:** 2025-10-21  
-**Estimated Duration:** Weeks 4-5 (2 weeks)  
-**Status:** 🟡 IN PROGRESS
+**Date:** October 23, 2025  
+**Status:** Phase 2 Implementation - In Progress  
+**Target:** Dashboard, Embedding Service, Performance Monitoring Tests  
 
 ---
 
-## 🎯 Phase 2 Goals
+# 🎯 PHASE 2 IMPLEMENTATION PLAN
 
-Transform the discovery system from planning to execution by implementing parallel sub-job processing with intelligent orchestration.
+## Overview
 
-### Success Criteria
-- [ ] Sub-jobs execute in parallel (up to 5 concurrent)
-- [ ] Dependency management working
-- [ ] Real-time progress tracking
-- [ ] Fault tolerance and recovery
-- [ ] Resource allocation and load balancing
-- [ ] Integration with existing ingestion pipeline
-- [ ] Performance improvement: 3-5x faster for large repos
-- [ ] Comprehensive monitoring and metrics
+**Goal:** Add 125 tests across 3 services to improve coverage from 82% to 88%
+
+**Time Estimate:** 12-16 hours
+
+**Priority:** MEDIUM (Important gaps)
 
 ---
 
-## 📋 Components to Build
+## 📊 Current Status
 
-### 1. Job Orchestrator (Core)
-**File:** `src/services/orchestration/job_orchestrator.py`  
-**Lines:** ~300  
-**Purpose:** Manages sub-job execution, dependencies, and coordination
+### Starting Point (After Phase 1)
+- **ecosystem-mcp**: 1,555 tests (92% coverage) ✅
+- **ecosystem-mcp-dashboard**: 28 tests (30% coverage) ⚠️
+- **ecosystem-mcp-embedding**: 42 tests (40% coverage) ⚠️
+- **Total**: 1,625 tests (82% coverage)
 
-**Features:**
-- Sub-job scheduling based on priority and dependencies
-- Parallel execution management (up to 5 concurrent)
-- Dependency resolution (topological sort)
-- Resource allocation
-- Error handling and retry logic
-- Status tracking and updates
-
-**Key Methods:**
-```python
-async def execute_plan(plan_id: str) -> ExecutionResult
-async def execute_sub_job(sub_job_id: str) -> SubJobResult
-async def check_dependencies(sub_job: SubJob) -> bool
-async def allocate_resources(sub_job: SubJob) -> Resources
-async def handle_failure(sub_job: SubJob, error: Exception)
-```
-
-### 2. Worker Pool Manager
-**File:** `src/services/orchestration/worker_pool.py`  
-**Lines:** ~250  
-**Purpose:** Manages worker threads/processes for parallel execution
-
-**Features:**
-- Dynamic worker pool (2-5 workers based on load)
-- Worker lifecycle management
-- Load balancing across workers
-- Health monitoring
-- Graceful shutdown
-
-**Key Methods:**
-```python
-async def start_workers(count: int)
-async def stop_workers()
-async def assign_job(sub_job: SubJob) -> Worker
-async def get_available_worker() -> Optional[Worker]
-async def monitor_worker_health()
-```
-
-### 3. Progress Tracker
-**File:** `src/services/orchestration/progress_tracker.py`  
-**Lines:** ~200  
-**Purpose:** Real-time progress tracking and reporting
-
-**Features:**
-- File-level progress tracking
-- Sub-job progress aggregation
-- Plan-level progress calculation
-- Real-time updates via Redis Pub/Sub
-- Progress persistence to database
-- ETA calculation
-
-**Key Methods:**
-```python
-async def update_progress(sub_job_id: str, files_processed: int)
-async def get_progress(plan_id: str) -> ProgressReport
-async def calculate_eta(plan_id: str) -> float
-async def publish_progress_update(update: ProgressUpdate)
-```
-
-### 4. Dependency Manager
-**File:** `src/services/orchestration/dependency_manager.py`  
-**Lines:** ~150  
-**Purpose:** Manages sub-job dependencies and execution order
-
-**Features:**
-- Dependency graph construction
-- Topological sorting
-- Circular dependency detection
-- Ready-to-execute queue management
-- Dependency completion tracking
-
-**Key Methods:**
-```python
-def build_dependency_graph(sub_jobs: List[SubJob]) -> Graph
-def topological_sort(graph: Graph) -> List[str]
-def detect_circular_dependencies(graph: Graph) -> List[Cycle]
-async def get_ready_sub_jobs(plan_id: str) -> List[SubJob]
-async def mark_dependency_complete(sub_job_id: str)
-```
-
-### 5. Resource Allocator
-**File:** `src/services/orchestration/resource_allocator.py`  
-**Lines:** ~180  
-**Purpose:** Allocates and manages computational resources
-
-**Features:**
-- Memory allocation per sub-job
-- CPU core allocation
-- Concurrent execution limits
-- Resource usage monitoring
-- Dynamic reallocation
-
-**Key Methods:**
-```python
-async def allocate(sub_job: SubJob) -> ResourceAllocation
-async def release(allocation: ResourceAllocation)
-async def get_available_resources() -> Resources
-async def monitor_usage() -> ResourceMetrics
-```
-
-### 6. Sub-Job Executor
-**File:** `src/services/orchestration/sub_job_executor.py`  
-**Lines:** ~350  
-**Purpose:** Executes individual sub-jobs (file processing)
-
-**Features:**
-- File-by-file processing within sub-job
-- Integration with existing normalization pipeline
-- Embedding generation
-- ChromaDB storage
-- Error handling per file
-- Progress reporting
-
-**Key Methods:**
-```python
-async def execute(sub_job: SubJob) -> ExecutionResult
-async def process_file(file: ClassifiedFile) -> FileResult
-async def handle_file_error(file: ClassifiedFile, error: Exception)
-async def report_progress(files_processed: int)
-```
-
-### 7. Execution Monitor
-**File:** `src/services/orchestration/execution_monitor.py`  
-**Lines:** ~200  
-**Purpose:** Monitors execution health and performance
-
-**Features:**
-- Real-time execution metrics
-- Performance tracking (files/sec, throughput)
-- Error rate monitoring
-- Resource usage tracking
-- Alerting on anomalies
-
-**Key Methods:**
-```python
-async def track_execution(plan_id: str)
-async def get_metrics(plan_id: str) -> ExecutionMetrics
-async def detect_anomalies() -> List[Anomaly]
-async def generate_report(plan_id: str) -> Report
-```
-
-### 8. API Endpoints
-**File:** `src/api/routes/orchestration.py`  
-**Lines:** ~300  
-**Purpose:** REST API for orchestration control
-
-**Endpoints:**
-- `POST /api/v1/orchestration/execute/{plan_id}` - Start execution
-- `GET /api/v1/orchestration/status/{plan_id}` - Get status
-- `POST /api/v1/orchestration/pause/{plan_id}` - Pause execution
-- `POST /api/v1/orchestration/resume/{plan_id}` - Resume execution
-- `POST /api/v1/orchestration/cancel/{plan_id}` - Cancel execution
-- `GET /api/v1/orchestration/progress/{plan_id}` - Get progress
-- `GET /api/v1/orchestration/metrics/{plan_id}` - Get metrics
-
-### 9. Database Schema Updates
-**File:** `src/storage/migrations/add_orchestration_tables.py`  
-**Lines:** ~150  
-**Purpose:** Add tables for execution tracking
-
-**Tables:**
-- `execution_sessions` - Execution session metadata
-- `sub_job_executions` - Individual sub-job execution records
-- `execution_metrics` - Performance metrics
-- `worker_status` - Worker health and status
+### Target (After Phase 2)
+- **ecosystem-mcp**: 1,580 tests (93% coverage) ✅
+- **ecosystem-mcp-dashboard**: 88 tests (70% coverage) 🎯
+- **ecosystem-mcp-embedding**: 82 tests (40% coverage) 🎯
+- **Total**: 1,750 tests (88% coverage)
 
 ---
 
-## 🏗️ Implementation Strategy
+## 🎯 WEEK 4: DASHBOARD SERVICE (6-8 hours, 60 tests)
 
-### Week 4: Core Infrastructure
+### Current State
+- **Existing Tests**: 28 tests in 3 files
+  - `test_config_validation.py` (~8 tests)
+  - `test_health_monitor.py` (~12 tests)
+  - `test_integration.py` (~8 tests)
 
-**Day 1-2: Foundation**
-1. Create orchestration module structure
-2. Implement Dependency Manager
-3. Implement Resource Allocator
-4. Write unit tests
+### Coverage Gaps
+- ❌ No UI component tests
+- ❌ No page navigation tests
+- ❌ No real-time update tests
+- ❌ No data visualization tests
+- ❌ No user interaction tests
+- ❌ No error display tests
 
-**Day 3-4: Execution Core**
-5. Implement Job Orchestrator (core logic)
-6. Implement Worker Pool Manager
-7. Implement Sub-Job Executor
-8. Integration tests
+### Implementation Strategy
 
-**Day 5: Progress & Monitoring**
-9. Implement Progress Tracker
-10. Implement Execution Monitor
-11. Redis Pub/Sub integration
-12. Real-time updates
+#### 1. Dashboard Pages Integration Tests (20 tests, 2 hours)
+**File:** `services/ecosystem-mcp-dashboard/tests/integration/test_dashboard_pages.py`
 
-### Week 5: Integration & Testing
+**Test Categories:**
+- Ingestion page workflow (5 tests)
+  - Form validation
+  - Job submission
+  - Progress monitoring
+  - Error handling
+  - Job cancellation
 
-**Day 1-2: API & Database**
-13. Create database migration
-14. Implement orchestration API endpoints
-15. Update EnhancedJobProcessor integration
-16. API tests
+- RAG Query page workflow (5 tests)
+  - Query submission
+  - Response display
+  - Citation rendering
+  - Multi-pass query
+  - Error handling
 
-**Day 3-4: End-to-End Testing**
-17. Test full discovery → execution flow
-18. Test parallel execution (5 concurrent)
-19. Test dependency management
-20. Test fault tolerance
+- ChromaDB Explorer page (5 tests)
+  - Collection browsing
+  - Document viewing
+  - Embedding visualization
+  - Search functionality
+  - Export features
 
-**Day 5: Performance & Documentation**
-21. Performance testing and optimization
-22. Comprehensive documentation
-23. Dashboard integration prep
-24. Phase 2 completion report
+- Service Manager page (5 tests)
+  - Service status display
+  - Container management
+  - Health checks
+  - Log viewing
+  - Restart functionality
 
----
+#### 2. Dashboard Navigation Tests (15 tests, 2 hours)
+**File:** `services/ecosystem-mcp-dashboard/tests/integration/test_dashboard_navigation.py`
 
-## 🔄 Integration Points
+**Test Categories:**
+- Page routing (5 tests)
+  - Navigate between pages
+  - URL parameter handling
+  - Session state persistence
+  - Back/forward navigation
+  - Deep linking
 
-### With Phase 1 (Discovery)
-- Read processing plans from database
-- Use classified files from discovery
-- Respect priority ordering
-- Execute sub-jobs in plan order
+- Sidebar navigation (5 tests)
+  - Menu item selection
+  - Active page highlighting
+  - Collapsible sections
+  - Quick actions
+  - Search functionality
 
-### With Existing Ingestion
-- Reuse file normalization logic
-- Reuse embedding generation
-- Reuse ChromaDB storage
-- Maintain backward compatibility
+- Error page handling (5 tests)
+  - 404 page display
+  - API error display
+  - Connection error display
+  - Timeout handling
+  - Retry mechanisms
 
-### With Infrastructure
-- Redis for progress pub/sub
-- PostgreSQL for state persistence
-- ChromaDB for embeddings
-- Existing worker infrastructure
+#### 3. Real-Time Update Tests (15 tests, 2 hours)
+**File:** `services/ecosystem-mcp-dashboard/tests/integration/test_dashboard_realtime.py`
 
----
+**Test Categories:**
+- Job progress updates (5 tests)
+  - Real-time progress bar
+  - Status changes
+  - Completion notifications
+  - Error notifications
+  - Auto-refresh
 
-## 📊 Expected Performance Improvements
+- Service health updates (5 tests)
+  - Health status changes
+  - Metric updates
+  - Alert notifications
+  - Connection status
+  - Auto-reconnect
 
-### Before (Phase 1)
-- Sequential processing
-- Single-threaded execution
-- No priority-based ordering
-- 10K files: ~60 minutes
+- Data refresh (5 tests)
+  - Auto-refresh intervals
+  - Manual refresh
+  - Stale data detection
+  - Optimistic updates
+  - Conflict resolution
 
-### After (Phase 2)
-- Parallel sub-job execution (5 concurrent)
-- Priority-based processing
-- Intelligent resource allocation
-- 10K files: ~15-20 minutes (3-4x faster)
+#### 4. Data Visualization Tests (10 tests, 2 hours)
+**File:** `services/ecosystem-mcp-dashboard/tests/integration/test_dashboard_visualizations.py`
 
-### Metrics to Track
-- Files processed per second
-- Sub-job completion time
-- Resource utilization
-- Error rates
-- Memory usage
-- CPU usage
+**Test Categories:**
+- Charts and graphs (5 tests)
+  - Metrics charts
+  - Timeline visualizations
+  - Progress indicators
+  - Status badges
+  - Data tables
 
----
-
-## 🧪 Testing Strategy
-
-### Unit Tests
-- Each component tested independently
-- Mock dependencies
-- Edge cases covered
-- ~80% code coverage target
-
-### Integration Tests
-- Component interactions
-- Database operations
-- Redis pub/sub
-- API endpoints
-
-### End-to-End Tests
-- Full discovery → execution flow
-- Real repository ingestion
-- Parallel execution verification
-- Fault tolerance scenarios
-
-### Performance Tests
-- Large repository (10K+ files)
-- Concurrent execution stress test
-- Resource usage monitoring
-- Throughput measurement
-
----
-
-## 🚨 Risk Mitigation
-
-### Technical Risks
-1. **Race Conditions**
-   - Mitigation: Proper locking, atomic operations
-   
-2. **Resource Exhaustion**
-   - Mitigation: Resource limits, monitoring, dynamic allocation
-   
-3. **Deadlocks**
-   - Mitigation: Dependency cycle detection, timeouts
-   
-4. **Data Consistency**
-   - Mitigation: Database transactions, idempotent operations
-
-### Operational Risks
-1. **Worker Crashes**
-   - Mitigation: Health monitoring, auto-restart, job recovery
-   
-2. **Database Failures**
-   - Mitigation: Connection pooling, retry logic, graceful degradation
-   
-3. **Memory Leaks**
-   - Mitigation: Resource cleanup, monitoring, limits
+- Interactive elements (5 tests)
+  - Filters and sorting
+  - Pagination
+  - Search and highlight
+  - Tooltips and popovers
+  - Export functionality
 
 ---
 
-## 📝 Success Metrics
+## 🎯 WEEK 5: EMBEDDING SERVICE (3-4 hours, 40 tests)
 
-### Functional
-- [ ] All sub-jobs execute successfully
-- [ ] Parallel execution working (5 concurrent)
-- [ ] Dependencies respected
-- [ ] Progress tracking accurate
-- [ ] Fault tolerance working
+### Current State
+- **Existing Tests**: 42 tests in 5 files
+  - Unit tests: 20 tests (cache, fastembed)
+  - Integration tests: 12 tests (API endpoints)
+  - E2E tests: 10 tests (full workflow)
 
-### Performance
-- [ ] 3-5x faster than sequential
-- [ ] <5% overhead from orchestration
-- [ ] Real-time progress updates (<1s latency)
-- [ ] Resource utilization >70%
+### Coverage Gaps
+- ❌ No batch processing stress tests
+- ❌ No concurrent request handling tests
+- ❌ No model switching tests
+- ❌ No fallback mechanism tests
+- ❌ No cache analytics tests
+- ❌ No performance benchmarks
+- ❌ No memory usage tests
 
-### Quality
-- [ ] 80%+ code coverage
-- [ ] All tests passing
-- [ ] No memory leaks
-- [ ] Clean error handling
-- [ ] Comprehensive logging
+### Implementation Strategy
+
+#### 1. Performance Benchmarks (10 tests, 1 hour)
+**File:** `services/ecosystem-mcp-embedding/tests/performance/test_embedding_benchmarks.py`
+
+**Test Categories:**
+- Throughput tests (5 tests)
+  - Single embedding latency
+  - Batch embedding throughput
+  - Concurrent request throughput
+  - Cache hit performance
+  - Cache miss performance
+
+- Resource usage tests (5 tests)
+  - Memory usage per embedding
+  - CPU usage under load
+  - Cache memory usage
+  - Connection pool usage
+  - Garbage collection impact
+
+#### 2. Concurrency Tests (15 tests, 1.5 hours)
+**File:** `services/ecosystem-mcp-embedding/tests/integration/test_embedding_concurrency.py`
+
+**Test Categories:**
+- Concurrent requests (5 tests)
+  - Multiple simultaneous requests
+  - Request queuing
+  - Rate limiting
+  - Timeout handling
+  - Error isolation
+
+- Batch processing (5 tests)
+  - Large batch handling
+  - Batch size optimization
+  - Partial batch failure
+  - Batch retry logic
+  - Progress tracking
+
+- Load testing (5 tests)
+  - Sustained load handling
+  - Spike load handling
+  - Resource exhaustion
+  - Graceful degradation
+  - Recovery after overload
+
+#### 3. Fallback Mechanism Tests (15 tests, 1.5 hours)
+**File:** `services/ecosystem-mcp-embedding/tests/functional/test_embedding_fallback.py`
+
+**Test Categories:**
+- Model switching (5 tests)
+  - Primary model failure
+  - Fallback to secondary model
+  - Model availability check
+  - Model performance comparison
+  - Automatic model selection
+
+- Cache fallback (5 tests)
+  - Redis unavailable fallback
+  - In-memory cache fallback
+  - Cache warming
+  - Cache invalidation
+  - Cache coherence
+
+- Service degradation (5 tests)
+  - Partial service availability
+  - Read-only mode
+  - Cached responses only
+  - Error rate monitoring
+  - Circuit breaker activation
 
 ---
 
-## 🎯 Phase 2 Deliverables
+## 🎯 WEEK 6: PERFORMANCE MONITORING (3-4 hours, 25 tests)
 
-1. **Code**
-   - 9 new components (~1,930 lines)
-   - Full test suite
-   - API endpoints
-   - Database migration
+### Current State
+- **Existing Tests**: 12 tests in 4 files
+  - Basic benchmarks
+  - Ingestion rate tests
+  - RAG throughput tests
+  - Search throughput tests
 
-2. **Documentation**
-   - Component documentation
-   - API documentation
-   - Integration guide
-   - Performance report
+### Coverage Gaps
+- ❌ No real-time metrics collection tests
+- ❌ No performance degradation detection tests
+- ❌ No resource usage tracking tests
+- ❌ No bottleneck identification tests
 
-3. **Testing**
-   - Unit tests
-   - Integration tests
-   - E2E tests
-   - Performance benchmarks
+### Implementation Strategy
 
-4. **Deployment**
-   - Migration scripts
-   - Configuration updates
-   - Monitoring setup
-   - Rollback procedures
+#### 1. Performance Monitoring Functional Tests (15 tests, 2 hours)
+**File:** `services/ecosystem-mcp/tests/functional/test_performance_monitoring.py`
+
+**Test Categories:**
+- Metrics collection (5 tests)
+  - Real-time metric capture
+  - Metric aggregation
+  - Metric persistence
+  - Metric querying
+  - Metric visualization
+
+- Degradation detection (5 tests)
+  - Baseline establishment
+  - Degradation threshold
+  - Alert generation
+  - Root cause analysis
+  - Recovery validation
+
+- Resource tracking (5 tests)
+  - CPU usage tracking
+  - Memory usage tracking
+  - Disk I/O tracking
+  - Network usage tracking
+  - Database connection tracking
+
+#### 2. Enhanced Benchmark Tests (10 tests, 1-2 hours)
+**File:** `services/ecosystem-mcp/tests/performance/test_benchmarks.py` (enhanced)
+
+**Test Categories:**
+- System benchmarks (5 tests)
+  - End-to-end pipeline performance
+  - Component performance isolation
+  - Parallel processing efficiency
+  - Cache effectiveness
+  - Database query performance
+
+- Stress tests (5 tests)
+  - Maximum throughput
+  - Maximum concurrent users
+  - Maximum data volume
+  - Resource exhaustion points
+  - Recovery time
 
 ---
 
-**Status:** 🟡 READY TO START  
-**Next:** Begin with Dependency Manager and Resource Allocator
+## 📋 IMPLEMENTATION CHECKLIST
 
+### Week 4: Dashboard Service ✅
+- [ ] Create `test_dashboard_pages.py` (20 tests)
+- [ ] Create `test_dashboard_navigation.py` (15 tests)
+- [ ] Create `test_dashboard_realtime.py` (15 tests)
+- [ ] Create `test_dashboard_visualizations.py` (10 tests)
+- [ ] Run all dashboard tests
+- [ ] Fix any failures
+- [ ] Update documentation
+- [ ] Commit changes
+
+### Week 5: Embedding Service ✅
+- [ ] Create `test_embedding_benchmarks.py` (10 tests)
+- [ ] Create `test_embedding_concurrency.py` (15 tests)
+- [ ] Create `test_embedding_fallback.py` (15 tests)
+- [ ] Run all embedding tests
+- [ ] Fix any failures
+- [ ] Update documentation
+- [ ] Commit changes
+
+### Week 6: Performance Monitoring ✅
+- [ ] Create `test_performance_monitoring.py` (15 tests)
+- [ ] Enhance `test_benchmarks.py` (10 tests)
+- [ ] Run all performance tests
+- [ ] Fix any failures
+- [ ] Update documentation
+- [ ] Commit changes
+
+---
+
+## 🎯 SUCCESS CRITERIA
+
+### Coverage Targets
+- ✅ Dashboard: 30% → 70% (+40%)
+- ✅ Embedding Service: 40% → 75% (+35%)
+- ✅ Performance Monitoring: 55% → 80% (+25%)
+- ✅ Overall: 82% → 88% (+6%)
+
+### Quality Gates
+- ✅ All dashboard pages tested
+- ✅ Real-time updates validated
+- ✅ Embedding service performance benchmarked
+- ✅ Concurrent request handling validated
+- ✅ Fallback mechanisms tested
+- ✅ Performance degradation detection working
+- ✅ Resource usage tracking validated
+
+### Test Quality
+- ✅ All tests pass consistently
+- ✅ Tests use test database where appropriate
+- ✅ Tests are isolated and independent
+- ✅ Tests have clear assertions
+- ✅ Tests are well-documented
+- ✅ Tests follow established patterns
+
+---
+
+## 📊 PROGRESS TRACKING
+
+### Dashboard Service (0/60 tests)
+- [ ] Pages: 0/20
+- [ ] Navigation: 0/15
+- [ ] Real-time: 0/15
+- [ ] Visualizations: 0/10
+
+### Embedding Service (0/40 tests)
+- [ ] Benchmarks: 0/10
+- [ ] Concurrency: 0/15
+- [ ] Fallback: 0/15
+
+### Performance Monitoring (0/25 tests)
+- [ ] Monitoring: 0/15
+- [ ] Benchmarks: 0/10
+
+### Total Progress: 0/125 tests (0%)
+
+---
+
+## 🚀 NEXT STEPS
+
+1. **Start with Dashboard Service** (Week 4)
+   - Highest impact (30% → 70%)
+   - User-facing functionality
+   - Critical for production use
+
+2. **Move to Embedding Service** (Week 5)
+   - Performance validation
+   - Scalability testing
+   - Fallback mechanisms
+
+3. **Complete with Performance Monitoring** (Week 6)
+   - Observability
+   - Degradation detection
+   - Production readiness
+
+---
+
+**Status:** Ready to begin Phase 2 implementation
+**Next Action:** Create dashboard integration tests
