@@ -234,10 +234,10 @@ class GapAnalyzer:
             # Check which topics are covered
             covered_topics = set()
             for doc in documents:
-                if not doc.content:
+                if not doc.normalized_content:
                     continue
                 
-                content_lower = doc.content.lower()
+                content_lower = doc.normalized_content.lower()
                 for topic in expected_topics:
                     if topic in content_lower or topic in doc.file_path.lower():
                         covered_topics.add(topic)
