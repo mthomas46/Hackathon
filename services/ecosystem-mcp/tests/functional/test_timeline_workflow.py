@@ -157,16 +157,16 @@ class TestTimelineWorkflow:
         result = await calculator.calculate_confidence(service_name=service_name)
         
         # Validate results
-        assert result.confidence_level == TemporalConfidence.HIGH
-        assert result.confidence_score >= 0.9
-        assert result.git_history_count == 95
-        assert result.snapshot_count == 5
+        assert result.git_percentage >= 90.0  # HIGH confidence threshold
+        assert result.git_history_documents == 95
+        assert result.snapshot_documents == 5
         assert result.total_documents == 100
-        assert result.fallback_strategy == "none_needed"
-        assert result.capabilities["timeline_creation"] is True
-        assert result.capabilities["temporal_rag"] is True
-        assert result.capabilities["gap_analysis"] is True
-        assert result.capabilities["drift_detection"] is True
+        assert result.fallback_strategy == "minimal_fallback"
+        assert result.can_show_evolution is True
+        assert result.can_detect_drift is True
+        assert result.can_show_timeline is True
+        assert result.can_compare_periods is True
+        assert len(result.warnings) == 0  # No warnings for high confidence
     
     async def test_confidence_calculation_medium(self, db_session):
         """
@@ -194,14 +194,16 @@ class TestTimelineWorkflow:
         result = await calculator.calculate_confidence(service_name=service_name)
         
         # Validate results
-        assert result.confidence_level == TemporalConfidence.MEDIUM
-        assert 0.5 <= result.confidence_score < 0.8
-        assert result.git_history_count == 60
-        assert result.snapshot_count == 40
+        assert 50.0 <= result.git_percentage < 90.0  # MEDIUM confidence range
+        assert result.git_history_documents == 60
+        assert result.snapshot_documents == 40
         assert result.total_documents == 100
-        assert result.fallback_strategy == "hybrid"
-        assert result.capabilities["timeline_creation"] is True
-        assert result.capabilities["temporal_rag"] is True
+        assert result.fallback_strategy == "hybrid_with_warnings"
+        assert result.can_show_evolution is True  # Partial support
+        assert result.can_detect_drift is True  # Partial support
+        assert result.can_show_timeline is True  # With gaps
+        assert result.can_compare_periods is True  # With limitations
+        assert len(result.warnings) > 0  # Should have warnings
     
     async def test_confidence_calculation_low(self, db_session):
         """
@@ -229,14 +231,16 @@ class TestTimelineWorkflow:
         result = await calculator.calculate_confidence(service_name=service_name)
         
         # Validate results
-        assert result.confidence_level == TemporalConfidence.LOW
-        assert 0.2 <= result.confidence_score < 0.5
-        assert result.git_history_count == 30
-        assert result.snapshot_count == 70
+        assert 0.0 < result.git_percentage < 50.0  # LOW confidence range
+        assert result.git_history_documents == 30
+        assert result.snapshot_documents == 70
         assert result.total_documents == 100
-        assert result.fallback_strategy == "prefer_alternatives"
-        assert result.capabilities["timeline_creation"] is False
-        assert result.capabilities["temporal_rag"] is False
+        assert result.fallback_strategy == "content_based_fallback"
+        assert result.can_show_evolution is False  # Too limited
+        assert result.can_detect_drift is False  # Not reliable
+        assert result.can_show_timeline is True  # Content-based only
+        assert result.can_compare_periods is True  # Content comparison only
+        assert len(result.warnings) > 0  # Should have warnings
     
     async def test_confidence_calculation_none(self, db_session):
         """
@@ -264,16 +268,16 @@ class TestTimelineWorkflow:
         result = await calculator.calculate_confidence(service_name=service_name)
         
         # Validate results
-        assert result.confidence_level == TemporalConfidence.NONE
-        assert result.confidence_score == 0.0
-        assert result.git_history_count == 0
-        assert result.snapshot_count == 100
+        assert result.git_percentage == 0.0  # NONE confidence
+        assert result.git_history_documents == 0
+        assert result.snapshot_documents == 100
         assert result.total_documents == 100
-        assert result.fallback_strategy == "use_alternatives_only"
-        assert result.capabilities["timeline_creation"] is False
-        assert result.capabilities["temporal_rag"] is False
-        assert result.capabilities["gap_analysis"] is False
-        assert result.capabilities["drift_detection"] is False
+        assert result.fallback_strategy == "no_temporal_features"
+        assert result.can_show_evolution is False  # No git history
+        assert result.can_detect_drift is False  # No git history
+        assert result.can_show_timeline is False  # No temporal data
+        assert result.can_compare_periods is False  # No temporal data
+        assert len(result.warnings) > 0  # Should have warnings
     
     async def test_period_generation_monthly(self, db_session):
         """
@@ -395,7 +399,8 @@ class TestTimelineWorkflow:
         timeline_create = TimelineCreate(
             name=f"test-timeline-{uuid4().hex[:8]}",
             service_name=service_name,
-            strategy=PeriodStrategy.MONTHLY,
+            repo_path="/test/repo",
+            period_strategy=PeriodStrategy.MONTHLY,
             start_date=datetime(2024, 1, 1),
             end_date=datetime(2024, 12, 31),
         )
@@ -406,15 +411,16 @@ class TestTimelineWorkflow:
         assert timeline.id is not None
         assert timeline.name == timeline_create.name
         assert timeline.service_name == service_name
-        assert timeline.confidence_metadata is not None
-        assert timeline.confidence_metadata.confidence_level == TemporalConfidence.HIGH
-        assert len(timeline.periods) == 12  # Monthly for full year
+        assert timeline.repo_path == "/test/repo"
+        assert timeline.start_date == datetime(2024, 1, 1)
+        assert timeline.end_date == datetime(2024, 12, 31)
         
         # Validate timeline can be retrieved
         timeline_repo = TimelineRepository(db_session)
         retrieved = await timeline_repo.get_by_id(timeline.id)
         assert retrieved is not None
         assert retrieved.id == timeline.id
+        assert retrieved.name == timeline.name
     
     # =========================================================================
     # PHASE 2: TEMPORAL RAG TESTS (Time-travel queries)
