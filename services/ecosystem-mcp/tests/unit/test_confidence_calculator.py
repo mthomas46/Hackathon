@@ -228,7 +228,8 @@ class TestPreFlightCheck:
         # With auto_adjust=True (default), NONE confidence now allows timeline creation with warnings
         assert result["can_proceed"] is True
         assert result["actual_confidence"] == "NONE"
-        assert len(result["warnings"]) > 0  # Should have warnings about limited features
+        assert "recommendation" in result
+        assert "snapshot-only" in result["recommendation"].lower() or "limited" in result["recommendation"].lower()
 
 
 class TestUpgradePath:

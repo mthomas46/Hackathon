@@ -38,13 +38,13 @@ class TestCircuitBreaker:
     
     def test_circuit_breaker_state_transitions(self):
         """Test circuit breaker state transitions via context manager."""
-        from src.utils.circuit_breaker import CircuitBreaker, CircuitState, CircuitBreakerError
+        from src.utils.circuit_breaker import CircuitBreaker, CircuitState, CircuitBreakerOpenError
         import asyncio
         
-        breaker = CircuitBreaker(failure_threshold=2)
+        breaker = CircuitBreaker(name="test", failure_threshold=2)
         
         # Should start CLOSED
-        assert breaker.state == CircuitState.CLOSED
+        assert breaker.stats.state == CircuitState.CLOSED
         
         # Simulate failures by calling the circuit breaker and raising exceptions
         async def failing_operation():
@@ -57,7 +57,7 @@ class TestCircuitBreaker:
         except Exception:
             pass
         
-        assert breaker.state == CircuitState.CLOSED  # Still closed after 1 failure
+        assert breaker.stats.state == CircuitState.CLOSED  # Still closed after 1 failure
         
         # Record second failure
         try:
@@ -65,7 +65,7 @@ class TestCircuitBreaker:
         except Exception:
             pass
         
-        assert breaker.state == CircuitState.OPEN  # Should open after threshold
+        assert breaker.stats.state == CircuitState.OPEN  # Should open after threshold
 
 
 # ============================================================================
@@ -252,7 +252,8 @@ class TestOllamaClientConfiguration:
         client = OllamaClient()
         
         assert hasattr(client, 'circuit_breaker'), "Client must have circuit_breaker"
-        assert hasattr(client.circuit_breaker, 'state'), "Circuit breaker must have state"
+        assert hasattr(client.circuit_breaker, 'stats'), "Circuit breaker must have stats"
+        assert hasattr(client.circuit_breaker.stats, 'state'), "Circuit breaker stats must have state"
         assert hasattr(client.circuit_breaker, 'get_state'), "Circuit breaker must have get_state method"
         # Circuit breaker uses context manager, not direct record methods
     
