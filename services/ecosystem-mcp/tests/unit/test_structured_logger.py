@@ -229,10 +229,10 @@ class TestCorrelationIDs:
 
 
 @pytest.mark.unit
-@pytest.mark.asyncio
 class TestDecorators:
     """Test logging decorators."""
     
+    @pytest.mark.asyncio
     async def test_with_request_id_async(self):
         """Test request ID decorator with async function."""
         clear_correlation_ids()
@@ -259,6 +259,7 @@ class TestDecorators:
         assert result is not None
         assert isinstance(result, str)
     
+    @pytest.mark.asyncio
     async def test_log_function_call_async(self, mock_logger):
         """Test function call logging with async function."""
         @log_function_call("test_operation")
@@ -283,6 +284,7 @@ class TestDecorators:
         # Should have logged start and complete
         assert mock_logger.debug.call_count >= 2
     
+    @pytest.mark.asyncio
     async def test_log_function_call_with_error_async(self, mock_logger):
         """Test function call logging with error in async function."""
         @log_function_call("failing_operation")

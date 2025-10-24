@@ -40,7 +40,8 @@ class TestCircuitBreaker:
         """Test circuit breaker state transitions via direct methods."""
         from src.utils.circuit_breaker import CircuitBreaker, CircuitState
         
-        breaker = CircuitBreaker(name="test", failure_threshold=2)
+        # Set startup_grace_period=0 to allow immediate failure recording
+        breaker = CircuitBreaker(name="test", failure_threshold=2, startup_grace_period=0)
         
         # Should start CLOSED
         assert breaker.stats.state == CircuitState.CLOSED
