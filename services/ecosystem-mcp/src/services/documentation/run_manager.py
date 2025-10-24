@@ -109,7 +109,7 @@ class DocumentationRunManager:
         Returns:
             Run model or None
         """
-        return await self.repository.get_run(run_id)
+        return await self.repository.get_by_id(run_id)
     
     async def get_runs_by_repo(
         self,
@@ -126,7 +126,7 @@ class DocumentationRunManager:
         Returns:
             List of runs
         """
-        return await self.repository.get_runs_by_repo(repo_path, limit=limit)
+        return await self.repository.get_by_repo_id(repo_path)
     
     async def get_runs_by_snapshot(
         self,
