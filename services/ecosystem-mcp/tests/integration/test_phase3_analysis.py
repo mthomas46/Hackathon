@@ -18,6 +18,18 @@ from src.services.analysis import (
 )
 
 
+@pytest.fixture
+def sample_repository(tmp_path):
+    """Create a sample repository structure for testing."""
+    # Create directory structure
+    (tmp_path / "services" / "api").mkdir(parents=True)
+    (tmp_path / "services" / "auth").mkdir(parents=True)
+    (tmp_path / "frontend").mkdir(parents=True)
+    
+    # API service
+    (tmp_path / "services" / "api" / "app.py").write_text("""
+from fastapi import FastAPI
+
 app = FastAPI()
 
 @app.get("/api/v1/users")

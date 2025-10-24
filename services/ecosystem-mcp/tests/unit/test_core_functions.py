@@ -28,13 +28,13 @@ class TestCircuitBreaker:
         breaker = CircuitBreaker(
             name="test",
             failure_threshold=5,
-            recovery_timeout=60.0
+            timeout=60.0
         )
         
         assert breaker.name == "test"
-        assert breaker.failure_threshold == 5
-        assert breaker.recovery_timeout == 60.0
-        assert breaker.failure_count == 0
+        assert breaker.config.failure_threshold == 5
+        assert breaker.config.timeout == 60.0
+        assert breaker.stats.failure_count == 0
     
     def test_circuit_breaker_state_transitions(self):
         """Test circuit breaker state transitions via context manager."""

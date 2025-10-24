@@ -18,12 +18,14 @@ def sample_documents():
     doc1.file_path = "/docs/api.md"
     doc1.service_name = "test-service"
     doc1.content = "# API Documentation\n\nSee [guide](../docs/guide.md) for more info."
+    doc1.normalized_content = "# API Documentation\n\nSee [guide](../docs/guide.md) for more info."
     
     doc2 = MagicMock(spec=DocumentModel)
     doc2.id = uuid4()
     doc2.file_path = "/docs/guide.md"
     doc2.service_name = "test-service"
     doc2.content = "# User Guide\n\nRefer to the API docs for details."
+    doc2.normalized_content = "# User Guide\n\nRefer to the API docs for details."
     
     return [doc1, doc2]
 

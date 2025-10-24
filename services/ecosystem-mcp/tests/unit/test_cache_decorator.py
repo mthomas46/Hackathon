@@ -43,7 +43,7 @@ class TestCacheDecorator:
             return x * 2
         
         # First call - cache miss
-        with patch('utils.cache_decorator.get_redis', return_value=mock_redis):
+        with patch('src.utils.cache_decorator.get_redis', return_value=mock_redis):
             mock_redis.get.return_value = None
             result1 = await expensive_function(5)
             
@@ -53,7 +53,7 @@ class TestCacheDecorator:
             assert mock_redis.setex.called
         
         # Second call - cache hit (simulate)
-        with patch('utils.cache_decorator.get_redis', return_value=mock_redis):
+        with patch('src.utils.cache_decorator.get_redis', return_value=mock_redis):
             import json
             mock_redis.get.return_value = json.dumps(10)
             result2 = await expensive_function(5)
@@ -71,7 +71,7 @@ class TestCacheDecorator:
             return "result"
         
         # First call - should be slow
-        with patch('utils.cache_decorator.get_redis', return_value=mock_redis):
+        with patch('src.utils.cache_decorator.get_redis', return_value=mock_redis):
             mock_redis.get.return_value = None
             
             start = time.time()
@@ -82,7 +82,7 @@ class TestCacheDecorator:
             assert time1 >= 0.2  # At least 200ms
         
         # Second call - should be fast (simulated cache hit)
-        with patch('utils.cache_decorator.get_redis', return_value=mock_redis):
+        with patch('src.utils.cache_decorator.get_redis', return_value=mock_redis):
             import json
             mock_redis.get.return_value = json.dumps("result")
             
@@ -108,7 +108,7 @@ class TestCacheDecorator:
             call_count += 1
             return a + b
         
-        with patch('utils.cache_decorator.get_redis', return_value=mock_redis):
+        with patch('src.utils.cache_decorator.get_redis', return_value=mock_redis):
             mock_redis.get.return_value = None
             
             result1 = await add(1, 2)
@@ -129,7 +129,7 @@ class TestCacheDecorator:
         async def get_data(data: dict) -> dict:
             return {"result": data["id"] * 2}
         
-        with patch('utils.cache_decorator.get_redis', return_value=mock_redis):
+        with patch('src.utils.cache_decorator.get_redis', return_value=mock_redis):
             mock_redis.get.return_value = None
             
             result = await get_data({"id": 5})

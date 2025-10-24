@@ -22,7 +22,11 @@ class TestConfidenceCalculation:
         # Mock database session
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 95, 5)  # total, git_history, snapshot
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 95
+        mock_row.snapshot = 5
+        mock_result.first.return_value = mock_row
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -44,7 +48,11 @@ class TestConfidenceCalculation:
         """Test MEDIUM confidence (50-90% git_history)."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 70, 30)  # 70% git_history
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 70
+        mock_row.snapshot = 30
+        mock_result.first.return_value = mock_row
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -62,7 +70,11 @@ class TestConfidenceCalculation:
         """Test LOW confidence (1-50% git_history)."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 25, 75)  # 25% git_history
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 25
+        mock_row.snapshot = 75
+        mock_result.first.return_value = mock_row
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -81,7 +93,11 @@ class TestConfidenceCalculation:
         """Test NONE confidence (0% git_history)."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 0, 100)  # 0% git_history
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 0
+        mock_row.snapshot = 100
+        mock_result.first.return_value = mock_row
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -101,7 +117,11 @@ class TestConfidenceCalculation:
         """Test with no documents."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (0, 0, 0)
+        mock_row = Mock()
+        mock_row.total = 0
+        mock_row.git_history = 0
+        mock_row.snapshot = 0
+        mock_result.first.return_value = mock_row
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -145,7 +165,11 @@ class TestPreFlightCheck:
         """Test pre-flight passes with HIGH confidence."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 95, 5)  # HIGH
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 95
+        mock_row.snapshot = 5
+        mock_result.first.return_value = mock_row  # HIGH
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -164,7 +188,11 @@ class TestPreFlightCheck:
         """Test pre-flight fails with insufficient confidence."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 25, 75)  # LOW
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 25
+        mock_row.snapshot = 75
+        mock_result.first.return_value = mock_row  # LOW
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -184,7 +212,11 @@ class TestPreFlightCheck:
         """Test pre-flight with NONE confidence."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 0, 100)  # NONE
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 0
+        mock_row.snapshot = 100
+        mock_result.first.return_value = mock_row  # NONE
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -193,8 +225,10 @@ class TestPreFlightCheck:
             minimum_confidence=TemporalConfidence.LOW
         )
         
-        assert result["can_proceed"] is False
+        # With auto_adjust=True (default), NONE confidence now allows timeline creation with warnings
+        assert result["can_proceed"] is True
         assert result["actual_confidence"] == "NONE"
+        assert len(result["warnings"]) > 0  # Should have warnings about limited features
 
 
 class TestUpgradePath:
@@ -205,7 +239,11 @@ class TestUpgradePath:
         """Test upgrade suggestions from NONE confidence."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 0, 100)  # NONE
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 0
+        mock_row.snapshot = 100
+        mock_result.first.return_value = mock_row  # NONE
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -225,7 +263,11 @@ class TestUpgradePath:
         """Test upgrade suggestions from LOW confidence."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 40, 60)  # LOW
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 40
+        mock_row.snapshot = 60
+        mock_result.first.return_value = mock_row  # LOW
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -243,7 +285,11 @@ class TestUpgradePath:
         """Test upgrade suggestions from MEDIUM confidence."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 80, 20)  # MEDIUM
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 80
+        mock_row.snapshot = 20
+        mock_result.first.return_value = mock_row  # MEDIUM
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -261,7 +307,11 @@ class TestUpgradePath:
         """Test upgrade path when already HIGH confidence."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (100, 95, 5)  # HIGH
+        mock_row = Mock()
+        mock_row.total = 100
+        mock_row.git_history = 95
+        mock_row.snapshot = 5
+        mock_result.first.return_value = mock_row  # HIGH
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -282,7 +332,11 @@ class TestConfidenceWithFilters:
         """Test confidence calculation for specific documents."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (10, 9, 1)
+        mock_row = Mock()
+        mock_row.total = 10
+        mock_row.git_history = 9
+        mock_row.snapshot = 1
+        mock_result.first.return_value = mock_row
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)
@@ -298,7 +352,11 @@ class TestConfidenceWithFilters:
         """Test confidence calculation for specific repo path."""
         mock_session = Mock()
         mock_result = Mock()
-        mock_result.first.return_value = (50, 40, 10)
+        mock_row = Mock()
+        mock_row.total = 50
+        mock_row.git_history = 40
+        mock_row.snapshot = 10
+        mock_result.first.return_value = mock_row
         mock_session.execute = AsyncMock(return_value=mock_result)
         
         calculator = TemporalConfidenceCalculator(mock_session)

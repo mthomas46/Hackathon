@@ -37,8 +37,9 @@ def mock_logger(monkeypatch):
     mock = MagicMock(spec=logging.Logger)
     mock.name = "test_logger"
     
-    def get_logger(name):
-        mock.name = name
+    def get_logger(name=None):
+        if name:
+            mock.name = name
         return mock
     
     monkeypatch.setattr(logging, 'getLogger', get_logger)

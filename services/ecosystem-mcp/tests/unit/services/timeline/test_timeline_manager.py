@@ -5,6 +5,7 @@ Unit tests for TimelineManager service.
 import pytest
 from datetime import datetime, timedelta
 from uuid import uuid4
+from unittest.mock import AsyncMock
 
 from src.services.timeline import TimelineManager
 from src.models.timeline import TimelineCreate, TemporalConfidence, PeriodStrategy
@@ -13,13 +14,14 @@ from src.models.timeline import TimelineCreate, TemporalConfidence, PeriodStrate
 @pytest.fixture
 def timeline_manager():
     """Create TimelineManager instance."""
-    return TimelineManager()
+    mock_session = AsyncMock()
+    return TimelineManager(db_session=mock_session)
 
 
-@pytest.mark.asyncio
 class TestTimelineManager:
     """Test TimelineManager functionality."""
     
+    @pytest.mark.asyncio
     async def test_create_timeline_basic(self, timeline_manager):
         """Test basic timeline creation."""
         timeline_data = TimelineCreate(

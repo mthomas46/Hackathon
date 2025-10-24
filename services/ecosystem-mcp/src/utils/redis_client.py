@@ -14,7 +14,7 @@ from datetime import datetime
 import redis.asyncio as redis
 from redis.exceptions import ResponseError
 
-from ..config import settings
+from src.config import settings
 
 logger = logging.getLogger(__name__)
 
