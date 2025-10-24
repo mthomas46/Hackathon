@@ -45,7 +45,7 @@ class TestApplicationLifecycle:
         # Test utils imports
         from src.utils.redis_client import RedisClient, get_redis_client
         from src.utils.cache_decorator import cache, get_cache_stats
-        from src.utils.circuit_breaker import CircuitBreaker, CircuitBreakerError
+        from src.utils.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
         from src.utils.metrics import (
             cache_hits_total,
             cache_misses_total,
@@ -364,8 +364,8 @@ class TestCircuitBreakers:
         client = get_ollama_client()
         
         assert hasattr(client, 'circuit_breaker'), "Missing circuit_breaker attribute"
-        assert hasattr(client.circuit_breaker, 'state'), "Circuit breaker missing state"
-        assert hasattr(client.circuit_breaker, 'get_state'), "Circuit breaker missing get_state"
+        assert hasattr(client.circuit_breaker, 'stats'), "Circuit breaker missing stats"
+        assert hasattr(client.circuit_breaker.stats, 'state'), "Circuit breaker stats missing state"
 
 
 # ============================================================================

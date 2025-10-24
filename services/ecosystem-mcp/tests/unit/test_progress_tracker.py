@@ -173,12 +173,13 @@ class TestProgressTrackerBasic:
         """Test updating progress."""
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=5)
         
-        await tracker.update_progress(
+        await tracker.update_sub_job_progress(
             plan_id="plan-1",
             sub_job_id="job-1",
             files_processed=10,
             files_failed=1,
-            files_skipped=2
+            files_skipped=2,
+            total_files=100
         )
         
         progress = tracker.plan_progress["plan-1"]
@@ -190,7 +191,7 @@ class TestProgressTrackerBasic:
     async def test_get_progress(self, tracker):
         """Test getting progress report."""
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=5)
-        await tracker.update_progress("plan-1", "job-1", 10, 0, 0)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 10, 0, 0, 100)
         
         report = await tracker.get_progress("plan-1")
         
@@ -207,7 +208,7 @@ class TestProgressCalculation:
     async def test_progress_percentage_calculation(self, tracker):
         """Test progress percentage is calculated correctly."""
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=5)
-        await tracker.update_progress("plan-1", "job-1", 50, 0, 0)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 50, 0, 0, 100)
         
         report = await tracker.get_progress("plan-1")
         
@@ -217,20 +218,20 @@ class TestProgressCalculation:
     async def test_progress_with_failures(self, tracker):
         """Test progress calculation includes failures."""
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=5)
-        await tracker.update_progress("plan-1", "job-1", 40, 10, 0)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 40, 10, 0, 100)
         
         report = await tracker.get_progress("plan-1")
         
-        # 40 processed + 10 failed = 50% of 100
+        # 40 processed out of 100 = 40%
         assert report.files_processed == 40
         assert report.files_failed == 10
-        assert report.progress_pct == 50.0
+        assert report.progress_pct == 40.0
     
     @pytest.mark.asyncio
     async def test_progress_with_skipped(self, tracker):
         """Test progress calculation includes skipped files."""
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=5)
-        await tracker.update_progress("plan-1", "job-1", 30, 10, 10)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 30, 10, 10, 100)
         
         report = await tracker.get_progress("plan-1")
         
@@ -244,7 +245,7 @@ class TestProgressCalculation:
     async def test_progress_completion(self, tracker):
         """Test progress at 100% completion."""
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=5)
-        await tracker.update_progress("plan-1", "job-1", 100, 0, 0)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 100, 0, 0, 100)
         
         report = await tracker.get_progress("plan-1")
         
@@ -260,9 +261,9 @@ class TestSubJobTracking:
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=3)
         
         # Update different sub-jobs
-        await tracker.update_progress("plan-1", "job-1", 20, 0, 0)
-        await tracker.update_progress("plan-1", "job-2", 30, 0, 0)
-        await tracker.update_progress("plan-1", "job-3", 10, 0, 0)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 20, 0, 0, 100)
+        await tracker.update_sub_job_progress("plan-1", "job-2", 30, 0, 0, 100)
+        await tracker.update_sub_job_progress("plan-1", "job-3", 10, 0, 0, 100)
         
         report = await tracker.get_progress("plan-1")
         
@@ -291,7 +292,7 @@ class TestEdgeCases:
     async def test_update_before_start(self, tracker):
         """Test updating progress before starting tracking."""
         # Should handle gracefully
-        await tracker.update_progress("nonexistent", "job-1", 10, 0, 0)
+        await tracker.update_sub_job_progress("nonexistent", "job-1", 10, 0, 0, 100)
         
         # Should not crash
         report = await tracker.get_progress("nonexistent")
@@ -312,7 +313,7 @@ class TestEdgeCases:
     async def test_progress_exceeds_total(self, tracker):
         """Test progress exceeding total files."""
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=1)
-        await tracker.update_progress("plan-1", "job-1", 150, 0, 0)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 150, 0, 0, 100)
         
         report = await tracker.get_progress("plan-1")
         
@@ -325,7 +326,7 @@ class TestEdgeCases:
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=1)
         
         # Try to update with negative values
-        await tracker.update_progress("plan-1", "job-1", -10, -5, -2)
+        await tracker.update_sub_job_progress("plan-1", "job-1", -10, -5, -2, 100)
         
         report = await tracker.get_progress("plan-1")
         
@@ -356,7 +357,7 @@ class TestETACalculation:
         
         # Simulate some progress
         await asyncio.sleep(0.1)  # Small delay
-        await tracker.update_progress("plan-1", "job-1", 50, 0, 0)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 50, 0, 0, 100)
         
         report = await tracker.get_progress("plan-1")
         
@@ -370,7 +371,7 @@ class TestETACalculation:
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=1)
         
         await asyncio.sleep(0.1)
-        await tracker.update_progress("plan-1", "job-1", 95, 0, 0)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 95, 0, 0, 100)
         
         report = await tracker.get_progress("plan-1")
         
@@ -416,8 +417,8 @@ class TestConcurrentTracking:
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=2)
         await tracker.start_tracking("plan-2", total_files=200, sub_jobs_total=3)
         
-        await tracker.update_progress("plan-1", "job-1", 50, 0, 0)
-        await tracker.update_progress("plan-2", "job-2", 100, 0, 0)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 50, 0, 0, 100)
+        await tracker.update_sub_job_progress("plan-2", "job-2", 100, 0, 0, 100)
         
         report1 = await tracker.get_progress("plan-1")
         report2 = await tracker.get_progress("plan-2")
@@ -431,7 +432,7 @@ class TestConcurrentTracking:
         await tracker.start_tracking("plan-1", total_files=100, sub_jobs_total=1)
         await tracker.start_tracking("plan-2", total_files=100, sub_jobs_total=1)
         
-        await tracker.update_progress("plan-1", "job-1", 50, 0, 0)
+        await tracker.update_sub_job_progress("plan-1", "job-1", 50, 0, 0, 100)
         
         report1 = await tracker.get_progress("plan-1")
         report2 = await tracker.get_progress("plan-2")
