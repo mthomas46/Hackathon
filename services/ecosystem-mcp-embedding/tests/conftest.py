@@ -7,9 +7,17 @@ import asyncio
 from typing import AsyncGenerator
 from httpx import AsyncClient
 
-from src.main import app
-from src.services.fastembed_service import FastEmbedService
-from src.services.cache_service import CacheService
+# Optional imports for unit tests (not needed for integration/performance tests)
+try:
+    from src.main import app
+    from src.services.fastembed_service import FastEmbedService
+    from src.services.cache_service import CacheService
+    APP_AVAILABLE = True
+except ImportError:
+    APP_AVAILABLE = False
+    app = None
+    FastEmbedService = None
+    CacheService = None
 
 
 @pytest.fixture(scope="session")
@@ -23,21 +31,27 @@ def event_loop():
 @pytest.fixture
 async def test_client() -> AsyncGenerator[AsyncClient, None]:
     """Create test client for API testing."""
+    if not APP_AVAILABLE:
+        pytest.skip("App not available (missing dependencies)")
     async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
 
 
 @pytest.fixture
-def fastembed_service() -> FastEmbedService:
+def fastembed_service():
     """Create FastEmbed service instance for testing."""
+    if not APP_AVAILABLE:
+        pytest.skip("FastEmbed service not available (missing dependencies)")
     service = FastEmbedService()
     service.load_model()
     return service
 
 
 @pytest.fixture
-async def cache_service() -> AsyncGenerator[CacheService, None]:
+async def cache_service() -> AsyncGenerator:
     """Create cache service instance for testing."""
+    if not APP_AVAILABLE:
+        pytest.skip("Cache service not available (missing dependencies)")
     service = CacheService()
     await service.connect()
     yield service
