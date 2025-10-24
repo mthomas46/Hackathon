@@ -39,7 +39,7 @@ def test_client(app) -> Generator[TestClient, None, None]:
             response = test_client.get("/api/v1/health")
             assert response.status_code == 200
     """
-    with TestClient(app=app) as client:
+    with TestClient(app) as client:
         yield client
 
 

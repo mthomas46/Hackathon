@@ -23,7 +23,6 @@ def test_health_endpoint(test_client):
     assert "timestamp" in data
 
 
-@pytest.mark.skip(reason="TestClient fixture setup issue - needs investigation")
 def test_root_endpoint(test_client):
     """Test root endpoint."""
     response = test_client.get("/")
@@ -34,14 +33,12 @@ def test_root_endpoint(test_client):
     assert "version" in data
 
 
-@pytest.mark.skip(reason="TestClient fixture setup issue - needs investigation")
 def test_openapi_docs(client):
     """Test OpenAPI documentation is available."""
     response = client.get("/docs")
     assert response.status_code == 200
 
 
-@pytest.mark.skip(reason="TestClient fixture setup issue - needs investigation")
 def test_openapi_json(client):
     """Test OpenAPI JSON schema."""
     response = client.get("/openapi.json")
@@ -53,7 +50,6 @@ def test_openapi_json(client):
     assert "paths" in schema
 
 
-@pytest.mark.skip(reason="TestClient fixture setup issue - needs investigation")
 def test_query_endpoint_structure(client):
     """Test query endpoint is accessible."""
     # This will likely fail without database, but tests endpoint exists
