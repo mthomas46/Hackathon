@@ -9,7 +9,6 @@ import tempfile
 from src.services.discovery.repository_scanner import RepositoryScanner, RepositoryInventory
 
 
-@pytest.mark.skip(reason="RepositoryScanner API has changed - tests need updating")
 class TestRepositoryScanner:
     """Test RepositoryScanner class."""
     
@@ -102,11 +101,11 @@ class TestRepositoryScanner:
         """Test language detection."""
         scanner = RepositoryScanner()
         
-        assert scanner._detect_language(".py") == "python"
-        assert scanner._detect_language(".js") == "javascript"
-        assert scanner._detect_language(".go") == "go"
-        assert scanner._detect_language(".rs") == "rust"
-        assert scanner._detect_language(".md") == ""
+        assert scanner._detect_language(".py") == "Python"
+        assert scanner._detect_language(".js") == "JavaScript"
+        assert scanner._detect_language(".go") == "Go"
+        assert scanner._detect_language(".rs") == "Rust"
+        assert scanner._detect_language(".md") == "Unknown"
     
     def test_should_ignore(self):
         """Test ignore pattern matching."""
@@ -132,8 +131,9 @@ class TestRepositoryScanner:
         """Test scanning a nonexistent directory."""
         scanner = RepositoryScanner()
         
-        with pytest.raises(Exception):
-            await scanner.scan(Path("/nonexistent/path"))
+        # Scanner now handles nonexistent paths gracefully
+        inventory = await scanner.scan(Path("/nonexistent/path"))
+        assert inventory.total_files == 0
     
     @pytest.mark.asyncio
     async def test_file_metadata(self, temp_repo):
@@ -157,9 +157,9 @@ class TestRepositoryScanner:
         scanner = RepositoryScanner()
         inventory = await scanner.scan(temp_repo)
         
-        # Should detect Python files
-        assert "python" in inventory.languages
-        assert inventory.languages["python"] > 0
+        # Should detect Python files (capitalized)
+        assert "Python" in inventory.languages
+        assert inventory.languages["Python"] > 0
 
 
 if __name__ == "__main__":
