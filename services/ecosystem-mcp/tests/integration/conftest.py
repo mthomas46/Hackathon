@@ -43,6 +43,12 @@ def test_client(app) -> TestClient:
 
 
 @pytest.fixture(scope="function")
+def client(test_client) -> TestClient:
+    """Alias for test_client fixture for backward compatibility."""
+    return test_client
+
+
+@pytest.fixture(scope="function")
 async def async_test_client(app) -> AsyncGenerator[AsyncClient, None]:
     """
     Provide async HTTP client for async endpoint testing.
