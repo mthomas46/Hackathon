@@ -11,11 +11,11 @@ from typing import List, Dict, Optional, Set
 from datetime import datetime
 from pathlib import Path
 
-from ...storage import get_database
-from ...storage.models_discovery import SubJobModel, FileClassificationModel
-from ..processing.normalizer_factory import NormalizerFactory
-from ..git.git_service import GitService
-from ...utils.redis_client import get_redis_client
+from src.storage import get_database
+from src.storage.models_discovery import SubJobModel, FileClassificationModel
+from src.services.processing.normalizer_factory import NormalizerFactory
+from src.services.git.git_service import GitService
+from src.utils.redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)
 
@@ -180,7 +180,7 @@ class SubJobExecutor:
         """
         try:
             from sqlalchemy import select, text
-            from ...storage.models import DocumentModel
+            from src.storage.models import DocumentModel
             
             async with get_database().session() as session:
                 # Check by content hash

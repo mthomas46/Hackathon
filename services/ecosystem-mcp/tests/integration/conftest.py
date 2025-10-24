@@ -27,7 +27,7 @@ def app():
 
 
 @pytest.fixture(scope="function")
-def test_client(app) -> Generator[TestClient, None, None]:
+def test_client(app) -> TestClient:
     """
     Provide FastAPI TestClient for synchronous endpoint testing.
     
@@ -39,8 +39,7 @@ def test_client(app) -> Generator[TestClient, None, None]:
             response = test_client.get("/api/v1/health")
             assert response.status_code == 200
     """
-    with TestClient(app) as client:
-        yield client
+    return TestClient(app)
 
 
 @pytest.fixture(scope="function")

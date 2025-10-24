@@ -21,7 +21,7 @@ from src.services.analysis.hierarchical_context_manager import (
 )
 from src.services.analysis.context_generator import RepositoryContext
 from src.services.analysis.analysis_engine import AnalysisReport
-from src.services.analysis.service_analyzer import ServiceMap, DetectedService
+from src.services.analysis.service_detector import ServiceMap, Service
 
 
 @pytest.fixture
@@ -63,7 +63,7 @@ def base_context():
 @pytest.fixture
 def service_map():
     """Create a mock service map."""
-    service1 = DetectedService(
+    service1 = Service(
         name="auth-service",
         path="/app/test_repo/services/auth",
         language="Python",
@@ -74,7 +74,7 @@ def service_map():
         entry_points=["app.py"]
     )
     
-    service2 = DetectedService(
+    service2 = Service(
         name="user-service",
         path="/app/test_repo/services/user",
         language="Python",

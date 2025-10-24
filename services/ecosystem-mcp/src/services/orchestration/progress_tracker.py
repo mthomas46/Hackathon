@@ -12,7 +12,7 @@ from dataclasses import dataclass, asdict
 from datetime import datetime
 import json
 
-from ...utils.redis_client import get_redis_client
+from src.utils.redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)
 

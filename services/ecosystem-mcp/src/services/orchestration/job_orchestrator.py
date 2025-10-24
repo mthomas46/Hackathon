@@ -17,8 +17,8 @@ from .resource_allocator import get_resource_allocator
 from .sub_job_executor import get_sub_job_executor
 from .progress_tracker import get_progress_tracker
 from .execution_monitor import get_execution_monitor
-from ...storage import get_database
-from ...storage.models_discovery import ProcessingPlanModel, SubJobModel
+from src.storage import get_database
+from src.storage.models_discovery import ProcessingPlanModel, SubJobModel
 
 logger = logging.getLogger(__name__)
 
