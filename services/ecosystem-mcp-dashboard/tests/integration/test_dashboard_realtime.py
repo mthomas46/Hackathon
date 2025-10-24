@@ -9,7 +9,7 @@ import pytest
 import httpx
 import os
 from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 
 
@@ -109,7 +109,7 @@ class TestJobProgressUpdates:
         mock_streamlit_session['refresh_interval'] = 5
         
         # Simulate refresh
-        mock_streamlit_session['last_refresh'] = datetime.utcnow()
+        mock_streamlit_session['last_refresh'] = datetime.now(timezone.utc)
         
         assert mock_streamlit_session['auto_refresh'] is True
         assert mock_streamlit_session['refresh_interval'] == 5
@@ -160,7 +160,7 @@ class TestServiceHealthUpdates:
         alert = {
             'severity': 'warning',
             'message': 'High memory usage',
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }
         mock_streamlit_session['alerts'].append(alert)
         
@@ -213,7 +213,7 @@ class TestDataRefresh:
             
             if response.status_code == 200:
                 mock_streamlit_session['data'] = response.json()
-                mock_streamlit_session['last_refresh'] = datetime.utcnow()
+                mock_streamlit_session['last_refresh'] = datetime.now(timezone.utc)
                 mock_streamlit_session['manual_refresh'] = False
                 
                 assert 'data' in mock_streamlit_session
@@ -226,11 +226,11 @@ class TestDataRefresh:
         from datetime import timedelta
         
         # Set old timestamp
-        mock_streamlit_session['last_refresh'] = datetime.utcnow() - timedelta(minutes=10)
+        mock_streamlit_session['last_refresh'] = datetime.now(timezone.utc) - timedelta(minutes=10)
         mock_streamlit_session['refresh_interval'] = 5  # 5 seconds
         
         # Check if stale
-        time_since_refresh = (datetime.utcnow() - mock_streamlit_session['last_refresh']).total_seconds()
+        time_since_refresh = (datetime.now(timezone.utc) - mock_streamlit_session['last_refresh']).total_seconds()
         is_stale = time_since_refresh > mock_streamlit_session['refresh_interval']
         
         assert is_stale is True
@@ -295,7 +295,7 @@ class TestRealtimeStreaming:
         
         for log in logs:
             mock_streamlit_session['logs'].append({
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
                 'message': log
             })
         

@@ -2,6 +2,8 @@
 Configuration settings for embedding service.
 """
 
+import os
+import tempfile
 from pydantic_settings import BaseSettings
 from typing import Optional
 
@@ -16,7 +18,7 @@ class Settings(BaseSettings):
     
     # FastEmbed Model
     model_name: str = "BAAI/bge-base-en-v1.5"  # 768 dims (matches nomic-embed-text)
-    model_cache_dir: str = "/app/models"
+    model_cache_dir: str = os.getenv("MODEL_CACHE_DIR", os.path.join(tempfile.gettempdir(), "fastembed_cache"))
     max_text_length: int = 8000
     
     # Redis Cache
