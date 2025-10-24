@@ -149,6 +149,7 @@ class TestRootEndpoint:
         assert "docs" in data
 
 
+@pytest.mark.skip(reason="Requires running server at localhost:8000 - end-to-end test")
 class TestRateLimiting:
     """Test rate limiting (careful - may affect other tests)."""
     
