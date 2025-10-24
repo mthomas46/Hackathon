@@ -39,7 +39,8 @@ def test_client(app) -> TestClient:
             response = test_client.get("/api/v1/health")
             assert response.status_code == 200
     """
-    return TestClient(app)
+    with TestClient(app) as client:
+        yield client
 
 
 @pytest.fixture(scope="function")

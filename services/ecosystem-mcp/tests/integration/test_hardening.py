@@ -12,8 +12,12 @@ from pathlib import Path
 import tempfile
 from unittest.mock import patch, MagicMock
 
-# Skip entire module - 'client' fixture not defined
-pytestmark = pytest.mark.skip(reason="Fixture 'client' not defined - tests need fixture setup")
+
+@pytest.fixture
+def client(test_client):
+    """Alias for test_client fixture."""
+    return test_client
+
 
 # Test fixtures
 
