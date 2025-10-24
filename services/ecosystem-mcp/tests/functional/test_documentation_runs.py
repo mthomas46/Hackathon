@@ -22,26 +22,30 @@ pytestmark = pytest.mark.functional
 
 @pytest.fixture(scope="function")
 async def repository_context(db_session):
-    """Create a repository context for testing."""
+    """Create repository contexts for testing."""
     # Check if it already exists
     from sqlalchemy import select, insert
     
-    stmt = select(RepositoryContextModel).where(RepositoryContextModel.repo_id == "/test/repo")
-    result = await db_session.execute(stmt)
-    existing = result.scalar_one_or_none()
+    # Create multiple repo contexts for tests that need them
+    repo_ids = ["/test/repo"] + [f"/test/repo{i}" for i in range(10)]
     
-    if not existing:
-        # Create repository context
-        stmt = insert(RepositoryContextModel).values(
-            repo_id="/test/repo",
-            repo_name="test-repo",
-            languages={"python": 100},
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
-        )
-        await db_session.execute(stmt)
-        await db_session.commit()
+    for repo_id in repo_ids:
+        stmt = select(RepositoryContextModel).where(RepositoryContextModel.repo_id == repo_id)
+        result = await db_session.execute(stmt)
+        existing = result.scalar_one_or_none()
+        
+        if not existing:
+            # Create repository context
+            stmt = insert(RepositoryContextModel).values(
+                repo_id=repo_id,
+                repo_name=repo_id.replace("/test/", ""),
+                languages={"python": 100},
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+            await db_session.execute(stmt)
     
+    await db_session.commit()
     return "/test/repo"
 
 
@@ -79,7 +83,7 @@ class TestDocumentationRunCreation:
 
         assert run is not None
         assert run.id is not None
-        assert run.repo_path == "/test/repo"
+        assert run.repo_id == "/test/repo"
         assert run.status == RunStatus.PENDING
         assert run.config["passes"] == 3
 
@@ -142,7 +146,7 @@ class TestDocumentationRunRetrieval:
 
         assert retrieved is not None
         assert retrieved.id == run.id
-        assert retrieved.repo_path == run.repo_path
+        assert retrieved.repo_id == run.repo_id
 
     async def test_get_runs_by_repo_path(
         self,
@@ -164,7 +168,7 @@ class TestDocumentationRunRetrieval:
         runs = await run_manager.get_runs_by_repo(repo_path)
 
         assert len(runs) >= 3
-        assert all(run.repo_path == repo_path for run in runs)
+        assert all(run.repo_id == repo_path for run in runs)
 
     async def test_get_runs_by_status(
         self,
