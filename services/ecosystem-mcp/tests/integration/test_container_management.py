@@ -7,6 +7,10 @@ Tests the subprocess-based Docker CLI implementation for managing containers.
 import pytest
 from typing import Dict, Any
 import time
+import httpx
+
+# Skip entire module - requires running server and Docker
+pytestmark = pytest.mark.skip(reason="Requires running server and Docker - end-to-end test")
 
 
 
