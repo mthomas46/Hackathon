@@ -8,10 +8,13 @@ production environments.
 
 from datetime import datetime
 import uuid
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Type hint for data that can be dict or Pydantic model
+DataType = Union[Dict[str, Any], Any]
 
 
 class TestDataMarker:
@@ -73,12 +76,14 @@ class TestDataMarker:
         return data
     
     @staticmethod
-    def is_test_data(data: Dict[str, Any]) -> bool:
+    def is_test_data(data: DataType) -> bool:
         """
         Check if data is marked as test data.
         
+        Works with both dicts and Pydantic models.
+        
         Args:
-            data: Data dictionary to check
+            data: Data dictionary or Pydantic model to check
             
         Returns:
             bool: True if data is marked as test data
@@ -86,19 +91,49 @@ class TestDataMarker:
         if not data:
             return False
         
-        metadata = data.get("metadata")
+        # Handle SQLAlchemy models (DocumentModel has doc_metadata)
+        if hasattr(data, 'doc_metadata'):
+            metadata = data.doc_metadata
+        # Handle Pydantic models
+        elif hasattr(data, 'metadata'):
+            metadata = data.metadata
+            # If metadata is a Pydantic model, convert to dict
+            if hasattr(metadata, 'model_dump'):
+                metadata = metadata.model_dump()
+            elif hasattr(metadata, 'dict'):
+                metadata = metadata.dict()
+            elif hasattr(metadata, 'extra'):
+                # DocumentMetadata stores test markers in 'extra' field
+                return metadata.extra.get(TestDataMarker.TEST_MARKER_KEY, False)
+        # Handle dicts
+        elif isinstance(data, dict):
+            metadata = data.get("metadata")
+        else:
+            return False
+        
         if not metadata:
             return False
         
-        return metadata.get(TestDataMarker.TEST_MARKER_KEY, False)
+        # Check for test marker
+        if isinstance(metadata, dict):
+            # Check if markers are directly in metadata
+            if TestDataMarker.TEST_MARKER_KEY in metadata:
+                return metadata.get(TestDataMarker.TEST_MARKER_KEY, False)
+            # Check if markers are nested under 'metadata' key (from mark_as_test_data)
+            elif "metadata" in metadata and isinstance(metadata["metadata"], dict):
+                return metadata["metadata"].get(TestDataMarker.TEST_MARKER_KEY, False)
+        
+        return False
     
     @staticmethod
-    def get_test_session(data: Dict[str, Any]) -> Optional[str]:
+    def get_test_session(data: DataType) -> Optional[str]:
         """
         Get test session ID from data.
         
+        Works with both dicts and Pydantic models.
+        
         Args:
-            data: Data dictionary
+            data: Data dictionary or Pydantic model
             
         Returns:
             Optional[str]: Test session ID if present
@@ -106,11 +141,39 @@ class TestDataMarker:
         if not data:
             return None
         
-        metadata = data.get("metadata")
+        # Handle SQLAlchemy models (DocumentModel has doc_metadata)
+        if hasattr(data, 'doc_metadata'):
+            metadata = data.doc_metadata
+        # Handle Pydantic models
+        elif hasattr(data, 'metadata'):
+            metadata = data.metadata
+            # If metadata is a Pydantic model, convert to dict
+            if hasattr(metadata, 'model_dump'):
+                metadata = metadata.model_dump()
+            elif hasattr(metadata, 'dict'):
+                metadata = metadata.dict()
+            elif hasattr(metadata, 'extra'):
+                # DocumentMetadata stores test markers in 'extra' field
+                return metadata.extra.get(TestDataMarker.TEST_SESSION_KEY)
+        # Handle dicts
+        elif isinstance(data, dict):
+            metadata = data.get("metadata")
+        else:
+            return None
+        
         if not metadata:
             return None
         
-        return metadata.get(TestDataMarker.TEST_SESSION_KEY)
+        # Get session ID
+        if isinstance(metadata, dict):
+            # Check if markers are directly in metadata
+            if TestDataMarker.TEST_SESSION_KEY in metadata:
+                return metadata.get(TestDataMarker.TEST_SESSION_KEY)
+            # Check if markers are nested under 'metadata' key (from mark_as_test_data)
+            elif "metadata" in metadata and isinstance(metadata["metadata"], dict):
+                return metadata["metadata"].get(TestDataMarker.TEST_SESSION_KEY)
+        
+        return None
     
     @staticmethod
     def get_test_created_at(data: Dict[str, Any]) -> Optional[str]:

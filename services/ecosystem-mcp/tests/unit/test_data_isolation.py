@@ -149,7 +149,6 @@ class TestDataMarking:
         assert TestDataMarker.is_test_data(cleaned) is False
 
 
-@pytest.mark.skip(reason="TestDataMarker expects dict but create_test_document returns DocumentModel - API mismatch")
 class TestHelperFunctions:
     """Test helper functions for creating test data."""
     
@@ -199,7 +198,6 @@ class TestHelperFunctions:
             verify_test_data_marked(doc)
 
 
-@pytest.mark.skip(reason="TestDataMarker expects dict but create_test_document returns DocumentModel - API mismatch")
 class TestIsolationGuarantees:
     """Test overall isolation guarantees."""
     
