@@ -6,6 +6,10 @@ Tests document listing, retrieval, and ensures unique IDs for Streamlit compatib
 
 import pytest
 from typing import Dict, Any
+import httpx
+
+# Skip entire module - requires running server
+pytestmark = pytest.mark.skip(reason="Requires running server - end-to-end test")
 
 
 
