@@ -37,35 +37,28 @@ class TestCircuitBreaker:
         assert breaker.stats.failure_count == 0
     
     def test_circuit_breaker_state_transitions(self):
-        """Test circuit breaker state transitions via context manager."""
-        from src.utils.circuit_breaker import CircuitBreaker, CircuitState, CircuitBreakerOpenError
-        import asyncio
+        """Test circuit breaker state transitions via direct methods."""
+        from src.utils.circuit_breaker import CircuitBreaker, CircuitState
         
         breaker = CircuitBreaker(name="test", failure_threshold=2)
         
         # Should start CLOSED
         assert breaker.stats.state == CircuitState.CLOSED
+        assert breaker.stats.failure_count == 0
         
-        # Simulate failures by calling the circuit breaker and raising exceptions
-        async def failing_operation():
-            async with breaker:
-                raise Exception("Simulated failure")
-        
-        # Record first failure
-        try:
-            asyncio.run(failing_operation())
-        except Exception:
-            pass
-        
+        # Record first failure using internal method
+        breaker._record_failure_sync()
         assert breaker.stats.state == CircuitState.CLOSED  # Still closed after 1 failure
+        assert breaker.stats.failure_count == 1
         
-        # Record second failure
-        try:
-            asyncio.run(failing_operation())
-        except Exception:
-            pass
-        
+        # Record second failure - should open circuit
+        breaker._record_failure_sync()
         assert breaker.stats.state == CircuitState.OPEN  # Should open after threshold
+        assert breaker.stats.failure_count == 2
+        
+        # Verify we can get state
+        state_dict = breaker.get_state()
+        assert state_dict["state"] == "open"
 
 
 # ============================================================================

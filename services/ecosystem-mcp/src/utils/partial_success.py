@@ -227,7 +227,7 @@ def should_continue_on_failure(
     
     # Check failure rate
     failure_rate = result.failed / result.total
-    if failure_rate > max_failure_rate:
+    if failure_rate >= max_failure_rate:
         logger.warning(
             f"⚠️  High failure rate: {failure_rate:.1%} "
             f"(threshold: {max_failure_rate:.1%})"
