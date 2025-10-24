@@ -33,7 +33,6 @@ def router():
 
 
 @pytest.mark.unit
-@pytest.mark.skip(reason="CodeDetector API has changed - tests need updating")
 class TestCodeDetector:
     """Test CodeDetector class."""
     
@@ -141,7 +140,7 @@ Just regular sentences and paragraphs.
     
     def test_is_code_content_threshold(self, code_detector):
         """Test code content detection with custom threshold."""
-        # Mix of code and text
+        # Mix of code and text (2/7 lines = 28.57% code)
         mixed_content = """
 This is some text.
 def function():
@@ -151,8 +150,11 @@ class MyClass:
     pass
 Even more text.
 """
-        # Should be detected as code with default threshold (0.3)
-        assert code_detector.is_code_content(mixed_content) is True
+        # Should NOT be detected with default threshold (0.3) - only 28.57% code
+        assert code_detector.is_code_content(mixed_content) is False
+        
+        # Should be detected with lower threshold (0.2)
+        assert code_detector.is_code_content(mixed_content, threshold=0.2) is True
         
         # Should NOT be detected with high threshold (0.8)
         assert code_detector.is_code_content(mixed_content, threshold=0.8) is False
