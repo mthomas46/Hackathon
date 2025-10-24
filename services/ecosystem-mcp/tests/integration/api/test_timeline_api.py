@@ -11,7 +11,7 @@ from datetime import datetime
 class TestTimelineAPI:
     """Test Timeline API endpoints."""
     
-    async def test_create_timeline_endpoint(self, client: AsyncClient):
+    async def test_create_timeline_endpoint(self, async_test_client: AsyncClient):
         """Test POST /api/v1/timelines endpoint."""
         payload = {
             "name": "Test Timeline",
@@ -28,7 +28,7 @@ class TestTimelineAPI:
         assert payload["name"] == "Test Timeline"
         assert payload["period_strategy"] in ["monthly", "quarterly", "adaptive"]
     
-    async def test_get_timeline_endpoint(self, client: AsyncClient):
+    async def test_get_timeline_endpoint(self, async_test_client: AsyncClient):
         """Test GET /api/v1/timelines/{timeline_id} endpoint."""
         # Mock timeline ID
         timeline_id = "123e4567-e89b-12d3-a456-426614174000"
@@ -39,7 +39,7 @@ class TestTimelineAPI:
         
         assert timeline_id  # Placeholder assertion
     
-    async def test_list_timelines_endpoint(self, client: AsyncClient):
+    async def test_list_timelines_endpoint(self, async_test_client: AsyncClient):
         """Test GET /api/v1/timelines endpoint."""
         # Would normally make actual request:
         # response = await client.get("/api/v1/timelines?service_name=test")

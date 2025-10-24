@@ -11,11 +11,11 @@ from src.api.app import create_app
 
 
 
-def test_health_endpoint(client):
+def test_health_endpoint(test_client):
     """Test health check endpoint."""
     # Note: This may fail if dependencies aren't running
     # In a real test environment, we'd mock them
-    response = client.get("/health")
+    response = test_client.get("/health")
     
     assert response.status_code in [200, 503]  # Either healthy or unhealthy
     data = response.json()
@@ -23,9 +23,9 @@ def test_health_endpoint(client):
     assert "timestamp" in data
 
 
-def test_root_endpoint(client):
+def test_root_endpoint(test_client):
     """Test root endpoint."""
-    response = client.get("/")
+    response = test_client.get("/")
     
     assert response.status_code == 200
     data = response.json()
