@@ -5,18 +5,28 @@ Tests plan generation, priority assignment, and sub-job creation logic.
 """
 
 import pytest
-
-# Skip entire module - ProcessingPlanner API has changed
-pytestmark = pytest.mark.skip(reason="ProcessingPlanner API has changed - tests need updating")
 from pathlib import Path
 from src.services.discovery.processing_planner import ProcessingPlanner, ProcessingPlan
 from src.services.discovery.repository_scanner import FileInfo, RepositoryInventory
+from src.services.discovery.file_classifier import FileClassifier
 
 
 @pytest.fixture
 def planner():
     """Create a ProcessingPlanner instance."""
     return ProcessingPlanner()
+
+
+@pytest.fixture
+def classifier():
+    """Create a FileClassifier instance."""
+    return FileClassifier()
+
+
+async def create_plan_with_classification(planner, classifier, inventory, repo_path):
+    """Helper to create plan with automatic file classification."""
+    classified_files = await classifier.classify(inventory.files)
+    return await planner.create_plan(inventory, classified_files, repo_path=repo_path)
 
 
 @pytest.fixture
@@ -79,7 +89,6 @@ def sample_inventory():
     )
 
 
-@pytest.mark.skip(reason="ProcessingPlanner API has changed - tests need updating")
 class TestProcessingPlannerBasic:
     """Basic ProcessingPlanner tests."""
     
@@ -90,13 +99,17 @@ class TestProcessingPlannerBasic:
         assert hasattr(planner, 'create_plan')
     
     @pytest.mark.asyncio
-    async def test_create_plan_basic(self, planner, sample_inventory):
+    async def test_create_plan_basic(self, planner, classifier, sample_inventory):
         """Test basic plan creation."""
-        plan = await planner.create_plan(sample_inventory, repo_path=Path("/test"))
+        # Classify files first
+        classified_files = await classifier.classify(sample_inventory.files)
+        
+        # Create plan with classified files
+        plan = await planner.create_plan(sample_inventory, classified_files, repo_path="/test")
         
         assert isinstance(plan, ProcessingPlan)
         assert len(plan.sub_jobs) > 0
-        assert plan.total_files == sample_inventory.total_files
+        assert plan.total_files == len(classified_files)
     
     @pytest.mark.asyncio
     async def test_empty_inventory(self, planner):
