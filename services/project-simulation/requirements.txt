@@ -11,7 +11,7 @@ uvicorn[standard]>=0.24.0
 pydantic>=2.8.0
 
 # HTTP clients for ecosystem integration
-httpx>=0.25.2
+httpx==0.24.1  # Pinned for starlette 0.27.0 compatibility
 aiohttp>=3.12.0
 requests>=2.32.0
 
