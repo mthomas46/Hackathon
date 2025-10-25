@@ -10,6 +10,7 @@ Enables deep analysis of complex queries through:
 
 import asyncio
 import logging
+import time
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from dataclasses import dataclass, field, asdict
@@ -166,7 +167,11 @@ class MultiPassQueryService:
             ]
             
             # Execute all sections in parallel
+            sections_start = time.time()
+            logger.info(f"⏱️  Executing {len(section_tasks)} sections in parallel (this will take longest)...")
             section_results = await asyncio.gather(*section_tasks, return_exceptions=True)
+            sections_time = time.time() - sections_start
+            logger.info(f"✅ All sections completed in {sections_time:.2f}s")
             
             # Handle any exceptions
             valid_section_results = []
@@ -275,11 +280,17 @@ Example:
 
 Provide exactly {num_passes} sections:"""
 
+        decompose_start = time.time()
+        logger.info(f"⏱️  Calling LLM to decompose query into {num_passes} sections...")
+        
         response = await self.ollama_router.generate(
             prompt=prompt,
             temperature=0.3,  # Lower temperature for structured output
             workload_type='rag'  # Use 'rag' to get Desktop GPU routing
         )
+        
+        decompose_time = time.time() - decompose_start
+        logger.info(f"✅ LLM decomposition completed in {decompose_time:.2f}s")
         
         # Extract JSON from response
         response_text = response.get("response", response.get("text", ""))
@@ -358,6 +369,9 @@ Provide exactly {num_passes} sections:"""
         
         async def generate_for_section(section_idx: int, section: Dict[str, str]) -> List[SecondaryQuestion]:
             """Generate questions for a single section."""
+            section_start = time.time()
+            logger.info(f"  ⏱️  Section {section_idx+1}: Generating {num_questions} questions for '{section['name']}'...")
+            
             prompt = f"""Generate {num_questions} specific, focused questions to explore this section in depth.
 
 Main Query: {main_query}
@@ -377,11 +391,14 @@ Format as a JSON array of strings:
 Provide exactly {num_questions} questions:"""
 
             try:
+                llm_start = time.time()
                 response = await self.ollama_router.generate(
                     prompt=prompt,
                     temperature=0.4,
                     workload_type='rag'  # Use 'rag' to get Desktop GPU routing
                 )
+                llm_time = time.time() - llm_start
+                logger.info(f"    ✅ LLM call for section {section_idx+1} completed in {llm_time:.2f}s")
                 
                 response_text = response.get("response", response.get("text", ""))
                 
@@ -440,7 +457,11 @@ Provide exactly {num_questions} questions:"""
             for section_idx, section in enumerate(sections)
         ]
         
+        questions_start = time.time()
+        logger.info(f"⏱️  Executing {len(question_tasks)} LLM calls in parallel...")
         section_question_lists = await asyncio.gather(*question_tasks, return_exceptions=True)
+        questions_time = time.time() - questions_start
+        logger.info(f"✅ All question generation completed in {questions_time:.2f}s")
         
         # Flatten results and handle exceptions
         all_questions = []
@@ -667,6 +688,8 @@ Synthesis:"""
         response_length: int = 1000
     ) -> str:
         """Synthesize final comprehensive answer from all sections."""
+        synthesis_start = time.time()
+        logger.info(f"⏱️  Synthesizing final answer from {len(section_results)} sections...")
         
         # Build context from all section syntheses
         context_parts = []
@@ -720,12 +743,17 @@ Provide a complete, well-structured answer that:
 
 Final Answer:"""
 
+        llm_start = time.time()
+        logger.info(f"⏱️  Calling LLM for final synthesis (may take 30-60s for long responses)...")
         response = await self.ollama_router.generate(
             prompt=prompt,
             temperature=0.7,
             workload_type='rag',  # Use 'rag' to get Desktop GPU routing (critical for speed)
             max_tokens=response_length * 2  # 2x tokens for final synthesis (it's synthesizing multiple sections)
         )
+        llm_time = time.time() - llm_start
+        synthesis_total = time.time() - synthesis_start
+        logger.info(f"✅ Final synthesis completed: LLM={llm_time:.2f}s, Total={synthesis_total:.2f}s")
         
         return response.get("response", response.get("text", ""))
 
