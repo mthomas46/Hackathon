@@ -153,7 +153,7 @@ class MultiPassQueryService:
             logger.info(f"  → All {len(all_questions)} RAG queries will execute simultaneously")
             logger.info(f"  → Using {'Enhanced' if use_enhancements else 'Standard'} RAG service")
             
-            # Create tasks for all sections
+            # Create tasks for all sections (pass rag_service)
             section_tasks = [
                 self._process_section(
                     section_idx,
@@ -161,7 +161,8 @@ class MultiPassQueryService:
                     all_questions,
                     n_results,
                     temperature,
-                    response_length
+                    response_length,
+                    rag_service  # Pass the selected RAG service
                 )
                 for section_idx, section in enumerate(sections)
             ]
@@ -218,6 +219,30 @@ class MultiPassQueryService:
             if progress_callback:
                 await progress_callback("complete", 100, "Query processing complete!")
             
+            # Aggregate enhancement metadata from all questions
+            all_enhancements = set()
+            matched_templates = set()
+            total_documents_used = 0
+            
+            for section in section_results:
+                for question in section.questions:
+                    q_metadata = question.metadata
+                    if 'enhancements_applied' in q_metadata:
+                        enhancements = q_metadata['enhancements_applied']
+                        if isinstance(enhancements, list):
+                            all_enhancements.update(enhancements)
+                    if 'matched_template' in q_metadata:
+                        template = q_metadata['matched_template']
+                        if template:
+                            matched_templates.add(template)
+                    if 'documents_used' in q_metadata:
+                        total_documents_used += q_metadata['documents_used']
+            
+            logger.info(f"📊 Aggregated enhancements across {total_questions} questions:")
+            logger.info(f"  • Enhancements: {list(all_enhancements)}")
+            logger.info(f"  • Templates: {list(matched_templates)}")
+            logger.info(f"  • Total documents: {total_documents_used}")
+            
             result = MultiPassResult(
                 original_query=query,
                 num_passes=num_passes,
@@ -231,7 +256,11 @@ class MultiPassQueryService:
                 metadata={
                     "n_results": n_results,
                     "temperature": temperature,
-                    "sections_count": len(sections)
+                    "sections_count": len(sections),
+                    "use_enhancements": use_enhancements,
+                    "enhancements_applied": list(all_enhancements),
+                    "matched_templates": list(matched_templates),
+                    "total_documents_used": total_documents_used
                 }
             )
             
@@ -482,7 +511,8 @@ Provide exactly {num_questions} questions:"""
         all_questions: List[SecondaryQuestion],
         n_results: int,
         temperature: float,
-        response_length: int
+        response_length: int,
+        rag_service=None  # Accept RAG service as parameter
     ) -> SectionResult:
         """
         Process a single section by answering all its questions.
@@ -525,6 +555,10 @@ Provide exactly {num_questions} questions:"""
             logger.debug(f"   Q{question_index + 1}/{total_questions}: {adaptive_n} docs (base={base_n_results}, reduction={reduction_factor:.1%})")
             return max(adaptive_n, 5)  # Minimum 5 docs
         
+        # Use passed rag_service or fallback to self.rag_service
+        if rag_service is None:
+            rag_service = self.rag_service
+        
         # 🚀 OPTIMIZATION: Execute ALL RAG queries in parallel (6-9× speedup!)
         async def execute_rag_query(question: SecondaryQuestion, question_index: int):
             """Execute single RAG query with timing, error handling, and adaptive docs."""
@@ -548,6 +582,13 @@ Provide exactly {num_questions} questions:"""
                     temperature=temperature,
                     response_length=response_length
                 )
+                
+                # Extract enhancement metadata for aggregation
+                metadata = rag_result.get('metadata', {})
+                if 'enhancements_applied' in metadata:
+                    rag_result['_enhancements'] = metadata['enhancements_applied']
+                if 'matched_template' in metadata:
+                    rag_result['_template'] = metadata['matched_template']
                 
                 logger.debug(
                     f"  ✅ RAG completed: {len(rag_result.get('answer', ''))} chars, "
