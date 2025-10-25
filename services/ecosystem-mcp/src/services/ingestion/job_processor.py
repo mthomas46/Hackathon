@@ -1555,8 +1555,8 @@ class JobProcessor:
                     logger.debug(f"📅 Using file mtime as final fallback: {git_date_value}")
             except Exception as e:
                 logger.debug(f"Failed to get file mtime: {e}")
-                    
-                    document = DocumentModel(
+        
+        document = DocumentModel(
                         service_name=service_name,  # ✅ FIX #4: Use actual service_name, not mode
                         file_path=file_path,
                         original_format=file_extension,
