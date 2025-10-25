@@ -100,7 +100,7 @@ st.sidebar.markdown("### 📈 MONITORING")
 monitoring_pages = ["⚡ Cache Performance", "📊 Metrics & Analytics", "🎯 Quality Dashboard", "📋 Logs Viewer", "🔍 Performance Monitor", "📦 Repository Contexts"]
 
 st.sidebar.markdown("### 🔧 CONFIGURATION")
-config_pages = ["🔌 API Explorer", "⚙️ Configuration", "🔌 LLM Tier Management", "🔧 Settings"]
+config_pages = ["🔌 API Explorer", "⚙️ Configuration", "⚙️ RAG Config Manager", "🔌 LLM Tier Management", "🔧 Settings"]
 
 # Combine all pages for radio selection
 all_pages = overview_pages + query_pages + data_pages + doc_pages + analysis_pages + discovery_pages + infra_pages + monitoring_pages + config_pages
@@ -181,6 +181,9 @@ elif page == "🔬 Diagnostics":
 elif page == "⚙️ Configuration":
     from dashboard_views import config_viewer
     config_viewer.show(api_base_url)
+elif page == "⚙️ RAG Config Manager":
+    from dashboard_views import rag_config_manager
+    rag_config_manager.show(api_base_url)
 elif page == "📋 Logs Viewer":
     from dashboard_views import logs_viewer
     logs_viewer.show(api_base_url)
