@@ -66,7 +66,7 @@ class Settings(BaseSettings):
         description="Enable native desktop Ollama for heavy workloads"
     )
     ollama_desktop_url: str = Field(
-        default="http://host.docker.internal:11435",
+        default="http://host.docker.internal:11434",
         description="Desktop Ollama API URL (use host.docker.internal to access host from container)"
     )
     ollama_desktop_model: str = Field(

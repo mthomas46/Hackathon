@@ -161,7 +161,7 @@ services:
       PREFLIGHT_MODE: "lenient"  # Allow startup even if Ollama is slow
       # Desktop Ollama (Tier 2) - GPU Enhanced
       OLLAMA_DESKTOP_ENABLED: "true"
-      OLLAMA_DESKTOP_URL: http://host.docker.internal:11435
+      OLLAMA_DESKTOP_URL: http://host.docker.internal:11434
       OLLAMA_DESKTOP_MODEL: llama3:latest
       USE_DESKTOP_FOR_RAG: "true"
       # Cursor IDE (Tier 1) - Premium Models
