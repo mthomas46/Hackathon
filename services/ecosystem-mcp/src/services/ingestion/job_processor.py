@@ -1279,8 +1279,6 @@ class JobProcessor:
             # 🆕 FALLBACK: Use filesystem metadata when git info unavailable
             if not git_metadata:
                 try:
-                    import os
-                    from pathlib import Path
                     full_path = Path(job.repo_path) / file_path
                     if full_path.exists():
                         stat = os.stat(full_path)
