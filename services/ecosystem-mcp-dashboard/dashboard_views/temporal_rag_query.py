@@ -9,8 +9,30 @@ import streamlit as st
 from datetime import datetime, timedelta
 from typing import Optional
 import pandas as pd
+import httpx
 
-from utils.api_tracker import make_api_request, show_api_tracker_widget
+# Fallback if api_tracker not available
+try:
+    from utils.api_tracker import make_api_request, show_api_tracker_widget
+except ImportError:
+    def make_api_request(base_url, endpoint, method="GET", json_data=None, params=None, timeout=30.0, show_error=True):
+        """Fallback API request function."""
+        try:
+            url = f"{base_url}{endpoint}"
+            if method == "GET":
+                response = httpx.get(url, params=params, timeout=timeout)
+            else:
+                response = httpx.post(url, json=json_data, timeout=timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            if show_error:
+                st.error(f"API Error: {e}")
+            return None
+    
+    def show_api_tracker_widget():
+        """Fallback tracker widget."""
+        pass
 
 
 def show(api_base_url: str):
