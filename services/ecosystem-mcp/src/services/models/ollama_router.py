@@ -123,7 +123,8 @@ class OllamaRouter:
     async def get_instance_for_complexity(
         self,
         complexity_score: float,
-        prompt: str
+        prompt: str,
+        workload_type: str = 'generation'
     ) -> tuple[Any, str, str]:
         """
         Get the appropriate LLM instance based on complexity score.
@@ -131,6 +132,7 @@ class OllamaRouter:
         Args:
             complexity_score: Complexity score (0.0-1.0)
             prompt: The query/prompt (for logging)
+            workload_type: Type of workload ('rag', 'generation', etc.)
         
         Returns:
             Tuple of (client, model_name, instance_name)
@@ -140,6 +142,19 @@ class OllamaRouter:
             await self._check_cursor_availability()
         if settings.ollama_desktop_enabled:
             await self._check_desktop_availability()
+        
+        # 🎯 SPECIAL CASE: RAG queries should prefer Desktop when available (for GPU acceleration)
+        # RAG queries benefit significantly from GPU (3-5x faster) but may have low complexity scores
+        if (workload_type == 'rag' and 
+            settings.ollama_desktop_enabled and 
+            settings.use_desktop_for_rag and
+            self.desktop_available):
+            
+            logger.info(
+                f"🎯 Routing RAG query to DESKTOP GPU (complexity={complexity_score:.2f}): "
+                f"{prompt[:50]}..."
+            )
+            return self.desktop_client, settings.ollama_desktop_model, "desktop"
         
         # Tier 1: Extreme complexity → Cursor IDE (premium)
         if (settings.cursor_enabled and 
@@ -182,6 +197,22 @@ class OllamaRouter:
         context_docs: Optional[list] = None
     ) -> Dict[str, Any]:
         """
+        Generate text using the optimal LLM instance.
+        
+        Args:
+            prompt: The prompt to generate from
+            workload_type: Type of workload ('rag', 'generation', 'embedding', etc.)
+            model: Optional model override
+            system: Optional system message
+            temperature: LLM temperature (0.0-1.0)
+            max_tokens: Maximum tokens to generate
+            context: Additional context for complexity analysis
+            context_docs: Retrieved documents for complexity analysis
+        
+        Returns:
+            Generated text and metadata
+        """
+        """
         Generate text using appropriate LLM instance based on complexity.
         
         Args:
@@ -207,7 +238,7 @@ class OllamaRouter:
         
         # Get appropriate instance
         client, default_model, instance_name = await self.get_instance_for_complexity(
-            complexity_score, prompt
+            complexity_score, prompt, workload_type
         )
         model = model or default_model
         

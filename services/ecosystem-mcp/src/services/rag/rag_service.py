@@ -49,7 +49,8 @@ class RAGService:
         n_results: int = 10,
         context: Optional[List[Dict[str, Any]]] = None,
         prefer_recent: bool = True,
-        temperature: float = 0.7
+        temperature: float = 0.7,
+        response_length: int = 1000
     ) -> Dict[str, Any]:
         """
         Answer a question using RAG.
@@ -60,6 +61,7 @@ class RAGService:
             context: Previous conversation context
             prefer_recent: Whether to boost recent documents
             temperature: LLM temperature (0.0-1.0)
+            response_length: Maximum tokens in response
         
         Returns:
             Dict with answer, sources, and metadata
@@ -91,7 +93,8 @@ class RAGService:
                 context=context_text,
                 conversation_history=context,
                 temperature=temperature,
-                retrieved_documents=documents  # Pass docs for complexity analysis
+                retrieved_documents=documents,  # Pass docs for complexity analysis
+                max_tokens=response_length
             )
             
             # Step 4: Extract and format sources
@@ -326,7 +329,8 @@ class RAGService:
         context: str,
         conversation_history: Optional[List[Dict[str, Any]]] = None,
         temperature: float = 0.7,
-        retrieved_documents: Optional[List[Dict[str, Any]]] = None
+        retrieved_documents: Optional[List[Dict[str, Any]]] = None,
+        max_tokens: int = 1000
     ) -> str:
         """
         Generate answer using LLM.
@@ -337,6 +341,7 @@ class RAGService:
             conversation_history: Previous Q&A pairs
             temperature: LLM temperature
             retrieved_documents: Retrieved documents for complexity analysis
+            max_tokens: Maximum tokens in response
         
         Returns:
             Generated answer
@@ -360,7 +365,7 @@ class RAGService:
             prompt=prompt,
             workload_type='rag',  # Hint: this is a RAG query
             temperature=temperature,
-            max_tokens=1000,
+            max_tokens=max_tokens,  # Use parameter instead of hardcoded value
             context=history_text,  # Conversation context for complexity analysis
             context_docs=retrieved_documents  # Retrieved documents for complexity analysis
         )

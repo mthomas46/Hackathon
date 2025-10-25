@@ -74,6 +74,12 @@ class EnhancedQueryRequest(BaseModel):
         le=1.0,
         description="LLM temperature"
     )
+    response_length: int = Field(
+        default=1000,
+        ge=100,
+        le=4000,
+        description="Max tokens in response (affects answer length)"
+    )
     max_retries: int = Field(
         default=2,
         ge=0,
@@ -166,7 +172,8 @@ async def _process_rag_query(request: EnhancedQueryRequest) -> EnhancedQueryResp
     result = await rag_service.ask(
         question=request.question,
         n_results=request.n_results,
-        temperature=request.temperature
+        temperature=request.temperature,
+        response_length=request.response_length
     )
     
     # Handle None result (RAG service error)
