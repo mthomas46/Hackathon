@@ -204,40 +204,9 @@ class TemporalRAGService:
                 limit=limit
             )
                 
-                # Filter results to only documents in this period
-                filtered_results = [
-                    r for r in rag_results["results"]
-                    if r.get("document_id") in document_ids
-                ][:limit]
-                
-                return {
-                    "query": query,
-                    "as_of_date": as_of_date.isoformat(),
-                    "temporal_context": {
-                        "timeline_id": str(timeline["id"]),
-                        "timeline_name": timeline["name"],
-                        "period_id": str(period["id"]),
-                        "period_name": period["name"],
-                        "period_range": {
-                            "start": period["start_date"].isoformat(),
-                            "end": period["end_date"].isoformat()
-                        },
-                        "confidence_level": timeline.get("confidence_level"),
-                        "documents_in_period": len(document_ids)
-                    },
-                    "results": filtered_results,
-                    "total": len(filtered_results),
-                    "metadata": {
-                        "service": service_name,
-                        "confidence": confidence_check,
-                        "query_type": "temporal_as_of"
-                    }
-                }
-                
         except Exception as e:
-            self.logger.error(f"Failed to execute time-travel query: {e}", exc_info=True)
-            # Fallback to standard RAG
-            return await self._fallback_to_standard_rag(query, service_name, limit)
+            self.logger.error(f"Failed to perform query_as_of: {e}", exc_info=True)
+            raise
     
     async def query_what_changed(
         self,
