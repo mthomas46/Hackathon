@@ -1643,28 +1643,28 @@ class JobProcessor:
                                 logger.info(f"✅ [PHASE2-FALLBACK1] Parsed mtime: {git_date_value}")
                             except Exception as e:
                                 logger.warning(f"❌ [PHASE2-FALLBACK1] Failed to parse file_mtime: {e}")
-        
-        # 🔧 FIX #5c: FINAL fallback - use file mtime even if git_metadata is None
-        if not git_date_value and job.mode == "enriched":
-            logger.info(f"🔍 [PHASE2-FALLBACK2] git_date still None, trying filesystem mtime")
-            try:
-                full_path = os.path.join(job.repo_path, file_path)
-                logger.info(f"🔍 [PHASE2-FALLBACK2] Full path: {full_path}")
-                if os.path.exists(full_path):
-                    mtime = os.path.getmtime(full_path)
-                    git_date_value = datetime.fromtimestamp(mtime)
-                    logger.info(f"✅ [PHASE2-FALLBACK2] Using file mtime: {git_date_value}")
-                else:
-                    logger.warning(f"⚠️  [PHASE2-FALLBACK2] File does not exist: {full_path}")
-            except Exception as e:
-                logger.error(f"❌ [PHASE2-FALLBACK2] Failed to get file mtime: {e}")
-        
-        logger.info(f"🔍 [PHASE2-FINAL] Final values:")
-        logger.info(f"   git_date_value: {git_date_value}")
-        logger.info(f"   git_author_value: {git_author_value}")
-        logger.info(f"   git_commit_sha: {git_commit_sha}")
-        
-        document = DocumentModel(
+                    
+                    # 🔧 FIX #5c: FINAL fallback - use file mtime even if git_metadata is None
+                    if not git_date_value and job.mode == "enriched":
+                        logger.info(f"🔍 [PHASE2-FALLBACK2] git_date still None, trying filesystem mtime")
+                        try:
+                            full_path = os.path.join(job.repo_path, file_path)
+                            logger.info(f"🔍 [PHASE2-FALLBACK2] Full path: {full_path}")
+                            if os.path.exists(full_path):
+                                mtime = os.path.getmtime(full_path)
+                                git_date_value = datetime.fromtimestamp(mtime)
+                                logger.info(f"✅ [PHASE2-FALLBACK2] Using file mtime: {git_date_value}")
+                            else:
+                                logger.warning(f"⚠️  [PHASE2-FALLBACK2] File does not exist: {full_path}")
+                        except Exception as e:
+                            logger.error(f"❌ [PHASE2-FALLBACK2] Failed to get file mtime: {e}")
+                    
+                    logger.info(f"🔍 [PHASE2-FINAL] Final values:")
+                    logger.info(f"   git_date_value: {git_date_value}")
+                    logger.info(f"   git_author_value: {git_author_value}")
+                    logger.info(f"   git_commit_sha: {git_commit_sha}")
+                    
+                    document = DocumentModel(
                         service_name=service_name,  # ✅ FIX #4: Use actual service_name, not mode
                         file_path=file_path,
                         original_format=file_extension,
