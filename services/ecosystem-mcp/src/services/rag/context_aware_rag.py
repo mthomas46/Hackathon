@@ -284,7 +284,7 @@ class ContextAwareRAG:
             vector_score = 1.0 - min(distance, 1.0)  # Convert to 0-1, higher is better
             
             # Keyword matching score
-            content = result.get("content", "").lower()
+            content = (result.get("content") or "").lower()
             matches = sum(1 for word in query_words if word in content)
             keyword_score = min(matches / len(query_words), 1.0) if query_words else 0.0
             

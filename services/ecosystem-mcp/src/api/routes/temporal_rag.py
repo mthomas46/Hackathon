@@ -63,13 +63,13 @@ class EvolutionQueryRequest(BaseModel):
         min_length=3,
         max_length=500
     )
-    timeline_id: str = Field(
-        ...,
-        description="Timeline ID to analyze"
+    timeline_id: Optional[str] = Field(
+        None,
+        description="Timeline ID to analyze (optional if service_name provided)"
     )
     service_name: Optional[str] = Field(
         None,
-        description="Optional service filter"
+        description="Service name to find timeline for (used if timeline_id not provided)"
     )
     limit_per_period: int = Field(
         default=3,
@@ -225,9 +225,27 @@ async def track_evolution(request: EvolutionQueryRequest):
         
         context_rag = get_context_aware_rag()
         
+        # Convert timeline_id to UUID if provided
+        timeline_uuid = None
+        if request.timeline_id:
+            try:
+                timeline_uuid = UUID(request.timeline_id)
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid timeline_id format: {request.timeline_id}"
+                )
+        
+        # Require at least one identifier
+        if not timeline_uuid and not request.service_name:
+            raise HTTPException(
+                status_code=400,
+                detail="Either timeline_id or service_name must be provided"
+            )
+        
         result = await context_rag.query_evolution(
             topic=request.topic,
-            timeline_id=request.timeline_id,
+            timeline_id=timeline_uuid,
             service_name=request.service_name,
             limit_per_period=request.limit_per_period
         )
