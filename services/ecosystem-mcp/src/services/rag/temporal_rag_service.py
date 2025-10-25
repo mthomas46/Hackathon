@@ -340,11 +340,19 @@ class TemporalRAGService:
                     if not timeline_model:
                         # ✅ Create timeline if it doesn't exist
                         self.logger.info(f"📝 Creating timeline for service: {service_name}")
+                        now = datetime.utcnow()
                         timeline_model = TimelineModel(
                             name=f"{service_name} Timeline",  # ✅ REQUIRED FIELD
                             service_name=service_name,
+                            repo_path=f"/repo/services/{service_name}",  # ✅ REQUIRED FIELD
                             description=f"Auto-generated timeline for {service_name}",
-                            created_at=datetime.utcnow()
+                            start_date=datetime(2020, 1, 1),  # ✅ REQUIRED: Default start
+                            end_date=now,  # ✅ REQUIRED: Current time as end
+                            confidence_level="MEDIUM",  # ✅ REQUIRED: Confidence level
+                            confidence_metadata={},  # ✅ REQUIRED: Empty metadata
+                            period_strategy="adaptive",  # Already set by default
+                            created_at=now,
+                            updated_at=now
                         )
                         session.add(timeline_model)
                         await session.flush()
