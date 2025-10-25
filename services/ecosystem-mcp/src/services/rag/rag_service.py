@@ -393,16 +393,35 @@ class RAGService:
             Formatted prompt
         """
         # Determine verbosity instruction based on max_tokens
+        # NOTE: These instructions OVERRIDE any brevity implied by the user's question (e.g., "list")
         if max_tokens <= 200:
             length_instruction = "Be VERY BRIEF and concise, limiting your answer to key points only (1-2 short paragraphs)."
         elif max_tokens <= 500:
-            length_instruction = "Be concise but cover the main points (2-3 paragraphs)."
+            length_instruction = "Be concise but cover the main points (2-3 paragraphs). Even if asked to 'list', provide brief descriptions for each item."
         elif max_tokens <= 1000:
-            length_instruction = "Provide a balanced answer with moderate detail (3-5 paragraphs)."
+            length_instruction = "Provide a balanced answer with moderate detail (3-5 paragraphs). If listing items, include explanations and context for each."
         elif max_tokens <= 2000:
-            length_instruction = "Provide a DETAILED and comprehensive answer with thorough explanations, examples, and context (5-10 paragraphs)."
+            length_instruction = """Provide a DETAILED and comprehensive answer (TARGET: 5-10 paragraphs minimum).
+            
+            IMPORTANT: Even if the question says "list", you MUST provide:
+            - Detailed descriptions for each item (2-4 sentences minimum per item)
+            - Examples and use cases
+            - Technical details and context
+            - Related information and relationships
+            
+            Think of this as writing a comprehensive guide, not a quick reference."""
         else:
-            length_instruction = "Provide an EXTREMELY DETAILED and exhaustive answer. Include comprehensive explanations, multiple examples, technical details, edge cases, and thorough coverage of all aspects (10+ paragraphs)."
+            length_instruction = """Provide an EXTREMELY DETAILED and exhaustive answer (TARGET: 10+ paragraphs minimum).
+            
+            CRITICAL: Regardless of question phrasing, provide:
+            - Comprehensive explanations for every concept
+            - Multiple examples and real-world scenarios
+            - Technical specifications and implementation details
+            - Edge cases and best practices
+            - Relationships and dependencies
+            - Historical context where relevant
+            
+            This should be a thorough, authoritative document."""
         
         prompt = f"""You are an intelligent assistant for the Ecosystem-MCP microservices documentation system.
 
