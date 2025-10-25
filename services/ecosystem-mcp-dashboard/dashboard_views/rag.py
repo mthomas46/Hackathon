@@ -178,7 +178,8 @@ def show(api_base_url: str):
                     else:
                         st.caption(f"✅ {tier.title()} tier available")
             
-            # Settings
+            # Settings (4 columns - including Response Length)
+            st.markdown("##### ⚙️ Settings")
             settings_col1, settings_col2, settings_col3, settings_col4 = st.columns(4)
             
             with settings_col1:
