@@ -46,6 +46,12 @@ class DocumentModel(Base):
     # Now nullable for snapshot mode
     git_commit_sha = Column(String(40), ForeignKey("git_commits.sha"), nullable=True, index=True)
     
+    # Temporal metadata columns (Phase 1: Temporal RAG)
+    git_date = Column(DateTime, nullable=True)
+    git_author = Column(String(255), nullable=True)
+    git_author_email = Column(String(255), nullable=True)
+    git_commit_message = Column(Text, nullable=True)
+    
     is_latest = Column(Boolean, nullable=False, default=True, index=True)
     embedding_id = Column(UUID(as_uuid=True), ForeignKey("embeddings.id"))
     doc_metadata = Column(JSONB, nullable=False, default=dict)

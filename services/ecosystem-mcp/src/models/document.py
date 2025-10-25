@@ -137,6 +137,28 @@ class Document(BaseModel):
         max_length=40
     )
     
+    git_date: Optional[datetime] = Field(
+        default=None,
+        description="Timestamp of the git commit (for temporal queries)"
+    )
+    
+    git_author: Optional[str] = Field(
+        default=None,
+        description="Author of the git commit",
+        max_length=255
+    )
+    
+    git_author_email: Optional[str] = Field(
+        default=None,
+        description="Email of the git commit author",
+        max_length=255
+    )
+    
+    git_commit_message: Optional[str] = Field(
+        default=None,
+        description="Git commit message"
+    )
+    
     is_latest: bool = Field(
         default=True,
         description="Whether this is the latest version"

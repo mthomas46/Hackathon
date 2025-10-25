@@ -1520,6 +1520,31 @@ class JobProcessor:
                                 git_commit_sha = None
                                 logger.warning(f"⚠️  [COMMIT-3] Proceeding without git commit reference for {file_path}")
                     
+                    # ✅ PHASE 2: Extract temporal metadata for database storage
+                    git_date_value = None
+                    git_author_value = None
+                    git_author_email_value = None
+                    git_commit_message_value = None
+                    
+                    if git_metadata:
+                        # Try git metadata first
+                        if git_metadata.get("last_commit_date"):
+                            try:
+                                git_date_value = datetime.fromisoformat(git_metadata["last_commit_date"])
+                            except Exception as e:
+                                logger.warning(f"Failed to parse git_date: {e}")
+                        
+                        git_author_value = git_metadata.get("last_commit_author")
+                        git_author_email_value = git_metadata.get("last_commit_author_email")
+                        git_commit_message_value = git_metadata.get("last_commit_message")
+                        
+                        # Fallback to file mtime if git date not available
+                        if not git_date_value and git_metadata.get("file_mtime"):
+                            try:
+                                git_date_value = datetime.fromisoformat(git_metadata["file_mtime"])
+                            except Exception as e:
+                                logger.warning(f"Failed to parse file_mtime: {e}")
+                    
                     document = DocumentModel(
                         service_name=job.mode,  # "snapshot" or "enriched"
                         file_path=file_path,
@@ -1531,6 +1556,10 @@ class JobProcessor:
                         version=1,
                         is_latest=True,
                         git_commit_sha=git_commit_sha,  # ✨ Last commit SHA
+                        git_date=git_date_value,  # ✅ PHASE 2: Temporal metadata
+                        git_author=git_author_value,  # ✅ PHASE 2
+                        git_author_email=git_author_email_value,  # ✅ PHASE 2
+                        git_commit_message=git_commit_message_value,  # ✅ PHASE 2
                         doc_metadata=doc_metadata
                     )
                     document = await doc_repo.create(document)

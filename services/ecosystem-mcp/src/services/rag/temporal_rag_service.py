@@ -54,6 +54,103 @@ class TemporalRAGService:
         self.logger = logging.getLogger(__name__)
         self.logger.info("TemporalRAGService initialized")
     
+    async def _query_with_temporal_filter(
+        self,
+        query: str,
+        as_of_date: datetime,
+        service_name: Optional[str] = None,
+        limit: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Query documents using temporal filtering in ChromaDB.
+        
+        ✅ PHASE 4: Uses git_date metadata to filter documents that existed at as_of_date.
+        
+        Args:
+            query: Question to answer
+            as_of_date: Point in time to query
+            service_name: Optional service filter
+            limit: Maximum results
+        
+        Returns:
+            Query results with temporal context
+        """
+        try:
+            from ...storage.chromadb_client import get_chroma_client
+            
+            chroma = get_chroma_client()
+            
+            # Build where clause for temporal filtering
+            where_clause = {
+                "git_date": {"$lte": as_of_date.isoformat()}
+            }
+            
+            if service_name:
+                where_clause["service_name"] = service_name
+            
+            self.logger.info(
+                f"🔍 Temporal query with filter: git_date <= {as_of_date.date()}"
+            )
+            
+            # Query ChromaDB with temporal filter
+            results = await chroma.query(
+                query_texts=[query],
+                n_results=limit,
+                where=where_clause
+            )
+            
+            if not results or not results.get("documents"):
+                return {
+                    "query": query,
+                    "as_of_date": as_of_date.isoformat(),
+                    "answer": "No documents found for the specified time period.",
+                    "documents": [],
+                    "metadata": {
+                        "temporal_filter_applied": True,
+                        "filter": where_clause,
+                        "documents_found": 0,
+                        "query_type": "temporal_rag"
+                    }
+                }
+            
+            # Format results
+            documents = results["documents"][0] if results["documents"] else []
+            metadatas = results["metadatas"][0] if results["metadatas"] else []
+            distances = results["distances"][0] if results["distances"] else []
+            
+            formatted_docs = []
+            for doc, meta, dist in zip(documents, metadatas, distances):
+                formatted_docs.append({
+                    "content": doc,
+                    "metadata": meta,
+                    "distance": dist,
+                    "relevance_score": 1.0 - dist  # Convert distance to score
+                })
+            
+            # Generate answer using context_rag
+            answer = await self.context_rag.generate_answer(
+                query=query,
+                documents=formatted_docs,
+                context=f"Information as of {as_of_date.date()}"
+            )
+            
+            return {
+                "query": query,
+                "as_of_date": as_of_date.isoformat(),
+                "answer": answer,
+                "documents": formatted_docs,
+                "metadata": {
+                    "temporal_filter_applied": True,
+                    "filter": where_clause,
+                    "documents_found": len(formatted_docs),
+                    "query_type": "temporal_rag"
+                }
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Temporal filtering failed: {e}", exc_info=True)
+            raise
+    
     async def query_as_of(
         self,
         query: str,
@@ -81,29 +178,13 @@ class TemporalRAGService:
         try:
             self.logger.info(f"⏰ Time-travel query as of {as_of_date.date()}: {query[:100]}")
             
-            async with get_database().session() as session:
-                # Get timeline for the service
-                timeline = await self._get_or_find_timeline(
-                    session, timeline_id, service_name, as_of_date
-                )
-                
-                if not timeline:
-                    return await self._fallback_to_standard_rag(query, service_name, limit)
-                
-                # Check confidence
-                confidence_check = await self._check_temporal_confidence(
-                    session, timeline["id"]
-                )
-                
-                if not confidence_check["can_use_temporal"]:
-                    self.logger.warning(
-                        f"⚠️ Low confidence for temporal query, using fallback: "
-                        f"{confidence_check['reason']}"
-                    )
-                    return await self._fallback_to_standard_rag(
-                        query, service_name, limit,
-                        confidence_warning=confidence_check["reason"]
-                    )
+            # ✅ PHASE 4: Use temporal filtering instead of falling back
+            return await self._query_with_temporal_filter(
+                query=query,
+                as_of_date=as_of_date,
+                service_name=service_name,
+                limit=limit
+            )
                 
                 # Find period containing the as_of_date
                 period = await self._find_period_for_date(

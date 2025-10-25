@@ -147,6 +147,57 @@ class TimelineManager:
                 f"(confidence={actual_confidence})"
             )
             
+            # ✅ PHASE 3: Auto-generate periods
+            from .period_generator import PeriodGenerator
+            from .document_placer import DocumentPlacer
+            from ...storage.db_models import TimePeriodModel
+            
+            self.logger.info(f"🔄 Generating periods for timeline {created.id}...")
+            
+            period_generator = PeriodGenerator(self.db)
+            periods = await period_generator.generate_periods(
+                timeline_id=str(created.id),
+                service_name=timeline_create.service_name,
+                start_date=timeline_create.start_date,
+                end_date=timeline_create.end_date,
+                strategy=timeline_create.period_strategy,
+                repo_path=timeline_create.repo_path
+            )
+            
+            # Create period records
+            for period_create in periods:
+                period_model = TimePeriodModel(
+                    timeline_id=created.id,
+                    name=period_create.name,
+                    description=period_create.description,
+                    start_date=period_create.start_date,
+                    end_date=period_create.end_date,
+                    sequence_number=period_create.sequence_number,
+                    document_count=0,  # Will be updated by placement
+                    commit_count=0,
+                    period_metadata=period_create.metadata.model_dump(mode='json')
+                )
+                await self.period_repo.create(period_model)
+            
+            await self.db.commit()
+            
+            self.logger.info(f"✅ Generated {len(periods)} periods for timeline {created.id}")
+            
+            # ✅ PHASE 3: Auto-place documents
+            self.logger.info(f"🔄 Placing documents for timeline {created.id}...")
+            
+            document_placer = DocumentPlacer(self.db)
+            placement_stats = await document_placer.place_documents(
+                timeline_id=created.id,
+                service_name=timeline_create.service_name,
+                repo_path=timeline_create.repo_path
+            )
+            
+            self.logger.info(
+                f"✅ Placed {placement_stats['placed_documents']} documents "
+                f"across {placement_stats['periods_updated']} periods"
+            )
+            
             # Convert to Pydantic model
             return self._model_to_pydantic(created)
             
