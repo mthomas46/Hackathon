@@ -77,6 +77,7 @@ class TemporalRAGService:
         """
         try:
             from ...storage.chromadb_client import get_chroma_client
+            from ...services.embeddings.embedding_service import EmbeddingService
             
             chroma = get_chroma_client()
             
@@ -92,9 +93,22 @@ class TemporalRAGService:
                 f"🔍 Temporal query with filter: git_date <= {as_of_date.date()}"
             )
             
+            # ✅ FIX #1: Generate query embedding first (ChromaDB needs vectors, not text)
+            embedding_service = EmbeddingService()
+            try:
+                embedding_result = await embedding_service.generate_embedding(query)
+                query_embedding = embedding_result.get("embedding") if isinstance(embedding_result, dict) else embedding_result
+                
+                if not query_embedding:
+                    raise ValueError("Failed to generate query embedding")
+                    
+            except Exception as embed_error:
+                self.logger.error(f"Failed to generate query embedding: {embed_error}")
+                raise
+            
             # Query ChromaDB with temporal filter
             results = await chroma.query(
-                query_texts=[query],
+                query_embeddings=[query_embedding],
                 n_results=limit,
                 where=where_clause
             )
@@ -128,11 +142,15 @@ class TemporalRAGService:
                 })
             
             # Generate answer using context_rag
-            answer = await self.context_rag.generate_answer(
-                query=query,
-                documents=formatted_docs,
-                context=f"Information as of {as_of_date.date()}"
-            )
+            try:
+                answer = await self.context_rag.generate_answer(
+                    query=query,
+                    documents=formatted_docs,
+                    context=f"Information as of {as_of_date.date()}"
+                )
+            except Exception as answer_error:
+                self.logger.error(f"Failed to generate answer: {answer_error}")
+                answer = f"Found {len(formatted_docs)} documents but failed to generate answer: {str(answer_error)}"
             
             return {
                 "query": query,

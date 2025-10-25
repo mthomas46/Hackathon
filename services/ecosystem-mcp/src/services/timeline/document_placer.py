@@ -324,7 +324,20 @@ class DocumentPlacer:
         Returns:
             Dict with date, source, and optional git_commit_sha
         """
-        # Check for git_history or enriched mode with commit
+        # ✅ FIX #2: Priority 1 - Use document.git_date directly if available
+        if document.git_date:
+            return {
+                "date": document.git_date,
+                "source": PlacementSource.GIT_COMMIT,
+                "git_commit_sha": document.git_commit_sha,
+                "metadata": {
+                    "commit_message": document.git_commit_message,
+                    "author": document.git_author,
+                    "source": "git_date_column"
+                }
+            }
+        
+        # Priority 2 - Fallback to git_commits table lookup
         if (
             document.ingestion_mode in ['git_history', 'enriched'] and
             document.git_commit_sha
@@ -344,11 +357,12 @@ class DocumentPlacer:
                     "git_commit_sha": commit.sha,
                     "metadata": {
                         "commit_message": commit.message,
-                        "author": commit.author
+                        "author": commit.author,
+                        "source": "git_commits_table"
                     }
                 }
         
-        # Fallback to created_at (snapshot mode or no commit)
+        # Priority 3 - Fallback to created_at (snapshot mode or no commit)
         if document.created_at:
             return {
                 "date": document.created_at,
