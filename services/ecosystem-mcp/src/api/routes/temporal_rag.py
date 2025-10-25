@@ -457,3 +457,77 @@ def _get_recommendations(confidence_level: str) -> List[str]:
             "Use standard RAG queries instead"
         ]
 
+
+# ============================================================================
+# Timeline Query Endpoint (Final 20% for 100% completion)
+# ============================================================================
+
+class TimelineQueryRequest(BaseModel):
+    """Request for timeline query."""
+    service_name: str = Field(
+        ...,
+        description="Service name to get timeline for",
+        min_length=1,
+        max_length=255
+    )
+    limit: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description="Maximum number of periods to return"
+    )
+
+
+@router.post(
+    "/temporal/timeline",
+    summary="Query Timeline",
+    description="""
+    Get timeline information and periods for a service.
+    
+    Returns:
+    - Timeline metadata
+    - Time periods within the timeline
+    - Period statistics
+    
+    Use this to:
+    - Discover available time periods
+    - Understand timeline structure
+    - Plan temporal queries
+    """
+)
+async def query_timeline(request: TimelineQueryRequest):
+    """
+    Query timeline information for a service.
+    
+    This endpoint retrieves timeline metadata and periods,
+    allowing clients to discover what temporal data is available.
+    """
+    try:
+        logger.info(f"📊 Timeline query: {request.service_name}")
+        
+        context_rag = get_context_aware_rag()
+        result = await context_rag.query_timeline(
+            service_name=request.service_name,
+            limit=request.limit
+        )
+        
+        return {
+            "success": True,
+            "service_name": request.service_name,
+            "timeline": result,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except ValueError as e:
+        logger.error(f"Timeline query error: {e}")
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Timeline query failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Timeline query failed: {str(e)}"
+        )
+

@@ -241,9 +241,13 @@ def test_timeline_query():
     print_section("TEST 5: Timeline Query")
     
     try:
-        # First get available timelines
-        response = httpx.get(
-            f"{API_BASE_URL}/api/v1/timeline/list",
+        # Query timeline for ecosystem-mcp service
+        response = httpx.post(
+            f"{API_BASE_URL}/api/v1/rag/temporal/timeline",
+            json={
+                "service_name": "ecosystem-mcp",
+                "limit": 10
+            },
             timeout=30.0
         )
         
