@@ -289,6 +289,108 @@ return enhanced_behavior(config)
 
 ---
 
+### **2025-10-25 - Step 1.3 COMPLETE** ✅
+
+**Time:** 20 minutes  
+**Status:** ✅ SUCCESS  
+**Files Modified:**
+- `src/api/routes/query_enhanced.py` (4 changes)
+- `src/api/routes/admin.py` (1 new endpoint)
+
+**What was implemented:**
+
+1. **Enhanced Query Endpoint:**
+   ```python
+   # Added to EnhancedQueryRequest
+   use_enhancements: bool = Field(
+       default=False,  # Opt-in by default
+       description="Use enhanced RAG with optional config"
+   )
+   
+   # Added service selection logic
+   if request.use_enhancements:
+       rag_service = get_enhanced_rag_service()
+       logger.info("Using EnhancedRAGService")
+   else:
+       rag_service = get_rag_service()
+       logger.info("Using standard RAGService")
+   ```
+
+2. **Cache Invalidation Endpoint:**
+   ```python
+   @router.post("/admin/invalidate-rag-config-cache")
+   async def invalidate_rag_config_cache():
+       """Manually invalidate RAG config cache."""
+       invalidate_config_cache()
+       return {"success": True, "message": "Cache invalidated"}
+   ```
+
+**API Usage:**
+```bash
+# Standard RAG (default)
+curl -X POST http://localhost:8000/api/v1/query/enhanced \
+  -d '{"question": "What is the API?"}'
+
+# Enhanced RAG (opt-in)
+curl -X POST http://localhost:8000/api/v1/query/enhanced \
+  -d '{"question": "What is the API?", "use_enhancements": true}'
+
+# Invalidate cache after config changes
+curl -X POST http://localhost:8000/admin/invalidate-rag-config-cache
+```
+
+**Key Design Decisions:**
+1. **Opt-in by default:** `use_enhancements: bool = False`
+2. **Backward compatible:** Existing API calls work unchanged
+3. **Service selection:** Simple if/else based on flag
+4. **Manual cache invalidation:** Dashboard can trigger immediate reload
+
+**Verification:**
+- ✅ `use_enhancements` field added to request model
+- ✅ Service selection logic implemented
+- ✅ Cache invalidation endpoint created
+- ✅ Defaults to False (opt-in)
+- ✅ Backward compatible (no breaking changes)
+
+**🎉 PHASE 1 COMPLETE!**
+
+---
+
+## 📊 PHASE 1 SUMMARY
+
+**Completed:** All 3 steps in Phase 1 (Foundation)
+**Time:** 2 hours total
+**Production Code:** 970+ lines
+**Files Created:**
+- `config_loader.py` (315 lines)
+- `enhanced_rag_service.py` (622 lines)
+**Files Modified:**
+- `query_enhanced.py` (API integration)
+- `admin.py` (cache invalidation)
+
+**Critical Features Delivered:**
+✅ Config loader with smart caching
+✅ Enhanced RAG service with context-aware exclusions
+✅ Multi-signal ranking (semantic + glossary + quality)
+✅ Token-rich context building
+✅ API integration (opt-in)
+✅ Cache invalidation endpoint
+
+**Critical Fixes Implemented:**
+✅ Temporal RAG filter conflict
+✅ Gap analysis blind spots
+✅ Doc generation missing examples
+✅ Cache staleness
+
+**Testing Status:**
+✅ Config loader: Graceful degradation verified
+✅ Enhanced RAG: Structure verification passed
+✅ API integration: Changes validated
+
+**Next Phase:** Phase 2 - Basic Configs (Example files + Dashboard UI)
+
+---
+
 ## 📦 PHASE 1: FOUNDATION
 
 ---

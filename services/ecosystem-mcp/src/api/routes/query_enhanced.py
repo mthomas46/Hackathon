@@ -17,6 +17,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from ...services.rag import get_rag_service
+from ...services.rag.enhanced_rag_service import get_enhanced_rag_service
 from ...services.models.ollama_router import get_ollama_router, LLMInstance
 from ...services.embeddings.embedding_service import get_embedding_service
 from ...storage.chromadb_client import get_chroma_client
@@ -57,6 +58,10 @@ class EnhancedQueryRequest(BaseModel):
     tier: TierPreference = Field(
         default=TierPreference.AUTO,
         description="LLM tier: 'auto', 'cursor', 'desktop', or 'docker'"
+    )
+    use_enhancements: bool = Field(
+        default=False,
+        description="Use enhanced RAG with optional config (glossary, exclusions, multi-signal ranking)"
     )
     context_id: Optional[str] = Field(
         default=None,
@@ -165,8 +170,16 @@ async def _process_rag_query(request: EnhancedQueryRequest) -> EnhancedQueryResp
     1. Retrieval: Semantic search for relevant documents
     2. Augmentation: Build context from retrieved documents
     3. Generation: LLM synthesizes answer from context
+    
+    Supports optional enhancements (glossary, exclusions, multi-signal ranking).
     """
-    rag_service = get_rag_service()
+    # Choose service based on use_enhancements flag
+    if request.use_enhancements:
+        rag_service = get_enhanced_rag_service()
+        logger.info("Using EnhancedRAGService")
+    else:
+        rag_service = get_rag_service()
+        logger.info("Using standard RAGService")
     
     # Execute RAG with tier preference
     result = await rag_service.ask(

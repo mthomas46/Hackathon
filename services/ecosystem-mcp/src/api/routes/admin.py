@@ -1524,3 +1524,37 @@ async def get_data_stats():
     except Exception as e:
         logger.error(f"Failed to get data stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/invalidate-rag-config-cache",
+    response_model=Dict[str, Any],
+    summary="Invalidate RAG configuration cache",
+    description="Manually invalidate the RAG config cache (forces immediate reload)"
+)
+async def invalidate_rag_config_cache():
+    """
+    Manually invalidate RAG config cache.
+    
+    Call this after updating config through dashboard or editing .rag-config/ files.
+    The config will be reloaded immediately on the next RAG query.
+    
+    Returns:
+        Success message
+    """
+    try:
+        from ...services.rag.config_loader import invalidate_config_cache
+        
+        invalidate_config_cache()
+        
+        logger.info("✅ RAG config cache invalidated")
+        
+        return {
+            "success": True,
+            "message": "RAG config cache invalidated successfully",
+            "note": "Config will be reloaded on next RAG query"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to invalidate RAG config cache: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
