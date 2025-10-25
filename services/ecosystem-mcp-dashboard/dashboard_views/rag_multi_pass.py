@@ -193,8 +193,7 @@ def show(api_base_url: str):
                         "n_results": n_results,
                         "temperature": temperature,
                         "max_retries": 2,
-                        "max_tokens": max_tokens,
-                        "response_length": response_length
+                        "response_length": max_tokens  # Send as integer (converted from S/M/L/XL)
                     },
                     timeout=900.0
                 )

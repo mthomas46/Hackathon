@@ -74,7 +74,7 @@ class EnhancedQueryRequest(BaseModel):
         le=1.0,
         description="LLM temperature"
     )
-    response_length: int = Field(
+    response_length: Optional[int] = Field(
         default=1000,
         ge=100,
         le=4000,
