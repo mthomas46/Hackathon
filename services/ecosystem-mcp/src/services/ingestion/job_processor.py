@@ -532,6 +532,70 @@ class JobProcessor:
         
         return result
     
+    async def _ensure_git_commit_exists(
+        self,
+        git_commit_sha: str,
+        git_metadata: Dict[str, Any],
+        repo_path: str
+    ) -> Optional[str]:
+        """
+        Ensure git commit exists in database using SEPARATE transaction.
+        
+        This is critical to avoid foreign key violations when documents reference commits.
+        Creates commit in its own isolated transaction before document insert.
+        
+        Args:
+            git_commit_sha: The commit SHA to ensure exists
+            git_metadata: Metadata about the commit
+            repo_path: Repository path
+        
+        Returns:
+            The commit SHA if successful, None if failed
+        """
+        logger.debug(f"🔍 [COMMIT-CREATE-1] Starting separate transaction for commit: {git_commit_sha[:8]}")
+        
+        try:
+            from ...storage.db_models import GitCommitModel
+            from sqlalchemy import select
+            
+            # Create commit in its OWN session/transaction
+            db = get_database()
+            async with db.session() as commit_session:
+                logger.debug(f"🔍 [COMMIT-CREATE-2] Checking if commit exists...")
+                
+                # Check if commit already exists
+                result = await commit_session.execute(
+                    select(GitCommitModel).where(GitCommitModel.sha == git_commit_sha)
+                )
+                existing_commit = result.scalar_one_or_none()
+                
+                if existing_commit:
+                    logger.debug(f"♻️  [COMMIT-CREATE-3-EXISTS] Commit already exists: {git_commit_sha[:8]}")
+                    return git_commit_sha
+                
+                # Create new commit
+                logger.info(f"📝 [COMMIT-CREATE-3-NEW] Creating git commit: {git_commit_sha[:8]}")
+                
+                git_commit = GitCommitModel(
+                    sha=git_commit_sha,
+                    author=git_metadata.get("last_commit_author", "Unknown"),
+                    author_email=git_metadata.get("last_commit_author_email", ""),
+                    commit_date=datetime.fromisoformat(git_metadata["last_commit_date"]) if git_metadata.get("last_commit_date") else datetime.now(),
+                    message=git_metadata.get("last_commit_message", ""),
+                    repo_path=str(repo_path)
+                )
+                
+                commit_session.add(git_commit)
+                logger.debug(f"🔍 [COMMIT-CREATE-4] Committing transaction...")
+                await commit_session.commit()  # ✅ SEPARATE COMMIT!
+                logger.info(f"✅ [COMMIT-CREATE-5] Git commit committed successfully: {git_commit_sha[:8]}")
+                
+                return git_commit_sha
+                
+        except Exception as e:
+            logger.error(f"❌ [COMMIT-CREATE-ERROR] Failed to create commit {git_commit_sha[:8]}: {e}", exc_info=True)
+            return None
+    
     async def process(self, job: IngestionJobModel) -> Dict[str, Any]:
         """
         Process a single ingestion job.
@@ -1243,45 +1307,77 @@ class JobProcessor:
                 "reason": "binary_content_detected"
             }
         
-        # ✨ NEW: Fetch git metadata if in enriched mode (with filesystem fallback)
+        # ✨ ENRICHED MODE: Fetch metadata with fail-fast protections
         git_metadata = None
         git_commit_sha = None
         
         if job.mode == "enriched":
+            logger.info(f"🔍 [ENRICH-1] Starting enriched metadata extraction for: {file_path}")
+            import time
+            enrich_start = time.time()
+            
             try:
+                logger.debug(f"🔍 [ENRICH-2] Checking GitService initialization...")
                 # 🎯 FIX: Lazy-initialize GitService for enriched mode
                 if not self.git_service:
+                    logger.info(f"🔍 [ENRICH-3] Initializing GitService...")
                     from ..git.git_service import find_git_root
-                    # Find git root from potentially subdirectory path
+                    init_start = time.time()
                     git_root = find_git_root(job.repo_path)
-                    logger.info(f"✨ Initializing GitService for enriched mode: git_root={git_root}, target_path={job.repo_path}")
+                    logger.info(f"✅ [ENRICH-4] Found git root: {git_root} (took {time.time()-init_start:.2f}s)")
+                    
                     self.git_service = GitService(repo_path=git_root)
+                    logger.info(f"✅ [ENRICH-5] GitService initialized")
+                else:
+                    logger.debug(f"♻️  [ENRICH-3-SKIP] GitService already initialized")
                 
-                # Get last commit for this file (max_commits=1)
-                file_history = await self.git_service.get_file_history(file_path, max_commits=1)
-                if file_history:
-                    last_commit = file_history[0]
-                    git_metadata = {
-                        "last_commit_sha": last_commit.sha,
-                        "last_commit_author": last_commit.author,
-                        "last_commit_date": last_commit.date.isoformat() if last_commit.date else None,
-                        "last_commit_message": last_commit.message,
-                        "enriched_mode": True,
-                        "metadata_source": "git"
-                    }
-                    git_commit_sha = last_commit.sha
-                    logger.debug(f"✨ Git metadata fetched for {file_path}: {last_commit.sha[:8]} by {last_commit.author}")
+                # ⏱️ FAIL-FAST: Timeout git operations after 5 seconds
+                logger.debug(f"🔍 [ENRICH-6] Fetching git history for file...")
+                git_start = time.time()
+                
+                try:
+                    file_history = await asyncio.wait_for(
+                        self.git_service.get_file_history(file_path, max_commits=1),
+                        timeout=5.0  # 5 second timeout
+                    )
+                    git_duration = time.time() - git_start
+                    logger.debug(f"⏱️  [ENRICH-7] Git history fetch took {git_duration:.2f}s")
+                    
+                    if file_history:
+                        last_commit = file_history[0]
+                        git_metadata = {
+                            "last_commit_sha": last_commit.sha,
+                            "last_commit_author": last_commit.author,
+                            "last_commit_date": last_commit.date.isoformat() if last_commit.date else None,
+                            "last_commit_message": last_commit.message,
+                            "enriched_mode": True,
+                            "metadata_source": "git",
+                            "extraction_time_sec": git_duration
+                        }
+                        git_commit_sha = last_commit.sha
+                        logger.info(f"✅ [ENRICH-8] Git metadata extracted: {last_commit.sha[:8]} by {last_commit.author} ({git_duration:.2f}s)")
+                    else:
+                        logger.warning(f"⚠️  [ENRICH-8-EMPTY] No git history for {file_path}")
+                        
+                except asyncio.TimeoutError:
+                    logger.error(f"⏱️  [ENRICH-7-TIMEOUT] Git history fetch timed out after 5s for {file_path}")
+                    raise  # Re-raise to trigger fallback
+                    
             except Exception as e:
-                logger.warning(f"⚠️ Failed to fetch git metadata for {file_path}: {e}")
-                # Fallback to filesystem metadata
-                logger.info(f"📁 Using filesystem metadata as fallback for {file_path}")
+                logger.warning(f"⚠️  [ENRICH-9-ERROR] Failed to fetch git metadata: {e}")
+                logger.info(f"📁 [ENRICH-10] Falling back to filesystem metadata...")
             
             # 🆕 FALLBACK: Use filesystem metadata when git info unavailable
             if not git_metadata:
+                logger.debug(f"🔍 [ENRICH-11] Starting filesystem metadata fallback...")
                 try:
+                    fs_start = time.time()
                     full_path = Path(job.repo_path) / file_path
+                    
                     if full_path.exists():
+                        logger.debug(f"🔍 [ENRICH-12] Getting file stats...")
                         stat = os.stat(full_path)
+                        fs_duration = time.time() - fs_start
                         
                         git_metadata = {
                             "file_mtime": datetime.fromtimestamp(stat.st_mtime).isoformat(),
@@ -1289,12 +1385,19 @@ class JobProcessor:
                             "file_size": stat.st_size,
                             "enriched_mode": True,
                             "metadata_source": "filesystem",
-                            "fallback_reason": "git_unavailable"
+                            "fallback_reason": "git_unavailable",
+                            "extraction_time_sec": fs_duration
                         }
-                        logger.debug(f"📁 Filesystem metadata: mtime={datetime.fromtimestamp(stat.st_mtime)}, size={stat.st_size}")
+                        logger.info(f"✅ [ENRICH-13] Filesystem metadata extracted: mtime={datetime.fromtimestamp(stat.st_mtime)}, size={stat.st_size} ({fs_duration:.3f}s)")
+                    else:
+                        logger.error(f"❌ [ENRICH-12-NOTFOUND] File does not exist: {full_path}")
+                        
                 except Exception as fs_error:
-                    logger.warning(f"⚠️ Failed to get filesystem metadata: {fs_error}")
+                    logger.error(f"❌ [ENRICH-14-ERROR] Filesystem metadata failed: {fs_error}")
                     # Continue without any metadata
+            
+            enrich_total = time.time() - enrich_start
+            logger.info(f"✅ [ENRICH-COMPLETE] Metadata extraction finished in {enrich_total:.2f}s (source: {git_metadata.get('metadata_source', 'none') if git_metadata else 'none'})")
         
         try:
             # Generate content hash for deduplication
@@ -1386,42 +1489,35 @@ class JobProcessor:
                         # Extract commit SHA (might be None if using filesystem metadata)
                         git_commit_sha = git_metadata.get("last_commit_sha")
                         
-                        # 🔧 CRITICAL FIX: Ensure git commit exists in database BEFORE referencing it
+                        # 🔧 CRITICAL FIX: Create git commit in SEPARATE transaction
                         if git_commit_sha:
+                            logger.info(f"🔍 [COMMIT-1] Ensuring git commit exists: {git_commit_sha[:8]}")
+                            commit_start = time.time()
+                            
                             try:
-                                from ...storage.db_models import GitCommitModel
-                                from sqlalchemy import select
-                                
-                                # Check if commit already exists
-                                result = await session.execute(
-                                    select(GitCommitModel).where(GitCommitModel.sha == git_commit_sha)
+                                # ⏱️ FAIL-FAST: Timeout commit creation after 3 seconds
+                                git_commit_sha = await asyncio.wait_for(
+                                    self._ensure_git_commit_exists(
+                                        git_commit_sha,
+                                        git_metadata,
+                                        job.repo_path
+                                    ),
+                                    timeout=3.0
                                 )
-                                existing_commit = result.scalar_one_or_none()
+                                commit_duration = time.time() - commit_start
                                 
-                                if not existing_commit:
-                                    # Create the git commit record
-                                    logger.info(f"📝 Creating git commit record: {git_commit_sha[:8]}")
-                                    git_commit = GitCommitModel(
-                                        sha=git_commit_sha,
-                                        author=git_metadata.get("last_commit_author", "Unknown"),
-                                        author_email=git_metadata.get("last_commit_author_email", ""),
-                                        commit_date=datetime.fromisoformat(git_metadata["last_commit_date"]) if git_metadata.get("last_commit_date") else datetime.now(),
-                                        message=git_metadata.get("last_commit_message", ""),
-                                        repo_path=str(job.repo_path)
-                                    )
-                                    session.add(git_commit)
-                                    await session.flush()  # Ensure commit is in DB before document references it
-                                    logger.debug(f"✅ Git commit created: {git_commit_sha[:8]}")
+                                if git_commit_sha:
+                                    logger.info(f"✅ [COMMIT-2] Git commit ready: {git_commit_sha[:8]} ({commit_duration:.2f}s)")
                                 else:
-                                    logger.debug(f"♻️  Git commit already exists: {git_commit_sha[:8]}")
-                            except Exception as commit_error:
-                                logger.error(f"❌ Failed to create git commit {git_commit_sha[:8]}: {commit_error}")
-                                # Clear git_commit_sha to avoid foreign key violation
+                                    logger.warning(f"⚠️  [COMMIT-2-NONE] Git commit creation returned None")
+                                    
+                            except asyncio.TimeoutError:
+                                logger.error(f"⏱️  [COMMIT-2-TIMEOUT] Commit creation timed out after 3s")
                                 git_commit_sha = None
-                                logger.warning(f"⚠️ Proceeding without git commit reference for {file_path}")
-                    # Ensure we have git_commit_sha set if it exists in metadata
-                    if not git_commit_sha and git_metadata:
-                        git_commit_sha = git_metadata.get("last_commit_sha")
+                            except Exception as commit_error:
+                                logger.error(f"❌ [COMMIT-2-ERROR] Failed to create git commit: {commit_error}")
+                                git_commit_sha = None
+                                logger.warning(f"⚠️  [COMMIT-3] Proceeding without git commit reference for {file_path}")
                     
                     document = DocumentModel(
                         service_name=job.mode,  # "snapshot" or "enriched"
