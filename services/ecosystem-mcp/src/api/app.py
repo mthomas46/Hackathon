@@ -187,20 +187,22 @@ async def lifespan(app: FastAPI):
         logger.info("  ✅ Ingestion worker started")
         
         # Detect and handle orphaned jobs on startup
-        logger.info("  🔍 Checking for orphaned jobs...")
-        try:
-            from ..services.ingestion.orphaned_job_detector import detect_orphaned_jobs
-            orphan_result = await detect_orphaned_jobs()
-            if orphan_result["orphaned_found"] > 0:
-                logger.warning(
-                    f"  ⚠️  Orphaned jobs detected: {orphan_result['failed_old']} failed, "
-                    f"{orphan_result['requeued_recent']} re-queued, "
-                    f"{orphan_result['orphaned_found']} total orphaned"
-                )
-            else:
-                logger.info("  ✅ No orphaned jobs detected")
-        except Exception as e:
-            logger.error(f"  ❌ Orphaned job detection failed: {e}", exc_info=True)
+        # 🚨 TEMPORARILY DISABLED to prevent re-queuing actively processing jobs during debugging
+        # TODO: Re-enable with improved logic (check worker heartbeat, progress updates)
+        logger.info("  ⏭️  Orphaned job detection DISABLED (temporary)")
+        # try:
+        #     from ..services.ingestion.orphaned_job_detector import detect_orphaned_jobs
+        #     orphan_result = await detect_orphaned_jobs()
+        #     if orphan_result["orphaned_found"] > 0:
+        #         logger.warning(
+        #             f"  ⚠️  Orphaned jobs detected: {orphan_result['failed_old']} failed, "
+        #             f"{orphan_result['requeued_recent']} re-queued, "
+        #             f"{orphan_result['orphaned_found']} total orphaned"
+        #         )
+        #     else:
+        #         logger.info("  ✅ No orphaned jobs detected")
+        # except Exception as e:
+        #     logger.error(f"  ❌ Orphaned job detection failed: {e}", exc_info=True)
         
         logger.info("\n✅ ALL SERVICES INITIALIZED SUCCESSFULLY")
         

@@ -14,8 +14,39 @@ import git
 
 from ...models.git_commit import GitCommit, GitCommitMetadata, FileChange
 from ...config import settings
+from ...utils.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
+
+
+def find_git_root(path: str) -> str:
+    """
+    Find the git repository root from any path within the repository.
+    
+    This allows GitService to work with subdirectory paths by automatically
+    finding the .git directory up the tree.
+    
+    Args:
+        path: Any path within a git repository (file or directory)
+    
+    Returns:
+        Git repository root path
+    
+    Raises:
+        ValidationError: If path is not within a git repository
+    """
+    current = Path(path).resolve()
+    
+    # Walk up the directory tree looking for .git
+    while current != current.parent:
+        git_dir = current / '.git'
+        if git_dir.exists():
+            logger.debug(f"Found git root: {current} (from path: {path})")
+            return str(current)
+        current = current.parent
+    
+    # Not in a git repository
+    raise ValidationError(f"Path {path} is not within a git repository")
 
 
 class GitService:

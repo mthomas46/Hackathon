@@ -305,8 +305,9 @@ class ProgressTracker:
             channel = f"progress:{update.plan_id}"
             message = update.to_json()
             
-            redis = await self.redis.get_client()
-            await redis.publish(channel, message)
+            # Connect and get client
+            await self.redis.connect()
+            await self.redis.client.publish(channel, message)
             
             logger.debug(f"📢 Published progress update to {channel}")
             
@@ -325,8 +326,10 @@ class ProgressTracker:
         """
         try:
             channel = f"progress:{plan_id}"
-            redis = await self.redis.get_client()
-            pubsub = redis.pubsub()
+            
+            # Connect and get client
+            await self.redis.connect()
+            pubsub = self.redis.client.pubsub()
             
             await pubsub.subscribe(channel)
             logger.info(f"📡 Subscribed to progress updates: {channel}")
@@ -358,11 +361,9 @@ class ProgressTracker:
         if plan_id in self.start_times:
             del self.start_times[plan_id]
         
-        # Remove from Redis
+        # Remove from Redis using RedisClient's delete method
         try:
-            redis = await self.redis.get_client()
-            await redis.delete(f"progress:plan:{plan_id}")
-            await redis.delete(f"progress:subjobs:{plan_id}")
+            await self.redis.delete(f"progress:plan:{plan_id}", f"progress:subjobs:{plan_id}")
         except Exception as e:
             logger.error(f"Failed to remove progress from Redis: {e}")
         
@@ -389,11 +390,9 @@ class ProgressTracker:
     async def _persist_progress(self, plan_id: str) -> None:
         """Persist progress to Redis."""
         try:
-            redis = await self.redis.get_client()
-            
-            # Store plan progress
+            # Store plan progress using RedisClient's set method
             if plan_id in self.plan_progress:
-                await redis.set(
+                await self.redis.set(
                     f"progress:plan:{plan_id}",
                     json.dumps(self.plan_progress[plan_id]),
                     ex=86400  # 24 hour expiry
@@ -401,32 +400,48 @@ class ProgressTracker:
             
             # Store sub-job progress
             if plan_id in self.sub_job_progress:
-                await redis.set(
+                await self.redis.set(
                     f"progress:subjobs:{plan_id}",
                     json.dumps(self.sub_job_progress[plan_id]),
                     ex=86400
                 )
             
+            # Store start time for ETA calculation
+            if plan_id in self.start_times:
+                await self.redis.set(
+                    f"progress:start:{plan_id}",
+                    self.start_times[plan_id].isoformat(),
+                    ex=86400
+                )
+            
+            logger.debug(f"💾 Persisted progress for plan {plan_id} to Redis")
+            
         except Exception as e:
-            logger.error(f"Failed to persist progress to Redis: {e}")
+            logger.error(f"Failed to persist progress to Redis: {e}", exc_info=True)
     
     async def _load_progress(self, plan_id: str) -> None:
         """Load progress from Redis."""
         try:
-            redis = await self.redis.get_client()
-            
-            # Load plan progress
-            plan_data = await redis.get(f"progress:plan:{plan_id}")
+            # Load plan progress using RedisClient's get method
+            plan_data = await self.redis.get(f"progress:plan:{plan_id}")
             if plan_data:
                 self.plan_progress[plan_id] = json.loads(plan_data)
+                logger.debug(f"📥 Loaded plan progress for {plan_id} from Redis")
             
             # Load sub-job progress
-            subjob_data = await redis.get(f"progress:subjobs:{plan_id}")
+            subjob_data = await self.redis.get(f"progress:subjobs:{plan_id}")
             if subjob_data:
                 self.sub_job_progress[plan_id] = json.loads(subjob_data)
+                logger.debug(f"📥 Loaded sub-job progress for {plan_id} from Redis")
+            
+            # Load start time
+            start_time_data = await self.redis.get(f"progress:start:{plan_id}")
+            if start_time_data:
+                self.start_times[plan_id] = datetime.fromisoformat(start_time_data)
+                logger.debug(f"📥 Loaded start time for {plan_id} from Redis")
             
         except Exception as e:
-            logger.error(f"Failed to load progress from Redis: {e}")
+            logger.error(f"Failed to load progress from Redis: {e}", exc_info=True)
 
 
 # Singleton instance

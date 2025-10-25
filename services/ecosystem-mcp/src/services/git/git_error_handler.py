@@ -70,6 +70,76 @@ class GitErrorHandler:
                 }
             )
             
+        elif "sha" in error_msg.lower() and ("could not be resolved" in error_msg.lower() or "is empty" in error_msg.lower()):
+            # SHA resolution failures from GitPython tree traversal
+            category = "sha_resolution"
+            self.error_counts["corruption"] += 1
+            recoverable = False
+            action = "skip_commit"
+            severity = "ERROR"
+            
+            # Extract a clean error message (truncate long binary data)
+            clean_msg = error_msg if len(error_msg) < 200 else error_msg[:200] + "..."
+            
+            logger.error(
+                f"🔴 SHA resolution failure in commit {context.get('commit_sha', 'unknown')[:8]}: {clean_msg}",
+                extra={
+                    "error_type": "sha_resolution",
+                    "commit_sha": context.get('commit_sha'),
+                    "operation": context.get('operation'),
+                }
+            )
+            
+        elif "odd-length string" in error_msg.lower() or "odd length" in error_msg.lower():
+            # Hex decoding failures - malformed SHA or tree entry
+            category = "hex_decode"
+            self.error_counts["corruption"] += 1
+            recoverable = False
+            action = "skip_commit"
+            severity = "ERROR"
+            
+            logger.error(
+                f"🔴 Git hex decode error in commit {context.get('commit_sha', 'unknown')[:8]}: Malformed SHA or tree entry (odd-length hex string)",
+                extra={
+                    "error_type": "hex_decode",
+                    "commit_sha": context.get('commit_sha'),
+                    "operation": context.get('operation'),
+                }
+            )
+            
+        elif "failed to parse header" in error_msg.lower():
+            # Git object header parsing failures
+            category = "parse_header"
+            self.error_counts["corruption"] += 1
+            recoverable = False
+            action = "skip_commit"
+            severity = "ERROR"
+            
+            # Truncate the error message
+            clean_msg = error_msg if len(error_msg) < 150 else error_msg[:150] + "..."
+            
+            logger.error(
+                f"🔴 Git header parse error in commit {context.get('commit_sha', 'unknown')[:8]}: {clean_msg}",
+                extra={
+                    "error_type": "parse_header",
+                    "commit_sha": context.get('commit_sha'),
+                    "operation": context.get('operation'),
+                }
+            )
+            
+        elif "dubious ownership" in error_msg.lower() or "safe.directory" in error_msg.lower():
+            # Git security check blocking operations
+            category = "ownership"
+            self.error_counts["unknown"] += 1
+            recoverable = False
+            action = "skip_commit"
+            severity = "WARNING"
+            
+            logger.warning(
+                f"⚠️  Git ownership issue in commit {context.get('commit_sha', 'unknown')[:8]}: "
+                f"Repository not trusted. Run: git config --global --add safe.directory <repo>"
+            )
+            
         elif isinstance(error, BadObject) or "bad object" in error_msg.lower():
             category = "bad_object"
             self.error_counts["bad_object"] += 1

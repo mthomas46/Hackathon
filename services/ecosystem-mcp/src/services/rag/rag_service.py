@@ -173,10 +173,16 @@ class RAGService:
                         prefer_recent=prefer_recent
                     )
                     
+                    # Safely get document content
+                    content = ""
+                    if "documents" in results and results["documents"] and len(results["documents"]) > 0:
+                        if results["documents"][0] and i < len(results["documents"][0]):
+                            content = results["documents"][0][i]
+                    
                     enhanced_docs.append({
                         "id": str(doc.id),
                         "file_path": doc.file_path,
-                        "content": results["documents"][0][i] if "documents" in results else "",
+                        "content": content,
                         "metadata": doc.doc_metadata or {},
                         "created_at": doc.created_at.isoformat() if doc.created_at else None,
                         "updated_at": doc.updated_at.isoformat() if doc.updated_at else None,
@@ -194,7 +200,9 @@ class RAGService:
             unique_docs = []
             for doc in enhanced_docs:
                 # Use content hash or file_path+content as unique key
-                doc_key = doc["metadata"].get("content_hash", f"{doc['file_path']}:{doc['content'][:100]}")
+                # Handle None or empty content safely
+                content_preview = (doc.get('content') or "")[:100]
+                doc_key = doc["metadata"].get("content_hash", f"{doc['file_path']}:{content_preview}")
                 if doc_key not in seen_hashes:
                     seen_hashes.add(doc_key)
                     unique_docs.append(doc)

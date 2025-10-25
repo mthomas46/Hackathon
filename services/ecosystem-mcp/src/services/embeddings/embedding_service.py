@@ -20,6 +20,55 @@ logger = logging.getLogger(__name__)
 _embedding_service: Optional["EmbeddingService"] = None
 
 
+def chunk_text(text: str, max_chars: int = 7000, overlap: int = 500) -> List[str]:
+    """
+    Split text into overlapping chunks for embedding generation.
+    
+    Args:
+        text: Text to chunk
+        max_chars: Maximum characters per chunk (default 7000, leaves buffer for 8000 limit)
+        overlap: Number of overlapping characters between chunks (default 500)
+    
+    Returns:
+        List of text chunks
+    """
+    if len(text) <= max_chars:
+        return [text]
+    
+    chunks = []
+    start = 0
+    
+    while start < len(text):
+        end = start + max_chars
+        
+        # If this is not the last chunk, try to break at a sentence or word boundary
+        if end < len(text):
+            # Look for sentence boundary (. ! ?)
+            sentence_break = max(
+                text.rfind('. ', start, end),
+                text.rfind('! ', start, end),
+                text.rfind('? ', start, end)
+            )
+            
+            if sentence_break > start + max_chars // 2:  # Found a reasonable break point
+                end = sentence_break + 1
+            else:
+                # Fall back to word boundary
+                word_break = text.rfind(' ', start, end)
+                if word_break > start + max_chars // 2:
+                    end = word_break
+        
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        
+        # Move start forward, with overlap
+        start = end - overlap if end < len(text) else end
+    
+    logger.debug(f"📄 Split text into {len(chunks)} chunks (total: {len(text)} chars)")
+    return chunks
+
+
 def get_embedding_service() -> "EmbeddingService":
     """
     Get singleton embedding service instance.
@@ -85,10 +134,11 @@ class EmbeddingService:
     
     async def generate_embedding(self, text: str) -> Dict[str, Any]:
         """
-        Generate embedding for a single text with smart retry.
+        Generate embedding for a single text with smart retry and chunking.
         
         Routes to appropriate backend (FastEmbed service or Ollama).
         Includes smart retry logic with health checks to auto-recover from transient failures.
+        Automatically chunks large texts (>7000 chars) and averages embeddings.
         
         Args:
             text: Text to generate embedding for
@@ -101,34 +151,61 @@ class EmbeddingService:
                 "cost": float,
                 "model": str,
                 "dimensions": int,
-                "backend": str
+                "backend": str,
+                "chunks": int  # Number of chunks processed
             }
         """
         logger.debug(f"🔄 Generating embedding: text_len={len(text)}, backend={self.backend}")
         start_time = time.time()
         
+        # Chunk text if needed (prevents FastEmbed 422 errors)
+        max_chars = 7000  # Safe limit for both FastEmbed and Ollama
+        chunks = chunk_text(text, max_chars=max_chars)
+        
+        if len(chunks) > 1:
+            logger.info(f"📄 Chunking large text: {len(chunks)} chunks for {len(text)} chars")
+        
         # Route to appropriate backend
         if self.backend == "service" and self.embedding_client:
             try:
-                result = await self.embedding_client.generate_embedding(text)
-                embedding = result["embedding"]
+                # Process each chunk
+                chunk_embeddings = []
+                total_tokens = 0
+                
+                for i, chunk in enumerate(chunks, 1):
+                    result = await self.embedding_client.generate_embedding(chunk)
+                    chunk_embeddings.append(result["embedding"])
+                    total_tokens += result["tokens"]
+                    
+                    if len(chunks) > 1:
+                        logger.debug(f"  ✅ FastEmbed chunk {i}/{len(chunks)}: {len(chunk)} chars")
+                
+                # Average embeddings if multiple chunks
+                if len(chunk_embeddings) > 1:
+                    import numpy as np
+                    embedding = np.mean(chunk_embeddings, axis=0).tolist()
+                    logger.info(f"✅ Averaged {len(chunk_embeddings)} FastEmbed chunk embeddings")
+                else:
+                    embedding = chunk_embeddings[0]
+                
                 model = result["model"]
                 dimensions = len(embedding)
                 duration = time.time() - start_time
                 
                 logger.info(
                     f"✅ FastEmbed embedding generated: "
-                    f"model={model}, dims={dimensions}, duration={duration:.3f}s"
+                    f"model={model}, dims={dimensions}, chunks={len(chunks)}, duration={duration:.3f}s"
                 )
                 
                 return {
                     "embedding": embedding,
-                    "tokens": result["tokens"],
+                    "tokens": total_tokens,
                     "cost": 0.0,  # Local and free
                     "model": model,
                     "dimensions": dimensions,
                     "backend": "fastembed",
-                    "duration": duration
+                    "duration": duration,
+                    "chunks": len(chunks)
                 }
             except CircuitBreakerOpenError as e:
                 # Smart retry: Check if service is actually healthy
@@ -137,16 +214,17 @@ class EmbeddingService:
                 if await self._check_fastembed_health():
                     logger.info(f"✅ FastEmbed service is healthy, resetting circuit breaker...")
                     try:
-                        # Reset circuit breaker and retry
+                        # Reset circuit breaker and retry with first chunk
                         await self.embedding_client.circuit_breaker.reset()
-                        result = await self.embedding_client.generate_embedding(text)
+                        result = await self.embedding_client.generate_embedding(chunks[0])
                         logger.info(f"✅ Smart retry successful!")
                         return {
                             "embedding": result["embedding"],
                             "tokens": result["tokens"],
                             "cost": 0.0,
                             "model": result["model"],
-                            "duration": result["duration_ms"] / 1000
+                            "duration": result["duration_ms"] / 1000,
+                            "chunks": 1
                         }
                     except Exception as retry_error:
                         logger.error(f"❌ Smart retry failed: {retry_error}")
@@ -178,7 +256,7 @@ class EmbeddingService:
                 raise
     
     async def _generate_with_ollama(self, text: str) -> Dict[str, Any]:
-        """Generate embedding using Ollama (legacy)."""
+        """Generate embedding using Ollama (legacy) with chunking support."""
         # Check if Ollama client is available
         if self.ollama_client is None:
             error_msg = "Ollama client not initialized and FastEmbed unavailable"
@@ -188,20 +266,36 @@ class EmbeddingService:
         start_time = time.time()
         
         try:
-            # Truncate very long text (Ollama has limits)
-            max_chars = 8000  # ~2000 tokens
-            if len(text) > max_chars:
-                logger.warning(f"Text too long ({len(text)} chars), truncating to {max_chars}")
-                text = text[:max_chars]
+            # Use chunking for long text instead of truncation
+            max_chars = 7000  # Safe limit leaving buffer for 8000
+            chunks = chunk_text(text, max_chars=max_chars)
             
-            # Generate embedding via Ollama
-            embedding = await self.ollama_client.embed(text)
+            if len(chunks) > 1:
+                logger.info(f"📄 Processing {len(chunks)} chunks for long text ({len(text)} chars)")
             
-            if not embedding:
-                raise ValueError("Ollama returned empty embedding")
+            # Generate embeddings for all chunks
+            chunk_embeddings = []
+            total_tokens = 0
             
-            # Estimate tokens (rough approximation)
-            tokens = self._estimate_tokens(text)
+            for i, chunk in enumerate(chunks, 1):
+                chunk_embedding = await self.ollama_client.embed(chunk)
+                
+                if not chunk_embedding:
+                    raise ValueError(f"Ollama returned empty embedding for chunk {i}")
+                
+                chunk_embeddings.append(chunk_embedding)
+                total_tokens += self._estimate_tokens(chunk)
+                
+                if len(chunks) > 1:
+                    logger.debug(f"  ✅ Chunk {i}/{len(chunks)}: {len(chunk)} chars")
+            
+            # Average embeddings if multiple chunks
+            if len(chunk_embeddings) > 1:
+                import numpy as np
+                embedding = np.mean(chunk_embeddings, axis=0).tolist()
+                logger.info(f"✅ Averaged {len(chunk_embeddings)} chunk embeddings")
+            else:
+                embedding = chunk_embeddings[0]
             
             # Calculate cost (Ollama is free, but track for metrics)
             cost = 0.0  # Ollama is local and free
@@ -211,17 +305,19 @@ class EmbeddingService:
             
             logger.info(
                 f"✅ Ollama embedding generated: "
-                f"model=nomic-embed-text, dims={dimensions}, tokens={tokens}, duration={duration:.3f}s"
+                f"model=nomic-embed-text, dims={dimensions}, tokens={total_tokens}, "
+                f"chunks={len(chunks)}, duration={duration:.3f}s"
             )
             
             return {
                 "embedding": embedding,
-                "tokens": tokens,
+                "tokens": total_tokens,
                 "cost": cost,
                 "model": "nomic-embed-text",
                 "dimensions": dimensions,
                 "backend": "ollama",
-                "duration": duration
+                "duration": duration,
+                "chunks": len(chunks)  # Track chunking
             }
         
         except Exception as e:

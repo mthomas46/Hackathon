@@ -324,9 +324,9 @@ class DocumentPlacer:
         Returns:
             Dict with date, source, and optional git_commit_sha
         """
-        # Check for git_history mode with commit
+        # Check for git_history or enriched mode with commit
         if (
-            document.ingestion_mode == 'git_history' and
+            document.ingestion_mode in ['git_history', 'enriched'] and
             document.git_commit_sha
         ):
             # Get commit to get its date

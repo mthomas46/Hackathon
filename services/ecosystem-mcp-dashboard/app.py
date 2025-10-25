@@ -73,49 +73,42 @@ st.markdown('<div class="main-header">🧠 Ecosystem MCP Dashboard</div>', unsaf
 
 # Sidebar navigation
 st.sidebar.title("Navigation")
+
+# Organized navigation with categories
+st.sidebar.markdown("### 📊 OVERVIEW")
+overview_pages = ["🏠 Home", "🏥 Health & Infrastructure", "🔬 Diagnostics"]
+
+st.sidebar.markdown("### 🔍 QUERY & SEARCH")
+query_pages = ["🤖 RAG Query", "🎯 Enhanced Query", "🔬 Multi-Pass RAG Query", "⏰ Temporal RAG", "🧠 Context-Aware RAG", "📚 Document Search"]
+
+st.sidebar.markdown("### 📥 DATA MANAGEMENT")
+data_pages = ["📚 Documents", "📥 Ingestion Manager", "⚡ Mode Comparison", "🔄 Job Recovery", "⚙️ Worker Monitor"]
+
+st.sidebar.markdown("### 📖 DOCUMENTATION")
+doc_pages = ["📖 Documentation Generator", "📚 Documentation Browser", "🔧 Doc Maintenance"]
+
+st.sidebar.markdown("### 📊 ANALYSIS & REPORTS")
+analysis_pages = ["📈 Timeline Analysis", "📈 Timeline Viewer", "📑 Report Generation"]
+
+st.sidebar.markdown("### 🎯 DISCOVERY & ORCHESTRATION")
+discovery_pages = ["🎯 Discovery & Orchestration"]
+
+st.sidebar.markdown("### 🏗️ INFRASTRUCTURE")
+infra_pages = ["🐳 Container Management", "🔍 Redis Explorer", "🗄️ PostgreSQL Explorer", "🔮 ChromaDB Explorer", "🎯 Embeddings Manager"]
+
+st.sidebar.markdown("### 📈 MONITORING")
+monitoring_pages = ["⚡ Cache Performance", "📊 Metrics & Analytics", "🎯 Quality Dashboard", "📋 Logs Viewer", "🔍 Performance Monitor", "📦 Repository Contexts"]
+
+st.sidebar.markdown("### 🔧 CONFIGURATION")
+config_pages = ["🔌 API Explorer", "⚙️ Configuration", "🔌 LLM Tier Management", "🔧 Settings"]
+
+# Combine all pages for radio selection
+all_pages = overview_pages + query_pages + data_pages + doc_pages + analysis_pages + discovery_pages + infra_pages + monitoring_pages + config_pages
+
 page = st.sidebar.radio(
-    "Go to",
-    [
-        # Overview & Status
-        "🏠 Home",
-        "🏥 Health & Infrastructure",
-        "🔬 Diagnostics",
-        
-        # Query Interfaces
-        "🤖 RAG Query",
-        "🎯 Enhanced Query",
-        "🔬 Multi-Pass RAG Query",
-        
-        # Data Management
-        "📚 Documents",
-        "📥 Ingestion Manager",
-        "⚡ Mode Comparison",  # Phase 8: Processing mode comparison
-        "📖 Documentation Generator",
-        "📚 Documentation Browser",
-        "🎯 Embeddings Manager",
-        "🔄 Job Recovery",
-        "📈 Timeline Viewer",
-        
-        # Infrastructure
-        "⚙️ Worker Monitor",
-        "🐳 Container Management",
-        "🔍 Redis Explorer",
-        "🗄️ PostgreSQL Explorer",
-        "🔮 ChromaDB Explorer",
-        
-        # Monitoring & Analytics
-        "⚡ Cache Performance",
-        "📊 Metrics & Analytics",
-        "📋 Logs Viewer",
-        "🎯 Quality Dashboard",
-        "📊 Timeline Analysis",
-        
-        # Tools & Configuration
-        "🔌 API Explorer",
-        "⚙️ Configuration",
-        "🔌 LLM Tier Management",
-        "🔧 Settings"
-    ]
+    "Select Page",
+    all_pages,
+    label_visibility="collapsed"
 )
 
 # API Base URL configuration
@@ -215,6 +208,15 @@ elif page == "🎯 Enhanced Query":
 elif page == "🔬 Multi-Pass RAG Query":
     from dashboard_views import rag_multi_pass
     rag_multi_pass.show(api_base_url)
+elif page == "⏰ Temporal RAG":
+    from dashboard_views import temporal_rag_query
+    temporal_rag_query.show(api_base_url)
+elif page == "🧠 Context-Aware RAG":
+    from pages import context_aware_rag
+    context_aware_rag.show(api_base_url)
+elif page == "📚 Document Search":
+    from dashboard_views import documents
+    documents.show(api_base_url)
 elif page == "📚 Documents":
     from dashboard_views import documents
     documents.show(api_base_url)
@@ -230,6 +232,9 @@ elif page == "📖 Documentation Generator":
 elif page == "📚 Documentation Browser":
     from dashboard_views import documentation_browser
     documentation_browser.show()
+elif page == "🔧 Doc Maintenance":
+    from dashboard_views import doc_maintenance
+    doc_maintenance.show(api_base_url)
 elif page == "🎯 Embeddings Manager":
     from dashboard_views import embeddings_manager
     embeddings_manager.show(api_base_url)
@@ -260,6 +265,18 @@ elif page == "🎯 Quality Dashboard":
 elif page == "📊 Timeline Analysis":
     from dashboard_views import timeline_analysis
     timeline_analysis.show(api_base_url)
+elif page == "🔍 Performance Monitor":
+    from pages import performance_monitor
+    performance_monitor.show(api_base_url)
+elif page == "📦 Repository Contexts":
+    from pages import repository_contexts
+    repository_contexts.show(api_base_url)
+elif page == "🎯 Discovery & Orchestration":
+    from dashboard_views import discovery_orchestration
+    discovery_orchestration.show(api_base_url)
+elif page == "📑 Report Generation":
+    from dashboard_views import reports_generator
+    reports_generator.show(api_base_url)
 
 # Footer
 st.sidebar.markdown("---")

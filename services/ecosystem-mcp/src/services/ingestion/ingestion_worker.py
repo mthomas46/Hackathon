@@ -67,11 +67,50 @@ class IngestionWorker:
         )
         logger.info("✅ Shutdown handler setup complete")
         
+        # 🧪 TEST: Verify Redis connection before starting
+        logger.info("🧪 Testing Redis connection...")
+        try:
+            redis = get_redis_client()
+            await redis.connect()
+            
+            # Test read from stream
+            test_messages = await redis.client.xrange(redis.INGESTION_STREAM, '-', '+', count=1)
+            logger.info(f"🧪 Redis connection test PASSED: {len(test_messages)} messages found in stream")
+            logger.info(f"🧪 Stream name: {redis.INGESTION_STREAM}")
+            logger.info(f"🧪 Consumer group: {redis.CONSUMER_GROUP}")
+            
+            # Test consumer group
+            try:
+                group_info = await redis.client.xinfo_groups(redis.INGESTION_STREAM)
+                logger.info(f"🧪 Consumer groups: {group_info}")
+            except Exception as e:
+                logger.warning(f"⚠️  Could not get consumer group info: {e}")
+                
+        except Exception as e:
+            logger.error(f"❌ Redis connection test FAILED: {e}", exc_info=True)
+            raise
+        
         self.running = True
-        logger.info(f"🚀 Creating worker loop task...")
+        logger.info(f"🚀 Creating worker loop task... (running={self.running})")
         self._task = asyncio.create_task(self._worker_loop())
         logger.info(f"✅ Task created: {self._task}")
+        logger.info(f"✅ Task done: {self._task.done()}")
+        logger.info(f"✅ Task cancelled: {self._task.cancelled()}")
         logger.info("✅ IngestionWorker started with graceful shutdown handler")
+        
+        # Monitor task for a few seconds to see if it starts
+        logger.info("🔍 Monitoring task startup...")
+        for i in range(3):
+            await asyncio.sleep(1)
+            logger.info(f"📊 Task state after {i+1}s: done={self._task.done()}, cancelled={self._task.cancelled()}")
+            if self._task.done():
+                try:
+                    result = self._task.result()
+                    logger.error(f"⚠️  Task completed unexpectedly with result: {result}")
+                except Exception as e:
+                    logger.error(f"❌ Task failed with exception: {e}", exc_info=True)
+                break
+        logger.info("🔍 Task monitoring complete")
         
         # Give the task a moment to start
         await asyncio.sleep(0.1)
@@ -111,85 +150,111 @@ class IngestionWorker:
         
         Continuously polls Redis streams for new jobs and processes them.
         """
-        logger.info("🔄 Worker loop started")
-        logger.info(f"🔄 Worker ID: {self.worker_id}")
-        logger.info(f"🔄 Running flag: {self.running}")
-        
-        loop_count = 0
-        while self.running:
-            loop_count += 1
-            logger.info(f"🔄 Worker loop iteration #{loop_count}")
-            
+        try:
+            logger.info("=" * 80)
+            logger.info("🔄 WORKER LOOP STARTING")
+            logger.info("=" * 80)
+            logger.info("🔍 DEBUG: About to log worker ID")
+            logger.info(f"🔄 Worker ID: {self.worker_id}")
+            logger.info("🔍 DEBUG: About to log running flag")
+            logger.info(f"🔄 Running flag: {self.running}")
+            logger.info("🔍 DEBUG: About to get event loop")
             try:
-                # Check for shutdown request
-                if is_shutdown_requested():
-                    logger.info("🛑 Shutdown requested, stopping worker loop")
-                    if self.shutdown_handler:
-                        await self.shutdown_handler.shutdown()
-                    break
-                
-                # Get next job from Redis stream
-                logger.info(f"📡 Calling _get_next_job()...")
-                result = await self._get_next_job()
-                logger.info(f"📡 _get_next_job() returned: {result}")
-                
-                if result:
-                    message_id, job_id = result
-                    self.current_job_id = job_id
-                    
-                    logger.info(f"🎯 Processing job: {job_id}")
-                    
-                    # Mark that we're finishing current work
-                    if self.shutdown_handler and is_shutdown_requested():
-                        await self.shutdown_handler.finish_current_work(f"job {job_id}")
-                    
-                    # Add timeout to prevent jobs from blocking forever
-                    try:
-                        logger.info(f"⏱️  Starting job processing with 10 minute timeout...")
-                        await asyncio.wait_for(
-                            self._process_job(job_id),
-                            timeout=600  # 10 minutes max per job
-                        )
-                        logger.info(f"✅ Job processing completed: {job_id}")
-                    except asyncio.TimeoutError:
-                        logger.error(f"⏰ Job {job_id} timed out after 10 minutes!")
-                        # Mark job as failed due to timeout
-                        async with get_database().session() as session:
-                            from ...storage.repositories import IngestionJobRepository
-                            from datetime import datetime
-                            repo = IngestionJobRepository(session)
-                            job = await repo.get_by_id(job_id)
-                            if job:
-                                job.status = "failed"
-                                job.completed_at = datetime.utcnow()
-                                job.error_message = "Job timed out after 10 minutes"
-                                await repo.update(job)
-                                await session.commit()
-                                logger.info(f"✅ Marked job {job_id} as failed due to timeout")
-                    
-                    # ✅ CRITICAL: ACK the message after processing
-                    redis = get_redis_client()
-                    await redis.client.xack(
-                        redis.INGESTION_STREAM,
-                        redis.CONSUMER_GROUP,
-                        message_id
-                    )
-                    logger.debug(f"✅ ACK'd message {message_id}")
-                    
-                    self.current_job_id = None
-                else:
-                    # No jobs available, wait before checking again
-                    logger.info(f"😴 No jobs available, sleeping 5s...")
-                    await asyncio.sleep(5)
-            
+                event_loop = asyncio.get_event_loop()
+                logger.info(f"🔄 Current event loop: {event_loop}")
             except Exception as e:
-                logger.error(f"❌ Error in worker loop: {e}", exc_info=True)
-                logger.error(f"❌ Exception type: {type(e).__name__}")
-                logger.error(f"❌ Sleeping 10s before retry...")
-                await asyncio.sleep(10)  # Back off on errors
-        
-        logger.info(f"✅ Worker loop stopped after {loop_count} iterations")
-        logger.info(f"✅ Final running flag: {self.running}")
+                logger.error(f"❌ Failed to get event loop: {e}")
+            logger.info("=" * 80)
+            
+            logger.info("🔍 DEBUG: About to initialize loop_count")
+            loop_count = 0
+            logger.info(f"🔍 DEBUG: loop_count initialized to {loop_count}")
+            logger.info(f"🔍 DEBUG: About to check self.running value: {self.running}")
+            logger.info("🔍 DEBUG: About to enter while loop")
+            
+            while self.running:
+                logger.info(f"🔍 DEBUG: ✅ INSIDE while loop! Iteration {loop_count + 1}")
+                logger.info(f"🔍 DEBUG: self.running = {self.running}")
+                loop_count += 1
+                
+                # 💓 Heartbeat every 5 iterations
+                if loop_count % 5 == 1:
+                    logger.info(f"💓 WORKER HEARTBEAT - Loop #{loop_count} - Running: {self.running}")
+                
+                try:
+                    # Check for shutdown request
+                    if is_shutdown_requested():
+                        logger.info("🛑 Shutdown requested, stopping worker loop")
+                        if self.shutdown_handler:
+                            await self.shutdown_handler.shutdown()
+                        break
+                    
+                    # Get next job from Redis stream
+                    logger.info(f"📡 Calling _get_next_job()...")
+                    result = await self._get_next_job()
+                    logger.info(f"📡 _get_next_job() returned: {result}")
+                    
+                    if result:
+                        message_id, job_id = result
+                        self.current_job_id = job_id
+                        
+                        logger.info(f"🎯 Processing job: {job_id}")
+                        
+                        # Mark that we're finishing current work
+                        if self.shutdown_handler and is_shutdown_requested():
+                            await self.shutdown_handler.finish_current_work(f"job {job_id}")
+                        
+                        # Add timeout to prevent jobs from blocking forever
+                        try:
+                            full_job_timeout = 14400  # 4 hours
+                            logger.info(f"⏱️  Starting job processing with {full_job_timeout/3600:.1f} hour timeout...")
+                            await asyncio.wait_for(
+                                self._process_job(job_id, message_id),
+                                timeout=full_job_timeout
+                            )
+                            logger.info(f"✅ Job processing completed: {job_id}")
+                        except asyncio.TimeoutError:
+                            logger.error(f"⏰ Job {job_id} timed out after {full_job_timeout/3600:.1f} hours!")
+                            # Mark job as failed due to timeout
+                            async with get_database().session() as session:
+                                from ...storage.repositories import IngestionJobRepository
+                                from datetime import datetime
+                                repo = IngestionJobRepository(session)
+                                job = await repo.get_by_id(job_id)
+                                if job:
+                                    job.status = "failed"
+                                    job.completed_at = datetime.utcnow()
+                                    job.error_message = f"Job timed out after {full_job_timeout/3600:.1f} hours"
+                                    await repo.update(job)
+                                    await session.commit()
+                                    logger.info(f"✅ Marked job {job_id} as failed due to timeout")
+                        
+                        # ✅ CRITICAL: ACK the message after processing
+                        redis = get_redis_client()
+                        await redis.client.xack(
+                            redis.INGESTION_STREAM,
+                            redis.CONSUMER_GROUP,
+                            message_id
+                        )
+                        logger.debug(f"✅ ACK'd message {message_id}")
+                        
+                        self.current_job_id = None
+                    else:
+                        # No jobs available, wait before checking again
+                        logger.info(f"😴 No jobs available, sleeping 5s...")
+                        await asyncio.sleep(5)
+                
+                except Exception as e:
+                    logger.error(f"❌ Error in worker loop: {e}", exc_info=True)
+                    logger.error(f"❌ Exception type: {type(e).__name__}")
+                    logger.error(f"❌ Sleeping 10s before retry...")
+                    await asyncio.sleep(10)  # Back off on errors
+            
+            logger.info(f"✅ Worker loop stopped after {loop_count} iterations")
+            logger.info(f"✅ Final running flag: {self.running}")
+        except Exception as e:
+            logger.error(f"❌ FATAL ERROR in _worker_loop: {e}", exc_info=True)
+            raise
     
     async def _get_next_job(self) -> Optional[tuple[str, UUID]]:
         """
@@ -228,11 +293,24 @@ class IngestionWorker:
                 logger.info(f"📨 Received message {message_id}: {data}")
                 job_id_str = data.get("job_id")
                 
-                if job_id_str:
-                    logger.info(f"✅ Found job_id: {job_id_str}")
-                    return (message_id, UUID(job_id_str))  # ✅ Return both!
-                else:
-                    logger.warning(f"⚠️  Message {message_id} missing job_id: {data}")
+                # 🎯 FIX #2: Validate message has job_id
+                if not job_id_str:
+                    logger.error(f"❌ Message {message_id} missing job_id: {data}")
+                    # ACK invalid message to remove from queue
+                    await redis.client.xack(redis.INGESTION_STREAM, redis.CONSUMER_GROUP, message_id)
+                    return None
+                
+                # 🎯 FIX #2: Validate job_id format
+                try:
+                    job_id = UUID(job_id_str)
+                except ValueError as e:
+                    logger.error(f"❌ Invalid job_id format '{job_id_str}': {e}")
+                    # ACK invalid message to remove from queue
+                    await redis.client.xack(redis.INGESTION_STREAM, redis.CONSUMER_GROUP, message_id)
+                    return None
+                
+                logger.info(f"✅ Found job_id: {job_id}")
+                return (message_id, job_id)
             
             return None
         
@@ -240,12 +318,13 @@ class IngestionWorker:
             logger.error(f"❌ Error reading from Redis stream: {e}", exc_info=True)
             return None
     
-    async def _process_job(self, job_id: UUID):
+    async def _process_job(self, job_id: UUID, message_id: str):
         """
         Process a single ingestion job.
         
         Args:
             job_id: ID of the job to process
+            message_id: Redis message ID for ACKing
         """
         logger.info(f"📍 _process_job START: {job_id}")
         
@@ -258,8 +337,23 @@ class IngestionWorker:
                 job = await repo.get_by_id(job_id)
                 logger.info(f"📍 Job fetched: {job}")
                 
+                # 🎯 FIX #3: Handle orphaned jobs (job doesn't exist in DB)
                 if not job:
-                    logger.error(f"❌ Job not found: {job_id}")
+                    logger.error(f"❌ Job {job_id} not found in database - orphaned Redis message")
+                    # ACK message to remove from queue
+                    redis = get_redis_client()
+                    await redis.client.xack(redis.INGESTION_STREAM, redis.CONSUMER_GROUP, message_id)
+                    logger.info(f"✅ Orphaned message {message_id} ACK'd and removed from queue")
+                    return
+                
+                # 🎯 FIX #1: Validate job state before processing
+                if job.status not in ["queued", "pending"]:
+                    logger.warning(f"⚠️  Job {job_id} is in '{job.status}' state (expected 'queued' or 'pending'), skipping")
+                    logger.warning(f"   Created: {job.created_at}, Started: {job.started_at}, Completed: {job.completed_at}")
+                    # ACK message to remove from queue
+                    redis = get_redis_client()
+                    await redis.client.xack(redis.INGESTION_STREAM, redis.CONSUMER_GROUP, message_id)
+                    logger.info(f"✅ Already-processed job message {message_id} ACK'd and removed from queue")
                     return
                 
                 # Update status to processing
@@ -271,10 +365,34 @@ class IngestionWorker:
                 
                 logger.info(f"📍 Starting job processor: mode={job.mode}, repo={job.repo_path}")
                 
-                # Process the job using JobProcessor
+                # Process the job using JobProcessor with full job timeout protection
                 logger.info(f"📍 Calling job_processor.process()...")
-                result = await self.job_processor.process(job)
-                logger.info(f"📍 Job processor returned: success={result.get('success')}, processed={result.get('processed_documents')}")
+                
+                # TODO: Re-enable progress-aware timeout once asyncio.wait() issue is fixed
+                # For now, use extended timeout to allow large jobs
+                full_job_timeout = 14400  # 4 hours for large repositories
+                
+                try:
+                    logger.info(f"⏱️  Using extended timeout: {full_job_timeout}s (4 hours)")
+                    
+                    result = await asyncio.wait_for(
+                        self.job_processor.process(job),
+                        timeout=full_job_timeout
+                    )
+                    logger.info(f"📍 Job processor returned: success={result.get('success')}, processed={result.get('processed_documents')}")
+                except asyncio.TimeoutError:
+                    logger.error(f"⏱️  TIMEOUT: Job exceeded {full_job_timeout}s")
+                    result = {
+                        "success": False,
+                        "processed_documents": 0,
+                        "total_documents": 0,
+                        "failed_documents": 0,
+                        "skipped_documents": 0,
+                        "embeddings_generated": 0,
+                        "total_cost_usd": 0.0,
+                        "error": f"Job timed out after {full_job_timeout} seconds"
+                    }
+                    logger.info(f"📍 Job processor timed out, returning failure result")
                 
                 # Update job with results
                 logger.info(f"📍 Updating job with results...")

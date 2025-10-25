@@ -365,14 +365,20 @@ def show(api_base_url: str):
             else:
                 st.info("ℹ️ **Standard Processing** - Job will process sequentially")
             
-            # Ingestion mode (quick/full/incremental - existing)
+            # Ingestion mode (quick/full/incremental/enriched/snapshot - existing)
             mode = st.selectbox(
                 "Ingestion Type",
-                options=["quick", "full", "incremental"],
+                options=["enriched", "snapshot", "quick", "full", "incremental"],
+                index=0,  # Default to enriched (best of both worlds)
                 help="""
-                - **quick**: Fast ingestion, skip embeddings
-                - **full**: Complete ingestion with embeddings
+                - **enriched**: ✨ Current files + git metadata (RECOMMENDED) - Fast with context
+                - **snapshot**: Current files only, no git (fastest but no history)
+                - **quick**: Last 10 commits with full history
+                - **full**: All commits with complete history
                 - **incremental**: Only process new/changed files
+                
+                💡 **Enriched mode** is recommended: gets file ownership, last modified date, 
+                and commit messages while being ~8x faster than full mode!
                 """
             )
             

@@ -229,9 +229,9 @@ class ResourceAllocator:
             # Wait before retry
             await asyncio.sleep(1.0)
     
-    def get_stats(self) -> Dict:
+    async def get_stats(self) -> Dict:
         """Get resource allocation statistics."""
-        resources = asyncio.run(self.get_available_resources())
+        resources = await self.get_available_resources()
         
         return {
             "total_memory_mb": resources.total_memory_mb,

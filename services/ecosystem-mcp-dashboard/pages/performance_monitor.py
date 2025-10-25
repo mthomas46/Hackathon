@@ -19,6 +19,11 @@ import time
 from dashboard_views.api_client import get_api_client
 
 
+def show(api_base_url: str):
+    """Entry point for dashboard integration."""
+    render_performance_monitor()
+
+
 def render_performance_monitor():
     """Render performance monitoring page."""
     st.title("📊 Performance Monitor")

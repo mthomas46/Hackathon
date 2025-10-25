@@ -304,7 +304,7 @@ async def get_metrics():
         from ...services.orchestration import get_resource_allocator
         
         allocator = get_resource_allocator()
-        stats = allocator.get_stats()
+        stats = await allocator.get_stats()
         
         return {
             "success": True,

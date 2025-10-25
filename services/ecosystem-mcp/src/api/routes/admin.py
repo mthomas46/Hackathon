@@ -34,9 +34,20 @@ router = APIRouter()
 class IngestRequest(BaseModel):
     """Request to start ingestion."""
     repo_path: str = Field(..., description="Path to repository to ingest (host or container path)")
-    mode: str = Field(default="quick", description="Ingestion mode: quick, full, incremental")
+    mode: str = Field(
+        default="quick",
+        description=(
+            "Ingestion mode:\n"
+            "- snapshot: Current files only, no git metadata (fastest)\n"
+            "- enriched: Current files + last commit metadata per file (fast + git context)\n"
+            "- quick: Last 10 commits with full history\n"
+            "- recent: Last 200 commits\n"
+            "- full: All commits (limited by max_commits_to_process)"
+        )
+    )
     resolve_host_path: bool = Field(default=True, description="Automatically resolve host paths and find git root")
     target_subdirectory: Optional[str] = Field(default=None, description="Specific subdirectory to target (relative to repo root)")
+    force_update: bool = Field(default=False, description="Force update of existing documents in ChromaDB (useful for fixing truncated content)")
 
 
 class IngestResponse(BaseModel):
@@ -137,6 +148,9 @@ async def start_ingestion(
         if request.target_subdirectory:
             job_metadata['target_subdirectory'] = request.target_subdirectory
             logger.info(f"Job will target subdirectory: {request.target_subdirectory}")
+        if request.force_update:
+            job_metadata['force_update'] = True
+            logger.info(f"🔄 Force update enabled - will re-process existing documents")
         
         # Create job in database
         db = get_database()

@@ -167,7 +167,7 @@ class OllamaClient:
             
             # ⚡ Use pooled client (reuse connection)
             response = await self._client.post(
-                f"{self.base_url}/api/embed",
+                f"{self.base_url}/api/embeddings",
                 json=payload
             )
             response.raise_for_status()

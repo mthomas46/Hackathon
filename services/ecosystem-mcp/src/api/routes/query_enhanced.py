@@ -169,6 +169,22 @@ async def _process_rag_query(request: EnhancedQueryRequest) -> EnhancedQueryResp
         temperature=request.temperature
     )
     
+    # Handle None result (RAG service error)
+    if result is None:
+        logger.error("RAG service returned None")
+        raise HTTPException(
+            status_code=500,
+            detail="RAG service failed to process query"
+        )
+    
+    # Validate result structure
+    if not isinstance(result, dict) or "answer" not in result:
+        logger.error(f"RAG service returned invalid result: {result}")
+        raise HTTPException(
+            status_code=500,
+            detail="RAG service returned invalid response format"
+        )
+    
     # Get tier information
     tier_used = await _get_tier_used(request.tier, request.question)
     

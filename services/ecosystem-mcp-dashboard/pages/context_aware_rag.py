@@ -18,6 +18,11 @@ import time
 from dashboard_views.api_client import get_api_client
 
 
+def show(api_base_url: str):
+    """Entry point for dashboard integration."""
+    render_context_aware_rag()
+
+
 def render_context_aware_rag():
     """Render context-aware RAG query page."""
     st.title("🔍 Context-Aware RAG Query")

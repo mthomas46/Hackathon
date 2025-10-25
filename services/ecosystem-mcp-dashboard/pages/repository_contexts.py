@@ -18,6 +18,11 @@ from datetime import datetime
 from dashboard_views.api_client import get_api_client
 
 
+def show(api_base_url: str):
+    """Entry point for dashboard integration."""
+    render_repository_contexts()
+
+
 def render_repository_contexts():
     """Render repository contexts page."""
     st.title("📚 Repository Contexts")

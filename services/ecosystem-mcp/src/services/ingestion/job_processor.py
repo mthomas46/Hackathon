@@ -48,7 +48,8 @@ class JobProcessor:
     """
     
     def __init__(self, worker_id: str = "unknown", use_batch_optimization: bool = True,
-                 max_concurrent_commits: int = None):
+                 max_concurrent_commits: int = None, commit_batch_size: int = 10,
+                 use_batched_processing: bool = True, max_commits_to_process: int = 100):
         """
         Initialize the job processor.
         
@@ -57,6 +58,9 @@ class JobProcessor:
             use_batch_optimization: Enable Phase 1 optimizations (batch embeddings, connection pooling, caching)
             max_concurrent_commits: Maximum number of commits to process in parallel (Phase 2)
                                    If None, automatically determined based on CPU count (2× cores, max 20)
+            commit_batch_size: Number of commits per batch for checkpointing (default: 10)
+            use_batched_processing: Enable batched processing with checkpoints (default: True)
+            max_commits_to_process: Maximum commits to process per job (default: 100, limits exposure to hangs)
         """
         self.worker_id = worker_id
         self.git_service = None  # Initialized per job
@@ -72,6 +76,11 @@ class JobProcessor:
         
         # Phase 1 optimizations flag
         self.use_batch_optimization = use_batch_optimization
+        
+        # Batched processing configuration
+        self.use_batched_processing = use_batched_processing
+        self.commit_batch_size = commit_batch_size
+        self.max_commits_to_process = max_commits_to_process
         
         # Phase 2: Parallel commit processing (auto-tune based on CPU count)
         import os
@@ -96,11 +105,18 @@ class JobProcessor:
         # Timeout configuration (per commit)
         self.commit_timeout_seconds = 600  # 10 minutes per commit max
         
+        # Batched commit processor (initialized lazily)
+        self._batched_processor = None
+        
         logger.info(
             f"JobProcessor initialized (worker: {worker_id}, "
+            f"max_commits: {max_commits_to_process}, "
+            f"batched_processing: {use_batched_processing}, "
+            f"batch_size: {commit_batch_size}, "
             f"batch_optimization: {'✅ ENABLED' if use_batch_optimization else '❌ DISABLED'}, "
             f"parallel_commits: {max_concurrent_commits}, "
-            f"commit_timeout: {self.commit_timeout_seconds}s)"
+            f"commit_timeout: {self.commit_timeout_seconds}s, "
+            f"graceful_degradation: ✅ ENABLED)"
         )
     
     async def _init_progress_tracking(self, job_id: str):
@@ -420,6 +436,102 @@ class JobProcessor:
             except Exception as monitor_error:
                 logger.debug(f"Failed to record monitoring failure: {monitor_error}")
     
+    async def _load_checkpoint(self, job_id: UUID) -> Optional[Dict[str, Any]]:
+        """
+        Load checkpoint for job recovery.
+        
+        Args:
+            job_id: Job ID to load checkpoint for
+        
+        Returns:
+            Checkpoint data or None if no checkpoint exists
+        """
+        try:
+            checkpoint = await self.checkpoint_manager.load_checkpoint(str(job_id))
+            return checkpoint
+        except Exception as e:
+            logger.debug(f"No checkpoint found or failed to load: {e}")
+            return None
+    
+    def _finalize_result(self, result: Dict[str, Any], job: IngestionJobModel) -> Dict[str, Any]:
+        """
+        Apply error aggregation logic to job result before returning.
+        
+        This ensures ALL code paths apply consistent success/failure logic.
+        
+        Args:
+            result: The result dict to finalize
+            job: The ingestion job
+            
+        Returns:
+            The finalized result dict with success field properly set
+        """
+        # Calculate total if not already set
+        if "total_documents" not in result or result["total_documents"] == 0:
+            result["total_documents"] = (result.get("processed_documents", 0) + 
+                                         result.get("failed_documents", 0) + 
+                                         result.get("skipped_documents", 0))
+        
+        # DEBUG: Log values before error aggregation check
+        logger.info(
+            f"🔍 FINALIZE RESULT for job {job.id}: "
+            f"processed={result.get('processed_documents', 0)}, "
+            f"skipped={result.get('skipped_documents', 0)}, "
+            f"failed={result.get('failed_documents', 0)}, "
+            f"total={result['total_documents']}"
+        )
+        
+        # Apply GRACEFUL error aggregation logic
+        processed = result.get("processed_documents", 0)
+        failed = result.get("failed_documents", 0)
+        skipped = result.get("skipped_documents", 0)
+        cancelled = result.get("cancelled_documents", 0)  # New: track cancelled/hung commits
+        total = result["total_documents"]
+        
+        # Check if all commits failed (no documents processed or skipped)
+        if processed == 0 and skipped == 0 and failed > 0:
+            result["success"] = False
+            result["error"] = f"All {failed} commits failed processing. Check git repository integrity."
+            logger.error(
+                f"❌ Job {job.id} FAILED: All {failed} documents failed to process. "
+                f"This may indicate git repository corruption or configuration issues."
+            )
+            logger.info(f"🔍 FINALIZE: Set success=False (all commits failed)")
+        elif processed == 0 and total > 0:
+            # Some files were skipped but none processed (partial failure)
+            result["success"] = False
+            result["error"] = "No documents were processed successfully"
+            logger.warning(
+                f"⚠️  Job {job.id} FAILED: No successful processing. "
+                f"Skipped: {skipped}, Failed: {failed}, Cancelled: {cancelled}"
+            )
+            logger.info(f"🔍 FINALIZE: Set success=False (no processing)")
+        else:
+            # GRACEFUL SUCCESS: Some processing succeeded (even if some failed)
+            result["success"] = True
+            
+            # Add warning if there were failures/cancellations but still partial success
+            if failed > 0 or cancelled > 0:
+                success_rate = (processed / total) * 100 if total > 0 else 0
+                result["warning"] = (
+                    f"Partial success: {processed}/{total} commits succeeded ({success_rate:.1f}%). "
+                    f"Failed: {failed}, Cancelled: {cancelled}, Skipped: {skipped}"
+                )
+                logger.warning(
+                    f"⚠️  Job {job.id} PARTIAL SUCCESS: {processed}/{total} commits processed ({success_rate:.1f}%). "
+                    f"Failed: {failed}, Cancelled: {cancelled}, Skipped: {skipped}"
+                )
+            else:
+                # Full success
+                logger.info(
+                    f"✅ Job {job.id} FULL SUCCESS: {processed} documents processed, "
+                    f"{skipped} skipped (already up-to-date)"
+                )
+            
+            logger.info(f"🔍 FINALIZE: Set success=True (processing succeeded)")
+        
+        return result
+    
     async def process(self, job: IngestionJobModel) -> Dict[str, Any]:
         """
         Process a single ingestion job.
@@ -443,6 +555,7 @@ class JobProcessor:
                 "subjobs_failed": Optional[int]  # NEW (if orchestration used)
             }
         """
+        logger.info(f"🔍 DEBUG: process() ENTRY for job {job.id}: mode={job.mode}, repo={job.repo_path}")
         logger.info(f"Processing job {job.id}: mode={job.mode}, repo={job.repo_path}")
         
         # PHASE 10: Check if sub-job orchestration requested
@@ -450,7 +563,9 @@ class JobProcessor:
         
         if use_subjobs and await self._should_use_orchestration(job):
             logger.info(f"🚀 Using sub-job orchestration for job {job.id}")
-            return await self._process_with_orchestration(job)
+            orch_result = await self._process_with_orchestration(job)
+            logger.info(f"🔍 DEBUG: process() EXIT (orchestration path) for job {job.id}")
+            return self._finalize_result(orch_result, job)
         else:
             if use_subjobs:
                 logger.info(f"📝 Repository too small for orchestration, using standard processing")
@@ -463,7 +578,9 @@ class JobProcessor:
             pass
         else:
             # Return orchestration result
-            return await self._process_with_orchestration(job)
+            orch_result = await self._process_with_orchestration(job)
+            logger.info(f"🔍 DEBUG: process() EXIT (orchestration path 2) for job {job.id}")
+            return self._finalize_result(orch_result, job)
         
         # ========================================================================
         # STANDARD PROCESSING (Existing Logic Below)
@@ -484,49 +601,195 @@ class JobProcessor:
         }
         
         try:
-            # Initialize Git service for this job
-            await self._update_progress("initializing", 0, 100, message="Initializing Git service...")
-            self.git_service = GitService(repo_path=job.repo_path)
+            # 🎯 FIX: Don't initialize GitService for snapshot/enriched modes yet
+            # These modes may be given subdirectory paths, not git roots
+            # GitService will be lazy-initialized when needed
+            if job.mode not in ["snapshot", "enriched"]:
+                # Only initialize for full/incremental modes that need git history upfront
+                await self._update_progress("initializing", 0, 100, message="Initializing Git service...")
+                self.git_service = GitService(repo_path=job.repo_path)
             
             # Get commits based on mode
             await self._update_progress("scanning", 10, 100, message="Scanning repository for commits...")
-            commits = await self._get_commits_for_mode(job.mode)
+            commits = await self._get_commits_for_mode(job.mode) if job.mode not in ["snapshot", "enriched"] else []
             
-            # Special handling for snapshot mode (no git history)
-            if job.mode == "snapshot" and not commits:
-                logger.info("📸 Snapshot mode: processing current filesystem state without git history")
-                await self._update_progress("processing", 0, 1, message="Processing current filesystem state (snapshot mode)")
+            # Special handling for snapshot and enriched modes (no full git history)
+            if (job.mode == "snapshot" or job.mode == "enriched") and not commits:
+                if job.mode == "enriched":
+                    logger.info("✨ Enriched mode: processing current filesystem state WITH git metadata")
+                    await self._update_progress("processing", 0, 1, message="Processing current files with git metadata (enriched mode)")
+                else:
+                    logger.info("📸 Snapshot mode: processing current filesystem state without git history")
+                    await self._update_progress("processing", 0, 1, message="Processing current filesystem state (snapshot mode)")
                 
-                # Process current filesystem directly
+                # Process current filesystem directly (enriched mode will fetch git metadata per file)
                 snapshot_result = await self._process_snapshot_mode(job)
-                return snapshot_result
+                logger.info(f"🔍 DEBUG: process() EXIT ({job.mode} mode) for job {job.id}")
+                return self._finalize_result(snapshot_result, job)
             
             if not commits:
                 result["error"] = "No commits found"
                 await self._update_progress("failed", 0, 0, message="No commits found")
-                return result
+                logger.info(f"🔍 DEBUG: process() EXIT (no commits) for job {job.id}")
+                return self._finalize_result(result, job)
             
             logger.info(f"Found {len(commits)} commits to process")
             await self._update_progress("processing", 0, len(commits), message=f"Found {len(commits)} commits")
             
-            # PHASE 2: Process commits in PARALLEL if enabled and multiple commits
-            if self.use_batch_optimization and len(commits) > 1:
+            # PHASE 2: Process commits with BATCHING and CHECKPOINTING for resilience
+            if self.use_batched_processing and len(commits) > self.commit_batch_size:
                 logger.info(
-                    f"🚀 PHASE 2: Processing {len(commits)} commits in PARALLEL "
-                    f"(max {self.max_concurrent_commits} concurrent)"
+                    f"📦 PHASE 2: Processing {len(commits)} commits in BATCHES "
+                    f"(batch size: {self.commit_batch_size}, max {self.max_concurrent_commits} concurrent per batch)"
                 )
                 
-                # Create tasks for all commits
+                # Check for existing checkpoint to resume from
+                checkpoint = await self._load_checkpoint(job.id)
+                resume_from_batch = 0
+                
+                if checkpoint:
+                    resume_from_batch = checkpoint.get("next_batch", 0)
+                    if resume_from_batch > 0:
+                        logger.info(
+                            f"🔄 Resuming from checkpoint: batch {resume_from_batch + 1}, "
+                            f"{checkpoint.get('processed_documents', 0)} documents already processed"
+                        )
+                        # Restore previous results
+                        result["processed_documents"] = checkpoint.get("processed_documents", 0)
+                        result["failed_documents"] = checkpoint.get("failed_documents", 0)
+                        result["skipped_documents"] = checkpoint.get("skipped_documents", 0)
+                        result["embeddings_generated"] = checkpoint.get("embeddings_generated", 0)
+                        result["total_cost_usd"] = checkpoint.get("total_cost_usd", 0.0)
+                
+                # Initialize batched processor
+                from .batched_commit_processor import get_batched_commit_processor
+                if self._batched_processor is None:
+                    self._batched_processor = get_batched_commit_processor(
+                        job_processor=self,
+                        batch_size=self.commit_batch_size,
+                        max_concurrent_per_batch=self.max_concurrent_commits
+                    )
+                
+                # Process commits in batches with checkpointing
+                batch_result = await self._batched_processor.process_commits_in_batches(
+                    commits=commits,
+                    job=job,
+                    resume_from_batch=resume_from_batch
+                )
+                
+                # Merge batch results into main result
+                result["processed_documents"] += batch_result["processed_documents"]
+                result["failed_documents"] += batch_result["failed_documents"]
+                result["skipped_documents"] += batch_result["skipped_documents"]
+                result["embeddings_generated"] += batch_result["embeddings_generated"]
+                result["total_cost_usd"] += batch_result["total_cost_usd"]
+                
+            # FALLBACK: Process commits in PARALLEL without batching (original behavior)
+            elif self.use_batch_optimization and len(commits) > 1:
+                logger.info(
+                    f"🚀 PHASE 2: Processing {len(commits)} commits in PARALLEL "
+                    f"(max {self.max_concurrent_commits} concurrent, no batching)"
+                )
+                
+                # Create tasks for all commits (wrap coroutines in tasks for asyncio.wait())
                 import asyncio
                 commit_tasks = [
-                    self._process_commit_parallel(commit, job, i, len(commits))
+                    asyncio.create_task(self._process_commit_parallel(commit, job, i, len(commits)))
                     for i, commit in enumerate(commits, 1)
                 ]
                 
-                # Execute all commits in parallel (semaphore limits concurrency)
-                commit_results = await asyncio.gather(*commit_tasks, return_exceptions=True)
+                # ENHANCEMENT: Add progress monitoring during parallel execution
+                # This helps detect hangs by logging periodic status
+                start_time = datetime.utcnow()
+                
+                # Create a monitoring task that logs progress every 30 seconds
+                async def monitor_progress():
+                    """Monitor and log commit processing progress."""
+                    while True:
+                        await asyncio.sleep(30)
+                        elapsed = (datetime.utcnow() - start_time).total_seconds()
+                        logger.info(
+                            f"⏳ Parallel processing ongoing: {elapsed:.0f}s elapsed, "
+                            f"{len(commits)} commits in flight"
+                        )
+                
+                # Start monitoring task (will be cancelled when processing completes)
+                monitor_task = asyncio.create_task(monitor_progress())
+                
+                # GRACEFUL DEGRADATION: Use asyncio.wait() instead of gather()
+                # This allows us to handle partial results and cancel hung tasks
+                commit_tasks_set = set(commit_tasks)
+                max_wait_time = len(commits) * 90  # 90s per commit max (generous for graceful handling)
+                
+                try:
+                    # Wait for all tasks with timeout (graceful degradation enabled)
+                    done, pending = await asyncio.wait(
+                        commit_tasks_set,
+                        timeout=max_wait_time,
+                        return_when=asyncio.ALL_COMPLETED
+                    )
+                    
+                    # Handle pending (hung) tasks
+                    if pending:
+                        hung_count = len(pending)
+                        logger.warning(
+                            f"⚠️  {hung_count} commit(s) still pending after {max_wait_time}s - "
+                            f"CANCELLING hung tasks for graceful degradation"
+                        )
+                        
+                        # Cancel all pending tasks
+                        for task in pending:
+                            task.cancel()
+                        
+                        # Wait briefly for cancellations to complete
+                        if pending:
+                            await asyncio.wait(pending, timeout=5)
+                        
+                        logger.info(
+                            f"✅ Cancelled {hung_count} hung tasks - "
+                            f"proceeding with {len(done)} completed commits"
+                        )
+                    
+                    # Extract results from completed tasks
+                    commit_results = []
+                    for task in done:
+                        try:
+                            result = task.result()
+                            commit_results.append(result)
+                        except Exception as e:
+                            logger.error(f"Task failed with exception: {e}")
+                            commit_results.append(e)
+                    
+                    # For cancelled tasks, add placeholder results
+                    for task in pending:
+                        commit_results.append({
+                            "processed": 0,
+                            "failed": 1,
+                            "skipped": 0,
+                            "embeddings": 0,
+                            "cost": 0.0,
+                            "error": "Task cancelled due to hang/timeout",
+                            "cancelled": True
+                        })
+                    
+                finally:
+                    # Stop monitoring
+                    monitor_task.cancel()
+                    try:
+                        await monitor_task
+                    except asyncio.CancelledError:
+                        pass
+                
+                # Log completion
+                total_elapsed = (datetime.utcnow() - start_time).total_seconds()
+                completed_count = len(commit_results)
+                logger.info(
+                    f"✅ Parallel processing complete: {completed_count}/{len(commits)} commits processed in {total_elapsed:.1f}s "
+                    f"({total_elapsed/completed_count:.1f}s per commit avg)"
+                )
                 
                 # Aggregate results from all commits
+                partial_successes = 0
                 for idx, commit_result in enumerate(commit_results, 1):
                     if isinstance(commit_result, Exception):
                         logger.error(f"Commit {idx} failed with exception: {commit_result}")
@@ -537,6 +800,10 @@ class JobProcessor:
                         result["skipped_documents"] += commit_result.get("skipped", 0)
                         result["embeddings_generated"] += commit_result["embeddings"]
                         result["total_cost_usd"] += commit_result.get("cost", 0.0)
+                        
+                        # Track partial successes (metadata extracted but processing failed)
+                        if commit_result.get("partial_success"):
+                            partial_successes += 1
                     
                     # Update progress after each commit
                     await self._update_progress(
@@ -548,6 +815,13 @@ class JobProcessor:
                         failed=result["failed_documents"],
                         skipped=result["skipped_documents"],
                         embeddings=result["embeddings_generated"]
+                    )
+                
+                # Log summary with partial success info
+                if partial_successes > 0:
+                    logger.info(
+                        f"📋 Partial successes: {partial_successes} commits had metadata extracted "
+                        f"despite processing failures"
                     )
             else:
                 # Fallback to sequential processing for single commit or non-batch mode
@@ -592,14 +866,17 @@ class JobProcessor:
                     )
             
             result["total_documents"] = result["processed_documents"] + result["failed_documents"] + result["skipped_documents"]
-            result["success"] = True
             
-            # Clear checkpoint after successful completion
+            # Apply error aggregation via _finalize_result
+            result = self._finalize_result(result, job)
+            
+            # Clear checkpoint after completion (successful or failed)
             await self.checkpoint_manager.clear_checkpoint(job.id)
             
             # Update final progress
+            final_status = "completed" if result["success"] else "failed"
             await self._update_progress(
-                "completed",
+                final_status,
                 result["total_documents"],
                 result["total_documents"],
                 message=f"Completed: {result['processed_documents']} processed, {result['embeddings_generated']} embeddings",
@@ -613,12 +890,17 @@ class JobProcessor:
             # Log git error summary
             self.git_error_handler.log_error_summary()
             
-            logger.info(
-                f"✅ Job {job.id} processing complete: "
-                f"{result['processed_documents']}/{result['total_documents']} documents, "
-                f"{result['skipped_documents']} skipped, "
-                f"{result['embeddings_generated']} embeddings"
-            )
+            if result["success"]:
+                logger.info(
+                    f"✅ Job {job.id} processing complete: "
+                    f"{result['processed_documents']}/{result['total_documents']} documents, "
+                    f"{result['skipped_documents']} skipped, "
+                    f"{result['embeddings_generated']} embeddings"
+                )
+            else:
+                logger.error(
+                    f"❌ Job {job.id} processing failed: {result['error']}"
+                )
         
         except Exception as e:
             logger.error(f"Error processing job {job.id}: {e}", exc_info=True)
@@ -634,7 +916,11 @@ class JobProcessor:
                 message=f"Failed: {str(e)}",
                 error=str(e)
             )
+            
+            # Finalize result even on exception
+            result = self._finalize_result(result, job)
         
+        logger.info(f"🔍 DEBUG: process() EXIT (main return) for job {job.id}")
         return result
     
     async def _process_snapshot_mode(self, job: IngestionJobModel) -> Dict[str, Any]:
@@ -816,6 +1102,9 @@ class JobProcessor:
                     skipped=result["skipped_documents"],
                     embeddings=result["embeddings_generated"]
                 )
+                
+                # ✅ FIXED: Update job counters in database after each batch
+                await self._update_job_counters_snapshot(job, result)
             
             result["success"] = True
             await self._update_progress(
@@ -828,6 +1117,9 @@ class JobProcessor:
                 skipped=result["skipped_documents"],
                 embeddings=result["embeddings_generated"]
             )
+            
+            # ✅ FIXED: Final update of job counters in database
+            await self._update_job_counters_snapshot(job, result)
             
             # Calculate embedding coverage
             embedding_coverage = 0
@@ -867,6 +1159,48 @@ class JobProcessor:
         
         return result
     
+    async def _update_job_counters_snapshot(self, job: IngestionJobModel, result: Dict[str, Any]):
+        """
+        Update job counters in database for snapshot mode.
+        
+        Args:
+            job: Ingestion job
+            result: Current result dictionary with counters
+        """
+        try:
+            db = get_database()
+            async with db.session() as session:
+                from ...storage.repositories import IngestionJobRepository
+                repo = IngestionJobRepository(session)
+                
+                # Get fresh job instance
+                current_job = await repo.get_by_id(job.id)
+                if not current_job:
+                    logger.warning(f"Job {job.id} not found in database, skipping counter update")
+                    return
+                
+                # Update counters
+                current_job.processed_documents = result["processed_documents"]
+                current_job.failed_documents = result["failed_documents"]
+                current_job.skipped_documents = result["skipped_documents"]
+                current_job.embeddings_generated = result.get("embeddings_generated", 0)
+                current_job.total_documents = result.get("total_documents", 0)
+                
+                await repo.update(current_job)
+                await session.commit()
+                
+                logger.debug(
+                    f"📊 Database counters updated: "
+                    f"processed={current_job.processed_documents}, "
+                    f"skipped={current_job.skipped_documents}, "
+                    f"failed={current_job.failed_documents}, "
+                    f"embeddings={current_job.embeddings_generated}"
+                )
+                
+        except Exception as e:
+            logger.warning(f"Failed to update job counters in database: {e}")
+            # Don't raise - this is not critical enough to fail the job
+    
     async def _process_snapshot_document(
         self,
         file_path: str,
@@ -875,6 +1209,8 @@ class JobProcessor:
     ) -> Dict[str, Any]:
         """
         Process a single document in snapshot mode.
+        
+        In enriched mode, also fetches git metadata (last commit) for the file.
         
         Args:
             file_path: Relative path to file
@@ -888,6 +1224,52 @@ class JobProcessor:
         from ...storage import get_database
         from ...storage.db_models import DocumentModel
         import hashlib
+        
+        # 🛡️ CRITICAL: Skip binary files to prevent PostgreSQL errors
+        if self.is_binary_file_extension(file_path):
+            logger.info(f"⏭️  Skipping binary file (by extension): {file_path}")
+            return {
+                "success": True,
+                "skipped": True,
+                "reason": "binary_file_extension"
+            }
+        
+        # 🛡️ CRITICAL: Check for null bytes in content (binary file indicator)
+        if '\x00' in content:
+            logger.warning(f"⚠️  Skipping file with null bytes (binary content): {file_path}")
+            return {
+                "success": True,
+                "skipped": True,
+                "reason": "binary_content_detected"
+            }
+        
+        # ✨ NEW: Fetch git metadata if in enriched mode
+        git_metadata = None
+        if job.mode == "enriched":
+            try:
+                # 🎯 FIX: Lazy-initialize GitService for enriched mode
+                if not self.git_service:
+                    from ..git.git_service import find_git_root
+                    # Find git root from potentially subdirectory path
+                    git_root = find_git_root(job.repo_path)
+                    logger.info(f"✨ Initializing GitService for enriched mode: git_root={git_root}, target_path={job.repo_path}")
+                    self.git_service = GitService(repo_path=git_root)
+                
+                # Get last commit for this file (max_commits=1)
+                file_history = await self.git_service.get_file_history(file_path, max_commits=1)
+                if file_history:
+                    last_commit = file_history[0]
+                    git_metadata = {
+                        "last_commit_sha": last_commit.sha,
+                        "last_commit_author": last_commit.author,
+                        "last_commit_date": last_commit.date.isoformat() if last_commit.date else None,
+                        "last_commit_message": last_commit.message,
+                        "enriched_mode": True
+                    }
+                    logger.debug(f"✨ Git metadata fetched for {file_path}: {last_commit.sha[:8]} by {last_commit.author}")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to fetch git metadata for {file_path}: {e}")
+                # Continue without git metadata - not critical
         
         try:
             # Generate content hash for deduplication
@@ -928,15 +1310,29 @@ class JobProcessor:
                 
                 # Check for duplicates and handle missing embeddings
                 if existing:
+                    # Check if we should force update (e.g., to fix truncated content in ChromaDB)
+                    force_update = job.job_metadata.get('force_update', False) if job.job_metadata else False
+                    
                     # Check if embedding is missing
                     needs_embedding = not existing.embedding_id
                     
-                    if needs_embedding:
-                        logger.warning(
-                            f"⚠️  Document exists but MISSING EMBEDDING: {file_path} "
-                            f"(doc_id: {existing.id}) - will generate embedding"
-                        )
-                        # Use existing document and generate embedding
+                    logger.debug(
+                        f"🔍 Duplicate check: {file_path} - "
+                        f"embedding_id={existing.embedding_id}, needs_embedding={needs_embedding}, force_update={force_update}"
+                    )
+                    
+                    if needs_embedding or force_update:
+                        if force_update:
+                            logger.info(
+                                f"🔄 FORCE UPDATE: Re-processing existing document: {file_path} "
+                                f"(doc_id: {existing.id}) - will update ChromaDB content"
+                            )
+                        else:
+                            logger.warning(
+                                f"⚠️  Document exists but MISSING EMBEDDING: {file_path} "
+                                f"(doc_id: {existing.id}) - will generate embedding"
+                            )
+                        # Use existing document and generate/update embedding
                         document = existing
                         should_generate_embedding = True
                         is_new_document = False
@@ -951,22 +1347,33 @@ class JobProcessor:
                         }
                 else:
                     # Create new document
+                    # Build metadata with optional git metadata
+                    doc_metadata = {
+                        "ingestion_job_id": str(job.id),
+                        "mode": job.mode,  # "snapshot" or "enriched"
+                        "snapshot": True,
+                        "word_count": len(normalized_content.split())
+                    }
+                    
+                    # ✨ Add git metadata if in enriched mode
+                    if git_metadata:
+                        doc_metadata.update(git_metadata)
+                        git_commit_sha = git_metadata.get("last_commit_sha")
+                    else:
+                        git_commit_sha = None
+                    
                     document = DocumentModel(
-                        service_name="snapshot",
+                        service_name=job.mode,  # "snapshot" or "enriched"
                         file_path=file_path,
                         original_format=file_extension,
                         original_content=content[:10000] if len(content) <= 10000 else content[:10000] + "...",
                         normalized_content=normalized_content,
                         content_hash=content_hash,
-                        ingestion_mode="snapshot",
+                        ingestion_mode=job.mode,
                         version=1,
                         is_latest=True,
-                        doc_metadata={
-                            "ingestion_job_id": str(job.id),
-                            "mode": "snapshot",
-                            "snapshot": True,
-                            "word_count": len(normalized_content.split())
-                        }
+                        git_commit_sha=git_commit_sha,  # ✨ Last commit SHA
+                        doc_metadata=doc_metadata
                     )
                     document = await doc_repo.create(document)
                     await session.commit()
@@ -1009,20 +1416,32 @@ class JobProcessor:
                         chroma = get_chroma_client()
                         
                         logger.debug(f"💾 Storing embedding in ChromaDB for {file_path}")
+                        
+                        # Build ChromaDB metadata
+                        chroma_metadata = {
+                            "id": str(document.id),
+                            "file_path": file_path,
+                            "service_name": job.mode,  # "snapshot" or "enriched"
+                            "ingestion_mode": job.mode,
+                            "content_hash": content_hash,
+                            "job_id": str(job.id),
+                            "embedding_duration_sec": duration,
+                            "embedding_model": model,
+                            "timestamp": time.time()
+                        }
+                        
+                        # ✨ Add git metadata to ChromaDB for enriched mode
+                        if git_metadata:
+                            chroma_metadata.update({
+                                "git_commit_sha": git_metadata.get("last_commit_sha", "")[:8],
+                                "git_author": git_metadata.get("last_commit_author", ""),
+                                "git_date": git_metadata.get("last_commit_date", "")
+                            })
+                        
                         await chroma.add_embeddings(
                             embeddings=[embedding_vector],
-                            metadatas=[{
-                                "id": str(document.id),
-                                "file_path": file_path,
-                                "service_name": "snapshot",
-                                "ingestion_mode": "snapshot",
-                                "content_hash": content_hash,
-                                "job_id": str(job.id),
-                                "content": normalized_content[:1000],
-                                "embedding_duration_sec": duration,
-                                "embedding_model": model,
-                                "timestamp": time.time()
-                            }],
+                            documents=[normalized_content],  # ✅ FIXED: Store full content
+                            metadatas=[chroma_metadata],
                             ids=[str(document.id)]
                         )
                         
@@ -1106,7 +1525,7 @@ class JobProcessor:
     
     async def _get_commits_for_mode(self, mode: str) -> List[Any]:
         """
-        Get commits based on ingestion mode.
+        Get commits based on ingestion mode, respecting max_commits_to_process limit.
         
         Args:
             mode: Ingestion mode (quick, full, incremental, recent, snapshot)
@@ -1118,22 +1537,32 @@ class JobProcessor:
             # Snapshot mode: no git history, just current state
             logger.info("📸 Snapshot mode: skipping git history, will process current files only")
             return []  # Empty list signals to use current filesystem state
+        elif mode == "enriched":
+            # Enriched mode: current files + last commit metadata for each file
+            # Returns empty list to trigger filesystem scan, but will fetch git metadata per file
+            logger.info("✨ Enriched mode: processing current files with git metadata (last commit per file)")
+            return []
         elif mode == "quick":
-            # Last 10 commits
-            return await self.git_service.get_recent_commits(limit=10)
+            # Last 10 commits (or max limit)
+            limit = min(10, self.max_commits_to_process)
+            return await self.git_service.get_recent_commits(limit=limit)
         elif mode == "recent":
-            # Last 200 commits
-            return await self.git_service.get_recent_commits(limit=200)
+            # Last 200 commits (or max limit)
+            limit = min(200, self.max_commits_to_process)
+            return await self.git_service.get_recent_commits(limit=limit)
         elif mode == "full":
-            # All commits (limited to 1000 for safety)
-            return await self.git_service.get_recent_commits(limit=1000)
+            # All commits (limited by max_commits_to_process, default 100)
+            logger.info(f"📚 Full mode: processing up to {self.max_commits_to_process} most recent commits")
+            return await self.git_service.get_recent_commits(limit=self.max_commits_to_process)
         elif mode == "incremental":
             # TODO: Get commits since last ingestion
-            # For now, same as quick
-            return await self.git_service.get_recent_commits(limit=10)
+            # For now, same as quick but respects max limit
+            limit = min(10, self.max_commits_to_process)
+            return await self.git_service.get_recent_commits(limit=limit)
         else:
             logger.warning(f"Unknown mode '{mode}', defaulting to quick")
-            return await self.git_service.get_recent_commits(limit=10)
+            limit = min(10, self.max_commits_to_process)
+            return await self.git_service.get_recent_commits(limit=limit)
     
     async def _process_commit(self, commit: Any, job: IngestionJobModel) -> Dict[str, Any]:
         """
@@ -1374,6 +1803,52 @@ class JobProcessor:
         
         return result
     
+    async def _extract_commit_metadata(self, commit: Any) -> Dict[str, Any]:
+        """
+        Extract basic commit metadata as a fallback when full processing fails.
+        
+        This allows us to capture valuable information even when git parsing 
+        or file processing fails. Acts as graceful degradation.
+        
+        Args:
+            commit: GitCommit object
+        
+        Returns:
+            Dict with commit metadata, or minimal info if extraction fails
+        """
+        try:
+            # Try to extract basic commit info (usually safe even with git issues)
+            metadata = {
+                "sha": commit.sha[:8] if hasattr(commit, 'sha') else "unknown",
+                "message": commit.message[:100] if hasattr(commit, 'message') else "N/A",
+                "author": str(commit.author) if hasattr(commit, 'author') else "unknown",
+                "date": commit.date.isoformat() if hasattr(commit, 'date') else None,
+                "extracted_at": datetime.utcnow().isoformat(),
+                "extraction_reason": "fallback"
+            }
+            
+            # Try to get file list (may fail with git corruption)
+            try:
+                if hasattr(commit, 'stats') and hasattr(commit.stats, 'files'):
+                    metadata["files_changed"] = list(commit.stats.files.keys())
+                    metadata["files_count"] = len(commit.stats.files)
+            except Exception:
+                metadata["files_changed"] = []
+                metadata["files_count"] = 0
+            
+            logger.info(f"📋 Extracted metadata for commit {metadata['sha']}: {metadata['files_count']} files")
+            return metadata
+            
+        except Exception as e:
+            # Even metadata extraction failed - return absolute minimum
+            logger.warning(f"⚠️  Metadata extraction failed: {e}")
+            return {
+                "sha": "unknown",
+                "message": "Metadata extraction failed",
+                "extracted_at": datetime.utcnow().isoformat(),
+                "extraction_error": str(e)
+            }
+    
     async def _process_commit_parallel(
         self,
         commit: Any,
@@ -1382,11 +1857,15 @@ class JobProcessor:
         total_commits: int
     ) -> Dict[str, Any]:
         """
-        PHASE 2: Process a single commit with concurrency control and timeout protection.
+        PHASE 2: Process a single commit with enhanced timeout protection and graceful fallbacks.
         
-        Uses semaphore to limit number of concurrent commits being processed.
-        Wraps the optimized batch processing with parallel execution support.
-        Includes timeout protection and git error handling.
+        Features:
+        - Blacklist checking (skip known problematic commits)
+        - Concurrency control via semaphore
+        - Aggressive timeout protection (prevents silent hangs)
+        - Metadata extraction fallback (captures data even on failure)
+        - Comprehensive error classification
+        - Progress heartbeat logging
         
         Args:
             commit: GitCommit object
@@ -1395,13 +1874,43 @@ class JobProcessor:
             total_commits: Total number of commits (for logging)
         
         Returns:
-            Dict with processing results
+            Dict with processing results (always returns, never hangs)
         """
+        commit_sha = commit.sha[:8] if hasattr(commit, 'sha') else "unknown"
+        commit_sha_full = commit.sha if hasattr(commit, 'sha') else "unknown"
+        
+        # CHECK BLACKLIST FIRST - Skip known problematic commits
+        from .commit_blacklist import is_blacklisted, get_blacklist_reason
+        
+        if is_blacklisted(commit_sha_full):
+            reason = get_blacklist_reason(commit_sha_full)
+            logger.warning(
+                f"🚫 BLACKLISTED: Skipping commit {commit_num}/{total_commits}: {commit_sha} - {reason[:100]}"
+            )
+            
+            # Extract metadata even for blacklisted commits (for audit trail)
+            metadata = await self._extract_commit_metadata(commit)
+            
+            return {
+                "processed": 0,
+                "failed": 0,
+                "skipped": 1,  # Count as skipped, not failed
+                "embeddings": 0,
+                "cost": 0.0,
+                "blacklisted": True,
+                "blacklist_reason": reason,
+                "metadata_extracted": True,
+                "metadata": metadata
+            }
+        
         async with self.commit_semaphore:
-            logger.info(f"🔄 Starting commit {commit_num}/{total_commits}: {commit.sha[:8]}")
+            logger.info(f"🔄 Starting commit {commit_num}/{total_commits}: {commit_sha}")
+            
+            # Track start time for hang detection
+            start_time = datetime.utcnow()
             
             try:
-                # Add timeout protection
+                # Prepare processing task with batch optimization
                 if self.use_batch_optimization:
                     process_task = self._process_commit_with_batch_optimization(
                         commit, job, batch_size=20
@@ -1409,51 +1918,79 @@ class JobProcessor:
                 else:
                     process_task = self._process_commit(commit, job)
                 
-                # Apply timeout
+                # Apply AGGRESSIVE timeout (reduced from default to catch hangs faster)
+                # Use 50% of configured timeout for faster hang detection
+                aggressive_timeout = max(30, self.commit_timeout_seconds // 2)
+                
+                logger.debug(f"⏱️  Commit {commit_sha}: timeout set to {aggressive_timeout}s")
+                
                 result = await asyncio.wait_for(
                     process_task,
-                    timeout=self.commit_timeout_seconds
+                    timeout=aggressive_timeout
                 )
                 
+                # Success!
+                elapsed = (datetime.utcnow() - start_time).total_seconds()
                 logger.info(
-                    f"✅ Completed commit {commit_num}/{total_commits}: {commit.sha[:8]} "
-                    f"({result['processed']} processed, {result['skipped']} skipped, {result['failed']} failed)"
+                    f"✅ Completed commit {commit_num}/{total_commits}: {commit_sha} "
+                    f"({result['processed']} processed, {result['skipped']} skipped, "
+                    f"{result['failed']} failed) in {elapsed:.1f}s"
                 )
                 return result
                 
             except asyncio.TimeoutError:
+                elapsed = (datetime.utcnow() - start_time).total_seconds()
                 logger.error(
-                    f"⏱️  TIMEOUT: Commit {commit_num}/{total_commits}: {commit.sha[:8]} "
-                    f"exceeded {self.commit_timeout_seconds}s timeout"
+                    f"⏱️  TIMEOUT: Commit {commit_num}/{total_commits}: {commit_sha} "
+                    f"exceeded {aggressive_timeout}s timeout (elapsed: {elapsed:.1f}s)"
                 )
+                
+                # GRACEFUL FALLBACK: Try to extract metadata before giving up
+                metadata = await self._extract_commit_metadata(commit)
+                
+                logger.warning(
+                    f"🔄 Fallback: Extracted metadata for timed-out commit {commit_sha}: "
+                    f"{metadata.get('files_count', 0)} files"
+                )
+                
                 return {
                     "processed": 0,
                     "failed": 1,
                     "skipped": 0,
                     "embeddings": 0,
                     "cost": 0.0,
-                    "error": f"Timeout after {self.commit_timeout_seconds}s"
+                    "error": f"Timeout after {aggressive_timeout}s",
+                    "metadata_extracted": True,
+                    "metadata": metadata,
+                    "partial_success": True  # We got metadata at least
                 }
                 
             except GitCorruptionError as e:
                 logger.error(
-                    f"🔴 GIT CORRUPTION in commit {commit_num}/{total_commits}: {commit.sha[:8]} - {e}"
+                    f"🔴 GIT CORRUPTION in commit {commit_num}/{total_commits}: {commit_sha} - {e}"
                 )
+                
+                # GRACEFUL FALLBACK: Try to extract metadata
+                metadata = await self._extract_commit_metadata(commit)
+                
                 return {
                     "processed": 0,
                     "failed": 1,
                     "skipped": 0,
                     "embeddings": 0,
                     "cost": 0.0,
-                    "error": f"Git corruption: {str(e)}"
+                    "error": f"Git corruption: {str(e)}",
+                    "metadata_extracted": True,
+                    "metadata": metadata,
+                    "partial_success": True
                 }
                 
             except Exception as e:
-                # Classify the error
+                # Classify the error for better diagnostics
                 error_classification = self.git_error_handler.classify_error(
                     e,
                     {
-                        "commit_sha": commit.sha,
+                        "commit_sha": commit_sha,
                         "operation": "process_commit",
                         "commit_num": commit_num,
                         "total_commits": total_commits
@@ -1461,10 +1998,19 @@ class JobProcessor:
                 )
                 
                 logger.error(
-                    f"❌ Failed commit {commit_num}/{total_commits}: {commit.sha[:8]} - "
-                    f"{error_classification['category']}: {e}",
-                    exc_info=True
+                    f"❌ Failed commit {commit_num}/{total_commits}: {commit_sha} - "
+                    f"{error_classification['category']}: {e}"
                 )
+                
+                # GRACEFUL FALLBACK: Try to extract metadata
+                metadata = await self._extract_commit_metadata(commit)
+                
+                # Log what we were able to salvage
+                if metadata.get('files_count', 0) > 0:
+                    logger.info(
+                        f"🔄 Salvaged metadata for failed commit {commit_sha}: "
+                        f"{metadata['files_count']} files identified"
+                    )
                 
                 return {
                     "processed": 0,
@@ -1473,7 +2019,10 @@ class JobProcessor:
                     "embeddings": 0,
                     "cost": 0.0,
                     "error": str(e),
-                    "error_category": error_classification['category']
+                    "error_category": error_classification['category'],
+                    "metadata_extracted": True,
+                    "metadata": metadata,
+                    "partial_success": metadata.get('files_count', 0) > 0
                 }
     
     async def _process_commit_with_batch_optimization(
@@ -1911,13 +2460,13 @@ class JobProcessor:
                         success = await chroma.add_embeddings_with_retry(
                             ids=[str(e['document'].id) for e in embeddings_to_store],
                             embeddings=[e['embedding']['embedding'] for e in embeddings_to_store],
+                            documents=[e['document'].normalized_content for e in embeddings_to_store],  # ✅ FIXED: Full content
                             metadatas=[{
                                 "file_path": str(e['path']),
                                 "service": e['document'].service_name,
                                 "commit_sha": commit.sha[:8],
                                 "created_at": e['document'].created_at.isoformat()
-                            } for e in embeddings_to_store],
-                            documents=[e['document'].normalized_content[:1000] for e in embeddings_to_store]
+                            } for e in embeddings_to_store]
                         )
                         
                         if success:
@@ -2143,13 +2692,13 @@ class JobProcessor:
                 embedding_success = await chroma.add_embeddings_with_retry(
                     ids=[str(created_doc.id)],
                     embeddings=[embedding_result["embedding"]],
+                    documents=[normalized["content"]],  # ✅ FIXED: Store full content (no truncation)
                     metadatas=[{
                         "file_path": str(path),
                         "service": normalized["metadata"].get("service", "ecosystem-mcp"),
                         "commit_sha": commit.sha[:8],
                         "created_at": created_doc.created_at.isoformat()
-                    }],
-                    documents=[normalized["content"][:1000]]
+                    }]
                 )
                 
                 if not embedding_success:
