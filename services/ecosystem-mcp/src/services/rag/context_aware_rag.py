@@ -414,7 +414,7 @@ class ContextAwareRAG:
     async def query_evolution(
         self,
         topic: str,
-        timeline_id: str,
+        timeline_id: Optional[str] = None,
         service_name: Optional[str] = None,
         limit_per_period: int = 3
     ) -> Dict[str, Any]:
@@ -426,8 +426,8 @@ class ContextAwareRAG:
         
         Args:
             topic: Topic to track
-            timeline_id: Timeline identifier
-            service_name: Optional service filter
+            timeline_id: Optional timeline identifier (use this OR service_name)
+            service_name: Optional service filter (use this OR timeline_id)
             limit_per_period: Max results per period
         
         Returns:
@@ -436,12 +436,26 @@ class ContextAwareRAG:
         from .temporal_rag_service import TemporalRAGService
         from uuid import UUID
         
-        logger.info(f"📈 Evolution query: {topic[:100]} (timeline={timeline_id})")
+        # ✅ FIX: Handle None timeline_id gracefully
+        timeline_uuid = None
+        if timeline_id:
+            try:
+                timeline_uuid = UUID(timeline_id)
+                logger.info(f"📈 Evolution query: {topic[:100]} (timeline={timeline_id})")
+            except ValueError:
+                raise ValueError(f"Invalid timeline_id format: {timeline_id}")
+        else:
+            logger.info(f"📈 Evolution query: {topic[:100]} (service={service_name})")
+        
+        # ✅ Require at least one identifier
+        if not timeline_uuid and not service_name:
+            raise ValueError("Either timeline_id or service_name must be provided")
         
         temporal_rag = TemporalRAGService()
         return await temporal_rag.query_evolution(
             topic=topic,
-            timeline_id=UUID(timeline_id),
+            timeline_id=timeline_uuid,  # ✅ Can be None now
+            service_name=service_name,
             limit_per_period=limit_per_period
         )
     

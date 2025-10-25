@@ -341,6 +341,7 @@ class TemporalRAGService:
                         # ✅ Create timeline if it doesn't exist
                         self.logger.info(f"📝 Creating timeline for service: {service_name}")
                         timeline_model = TimelineModel(
+                            name=f"{service_name} Timeline",  # ✅ REQUIRED FIELD
                             service_name=service_name,
                             description=f"Auto-generated timeline for {service_name}",
                             created_at=datetime.utcnow()
@@ -351,8 +352,8 @@ class TemporalRAGService:
                 else:
                     raise ValueError("Either timeline_id or service_name must be provided")
                 
-                # Get all periods
-                periods = await period_repo.get_by_timeline(timeline_id, order_by_sequence=True)
+                # Get all periods (use timeline_model.id since we have the model now)
+                periods = await period_repo.get_by_timeline(timeline_model.id, order_by_sequence=True)
                 
                 self.logger.info(f"   📊 Tracking evolution across {len(periods)} periods")
                 
