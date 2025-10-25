@@ -175,6 +175,7 @@ services:
       - ./data/chroma_db:/app/data/chroma_db
       - ./data/backups:/app/data/backups
       - /Users/mykalthomas/Documents/work/Hackathon:/repo:ro
+      - /Users/mykalthomas/Documents/work/Hackathon/.rag-config:/app/.rag-config:ro  # RAG enhancements config
       - /var/run/docker.sock:/var/run/docker.sock  # Docker socket for container management
     depends_on:
       postgres:

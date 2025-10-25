@@ -456,7 +456,7 @@ class EnhancedRAGService(RAGService):
         # Score documents based on term mentions
         scores = []
         for doc in documents:
-            content = doc.get('content', '').lower()
+            content = (doc.get('content') or '').lower()
             score = 0.0
             
             for term_name, term_config in relevant_terms:
@@ -498,7 +498,8 @@ class EnhancedRAGService(RAGService):
             metadata = doc.get('metadata', {})
             
             # Length signal
-            length = len(doc.get('content', ''))
+            content = doc.get('content') or ''
+            length = len(content)
             if length < 200:
                 length_score = 0.3  # Probably a stub
             elif length > 2000:
