@@ -1,53 +1,68 @@
-#!/usr/bin/env python3
 """
 Temporal RAG API Validation Script
 
-Tests all 5 Temporal RAG operations using real git history:
-1. Query As Of (Point in Time)
-2. Query Evolution
-3. Query What Changed
-4. Analyze Period
-5. Compare Periods
+Tests all temporal RAG endpoints against running services.
 """
 
 import httpx
 import json
 from datetime import datetime, timedelta
 from typing import Dict, Any
+import subprocess
 
+# Configuration
 API_BASE_URL = "http://localhost:8000"
 
-
 def print_section(title: str):
-    """Print formatted section header."""
-    print("\n" + "="*80)
+    """Print a formatted section header."""
+    print(f"\n{'='*80}")
     print(f"  {title}")
-    print("="*80 + "\n")
+    print(f"{'='*80}\n")
 
+def print_result(test_name: str, result: Dict[str, Any], success: bool = True):
+    """Print test result in a formatted way."""
+    status_emoji = "✅ PASS" if success else "❌ FAIL"
+    print(f"\n{status_emoji} | {test_name}")
+    print(f"{'-'*80}")
+    print(json.dumps(result, indent=2))
+    print(f"{'-'*80}\n")
 
-def print_result(operation: str, result: Dict[str, Any], success: bool = True):
-    """Print formatted test result."""
-    status = "✅ PASS" if success else "❌ FAIL"
-    print(f"\n{status} | {operation}")
-    print("-" * 80)
-    print(json.dumps(result, indent=2, default=str))
-    print("-" * 80)
+def get_git_history():
+    """Get git history for testing dates."""
+    try:
+        result = subprocess.run(
+            ["git", "log", "--pretty=format:%H|%ad", "--date=iso", "-10"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        commits = []
+        for line in result.stdout.strip().split('\n'):
+            if '|' in line:
+                sha, date_str = line.split('|')
+                commits.append({
+                    "sha": sha,
+                    "date": datetime.fromisoformat(date_str.strip())
+                })
+        return commits
+    except Exception as e:
+        print(f"Warning: Could not get git history: {e}")
+        return []
 
 
 def test_query_as_of():
     """Test 1: Query As Of (Point in Time)"""
     print_section("TEST 1: Query As Of (Point in Time)")
     
-    # Query documents as they were 7 days ago
-    as_of_date = (datetime.now() - timedelta(days=7)).isoformat()
-    
     try:
+        # Query as of one week ago
+        as_of_date = (datetime.now() - timedelta(days=7)).isoformat()
+        
         response = httpx.post(
             f"{API_BASE_URL}/api/v1/rag/temporal/query",
             json={
-                "question": "What are the RAG enhancements?",
+                "question": "What is the RAG system architecture?",
                 "as_of_date": as_of_date,
-                "service_name": "ecosystem-mcp",
                 "limit": 5
             },
             timeout=60.0
@@ -58,8 +73,8 @@ def test_query_as_of():
             print_result("Query As Of", {
                 "status": "SUCCESS",
                 "as_of_date": as_of_date,
-                "answer_preview": result.get("answer", "")[:200] + "...",
-                "documents_found": result.get("document_count", 0),
+                "answer_preview": result.get("answer", "...")[:100] + "...",
+                "documents_found": len(result.get("documents", [])),
                 "confidence": result.get("confidence", 0),
                 "metadata": result.get("metadata", {})
             })
@@ -80,62 +95,41 @@ def test_query_as_of():
         return False
 
 
-def test_query_evolution():
-    """Test 2: Query Evolution"""
+def test_query_evolution(service_name: str = "ecosystem-mcp"):
+    """Test 2: Query Evolution Tracking"""
     print_section("TEST 2: Query Evolution Tracking")
     
     try:
-        # First, we need to get a document ID
-        # Let's query for documents first
-        search_response = httpx.post(
-            f"{API_BASE_URL}/api/v1/search",
+        response = httpx.post(
+            f"{API_BASE_URL}/api/v1/rag/temporal/evolution",
             json={
-                "query": "RAG enhancements",
-                "limit": 1
+                "topic": "test coverage strategy",
+                "service_name": service_name,
+                "limit_per_period": 3
             },
-            timeout=30.0
+            timeout=60.0
         )
         
-        if search_response.status_code == 200:
-            search_results = search_response.json()
-            if search_results.get("results"):
-                document_id = search_results["results"][0].get("id")
-                
-                # Now test evolution tracking
-                response = httpx.post(
-                    f"{API_BASE_URL}/api/v1/rag/temporal/evolution",
-                    json={
-                        "topic": "RAG query optimization",
-                        "service_name": "ecosystem-mcp",
-                        "limit_per_period": 3
-                    },
-                    timeout=60.0
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    print_result("Query Evolution", {
-                        "status": "SUCCESS",
-                        "timeline_found": result.get("timeline_id") is not None,
-                        "periods_analyzed": len(result.get("periods", [])),
-                        "evolution_summary": result.get("summary", "")[:200] + "...",
-                        "metadata": result.get("metadata", {})
-                    })
-                    return True
-                else:
-                    print_result("Query Evolution", {
-                        "status": "FAILED",
-                        "status_code": response.status_code,
-                        "error": response.text
-                    }, success=False)
-                    return False
-            else:
-                print_result("Query Evolution", {
-                    "status": "SKIPPED",
-                    "reason": "No documents found to track"
-                }, success=False)
-                return False
-                
+        if response.status_code == 200:
+            result = response.json()
+            evolution = result.get("evolution", [])
+            
+            print_result("Query Evolution", {
+                "status": "SUCCESS",
+                "timeline_found": result.get("timeline_id") is not None,
+                "periods_analyzed": len(evolution),
+                "evolution_summary": result.get("summary", "...")[:100] + "...",
+                "metadata": result.get("metadata", {})
+            })
+            return True
+        else:
+            print_result("Query Evolution", {
+                "status": "FAILED",
+                "status_code": response.status_code,
+                "error": response.text
+            }, success=False)
+            return False
+            
     except Exception as e:
         print_result("Query Evolution", {
             "status": "ERROR",
@@ -144,23 +138,20 @@ def test_query_evolution():
         return False
 
 
-def test_query_comparison():
-    """Test 3: Compare Periods"""
+def test_query_comparison(start_date_1: datetime, end_date: datetime):
+    """Test 3: Period Comparison"""
     print_section("TEST 3: Period Comparison")
     
     try:
-        # Compare last 14 days vs previous 14 days
-        end_date = datetime.now()
-        mid_date = end_date - timedelta(days=14)
-        start_date = end_date - timedelta(days=28)
+        # Calculate midpoint for comparison
+        midpoint = start_date_1 + (end_date - start_date_1) / 2
         
         response = httpx.post(
             f"{API_BASE_URL}/api/v1/rag/temporal/comparison",
             json={
-                "question": "RAG query features",
-                "start_date": start_date.isoformat(),
+                "question": "test coverage improvements",
+                "start_date": start_date_1.isoformat(),
                 "end_date": end_date.isoformat(),
-                "service_name": "ecosystem-mcp",
                 "limit": 5
             },
             timeout=60.0
@@ -168,12 +159,13 @@ def test_query_comparison():
         
         if response.status_code == 200:
             result = response.json()
+            
             print_result("Period Comparison", {
                 "status": "SUCCESS",
-                "period_1": f"{start_date.date()} to {mid_date.date()}",
-                "period_2": f"{mid_date.date()} to {end_date.date()}",
-                "comparison_summary": result.get("summary", "")[:200] + "...",
-                "changes_detected": result.get("changes_detected", 0),
+                "period_1": f"{start_date_1.date()} to {midpoint.date()}",
+                "period_2": f"{midpoint.date()} to {end_date.date()}",
+                "comparison_summary": result.get("summary", "...")[:100] + "...",
+                "changes_detected": len(result.get("changes", [])),
                 "metadata": result.get("metadata", {})
             })
             return True
@@ -194,7 +186,7 @@ def test_query_comparison():
 
 
 def test_versioning_as_of():
-    """Test 4: Versioning As Of (Alternative endpoint)"""
+    """Test 4: Versioning As Of Query"""
     print_section("TEST 4: Versioning As Of Query")
     
     try:
@@ -252,42 +244,38 @@ def test_timeline_query():
         )
         
         if response.status_code == 200:
-            timelines = response.json()
+            result = response.json()
             
-            if timelines and len(timelines) > 0:
-                timeline_id = timelines[0]["id"]
+            # Check if we got a successful response
+            if result.get("success"):
+                timeline = result.get("timeline", {})
                 
-                # Query the timeline
-                detail_response = httpx.get(
-                    f"{API_BASE_URL}/api/v1/timeline/{timeline_id}",
-                    timeout=30.0
-                )
-                
-                if detail_response.status_code == 200:
-                    timeline_data = detail_response.json()
-                    print_result("Timeline Query", {
-                        "status": "SUCCESS",
-                        "timeline_id": timeline_id,
-                        "service_name": timeline_data.get("service_name"),
-                        "period_count": len(timeline_data.get("periods", [])),
-                        "date_range": f"{timeline_data.get('start_date')} to {timeline_data.get('end_date')}",
-                        "metadata": timeline_data.get("metadata", {})
-                    })
-                    return True
-                else:
-                    print_result("Timeline Query", {
-                        "status": "FAILED",
-                        "status_code": detail_response.status_code,
-                        "error": detail_response.text
-                    }, success=False)
-                    return False
+                print_result("Timeline Query", {
+                    "status": "SUCCESS",
+                    "service_name": result.get("service_name"),
+                    "timeline_id": timeline.get("timeline_id"),
+                    "timeline_name": timeline.get("name"),
+                    "total_periods": timeline.get("total_periods", 0),
+                    "start_date": timeline.get("start_date"),
+                    "end_date": timeline.get("end_date"),
+                    "confidence_level": timeline.get("confidence_level")
+                })
+                return True
             else:
                 print_result("Timeline Query", {
-                    "status": "NO_TIMELINES",
-                    "message": "No timelines found (normal if ingestion hasn't run with git history)"
-                }, success=True)
-                return True
-                
+                    "status": "FAILED",
+                    "error": "Response not successful",
+                    "response": result
+                }, success=False)
+                return False
+        else:
+            print_result("Timeline Query", {
+                "status": "FAILED",
+                "status_code": response.status_code,
+                "error": response.text
+            }, success=False)
+            return False
+            
     except Exception as e:
         print_result("Timeline Query", {
             "status": "ERROR",
@@ -297,40 +285,51 @@ def test_timeline_query():
 
 
 def main():
-    """Run all Temporal RAG validation tests."""
-    print("\n" + "="*80)
-    print("  TEMPORAL RAG API VALIDATION")
-    print("  Using Real Git History for Testing")
-    print("="*80)
-    
+    print_section("TEMPORAL RAG API VALIDATION")
+    print("Using Real Git History for Testing")
+    print("="*80 + "\n")
+
+    # Get git history for dynamic testing dates
+    git_history = get_git_history()
+    if not git_history:
+        print("❌ No git history found. Cannot run temporal RAG tests.")
+        return False
+
+    # Define test dates based on recent history
+    today = datetime.now()
+    one_week_ago = today - timedelta(days=7)
+    two_weeks_ago = today - timedelta(days=14)
+    four_weeks_ago = today - timedelta(days=28)
+
+    # Test all operations
     results = {
-        "Query As Of": test_query_as_of(),
-        "Query Evolution": test_query_evolution(),
-        "Period Comparison": test_query_comparison(),
-        "Versioning As Of": test_versioning_as_of(),
+        "Query As Of (Point in Time)": test_query_as_of(),
+        "Query Evolution Tracking": test_query_evolution(service_name="ecosystem-mcp"),
+        "Period Comparison": test_query_comparison(two_weeks_ago, today),
+        "Versioning As Of Query": test_versioning_as_of(),
         "Timeline Query": test_timeline_query()
     }
-    
+
     # Summary
     print_section("VALIDATION SUMMARY")
     passed_count = sum(1 for v in results.values() if v is True)
     total = len(results)
-    
+
     print(f"\nTests Passed: {passed_count}/{total}\n")
-    
+
     for test_name, test_passed in results.items():
         status = "✅ PASS" if test_passed else "❌ FAIL"
         print(f"  {status}  {test_name}")
-    
+
     print("\n" + "="*80)
-    
+
     if passed_count == total:
         print("🎉 ALL TEMPORAL RAG OPERATIONS VALIDATED!")
     else:
         print(f"⚠️  {total - passed_count} tests failed or require setup")
-    
+
     print("="*80 + "\n")
-    
+
     return passed_count == total
 
 
@@ -338,4 +337,3 @@ if __name__ == "__main__":
     import sys
     success = main()
     sys.exit(0 if success else 1)
-
