@@ -1,0 +1,65 @@
+# Document Priorities
+# Boost specific documents based on path patterns
+
+priorities:
+  # Critical priority (2.0x boost)
+  critical:
+    level: 2.0
+    description: "Core documentation that should always be prioritized"
+    patterns:
+      - "^README\\.md$"
+      - "^GETTING_STARTED\\.md$"
+      - "^QUICKSTART\\.md$"
+      - "/README\\.md$"
+      - "^docs/index"
+      - "^docs/overview"
+    reason: "Primary entry points and overview documents"
+  
+  # High priority (1.5x boost)
+  high:
+    level: 1.5
+    description: "Important technical documentation"
+    patterns:
+      - "ARCHITECTURE\\.md$"
+      - "API\\.md$"
+      - "^docs/architecture"
+      - "^docs/api"
+      - "^docs/design"
+      - "/architecture/"
+      - "/api/"
+      - "openapi\\.yaml$"
+      - "swagger\\.json$"
+    reason: "Architecture and API documentation"
+  
+  # Medium priority (1.0x boost - neutral)
+  medium:
+    level: 1.0
+    description: "Standard documentation"
+    patterns:
+      - "^docs/"
+      - "\\.md$"
+      - "CONTRIBUTING\\.md$"
+      - "CHANGELOG\\.md$"
+      - "FAQ\\.md$"
+    reason: "General documentation files"
+  
+  # Low priority (0.5x boost)
+  low:
+    level: 0.5
+    description: "Supplementary materials"
+    patterns:
+      - "/examples/"
+      - "/samples/"
+      - "\\.example\\."
+      - "\\.sample\\."
+      - "/demo/"
+      - "/tutorials/"
+    reason: "Examples and samples (less authoritative)"
+
+# Notes:
+# - Patterns are regex (match against file paths)
+# - Level is a multiplier for priority signal (0.0-2.0)
+# - Higher level = higher priority in ranking
+# - Patterns are evaluated in order (first match wins)
+# - Use case-insensitive matching
+

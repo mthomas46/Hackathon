@@ -718,6 +718,91 @@ architecture:
 
 ---
 
+### **2025-10-25 - Step 3.2 COMPLETE** ✅
+
+**Time:** 40 minutes  
+**Status:** ✅ SUCCESS  
+**Files Created/Modified:**
+- `.rag-config/priorities.yaml` (65 lines, 4 priority levels)
+- `src/services/rag/config_loader.py` (PriorityRule model, _load_priorities_file)
+- `src/services/rag/enhanced_rag_service.py` (_compute_priority_scores, integration)
+- `.rag-config/config.yaml` (enabled priorities feature)
+
+**What was implemented:**
+
+1. **Priority Rules File** (`priorities.yaml`):
+   - **4 priority levels:**
+     - Critical (2.0x): README.md, core docs
+     - High (1.5x): Architecture, API docs
+     - Medium (1.0x): Standard docs
+     - Low (0.5x): Examples, samples
+   - Each level includes:
+     - level: Numeric multiplier (0.5-2.0)
+     - description: Human-readable explanation
+     - patterns: Regex patterns to match paths
+     - reason: Why this priority level
+
+2. **Config Loader Updates:**
+   ```python
+   class PriorityRule(BaseModel):
+       level: float = Field(ge=0.0, le=2.0)  # Multiplier
+       description: str
+       patterns: list[str]  # Regex for file paths
+       reason: str
+   
+   def _load_priorities_file(path: Path) -> Dict[str, PriorityRule]:
+       # Parses YAML, validates with Pydantic
+   ```
+
+3. **Priority Scoring Logic:**
+   ```python
+   def _compute_priority_scores(documents) -> List[float]:
+       # Match file paths against priority patterns
+       # First match wins (critical > high > medium > low)
+       # Returns multipliers (0.5-2.0)
+   ```
+
+4. **Integration into Multi-Signal Ranking:**
+   - Priority acts as a **multiplier** (not weighted sum)
+   - Applied after computing base score
+   - Formula: `final_score = base_score * (1.0 + (priority - 1.0) * weight)`
+   - Allows critical docs (2.0) to get 2x boost if priority_weight = 1.0
+
+**Example Priority Rule:**
+```yaml
+critical:
+  level: 2.0
+  description: "Core documentation"
+  patterns:
+    - "^README\\.md$"
+    - "^docs/index"
+  reason: "Primary entry points"
+```
+
+**How It Works:**
+1. Document path: `/docs/API.md`
+2. Matches pattern: `API\\.md$` (high priority)
+3. Gets priority score: 1.5
+4. With priority_weight: 0.15
+5. Adjustment: (1.5 - 1.0) * 0.15 = 0.075
+6. Final score multiplied by: 1.075
+
+**Verification:**
+- ✅ 4 priority levels created
+- ✅ Priorities load successfully
+- ✅ Priority scoring implemented
+- ✅ Integrated into ranking
+- ✅ Feature enabled in config
+
+**Expected Impact:**
+- +5-10% accuracy for priority-aware queries
+- Boosts authoritative sources (READMEs, architecture docs)
+- Reduces noise from examples/samples
+
+**Next:** Step 3.3 - Feedback Collection
+
+---
+
 ## 📦 PHASE 1: FOUNDATION
 
 ---

@@ -360,29 +360,43 @@ class EnhancedRAGService(RAGService):
         # Compute optional signals
         glossary_scores = await self._compute_glossary_scores(documents, question)
         quality_scores = self._compute_quality_scores(documents)
+        priority_scores = self._compute_priority_scores(documents)  # Phase 3
         
         # Get signal weights
         weights = self.config.signal_weights if self.config else {
             'semantic': 0.55,  # Higher weight when no other signals
             'glossary': 0.15,
+            'priority': 0.0,  # Disabled without config
             'content_quality': 0.15,
             'recency': 0.15
         }
         
         # Combine signals using weighted sum
         for idx, doc in enumerate(documents):
-            final_score = (
+            # Compute base score from weighted signals
+            base_score = (
                 semantic_normalized[idx] * weights['semantic'] +
                 glossary_scores[idx] * weights.get('glossary', 0) +
                 quality_scores[idx] * weights.get('content_quality', 0)
                 # Note: recency already in adjusted_score from parent
             )
             
+            # Apply priority as a multiplier (not weighted sum)
+            # Priority acts as a document-level boost
+            priority_weight = weights.get('priority', 0.0)
+            if priority_weight > 0:
+                # Priority scores are 0.5-2.0, apply weighted influence
+                priority_adjustment = (priority_scores[idx] - 1.0) * priority_weight
+                final_score = base_score * (1.0 + priority_adjustment)
+            else:
+                final_score = base_score
+            
             doc['final_score'] = final_score
             doc['signal_breakdown'] = {
                 'semantic': semantic_normalized[idx],
                 'glossary': glossary_scores[idx],
-                'quality': quality_scores[idx]
+                'quality': quality_scores[idx],
+                'priority': priority_scores[idx]
             }
         
         # Re-sort by final score
@@ -500,6 +514,58 @@ class EnhancedRAGService(RAGService):
         
         return self._normalize_scores(scores)
     
+    def _compute_priority_scores(
+        self,
+        documents: List[Dict[str, Any]]
+    ) -> List[float]:
+        """
+        Compute priority scores based on file path patterns.
+        
+        Phase 3 feature: User-defined document priorities.
+        
+        Uses priority rules to boost documents based on path:
+        - Critical (2.0): README.md, core docs
+        - High (1.5): Architecture, API docs
+        - Medium (1.0): Standard docs
+        - Low (0.5): Examples, samples
+        
+        Args:
+            documents: Documents to score
+        
+        Returns:
+            List of priority scores (0.5-2.0)
+        """
+        if not self.config or not self.config.priorities:
+            return [1.0] * len(documents)  # Neutral priority
+        
+        import re
+        scores = []
+        
+        for doc in documents:
+            file_path = doc.get('metadata', {}).get('file_path', '')
+            
+            # Try to match against priority rules (first match wins)
+            matched_priority = 1.0  # Default to medium priority
+            
+            # Check each priority level in order (critical, high, medium, low)
+            for priority_name, priority_rule in self.config.priorities.items():
+                for pattern in priority_rule.patterns:
+                    try:
+                        if re.search(pattern, file_path, re.IGNORECASE):
+                            matched_priority = priority_rule.level
+                            logger.debug(f"Matched priority '{priority_name}' ({priority_rule.level}) for {file_path}")
+                            break
+                    except re.error as e:
+                        logger.warning(f"Invalid priority pattern '{pattern}': {e}")
+                        continue
+                
+                if matched_priority != 1.0:  # Found a match, stop checking
+                    break
+            
+            scores.append(matched_priority)
+        
+        return scores  # Don't normalize, these are multipliers
+
     def _normalize_scores(self, scores: List[float]) -> List[float]:
         """
         Normalize scores to [0, 1] using min-max scaling.

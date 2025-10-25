@@ -41,6 +41,14 @@ class QueryTemplate(BaseModel):
     prefer_recent: bool = True  # Whether to boost recent documents
 
 
+class PriorityRule(BaseModel):
+    """Document priority rule."""
+    level: float = Field(ge=0.0, le=2.0)  # Priority multiplier
+    description: str = ""  # Human-readable description
+    patterns: list[str]  # Regex patterns to match file paths
+    reason: str = ""  # Reason for this priority level
+
+
 class RAGConfig(BaseModel):
     """
     Complete RAG configuration.
@@ -61,9 +69,12 @@ class RAGConfig(BaseModel):
     
     # Exclusion rules
     exclusions: list[ExclusionRule] = []
-    
+
     # Query templates
     templates: Dict[str, QueryTemplate] = {}
+    
+    # Priority rules
+    priorities: Dict[str, PriorityRule] = {}
     
     # Signal weights (must sum to 1.0)
     signal_weights: Dict[str, float] = {
@@ -183,6 +194,12 @@ class OptionalConfigLoader:
                 )
                 config_data['templates'] = templates
             
+            if 'priorities_file' in config_data:
+                priorities = self._load_priorities_file(
+                    self.config_dir / config_data['priorities_file']
+                )
+                config_data['priorities'] = priorities
+            
             # Validate and create config
             config = RAGConfig(**config_data)
             
@@ -285,6 +302,29 @@ class OptionalConfigLoader:
         
         except Exception as e:
             logger.warning(f"Failed to load templates file {path}: {e}")
+            return {}
+    
+    def _load_priorities_file(self, path: Path) -> Dict[str, PriorityRule]:
+        """Load priority rules from separate file."""
+        if not path.exists():
+            return {}
+        
+        try:
+            with open(path, 'r') as f:
+                data = yaml.safe_load(f)
+            
+            priorities = {}
+            for priority_name, priority_data in data.get('priorities', {}).items():
+                try:
+                    priorities[priority_name] = PriorityRule(**priority_data)
+                except Exception as e:
+                    logger.warning(f"Invalid priority rule '{priority_name}': {e}")
+            
+            logger.info(f"✅ Loaded {len(priorities)} priority rules")
+            return priorities
+        
+        except Exception as e:
+            logger.warning(f"Failed to load priorities file {path}: {e}")
             return {}
     
     def invalidate_cache(self):
