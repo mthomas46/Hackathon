@@ -7,6 +7,8 @@ Coordinates the entire ingestion pipeline from Git → Database → ChromaDB.
 
 import asyncio
 import logging
+import time
+import threading
 from typing import Optional
 from uuid import UUID, uuid4
 from datetime import datetime
@@ -44,7 +46,10 @@ class IngestionWorker:
         self.job_processor = JobProcessor(worker_id=self.worker_id)
         self.shutdown_handler = None
         self.current_job_id: Optional[UUID] = None
-        logger.info(f"IngestionWorker initialized (ID: {self.worker_id})")
+        self._start_time = time.time()  # Track uptime
+        self._iteration_count = 0  # Track loop iterations
+        self._last_heartbeat = time.time()  # Track heartbeat
+        logger.info(f"🏗️  IngestionWorker initialized (ID: {self.worker_id})")
     
     async def start(self):
         """
@@ -93,10 +98,18 @@ class IngestionWorker:
         self.running = True
         logger.info(f"🚀 Creating worker loop task... (running={self.running})")
         self._task = asyncio.create_task(self._worker_loop())
+        
+        # ✅ CRITICAL: Add done callback for debugging
+        self._task.add_done_callback(self._on_task_done)
+        
+        # ✅ CRITICAL: Ensure task persists (prevent garbage collection)
+        asyncio.ensure_future(self._task)
+        
         logger.info(f"✅ Task created: {self._task}")
         logger.info(f"✅ Task done: {self._task.done()}")
         logger.info(f"✅ Task cancelled: {self._task.cancelled()}")
-        logger.info("✅ IngestionWorker started with graceful shutdown handler")
+        logger.info(f"✅ Task ID: {id(self._task)}")
+        logger.info("✅ IngestionWorker started with graceful shutdown handler and persistence")
         
         # Monitor task for a few seconds to see if it starts
         logger.info("🔍 Monitoring task startup...")
