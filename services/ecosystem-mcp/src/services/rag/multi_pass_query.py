@@ -236,7 +236,7 @@ Provide exactly {num_passes} sections:"""
         response = await self.ollama_router.generate(
             prompt=prompt,
             temperature=0.3,  # Lower temperature for structured output
-            workload_type='generation'
+            workload_type='rag'  # Use 'rag' to get Desktop GPU routing
         )
         
         # Extract JSON from response
@@ -334,7 +334,7 @@ Provide exactly {num_questions} questions:"""
             response = await self.ollama_router.generate(
                 prompt=prompt,
                 temperature=0.4,
-                workload_type='generation'
+                workload_type='rag'  # Use 'rag' to get Desktop GPU routing
             )
             
             response_text = response.get("response", response.get("text", ""))
@@ -513,7 +513,7 @@ Synthesis:"""
         response = await self.ollama_router.generate(
             prompt=prompt,
             temperature=0.7,
-            workload_type='generation',
+            workload_type='rag',  # Use 'rag' to get Desktop GPU routing
             max_tokens=response_length  # Pass max_tokens for synthesis
         )
         
@@ -582,7 +582,7 @@ Final Answer:"""
         response = await self.ollama_router.generate(
             prompt=prompt,
             temperature=0.7,
-            workload_type='generation',
+            workload_type='rag',  # Use 'rag' to get Desktop GPU routing (critical for speed)
             max_tokens=response_length * 2  # 2x tokens for final synthesis (it's synthesizing multiple sections)
         )
         
