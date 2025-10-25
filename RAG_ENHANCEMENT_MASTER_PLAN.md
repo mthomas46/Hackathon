@@ -189,6 +189,94 @@ return enhanced_behavior(config)
 
 ---
 
+### **2025-10-25 - Step 1.2 COMPLETE** ✅
+
+**Time:** 45 minutes  
+**Status:** ✅ SUCCESS  
+**File Created:** `services/ecosystem-mcp/src/services/rag/enhanced_rag_service.py` (622 lines)
+
+**What was built:**
+- `EnhancedRAGService` - Extends `RAGService` (not replaces)
+- Context-aware exclusion filtering (temporal, gap analysis, doc generation)
+- Multi-signal ranking (semantic + glossary + quality + recency)
+- Token-rich context building (glossary + ranking explanations)
+- Graceful degradation (works without config)
+
+**Tests performed:**
+```bash
+✅ TEST 1: Module Structure
+   - All critical elements present
+
+✅ TEST 2: Context-Aware Exclusions
+   - Temporal: Skip exclusions ✅
+   - Gap analysis: Skip exclusions ✅
+   - Doc generation: Modify exclusions ✅
+
+✅ TEST 3: Class Inheritance
+   - Extends RAGService ✅
+   - Calls parent __init__ ✅
+
+✅ TEST 4: Graceful Degradation
+   - Checks for None config ✅
+   - Falls back to standard behavior ✅
+
+✅ TEST 5: Multi-Signal Ranking
+   - Semantic, Glossary, Quality signals ✅
+   - Normalization implemented ✅
+
+✅ TEST 6: Token-Rich Context
+   - Enhanced context building ✅
+   - Glossary section ✅
+   - Ranking explanations ✅
+```
+
+**Critical Features Implemented:**
+1. **Context-aware filtering:**
+   ```python
+   # Temporal queries see ALL documents (no exclusions)
+   if context_flags.get('temporal'):
+       logger.info("⏰ Temporal query: Skipping exclusions")
+       return documents
+   
+   # Gap analysis sees ALL documents
+   if context_flags.get('gap_analysis'):
+       logger.info("📊 Gap analysis: Skipping exclusions")
+       return documents
+   
+   # Doc generation keeps test files (for examples)
+   if context_flags.get('doc_generation'):
+       logger.info("📝 Doc generation: Keeping test files")
+       # Filter out test-related exclusions
+   ```
+
+2. **Multi-signal ranking:**
+   - Semantic similarity (from parent)
+   - Glossary relevance (term mentions + synonyms)
+   - Content quality (length + updates + references)
+   - Normalized additive scoring (prevents over-boosting)
+
+3. **Token-rich context (Ollama advantage):**
+   - Glossary definitions for relevant terms
+   - Ranking explanations (why these docs)
+   - Full document content (not excerpts)
+
+**Key Design Decisions:**
+1. **Inheritance over replacement:** Extends RAGService, all existing functionality preserved
+2. **Context flags:** Use conversation context to pass feature flags
+3. **Pre-compiled patterns:** Exclusion regex compiled once for performance
+4. **Optional everything:** Every enhancement checks `if self.config:`
+
+**Verification:**
+- ✅ Extends RAGService (backward compatible)
+- ✅ Graceful degradation enforced
+- ✅ Context-aware exclusions (critical for temporal/gap)
+- ✅ Multi-signal ranking implemented
+- ✅ Token-rich context for Ollama
+
+**Next Step:** Step 1.3 - API Integration
+
+---
+
 ## 📦 PHASE 1: FOUNDATION
 
 ---
