@@ -200,6 +200,13 @@ def show(api_base_url: str = None):
                 help="Max retry attempts if selected tier unavailable"
             )
         
+        # Use enhancements toggle
+        use_enhancements = st.checkbox(
+            "✨ Use RAG Enhancements",
+            value=True,
+            help="Enable glossary, exclusions, templates, priorities, and multi-signal ranking"
+        )
+        
         # Submit button
         submitted = st.form_submit_button("🚀 Submit Query", use_container_width=True)
     
@@ -218,7 +225,8 @@ def show(api_base_url: str = None):
                         "tier": tier,
                         "n_results": n_results,
                         "temperature": temperature,
-                        "max_retries": max_retries
+                        "max_retries": max_retries,
+                        "use_enhancements": use_enhancements  # Pass enhancement flag
                     },
                     timeout=300.0  # 5 minutes
                 )
@@ -249,7 +257,34 @@ def show(api_base_url: str = None):
                     if result.get("tier_used") != result.get("tier_requested"):
                         st.warning(f"⚠️ Requested tier `{tier_requested}` was unavailable. Fell back to `{tier_used}`.")
                     
+                    # Enhancement indicators
+                    metadata = result.get("metadata", {})
+                    enhancements = metadata.get("enhancements_applied", [])
+                    matched_template = metadata.get("matched_template")
+                    
+                    if enhancements or matched_template:
+                        st.success("✨ **Enhancements Active!**")
+                        
+                        enh_col1, enh_col2, enh_col3 = st.columns(3)
+                        
+                        with enh_col1:
+                            if enhancements:
+                                st.markdown("**🎯 Enhancements Applied:**")
+                                for enhancement in enhancements:
+                                    st.markdown(f"- ✅ {enhancement}")
+                        
+                        with enh_col2:
+                            if matched_template:
+                                st.markdown("**📋 Template Matched:**")
+                                st.markdown(f"- ✅ {matched_template}")
+                        
+                        with enh_col3:
+                            docs_used = metadata.get("documents_used", 0)
+                            if docs_used > 0:
+                                st.metric("Documents", docs_used)
+                    
                     # Answer text
+                    st.markdown("---")
                     st.markdown(result.get("answer", "No answer generated"))
                     
                     # Sources (if any)

@@ -182,18 +182,17 @@ def show(api_base_url: str):
                 }
                 max_tokens = length_to_tokens.get(response_length, 600)
                 
-                # Make request using enhanced endpoint (single-pass RAG for now)
-                # TODO: Switch to multi-pass endpoint when ready
+                # Make request to multi-pass endpoint
                 response = httpx.post(
-                    f"{api_base_url}/api/v1/query/enhanced",
+                    f"{api_base_url}/api/v1/query/multi-pass",
                     json={
-                        "question": query,
-                        "mode": "rag",
-                        "tier": tier,
+                        "query": query,
+                        "num_sections": num_passes,
+                        "questions_per_section": num_secondary_questions,
                         "n_results": n_results,
                         "temperature": temperature,
-                        "max_retries": 2,
-                        "response_length": max_tokens  # Send as integer (converted from S/M/L/XL)
+                        "response_length": max_tokens,
+                        "use_enhancements": True  # Enable enhancements by default
                     },
                     timeout=900.0
                 )
@@ -217,24 +216,49 @@ def show(api_base_url: str):
                     metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
                     
                     with metric_col1:
-                        st.metric("Mode", result.get("mode", "").upper())
+                        st.metric("Sections", result.get("num_passes", num_passes))
                     
                     with metric_col2:
-                        st.metric("Tier Used", result.get("tier_used", "").upper())
+                        st.metric("Questions", result.get("total_questions_asked", 0))
                     
                     with metric_col3:
                         st.metric("Duration", f"{elapsed_time:.1f}s")
                     
                     with metric_col4:
-                        st.metric("Sources", len(result.get("sources", [])))
+                        st.metric("Total Sources", result.get("total_sources_used", 0))
                     
-                    # Tier fallback warning
-                    if result.get("tier_used") != result.get("tier_requested"):
-                        st.warning(f"⚠️ Tier fallback: {result.get('tier_requested', '').upper()} → {result.get('tier_used', '').upper()}")
+                    # Enhancement indicators
+                    metadata = result.get("metadata", {})
+                    enhancements = metadata.get("enhancements_applied", [])
+                    matched_templates = metadata.get("matched_templates", [])
+                    total_docs = metadata.get("total_documents_used", 0)
+                    
+                    if enhancements or matched_templates:
+                        st.success("✨ **Enhancements Active!**")
+                        
+                        enh_col1, enh_col2, enh_col3 = st.columns(3)
+                        
+                        with enh_col1:
+                            if enhancements:
+                                st.markdown("**🎯 Enhancements Applied:**")
+                                for enhancement in enhancements:
+                                    st.markdown(f"- ✅ {enhancement}")
+                        
+                        with enh_col2:
+                            if matched_templates:
+                                st.markdown("**📋 Templates Matched:**")
+                                for template in matched_templates:
+                                    st.markdown(f"- ✅ {template}")
+                        
+                        with enh_col3:
+                            if total_docs > 0:
+                                st.metric("Documents Retrieved", total_docs)
+                                st.caption("Across all sub-queries")
                     
                     # Answer
+                    st.markdown("---")
                     st.markdown("### 📝 Comprehensive Answer")
-                    st.markdown(result.get("answer", "No answer generated"))
+                    st.markdown(result.get("final_synthesis", result.get("answer", "No answer generated")))
                     
                     # Sources
                     sources = result.get("sources", [])
