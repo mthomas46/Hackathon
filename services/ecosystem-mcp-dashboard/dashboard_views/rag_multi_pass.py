@@ -9,10 +9,25 @@ import httpx
 import json
 import os
 from datetime import datetime
+import time
+
+# Import state manager
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.state_manager import StateManager
+from utils.document_query_managers import (
+    check_for_similar_query,
+    show_similar_query_notification,
+    generate_query_id,
+    generate_doc_id
+)
 
 
 def show(api_base_url: str):
     """Show multi-pass RAG query page."""
+    # Initialize state manager
+    StateManager.initialize()
+    
     st.title("🔬 Multi-Pass RAG Query Interface")
     
     st.markdown("""
@@ -176,6 +191,14 @@ def show(api_base_url: str):
     
     # Process multi-pass query
     if submitted and query:
+        # Check for similar cached query
+        similar_query = check_for_similar_query(query, "multi-pass")
+        
+        if similar_query:
+            show_similar_query_notification(similar_query)
+            st.markdown("---")
+            st.info("💡 **Tip:** A similar query was found. You can view it above or proceed with a new analysis below.")
+        
         # Initialize progress tracking
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -218,6 +241,55 @@ def show(api_base_url: str):
                 
                 if response.status_code == 200:
                     result = response.json()
+                    
+                    progress_bar.progress(95)
+                    status_text.text("💾 Caching results...")
+                    
+                    # Cache the query with full metadata
+                    query_id = generate_query_id(query, "multi-pass")
+                    answer_text = result.get("final_synthesis", result.get("answer", ""))
+                    
+                    StateManager.cache_query(
+                        query_id=query_id,
+                        question=query,
+                        answer=answer_text,
+                        query_type="multi-pass",
+                        query_metadata={
+                            "num_sections": num_passes,
+                            "questions_per_section": num_secondary_questions,
+                            "n_results": n_results,
+                            "temperature": temperature,
+                            "response_length": response_length,
+                            "use_enhancements": use_enhancements,
+                            "tier": tier
+                        },
+                        retrieved_documents=result.get("sources", []),
+                        generation_metadata={
+                            "duration_s": elapsed_time,
+                            "total_questions": result.get("total_questions_asked", 0),
+                            "total_sources": result.get("total_sources_used", 0),
+                            "metadata": result.get("metadata", {})
+                        }
+                    )
+                    
+                    # Save as document if comprehensive
+                    if len(answer_text) > 500:  # Only save substantial answers
+                        doc_id = generate_doc_id(f"Multi-Pass: {query[:50]}", "analysis")
+                        StateManager.add_document(
+                            doc_id=doc_id,
+                            title=f"Multi-Pass Analysis: {query[:60]}...",
+                            content=f"# {query}\n\n{answer_text}",
+                            doc_type="analysis",
+                            metadata={
+                                "source": "multi-pass RAG",
+                                "num_sections": num_passes,
+                                "questions_per_section": num_secondary_questions,
+                                "total_questions": result.get("total_questions_asked", 0),
+                                "duration_s": elapsed_time,
+                                "use_enhancements": use_enhancements
+                            },
+                            tags=["multi-pass", "analysis", "rag"]
+                        )
                     
                     progress_bar.progress(100)
                     status_text.text("✅ Analysis complete!")

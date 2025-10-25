@@ -4,9 +4,23 @@ import streamlit as st
 import httpx
 import json
 from datetime import datetime
+import os
+import sys
+
+# Import state manager
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.state_manager import StateManager
+from utils.document_query_managers import (
+    check_for_similar_query,
+    show_similar_query_notification,
+    generate_query_id
+)
 
 def show(api_base_url: str):
     """Show enhanced RAG query page."""
+    # Initialize state manager
+    StateManager.initialize()
+    
     st.title("🤖 RAG Query Interface")
     
     st.markdown("""
