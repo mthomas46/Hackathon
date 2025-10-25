@@ -1,0 +1,62 @@
+# Exclusion Rules
+# Filter out documents that are never relevant
+
+exclusions:
+  # Global exclusions (apply to all queries)
+  - pattern: "node_modules/"
+    reason: "Third-party dependencies (not project documentation)"
+    applies_to_queries: ["*"]
+  
+  - pattern: "\\.log$"
+    reason: "Log files have no documentation value"
+    applies_to_queries: ["*"]
+  
+  - pattern: "__pycache__/"
+    reason: "Python cache files"
+    applies_to_queries: ["*"]
+  
+  - pattern: "\\.pyc$"
+    reason: "Compiled Python files"
+    applies_to_queries: ["*"]
+  
+  - pattern: "generated/"
+    reason: "Auto-generated files (not authoritative)"
+    applies_to_queries: ["*"]
+  
+  - pattern: "\\.min\\."
+    reason: "Minified files (not human-readable)"
+    applies_to_queries: ["*"]
+  
+  - pattern: "/vendor/"
+    reason: "Third-party vendor code"
+    applies_to_queries: ["*"]
+  
+  - pattern: "/dist/"
+    reason: "Build artifacts"
+    applies_to_queries: ["*"]
+  
+  - pattern: "\\.map$"
+    reason: "Source maps (build artifacts)"
+    applies_to_queries: ["*"]
+  
+  # Conditional exclusions (only for specific query types)
+  - pattern: "\\.test\\."
+    reason: "Test files (for code queries, not documentation)"
+    applies_to_queries: ["api", "code", "implementation"]
+  
+  - pattern: "/tests/"
+    reason: "Test directories (for documentation queries)"
+    applies_to_queries: ["api", "architecture", "usage"]
+  
+  - pattern: "/mocks/"
+    reason: "Mock data (not real implementation)"
+    applies_to_queries: ["*"]
+
+# Notes:
+# - pattern: Regular expression pattern to match file paths
+# - reason: Human-readable explanation for the exclusion
+# - applies_to_queries: ["*"] for all queries, or specific types
+# - Exclusions are skipped for temporal and gap analysis queries
+# - Exclusions are modified for doc generation (keeps test examples)
+# - Use regex syntax: \. for literal dot, $ for end of string
+

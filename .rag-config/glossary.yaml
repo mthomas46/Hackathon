@@ -1,0 +1,66 @@
+# Domain Glossary
+# Define project-specific terms for better search accuracy
+
+glossary:
+  MCP:
+    description: "Model Context Protocol - framework for AI-tool communication"
+    synonyms: ["protocol", "context protocol", "model protocol"]
+    boost_weight: 1.5
+    examples:
+      - "MCP enables tools to provide context to AI models"
+      - "Ecosystem-MCP implements the MCP specification"
+  
+  RAG:
+    description: "Retrieval Augmented Generation - combines search with LLM generation"
+    synonyms: ["retrieval augmented", "semantic search", "vector search"]
+    boost_weight: 1.4
+    examples:
+      - "RAG improves answer accuracy by grounding in documents"
+      - "Multi-pass RAG decomposes complex queries"
+  
+  FastEmbed:
+    description: "High-performance ONNX-based embedding service"
+    synonyms: ["embedding service", "ONNX embeddings", "vector embeddings"]
+    boost_weight: 1.3
+    examples:
+      - "FastEmbed generates embeddings with ONNX runtime"
+      - "Embedding service uses FastEmbed for speed"
+  
+  ChromaDB:
+    description: "Vector database for storing and searching embeddings"
+    synonyms: ["vector database", "embedding database", "chroma", "vector store"]
+    boost_weight: 1.3
+    examples:
+      - "ChromaDB stores document embeddings with metadata"
+      - "Vector database enables semantic search"
+  
+  Ollama:
+    description: "Local LLM runtime for running language models"
+    synonyms: ["LLM", "language model", "local AI", "llama"]
+    boost_weight: 1.4
+    examples:
+      - "Ollama runs large language models locally"
+      - "3-tier LLM routing uses Cursor, Desktop Ollama, and Docker"
+  
+  Temporal:
+    description: "Time-based features for querying historical states"
+    synonyms: ["temporal query", "time-travel", "historical", "as-of query"]
+    boost_weight: 1.3
+    examples:
+      - "Temporal RAG queries documents as they existed at a point in time"
+      - "Timeline tracks documentation evolution"
+  
+  Ingestion:
+    description: "Process of importing and indexing documents"
+    synonyms: ["import", "indexing", "processing", "ingest"]
+    boost_weight: 1.2
+    examples:
+      - "Ingestion pipeline processes git history"
+      - "Snapshot mode ingests current files only"
+
+# Notes:
+# - boost_weight: 1.0-3.0 (1.0 = no boost, 3.0 = max boost)
+# - synonyms: Alternative terms that mean the same thing
+# - Glossary terms boost documents that mention them
+# - Higher weights = stronger boost when term appears
+
