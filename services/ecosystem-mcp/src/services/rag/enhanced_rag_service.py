@@ -162,10 +162,19 @@ class EnhancedRAGService(RAGService):
         )
         
         # Step 6: Format response with enhancement metadata
+        import uuid
+        query_id = str(uuid.uuid4())  # Phase 3: Feedback tracking
+        
         sources = self._format_sources(documents)
         confidence = self._calculate_confidence(documents, answer)
         
+        # Extract matched template name if any (Phase 3)
+        matched_template_name = None
+        if matched_template:
+            matched_template_name = matched_template[0]
+        
         result = {
+            "query_id": query_id,  # Phase 3: For feedback tracking
             "answer": answer,
             "sources": sources,
             "confidence": confidence,
@@ -175,7 +184,9 @@ class EnhancedRAGService(RAGService):
                 "prefer_recent": prefer_recent,
                 "top_score": documents[0]["adjusted_score"] if documents else 0.0,
                 "enhancements_applied": self._get_applied_enhancements(),
-                "context_flags": context_flags
+                "matched_template": matched_template_name,  # Phase 3
+                "context_flags": context_flags,
+                "feedback_endpoint": "/api/v1/feedback"  # Phase 3: Future implementation
             }
         }
         
