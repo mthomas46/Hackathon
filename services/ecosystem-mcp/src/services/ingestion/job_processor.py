@@ -1510,6 +1510,67 @@ class JobProcessor:
                 )
                 existing = result_query.scalar_one_or_none()
                 
+                # ✅ PHASE 2: Extract temporal metadata BEFORE if/else (needed for both new and existing documents)
+                logger.info(f"🔍 [PHASE2-START] Extracting temporal metadata for: {file_path[:60]}")
+                logger.info(f"🔍 [PHASE2-CHECK] git_metadata exists: {git_metadata is not None}")
+                logger.info(f"🔍 [PHASE2-CHECK] job.mode: {job.mode}")
+                
+                git_date_value = None
+                git_author_value = None
+                git_author_email_value = None
+                git_commit_message_value = None
+                
+                # Extract git metadata if in enriched mode
+                if job.mode == "enriched" and git_metadata:
+                    # Extract commit SHA (might be None if using filesystem metadata)
+                    git_commit_sha = git_metadata.get("last_commit_sha")
+                    
+                    logger.info(f"🔍 [PHASE2-META] git_metadata keys: {list(git_metadata.keys())}")
+                    logger.info(f"🔍 [PHASE2-META] metadata_source: {git_metadata.get('metadata_source', 'unknown')}")
+                    
+                    # Try git metadata first
+                    logger.info(f"🔍 [PHASE2-GIT] Checking last_commit_date: {git_metadata.get('last_commit_date', 'NONE')}")
+                    if git_metadata.get("last_commit_date"):
+                        try:
+                            git_date_value = datetime.fromisoformat(git_metadata["last_commit_date"])
+                            logger.info(f"✅ [PHASE2-GIT] Parsed git_date: {git_date_value}")
+                        except Exception as e:
+                            logger.warning(f"❌ [PHASE2-GIT] Failed to parse git_date: {e}")
+    
+                    git_author_value = git_metadata.get("last_commit_author")
+                    git_author_email_value = git_metadata.get("last_commit_author_email")
+                    git_commit_message_value = git_metadata.get("last_commit_message")
+                    
+                    logger.info(f"🔍 [PHASE2-GIT] Extracted: author={git_author_value}, email={git_author_email_value}")
+                    
+                    # Fallback to file mtime if git date not available
+                    if not git_date_value and git_metadata.get("file_mtime"):
+                        logger.info(f"🔍 [PHASE2-FALLBACK1] Using file_mtime: {git_metadata.get('file_mtime')}")
+                        try:
+                            git_date_value = datetime.fromisoformat(git_metadata["file_mtime"])
+                            logger.info(f"✅ [PHASE2-FALLBACK1] Parsed mtime: {git_date_value}")
+                        except Exception as e:
+                            logger.warning(f"❌ [PHASE2-FALLBACK1] Failed to parse file_mtime: {e}")
+                
+                # 🔧 FIX #5c: FINAL fallback - use file mtime even if git_metadata is None
+                if not git_date_value and job.mode == "enriched":
+                    logger.info(f"🔍 [PHASE2-FALLBACK2] git_date still None, trying filesystem mtime")
+                    try:
+                        full_path = os.path.join(job.repo_path, file_path)
+                        logger.info(f"🔍 [PHASE2-FALLBACK2] Full path: {full_path}")
+                        if os.path.exists(full_path):
+                            mtime = os.path.getmtime(full_path)
+                            git_date_value = datetime.fromtimestamp(mtime)
+                            logger.info(f"✅ [PHASE2-FALLBACK2] Using file mtime: {git_date_value}")
+                        else:
+                            logger.warning(f"⚠️  [PHASE2-FALLBACK2] File does not exist: {full_path}")
+                    except Exception as e:
+                        logger.error(f"❌ [PHASE2-FALLBACK2] Failed to get file mtime: {e}")
+                
+                logger.info(f"🔍 [PHASE2-FINAL] Final values:")
+                logger.info(f"   git_date_value: {git_date_value}")
+                logger.info(f"   git_author_value: {git_author_value}")
+                
                 # Check for duplicates and handle missing embeddings
                 if existing:
                     # Check if we should force update (e.g., to fix truncated content in ChromaDB)
@@ -1587,10 +1648,8 @@ class JobProcessor:
                     # ✨ Add git metadata if in enriched mode
                     if git_metadata:
                         doc_metadata.update(git_metadata)
-                        # Extract commit SHA (might be None if using filesystem metadata)
-                        git_commit_sha = git_metadata.get("last_commit_sha")
                         
-                        # 🔧 CRITICAL FIX: Create git commit in SEPARATE transaction
+                        # 🔧 CRITICAL FIX: Create git commit in SEPARATE transaction (if not already created)
                         if git_commit_sha:
                             logger.info(f"🔍 [COMMIT-1] Ensuring git commit exists: {git_commit_sha[:8]}")
                             commit_start = time.time()
@@ -1619,63 +1678,6 @@ class JobProcessor:
                                 logger.error(f"❌ [COMMIT-2-ERROR] Failed to create git commit: {commit_error}")
                                 git_commit_sha = None
                                 logger.warning(f"⚠️  [COMMIT-3] Proceeding without git commit reference for {file_path}")
-                    
-                    # ✅ PHASE 2: Extract temporal metadata for database storage
-                    logger.info(f"🔍 [PHASE2-START] Extracting temporal metadata for: {file_path[:60]}")
-                    logger.info(f"🔍 [PHASE2-CHECK] git_metadata exists: {git_metadata is not None}")
-                    logger.info(f"🔍 [PHASE2-CHECK] job.mode: {job.mode}")
-                    
-                    git_date_value = None
-                    git_author_value = None
-                    git_author_email_value = None
-                    git_commit_message_value = None
-                    
-                    if git_metadata:
-                        logger.info(f"🔍 [PHASE2-META] git_metadata keys: {list(git_metadata.keys())}")
-                        logger.info(f"🔍 [PHASE2-META] metadata_source: {git_metadata.get('metadata_source', 'unknown')}")
-                        # Try git metadata first
-                        logger.info(f"🔍 [PHASE2-GIT] Checking last_commit_date: {git_metadata.get('last_commit_date', 'NONE')}")
-                        if git_metadata.get("last_commit_date"):
-                            try:
-                                git_date_value = datetime.fromisoformat(git_metadata["last_commit_date"])
-                                logger.info(f"✅ [PHASE2-GIT] Parsed git_date: {git_date_value}")
-                            except Exception as e:
-                                logger.warning(f"❌ [PHASE2-GIT] Failed to parse git_date: {e}")
-            
-                        git_author_value = git_metadata.get("last_commit_author")
-                        git_author_email_value = git_metadata.get("last_commit_author_email")
-                        git_commit_message_value = git_metadata.get("last_commit_message")
-                        
-                        logger.info(f"🔍 [PHASE2-GIT] Extracted: author={git_author_value}, email={git_author_email_value}")
-                        
-                        # Fallback to file mtime if git date not available
-                        if not git_date_value and git_metadata.get("file_mtime"):
-                            logger.info(f"🔍 [PHASE2-FALLBACK1] Using file_mtime: {git_metadata.get('file_mtime')}")
-                            try:
-                                git_date_value = datetime.fromisoformat(git_metadata["file_mtime"])
-                                logger.info(f"✅ [PHASE2-FALLBACK1] Parsed mtime: {git_date_value}")
-                            except Exception as e:
-                                logger.warning(f"❌ [PHASE2-FALLBACK1] Failed to parse file_mtime: {e}")
-                    
-                    # 🔧 FIX #5c: FINAL fallback - use file mtime even if git_metadata is None
-                    if not git_date_value and job.mode == "enriched":
-                        logger.info(f"🔍 [PHASE2-FALLBACK2] git_date still None, trying filesystem mtime")
-                        try:
-                            full_path = os.path.join(job.repo_path, file_path)
-                            logger.info(f"🔍 [PHASE2-FALLBACK2] Full path: {full_path}")
-                            if os.path.exists(full_path):
-                                mtime = os.path.getmtime(full_path)
-                                git_date_value = datetime.fromtimestamp(mtime)
-                                logger.info(f"✅ [PHASE2-FALLBACK2] Using file mtime: {git_date_value}")
-                            else:
-                                logger.warning(f"⚠️  [PHASE2-FALLBACK2] File does not exist: {full_path}")
-                        except Exception as e:
-                            logger.error(f"❌ [PHASE2-FALLBACK2] Failed to get file mtime: {e}")
-                    
-                    logger.info(f"🔍 [PHASE2-FINAL] Final values:")
-                    logger.info(f"   git_date_value: {git_date_value}")
-                    logger.info(f"   git_author_value: {git_author_value}")
-                    logger.info(f"   git_commit_sha: {git_commit_sha}")
                     
                     document = DocumentModel(
                         service_name=service_name,  # ✅ FIX #4: Use actual service_name, not mode
