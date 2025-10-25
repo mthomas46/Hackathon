@@ -10,13 +10,22 @@ import time
 from datetime import datetime
 from typing import List, Dict, Any
 
+# Import state manager
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.state_manager import StateManager
+
 
 def show(api_base_url: str):
     """Display documentation generator page with enhanced feedback."""
     st.title("📖 Documentation Generator")
     st.markdown("Generate comprehensive documentation using multi-pass RAG queries")
     
-    # Initialize session state
+    # Initialize state manager
+    StateManager.initialize()
+    
+    # Initialize session state (legacy support)
     if "generation_results" not in st.session_state:
         st.session_state.generation_results = {}
     if "generation_metrics" not in st.session_state:
@@ -346,6 +355,21 @@ def show(api_base_url: str):
                 st.session_state.generation_start_time = time.time()
                 st.session_state.generation_results = {}
                 st.session_state.generation_metrics = []
+                
+                # Register process with state manager
+                generation_id = f"doc_gen_{int(time.time())}"
+                StateManager.register_process(
+                    process_id=generation_id,
+                    process_type="generation",
+                    description=f"Documentation generation for {config.get('directory', 'unknown')}",
+                    metadata={
+                        "sections": config['sections'],
+                        "total_queries": len(config['sections']) * len(config['passes']) * config['queries_per_pass'],
+                        "tier": config['tier']
+                    }
+                )
+                st.session_state.generation_process_id = generation_id
+                
                 st.rerun()
         
         # Generation in progress
@@ -411,10 +435,38 @@ def show(api_base_url: str):
                 
                 # Update progress
                 progress_bar.progress((i + 1) / total_sections)
+                
+                # Update process status
+                if "generation_process_id" in st.session_state:
+                    progress_percent = ((i + 1) / total_sections) * 100
+                    StateManager.update_process_status(
+                        st.session_state.generation_process_id,
+                        status="running",
+                        progress=progress_percent
+                    )
             
             # Generation complete
             st.session_state.generating = False
             generation_time = time.time() - st.session_state.generation_start_time
+            
+            # Mark process as complete
+            if "generation_process_id" in st.session_state:
+                StateManager.complete_process(
+                    st.session_state.generation_process_id,
+                    result={"sections": len(st.session_state.generation_results), "duration": generation_time}
+                )
+            
+            # Save generated content to state manager for persistence
+            for section, content in st.session_state.generation_results.items():
+                StateManager.save_generated_content(
+                    key=f"doc_{section}_{int(time.time())}",
+                    content=content,
+                    metadata={
+                        "section": section,
+                        "directory": config.get('directory'),
+                        "tier": config.get('tier')
+                    }
+                )
             
             st.success(f"🎉 Documentation generated in {generation_time:.1f} seconds!")
             st.balloons()

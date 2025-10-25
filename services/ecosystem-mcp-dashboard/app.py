@@ -22,6 +22,17 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Import health checker
 from utils.health_check import HealthChecker
 
+# Import state management
+from utils.state_manager import StateManager
+from utils.active_process_widget import (
+    show_active_processes,
+    show_generated_content_manager,
+    show_state_persistence_indicator
+)
+
+# Initialize state manager
+StateManager.initialize()
+
 # Page configuration
 st.set_page_config(
     page_title="Ecosystem MCP Dashboard",
@@ -167,6 +178,19 @@ if 'api_base_url' not in st.session_state:
     st.session_state.api_base_url = api_base_url
 else:
     st.session_state.api_base_url = api_base_url
+
+# ============================================================================
+# Active Process Management Widgets
+# ============================================================================
+
+# Show active processes widget
+show_active_processes()
+
+# Show generated content manager
+show_generated_content_manager()
+
+# Show state persistence indicator
+show_state_persistence_indicator()
 
 # Page routing
 if page == "🏠 Home":
