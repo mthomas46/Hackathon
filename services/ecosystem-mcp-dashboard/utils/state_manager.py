@@ -26,6 +26,10 @@ class StateManager:
     LAST_PAGE_KEY = "last_page"
     PAGE_STATE_KEY = "page_state"
     
+    # New keys for enhanced management
+    DOCUMENT_MANAGER_KEY = "document_manager"  # Organized generated documents
+    QUERY_CACHE_KEY = "query_cache"  # Full RAG query cache with metadata
+    
     @staticmethod
     def initialize():
         """Initialize all state keys if they don't exist."""
@@ -36,7 +40,9 @@ class StateManager:
             StateManager.TIMELINE_CACHE_KEY: {},
             StateManager.UNSAVED_CHANGES_KEY: False,
             StateManager.LAST_PAGE_KEY: None,
-            StateManager.PAGE_STATE_KEY: {}
+            StateManager.PAGE_STATE_KEY: {},
+            StateManager.DOCUMENT_MANAGER_KEY: {},
+            StateManager.QUERY_CACHE_KEY: {}
         }
         
         for key, default_value in defaults.items():
@@ -357,6 +363,415 @@ class StateManager:
         return history
     
     # ========================================================================
+    # Document Manager
+    # ========================================================================
+    
+    @staticmethod
+    def add_document(
+        doc_id: str,
+        title: str,
+        content: str,
+        doc_type: str,
+        metadata: Optional[Dict] = None,
+        tags: Optional[List[str]] = None
+    ) -> None:
+        """
+        Add a document to the document manager.
+        
+        Args:
+            doc_id: Unique document identifier
+            title: Document title
+            content: Full document content
+            doc_type: Type (documentation, report, analysis, etc.)
+            metadata: Optional metadata (source, generation method, etc.)
+            tags: Optional tags for categorization
+        """
+        StateManager.initialize()
+        
+        document = {
+            "doc_id": doc_id,
+            "title": title,
+            "content": content,
+            "doc_type": doc_type,
+            "metadata": metadata or {},
+            "tags": tags or [],
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat(),
+            "word_count": len(content.split()),
+            "char_count": len(content)
+        }
+        
+        st.session_state[StateManager.DOCUMENT_MANAGER_KEY][doc_id] = document
+        logger.info(f"📄 Added document: {title} ({doc_type})")
+    
+    @staticmethod
+    def get_document(doc_id: str) -> Optional[Dict]:
+        """Retrieve a document by ID."""
+        StateManager.initialize()
+        return st.session_state[StateManager.DOCUMENT_MANAGER_KEY].get(doc_id)
+    
+    @staticmethod
+    def update_document(
+        doc_id: str,
+        content: Optional[str] = None,
+        metadata: Optional[Dict] = None,
+        tags: Optional[List[str]] = None
+    ) -> bool:
+        """Update an existing document."""
+        StateManager.initialize()
+        
+        if doc_id not in st.session_state[StateManager.DOCUMENT_MANAGER_KEY]:
+            return False
+        
+        doc = st.session_state[StateManager.DOCUMENT_MANAGER_KEY][doc_id]
+        
+        if content is not None:
+            doc["content"] = content
+            doc["word_count"] = len(content.split())
+            doc["char_count"] = len(content)
+        
+        if metadata is not None:
+            doc["metadata"].update(metadata)
+        
+        if tags is not None:
+            doc["tags"] = tags
+        
+        doc["updated_at"] = datetime.now().isoformat()
+        
+        logger.info(f"📝 Updated document: {doc_id}")
+        return True
+    
+    @staticmethod
+    def delete_document(doc_id: str) -> bool:
+        """Delete a document."""
+        StateManager.initialize()
+        
+        if doc_id in st.session_state[StateManager.DOCUMENT_MANAGER_KEY]:
+            del st.session_state[StateManager.DOCUMENT_MANAGER_KEY][doc_id]
+            logger.info(f"🗑️ Deleted document: {doc_id}")
+            return True
+        return False
+    
+    @staticmethod
+    def list_documents(
+        doc_type: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        sort_by: str = "created_at",
+        reverse: bool = True
+    ) -> List[Dict]:
+        """
+        List all documents with optional filtering and sorting.
+        
+        Args:
+            doc_type: Filter by document type
+            tags: Filter by tags (documents must have all tags)
+            sort_by: Sort field (created_at, updated_at, title, word_count)
+            reverse: Sort in reverse order (newest first by default)
+        """
+        StateManager.initialize()
+        
+        docs = list(st.session_state[StateManager.DOCUMENT_MANAGER_KEY].values())
+        
+        # Filter by type
+        if doc_type:
+            docs = [d for d in docs if d["doc_type"] == doc_type]
+        
+        # Filter by tags
+        if tags:
+            docs = [d for d in docs if all(tag in d["tags"] for tag in tags)]
+        
+        # Sort
+        if sort_by in ["created_at", "updated_at", "title", "word_count", "char_count"]:
+            docs.sort(key=lambda d: d.get(sort_by, ""), reverse=reverse)
+        
+        return docs
+    
+    @staticmethod
+    def search_documents(
+        search_query: str,
+        search_in: List[str] = ["title", "content", "tags"]
+    ) -> List[Dict]:
+        """
+        Search documents by query string.
+        
+        Args:
+            search_query: Query string to search for
+            search_in: Fields to search in (title, content, tags, metadata)
+        """
+        StateManager.initialize()
+        
+        query_lower = search_query.lower()
+        results = []
+        
+        for doc in st.session_state[StateManager.DOCUMENT_MANAGER_KEY].values():
+            match = False
+            
+            if "title" in search_in and query_lower in doc["title"].lower():
+                match = True
+            
+            if "content" in search_in and query_lower in doc["content"].lower():
+                match = True
+            
+            if "tags" in search_in:
+                for tag in doc["tags"]:
+                    if query_lower in tag.lower():
+                        match = True
+                        break
+            
+            if "metadata" in search_in:
+                for key, value in doc["metadata"].items():
+                    if query_lower in str(value).lower():
+                        match = True
+                        break
+            
+            if match:
+                results.append(doc)
+        
+        return results
+    
+    @staticmethod
+    def get_document_stats() -> Dict:
+        """Get document manager statistics."""
+        StateManager.initialize()
+        
+        docs = st.session_state[StateManager.DOCUMENT_MANAGER_KEY].values()
+        
+        if not docs:
+            return {
+                "total_documents": 0,
+                "total_words": 0,
+                "total_chars": 0,
+                "by_type": {},
+                "total_tags": 0
+            }
+        
+        by_type = {}
+        all_tags = set()
+        
+        for doc in docs:
+            doc_type = doc["doc_type"]
+            by_type[doc_type] = by_type.get(doc_type, 0) + 1
+            all_tags.update(doc["tags"])
+        
+        return {
+            "total_documents": len(docs),
+            "total_words": sum(d["word_count"] for d in docs),
+            "total_chars": sum(d["char_count"] for d in docs),
+            "by_type": by_type,
+            "total_tags": len(all_tags),
+            "unique_tags": sorted(list(all_tags))
+        }
+    
+    # ========================================================================
+    # Query Cache
+    # ========================================================================
+    
+    @staticmethod
+    def cache_query(
+        query_id: str,
+        question: str,
+        answer: str,
+        query_type: str,
+        query_metadata: Dict,
+        retrieved_documents: List[Dict],
+        generation_metadata: Optional[Dict] = None
+    ) -> None:
+        """
+        Cache a RAG query with full metadata.
+        
+        Args:
+            query_id: Unique query identifier
+            question: Original question text
+            answer: Generated answer
+            query_type: Type (basic, contextual, rag, multi-pass, temporal, etc.)
+            query_metadata: Metadata used for query (tier, n_results, temperature, etc.)
+            retrieved_documents: List of documents used to generate answer
+            generation_metadata: Optional generation metadata (timing, costs, etc.)
+        """
+        StateManager.initialize()
+        
+        cache_entry = {
+            "query_id": query_id,
+            "question": question,
+            "answer": answer,
+            "query_type": query_type,
+            "query_metadata": query_metadata,
+            "retrieved_documents": retrieved_documents,
+            "generation_metadata": generation_metadata or {},
+            "timestamp": datetime.now().isoformat(),
+            "answer_length": len(answer),
+            "num_documents": len(retrieved_documents)
+        }
+        
+        st.session_state[StateManager.QUERY_CACHE_KEY][query_id] = cache_entry
+        logger.info(f"💾 Cached query: {question[:50]}... ({query_type})")
+    
+    @staticmethod
+    def get_cached_query(query_id: str) -> Optional[Dict]:
+        """Retrieve a cached query by ID."""
+        StateManager.initialize()
+        return st.session_state[StateManager.QUERY_CACHE_KEY].get(query_id)
+    
+    @staticmethod
+    def find_similar_cached_query(
+        question: str,
+        query_type: Optional[str] = None,
+        threshold: float = 0.8
+    ) -> Optional[Dict]:
+        """
+        Find a similar cached query (simple string similarity).
+        
+        Args:
+            question: Question to match
+            query_type: Optional filter by query type
+            threshold: Similarity threshold (0.0-1.0)
+        """
+        StateManager.initialize()
+        
+        question_lower = question.lower()
+        best_match = None
+        best_score = 0.0
+        
+        for entry in st.session_state[StateManager.QUERY_CACHE_KEY].values():
+            # Filter by type if specified
+            if query_type and entry["query_type"] != query_type:
+                continue
+            
+            cached_question_lower = entry["question"].lower()
+            
+            # Simple similarity: ratio of matching words
+            question_words = set(question_lower.split())
+            cached_words = set(cached_question_lower.split())
+            
+            if not question_words or not cached_words:
+                continue
+            
+            intersection = question_words & cached_words
+            union = question_words | cached_words
+            
+            similarity = len(intersection) / len(union) if union else 0.0
+            
+            if similarity > best_score and similarity >= threshold:
+                best_score = similarity
+                best_match = {**entry, "similarity_score": similarity}
+        
+        return best_match
+    
+    @staticmethod
+    def list_cached_queries(
+        query_type: Optional[str] = None,
+        sort_by: str = "timestamp",
+        reverse: bool = True,
+        limit: Optional[int] = None
+    ) -> List[Dict]:
+        """
+        List cached queries with optional filtering.
+        
+        Args:
+            query_type: Filter by query type
+            sort_by: Sort field (timestamp, answer_length, num_documents)
+            reverse: Sort in reverse order
+            limit: Maximum number of results
+        """
+        StateManager.initialize()
+        
+        queries = list(st.session_state[StateManager.QUERY_CACHE_KEY].values())
+        
+        # Filter by type
+        if query_type:
+            queries = [q for q in queries if q["query_type"] == query_type]
+        
+        # Sort
+        if sort_by in ["timestamp", "answer_length", "num_documents"]:
+            queries.sort(key=lambda q: q.get(sort_by, ""), reverse=reverse)
+        
+        # Limit
+        if limit:
+            queries = queries[:limit]
+        
+        return queries
+    
+    @staticmethod
+    def search_cached_queries(search_query: str) -> List[Dict]:
+        """Search cached queries by question or answer content."""
+        StateManager.initialize()
+        
+        query_lower = search_query.lower()
+        results = []
+        
+        for entry in st.session_state[StateManager.QUERY_CACHE_KEY].values():
+            if (query_lower in entry["question"].lower() or 
+                query_lower in entry["answer"].lower()):
+                results.append(entry)
+        
+        return results
+    
+    @staticmethod
+    def delete_cached_query(query_id: str) -> bool:
+        """Delete a cached query."""
+        StateManager.initialize()
+        
+        if query_id in st.session_state[StateManager.QUERY_CACHE_KEY]:
+            del st.session_state[StateManager.QUERY_CACHE_KEY][query_id]
+            logger.info(f"🗑️ Deleted cached query: {query_id}")
+            return True
+        return False
+    
+    @staticmethod
+    def clear_query_cache(query_type: Optional[str] = None) -> int:
+        """
+        Clear query cache, optionally by type.
+        
+        Returns:
+            Number of queries cleared
+        """
+        StateManager.initialize()
+        
+        if query_type is None:
+            count = len(st.session_state[StateManager.QUERY_CACHE_KEY])
+            st.session_state[StateManager.QUERY_CACHE_KEY] = {}
+            logger.info(f"🧹 Cleared {count} cached queries")
+            return count
+        else:
+            cache = st.session_state[StateManager.QUERY_CACHE_KEY]
+            to_delete = [
+                qid for qid, entry in cache.items() 
+                if entry["query_type"] == query_type
+            ]
+            for qid in to_delete:
+                del cache[qid]
+            logger.info(f"🧹 Cleared {len(to_delete)} cached queries of type {query_type}")
+            return len(to_delete)
+    
+    @staticmethod
+    def get_query_cache_stats() -> Dict:
+        """Get query cache statistics."""
+        StateManager.initialize()
+        
+        queries = st.session_state[StateManager.QUERY_CACHE_KEY].values()
+        
+        if not queries:
+            return {
+                "total_queries": 0,
+                "by_type": {},
+                "total_documents_retrieved": 0,
+                "avg_answer_length": 0
+            }
+        
+        by_type = {}
+        for query in queries:
+            qtype = query["query_type"]
+            by_type[qtype] = by_type.get(qtype, 0) + 1
+        
+        return {
+            "total_queries": len(queries),
+            "by_type": by_type,
+            "total_documents_retrieved": sum(q["num_documents"] for q in queries),
+            "avg_answer_length": sum(q["answer_length"] for q in queries) / len(queries),
+            "avg_documents_per_query": sum(q["num_documents"] for q in queries) / len(queries)
+        }
+    
+    # ========================================================================
     # Utility Methods
     # ========================================================================
     
@@ -370,7 +785,9 @@ class StateManager:
             "generated_content": st.session_state[StateManager.GENERATED_CONTENT_KEY],
             "active_processes": st.session_state[StateManager.ACTIVE_PROCESSES_KEY],
             "query_history": st.session_state[StateManager.QUERY_HISTORY_KEY],
-            "page_state": st.session_state[StateManager.PAGE_STATE_KEY]
+            "page_state": st.session_state[StateManager.PAGE_STATE_KEY],
+            "document_manager": st.session_state[StateManager.DOCUMENT_MANAGER_KEY],
+            "query_cache": st.session_state[StateManager.QUERY_CACHE_KEY]
         }
     
     @staticmethod
@@ -381,7 +798,9 @@ class StateManager:
             StateManager.ACTIVE_PROCESSES_KEY,
             StateManager.QUERY_HISTORY_KEY,
             StateManager.TIMELINE_CACHE_KEY,
-            StateManager.PAGE_STATE_KEY
+            StateManager.PAGE_STATE_KEY,
+            StateManager.DOCUMENT_MANAGER_KEY,
+            StateManager.QUERY_CACHE_KEY
         ]:
             if key in st.session_state:
                 st.session_state[key] = {} if key != StateManager.QUERY_HISTORY_KEY else []
@@ -399,7 +818,9 @@ class StateManager:
             "active_processes_count": len(StateManager.get_running_processes()),
             "query_history_count": len(st.session_state[StateManager.QUERY_HISTORY_KEY]),
             "has_unsaved_changes": st.session_state.get(StateManager.UNSAVED_CHANGES_KEY, False),
-            "page_states_saved": len(st.session_state[StateManager.PAGE_STATE_KEY])
+            "page_states_saved": len(st.session_state[StateManager.PAGE_STATE_KEY]),
+            "documents_count": len(st.session_state[StateManager.DOCUMENT_MANAGER_KEY]),
+            "cached_queries_count": len(st.session_state[StateManager.QUERY_CACHE_KEY])
         }
 
 

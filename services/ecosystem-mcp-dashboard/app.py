@@ -29,6 +29,12 @@ from utils.active_process_widget import (
     show_generated_content_manager,
     show_state_persistence_indicator
 )
+from utils.document_query_managers import (
+    show_document_manager,
+    show_query_cache,
+    show_document_viewer,
+    show_query_viewer
+)
 
 # Initialize state manager
 StateManager.initialize()
@@ -189,8 +195,20 @@ show_active_processes()
 # Show generated content manager
 show_generated_content_manager()
 
+# Show document manager widget
+show_document_manager()
+
+# Show query cache widget
+show_query_cache()
+
 # Show state persistence indicator
 show_state_persistence_indicator()
+
+# Show document viewer if viewing a document
+show_document_viewer()
+
+# Show query viewer if viewing a query
+show_query_viewer()
 
 # Page routing
 if page == "🏠 Home":
