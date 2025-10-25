@@ -1546,7 +1546,7 @@ class JobProcessor:
                                 logger.warning(f"Failed to parse file_mtime: {e}")
                     
                     document = DocumentModel(
-                        service_name=job.mode,  # "snapshot" or "enriched"
+                        service_name=service_name,  # ✅ FIX #4: Use actual service_name, not mode
                         file_path=file_path,
                         original_format=file_extension,
                         original_content=content[:10000] if len(content) <= 10000 else content[:10000] + "...",
