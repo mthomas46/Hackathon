@@ -459,6 +459,92 @@ class ContextAwareRAG:
             limit_per_period=limit_per_period
         )
     
+    async def query_timeline(
+        self,
+        service_name: str,
+        limit: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Query timeline information for a service.
+        
+        Returns timeline metadata and periods.
+        
+        Args:
+            service_name: Service to get timeline for
+            limit: Maximum number of periods to return
+        
+        Returns:
+            Timeline information with periods
+        """
+        from ...storage import get_database
+        from ...storage.db_models import TimelineModel
+        from sqlalchemy import select
+        
+        logger.info(f"📊 Timeline query for service: {service_name}")
+        
+        try:
+            # Get or create timeline
+            db = get_database()
+            async with db.session() as session:
+                result = await session.execute(
+                    select(TimelineModel)
+                    .where(TimelineModel.service_name == service_name)
+                    .limit(1)
+                )
+                timeline_model = result.scalar_one_or_none()
+                
+                if not timeline_model:
+                    # Auto-create timeline
+                    logger.info(f"📝 Creating timeline for: {service_name}")
+                    now = datetime.utcnow()
+                    timeline_model = TimelineModel(
+                        name=f"{service_name} Timeline",
+                        service_name=service_name,
+                        repo_path=f"/repo/services/{service_name}",
+                        description=f"Auto-generated timeline for {service_name}",
+                        start_date=datetime(2020, 1, 1),
+                        end_date=now,
+                        confidence_level="MEDIUM",
+                        confidence_metadata={},
+                        period_strategy="adaptive",
+                        created_at=now,
+                        updated_at=now
+                    )
+                    session.add(timeline_model)
+                    await session.commit()
+                    logger.info(f"✅ Timeline created: {timeline_model.id}")
+                
+                # Get periods
+                from ...storage.repositories import TimePeriodRepository
+                period_repo = TimePeriodRepository(session)
+                periods = await period_repo.get_by_timeline(timeline_model.id, order_by_sequence=True)
+                
+                # Format response
+                return {
+                    "timeline_id": str(timeline_model.id),
+                    "name": timeline_model.name,
+                    "service_name": timeline_model.service_name,
+                    "start_date": timeline_model.start_date.isoformat() if timeline_model.start_date else None,
+                    "end_date": timeline_model.end_date.isoformat() if timeline_model.end_date else None,
+                    "confidence_level": timeline_model.confidence_level,
+                    "period_strategy": timeline_model.period_strategy,
+                    "total_periods": len(periods),
+                    "periods": [
+                        {
+                            "id": str(p.id),
+                            "name": p.name,
+                            "sequence": p.sequence_number,
+                            "start_date": p.start_date.isoformat(),
+                            "end_date": p.end_date.isoformat()
+                        }
+                        for p in periods[:limit]
+                    ]
+                }
+                
+        except Exception as e:
+            logger.error(f"Timeline query failed: {e}", exc_info=True)
+            raise
+    
     async def query_comparison(
         self,
         query: str,
