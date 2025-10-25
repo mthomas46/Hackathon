@@ -172,6 +172,9 @@ class MultiPassQueryService:
             section_results = valid_section_results
             logger.info(f"✅ Completed {len(section_results)} sections in PARALLEL")
             
+            # Calculate total questions
+            total_questions = len(all_questions)
+            
             # Step 4: Final synthesis
             if progress_callback:
                 await progress_callback("synthesizing", 90, "Synthesizing final answer...")
