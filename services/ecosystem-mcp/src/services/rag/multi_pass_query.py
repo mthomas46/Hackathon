@@ -16,6 +16,7 @@ from dataclasses import dataclass, field, asdict
 import hashlib
 
 from .rag_service import get_rag_service
+from .enhanced_rag_service import get_enhanced_rag_service
 from ..models.ollama_router import get_ollama_router
 
 logger = logging.getLogger(__name__)
@@ -91,6 +92,7 @@ class MultiPassQueryService:
         n_results: int = 10,
         temperature: float = 0.7,
         response_length: int = 1000,
+        use_enhancements: bool = False,
         progress_callback: Optional[callable] = None
     ) -> MultiPassResult:
         """
@@ -103,15 +105,26 @@ class MultiPassQueryService:
             n_results: Documents to retrieve per question
             temperature: LLM temperature
             response_length: Target response length in tokens (affects verbosity)
+            use_enhancements: Use enhanced RAG with optional config (glossary, templates, priorities)
             progress_callback: Optional callback for progress updates
         
         Returns:
             MultiPassResult with complete analysis
         """
         start_time = datetime.now()
+        
+        # Select RAG service based on enhancements flag
+        if use_enhancements:
+            logger.info("🎨 Using EnhancedRAGService with optional config")
+            rag_service = get_enhanced_rag_service()
+        else:
+            logger.info("📊 Using standard RAGService")
+            rag_service = get_rag_service()
+        
         logger.info(
             f"Starting multi-pass query: passes={num_passes}, "
-            f"secondary_questions={num_secondary_questions}"
+            f"secondary_questions={num_secondary_questions}, "
+            f"use_enhancements={use_enhancements}"
         )
         
         try:
@@ -119,19 +132,25 @@ class MultiPassQueryService:
             if progress_callback:
                 await progress_callback("decomposing", 0, "Decomposing query into sections...")
             
+            logger.info(f"📋 Step 1: Decomposing query into {num_passes} sections...")
             sections = await self._decompose_query(query, num_passes)
+            logger.info(f"✅ Decomposed into {len(sections)} sections: {[s['name'] for s in sections]}")
             
             # Step 2: Generate secondary questions for each section
             if progress_callback:
                 await progress_callback("generating_questions", 10, "Generating secondary questions...")
             
             # 🚀 OPTIMIZATION: Generate questions for all sections in parallel (3× speedup!)
+            logger.info(f"❓ Step 2: Generating {num_secondary_questions} questions per section...")
             all_questions = await self._generate_secondary_questions(
                 query, sections, num_secondary_questions
             )
+            logger.info(f"✅ Generated {len(all_questions)} total questions across all sections")
             
             # 🚀 PHASE 2 OPTIMIZATION: Process ALL sections in PARALLEL (2-3× speedup!)
-            logger.info(f"🚀 Processing {len(sections)} sections in PARALLEL (all {len(all_questions)} questions will run together!)")
+            logger.info(f"🔍 Step 3: Processing {len(sections)} sections in PARALLEL...")
+            logger.info(f"  → All {len(all_questions)} RAG queries will execute simultaneously")
+            logger.info(f"  → Using {'Enhanced' if use_enhancements else 'Standard'} RAG service")
             
             # Create tasks for all sections
             section_tasks = [
@@ -497,11 +516,21 @@ Provide exactly {num_questions} questions:"""
                     n_results
                 )
                 
-                rag_result = await self.rag_service.ask(
+                logger.debug(
+                    f"  Executing RAG for question {question_index + 1}/{len(section_questions)}: "
+                    f"{question.question[:60]}..."
+                )
+                
+                rag_result = await rag_service.ask(
                     question=question.question,
                     n_results=adaptive_n,  # ✅ Adaptive!
                     temperature=temperature,
                     response_length=response_length
+                )
+                
+                logger.debug(
+                    f"  ✅ RAG completed: {len(rag_result.get('answer', ''))} chars, "
+                    f"confidence: {rag_result.get('confidence', 0):.3f}"
                 )
                 
                 q_duration = (datetime.now() - q_start).total_seconds()

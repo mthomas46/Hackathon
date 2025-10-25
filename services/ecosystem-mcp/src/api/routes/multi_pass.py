@@ -59,6 +59,10 @@ class MultiPassRequest(BaseModel):
         le=4000,
         description="Target response length in tokens (affects verbosity)"
     )
+    use_enhancements: bool = Field(
+        default=False,
+        description="Use enhanced RAG with optional config (glossary, exclusions, templates, priorities)"
+    )
     stream: bool = Field(
         default=False,
         description="Stream progress updates (SSE)"
@@ -149,13 +153,16 @@ async def multi_pass_query(request: MultiPassRequest):
     try:
         multi_pass_service = get_multi_pass_service()
         
+        logger.info(f"Multi-pass query request: enhancements={request.use_enhancements}")
+        
         result = await multi_pass_service.process_query(
             query=request.query,
             num_passes=request.num_passes,
             num_secondary_questions=request.num_secondary_questions,
             n_results=request.n_results,
             temperature=request.temperature,
-            response_length=request.response_length
+            response_length=request.response_length,
+            use_enhancements=request.use_enhancements
         )
         
         # Create section summaries
