@@ -99,9 +99,6 @@ class IngestionWorker:
         logger.info(f"🚀 Creating worker loop task... (running={self.running})")
         self._task = asyncio.create_task(self._worker_loop())
         
-        # ✅ CRITICAL: Add done callback for debugging
-        self._task.add_done_callback(self._on_task_done)
-        
         # ✅ CRITICAL: Ensure task persists (prevent garbage collection)
         asyncio.ensure_future(self._task)
         
