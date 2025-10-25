@@ -1282,7 +1282,6 @@ class JobProcessor:
                     full_path = Path(job.repo_path) / file_path
                     if full_path.exists():
                         stat = os.stat(full_path)
-                        from datetime import datetime
                         
                         git_metadata = {
                             "file_mtime": datetime.fromtimestamp(stat.st_mtime).isoformat(),
