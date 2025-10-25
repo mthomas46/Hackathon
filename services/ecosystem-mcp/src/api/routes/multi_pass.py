@@ -53,6 +53,12 @@ class MultiPassRequest(BaseModel):
         le=1.0,
         description="LLM temperature"
     )
+    response_length: int = Field(
+        default=1000,
+        ge=100,
+        le=4000,
+        description="Target response length in tokens (affects verbosity)"
+    )
     stream: bool = Field(
         default=False,
         description="Stream progress updates (SSE)"
@@ -148,7 +154,8 @@ async def multi_pass_query(request: MultiPassRequest):
             num_passes=request.num_passes,
             num_secondary_questions=request.num_secondary_questions,
             n_results=request.n_results,
-            temperature=request.temperature
+            temperature=request.temperature,
+            response_length=request.response_length
         )
         
         # Create section summaries
@@ -265,6 +272,7 @@ async def _generate_progress_events(service, request):
                 num_secondary_questions=request.num_secondary_questions,
                 n_results=request.n_results,
                 temperature=request.temperature,
+                response_length=request.response_length,
                 progress_callback=callback
             )
             

@@ -90,6 +90,7 @@ class MultiPassQueryService:
         num_secondary_questions: int = 3,
         n_results: int = 10,
         temperature: float = 0.7,
+        response_length: int = 1000,
         progress_callback: Optional[callable] = None
     ) -> MultiPassResult:
         """
@@ -101,6 +102,7 @@ class MultiPassQueryService:
             num_secondary_questions: Number of questions per section (1-10)
             n_results: Documents to retrieve per question
             temperature: LLM temperature
+            response_length: Target response length in tokens (affects verbosity)
             progress_callback: Optional callback for progress updates
         
         Returns:
@@ -145,7 +147,8 @@ class MultiPassQueryService:
                     section,
                     all_questions,
                     n_results,
-                    temperature
+                    temperature,
+                    response_length
                 )
                 section_results.append(section_result)
             
@@ -154,7 +157,7 @@ class MultiPassQueryService:
                 await progress_callback("synthesizing", 90, "Synthesizing final answer...")
             
             final_synthesis = await self._synthesize_final_answer(
-                query, section_results
+                query, section_results, response_length
             )
             
             # Calculate totals
@@ -381,7 +384,8 @@ Provide exactly {num_questions} questions:"""
         section: Dict[str, str],
         all_questions: List[SecondaryQuestion],
         n_results: int,
-        temperature: float
+        temperature: float,
+        response_length: int
     ) -> SectionResult:
         """
         Process a single section by answering all its questions.
@@ -411,11 +415,12 @@ Provide exactly {num_questions} questions:"""
             q_start = datetime.now()
             
             try:
-                # Execute RAG
+                # Execute RAG with response_length for verbosity control
                 rag_result = await self.rag_service.ask(
                     question=question.question,
                     n_results=n_results,
-                    temperature=temperature
+                    temperature=temperature,
+                    response_length=response_length
                 )
                 
                 q_duration = (datetime.now() - q_start).total_seconds()
@@ -442,11 +447,12 @@ Provide exactly {num_questions} questions:"""
                     metadata={"error": str(e)}
                 ))
         
-        # Synthesize section answer
+        # Synthesize section answer with verbosity control
         synthesis = await self._synthesize_section(
             section['name'],
             section['description'],
-            question_results
+            question_results,
+            response_length
         )
         
         duration = (datetime.now() - start_time).total_seconds()
@@ -465,7 +471,8 @@ Provide exactly {num_questions} questions:"""
         self,
         section_name: str,
         section_description: str,
-        question_results: List[QuestionResult]
+        question_results: List[QuestionResult],
+        response_length: int = 1000
     ) -> str:
         """Synthesize section-level answer from question results."""
         
@@ -475,6 +482,16 @@ Provide exactly {num_questions} questions:"""
             context_parts.append(f"Q: {q_result.question}\nA: {q_result.answer}\n")
         
         context = "\n".join(context_parts)
+        
+        # Determine verbosity for section synthesis (same logic as RAG service)
+        if response_length <= 500:
+            verbosity = "Provide a concise synthesis (2-3 paragraphs) covering key points."
+        elif response_length <= 1000:
+            verbosity = "Provide a balanced synthesis (3-5 paragraphs) with moderate detail."
+        elif response_length <= 2000:
+            verbosity = "Provide a DETAILED synthesis (5-8 paragraphs) with thorough explanations, examples, and technical context."
+        else:
+            verbosity = "Provide an EXTREMELY DETAILED synthesis (8-12 paragraphs) with comprehensive explanations, multiple examples, technical specifications, and thorough coverage."
         
         prompt = f"""Synthesize a comprehensive answer for this section based on the questions and answers below.
 
@@ -489,14 +506,15 @@ Provide a well-structured, coherent synthesis that:
 2. Eliminates redundancy
 3. Maintains logical flow
 4. Highlights key insights
-5. Is comprehensive yet concise
+5. {verbosity}
 
 Synthesis:"""
 
         response = await self.ollama_router.generate(
             prompt=prompt,
             temperature=0.7,
-            workload_type='generation'
+            workload_type='generation',
+            max_tokens=response_length  # Pass max_tokens for synthesis
         )
         
         return response.get("response", response.get("text", ""))
@@ -504,7 +522,8 @@ Synthesis:"""
     async def _synthesize_final_answer(
         self,
         original_query: str,
-        section_results: List[SectionResult]
+        section_results: List[SectionResult],
+        response_length: int = 1000
     ) -> str:
         """Synthesize final comprehensive answer from all sections."""
         
@@ -518,6 +537,32 @@ Synthesis:"""
         
         context = "\n".join(context_parts)
         
+        # Determine verbosity for final synthesis (more aggressive for multi-pass)
+        if response_length <= 500:
+            verbosity = "Provide a concise final answer (3-5 paragraphs) highlighting the most important points."
+        elif response_length <= 1000:
+            verbosity = "Provide a comprehensive final answer (5-8 paragraphs) with clear structure and detailed coverage."
+        elif response_length <= 2000:
+            verbosity = """Provide a DETAILED and COMPREHENSIVE final answer (10-15 paragraphs minimum).
+            
+            IMPORTANT: Multi-pass analysis deserves thorough synthesis. Include:
+            - Comprehensive overview of all findings
+            - Detailed explanations for each major concept
+            - Integration of insights across sections
+            - Examples and technical details
+            - Clear section headings and structure"""
+        else:
+            verbosity = """Provide an EXTREMELY DETAILED and EXHAUSTIVE final answer (15-25 paragraphs minimum).
+            
+            CRITICAL: This is a deep multi-pass analysis - the final document should be authoritative and thorough:
+            - Comprehensive introduction and executive summary
+            - Detailed exploration of each major concept
+            - Multiple examples and real-world scenarios
+            - Technical specifications and implementation details
+            - Cross-section integration and relationships
+            - Best practices and recommendations
+            - Clear hierarchical structure with headings"""
+        
         prompt = f"""Create a comprehensive, final answer to the original query by synthesizing all section analyses.
 
 Original Query: {original_query}
@@ -530,14 +575,15 @@ Provide a complete, well-structured answer that:
 2. Integrates insights from all sections
 3. Maintains coherent narrative flow
 4. Highlights key takeaways
-5. Is authoritative and comprehensive
+5. {verbosity}
 
 Final Answer:"""
 
         response = await self.ollama_router.generate(
             prompt=prompt,
             temperature=0.7,
-            workload_type='generation'
+            workload_type='generation',
+            max_tokens=response_length * 2  # 2x tokens for final synthesis (it's synthesizing multiple sections)
         )
         
         return response.get("response", response.get("text", ""))
