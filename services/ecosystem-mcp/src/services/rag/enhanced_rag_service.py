@@ -7,7 +7,7 @@ backward compatibility. If no config exists, behaves exactly like RAGService.
 
 import logging
 import re
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 
 from .rag_service import RAGService
