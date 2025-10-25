@@ -352,11 +352,12 @@ class RAGService:
             for turn in conversation_history[-3:]:  # Last 3 turns
                 history_text += f"Q: {turn.get('question', '')}\nA: {turn.get('answer', '')}\n\n"
         
-        # Build prompt
+        # Build prompt with length guidance
         prompt = self._build_prompt(
             question=question,
             context=context,
-            history=history_text
+            history=history_text,
+            max_tokens=max_tokens
         )
         
         # Generate response using 3-tier router (analyzes complexity and routes optimally)
@@ -376,19 +377,33 @@ class RAGService:
         self,
         question: str,
         context: str,
-        history: str = ""
+        history: str = "",
+        max_tokens: int = 1000
     ) -> str:
         """
-        Build RAG prompt for LLM.
+        Build RAG prompt for LLM with response length guidance.
         
         Args:
             question: User's question
             context: Retrieved context
             history: Conversation history
+            max_tokens: Target response length in tokens
         
         Returns:
             Formatted prompt
         """
+        # Determine verbosity instruction based on max_tokens
+        if max_tokens <= 200:
+            length_instruction = "Be VERY BRIEF and concise, limiting your answer to key points only (1-2 short paragraphs)."
+        elif max_tokens <= 500:
+            length_instruction = "Be concise but cover the main points (2-3 paragraphs)."
+        elif max_tokens <= 1000:
+            length_instruction = "Provide a balanced answer with moderate detail (3-5 paragraphs)."
+        elif max_tokens <= 2000:
+            length_instruction = "Provide a DETAILED and comprehensive answer with thorough explanations, examples, and context (5-10 paragraphs)."
+        else:
+            length_instruction = "Provide an EXTREMELY DETAILED and exhaustive answer. Include comprehensive explanations, multiple examples, technical details, edge cases, and thorough coverage of all aspects (10+ paragraphs)."
+        
         prompt = f"""You are an intelligent assistant for the Ecosystem-MCP microservices documentation system.
 
 Your role is to answer questions accurately based on the provided context from indexed documentation.
@@ -397,9 +412,10 @@ GUIDELINES:
 1. Answer based ONLY on the provided context
 2. If the context doesn't contain the answer, say "I don't have enough information"
 3. Cite sources using [Source N] notation when referencing information
-4. Be concise but comprehensive
+4. {length_instruction}
 5. If information is outdated, mention the update date
 6. Prioritize recent information when conflicting information exists
+7. Structure your answer with clear sections and headings when appropriate
 
 """
         
