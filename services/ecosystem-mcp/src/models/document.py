@@ -159,6 +159,11 @@ class Document(BaseModel):
         description="Git commit message"
     )
     
+    metadata_version: Optional[int] = Field(
+        default=1,
+        description="Metadata schema version for tracking completeness"
+    )
+    
     is_latest: bool = Field(
         default=True,
         description="Whether this is the latest version"

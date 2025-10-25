@@ -29,6 +29,31 @@ from ..git.git_error_handler import get_git_error_handler, GitCorruptionError
 
 logger = logging.getLogger(__name__)
 
+# 📊 Metadata completeness requirements by ingestion mode
+# Version tracking ensures we can evolve metadata schema without endless re-processing
+REQUIRED_METADATA_BY_MODE = {
+    "snapshot": {
+        "required_fields": [],  # Snapshot mode: no metadata required
+        "version": 1
+    },
+    "enriched": {
+        "required_fields": ["git_date"],  # Enriched: minimum temporal date
+        "optional_fields": ["git_author", "git_author_email", "git_commit_message"],
+        "version": 1
+    },
+    "git_history": {
+        "required_fields": ["git_date", "git_commit_sha"],  # Full history: date + SHA
+        "version": 1
+    },
+    "incremental": {
+        "required_fields": ["git_date", "git_commit_sha"],
+        "version": 1
+    }
+}
+
+# Current global metadata version
+CURRENT_METADATA_VERSION = 1
+
 
 class JobProcessor:
     """
@@ -1266,6 +1291,55 @@ class JobProcessor:
             logger.warning(f"Failed to update job counters in database: {e}")
             # Don't raise - this is not critical enough to fail the job
     
+    def _check_metadata_completeness(
+        self,
+        document: 'DocumentModel',
+        ingestion_mode: str
+    ) -> bool:
+        """
+        Check if document has all required metadata for the given ingestion mode.
+        
+        This prevents skipping documents that are missing newly-added metadata fields.
+        
+        Args:
+            document: Existing document to check
+            ingestion_mode: Current ingestion mode (snapshot, enriched, git_history, etc.)
+        
+        Returns:
+            True if metadata is incomplete and document should be re-processed
+            False if metadata is complete and document can be skipped
+        """
+        # Get requirements for this mode
+        mode_config = REQUIRED_METADATA_BY_MODE.get(ingestion_mode, {})
+        required_fields = mode_config.get("required_fields", [])
+        required_version = mode_config.get("version", 1)
+        
+        # Check metadata version (future-proofing)
+        doc_version = getattr(document, 'metadata_version', 0) or 0
+        if doc_version < required_version:
+            logger.info(
+                f"📊 [METADATA-CHECK] Document metadata version outdated: "
+                f"has v{doc_version}, need v{required_version}"
+            )
+            return True  # Needs update
+        
+        # Check required fields
+        for field_name in required_fields:
+            field_value = getattr(document, field_name, None)
+            if field_value is None:
+                logger.info(
+                    f"📊 [METADATA-CHECK] Missing required field '{field_name}' "
+                    f"for mode '{ingestion_mode}'"
+                )
+                return True  # Needs update
+        
+        # All checks passed - metadata is complete
+        logger.debug(
+            f"📊 [METADATA-CHECK] Metadata complete: mode={ingestion_mode}, "
+            f"version={doc_version}, fields={required_fields}"
+        )
+        return False  # No update needed
+    
     async def _process_snapshot_document(
         self,
         file_path: str,
@@ -1445,16 +1519,28 @@ class JobProcessor:
                     # Check if embedding is missing
                     needs_embedding = not existing.embedding_id
                     
-                    logger.debug(
-                        f"🔍 Duplicate check: {file_path} - "
-                        f"embedding_id={existing.embedding_id}, needs_embedding={needs_embedding}, force_update={force_update}"
+                    # 🆕 FIX #6: Check if required metadata is missing
+                    needs_metadata_update = self._check_metadata_completeness(
+                        existing, 
+                        job.mode
                     )
                     
-                    if needs_embedding or force_update:
+                    logger.debug(
+                        f"🔍 Duplicate check: {file_path} - "
+                        f"embedding_id={existing.embedding_id}, needs_embedding={needs_embedding}, "
+                        f"needs_metadata={needs_metadata_update}, force_update={force_update}"
+                    )
+                    
+                    if needs_embedding or force_update or needs_metadata_update:
                         if force_update:
                             logger.info(
                                 f"🔄 FORCE UPDATE: Re-processing existing document: {file_path} "
                                 f"(doc_id: {existing.id}) - will update ChromaDB content"
+                            )
+                        elif needs_metadata_update:
+                            logger.info(
+                                f"🔄 METADATA UPDATE: Re-processing existing document: {file_path} "
+                                f"(doc_id: {existing.id}) - missing required metadata for mode '{job.mode}'"
                             )
                         else:
                             logger.warning(
@@ -1466,13 +1552,14 @@ class JobProcessor:
                         should_generate_embedding = True
                         is_new_document = False
                     else:
-                        logger.debug(f"⏭️  Skipping duplicate with embedding: {file_path}")
+                        logger.debug(f"⏭️  Skipping duplicate with complete metadata: {file_path}")
                         return {
                             "success": True,
                             "duplicate": True,
                             "skipped": True,
                             "embedding_generated": False,
-                            "embedding_exists": True
+                            "embedding_exists": True,
+                            "metadata_complete": True
                         }
                 else:
                     # Create new document
@@ -1592,6 +1679,7 @@ class JobProcessor:
                         git_author=git_author_value,  # ✅ PHASE 2
                         git_author_email=git_author_email_value,  # ✅ PHASE 2
                         git_commit_message=git_commit_message_value,  # ✅ PHASE 2
+                        metadata_version=CURRENT_METADATA_VERSION,  # ✅ FIX #6: Track metadata schema version
                         doc_metadata=doc_metadata
                     )
                     document = await doc_repo.create(document)

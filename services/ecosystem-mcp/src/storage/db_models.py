@@ -52,6 +52,9 @@ class DocumentModel(Base):
     git_author_email = Column(String(255), nullable=True)
     git_commit_message = Column(Text, nullable=True)
     
+    # Metadata schema version (Fix #6: Metadata completeness tracking)
+    metadata_version = Column(Integer, nullable=True, default=1)
+    
     is_latest = Column(Boolean, nullable=False, default=True, index=True)
     embedding_id = Column(UUID(as_uuid=True), ForeignKey("embeddings.id"))
     doc_metadata = Column(JSONB, nullable=False, default=dict)
