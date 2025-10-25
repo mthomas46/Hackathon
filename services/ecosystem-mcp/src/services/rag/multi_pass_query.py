@@ -467,14 +467,39 @@ Provide exactly {num_questions} questions:"""
         
         logger.info(f"🚀 Processing {len(section_questions)} questions in PARALLEL for section {section_idx}")
         
+        # 🚀 PHASE 3 OPTIMIZATION: Adaptive n_results (later questions need fewer docs)
+        def calculate_adaptive_n_results(question_index: int, total_questions: int, base_n_results: int) -> int:
+            """
+            Reduce documents for later questions since they have context from earlier ones.
+            
+            First question: 100% of docs (no context)
+            Last question: 70% of docs (has context from all previous)
+            """
+            if question_index == 0 or total_questions == 1:
+                return base_n_results
+            
+            # Gradual reduction: 0% → 30% reduction
+            reduction_factor = 0.3 * (question_index / (total_questions - 1))
+            adaptive_n = int(base_n_results * (1 - reduction_factor))
+            
+            logger.debug(f"   Q{question_index + 1}/{total_questions}: {adaptive_n} docs (base={base_n_results}, reduction={reduction_factor:.1%})")
+            return max(adaptive_n, 5)  # Minimum 5 docs
+        
         # 🚀 OPTIMIZATION: Execute ALL RAG queries in parallel (6-9× speedup!)
-        async def execute_rag_query(question: SecondaryQuestion):
-            """Execute single RAG query with timing and error handling."""
+        async def execute_rag_query(question: SecondaryQuestion, question_index: int):
+            """Execute single RAG query with timing, error handling, and adaptive docs."""
             q_start = datetime.now()
             try:
+                # Calculate adaptive n_results for this question
+                adaptive_n = calculate_adaptive_n_results(
+                    question_index,
+                    len(section_questions),
+                    n_results
+                )
+                
                 rag_result = await self.rag_service.ask(
                     question=question.question,
-                    n_results=n_results,
+                    n_results=adaptive_n,  # ✅ Adaptive!
                     temperature=temperature,
                     response_length=response_length
                 )
@@ -507,13 +532,13 @@ Provide exactly {num_questions} questions:"""
         # Desktop Ollama can handle ~8-10 parallel requests
         semaphore = asyncio.Semaphore(8)
         
-        async def limited_rag_query(question: SecondaryQuestion):
+        async def limited_rag_query(question: SecondaryQuestion, question_index: int):
             """Execute RAG query with concurrency limit."""
             async with semaphore:
-                return await execute_rag_query(question)
+                return await execute_rag_query(question, question_index)
         
-        # Create tasks for all questions
-        rag_tasks = [limited_rag_query(q) for q in section_questions]
+        # Create tasks for all questions (with indices for adaptive n_results)
+        rag_tasks = [limited_rag_query(q, idx) for idx, q in enumerate(section_questions)]
         
         # Wait for all to complete (return_exceptions=True handles errors gracefully)
         question_results = await asyncio.gather(*rag_tasks, return_exceptions=True)
