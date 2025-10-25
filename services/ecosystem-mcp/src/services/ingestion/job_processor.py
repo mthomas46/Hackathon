@@ -1243,8 +1243,10 @@ class JobProcessor:
                 "reason": "binary_content_detected"
             }
         
-        # ✨ NEW: Fetch git metadata if in enriched mode
+        # ✨ NEW: Fetch git metadata if in enriched mode (with filesystem fallback)
         git_metadata = None
+        git_commit_sha = None
+        
         if job.mode == "enriched":
             try:
                 # 🎯 FIX: Lazy-initialize GitService for enriched mode
@@ -1264,12 +1266,38 @@ class JobProcessor:
                         "last_commit_author": last_commit.author,
                         "last_commit_date": last_commit.date.isoformat() if last_commit.date else None,
                         "last_commit_message": last_commit.message,
-                        "enriched_mode": True
+                        "enriched_mode": True,
+                        "metadata_source": "git"
                     }
+                    git_commit_sha = last_commit.sha
                     logger.debug(f"✨ Git metadata fetched for {file_path}: {last_commit.sha[:8]} by {last_commit.author}")
             except Exception as e:
                 logger.warning(f"⚠️ Failed to fetch git metadata for {file_path}: {e}")
-                # Continue without git metadata - not critical
+                # Fallback to filesystem metadata
+                logger.info(f"📁 Using filesystem metadata as fallback for {file_path}")
+            
+            # 🆕 FALLBACK: Use filesystem metadata when git info unavailable
+            if not git_metadata:
+                try:
+                    import os
+                    from pathlib import Path
+                    full_path = Path(job.repo_path) / file_path
+                    if full_path.exists():
+                        stat = os.stat(full_path)
+                        from datetime import datetime
+                        
+                        git_metadata = {
+                            "file_mtime": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                            "file_ctime": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                            "file_size": stat.st_size,
+                            "enriched_mode": True,
+                            "metadata_source": "filesystem",
+                            "fallback_reason": "git_unavailable"
+                        }
+                        logger.debug(f"📁 Filesystem metadata: mtime={datetime.fromtimestamp(stat.st_mtime)}, size={stat.st_size}")
+                except Exception as fs_error:
+                    logger.warning(f"⚠️ Failed to get filesystem metadata: {fs_error}")
+                    # Continue without any metadata
         
         try:
             # Generate content hash for deduplication
@@ -1358,9 +1386,45 @@ class JobProcessor:
                     # ✨ Add git metadata if in enriched mode
                     if git_metadata:
                         doc_metadata.update(git_metadata)
+                        # Extract commit SHA (might be None if using filesystem metadata)
                         git_commit_sha = git_metadata.get("last_commit_sha")
-                    else:
-                        git_commit_sha = None
+                        
+                        # 🔧 CRITICAL FIX: Ensure git commit exists in database BEFORE referencing it
+                        if git_commit_sha:
+                            try:
+                                from ...storage.db_models import GitCommitModel
+                                from sqlalchemy import select
+                                
+                                # Check if commit already exists
+                                result = await session.execute(
+                                    select(GitCommitModel).where(GitCommitModel.sha == git_commit_sha)
+                                )
+                                existing_commit = result.scalar_one_or_none()
+                                
+                                if not existing_commit:
+                                    # Create the git commit record
+                                    logger.info(f"📝 Creating git commit record: {git_commit_sha[:8]}")
+                                    git_commit = GitCommitModel(
+                                        sha=git_commit_sha,
+                                        author=git_metadata.get("last_commit_author", "Unknown"),
+                                        author_email=git_metadata.get("last_commit_author_email", ""),
+                                        commit_date=datetime.fromisoformat(git_metadata["last_commit_date"]) if git_metadata.get("last_commit_date") else datetime.now(),
+                                        message=git_metadata.get("last_commit_message", ""),
+                                        repo_path=str(job.repo_path)
+                                    )
+                                    session.add(git_commit)
+                                    await session.flush()  # Ensure commit is in DB before document references it
+                                    logger.debug(f"✅ Git commit created: {git_commit_sha[:8]}")
+                                else:
+                                    logger.debug(f"♻️  Git commit already exists: {git_commit_sha[:8]}")
+                            except Exception as commit_error:
+                                logger.error(f"❌ Failed to create git commit {git_commit_sha[:8]}: {commit_error}")
+                                # Clear git_commit_sha to avoid foreign key violation
+                                git_commit_sha = None
+                                logger.warning(f"⚠️ Proceeding without git commit reference for {file_path}")
+                    # Ensure we have git_commit_sha set if it exists in metadata
+                    if not git_commit_sha and git_metadata:
+                        git_commit_sha = git_metadata.get("last_commit_sha")
                     
                     document = DocumentModel(
                         service_name=job.mode,  # "snapshot" or "enriched"
