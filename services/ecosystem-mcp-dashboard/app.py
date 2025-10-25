@@ -212,8 +212,12 @@ elif page == "🔬 Multi-Pass RAG Query":
     from dashboard_views import rag_multi_pass
     rag_multi_pass.show(api_base_url)
 elif page == "⏰ Temporal RAG":
-    from dashboard_views import temporal_rag_query
-    temporal_rag_query.show(api_base_url)
+    try:
+        from dashboard_views import temporal_rag_query
+        temporal_rag_query.show(api_base_url)
+    except Exception as e:
+        st.error(f"Temporal RAG page unavailable: {e}")
+        st.info("This feature is under development")
 elif page == "🧠 Context-Aware RAG":
     from pages import context_aware_rag
     context_aware_rag.show(api_base_url)

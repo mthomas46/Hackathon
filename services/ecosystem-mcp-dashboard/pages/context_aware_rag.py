@@ -15,7 +15,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 import time
 
-from dashboard_views.api_client import get_api_client
+# from dashboard_views.api_client import get_api_client  # Module not available
 
 
 def show(api_base_url: str):

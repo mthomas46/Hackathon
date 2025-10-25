@@ -126,8 +126,10 @@ def show(api_base_url: str = None):
     st.markdown("---")
     st.subheader("🔍 Submit Query")
     
-    # Create form
-    with st.form("query_enhanced_form_unique"):
+    # Create form with unique key
+    import time
+    form_key = f"query_enhanced_form_{int(time.time() * 1000)}"
+    with st.form(form_key):
         # Question input
         question = st.text_area(
             "Your Question",
