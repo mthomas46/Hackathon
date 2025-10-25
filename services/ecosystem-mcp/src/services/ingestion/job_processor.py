@@ -1548,6 +1548,20 @@ class JobProcessor:
                             )
                         # Use existing document and generate/update embedding
                         document = existing
+                        
+                        # 🔧 FIX #7: Update temporal metadata for existing documents
+                        if needs_metadata_update and (git_date_value or git_author_value or git_commit_sha):
+                            logger.info(f"📝 [METADATA-UPDATE] Updating temporal metadata for existing document {file_path}")
+                            document.git_date = git_date_value
+                            document.git_author = git_author_value
+                            document.git_author_email = git_author_email_value
+                            document.git_commit_message = git_commit_message_value
+                            document.git_commit_sha = git_commit_sha
+                            document.metadata_version = CURRENT_METADATA_VERSION
+                            await doc_repo.update(document)
+                            await session.commit()
+                            logger.info(f"✅ [METADATA-UPDATE] Temporal metadata updated: git_date={git_date_value}, author={git_author_value}")
+                        
                         should_generate_embedding = True
                         is_new_document = False
                     else:
