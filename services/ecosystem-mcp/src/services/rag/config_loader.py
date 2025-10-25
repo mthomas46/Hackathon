@@ -32,11 +32,13 @@ class ExclusionRule(BaseModel):
 
 class QueryTemplate(BaseModel):
     """Pre-optimized query template."""
-    patterns: list[str]  # Patterns that match this template
-    optimized_sections: list[str]  # Pre-defined sections
-    boost_paths: list[str] = []
-    boost_keywords: list[str] = []
-    documents_needed: int = 20
+    description: str = ""  # Human-readable description
+    patterns: list[str]  # Regex patterns that match this template
+    optimized_sections: list[str]  # Pre-defined sections for multi-pass
+    boost_paths: list[str] = []  # File patterns to prioritize
+    boost_keywords: list[str] = []  # Keywords to boost
+    documents_needed: int = 20  # Override default n_results
+    prefer_recent: bool = True  # Whether to boost recent documents
 
 
 class RAGConfig(BaseModel):
@@ -175,6 +177,12 @@ class OptionalConfigLoader:
                 )
                 config_data['exclusions'] = exclusions
             
+            if 'templates_file' in config_data:
+                templates = self._load_templates_file(
+                    self.config_dir / config_data['templates_file']
+                )
+                config_data['templates'] = templates
+            
             # Validate and create config
             config = RAGConfig(**config_data)
             
@@ -255,6 +263,29 @@ class OptionalConfigLoader:
         except Exception as e:
             logger.warning(f"Failed to load exclusions file {path}: {e}")
             return []
+    
+    def _load_templates_file(self, path: Path) -> Dict[str, QueryTemplate]:
+        """Load query templates from separate file."""
+        if not path.exists():
+            return {}
+        
+        try:
+            with open(path, 'r') as f:
+                data = yaml.safe_load(f)
+            
+            templates = {}
+            for template_name, template_data in data.get('templates', {}).items():
+                try:
+                    templates[template_name] = QueryTemplate(**template_data)
+                except Exception as e:
+                    logger.warning(f"Invalid template '{template_name}': {e}")
+            
+            logger.info(f"✅ Loaded {len(templates)} query templates")
+            return templates
+        
+        except Exception as e:
+            logger.warning(f"Failed to load templates file {path}: {e}")
+            return {}
     
     def invalidate_cache(self):
         """Manually invalidate cache."""

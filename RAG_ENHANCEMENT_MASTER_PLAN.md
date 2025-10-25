@@ -596,6 +596,128 @@ curl -X POST http://localhost:8000/admin/invalidate-rag-config-cache
 
 ---
 
+## 📦 PHASE 3: ADVANCED FEATURES
+
+---
+
+### **2025-10-25 - Phase 3 Planning** 📋
+
+**Goal:** Add advanced features for power users  
+**Estimated Time:** 3 hours  
+**Expected Impact:** +15-20% additional accuracy
+
+**Features to Implement:**
+
+1. **Query Templates** (Step 3.1)
+   - Pre-optimized query structures
+   - Pattern matching for common queries
+   - Automatic section decomposition
+   - Boost specific paths/keywords
+   
+2. **Priority System** (Step 3.2)
+   - Path-based document priorities
+   - User-defined priority levels
+   - Priority signal in ranking
+   - Dashboard UI for management
+   
+3. **Feedback Collection** (Step 3.3)
+   - Capture query feedback (helpful/not helpful)
+   - Store for future ML training
+   - Basic analytics in dashboard
+   - Export for analysis
+
+**Implementation Strategy:**
+- Keep it simple and practical
+- Focus on immediate user value
+- Build foundation for future ML
+- Maintain backward compatibility
+
+---
+
+### **2025-10-25 - Step 3.1 COMPLETE** ✅
+
+**Time:** 45 minutes  
+**Status:** ✅ SUCCESS  
+**Files Created/Modify:**
+- `.rag-config/templates.yaml` (180 lines, 6 templates)
+- `src/services/rag/config_loader.py` (_load_templates_file method)
+- `src/services/rag/enhanced_rag_service.py` (_match_query_template method)
+- `.rag-config/config.yaml` (enabled templates feature)
+
+**What was implemented:**
+
+1. **Query Templates File** (`templates.yaml`):
+   - **6 pre-defined templates:**
+     - architecture - System design queries
+     - api_documentation - API endpoint queries
+     - testing - Test strategy queries
+     - setup_installation - Getting started queries
+     - troubleshooting - Error/debug queries
+     - code_examples - Usage example queries
+   - Each template includes:
+     - Regex patterns (multiple per template)
+     - Optimized sections (for multi-pass)
+     - Boost paths (file patterns to prioritize)
+     - Boost keywords (terms to highlight)
+     - documents_needed (override n_results)
+     - prefer_recent flag (recency preference)
+
+2. **Config Loader Updates**:
+   ```python
+   def _load_templates_file(path: Path) -> Dict[str, QueryTemplate]:
+       """Load query templates from separate file."""
+       # Parses YAML, validates with Pydantic
+       # Returns dict of template_name -> QueryTemplate
+   ```
+
+3. **Template Matching Logic**:
+   ```python
+   def _match_query_template(question: str) -> Optional[Tuple[str, Any]]:
+       """Match question against templates using regex."""
+       # Tries each template's patterns
+       # Returns (template_name, template) if matched
+   ```
+
+4. **Integration into RAG Flow**:
+   - Step 0 (new): Template matching before retrieval
+   - Overrides `n_results` based on template
+   - Overrides `prefer_recent` based on template
+   - Logs matched template for debugging
+
+**Example Template:**
+```yaml
+architecture:
+  description: "Questions about system architecture"
+  patterns:
+    - "how (?:does|is) .* (?:architected|structured)"
+    - "what is the architecture"
+  optimized_sections:
+    - "System Overview"
+    - "Component Architecture"
+  boost_paths:
+    - "README.md"
+    - "ARCHITECTURE.md"
+  documents_needed: 30
+  prefer_recent: false
+```
+
+**Verification:**
+- ✅ 6 templates created
+- ✅ Templates load successfully
+- ✅ Regex patterns validated
+- ✅ Template matching integrated
+- ✅ Feature enabled in config
+
+**Expected Impact:**
+- +10-15% accuracy for templated queries
+- Automatic parameter optimization
+- Better document selection
+- Foundation for multi-pass pre-structuring
+
+**Next:** Step 3.2 - Priority System
+
+---
+
 ## 📦 PHASE 1: FOUNDATION
 
 ---

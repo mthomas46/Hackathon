@@ -1,0 +1,180 @@
+# Query Templates
+# Pre-optimized structures for common query patterns
+
+templates:
+  architecture:
+    description: "Questions about system architecture, design, and structure"
+    patterns:
+      - "how (?:does|is) .* (?:architected|structured|designed)"
+      - "what is the architecture"
+      - "explain the (?:structure|design|architecture)"
+      - "how do (?:components|services|modules) (?:interact|communicate)"
+    optimized_sections:
+      - "System Overview"
+      - "Component Architecture"
+      - "Data Flow"
+      - "Integration Points"
+      - "Technology Stack"
+    boost_paths:
+      - "README.md"
+      - "ARCHITECTURE.md"
+      - "docs/architecture"
+      - "docs/design"
+      - "/src/**/README.md"
+    boost_keywords:
+      - "architecture"
+      - "design"
+      - "structure"
+      - "component"
+      - "service"
+    documents_needed: 30
+    prefer_recent: false  # Architecture docs are stable
+  
+  api_documentation:
+    description: "Questions about API endpoints, usage, and examples"
+    patterns:
+      - "(?:what|which) (?:api|endpoint)"
+      - "how (?:do i|to) (?:call|use) (?:the )?(api|endpoint)"
+      - "(?:api|endpoint) for"
+      - "list (?:all )?(?:api|endpoint)"
+    optimized_sections:
+      - "API Overview"
+      - "Endpoints"
+      - "Request/Response Examples"
+      - "Authentication"
+      - "Error Handling"
+    boost_paths:
+      - "API.md"
+      - "docs/api"
+      - "/api/"
+      - "openapi.yaml"
+      - "swagger.json"
+    boost_keywords:
+      - "endpoint"
+      - "api"
+      - "request"
+      - "response"
+      - "route"
+    documents_needed: 25
+    prefer_recent: true  # API docs update frequently
+  
+  testing:
+    description: "Questions about testing strategy, frameworks, and examples"
+    patterns:
+      - "how (?:do i|to) test"
+      - "(?:what|which) test"
+      - "testing (?:strategy|approach|framework)"
+      - "(?:unit|integration|e2e) test"
+    optimized_sections:
+      - "Testing Overview"
+      - "Test Structure"
+      - "Running Tests"
+      - "Test Examples"
+      - "Coverage"
+    boost_paths:
+      - "TESTING.md"
+      - "docs/testing"
+      - "/tests/"
+      - "/test/"
+      - "*.test.*"
+    boost_keywords:
+      - "test"
+      - "testing"
+      - "assert"
+      - "mock"
+      - "coverage"
+    documents_needed: 20
+    prefer_recent: true  # Tests change often
+  
+  setup_installation:
+    description: "Questions about setup, installation, and getting started"
+    patterns:
+      - "how (?:do i|to) (?:install|setup|configure)"
+      - "getting started"
+      - "(?:installation|setup) (?:guide|instructions)"
+      - "how (?:do i|to) run"
+    optimized_sections:
+      - "Prerequisites"
+      - "Installation Steps"
+      - "Configuration"
+      - "Running the Application"
+      - "Verification"
+    boost_paths:
+      - "README.md"
+      - "INSTALL.md"
+      - "SETUP.md"
+      - "docs/getting-started"
+      - "docs/installation"
+    boost_keywords:
+      - "install"
+      - "setup"
+      - "configure"
+      - "prerequisite"
+      - "requirement"
+    documents_needed: 15
+    prefer_recent: true  # Setup docs should be current
+  
+  troubleshooting:
+    description: "Questions about errors, issues, and debugging"
+    patterns:
+      - "(?:error|issue|problem|bug)"
+      - "(?:why|how) (?:is|does) .* (?:not |n't )(?:work|working)"
+      - "(?:debug|troubleshoot|fix)"
+      - "(?:fails|failing|broken)"
+    optimized_sections:
+      - "Common Issues"
+      - "Error Messages"
+      - "Debugging Guide"
+      - "Solutions"
+      - "Workarounds"
+    boost_paths:
+      - "TROUBLESHOOTING.md"
+      - "FAQ.md"
+      - "docs/troubleshooting"
+      - "docs/faq"
+      - "KNOWN_ISSUES.md"
+    boost_keywords:
+      - "error"
+      - "issue"
+      - "fix"
+      - "debug"
+      - "solution"
+    documents_needed: 20
+    prefer_recent: true  # Recent issues are most relevant
+  
+  code_examples:
+    description: "Questions requesting code examples and usage patterns"
+    patterns:
+      - "(?:show|give) (?:me )?(?:an? )?example"
+      - "how (?:do i|to) use"
+      - "sample code"
+      - "usage example"
+    optimized_sections:
+      - "Basic Usage"
+      - "Code Examples"
+      - "Common Patterns"
+      - "Advanced Usage"
+      - "Best Practices"
+    boost_paths:
+      - "examples/"
+      - "docs/examples"
+      - "*.example.*"
+      - "/samples/"
+      - "USAGE.md"
+    boost_keywords:
+      - "example"
+      - "sample"
+      - "usage"
+      - "pattern"
+      - "snippet"
+    documents_needed: 25
+    prefer_recent: true  # Examples should match current API
+
+# Notes:
+# - patterns: Regex patterns to match user questions (case-insensitive)
+# - optimized_sections: Pre-defined section structure for multi-pass queries
+# - boost_paths: File patterns to prioritize (supports wildcards)
+# - boost_keywords: Terms that indicate relevance
+# - documents_needed: Override default n_results for this template
+# - prefer_recent: Whether to boost recent documents (git history)
+

@@ -102,6 +102,17 @@ class EnhancedRAGService(RAGService):
         # Extract context flags if provided
         context_flags = self._extract_context_flags(context)
         
+        # Step 0: Check for matching query template (Phase 3)
+        matched_template = None
+        if self.config and self.config.features_enabled.get('templates'):
+            matched_template = self._match_query_template(question)
+            if matched_template:
+                template_name, template = matched_template
+                logger.info(f"✅ Matched template: {template_name}")
+                # Override parameters based on template
+                n_results = template.documents_needed
+                prefer_recent = template.prefer_recent
+        
         # Step 1: Standard retrieval (delegates to parent)
         documents = await self._retrieve_with_scoring(
             question,
@@ -169,6 +180,40 @@ class EnhancedRAGService(RAGService):
         }
         
         return result
+    
+    def _match_query_template(
+        self,
+        question: str
+    ) -> Optional[Tuple[str, Any]]:
+        """
+        Match question against query templates using regex patterns.
+        
+        Phase 3 feature: Pre-optimized query structures.
+        
+        Args:
+            question: User's question
+        
+        Returns:
+            Tuple of (template_name, template) if matched, None otherwise
+        """
+        if not self.config or not self.config.templates:
+            return None
+        
+        import re
+        question_lower = question.lower()
+        
+        # Try to match each template's patterns
+        for template_name, template in self.config.templates.items():
+            for pattern in template.patterns:
+                try:
+                    if re.search(pattern, question_lower, re.IGNORECASE):
+                        logger.debug(f"Question matched template '{template_name}' with pattern: {pattern}")
+                        return (template_name, template)
+                except re.error as e:
+                    logger.warning(f"Invalid regex pattern in template '{template_name}': {pattern} - {e}")
+                    continue
+        
+        return None
     
     def _extract_context_flags(
         self,

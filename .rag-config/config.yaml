@@ -5,7 +5,7 @@
 features_enabled:
   glossary: true          # Boost documents mentioning domain terms
   exclusions: true        # Filter out noise (logs, tests, etc.)
-  templates: false        # Pre-optimized query structures (Phase 3)
+  templates: true         # Pre-optimized query structures (Phase 3)
   priorities: false       # User-defined priority documents (Phase 3)
   feedback: false         # Learn from user feedback (Phase 3)
 
@@ -21,6 +21,7 @@ signal_weights:
 # Load additional config files
 glossary_file: "glossary.yaml"
 exclusions_file: "exclusions.yaml"
+templates_file: "templates.yaml"
 
 # Notes:
 # - Changes take effect within 5 minutes (cache TTL)
