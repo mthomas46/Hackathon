@@ -158,6 +158,20 @@ def show(api_base_url: str):
         - **Estimated time:** ~{int(estimated_time)} seconds ({estimated_time/60:.1f} minutes)
         """)
         
+        # RAG Enhancements toggle - Make it PROMINENT
+        st.markdown("---")
+        use_enhancements = st.checkbox(
+            "✨ **Use RAG Enhancements** (Glossary, Exclusions, Templates, Priorities)",
+            value=True,
+            help="Enable all RAG enhancements for each sub-query: glossary boosting, noise exclusions, query templates, document priorities, and multi-signal ranking",
+            key="multipass_enhancements_toggle"
+        )
+        
+        if use_enhancements:
+            st.success("🎯 **Enhancements ON** - All sub-queries will use optimized retrieval and ranking")
+        else:
+            st.warning("⚠️ **Enhancements OFF** - Using baseline RAG for all sub-queries")
+        
         submitted = st.form_submit_button("🚀 Start Multi-Pass Analysis", use_container_width=True)
     
     # Process multi-pass query
@@ -192,7 +206,7 @@ def show(api_base_url: str):
                         "n_results": n_results,
                         "temperature": temperature,
                         "response_length": max_tokens,
-                        "use_enhancements": True  # Enable enhancements by default
+                        "use_enhancements": use_enhancements  # Use the toggle value
                     },
                     timeout=900.0
                 )

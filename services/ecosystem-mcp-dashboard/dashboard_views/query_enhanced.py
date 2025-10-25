@@ -190,6 +190,19 @@ def show(api_base_url: str = None):
                 help="Higher = more creative, Lower = more focused"
             )
         
+        # RAG Enhancements toggle - Make it PROMINENT
+        st.markdown("---")
+        use_enhancements = st.checkbox(
+            "✨ **Use RAG Enhancements** (Glossary, Exclusions, Templates, Priorities)",
+            value=True,
+            help="Enable all RAG enhancements: glossary boosting, noise exclusions, query templates, document priorities, and multi-signal ranking"
+        )
+        
+        if use_enhancements:
+            st.info("🎯 **Enhancements ON** - Your query will benefit from optimized retrieval and ranking")
+        else:
+            st.warning("⚠️ **Enhancements OFF** - Using baseline RAG without optimizations")
+        
         # Advanced settings
         with st.expander("⚙️ Advanced Settings"):
             max_retries = st.slider(
@@ -199,13 +212,6 @@ def show(api_base_url: str = None):
                 value=2,
                 help="Max retry attempts if selected tier unavailable"
             )
-        
-        # Use enhancements toggle
-        use_enhancements = st.checkbox(
-            "✨ Use RAG Enhancements",
-            value=True,
-            help="Enable glossary, exclusions, templates, priorities, and multi-signal ranking"
-        )
         
         # Submit button
         submitted = st.form_submit_button("🚀 Submit Query", use_container_width=True)
