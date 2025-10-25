@@ -280,6 +280,7 @@ async def _generate_progress_events(service, request):
                 n_results=request.n_results,
                 temperature=request.temperature,
                 response_length=request.response_length,
+                use_enhancements=request.use_enhancements,
                 progress_callback=callback
             )
             
