@@ -1520,30 +1520,41 @@ class JobProcessor:
                                 git_commit_sha = None
                                 logger.warning(f"⚠️  [COMMIT-3] Proceeding without git commit reference for {file_path}")
                     
-                    # ✅ PHASE 2: Extract temporal metadata for database storage
-                    git_date_value = None
-                    git_author_value = None
-                    git_author_email_value = None
-                    git_commit_message_value = None
-                    
-                    if git_metadata:
-                        # Try git metadata first
-                        if git_metadata.get("last_commit_date"):
-                            try:
-                                git_date_value = datetime.fromisoformat(git_metadata["last_commit_date"])
-                            except Exception as e:
-                                logger.warning(f"Failed to parse git_date: {e}")
-                        
-                        git_author_value = git_metadata.get("last_commit_author")
-                        git_author_email_value = git_metadata.get("last_commit_author_email")
-                        git_commit_message_value = git_metadata.get("last_commit_message")
-                        
-                        # Fallback to file mtime if git date not available
-                        if not git_date_value and git_metadata.get("file_mtime"):
-                            try:
-                                git_date_value = datetime.fromisoformat(git_metadata["file_mtime"])
-                            except Exception as e:
-                                logger.warning(f"Failed to parse file_mtime: {e}")
+        # ✅ PHASE 2: Extract temporal metadata for database storage
+        git_date_value = None
+        git_author_value = None
+        git_author_email_value = None
+        git_commit_message_value = None
+        
+        if git_metadata:
+            # Try git metadata first
+            if git_metadata.get("last_commit_date"):
+                try:
+                    git_date_value = datetime.fromisoformat(git_metadata["last_commit_date"])
+                except Exception as e:
+                    logger.warning(f"Failed to parse git_date: {e}")
+            
+            git_author_value = git_metadata.get("last_commit_author")
+            git_author_email_value = git_metadata.get("last_commit_author_email")
+            git_commit_message_value = git_metadata.get("last_commit_message")
+            
+            # Fallback to file mtime if git date not available
+            if not git_date_value and git_metadata.get("file_mtime"):
+                try:
+                    git_date_value = datetime.fromisoformat(git_metadata["file_mtime"])
+                except Exception as e:
+                    logger.warning(f"Failed to parse file_mtime: {e}")
+        
+        # 🔧 FIX #5c: FINAL fallback - use file mtime even if git_metadata is None
+        if not git_date_value and job.mode == "enriched":
+            try:
+                full_path = os.path.join(job.repo_path, file_path)
+                if os.path.exists(full_path):
+                    mtime = os.path.getmtime(full_path)
+                    git_date_value = datetime.fromtimestamp(mtime)
+                    logger.debug(f"📅 Using file mtime as final fallback: {git_date_value}")
+            except Exception as e:
+                logger.debug(f"Failed to get file mtime: {e}")
                     
                     document = DocumentModel(
                         service_name=service_name,  # ✅ FIX #4: Use actual service_name, not mode
