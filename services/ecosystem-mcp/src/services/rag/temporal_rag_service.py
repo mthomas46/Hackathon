@@ -204,20 +204,6 @@ class TemporalRAGService:
                 limit=limit
             )
                 
-                # Find period containing the as_of_date
-                period = await self._find_period_for_date(
-                    session, timeline["id"], as_of_date
-                )
-                
-                if not period:
-                    self.logger.warning(
-                        f"No period found for date {as_of_date.date()}, "
-                        f"using closest period"
-                    )
-                    period = await self._find_closest_period(
-                        session, timeline["id"], as_of_date
-                    )
-                
                 if not period:
                     return await self._fallback_to_standard_rag(query, service_name, limit)
                 
