@@ -294,7 +294,8 @@ class TemporalRAGService:
     async def query_evolution(
         self,
         topic: str,
-        timeline_id: UUID,
+        timeline_id: Optional[UUID] = None,
+        service_name: Optional[str] = None,
         limit_per_period: int = 3
     ) -> Dict[str, Any]:
         """
@@ -305,7 +306,8 @@ class TemporalRAGService:
         
         Args:
             topic: The topic to track
-            timeline_id: Timeline to analyze
+            timeline_id: Optional timeline to analyze (use this OR service_name)
+            service_name: Optional service name to find timeline for
             limit_per_period: Max results per period
         
         Returns:
@@ -318,10 +320,36 @@ class TemporalRAGService:
                 timeline_repo = TimelineRepository(session)
                 period_repo = TimePeriodRepository(session)
                 
-                # Get timeline
-                timeline_model = await timeline_repo.get_by_id(timeline_id)
-                if not timeline_model:
-                    raise ValueError(f"Timeline not found: {timeline_id}")
+                # ✅ FIX: Get timeline by ID or service name
+                if timeline_id:
+                    timeline_model = await timeline_repo.get_by_id(timeline_id)
+                    if not timeline_model:
+                        raise ValueError(f"Timeline not found: {timeline_id}")
+                elif service_name:
+                    # Find timeline by service name
+                    from sqlalchemy import select
+                    from ...storage.db_models import TimelineModel
+                    
+                    result = await session.execute(
+                        select(TimelineModel)
+                        .where(TimelineModel.service_name == service_name)
+                        .limit(1)
+                    )
+                    timeline_model = result.scalar_one_or_none()
+                    
+                    if not timeline_model:
+                        # ✅ Create timeline if it doesn't exist
+                        self.logger.info(f"📝 Creating timeline for service: {service_name}")
+                        timeline_model = TimelineModel(
+                            service_name=service_name,
+                            description=f"Auto-generated timeline for {service_name}",
+                            created_at=datetime.utcnow()
+                        )
+                        session.add(timeline_model)
+                        await session.flush()
+                        self.logger.info(f"✅ Timeline created: {timeline_model.id}")
+                else:
+                    raise ValueError("Either timeline_id or service_name must be provided")
                 
                 # Get all periods
                 periods = await period_repo.get_by_timeline(timeline_id, order_by_sequence=True)
