@@ -637,6 +637,8 @@ Provide exactly {num_questions} questions:"""
         response_length: int = 1000
     ) -> str:
         """Synthesize section-level answer from question results."""
+        synth_start = time.time()
+        logger.info(f"    ⏱️  Synthesizing section '{section_name}' from {len(question_results)} answers...")
         
         # Build context from all question answers
         context_parts = []
@@ -672,12 +674,16 @@ Provide a well-structured, coherent synthesis that:
 
 Synthesis:"""
 
+        llm_start = time.time()
         response = await self.ollama_router.generate(
             prompt=prompt,
             temperature=0.7,
             workload_type='rag',  # Use 'rag' to get Desktop GPU routing
             max_tokens=response_length  # Pass max_tokens for synthesis
         )
+        llm_time = time.time() - llm_start
+        synth_total = time.time() - synth_start
+        logger.info(f"    ✅ Section synthesis completed: LLM={llm_time:.2f}s, Total={synth_total:.2f}s")
         
         return response.get("response", response.get("text", ""))
     
