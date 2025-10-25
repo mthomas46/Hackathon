@@ -204,29 +204,6 @@ class TemporalRAGService:
                 limit=limit
             )
                 
-                if not period:
-                    return await self._fallback_to_standard_rag(query, service_name, limit)
-                
-                # Get documents in this period
-                document_ids = await self._get_documents_in_period(
-                    session, period["id"]
-                )
-                
-                self.logger.info(
-                    f"   📅 Period: {period['name']} "
-                    f"({period['start_date'].date()} - {period['end_date'].date()})"
-                )
-                self.logger.info(f"   📄 Documents in period: {len(document_ids)}")
-                
-                # Query RAG with temporal filter
-                time_range = timedelta(days=365 * 10)  # Wide range, filtered by document_ids
-                rag_results = await self.context_rag.query_with_context(
-                    query=query,
-                    service_filter=service_name,
-                    time_range=time_range,
-                    limit=limit * 2  # Get more to filter
-                )
-                
                 # Filter results to only documents in this period
                 filtered_results = [
                     r for r in rag_results["results"]
