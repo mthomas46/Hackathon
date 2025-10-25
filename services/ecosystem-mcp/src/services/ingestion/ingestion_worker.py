@@ -512,21 +512,21 @@ class IngestionWorker:
 
 # Global worker instance
 _worker_instance: Optional[IngestionWorker] = None
-
+_worker_lock = threading.Lock()
 
 def get_ingestion_worker() -> IngestionWorker:
-    """
-    Get the global ingestion worker instance.
-    
-    Returns:
-        IngestionWorker instance
-    """
     global _worker_instance
     
-    if _worker_instance is None:
-        _worker_instance = IngestionWorker()
-    
-    return _worker_instance
+    with _worker_lock:
+        if _worker_instance is None:
+            logger.info("🏗️  [SINGLETON] Creating NEW worker instance")
+            _worker_instance = IngestionWorker()
+        else:
+            logger.info(
+                f"♻️  [SINGLETON] Reusing EXISTING worker "
+                f"(ID: {_worker_instance.worker_id}, running={_worker_instance.running})"
+            )
+        return _worker_instance
 
 
 async def start_ingestion_worker():
