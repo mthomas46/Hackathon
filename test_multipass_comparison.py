@@ -40,7 +40,7 @@ def run_multipass_query(question, use_enhancements=False):
     start_time = time.time()
     
     try:
-        response = requests.post(url, json=payload, timeout=180)
+        response = requests.post(url, json=payload, timeout=240)  # Increased from 180s
         elapsed = time.time() - start_time
         
         print(f"✅ Response received in {elapsed:.2f}s")

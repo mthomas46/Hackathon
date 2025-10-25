@@ -30,13 +30,13 @@ class MultiPassRequest(BaseModel):
         max_length=2000
     )
     num_passes: int = Field(
-        default=3,
+        default=2,  # Reduced from 3 - reduces LLM calls and improves completion rate
         ge=1,
         le=10,
         description="Number of major concepts/sections to decompose into"
     )
     num_secondary_questions: int = Field(
-        default=3,
+        default=2,  # Reduced from 3 - reduces LLM calls from 9 to 4 total
         ge=1,
         le=10,
         description="Number of secondary questions per section"
