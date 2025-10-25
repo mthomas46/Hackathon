@@ -606,9 +606,8 @@ class JobProcessor:
                     sha=git_commit_sha,
                     author=git_metadata.get("last_commit_author", "Unknown"),
                     author_email=git_metadata.get("last_commit_author_email", ""),
-                    commit_date=datetime.fromisoformat(git_metadata["last_commit_date"]) if git_metadata.get("last_commit_date") else datetime.now(),
-                    message=git_metadata.get("last_commit_message", ""),
-                    repo_path=str(repo_path)
+                    date=datetime.fromisoformat(git_metadata["last_commit_date"]) if git_metadata.get("last_commit_date") else datetime.now(),
+                    message=git_metadata.get("last_commit_message", "")
                 )
                 
                 commit_session.add(git_commit)
