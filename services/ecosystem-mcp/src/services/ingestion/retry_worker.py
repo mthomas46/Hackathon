@@ -405,10 +405,9 @@ class RetryWorker:
             # Only get documents where next_retry_at <= now
             messages = await redis_client.read_from_stream(
                 stream=redis_client.RETRY_STREAM,
-                consumer_group=redis_client.CONSUMER_GROUP,
                 consumer_name=self.worker_id,
                 count=self.batch_size,
-                block_ms=1000  # Block for 1 second
+                block=1000  # Block for 1 second
             )
             
             if not messages:
