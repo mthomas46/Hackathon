@@ -137,6 +137,50 @@ async def infrastructure_health(response: Response):
         if stats["state"] == "open":
             overall_healthy = False
     
+    # 🆕 PHASE 3.1: Add retry infrastructure metrics
+    try:
+        from ...services.ingestion.retry_worker import get_retry_worker
+        
+        retry_worker = get_retry_worker()
+        worker_stats = retry_worker.get_stats()
+        
+        # Get queue lengths
+        retry_queue_length = await redis.xlen(redis_wrapper.RETRY_STREAM)
+        dlq_length = await redis.xlen(redis_wrapper.FAILED_STREAM)
+        
+        # Calculate success rate
+        total_attempts = worker_stats.get("total_retried", 0)
+        total_recovered = worker_stats.get("total_recovered", 0)
+        success_rate = (total_recovered / total_attempts * 100) if total_attempts > 0 else 0
+        
+        health_status["retry_infrastructure"] = {
+            "worker": {
+                "running": worker_stats.get("running", False),
+                "worker_id": worker_stats.get("worker_id", "unknown"),
+                "started_at": worker_stats.get("started_at"),
+                "last_poll_at": worker_stats.get("last_poll_at")
+            },
+            "statistics": {
+                "total_retried": total_attempts,
+                "total_recovered": total_recovered,
+                "total_failed": worker_stats.get("total_failed", 0),
+                "total_moved_to_dlq": worker_stats.get("total_moved_to_dlq", 0),
+                "batches_processed": worker_stats.get("batches_processed", 0),
+                "success_rate_percent": round(success_rate, 2)
+            },
+            "queues": {
+                "retry_queue_length": retry_queue_length,
+                "dead_letter_queue_length": dlq_length
+            },
+            "circuit_breaker": worker_stats.get("circuit_breaker", {})
+        }
+    except Exception as e:
+        logger.warning(f"Failed to collect retry metrics: {e}")
+        health_status["retry_infrastructure"] = {
+            "status": "unavailable",
+            "error": str(e)
+        }
+    
     # Set overall status
     health_status["status"] = "healthy" if overall_healthy else "unhealthy"
     
