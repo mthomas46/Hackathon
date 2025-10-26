@@ -122,11 +122,52 @@ config_pages = ["🔌 API Explorer", "⚙️ Configuration", "⚙️ RAG Config 
 # Combine all pages for radio selection
 all_pages = overview_pages + query_pages + data_pages + doc_pages + analysis_pages + discovery_pages + infra_pages + monitoring_pages + config_pages
 
-page = st.sidebar.radio(
+# Get current page from session state (for navigation guard)
+current_page = st.session_state.get('current_page', all_pages[0])
+
+# Page selection with navigation guard
+selected_page = st.sidebar.radio(
     "Select Page",
     all_pages,
-    label_visibility="collapsed"
+    label_visibility="collapsed",
+    index=all_pages.index(current_page) if current_page in all_pages else 0
 )
+
+# Check if page is changing and if there are active processes
+if selected_page != current_page:
+    # Check for active processes before navigating
+    if StateManager.has_active_processes():
+        running = StateManager.get_running_processes()
+        
+        st.sidebar.markdown("---")
+        st.sidebar.warning(f"⚠️ {len(running)} active process(es)")
+        
+        with st.sidebar.expander("🔄 Active Processes", expanded=True):
+            for process in running:
+                st.sidebar.markdown(f"**{process['description']}**")
+                st.sidebar.caption(f"{process['process_type']} - Running")
+            
+            st.sidebar.markdown("---")
+            st.sidebar.markdown("**Navigation will continue in background**")
+            
+            col1, col2 = st.sidebar.columns(2)
+            with col1:
+                if st.sidebar.button("✅ Continue", key="nav_continue", use_container_width=True, type="primary"):
+                    st.session_state['current_page'] = selected_page
+                    st.rerun()
+            with col2:
+                if st.sidebar.button("⏸️ Stay", key="nav_stay", use_container_width=True):
+                    # Don't change page
+                    st.rerun()
+        
+        # Don't navigate yet - wait for user decision
+        page = current_page
+    else:
+        # No active processes, safe to navigate
+        st.session_state['current_page'] = selected_page
+        page = selected_page
+else:
+    page = current_page
 
 # API Base URL configuration
 st.sidebar.markdown("---")
