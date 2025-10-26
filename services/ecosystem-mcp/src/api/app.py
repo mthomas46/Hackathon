@@ -186,6 +186,12 @@ async def lifespan(app: FastAPI):
         await ingestion_worker.start()
         logger.info("  ✅ Ingestion worker started")
         
+        # 🆕 PHASE 2.2: Start retry worker
+        from ..services.ingestion.retry_worker import get_retry_worker
+        retry_worker = get_retry_worker()
+        await retry_worker.start()
+        logger.info("  ✅ Retry worker started")
+        
         # Detect and handle orphaned jobs on startup
         # 🚨 TEMPORARILY DISABLED to prevent re-queuing actively processing jobs during debugging
         # TODO: Re-enable with improved logic (check worker heartbeat, progress updates)
@@ -231,6 +237,15 @@ async def lifespan(app: FastAPI):
         logger.info("  ✅ Ingestion worker stopped")
     except Exception as e:
         logger.error(f"Error stopping ingestion worker: {e}")
+    
+    # 🆕 PHASE 2.2: Stop retry worker
+    try:
+        from ..services.ingestion.retry_worker import get_retry_worker
+        retry_worker = get_retry_worker()
+        await retry_worker.stop()
+        logger.info("  ✅ Retry worker stopped")
+    except Exception as e:
+        logger.error(f"Error stopping retry worker: {e}")
     
     # Use cleanup_resources for graceful shutdown
     await cleanup_resources()
