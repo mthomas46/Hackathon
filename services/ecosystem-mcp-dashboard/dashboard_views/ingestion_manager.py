@@ -13,6 +13,13 @@ import httpx
 from datetime import datetime
 import json
 import logging
+import os
+import sys
+
+# Import state manager and path validator
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.state_manager import StateManager
+from utils.path_validator import show_path_validator_widget
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +94,8 @@ def display_active_job(job, api_base_url):
 
 def show(api_base_url: str):
     """Display ingestion manager page."""
+    # Initialize state manager
+    StateManager.initialize()
     
     st.title("📥 Ingestion Manager")
     st.markdown("Manage document ingestion and data cleanup operations")
