@@ -397,6 +397,107 @@ class RedisClient:
             await self.connect()
         
         return await self.client.keys(pattern)
+    
+    # ============================================================================
+    # 🆕 PHASE 1: Retry Infrastructure Methods
+    # ============================================================================
+    
+    async def enqueue_failed_document(
+        self,
+        job_id: str,
+        document_info: Dict[str, Any],
+        error_type: str,
+        error_message: str,
+        retry_count: int = 0
+    ) -> str:
+        """
+        Enqueue failed document for retry.
+        
+        Args:
+            job_id: Parent job ID
+            document_info: Document details (file_path, mode, etc.)
+            error_type: Classified error type
+            error_message: Full error message
+            retry_count: Current retry count
+        
+        Returns:
+            Message ID
+        """
+        from datetime import datetime, timedelta
+        
+        # Calculate next retry time with exponential backoff
+        backoff_minutes = self.RETRY_BACKOFF_BASE ** retry_count
+        next_retry_at = datetime.utcnow() + timedelta(minutes=backoff_minutes)
+        
+        data = {
+            "job_id": job_id,
+            "document_info": json.dumps(document_info),
+            "error_type": error_type,
+            "error_message": error_message,
+            "retry_count": str(retry_count),
+            "failed_at": datetime.utcnow().isoformat(),
+            "next_retry_at": next_retry_at.isoformat()
+        }
+        
+        message_id = await self.add_to_stream(
+            self.RETRY_STREAM,
+            data,
+            max_len=50000  # Higher limit for retry queue
+        )
+        
+        logger.info(
+            f"📝 Enqueued document for retry: {document_info.get('file_path', 'unknown')} "
+            f"(retry {retry_count + 1}/{self.MAX_RETRIES}, "
+            f"next attempt in {backoff_minutes}min)"
+        )
+        
+        return message_id
+    
+    async def move_to_dead_letter(
+        self,
+        job_id: str,
+        document_info: Dict[str, Any],
+        error_type: str,
+        error_message: str,
+        retry_count: int
+    ) -> str:
+        """
+        Move document to dead letter queue (permanent failure).
+        
+        Args:
+            job_id: Parent job ID
+            document_info: Document details
+            error_type: Classified error type
+            error_message: Full error message
+            retry_count: Number of retries attempted
+        
+        Returns:
+            Message ID
+        """
+        from datetime import datetime
+        
+        data = {
+            "job_id": job_id,
+            "document_info": json.dumps(document_info),
+            "error_type": error_type,
+            "error_message": error_message,
+            "retry_count": str(retry_count),
+            "failed_at": datetime.utcnow().isoformat(),
+            "moved_to_dlq_at": datetime.utcnow().isoformat()
+        }
+        
+        message_id = await self.add_to_stream(
+            self.FAILED_STREAM,
+            data,
+            max_len=100000  # Keep dead letters longer
+        )
+        
+        logger.warning(
+            f"💀 Moved to dead letter queue: {document_info.get('file_path', 'unknown')} "
+            f"after {retry_count} retries (error: {error_type})"
+        )
+        
+        return message_id
 
 
 # Global Redis instance

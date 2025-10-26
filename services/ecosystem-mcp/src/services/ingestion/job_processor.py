@@ -1855,9 +1855,88 @@ class JobProcessor:
         
         except Exception as e:
             logger.error(f"❌ Error processing snapshot document {file_path}: {e}", exc_info=True)
+            
+            # 🆕 PHASE 1.3: Classify error and enqueue for retry if transient
+            from .error_classifier import ErrorClassifier
+            
+            error_type = ErrorClassifier.classify(e)
+            error_type_str = error_type.value
+            
+            # Determine if we should retry this document
+            if ErrorClassifier.is_transient(error_type):
+                logger.info(
+                    f"🔄 Transient error detected ({error_type_str}): "
+                    f"Enqueuing {file_path} for retry"
+                )
+                
+                try:
+                    # Enqueue to retry queue
+                    redis_client = get_redis_client()
+                    
+                    document_info = {
+                        "file_path": file_path,
+                        "mode": job.mode,
+                        "service_name": job.service_name,
+                        "repo_path": job.repo_path,
+                        "content_hash": content_hash if 'content_hash' in locals() else None,
+                        "retry_context": "snapshot_document_processing"
+                    }
+                    
+                    await redis_client.enqueue_failed_document(
+                        job_id=str(job.id),
+                        document_info=document_info,
+                        error_type=error_type_str,
+                        error_message=str(e),
+                        retry_count=0  # First failure
+                    )
+                    
+                    logger.info(f"✅ Enqueued {file_path} to retry queue")
+                    
+                except Exception as enqueue_error:
+                    logger.error(
+                        f"❌ Failed to enqueue document for retry: {enqueue_error}",
+                        exc_info=True
+                    )
+            else:
+                # Permanent error - move to dead letter queue
+                logger.warning(
+                    f"💀 Permanent error detected ({error_type_str}): "
+                    f"Moving {file_path} to dead letter queue"
+                )
+                
+                try:
+                    redis_client = get_redis_client()
+                    
+                    document_info = {
+                        "file_path": file_path,
+                        "mode": job.mode,
+                        "service_name": job.service_name,
+                        "repo_path": job.repo_path,
+                        "retry_context": "snapshot_document_processing"
+                    }
+                    
+                    await redis_client.move_to_dead_letter(
+                        job_id=str(job.id),
+                        document_info=document_info,
+                        error_type=error_type_str,
+                        error_message=str(e),
+                        retry_count=0  # Never retried
+                    )
+                    
+                    logger.info(f"✅ Moved {file_path} to dead letter queue")
+                    
+                except Exception as dlq_error:
+                    logger.error(
+                        f"❌ Failed to move document to dead letter queue: {dlq_error}",
+                        exc_info=True
+                    )
+            
             return {
                 "success": False,
                 "error": str(e),
+                "error_type": error_type_str,  # 🆕 Include error classification
+                "transient": ErrorClassifier.is_transient(error_type),  # 🆕
+                "enqueued_for_retry": ErrorClassifier.is_transient(error_type),  # 🆕
                 "embedding_generated": False,
                 "embedding_error": str(e),
                 "skipped": False
