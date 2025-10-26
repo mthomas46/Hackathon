@@ -271,8 +271,8 @@ elif page == "📋 Logs Viewer":
     from dashboard_views import logs_viewer
     logs_viewer.show(api_base_url)
 elif page == "🔌 API Explorer":
-    from dashboard_views import api_explorer
-    api_explorer.show(api_base_url)
+    from dashboard_views import api_discovery
+    api_discovery.show(api_base_url)
 elif page == "🐳 Container Management":
     from dashboard_views import containers
     containers.show(api_base_url)
