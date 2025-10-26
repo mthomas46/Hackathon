@@ -34,13 +34,15 @@ class RedisClient:
     # Stream names
     INGESTION_STREAM = "ingestion_queue"
     EMBEDDING_STREAM = "embedding_queue"
-    FAILED_STREAM = "failed_queue"  # Dead letter queue
+    RETRY_STREAM = "retry_queue"  # 🆕 Transient failures with retry logic
+    FAILED_STREAM = "failed_queue"  # Dead letter queue (permanent failures)
     
     # Consumer group name
     CONSUMER_GROUP = "workers"
     
-    # Max retries before moving to DLQ
-    MAX_RETRIES = 3
+    # Retry configuration
+    MAX_RETRIES = 5  # 🆕 Increased from 3 to 5
+    RETRY_BACKOFF_BASE = 2  # 🆕 Exponential base (2^n minutes)
     
     def __init__(self, redis_url: str | None = None):
         """
@@ -99,6 +101,7 @@ class RedisClient:
         streams = [
             self.INGESTION_STREAM,
             self.EMBEDDING_STREAM,
+            self.RETRY_STREAM,  # 🆕 Retry queue
             self.FAILED_STREAM
         ]
         

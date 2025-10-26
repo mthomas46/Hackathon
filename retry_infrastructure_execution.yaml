@@ -1,0 +1,687 @@
+# Retry Infrastructure Implementation - Execution Tracker
+# Date: October 26, 2025
+# Critical Issue: 68% failure rate (Job: 19374bb8-3957-454d-a5e0-74e0fad46bcf)
+# Master Plan: RETRY_INFRASTRUCTURE_MASTER_PLAN.md
+
+execution_metadata:
+  plan_version: "1.0"
+  started_at: "2025-10-26T00:00:00Z"
+  current_phase: "phase_1"
+  total_phases: 3
+  estimated_total_hours: 12
+  critical_priority: true
+  issue_severity: "CRITICAL"
+  data_loss_rate: "68.72%"
+
+project_context:
+  problem: "68% document failure rate with no retry mechanism"
+  root_cause: "Missing comprehensive retry infrastructure"
+  solution: "Phased implementation leveraging 80% existing infrastructure"
+  services_affected:
+    - "services/ecosystem-mcp"
+    - "services/ecosystem-mcp-dashboard" 
+    - "services/ecosystem-mcp-embedding" # No changes needed
+  
+infrastructure_audit_findings:
+  existing_leverage:
+    redis_streams: 95  # Just add enqueue methods
+    worker_infrastructure: 80  # Clone IngestionWorker
+    job_processor: 90  # Add error enqueuing
+    monitoring: 95  # Extend existing metrics
+    embedding_service: 100  # No changes needed
+  
+  critical_discovery: "FAILED_STREAM already exists in Redis but is NEVER written to!"
+  
+  missing_components:
+    - "Retry queue (separate from dead letter)"
+    - "Error classification engine"
+    - "Retry worker"
+    - "Circuit breaker"
+    - "Failed document tracking table"
+
+# ============================================================================
+# PHASE 0: INFRASTRUCTURE AUDIT
+# ============================================================================
+phase_0:
+  name: "Infrastructure Audit"
+  status: "completed"
+  completed_at: "2025-10-26T02:00:00Z"
+  duration_hours: 2
+  
+  deliverables:
+    - name: "Audit 7 existing systems"
+      status: "completed"
+      location: "RETRY_INFRASTRUCTURE_MASTER_PLAN.md:100-600"
+    
+    - name: "Identify leverage opportunities"
+      status: "completed"
+      findings: "60-100% leverage across all systems"
+    
+    - name: "Document 7 critical flaws"
+      status: "completed"
+      location: "RETRY_INFRASTRUCTURE_MASTER_PLAN.md:400-500"
+    
+    - name: "Find 5 missing components"
+      status: "completed"
+      list: ["Retry queue", "Error classifier", "Retry worker", "Circuit breaker", "Failed docs table"]
+
+# ============================================================================
+# PHASE 1: FOUNDATION (4 hours)
+# ============================================================================
+phase_1:
+  name: "Foundation - Stop Data Loss"
+  status: "in_progress"
+  started_at: "2025-10-26T02:30:00Z"
+  estimated_hours: 4
+  priority: "CRITICAL"
+  goal: "Stop future data loss by enqueuing failed documents"
+  
+  tasks:
+    # Task 1.1: Redis Retry Stream
+    - id: "1.1"
+      name: "Add Retry Stream to Redis"
+      status: "pending"
+      estimated_minutes: 30
+      file: "services/ecosystem-mcp/src/utils/redis_client.py"
+      changes:
+        - "Add RETRY_STREAM constant"
+        - "Add enqueue_failed_document() method"
+        - "Add move_to_dead_letter() method"
+        - "Add exponential backoff calculation"
+      code_location: "RETRY_INFRASTRUCTURE_MASTER_PLAN.md:520-620"
+      dependencies: []
+      validation:
+        - "redis-cli XLEN retry_queue returns 0"
+        - "Test enqueue method"
+        - "Verify exponential backoff calculation"
+    
+    # Task 1.2: Error Classification Engine
+    - id: "1.2"
+      name: "Create Error Classification Engine"
+      status: "pending"
+      estimated_minutes: 60
+      file: "services/ecosystem-mcp/src/services/ingestion/error_classifier.py"
+      new_file: true
+      lines_of_code: ~300
+      changes:
+        - "Create ErrorType enum"
+        - "Create ErrorClassifier class"
+        - "Add transient error patterns (5 types)"
+        - "Add permanent error patterns (5 types)"
+        - "Add classification logic"
+        - "Add suggested backoff calculation"
+      code_location: "RETRY_INFRASTRUCTURE_MASTER_PLAN.md:650-820"
+      dependencies: []
+      validation:
+        - "Test ConnectionError → CONNECTIVITY"
+        - "Test ValueError → INVALID_DATA"
+        - "Test TimeoutError → TIMEOUT"
+        - "Test is_transient() logic"
+        - "Test get_suggested_backoff()"
+    
+    # Task 1.3: Job Processor Integration
+    - id: "1.3"
+      name: "Integrate Error Classification into Job Processor"
+      status: "pending"
+      estimated_minutes: 90
+      file: "services/ecosystem-mcp/src/services/ingestion/job_processor.py"
+      changes:
+        - "Import ErrorClassifier and get_redis_client"
+        - "Modify _process_snapshot_document error handling"
+        - "Add error classification call"
+        - "Enqueue transient errors to RETRY_STREAM"
+        - "Move permanent errors to FAILED_STREAM"
+        - "Update error result with error_type"
+      integration_points:
+        - "batched_commit_processor.py"
+        - "recoverable_job_processor.py"
+        - "snapshot_processor.py"
+      code_location: "RETRY_INFRASTRUCTURE_MASTER_PLAN.md:840-920"
+      dependencies: ["1.1", "1.2"]
+      validation:
+        - "Trigger connectivity error → Check RETRY_STREAM"
+        - "Trigger invalid data error → Check FAILED_STREAM"
+        - "Verify error_type in result"
+    
+    # Task 1.4: Database Migration
+    - id: "1.4"
+      name: "Create Database Migration for Failed Documents"
+      status: "pending"
+      estimated_minutes: 60
+      file: "services/ecosystem-mcp/src/storage/migrations/012_add_failed_documents_table.py"
+      new_file: true
+      lines_of_code: ~100
+      changes:
+        - "Create failed_documents table"
+        - "Add indexes (job_id, error_type, retry_count, next_retry, dlq)"
+        - "Add upgrade() function"
+        - "Add downgrade() function"
+      code_location: "RETRY_INFRASTRUCTURE_MASTER_PLAN.md:920-1000"
+      dependencies: []
+      validation:
+        - "Run migration: python -m src.storage.migrations.runner upgrade"
+        - "Verify table exists: psql -c '\\dt failed_documents'"
+        - "Verify indexes: psql -c '\\di'"
+  
+  deliverables:
+    - name: "Retry stream infrastructure"
+      files: ["redis_client.py"]
+      status: "pending"
+    
+    - name: "Error classification engine"
+      files: ["error_classifier.py"]
+      status: "pending"
+    
+    - name: "Job processor integration"
+      files: ["job_processor.py", "batched_commit_processor.py", "recoverable_job_processor.py"]
+      status: "pending"
+    
+    - name: "Database migration"
+      files: ["012_add_failed_documents_table.py"]
+      status: "pending"
+  
+  success_criteria:
+    - "New ingestion job enqueues failed docs to RETRY_STREAM"
+    - "Transient errors go to retry queue"
+    - "Permanent errors go to dead letter queue"
+    - "failed_documents table populated"
+    - "No more silent document loss"
+  
+  rollback_plan:
+    - "Revert redis_client.py changes"
+    - "Remove error_classifier.py"
+    - "Revert job_processor.py changes"
+    - "Run migration downgrade"
+
+# ============================================================================
+# PHASE 2: RETRY WORKER (4 hours)
+# ============================================================================
+phase_2:
+  name: "Retry Worker - Automatic Recovery"
+  status: "pending"
+  estimated_hours: 4
+  priority: "HIGH"
+  goal: "Automatically retry failed documents with exponential backoff"
+  depends_on: "phase_1"
+  
+  tasks:
+    # Task 2.1: Create Retry Worker
+    - id: "2.1"
+      name: "Create Retry Worker"
+      status: "pending"
+      estimated_minutes: 150
+      file: "services/ecosystem-mcp/src/services/ingestion/retry_worker.py"
+      new_file: true
+      lines_of_code: ~1400
+      changes:
+        - "Create CircuitBreaker class (~140 LOC)"
+        - "Create RetryWorker class (~400 LOC)"
+        - "Implement exponential backoff (2^n minutes)"
+        - "Implement circuit breaker (10 failures → 5min pause)"
+        - "Implement max 5 retries"
+        - "Implement batch processing (10 docs/batch)"
+        - "Implement statistics tracking"
+        - "Add singleton pattern"
+      code_location: "RETRY_INFRASTRUCTURE_MASTER_PLAN.md:1020-1400"
+      dependencies: ["1.1", "1.2", "1.3"]
+      validation:
+        - "Test circuit breaker opens after 10 failures"
+        - "Test circuit breaker closes after recovery"
+        - "Test exponential backoff calculation"
+        - "Test max retries → dead letter"
+        - "Test get_stats() method"
+    
+    # Task 2.2: Start Retry Worker on Service Init
+    - id: "2.2"
+      name: "Start Retry Worker on Service Init"
+      status: "pending"
+      estimated_minutes: 30
+      file: "services/ecosystem-mcp/src/main.py"
+      changes:
+        - "Import get_retry_worker"
+        - "Start retry worker in lifespan startup"
+        - "Stop retry worker in lifespan shutdown"
+      dependencies: ["2.1"]
+      validation:
+        - "Service starts without errors"
+        - "Retry worker logs show startup"
+        - "GET /admin/retry-worker/status returns running"
+    
+    # Task 2.3: Add Admin API Endpoints
+    - id: "2.3"
+      name: "Add Admin API Endpoints"
+      status: "pending"
+      estimated_minutes: 60
+      file: "services/ecosystem-mcp/src/api/routes/admin_routes.py"
+      changes:
+        - "Add GET /admin/retry-queue/stats"
+        - "Add GET /admin/retry-queue/items"
+        - "Add POST /admin/retry-queue/reprocess"
+        - "Add GET /admin/dead-letter/items"
+        - "Add DELETE /admin/dead-letter/{id}"
+        - "Add GET /admin/retry-worker/status"
+      dependencies: ["2.1", "2.2"]
+      validation:
+        - "GET /admin/retry-queue/stats returns JSON"
+        - "GET /admin/retry-queue/items returns list"
+        - "GET /admin/retry-worker/status shows stats"
+    
+    # Task 2.4: Integration Testing
+    - id: "2.4"
+      name: "Integration Testing"
+      status: "pending"
+      estimated_minutes: 30
+      dependencies: ["2.1", "2.2", "2.3"]
+      test_scenarios:
+        - "Enqueue document → Verify retry worker processes it"
+        - "Simulate transient failure → Verify exponential backoff"
+        - "Trigger circuit breaker → Verify pause"
+        - "Exceed max retries → Verify move to dead letter"
+  
+  deliverables:
+    - name: "Retry worker implementation"
+      files: ["retry_worker.py"]
+      status: "pending"
+    
+    - name: "Service integration"
+      files: ["main.py"]
+      status: "pending"
+    
+    - name: "Admin API endpoints"
+      files: ["admin_routes.py"]
+      status: "pending"
+  
+  success_criteria:
+    - "Retry worker starts automatically"
+    - "Failed documents automatically retried"
+    - "Circuit breaker prevents service overload"
+    - "Admin APIs provide visibility"
+    - "Max retries moves docs to dead letter"
+  
+  rollback_plan:
+    - "Remove retry_worker.py"
+    - "Revert main.py changes"
+    - "Revert admin_routes.py changes"
+
+# ============================================================================
+# PHASE 3: MONITORING & DASHBOARD (4 hours)
+# ============================================================================
+phase_3:
+  name: "Monitoring & Dashboard - Visibility"
+  status: "pending"
+  estimated_hours: 4
+  priority: "MEDIUM"
+  goal: "Provide visibility into retry queue and dead letter queue"
+  depends_on: "phase_2"
+  
+  tasks:
+    # Task 3.1: Extend Monitoring Infrastructure
+    - id: "3.1"
+      name: "Extend Monitoring Infrastructure"
+      status: "pending"
+      estimated_minutes: 60
+      file: "services/ecosystem-mcp/src/services/monitoring/performance_monitor.py"
+      changes:
+        - "Add retry queue metrics"
+        - "Add circuit breaker state tracking"
+        - "Add retry success rate metrics"
+        - "Add dead letter queue size metrics"
+        - "Add error type distribution metrics"
+      dependencies: ["2.1", "2.2"]
+      validation:
+        - "Metrics include retry_queue_length"
+        - "Metrics include circuit_breaker_state"
+        - "Metrics include retry_success_rate"
+    
+    # Task 3.2: Create Dashboard Pages
+    - id: "3.2"
+      name: "Create Retry Queue Dashboard Page"
+      status: "pending"
+      estimated_minutes: 90
+      file: "services/ecosystem-mcp-dashboard/dashboard_views/retry_queue.py"
+      new_file: true
+      lines_of_code: ~300
+      changes:
+        - "Create Retry Queue page"
+        - "Display queue stats (length, oldest, error types)"
+        - "Display retry items table"
+        - "Add manual reprocess button"
+        - "Add circuit breaker status indicator"
+      dependencies: ["2.3"]
+      validation:
+        - "Page loads without errors"
+        - "Stats display correctly"
+        - "Retry items table shows data"
+        - "Reprocess button works"
+    
+    # Task 3.3: Create Dead Letter Queue Browser
+    - id: "3.3"
+      name: "Create Dead Letter Queue Browser"
+      status: "pending"
+      estimated_minutes: 60
+      file: "services/ecosystem-mcp-dashboard/dashboard_views/dead_letter_queue.py"
+      new_file: true
+      lines_of_code: ~200
+      changes:
+        - "Create Dead Letter Queue page"
+        - "Display dead letter items table"
+        - "Add error type filter"
+        - "Add search by file path"
+        - "Add manual retry button (reset retry count)"
+        - "Add delete button"
+      dependencies: ["2.3"]
+      validation:
+        - "Page loads without errors"
+        - "Dead letter items display"
+        - "Filters work correctly"
+        - "Manual retry button works"
+    
+    # Task 3.4: Add Retry Metrics to Main Dashboard
+    - id: "3.4"
+      name: "Add Retry Metrics to Main Dashboard"
+      status: "pending"
+      estimated_minutes: 30
+      file: "services/ecosystem-mcp-dashboard/dashboard_views/home.py"
+      changes:
+        - "Add retry queue metrics card"
+        - "Add circuit breaker status indicator"
+        - "Add retry success rate chart"
+        - "Add link to retry queue page"
+      dependencies: ["3.1", "3.2"]
+      validation:
+        - "Metrics display on home page"
+        - "Circuit breaker status shows correctly"
+        - "Links navigate to retry queue page"
+  
+  deliverables:
+    - name: "Extended monitoring"
+      files: ["performance_monitor.py"]
+      status: "pending"
+    
+    - name: "Retry queue dashboard"
+      files: ["retry_queue.py"]
+      status: "pending"
+    
+    - name: "Dead letter queue browser"
+      files: ["dead_letter_queue.py"]
+      status: "pending"
+    
+    - name: "Main dashboard integration"
+      files: ["home.py"]
+      status: "pending"
+  
+  success_criteria:
+    - "Retry queue page shows live stats"
+    - "Dead letter queue browser functional"
+    - "Main dashboard shows retry metrics"
+    - "Manual reprocess/retry works"
+    - "Circuit breaker status visible"
+  
+  rollback_plan:
+    - "Revert monitoring changes"
+    - "Remove new dashboard pages"
+    - "Revert home.py changes"
+
+# ============================================================================
+# PROGRESS TRACKING
+# ============================================================================
+progress:
+  overall:
+    total_tasks: 13
+    completed: 0
+    in_progress: 0
+    pending: 13
+    completion_percentage: 0
+  
+  by_phase:
+    phase_0:
+      status: "completed"
+      tasks_completed: 4
+      tasks_total: 4
+    
+    phase_1:
+      status: "in_progress"
+      tasks_completed: 0
+      tasks_total: 4
+      current_task: "1.1"
+    
+    phase_2:
+      status: "pending"
+      tasks_completed: 0
+      tasks_total: 4
+    
+    phase_3:
+      status: "pending"
+      tasks_completed: 0
+      tasks_total: 4
+  
+  time_tracking:
+    estimated_total_hours: 12
+    spent_hours: 2  # Phase 0 audit
+    remaining_hours: 10
+
+# ============================================================================
+# RISK MANAGEMENT
+# ============================================================================
+risks:
+  - id: "R1"
+    description: "Service restart required for changes"
+    severity: "MEDIUM"
+    mitigation: "Plan deployment during low usage"
+    impact: "5-10 minute downtime"
+  
+  - id: "R2"
+    description: "Retry worker could overwhelm services"
+    severity: "MEDIUM"
+    mitigation: "Circuit breaker + batch size limits"
+    status: "mitigated"
+  
+  - id: "R3"
+    description: "Database migration could fail"
+    severity: "LOW"
+    mitigation: "Test migration on dev first + rollback plan"
+    status: "planned"
+  
+  - id: "R4"
+    description: "Existing failed documents not recovered"
+    severity: "HIGH"
+    mitigation: "Manual reprocess API for current 6,872 failed docs"
+    status: "post_implementation"
+
+# ============================================================================
+# TESTING STRATEGY
+# ============================================================================
+testing:
+  unit_tests:
+    - "ErrorClassifier.classify() for all error types"
+    - "CircuitBreaker state transitions"
+    - "Exponential backoff calculation"
+    - "RetryWorker._get_next_retries() filtering"
+  
+  integration_tests:
+    - "End-to-end: Document fails → Enqueued → Retried → Success"
+    - "Circuit breaker opens during outage"
+    - "Max retries moves to dead letter"
+    - "Manual reprocess from dead letter"
+  
+  performance_tests:
+    - "Retry worker processes 100 docs in < 1 minute"
+    - "Circuit breaker responds within 100ms"
+    - "Admin APIs respond in < 500ms"
+  
+  regression_tests:
+    - "Existing ingestion still works"
+    - "No performance degradation"
+    - "No memory leaks"
+
+# ============================================================================
+# DEPLOYMENT PLAN
+# ============================================================================
+deployment:
+  phase_1_deployment:
+    steps:
+      - "Run database migration"
+      - "Deploy code changes"
+      - "Restart service"
+      - "Verify retry stream created"
+      - "Run test ingestion job"
+      - "Verify failed docs enqueued"
+  
+  phase_2_deployment:
+    steps:
+      - "Deploy retry worker code"
+      - "Restart service"
+      - "Verify retry worker starts"
+      - "Monitor circuit breaker"
+      - "Test manual reprocess API"
+  
+  phase_3_deployment:
+    steps:
+      - "Deploy dashboard changes"
+      - "Restart dashboard"
+      - "Verify new pages load"
+      - "Test all dashboard features"
+
+# ============================================================================
+# SUCCESS METRICS
+# ============================================================================
+success_metrics:
+  before:
+    failure_rate: 68.72
+    retry_mechanism: false
+    recovery_path: "manual_only"
+    data_loss: "permanent"
+  
+  after_phase_1:
+    failure_rate: 68.72  # Same, but now tracked
+    retry_mechanism: "enqueued"
+    recovery_path: "queued_for_retry"
+    data_loss: "prevented"
+  
+  after_phase_2:
+    failure_rate: "<5%"  # Target
+    retry_mechanism: "automatic"
+    recovery_path: "automatic_retry"
+    data_loss: "none"
+  
+  after_phase_3:
+    failure_rate: "<5%"
+    retry_mechanism: "automatic"
+    recovery_path: "automatic_retry"
+    data_loss: "none"
+    visibility: "full"
+
+# ============================================================================
+# CONTEXT PRESERVATION
+# ============================================================================
+context:
+  key_decisions:
+    - "Use RETRY_STREAM separate from FAILED_STREAM (dead letter)"
+    - "Exponential backoff: 2^n minutes"
+    - "Max 5 retries before dead letter"
+    - "Circuit breaker: 10 failures → 5min pause"
+    - "Batch processing: 10 docs at a time"
+  
+  architectural_principles:
+    - "Leverage existing infrastructure (80-100%)"
+    - "Fail gracefully with circuit breaker"
+    - "Document-level granularity for tracking"
+    - "Separate transient from permanent failures"
+    - "Provide visibility through APIs and dashboard"
+  
+  integration_points:
+    ecosystem_mcp:
+      - "redis_client.py"
+      - "job_processor.py"
+      - "batched_commit_processor.py"
+      - "recoverable_job_processor.py"
+      - "admin_routes.py"
+      - "main.py"
+    
+    ecosystem_mcp_dashboard:
+      - "retry_queue.py (new)"
+      - "dead_letter_queue.py (new)"
+      - "home.py (updated)"
+    
+    ecosystem_mcp_embedding:
+      - "No changes needed"
+  
+  dependencies:
+    external:
+      - "Redis (streams feature)"
+      - "PostgreSQL (failed_documents table)"
+    
+    internal:
+      - "Existing ingestion worker pattern"
+      - "Existing monitoring infrastructure"
+      - "Existing admin routes"
+
+# ============================================================================
+# NOTES & LEARNINGS
+# ============================================================================
+notes:
+  - "FAILED_STREAM already exists but was never used - quick win!"
+  - "Can clone IngestionWorker pattern for RetryWorker"
+  - "Embedding service needs NO changes (fault-isolated)"
+  - "Current job (19374bb8-3957-454d-a5e0-74e0fad46bcf) has 6,872 failed docs"
+  - "Manual reprocess API needed for existing failures"
+  - "Circuit breaker is critical for preventing cascade failures"
+  - "Document-level tracking allows fine-grained retry logic"
+
+# ============================================================================
+# NEXT ACTIONS
+# ============================================================================
+next_actions:
+  immediate:
+    - "Begin Phase 1 Task 1.1: Add Retry Stream to Redis"
+    - "Create error_classifier.py with full code"
+    - "Modify job_processor.py error handling"
+    - "Run database migration"
+  
+  after_phase_1:
+    - "Validate retry queue has entries"
+    - "Run test ingestion job"
+    - "Verify error classification working"
+    - "Begin Phase 2"
+  
+  after_phase_2:
+    - "Monitor retry worker stats"
+    - "Test circuit breaker"
+    - "Verify automatic retry"
+    - "Begin Phase 3"
+  
+  after_phase_3:
+    - "Manual reprocess existing 6,872 failed docs"
+    - "Monitor success rate"
+    - "Optimize if needed"
+
+# ============================================================================
+# EXECUTION LOG
+# ============================================================================
+execution_log:
+  - timestamp: "2025-10-26T00:00:00Z"
+    action: "Project initiated"
+    user: "AI Assistant"
+    details: "68% failure rate identified in job 19374bb8-3957-454d-a5e0-74e0fad46bcf"
+  
+  - timestamp: "2025-10-26T00:30:00Z"
+    action: "Phase 0 started"
+    user: "AI Assistant"
+    details: "Infrastructure audit begun"
+  
+  - timestamp: "2025-10-26T02:00:00Z"
+    action: "Phase 0 completed"
+    user: "AI Assistant"
+    details: "Audit complete - 95% leverage identified"
+  
+  - timestamp: "2025-10-26T02:00:00Z"
+    action: "Master plan created"
+    user: "AI Assistant"
+    details: "RETRY_INFRASTRUCTURE_MASTER_PLAN.md (1,477 lines)"
+  
+  - timestamp: "2025-10-26T02:30:00Z"
+    action: "Phase 1 started"
+    user: "AI Assistant"
+    details: "Beginning foundation implementation"
+    current_task: "1.1 - Add Retry Stream to Redis"
+
