@@ -99,7 +99,7 @@ st.sidebar.markdown("### 🔍 QUERY & SEARCH")
 query_pages = ["🤖 RAG Query", "🎯 Enhanced Query", "🔬 Multi-Pass RAG Query", "⏰ Temporal RAG", "🧠 Context-Aware RAG", "📚 Document Search"]
 
 st.sidebar.markdown("### 📥 DATA MANAGEMENT")
-data_pages = ["📚 Documents", "📥 Ingestion Manager", "⚡ Mode Comparison", "🔄 Job Recovery", "⚙️ Worker Monitor"]
+data_pages = ["📚 Documents", "📥 Ingestion Manager", "⚡ Mode Comparison", "🔄 Job Recovery", "⚙️ Worker Monitor", "🔄 Retry Queue", "💀 Dead Letter Queue"]
 
 st.sidebar.markdown("### 📖 DOCUMENTATION")
 doc_pages = ["📖 Documentation Generator", "📚 Documentation Browser", "🔧 Doc Maintenance"]
@@ -333,6 +333,12 @@ elif page == "📈 Timeline Viewer":
 elif page == "⚙️ Worker Monitor":
     from dashboard_views import worker_monitor
     worker_monitor.show(api_base_url)
+elif page == "🔄 Retry Queue":
+    from dashboard_views import retry_queue
+    retry_queue.show()
+elif page == "💀 Dead Letter Queue":
+    from dashboard_views import dead_letter_queue
+    dead_letter_queue.show()
 elif page == "⚡ Cache Performance":
     from dashboard_views import cache
     cache.show(api_base_url)
