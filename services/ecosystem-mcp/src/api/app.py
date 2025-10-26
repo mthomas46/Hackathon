@@ -26,7 +26,7 @@ from ..utils.redis_client import get_redis_client
 from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
-from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, embeddings_admin, job_recovery, path_resolver, temporal_versioning, documentation_runs, job_progress, performance_optimization, cache_analytics, discovery, discovery_admin, orchestration, documentation, timeline, temporal_rag, maintenance, reports, consolidation, dynamic_rag
+from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, embeddings_admin, job_recovery, path_resolver, temporal_versioning, documentation_runs, job_progress, performance_optimization, cache_analytics, discovery, discovery_admin, orchestration, documentation, timeline, temporal_rag, maintenance, reports, consolidation, dynamic_rag, retry_admin
 from .routes import analysis as analysis_routes
 # embeddings import moved below to handle conditional loading
 from .middleware import RequestIDMiddleware, TimeoutMiddleware, MetricsMiddleware
@@ -352,6 +352,7 @@ def create_app() -> FastAPI:
     app.include_router(infrastructure.router, prefix="/api/v1", tags=["Infrastructure"])  # ✅ Infrastructure monitoring
     app.include_router(standard.router, tags=["Standard"])  # ✅ Standard ecosystem endpoints
     app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+    app.include_router(retry_admin.router, prefix="/api/v1/admin", tags=["Retry Admin"])  # 🆕 Phase 2.3
     app.include_router(search.router, prefix="/api/v1", tags=["Search"])
     app.include_router(ask.router, prefix="/api/v1", tags=["RAG"])  # ✅ RAG question answering
     app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
