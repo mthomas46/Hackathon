@@ -298,7 +298,7 @@ elif page == "⏰ Temporal RAG":
     from dashboard_views import temporal_rag_query
     temporal_rag_query.show(api_base_url)
 elif page == "🧠 Context-Aware RAG":
-    from pages import context_aware_rag
+    from dashboard_views import context_aware_rag
     context_aware_rag.show(api_base_url)
 elif page == "📚 Document Search":
     from dashboard_views import documents
