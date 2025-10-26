@@ -1,2 +1,3 @@
-"""Test suite for the dashboard."""
-
+"""
+Test suite for Ecosystem MCP Dashboard
+"""
