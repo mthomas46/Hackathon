@@ -121,6 +121,24 @@ class GitCommit(BaseModel):
         description="Additional commit metadata"
     )
     
+    @field_validator('date', mode='before')
+    @classmethod
+    def ensure_utc_dates(cls, v):
+        """
+        Ensure datetime fields are UTC-aware.
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if v is None:
+            return v
+        
+        if isinstance(v, str):
+            from ..utils.datetime_utils import parse_datetime_flexible
+            return parse_datetime_flexible(v)
+        
+        from ..utils.datetime_utils import ensure_utc
+        return ensure_utc(v)
+    
     class Config:
         json_schema_extra = {
             "example": {

@@ -22,6 +22,7 @@ from ...storage import get_database
 from ...storage.db_models import DocumentModel
 from ..processing.normalizer_factory import get_normalizer
 from ...utils.redis_client import get_redis_client
+from ...utils.datetime_utils import ensure_utc_naive
 
 logger = logging.getLogger(__name__)
 
@@ -457,7 +458,7 @@ class SnapshotProcessor:
                     git_commit_sha=None,  # No Git SHA in snapshot mode
                     is_latest=True,  # Will be updated later
                     ingestion_job_id=self.job_id,
-                    ingested_at=datetime.utcnow()
+                    ingested_at=ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Sprint 2
                 )
                 
                 session.add(doc)

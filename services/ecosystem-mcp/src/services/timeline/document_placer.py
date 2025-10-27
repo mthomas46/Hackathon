@@ -3,6 +3,8 @@ Document Placer
 
 Places documents into timeline periods based on temporal information.
 Supports both git_history mode (commit dates) and snapshot mode (created_at dates).
+
+✅ UTC STANDARDIZATION: Uses ensure_utc_naive() for PostgreSQL datetime operations.
 """
 
 import logging
@@ -29,6 +31,7 @@ from ...models.timeline import (
     DocumentPlacementCreate,
     PlacementMetadata
 )
+from ...utils.datetime_utils import ensure_utc_naive
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +162,7 @@ class DocumentPlacer:
                 
                 period.document_count = doc_count
                 period.commit_count = commit_count
-                period.updated_at = datetime.utcnow()
+                period.updated_at = ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Phase 2
                 
                 if doc_count > 0:
                     stats["periods_updated"] += 1

@@ -84,6 +84,8 @@ class Timeline(BaseModel):
     Timeline model.
     
     Represents a temporal timeline for a repository/service with discrete time periods.
+    
+    ✅ UTC STANDARDIZATION: All datetime fields are automatically converted to UTC.
     """
     id: UUID = Field(default_factory=uuid4, description="Unique timeline identifier")
     name: str = Field(min_length=1, max_length=255, description="Timeline name")
@@ -106,19 +108,48 @@ class Timeline(BaseModel):
     )
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: __import__('datetime').datetime.utcnow())
+    updated_at: datetime = Field(default_factory=lambda: __import__('datetime').datetime.utcnow())
     created_by: Optional[str] = None
     
     # Metadata
     metadata: TimelineMetadata = Field(default_factory=TimelineMetadata)
     
+    @field_validator('start_date', 'end_date', 'created_at', 'updated_at', mode='before')
+    @classmethod
+    def ensure_utc_dates(cls, v):
+        """
+        Ensure all datetime fields are UTC-aware.
+        
+        - Naive datetimes → Assume UTC with warning
+        - Non-UTC datetimes → Convert to UTC
+        - String dates → Parse and convert to UTC
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if v is None:
+            return v
+        
+        # Import here to avoid circular dependency
+        if isinstance(v, str):
+            from ..utils.datetime_utils import parse_datetime_flexible
+            return parse_datetime_flexible(v)
+        
+        from ..utils.datetime_utils import ensure_utc
+        return ensure_utc(v)
+    
     @field_validator('end_date')
     @classmethod
     def validate_date_range(cls, v: datetime, info) -> datetime:
-        """Ensure end_date is after start_date."""
-        if 'start_date' in info.data and v < info.data['start_date']:
-            raise ValueError("end_date must be after start_date")
+        """
+        Ensure end_date is after start_date (UTC-safe comparison).
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if 'start_date' in info.data:
+            from ..utils.datetime_utils import safe_datetime_comparison
+            if not safe_datetime_comparison(info.data['start_date'], v, "<"):
+                raise ValueError("end_date must be after start_date")
         return v
     
     class Config:
@@ -138,7 +169,11 @@ class Timeline(BaseModel):
 
 
 class TimelineCreate(BaseModel):
-    """Model for creating a new timeline."""
+    """
+    Model for creating a new timeline.
+    
+    ✅ UTC STANDARDIZATION: All datetime fields are automatically converted to UTC.
+    """
     name: str = Field(min_length=1, max_length=255)
     description: Optional[str] = None
     service_name: str = Field(min_length=1, max_length=255)
@@ -149,12 +184,36 @@ class TimelineCreate(BaseModel):
     created_by: Optional[str] = None
     metadata: TimelineMetadata = Field(default_factory=TimelineMetadata)
     
+    @field_validator('start_date', 'end_date', mode='before')
+    @classmethod
+    def ensure_utc_dates(cls, v):
+        """
+        Ensure datetime fields are UTC-aware.
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if v is None:
+            return v
+        
+        if isinstance(v, str):
+            from ..utils.datetime_utils import parse_datetime_flexible
+            return parse_datetime_flexible(v)
+        
+        from ..utils.datetime_utils import ensure_utc
+        return ensure_utc(v)
+    
     @field_validator('end_date')
     @classmethod
     def validate_date_range(cls, v: datetime, info) -> datetime:
-        """Ensure end_date is after start_date."""
-        if 'start_date' in info.data and v < info.data['start_date']:
-            raise ValueError("end_date must be after start_date")
+        """
+        Ensure end_date is after start_date (UTC-safe comparison).
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if 'start_date' in info.data:
+            from ..utils.datetime_utils import safe_datetime_comparison
+            if not safe_datetime_comparison(info.data['start_date'], v, "<"):
+                raise ValueError("end_date must be after start_date")
         return v
 
 
@@ -181,6 +240,8 @@ class TimePeriod(BaseModel):
     Time period model.
     
     Represents a discrete time period within a timeline with associated documents.
+    
+    ✅ UTC STANDARDIZATION: All datetime fields are automatically converted to UTC.
     """
     id: UUID = Field(default_factory=uuid4, description="Unique period identifier")
     timeline_id: UUID = Field(description="Parent timeline ID")
@@ -202,15 +263,39 @@ class TimePeriod(BaseModel):
     metadata: PeriodMetadata = Field(default_factory=PeriodMetadata)
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: __import__('datetime').datetime.utcnow())
+    updated_at: datetime = Field(default_factory=lambda: __import__('datetime').datetime.utcnow())
+    
+    @field_validator('start_date', 'end_date', 'created_at', 'updated_at', mode='before')
+    @classmethod
+    def ensure_utc_dates(cls, v):
+        """
+        Ensure datetime fields are UTC-aware.
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if v is None:
+            return v
+        
+        if isinstance(v, str):
+            from ..utils.datetime_utils import parse_datetime_flexible
+            return parse_datetime_flexible(v)
+        
+        from ..utils.datetime_utils import ensure_utc
+        return ensure_utc(v)
     
     @field_validator('end_date')
     @classmethod
     def validate_date_range(cls, v: datetime, info) -> datetime:
-        """Ensure end_date is after start_date."""
-        if 'start_date' in info.data and v < info.data['start_date']:
-            raise ValueError("end_date must be after start_date")
+        """
+        Ensure end_date is after start_date (UTC-safe comparison).
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if 'start_date' in info.data:
+            from ..utils.datetime_utils import safe_datetime_comparison
+            if not safe_datetime_comparison(info.data['start_date'], v, "<"):
+                raise ValueError("end_date must be after start_date")
         return v
     
     class Config:
@@ -230,7 +315,11 @@ class TimePeriod(BaseModel):
 
 
 class TimePeriodCreate(BaseModel):
-    """Model for creating a time period."""
+    """
+    Model for creating a time period.
+    
+    ✅ UTC STANDARDIZATION: All datetime fields are automatically converted to UTC.
+    """
     timeline_id: UUID
     name: str = Field(min_length=1, max_length=255)
     description: Optional[str] = None
@@ -238,6 +327,38 @@ class TimePeriodCreate(BaseModel):
     end_date: datetime
     sequence_number: int = Field(ge=1)
     metadata: PeriodMetadata = Field(default_factory=PeriodMetadata)
+    
+    @field_validator('start_date', 'end_date', mode='before')
+    @classmethod
+    def ensure_utc_dates(cls, v):
+        """
+        Ensure datetime fields are UTC-aware.
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if v is None:
+            return v
+        
+        if isinstance(v, str):
+            from ..utils.datetime_utils import parse_datetime_flexible
+            return parse_datetime_flexible(v)
+        
+        from ..utils.datetime_utils import ensure_utc
+        return ensure_utc(v)
+    
+    @field_validator('end_date')
+    @classmethod
+    def validate_date_range(cls, v: datetime, info) -> datetime:
+        """
+        Ensure end_date is after start_date (UTC-safe comparison).
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if 'start_date' in info.data:
+            from ..utils.datetime_utils import safe_datetime_comparison
+            if not safe_datetime_comparison(info.data['start_date'], v, "<"):
+                raise ValueError("end_date must be after start_date")
+        return v
 
 
 class PlacementMetadata(BaseModel):

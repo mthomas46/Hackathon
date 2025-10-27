@@ -26,7 +26,7 @@ from ..utils.redis_client import get_redis_client
 from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
-from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, embeddings_admin, job_recovery, path_resolver, temporal_versioning, documentation_runs, job_progress, performance_optimization, cache_analytics, discovery, discovery_admin, orchestration, documentation, timeline, temporal_rag, maintenance, reports, consolidation, dynamic_rag, retry_admin
+from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, config_validation, embeddings_admin, job_recovery, path_resolver, temporal_versioning, documentation_runs, job_progress, performance_optimization, cache_analytics, discovery, discovery_admin, orchestration, documentation, timeline, temporal_rag, maintenance, reports, consolidation, dynamic_rag, retry_admin, monitoring
 from .routes import analysis as analysis_routes
 # embeddings import moved below to handle conditional loading
 from .middleware import RequestIDMiddleware, TimeoutMiddleware, MetricsMiddleware
@@ -350,6 +350,7 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(health.router, tags=["Health"])
     app.include_router(infrastructure.router, prefix="/api/v1", tags=["Infrastructure"])  # ✅ Infrastructure monitoring
+    app.include_router(monitoring.router, prefix="/api/v1/monitoring", tags=["Monitoring"])  # ✅ Metadata consistency monitoring
     app.include_router(standard.router, tags=["Standard"])  # ✅ Standard ecosystem endpoints
     app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
     app.include_router(retry_admin.router, prefix="/api/v1/admin", tags=["Retry Admin"])  # 🆕 Phase 2.3
@@ -391,6 +392,7 @@ def create_app() -> FastAPI:
     # Diagnostics and configuration
     app.include_router(diagnostics.router, prefix="/api/v1", tags=["Diagnostics"])
     app.include_router(config_viewer.router, prefix="/api/v1", tags=["Configuration"])
+    app.include_router(config_validation.router, prefix="/api/v1", tags=["Configuration Validation"])  # ✅ PHASE 4
     
     # Worker management and health monitoring
     from .routes import workers

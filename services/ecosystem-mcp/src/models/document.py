@@ -121,12 +121,12 @@ class Document(BaseModel):
     )
     
     created_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: __import__('datetime').datetime.utcnow(),
         description="When document was first ingested"
     )
     
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: __import__('datetime').datetime.utcnow(),
         description="When document was last updated"
     )
     
@@ -198,6 +198,24 @@ class Document(BaseModel):
                 }
             }
         }
+    
+    @field_validator('created_at', 'updated_at', 'git_date', mode='before')
+    @classmethod
+    def ensure_utc_dates(cls, v):
+        """
+        Ensure all datetime fields are UTC-aware.
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if v is None:
+            return v
+        
+        if isinstance(v, str):
+            from ..utils.datetime_utils import parse_datetime_flexible
+            return parse_datetime_flexible(v)
+        
+        from ..utils.datetime_utils import ensure_utc
+        return ensure_utc(v)
     
     @field_validator('git_commit_sha')
     @classmethod

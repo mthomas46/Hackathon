@@ -13,7 +13,7 @@ from typing import Optional, List, Dict, Any
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query as QueryParam
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ...services.rag.temporal_rag_service import TemporalRAGService
 from ...services.rag.context_aware_rag import get_context_aware_rag
@@ -28,7 +28,11 @@ router = APIRouter()
 # ============================================================================
 
 class TemporalQueryRequest(BaseModel):
-    """Request for temporal RAG query."""
+    """
+    Request for temporal RAG query.
+    
+    ✅ UTC STANDARDIZATION: Datetime fields are automatically converted to UTC.
+    """
     question: str = Field(
         ...,
         description="Question to answer",
@@ -53,6 +57,20 @@ class TemporalQueryRequest(BaseModel):
         le=50,
         description="Maximum results to return"
     )
+    
+    @field_validator('as_of_date', mode='before')
+    @classmethod
+    def ensure_utc_date(cls, v):
+        """
+        Ensure datetime is UTC-aware.
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if isinstance(v, str):
+            from ...utils.datetime_utils import parse_datetime_flexible
+            return parse_datetime_flexible(v)
+        from ...utils.datetime_utils import ensure_utc
+        return ensure_utc(v)
 
 
 class EvolutionQueryRequest(BaseModel):
@@ -80,7 +98,11 @@ class EvolutionQueryRequest(BaseModel):
 
 
 class ComparisonQueryRequest(BaseModel):
-    """Request for comparison query."""
+    """
+    Request for comparison query.
+    
+    ✅ UTC STANDARDIZATION: Datetime fields are automatically converted to UTC.
+    """
     question: str = Field(
         ...,
         description="Question to answer",
@@ -99,6 +121,20 @@ class ComparisonQueryRequest(BaseModel):
         None,
         description="Specific timeline to use (optional)"
     )
+    
+    @field_validator('start_date', 'end_date', mode='before')
+    @classmethod
+    def ensure_utc_dates(cls, v):
+        """
+        Ensure datetime fields are UTC-aware.
+        
+        ✅ UTC STANDARDIZATION Phase 1
+        """
+        if isinstance(v, str):
+            from ...utils.datetime_utils import parse_datetime_flexible
+            return parse_datetime_flexible(v)
+        from ...utils.datetime_utils import ensure_utc
+        return ensure_utc(v)
     service_name: Optional[str] = Field(
         None,
         description="Service to query (if timeline_id not provided)"

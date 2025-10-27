@@ -233,7 +233,7 @@ class IngestionWorker:
                                 job = await repo.get_by_id(job_id)
                                 if job:
                                     job.status = "failed"
-                                    job.completed_at = datetime.utcnow()
+                                    job.completed_at = ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Sprint 2
                                     job.error_message = f"Job timed out after {full_job_timeout/3600:.1f} hours"
                                     await repo.update(job)
                                     await session.commit()
@@ -407,7 +407,7 @@ class IngestionWorker:
                 # Update job with results
                 logger.info(f"📍 Updating job with results...")
                 job.status = "completed" if result["success"] else "failed"
-                job.completed_at = datetime.utcnow()
+                job.completed_at = ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Sprint 2
                 job.processed_documents = result.get("processed_documents", 0)
                 job.total_documents = result.get("total_documents", 0)
                 job.failed_documents = result.get("failed_documents", 0)
@@ -444,7 +444,7 @@ class IngestionWorker:
                     job = await repo.get_by_id(job_id)
                     if job:
                         job.status = "failed"
-                        job.completed_at = datetime.utcnow()
+                        job.completed_at = ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Sprint 2
                         job.error_message = str(e)
                         await repo.update(job)
                         await session.commit()

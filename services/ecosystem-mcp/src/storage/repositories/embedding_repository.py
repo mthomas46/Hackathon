@@ -2,6 +2,8 @@
 Embedding repository for Ecosystem MCP Service.
 
 Provides embedding-specific database operations.
+
+✅ UTC STANDARDIZATION: Uses ensure_utc_naive() for PostgreSQL datetime operations.
 """
 
 from typing import Optional, List
@@ -13,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db_models import EmbeddingModel
 from .base import BaseRepository
+from ...utils.datetime_utils import ensure_utc_naive
 
 
 class EmbeddingRepository(BaseRepository[EmbeddingModel]):
@@ -74,8 +77,10 @@ class EmbeddingRepository(BaseRepository[EmbeddingModel]):
         
         Returns:
             List of embeddings
+        
+        ✅ UTC STANDARDIZATION Phase 2
         """
-        since = datetime.utcnow() - timedelta(hours=hours)
+        since = ensure_utc_naive(datetime.utcnow() - timedelta(hours=hours))
         result = await self.session.execute(
             select(self.model)
             .where(self.model.created_at >= since)
@@ -96,11 +101,13 @@ class EmbeddingRepository(BaseRepository[EmbeddingModel]):
         
         Returns:
             Total cost in USD
+        
+        ✅ UTC STANDARDIZATION Phase 2
         """
         query = select(func.sum(self.model.cost_usd))
         
         if since:
-            query = query.where(self.model.created_at >= since)
+            query = query.where(self.model.created_at >= ensure_utc_naive(since))
         
         result = await self.session.execute(query)
         total = result.scalar_one_or_none()
@@ -118,11 +125,13 @@ class EmbeddingRepository(BaseRepository[EmbeddingModel]):
         
         Returns:
             Total token count
+        
+        ✅ UTC STANDARDIZATION Phase 2
         """
         query = select(func.sum(self.model.token_count))
         
         if since:
-            query = query.where(self.model.created_at >= since)
+            query = query.where(self.model.created_at >= ensure_utc_naive(since))
         
         result = await self.session.execute(query)
         total = result.scalar_one_or_none()

@@ -1,0 +1,48 @@
+Category,Subcategory,Current Value,Location,Line Number,Risk Level,Quick Win,Notes
+Redis,Stream Name,ingestion_queue,src/utils/redis_client.py,35,Critical,Yes,Main ingestion queue
+Redis,Stream Name,embedding_queue,src/utils/redis_client.py,36,Critical,Yes,Embedding generation queue
+Redis,Stream Name,retry_queue,src/utils/redis_client.py,37,Critical,Yes,Retry queue for transient failures
+Redis,Stream Name,failed_queue,src/utils/redis_client.py,38,Critical,Yes,Dead letter queue
+Redis,Consumer Group,workers,src/utils/redis_client.py,41,Critical,Yes,CAUSED TODAY'S ISSUE!
+Redis,Max Retries,5,src/utils/redis_client.py,44,Medium,Yes,Retry configuration
+Redis,Backoff Base,2,src/utils/redis_client.py,45,Medium,Yes,Exponential backoff base
+Redis,Connection URL,redis://localhost:6379/0,src/config.py,41,Critical,Yes,Redis connection string
+Redis,Max Connections,50,src/config.py,44,Medium,Yes,Connection pool size
+Database,Connection String,postgresql://ecosystem:ecosystem_password@localhost:5432/ecosystem_mcp,src/config.py,33,Critical,Yes,Full PostgreSQL connection
+Database,Database Name,ecosystem_mcp,docker-compose.yml,9,Critical,Yes,PostgreSQL database name
+Database,User,ecosystem,docker-compose.yml,10,Critical,Yes,PostgreSQL user
+Database,Password,ecosystem_password,docker-compose.yml,11,Critical,Yes,PostgreSQL password (not secure!)
+Database,Host,localhost,src/config.py,33,High,Yes,Database host
+Database,Port,5432,docker-compose.yml,14,High,Yes,PostgreSQL port
+Database,Pool Size,20,src/config.py,36,Medium,Yes,Connection pool size
+Database,Max Overflow,10,src/config.py,37,Medium,Yes,Max overflow connections
+ChromaDB,Collection Name,ecosystem_docs,src/config.py,51,High,Yes,Main collection name
+ChromaDB,Path,./data/chroma_db,src/config.py,48,Medium,Yes,Storage path
+Service,Port - PostgreSQL,5432,docker-compose.yml,14,High,Yes,External port mapping
+Service,Port - Redis,6379,docker-compose.yml,38,High,Yes,External port mapping
+Service,Port - Ollama,11434,docker-compose.yml,61,High,Yes,External port mapping
+Service,Port - Embedding,8001,docker-compose.yml,114,High,Yes,External port mapping
+Service,Port - API,8000,docker-compose.yml,172,High,Yes,Main API port
+Service,Port - Metrics,9090,docker-compose.yml,173,High,Yes,Metrics port
+Service,Port - Dashboard,8501,docker-compose.yml,214,High,Yes,Streamlit dashboard port
+Service,Container Name - PostgreSQL,ecosystem-mcp-postgres,docker-compose.yml,7,Medium,Yes,Container identifier
+Service,Container Name - Redis,ecosystem-mcp-redis,docker-compose.yml,35,Medium,Yes,Container identifier
+Service,Container Name - Ollama,ecosystem-mcp-ollama,docker-compose.yml,59,Medium,Yes,Container identifier
+Service,Container Name - Embedding,ecosystem-mcp-embedding,docker-compose.yml,105,Medium,Yes,Container identifier
+Service,Container Name - API,ecosystem-mcp-service,docker-compose.yml,144,Medium,Yes,Container identifier
+Service,Container Name - Dashboard,ecosystem-mcp-dashboard,docker-compose.yml,209,Medium,Yes,Container identifier
+Service,Network Name,ecosystem-mcp,docker-compose.yml,240,Medium,Yes,Docker network
+Ollama,Base URL,http://localhost:11434,src/config.py,55,High,Yes,Container Ollama URL
+Ollama,Desktop URL,http://host.docker.internal:11434,src/config.py,69,High,Yes,Host Ollama URL
+Ollama,Model Small,llama3.2:3b,src/config.py,58,Low,No,Model selection
+Ollama,Model Medium,mistral:7b-instruct-q8_0,src/config.py,59,Low,No,Model selection
+Ollama,Embedding Model,nomic-embed-text:latest,src/config.py,60,Low,No,Embedding model
+Ollama,Timeout,300,src/config.py,61,Medium,Yes,Request timeout
+Cursor,MCP URL,http://host.docker.internal:3000,src/config.py,87,Medium,Yes,Cursor IDE MCP server
+Cursor,Model,claude-4.5-sonnet,src/config.py,91,Low,No,Cursor model selection
+Cursor,Complexity Threshold,0.7,src/config.py,95,Low,No,Routing threshold
+Worker,Poll Interval,5,Inferred from code,N/A,Medium,Yes,Worker polling interval
+Worker,Batch Size,1,Inferred from code,N/A,Medium,Yes,Worker batch size
+Environment,Log Level,INFO,Inferred from docker-compose,N/A,Low,Yes,Default log level
+Environment,Environment,development,Inferred from code,N/A,Low,Yes,Default environment
+

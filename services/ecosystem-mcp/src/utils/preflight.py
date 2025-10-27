@@ -75,6 +75,7 @@ class PreflightChecker:
         checks = [
             self.check_config,
             self.check_environment,
+            self.check_config_registry_validation,  # ✅ PHASE 3: Registry validation
             self.check_postgresql,
             self.check_redis,
             self.check_chromadb,
@@ -184,6 +185,82 @@ class PreflightChecker:
                 name="Environment",
                 passed=False,
                 message=f"Environment error: {e}"
+            )
+    
+    async def check_config_registry_validation(self) -> CheckResult:
+        """
+        Check configuration registry validation.
+        
+        ✅ PHASE 3: This runs the comprehensive ConfigValidator
+        that would have caught today's consumer group mismatch!
+        """
+        logger.info("Running registry validation checks...")
+        
+        try:
+            from ..validation import ConfigValidator
+            
+            validator = ConfigValidator()
+            results = await validator.validate_all(fail_fast=False)
+            
+            # Get summary
+            summary = results.summary()
+            critical_failures = results.get_critical_failures()
+            
+            if critical_failures:
+                # Format failure messages
+                failure_msgs = "\n".join([
+                    f"   - {f.check_name}: {f.message}"
+                    for f in critical_failures
+                ])
+                
+                return CheckResult(
+                    name="Registry Validation",
+                    passed=False,
+                    message=f"{len(critical_failures)} critical validation(s) failed:\n{failure_msgs}",
+                    category=CheckCategory.CRITICAL,
+                    details={
+                        "total_checks": summary["total_checks"],
+                        "passed": summary["passed"],
+                        "failed": summary["failed"],
+                        "critical_failures": len(critical_failures),
+                        "failures": [
+                            {
+                                "check": f.check_name,
+                                "message": f.message,
+                                "remediation": f.remediation
+                            }
+                            for f in critical_failures
+                        ]
+                    }
+                )
+            
+            # Check for non-critical failures
+            all_failures = results.get_failures()
+            if all_failures:
+                return CheckResult(
+                    name="Registry Validation",
+                    passed=True,  # Non-critical, allow startup
+                    message=f"Validation complete: {summary['passed']}/{summary['total_checks']} passed ({len(all_failures)} warnings)",
+                    category=CheckCategory.HIGH,
+                    details=summary
+                )
+            
+            return CheckResult(
+                name="Registry Validation",
+                passed=True,
+                message=f"✅ All {summary['total_checks']} validations passed",
+                category=CheckCategory.CRITICAL,
+                details=summary
+            )
+            
+        except Exception as e:
+            logger.error(f"Registry validation error: {e}", exc_info=True)
+            return CheckResult(
+                name="Registry Validation",
+                passed=False,
+                message=f"Validation system error: {str(e)}",
+                category=CheckCategory.HIGH,  # Don't block startup on validation system errors
+                details={"exception": str(e)}
             )
     
     async def check_postgresql(self) -> CheckResult:

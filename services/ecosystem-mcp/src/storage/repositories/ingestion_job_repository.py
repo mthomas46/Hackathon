@@ -2,6 +2,8 @@
 Repository for ingestion job operations.
 
 Provides CRUD operations for tracking document ingestion jobs.
+
+✅ UTC STANDARDIZATION: Uses ensure_utc_naive() for PostgreSQL datetime operations.
 """
 
 from typing import Optional, List
@@ -13,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db_models import IngestionJobModel
 from .base import BaseRepository
+from ...utils.datetime_utils import ensure_utc_naive
 
 
 class IngestionJobRepository(BaseRepository[IngestionJobModel]):
@@ -129,10 +132,12 @@ class IngestionJobRepository(BaseRepository[IngestionJobModel]):
         
         Returns:
             True if updated successfully
+        
+        ✅ UTC STANDARDIZATION Phase 2
         """
         values = {
             "status": "completed",
-            "completed_at": datetime.utcnow(),
+            "completed_at": ensure_utc_naive(datetime.utcnow()),
             "total_cost_usd": total_cost
         }
         if summary:
@@ -156,13 +161,15 @@ class IngestionJobRepository(BaseRepository[IngestionJobModel]):
         
         Returns:
             True if updated successfully
+        
+        ✅ UTC STANDARDIZATION Phase 2
         """
         result = await self.session.execute(
             sql_update(IngestionJobModel)
             .where(IngestionJobModel.id == job_id)
             .values(
                 status="failed",
-                completed_at=datetime.utcnow(),
+                completed_at=ensure_utc_naive(datetime.utcnow()),
                 error_message=error
             )
         )

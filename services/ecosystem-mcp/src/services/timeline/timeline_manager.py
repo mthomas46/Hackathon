@@ -3,6 +3,8 @@ Timeline Manager
 
 Manages timeline CRUD operations with confidence validation.
 Integrates with TemporalConfidenceCalculator for pre-flight checks.
+
+✅ UTC STANDARDIZATION: Uses ensure_utc_naive() for PostgreSQL datetime operations.
 """
 
 import logging
@@ -27,6 +29,7 @@ from ...models.timeline import (
     PeriodStrategy,
 )
 from .confidence_calculator import TemporalConfidenceCalculator
+from ...utils.datetime_utils import ensure_utc_naive
 
 logger = logging.getLogger(__name__)
 
@@ -271,7 +274,7 @@ class TimelineManager:
                 else:
                     setattr(timeline_model, field, value)
             
-            timeline_model.updated_at = datetime.utcnow()
+            timeline_model.updated_at = ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Phase 2
             
             await self.db.commit()
             
@@ -425,8 +428,48 @@ class TimelineManager:
         
         Returns:
             Timeline Pydantic model
+            
+        ✅ FIX: Handles legacy timelines with empty confidence_metadata gracefully.
         """
         from ...models.timeline import TimelineMetadata, ConfidenceMetadata
+        from datetime import datetime
+        
+        # ✅ FIX: Handle empty/missing confidence_metadata for legacy timelines
+        if not model.confidence_metadata or model.confidence_metadata == {}:
+            self.logger.warning(
+                f"⚠️ [LEGACY_TIMELINE] Timeline {model.id} ({model.name}) has empty confidence_metadata. "
+                f"Using default values. Consider recalculating confidence."
+            )
+            confidence_metadata = self._get_default_confidence_metadata()
+        else:
+            # Normal case: unpack from database
+            try:
+                confidence_metadata = ConfidenceMetadata(**model.confidence_metadata)
+            except Exception as e:
+                self.logger.error(
+                    f"❌ Failed to parse confidence_metadata for timeline {model.id}: {e}",
+                    exc_info=True
+                )
+                self.logger.warning("Falling back to default confidence_metadata")
+                confidence_metadata = self._get_default_confidence_metadata()
+        
+        # ✅ FIX: Handle period_strategy conversion from string to enum
+        if isinstance(model.period_strategy, str):
+            # Convert string value to enum (e.g., "adaptive" -> PeriodStrategy.ADAPTIVE)
+            self.logger.info(f"📝 Converting period_strategy from string '{model.period_strategy}' to enum")
+            # Use getattr to convert string to enum value
+            try:
+                period_strategy = getattr(PeriodStrategy, model.period_strategy.upper())
+                self.logger.info(f"   ✅ Converted to: {period_strategy} (type: {type(period_strategy).__name__})")
+            except AttributeError:
+                # Fallback: try direct enum construction
+                self.logger.warning(f"   ⚠️ Failed to convert via UPPER, trying direct enum construction")
+                period_strategy = PeriodStrategy(model.period_strategy)
+                self.logger.info(f"   Result: {period_strategy} (type: {type(period_strategy).__name__})")
+        else:
+            # Already an enum
+            self.logger.info(f"📝 period_strategy is already {type(model.period_strategy).__name__}: {model.period_strategy}")
+            period_strategy = model.period_strategy
         
         return Timeline(
             id=model.id,
@@ -437,11 +480,39 @@ class TimelineManager:
             start_date=model.start_date,
             end_date=model.end_date,
             confidence_level=TemporalConfidence(model.confidence_level),
-            confidence_metadata=ConfidenceMetadata(**model.confidence_metadata),
-            period_strategy=PeriodStrategy(model.period_strategy),
+            confidence_metadata=confidence_metadata,  # ✅ Now handles empty metadata
+            period_strategy=period_strategy,  # ✅ Now handles string-to-enum conversion
             created_at=model.created_at,
             updated_at=model.updated_at,
             created_by=model.created_by,
             metadata=TimelineMetadata(**model.timeline_metadata)
+        )
+    
+    def _get_default_confidence_metadata(self):
+        """
+        Get default ConfidenceMetadata for legacy timelines.
+        
+        Returns:
+            ConfidenceMetadata with sensible defaults
+        """
+        from ...models.timeline import ConfidenceMetadata
+        from datetime import datetime
+        
+        return ConfidenceMetadata(
+            total_documents=0,
+            git_history_documents=0,
+            snapshot_documents=0,
+            git_percentage=0.0,
+            can_show_evolution=False,
+            can_detect_drift=False,
+            can_show_timeline=True,  # Basic capability always available
+            can_compare_periods=False,
+            fallback_strategy="content_based",
+            warnings=[
+                "Legacy timeline with missing confidence metadata",
+                "Confidence values are defaults",
+                "Run confidence recalculation for accurate values"
+            ],
+            calculated_at=ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Phase 2
         )
 

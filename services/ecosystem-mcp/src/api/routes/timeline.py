@@ -432,53 +432,91 @@ async def get_timeline_periods(
 
 
 @router.post("/{timeline_id}/periods/generate")
-async def generate_periods(request: PeriodGenerationRequest):
+async def generate_periods(
+    timeline_id: str
+):
     """
     Generate periods for a timeline.
     
     Args:
-        request: Period generation request
+        timeline_id: Timeline ID from path
     
     Returns:
         Number of periods generated
     """
+    logger.info(f"🔧 [PERIOD_GEN] Starting period generation for timeline: {timeline_id}")
+    
     try:
+        # Validate UUID format
+        logger.debug(f"🔧 [PERIOD_GEN] Step 1: Validating UUID format")
+        logger.debug(f"   Raw timeline_id: {timeline_id!r} (type: {type(timeline_id)})")
+        
+        try:
+            timeline_uuid = UUID(timeline_id)
+            logger.debug(f"   ✅ UUID parsed successfully: {timeline_uuid}")
+        except ValueError as e:
+            logger.error(f"   ❌ UUID parsing failed: {e}")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid timeline ID format: {timeline_id}. Must be valid UUID."
+            )
+        
         db = get_database()
         async with db.session() as session:
             # Get timeline
+            logger.debug(f"🔧 [PERIOD_GEN] Step 2: Fetching timeline from database")
             manager = TimelineManager(session)
-            timeline = await manager.get_timeline(UUID(request.timeline_id))
+            timeline = await manager.get_timeline(timeline_uuid)
             
             if not timeline:
-                raise HTTPException(status_code=404, detail="Timeline not found")
+                logger.error(f"   ❌ Timeline not found: {timeline_uuid}")
+                raise HTTPException(status_code=404, detail=f"Timeline not found: {timeline_id}")
             
-            # Use timeline's strategy if not specified
-            strategy = request.strategy or timeline.period_strategy
+            logger.info(f"   ✅ Timeline found: {timeline.name}")
+            logger.debug(f"   Service: {timeline.service_name}")
+            logger.debug(f"   Date range: {timeline.start_date} to {timeline.end_date}")
+            
+            # Use timeline's strategy
+            strategy = timeline.period_strategy
+            logger.info(f"🔧 [PERIOD_GEN] Step 3: Using strategy: {strategy} (type: {type(strategy).__name__})")
+            logger.info(f"   Is PeriodStrategy enum? {isinstance(strategy, PeriodStrategy)}")
+            logger.info(f"   Has .value attribute? {hasattr(strategy, 'value')}")
             
             # Generate periods
+            logger.debug(f"🔧 [PERIOD_GEN] Step 4: Generating periods")
             generator = PeriodGenerator(session)
-            period_creates = await generator.generate_periods(
-                timeline_id=request.timeline_id,
-                service_name=timeline.service_name,
-                start_date=timeline.start_date,
-                end_date=timeline.end_date,
-                strategy=strategy,
-                repo_path=timeline.repo_path
-            )
+            
+            try:
+                period_creates = await generator.generate_periods(
+                    timeline_id=timeline_id,
+                    service_name=timeline.service_name,
+                    start_date=timeline.start_date,
+                    end_date=timeline.end_date,
+                    strategy=strategy,
+                    repo_path=timeline.repo_path
+                )
+                logger.info(f"   ✅ Generated {len(period_creates)} period definitions")
+            except Exception as e:
+                logger.error(f"   ❌ Period generation failed: {e}", exc_info=True)
+                raise
             
             # Save periods
+            logger.debug(f"🔧 [PERIOD_GEN] Step 5: Saving periods to database")
             from ...storage.repositories.timeline_repository import TimePeriodRepository
             from ...storage.db_models import TimePeriodModel
             
             period_repo = TimePeriodRepository(session)
             
             # Delete existing periods first
-            await period_repo.delete_by_timeline(UUID(request.timeline_id))
+            logger.debug(f"   Deleting existing periods for timeline {timeline_uuid}")
+            await period_repo.delete_by_timeline(timeline_uuid)
             
             # Create new periods
-            for period_create in period_creates:
+            logger.debug(f"   Creating {len(period_creates)} new periods")
+            for i, period_create in enumerate(period_creates, 1):
+                logger.debug(f"   Period {i}: {period_create.name} ({period_create.start_date} to {period_create.end_date})")
                 period_model = TimePeriodModel(
-                    timeline_id=UUID(request.timeline_id),
+                    timeline_id=timeline_uuid,
                     name=period_create.name,
                     description=period_create.description,
                     start_date=period_create.start_date,
@@ -488,21 +526,27 @@ async def generate_periods(request: PeriodGenerationRequest):
                 )
                 await period_repo.create(period_model)
             
+            logger.debug(f"🔧 [PERIOD_GEN] Step 6: Committing transaction")
             await session.commit()
             
+            logger.info(f"✅ [PERIOD_GEN] SUCCESS: Generated {len(period_creates)} periods for timeline {timeline_id}")
+            
+            # ✅ FIX: Handle both string and enum for strategy value
+            strategy_value = strategy.value if hasattr(strategy, 'value') else str(strategy)
+            
             return {
+                "success": True,
                 "message": f"Generated {len(period_creates)} periods",
                 "count": len(period_creates),
-                "strategy": strategy.value
+                "strategy": strategy_value,
+                "timeline_id": timeline_id
             }
     
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid timeline ID")
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to generate periods: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"❌ [PERIOD_GEN] FAILED: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Period generation failed: {str(e)}")
 
 
 # ==========================================

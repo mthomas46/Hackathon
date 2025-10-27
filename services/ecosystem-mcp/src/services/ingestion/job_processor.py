@@ -25,6 +25,7 @@ from ...storage.repositories import DocumentRepository
 from ...storage.chromadb_client import get_chroma_client
 from .commit_optimizer import get_commit_optimizer
 from ...utils.redis_client import get_redis_client
+from ...utils.datetime_utils import ensure_utc_naive
 from ..git.git_error_handler import get_git_error_handler, GitCorruptionError
 
 logger = logging.getLogger(__name__)
@@ -316,7 +317,7 @@ class JobProcessor:
                             f"Job timeout: exceeded maximum runtime of {MAX_JOB_RUNTIME} "
                             f"(actual: {runtime})"
                         )
-                        current_job.completed_at = datetime.utcnow()
+                        current_job.completed_at = ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Sprint 2
                         
                         # Update metadata
                         if current_job.job_metadata:
@@ -883,6 +884,43 @@ class JobProcessor:
                     if isinstance(commit_result, Exception):
                         logger.error(f"Commit {idx} failed with exception: {commit_result}")
                         result["failed_documents"] += 1
+                        
+                        # 🆕 PHASE 3.1a: Integrate retry for commit-level exceptions
+                        try:
+                            from .error_classifier import ErrorClassifier
+                            from ...utils.redis_client import get_redis_client
+                            
+                            classified_error = ErrorClassifier.classify(commit_result)
+                            error_type_str = classified_error.value
+                            
+                            if ErrorClassifier.is_transient(classified_error):
+                                logger.info(
+                                    f"🔄 Transient commit processing error detected ({error_type_str}): "
+                                    f"Enqueuing commit {idx} for retry"
+                                )
+                                
+                                redis_client = get_redis_client()
+                                
+                                document_info = {
+                                    "commit_index": idx,
+                                    "mode": job.mode,
+                                    "service_name": job.service_name,
+                                    "repo_path": job.repo_path,
+                                    "retry_context": "commit_processing_exception"
+                                }
+                                
+                                await redis_client.enqueue_failed_document(
+                                    job_id=str(job.id),
+                                    document_info=document_info,
+                                    error_type=error_type_str,
+                                    error_message=str(commit_result),
+                                    retry_count=0
+                                )
+                                
+                                logger.info(f"✅ Enqueued commit {idx} to retry queue")
+                        except Exception as enqueue_error:
+                            logger.error(f"Failed to enqueue commit exception: {enqueue_error}")
+                            
                     else:
                         result["processed_documents"] += commit_result["processed"]
                         result["failed_documents"] += commit_result["failed"]
@@ -1772,10 +1810,24 @@ class JobProcessor:
                         
                         # ✨ Add git metadata to ChromaDB for enriched mode
                         if git_metadata:
+                            # ✅ FIX: Convert git_date to Unix timestamp for ChromaDB queries
+                            git_date_str = git_metadata.get("last_commit_date", "")
+                            git_date_timestamp = None
+                            
+                            if git_date_str:
+                                try:
+                                    # Parse ISO date and convert to timestamp
+                                    from datetime import datetime
+                                    git_date_dt = datetime.fromisoformat(git_date_str.replace('Z', '+00:00'))
+                                    git_date_timestamp = git_date_dt.timestamp()
+                                    logger.debug(f"   Converted git_date to timestamp: {git_date_str} -> {git_date_timestamp}")
+                                except Exception as e:
+                                    logger.warning(f"   Failed to convert git_date to timestamp: {e}")
+                            
                             chroma_metadata.update({
                                 "git_commit_sha": git_metadata.get("last_commit_sha", "")[:8],
                                 "git_author": git_metadata.get("last_commit_author", ""),
-                                "git_date": git_metadata.get("last_commit_date", "")
+                                "git_date": git_date_timestamp if git_date_timestamp else 0  # Use 0 as fallback
                             })
                         
                         await chroma.add_embeddings(
@@ -1841,6 +1893,83 @@ class JobProcessor:
                             "error_type": error_type,
                             "timestamp": time.time()
                         })
+                        
+                        # 🆕 RETRY INFRASTRUCTURE: Enqueue embedding failures for retry
+                        from .error_classifier import ErrorClassifier
+                        
+                        # Classify the embedding error
+                        classified_error = ErrorClassifier.classify(e)
+                        error_type_str = classified_error.value
+                        
+                        if ErrorClassifier.is_transient(classified_error):
+                            logger.info(
+                                f"🔄 Transient embedding error detected ({error_type_str}): "
+                                f"Enqueuing {file_path} for retry"
+                            )
+                            
+                            try:
+                                from ...utils.redis_client import get_redis_client
+                                redis_client = get_redis_client()
+                                
+                                document_info = {
+                                    "file_path": file_path,
+                                    "mode": job.mode,
+                                    "service_name": job.service_name,
+                                    "repo_path": job.repo_path,
+                                    "content_hash": content_hash,
+                                    "retry_context": "embedding_generation_failure"
+                                }
+                                
+                                await redis_client.enqueue_failed_document(
+                                    job_id=str(job.id),
+                                    document_info=document_info,
+                                    error_type=error_type_str,
+                                    error_message=embedding_error,
+                                    retry_count=0
+                                )
+                                
+                                logger.info(f"✅ Enqueued {file_path} to retry queue (embedding failure)")
+                                
+                            except Exception as enqueue_error:
+                                logger.error(
+                                    f"❌ Failed to enqueue document for retry: {enqueue_error}",
+                                    exc_info=True
+                                )
+                        else:
+                            # Permanent embedding error - move to dead letter queue
+                            logger.warning(
+                                f"💀 Permanent embedding error detected ({error_type_str}): "
+                                f"Moving {file_path} to dead letter queue"
+                            )
+                            
+                            try:
+                                from ...utils.redis_client import get_redis_client
+                                redis_client = get_redis_client()
+                                
+                                document_info = {
+                                    "file_path": file_path,
+                                    "mode": job.mode,
+                                    "service_name": job.service_name,
+                                    "repo_path": job.repo_path,
+                                    "retry_context": "embedding_generation_permanent_failure"
+                                }
+                                
+                                await redis_client.move_to_dead_letter(
+                                    job_id=str(job.id),
+                                    document_info=document_info,
+                                    error_type=error_type_str,
+                                    error_message=embedding_error,
+                                    retry_count=0
+                                )
+                                
+                                logger.info(f"✅ Moved {file_path} to dead letter queue (permanent embedding failure)")
+                                
+                            except Exception as dlq_error:
+                                logger.error(
+                                    f"❌ Failed to move document to dead letter queue: {dlq_error}",
+                                    exc_info=True
+                                )
+                        
                 elif not self.embedding_service:
                     logger.warning(f"⚠️  No embedding service configured - skipping embedding for {file_path}")
             
@@ -2087,6 +2216,83 @@ class JobProcessor:
             result["skipped"] += len(files_to_skip)
             result["failed"] += len(files_failed_read)
             
+            # 🆕 PHASE 1.1: Integrate retry for file read failures
+            if files_failed_read:
+                from .error_classifier import ErrorClassifier
+                from ...utils.redis_client import get_redis_client
+                
+                for failed_file_info in files_failed_read:
+                    try:
+                        file_path = failed_file_info.get('file_path', 'unknown')
+                        error_msg = failed_file_info.get('error', 'Unknown read error')
+                        
+                        # Classify the error
+                        error_exception = Exception(error_msg)
+                        classified_error = ErrorClassifier.classify(error_exception)
+                        error_type_str = classified_error.value
+                        
+                        logger.info(
+                            f"🔍 File read failure for {file_path}: {error_type_str}"
+                        )
+                        
+                        if ErrorClassifier.is_transient(classified_error):
+                            logger.info(
+                                f"🔄 Transient file read error detected ({error_type_str}): "
+                                f"Enqueuing {file_path} for retry"
+                            )
+                            
+                            redis_client = get_redis_client()
+                            
+                            document_info = {
+                                "file_path": str(file_path),
+                                "mode": job.mode,
+                                "service_name": job.service_name,
+                                "repo_path": job.repo_path,
+                                "retry_context": "file_read_failure"
+                            }
+                            
+                            await redis_client.enqueue_failed_document(
+                                job_id=str(job.id),
+                                document_info=document_info,
+                                error_type=error_type_str,
+                                error_message=error_msg,
+                                retry_count=0
+                            )
+                            
+                            logger.info(f"✅ Enqueued {file_path} to retry queue (file read failure)")
+                            
+                        else:
+                            logger.warning(
+                                f"💀 Permanent file read error detected ({error_type_str}): "
+                                f"Moving {file_path} to dead letter queue"
+                            )
+                            
+                            redis_client = get_redis_client()
+                            
+                            document_info = {
+                                "file_path": str(file_path),
+                                "mode": job.mode,
+                                "service_name": job.service_name,
+                                "repo_path": job.repo_path,
+                                "retry_context": "file_read_permanent_failure"
+                            }
+                            
+                            await redis_client.move_to_dead_letter(
+                                job_id=str(job.id),
+                                document_info=document_info,
+                                error_type=error_type_str,
+                                error_message=error_msg,
+                                retry_count=0
+                            )
+                            
+                            logger.info(f"✅ Moved {file_path} to dead letter queue (permanent file read failure)")
+                            
+                    except Exception as enqueue_error:
+                        logger.error(
+                            f"❌ Failed to enqueue file read failure for retry: {enqueue_error}",
+                            exc_info=True
+                        )
+            
             # Use the optimized file list instead of filtered_files
             optimized_files = files_to_process
             
@@ -2203,6 +2409,76 @@ class JobProcessor:
                     # Actual error
                     result["failed"] += 1
                     logger.warning(f"❌ Failed to process {file_path_str}: {file_result.get('error')}")
+                    
+                    # 🆕 PHASE 1.2: Integrate retry for processing errors
+                    try:
+                        from .error_classifier import ErrorClassifier
+                        from ...utils.redis_client import get_redis_client
+                        
+                        error_msg = file_result.get('error', 'Unknown processing error')
+                        
+                        # Classify the error
+                        error_exception = Exception(error_msg)
+                        classified_error = ErrorClassifier.classify(error_exception)
+                        error_type_str = classified_error.value
+                        
+                        if ErrorClassifier.is_transient(classified_error):
+                            logger.info(
+                                f"🔄 Transient processing error detected ({error_type_str}): "
+                                f"Enqueuing {file_path_str} for retry"
+                            )
+                            
+                            redis_client = get_redis_client()
+                            
+                            document_info = {
+                                "file_path": str(file_path_str),
+                                "mode": job.mode,
+                                "service_name": job.service_name,
+                                "repo_path": job.repo_path,
+                                "retry_context": "processing_error"
+                            }
+                            
+                            await redis_client.enqueue_failed_document(
+                                job_id=str(job.id),
+                                document_info=document_info,
+                                error_type=error_type_str,
+                                error_message=error_msg,
+                                retry_count=0
+                            )
+                            
+                            logger.info(f"✅ Enqueued {file_path_str} to retry queue (processing error)")
+                            
+                        else:
+                            logger.warning(
+                                f"💀 Permanent processing error detected ({error_type_str}): "
+                                f"Moving {file_path_str} to dead letter queue"
+                            )
+                            
+                            redis_client = get_redis_client()
+                            
+                            document_info = {
+                                "file_path": str(file_path_str),
+                                "mode": job.mode,
+                                "service_name": job.service_name,
+                                "repo_path": job.repo_path,
+                                "retry_context": "processing_permanent_error"
+                            }
+                            
+                            await redis_client.move_to_dead_letter(
+                                job_id=str(job.id),
+                                document_info=document_info,
+                                error_type=error_type_str,
+                                error_message=error_msg,
+                                retry_count=0
+                            )
+                            
+                            logger.info(f"✅ Moved {file_path_str} to dead letter queue (permanent processing error)")
+                            
+                    except Exception as enqueue_error:
+                        logger.error(
+                            f"❌ Failed to enqueue processing error for retry: {enqueue_error}",
+                            exc_info=True
+                        )
                 
                 # Update job metadata with progress (every 5 files or last file for more frequent updates)
                 if (idx + 1) % 5 == 0 or idx == len(optimized_files) - 1:
@@ -2507,6 +2783,76 @@ class JobProcessor:
                     )
                     result["failed"] = 1
                     result["error"] = error_classification['error_message']
+                    
+                    # 🆕 PHASE 3.2: Integrate retry for corrupt commit errors
+                    try:
+                        from .error_classifier import ErrorClassifier
+                        from ...utils.redis_client import get_redis_client
+                        
+                        # Classify the corruption error
+                        error_exception = Exception(error_classification['error_message'])
+                        classified_error = ErrorClassifier.classify(error_exception)
+                        error_type_str = classified_error.value
+                        
+                        # Corrupt commits are typically permanent, but check anyway
+                        if ErrorClassifier.is_transient(classified_error):
+                            logger.info(
+                                f"🔄 Transient corrupt commit error detected ({error_type_str}): "
+                                f"Enqueuing commit {commit.sha[:8]} for retry"
+                            )
+                            
+                            redis_client = get_redis_client()
+                            
+                            document_info = {
+                                "commit_sha": commit.sha,
+                                "mode": job.mode,
+                                "service_name": job.service_name,
+                                "repo_path": job.repo_path,
+                                "retry_context": "corrupt_commit_error"
+                            }
+                            
+                            await redis_client.enqueue_failed_document(
+                                job_id=str(job.id),
+                                document_info=document_info,
+                                error_type=error_type_str,
+                                error_message=error_classification['error_message'],
+                                retry_count=0
+                            )
+                            
+                            logger.info(f"✅ Enqueued corrupt commit {commit.sha[:8]} to retry queue")
+                            
+                        else:
+                            logger.warning(
+                                f"💀 Permanent corrupt commit error detected ({error_type_str}): "
+                                f"Moving commit {commit.sha[:8]} to dead letter queue"
+                            )
+                            
+                            redis_client = get_redis_client()
+                            
+                            document_info = {
+                                "commit_sha": commit.sha,
+                                "mode": job.mode,
+                                "service_name": job.service_name,
+                                "repo_path": job.repo_path,
+                                "retry_context": "corrupt_commit_permanent_error"
+                            }
+                            
+                            await redis_client.move_to_dead_letter(
+                                job_id=str(job.id),
+                                document_info=document_info,
+                                error_type=error_type_str,
+                                error_message=error_classification['error_message'],
+                                retry_count=0
+                            )
+                            
+                            logger.info(f"✅ Moved corrupt commit {commit.sha[:8]} to dead letter queue")
+                            
+                    except Exception as enqueue_error:
+                        logger.error(
+                            f"❌ Failed to enqueue corrupt commit for retry: {enqueue_error}",
+                            exc_info=True
+                        )
+                    
                     return result
                 else:
                     raise
@@ -2776,7 +3122,81 @@ class JobProcessor:
             
             # Separate successful and failed normalizations
             normalized_docs = [r for r in normalization_results if r.get('success')]
-            result["failed"] = len([r for r in normalization_results if not r.get('success')])
+            failed_normalizations = [r for r in normalization_results if not r.get('success')]
+            result["failed"] = len(failed_normalizations)
+            
+            # 🆕 PHASE 1.3: Integrate retry for normalization failures
+            if failed_normalizations:
+                from .error_classifier import ErrorClassifier
+                from ...utils.redis_client import get_redis_client
+                
+                for failed_norm in failed_normalizations:
+                    try:
+                        file_path = failed_norm.get('file_path', 'unknown')
+                        error_msg = failed_norm.get('error', 'Unknown normalization error')
+                        
+                        # Classify the error
+                        error_exception = Exception(error_msg)
+                        classified_error = ErrorClassifier.classify(error_exception)
+                        error_type_str = classified_error.value
+                        
+                        if ErrorClassifier.is_transient(classified_error):
+                            logger.info(
+                                f"🔄 Transient normalization error detected ({error_type_str}): "
+                                f"Enqueuing {file_path} for retry"
+                            )
+                            
+                            redis_client = get_redis_client()
+                            
+                            document_info = {
+                                "file_path": str(file_path),
+                                "mode": job.mode,
+                                "service_name": job.service_name,
+                                "repo_path": job.repo_path,
+                                "retry_context": "normalization_failure"
+                            }
+                            
+                            await redis_client.enqueue_failed_document(
+                                job_id=str(job.id),
+                                document_info=document_info,
+                                error_type=error_type_str,
+                                error_message=error_msg,
+                                retry_count=0
+                            )
+                            
+                            logger.info(f"✅ Enqueued {file_path} to retry queue (normalization failure)")
+                            
+                        else:
+                            logger.warning(
+                                f"💀 Permanent normalization error detected ({error_type_str}): "
+                                f"Moving {file_path} to dead letter queue"
+                            )
+                            
+                            redis_client = get_redis_client()
+                            
+                            document_info = {
+                                "file_path": str(file_path),
+                                "mode": job.mode,
+                                "service_name": job.service_name,
+                                "repo_path": job.repo_path,
+                                "retry_context": "normalization_permanent_failure"
+                            }
+                            
+                            await redis_client.move_to_dead_letter(
+                                job_id=str(job.id),
+                                document_info=document_info,
+                                error_type=error_type_str,
+                                error_message=error_msg,
+                                retry_count=0
+                            )
+                            
+                            logger.info(f"✅ Moved {file_path} to dead letter queue (permanent normalization failure)")
+                            
+                    except Exception as enqueue_error:
+                        logger.error(
+                            f"❌ Failed to enqueue normalization failure for retry: {enqueue_error}",
+                            exc_info=True
+                        )
             
             if not normalized_docs:
                 return result
@@ -2862,6 +3282,76 @@ class JobProcessor:
                     except Exception as e:
                         logger.error(f"Failed to prepare document: {e}")
                         result["failed"] += 1
+                        
+                        # 🆕 PHASE 2.1: Integrate retry for document preparation failures
+                        try:
+                            from .error_classifier import ErrorClassifier
+                            from ...utils.redis_client import get_redis_client
+                            
+                            # Classify the error
+                            classified_error = ErrorClassifier.classify(e)
+                            error_type_str = classified_error.value
+                            
+                            # Get file path from the document being prepared
+                            file_path = doc.get('file_path', 'unknown') if isinstance(doc, dict) else 'unknown'
+                            
+                            if ErrorClassifier.is_transient(classified_error):
+                                logger.info(
+                                    f"🔄 Transient document preparation error detected ({error_type_str}): "
+                                    f"Enqueuing {file_path} for retry"
+                                )
+                                
+                                redis_client = get_redis_client()
+                                
+                                document_info = {
+                                    "file_path": str(file_path),
+                                    "mode": job.mode,
+                                    "service_name": job.service_name,
+                                    "repo_path": job.repo_path,
+                                    "retry_context": "document_preparation_failure"
+                                }
+                                
+                                await redis_client.enqueue_failed_document(
+                                    job_id=str(job.id),
+                                    document_info=document_info,
+                                    error_type=error_type_str,
+                                    error_message=str(e),
+                                    retry_count=0
+                                )
+                                
+                                logger.info(f"✅ Enqueued {file_path} to retry queue (document preparation failure)")
+                                
+                            else:
+                                logger.warning(
+                                    f"💀 Permanent document preparation error detected ({error_type_str}): "
+                                    f"Moving {file_path} to dead letter queue"
+                                )
+                                
+                                redis_client = get_redis_client()
+                                
+                                document_info = {
+                                    "file_path": str(file_path),
+                                    "mode": job.mode,
+                                    "service_name": job.service_name,
+                                    "repo_path": job.repo_path,
+                                    "retry_context": "document_preparation_permanent_failure"
+                                }
+                                
+                                await redis_client.move_to_dead_letter(
+                                    job_id=str(job.id),
+                                    document_info=document_info,
+                                    error_type=error_type_str,
+                                    error_message=str(e),
+                                    retry_count=0
+                                )
+                                
+                                logger.info(f"✅ Moved {file_path} to dead letter queue (permanent document preparation failure)")
+                                
+                        except Exception as enqueue_error:
+                            logger.error(
+                                f"❌ Failed to enqueue document preparation failure for retry: {enqueue_error}",
+                                exc_info=True
+                            )
                 
                 # 🚀 OPTIMIZATION: Bulk insert all documents at once
                 if documents_to_create:
@@ -2900,6 +3390,87 @@ class JobProcessor:
         except Exception as e:
             logger.error(f"Error in batch processing: {e}", exc_info=True)
             result["failed"] += len(batch_files)
+            
+            # 🆕 PHASE 2.2: Integrate retry for batch processing exceptions
+            try:
+                from .error_classifier import ErrorClassifier
+                from ...utils.redis_client import get_redis_client
+                
+                # Classify the batch error
+                classified_error = ErrorClassifier.classify(e)
+                error_type_str = classified_error.value
+                
+                if ErrorClassifier.is_transient(classified_error):
+                    logger.info(
+                        f"🔄 Transient batch processing error detected ({error_type_str}): "
+                        f"Enqueuing {len(batch_files)} files for retry"
+                    )
+                    
+                    redis_client = get_redis_client()
+                    
+                    # Enqueue each file in the failed batch
+                    for batch_file in batch_files:
+                        try:
+                            file_path = batch_file.get('file_path', 'unknown')
+                            
+                            document_info = {
+                                "file_path": str(file_path),
+                                "mode": job.mode,
+                                "service_name": job.service_name,
+                                "repo_path": job.repo_path,
+                                "retry_context": "batch_processing_failure"
+                            }
+                            
+                            await redis_client.enqueue_failed_document(
+                                job_id=str(job.id),
+                                document_info=document_info,
+                                error_type=error_type_str,
+                                error_message=f"Batch processing failed: {str(e)}",
+                                retry_count=0
+                            )
+                        except Exception as file_enqueue_error:
+                            logger.error(f"Failed to enqueue {file_path}: {file_enqueue_error}")
+                    
+                    logger.info(f"✅ Enqueued {len(batch_files)} files to retry queue (batch processing failure)")
+                    
+                else:
+                    logger.warning(
+                        f"💀 Permanent batch processing error detected ({error_type_str}): "
+                        f"Moving {len(batch_files)} files to dead letter queue"
+                    )
+                    
+                    redis_client = get_redis_client()
+                    
+                    # Move each file to DLQ
+                    for batch_file in batch_files:
+                        try:
+                            file_path = batch_file.get('file_path', 'unknown')
+                            
+                            document_info = {
+                                "file_path": str(file_path),
+                                "mode": job.mode,
+                                "service_name": job.service_name,
+                                "repo_path": job.repo_path,
+                                "retry_context": "batch_processing_permanent_failure"
+                            }
+                            
+                            await redis_client.move_to_dead_letter(
+                                job_id=str(job.id),
+                                document_info=document_info,
+                                error_type=error_type_str,
+                                error_message=f"Batch processing failed: {str(e)}",
+                                retry_count=0
+                            )
+                        except Exception as file_dlq_error:
+                            logger.error(f"Failed to move {file_path} to DLQ: {file_dlq_error}")
+                    
+                    logger.info(f"✅ Moved {len(batch_files)} files to dead letter queue (permanent batch processing failure)")
+                    
+            except Exception as enqueue_error:
+                logger.error(
+                    f"❌ Failed to enqueue batch processing failure for retry: {enqueue_error}",
+                    exc_info=True
+                )
         
         return result
     
@@ -2996,7 +3567,7 @@ class JobProcessor:
         # Update if enriched
         if enriched:
             existing_doc.doc_metadata = current_metadata
-            existing_doc.updated_at = datetime.utcnow()
+            existing_doc.updated_at = ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Sprint 2
             await session.commit()
             logger.info(f"✨ Enriched metadata for document: {existing_doc.file_path}")
         
@@ -3092,8 +3663,8 @@ class JobProcessor:
                     original_content=content,
                     normalized_content=normalized["content"],
                     content_hash=content_hash,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
+                    created_at=ensure_utc_naive(datetime.utcnow()),  # ✅ UTC STANDARDIZATION Sprint 2
+                    updated_at=ensure_utc_naive(datetime.utcnow()),  # ✅ UTC STANDARDIZATION Sprint 2
                     git_commit_sha=commit.sha,
                     is_latest=True,
                     doc_metadata=normalized["metadata"]
@@ -3260,8 +3831,8 @@ class JobProcessor:
                     original_content=content,
                     normalized_content=normalized["content"],
                     content_hash=content_hash,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
+                    created_at=ensure_utc_naive(datetime.utcnow()),  # ✅ UTC STANDARDIZATION Sprint 2
+                    updated_at=ensure_utc_naive(datetime.utcnow()),  # ✅ UTC STANDARDIZATION Sprint 2
                     git_commit_sha=commit.sha,
                     is_latest=True,
                     doc_metadata=normalized["metadata"]

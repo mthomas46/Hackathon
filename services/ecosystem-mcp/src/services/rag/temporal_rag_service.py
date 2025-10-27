@@ -52,6 +52,11 @@ class TemporalRAGService:
         self.db = db_session
         self.context_rag = ContextAwareRAG()
         self.logger = logging.getLogger(__name__)
+        
+        # Import Ollama router for LLM answer synthesis
+        from ..models.ollama_router import get_ollama_router
+        self.ollama_router = get_ollama_router()
+        
         self.logger.info("TemporalRAGService initialized")
     
     async def _query_with_temporal_filter(
@@ -79,21 +84,47 @@ class TemporalRAGService:
             from ...storage.chromadb_client import get_chroma_client
             from ...services.embeddings.embedding_service import EmbeddingService
             
+            self.logger.info(f"🔍 [TEMPORAL_RAG] Starting temporal query")
+            self.logger.debug(f"   Query: {query[:100]}")
+            self.logger.debug(f"   As of date: {as_of_date}")
+            self.logger.debug(f"   Service name: {service_name}")
+            self.logger.debug(f"   Limit: {limit}")
+            
             chroma = get_chroma_client()
             
-            # Build where clause for temporal filtering
-            where_clause = {
-                "git_date": {"$lte": as_of_date.isoformat()}
-            }
+            # ✅ FIX: Build where clause properly for ChromaDB
+            # ChromaDB requires $and operator when there are multiple conditions
+            self.logger.debug(f"🔍 [TEMPORAL_RAG] Building where clause")
             
+            conditions = []
+            
+            # Always filter by git_date
+            # ✅ FIX: Convert to timestamp (ChromaDB expects numeric values for comparison operators)
+            as_of_timestamp = as_of_date.timestamp()
+            git_date_condition = {"git_date": {"$lte": as_of_timestamp}}
+            conditions.append(git_date_condition)
+            self.logger.debug(f"   Adding git_date filter: <= {as_of_date.date()} (timestamp: {as_of_timestamp})")
+            
+            # Optionally filter by service_name
             if service_name:
-                where_clause["service_name"] = service_name
+                service_condition = {"service_name": service_name}
+                conditions.append(service_condition)
+                self.logger.debug(f"   Adding service_name filter: {service_name}")
+            
+            # Build final where clause
+            if len(conditions) == 1:
+                where_clause = conditions[0]
+                self.logger.debug(f"   Single condition where clause: {where_clause}")
+            else:
+                where_clause = {"$and": conditions}
+                self.logger.debug(f"   Multi-condition where clause using $and: {where_clause}")
             
             self.logger.info(
-                f"🔍 Temporal query with filter: git_date <= {as_of_date.date()}"
+                f"✅ [TEMPORAL_RAG] Where clause built with {len(conditions)} condition(s)"
             )
             
-            # ✅ FIX #1: Generate query embedding first (ChromaDB needs vectors, not text)
+            # Generate query embedding first (ChromaDB needs vectors, not text)
+            self.logger.debug(f"🔍 [TEMPORAL_RAG] Generating query embedding")
             embedding_service = EmbeddingService()
             try:
                 embedding_result = await embedding_service.generate_embedding(query)
@@ -101,29 +132,44 @@ class TemporalRAGService:
                 
                 if not query_embedding:
                     raise ValueError("Failed to generate query embedding")
+                
+                self.logger.debug(f"   ✅ Embedding generated (dimension: {len(query_embedding)})")
                     
             except Exception as embed_error:
-                self.logger.error(f"Failed to generate query embedding: {embed_error}")
+                self.logger.error(f"   ❌ Failed to generate query embedding: {embed_error}", exc_info=True)
                 raise
             
             # Query ChromaDB with temporal filter
-            results = await chroma.query(
-                query_embeddings=[query_embedding],
-                n_results=limit,
-                where=where_clause
-            )
+            self.logger.debug(f"🔍 [TEMPORAL_RAG] Querying ChromaDB")
+            self.logger.debug(f"   Where clause: {where_clause}")
+            self.logger.debug(f"   n_results: {limit}")
+            
+            try:
+                results = await chroma.query(
+                    query_embeddings=[query_embedding],
+                    n_results=limit,
+                    where=where_clause
+                )
+                self.logger.debug(f"   ✅ ChromaDB query successful")
+            except Exception as chroma_error:
+                self.logger.error(f"   ❌ ChromaDB query failed: {chroma_error}", exc_info=True)
+                self.logger.error(f"   Where clause that failed: {where_clause}")
+                raise
             
             if not results or not results.get("documents"):
+                self.logger.warning(f"⚠️ [TEMPORAL_RAG] No documents found matching temporal filter")
                 return {
                     "query": query,
                     "as_of_date": as_of_date.isoformat(),
                     "answer": "No documents found for the specified time period.",
                     "documents": [],
+                    "sources": [],
                     "metadata": {
                         "temporal_filter_applied": True,
                         "filter": where_clause,
                         "documents_found": 0,
-                        "query_type": "temporal_rag"
+                        "query_type": "temporal_rag",
+                        "as_of_date": as_of_date.isoformat()
                     }
                 }
             
@@ -131,6 +177,8 @@ class TemporalRAGService:
             documents = results["documents"][0] if results["documents"] else []
             metadatas = results["metadatas"][0] if results["metadatas"] else []
             distances = results["distances"][0] if results["distances"] else []
+            
+            self.logger.info(f"✅ [TEMPORAL_RAG] Found {len(documents)} documents matching temporal filter")
             
             formatted_docs = []
             for doc, meta, dist in zip(documents, metadatas, distances):
@@ -141,15 +189,66 @@ class TemporalRAGService:
                     "relevance_score": 1.0 - dist  # Convert distance to score
                 })
             
-            # Generate answer using context_rag
+            # Generate answer using LLM synthesis
+            # ✅ FIX: Use LLM to synthesize answer from temporal-filtered documents (like standard RAG)
             try:
-                answer = await self.context_rag.generate_answer(
-                    query=query,
-                    documents=formatted_docs,
-                    context=f"Information as of {as_of_date.date()}"
-                )
+                if not formatted_docs:
+                    answer = f"No documents found as of {as_of_date.date()}. This information may not have existed at that time."
+                else:
+                    # Build context from temporal-filtered documents
+                    context_parts = []
+                    for i, doc in enumerate(formatted_docs, 1):
+                        file_path = doc.get("file_path", "Unknown")
+                        content = doc.get("content", "")
+                        relevance = doc.get("relevance_score", 0)
+                        
+                        context_parts.append(
+                            f"[Source {i}] {file_path} (relevance: {relevance:.3f})\n"
+                            f"{content}\n"
+                        )
+                    
+                    context_text = "\n".join(context_parts)
+                    
+                    # Build temporal-aware prompt
+                    prompt = f"""You are an intelligent assistant analyzing historical documentation.
+
+**Context:** You are answering based on documents that existed as of {as_of_date.date()}.
+
+**Important:** Only use information from the provided sources. If the sources don't contain enough information to answer the question, say so.
+
+**Sources:**
+{context_text}
+
+**Question:** {query}
+
+**Instructions:**
+- Answer the question using ONLY the information from the provided sources
+- Provide a detailed, comprehensive answer (3-5 paragraphs minimum)
+- Include specific details, examples, and context from the sources
+- If listing items, provide descriptions and explanations for each
+- Reference which sources support your answer
+- Remember: This is information as of {as_of_date.date()}
+
+**Answer:**"""
+                    
+                    # Generate answer using Ollama router (3-tier routing)
+                    self.logger.info(f"🤖 [TEMPORAL_RAG] Generating LLM answer from {len(formatted_docs)} temporal-filtered documents")
+                    response = await self.ollama_router.generate(
+                        prompt=prompt,
+                        workload_type='rag',
+                        temperature=0.7,
+                        max_tokens=1000
+                    )
+                    
+                    answer = response.get("response", "").strip()
+                    
+                    if not answer:
+                        answer = f"Found {len(formatted_docs)} documents as of {as_of_date.date()}, but failed to generate detailed answer."
+                    
+                    self.logger.info(f"✅ [TEMPORAL_RAG] LLM answer generated: {len(answer)} characters")
+                    
             except Exception as answer_error:
-                self.logger.error(f"Failed to generate answer: {answer_error}")
+                self.logger.error(f"Failed to generate answer: {answer_error}", exc_info=True)
                 answer = f"Found {len(formatted_docs)} documents but failed to generate answer: {str(answer_error)}"
             
             return {
@@ -235,6 +334,12 @@ class TemporalRAGService:
             Comparison showing changes over time
         """
         try:
+            from ...utils.datetime_utils import ensure_utc
+            
+            # ✅ FIX: Ensure dates are UTC-aware to prevent timezone comparison errors
+            start_date = ensure_utc(start_date)
+            end_date = ensure_utc(end_date)
+            
             self.logger.info(
                 f"🔄 Change detection query from {start_date.date()} to {end_date.date()}: "
                 f"{query[:100]}"
@@ -486,10 +591,14 @@ class TemporalRAGService:
                 }
         
         if service_name:
+            from ...utils.datetime_utils import ensure_utc_naive
+            
             timelines = await timeline_repo.get_by_service(service_name, limit=10)
             # Find timeline that contains reference_date
+            # ✅ FIX: Convert reference_date to naive for safe comparison with DB dates
+            reference_naive = ensure_utc_naive(reference_date)
             for timeline in timelines:
-                if timeline.start_date <= reference_date <= timeline.end_date:
+                if timeline.start_date <= reference_naive <= timeline.end_date:
                     return {
                         "id": timeline.id,
                         "name": timeline.name,
@@ -591,9 +700,20 @@ class TemporalRAGService:
         start_date: datetime,
         end_date: datetime
     ) -> List[Dict[str, Any]]:
-        """Find all periods in date range."""
+        """
+        Find all periods in date range.
+        
+        ✅ UTC STANDARDIZATION: Converts UTC-aware dates to naive for comparison with DB dates.
+        """
+        from ...utils.datetime_utils import ensure_utc_naive
+        
         period_repo = TimePeriodRepository(session)
-        periods = await period_repo.get_by_date_range(timeline_id, start_date, end_date)
+        # ✅ FIX: Convert input dates to naive for safe comparison with DB dates
+        periods = await period_repo.get_by_date_range(
+            timeline_id,
+            ensure_utc_naive(start_date),
+            ensure_utc_naive(end_date)
+        )
         
         return [
             {
@@ -672,21 +792,29 @@ class TemporalRAGService:
         self,
         evolution_data: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
-        """Identify major changes in evolution timeline."""
+        """
+        Identify major changes in evolution timeline.
+        
+        ✅ FIX: Handle periods with status='no_documents' that don't have result_count.
+        """
         major_changes = []
         
         for i in range(len(evolution_data) - 1):
             current = evolution_data[i]
             next_item = evolution_data[i + 1]
             
+            # ✅ FIX: Safely get result_count, default to 0 if missing or if status is 'no_documents'
+            current_count = current.get("result_count", 0) if current.get("status") != "no_documents" else 0
+            next_count = next_item.get("result_count", 0) if next_item.get("status") != "no_documents" else 0
+            
             # Detect significant changes (e.g., new documents, removed topics)
-            if current["result_count"] == 0 and next_item["result_count"] > 0:
+            if current_count == 0 and next_count > 0:
                 major_changes.append({
                     "period": next_item["period"]["name"],
                     "type": "new_content",
                     "description": f"New content appeared in {next_item['period']['name']}"
                 })
-            elif current["result_count"] > 0 and next_item["result_count"] == 0:
+            elif current_count > 0 and next_count == 0:
                 major_changes.append({
                     "period": next_item["period"]["name"],
                     "type": "content_removed",

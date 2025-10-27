@@ -1,0 +1,157 @@
+
+================================================================================
+  Temporal RAG vs Standard RAG Comparison Test
+================================================================================
+
+📋 This test compares temporal RAG queries to standard RAG queries
+   to demonstrate the impact of temporal context on answer quality.
+
+================================================================================
+  Test 1: Standard RAG (Baseline)
+================================================================================
+
+🔍 Testing: architecture
+
+🧪 Standard RAG - architecture
+--------------------------------------------------------------------------------
+❌ Error: HTTP 404: {"detail":"Not Found"}
+
+🔍 Testing: testing
+
+🧪 Standard RAG - testing
+--------------------------------------------------------------------------------
+❌ Error: HTTP 404: {"detail":"Not Found"}
+
+🔍 Testing: configuration
+
+🧪 Standard RAG - configuration
+--------------------------------------------------------------------------------
+❌ Error: HTTP 404: {"detail":"Not Found"}
+
+================================================================================
+  Test 2: Point-in-Time Temporal RAG
+================================================================================
+📅 Querying as of: 2025-10-19
+
+🔍 Testing: architecture
+
+🧪 Temporal Point-in-Time - architecture
+--------------------------------------------------------------------------------
+❌ Error: HTTP 404: {"detail":"Not Found"}
+
+🔍 Testing: testing
+
+🧪 Temporal Point-in-Time - testing
+--------------------------------------------------------------------------------
+❌ Error: HTTP 404: {"detail":"Not Found"}
+
+🔍 Testing: configuration
+
+🧪 Temporal Point-in-Time - configuration
+--------------------------------------------------------------------------------
+❌ Error: HTTP 404: {"detail":"Not Found"}
+
+================================================================================
+  Test 3: Evolution Tracking
+================================================================================
+
+🔍 Testing: testing strategy
+
+🧪 Evolution Tracking - testing strategy
+--------------------------------------------------------------------------------
+❌ Error: HTTP 500: {"success":false,"error":"Evolution tracking failed: 400: Either timeline_id or service_name must be provided","error_code":"INTERNAL_ERROR","status_code":500,"details":null,"request_id":"9aa03ec8-3c77-4bff-b276-9a33ba5e04f7","timestamp":"2025-10-26T22:13:18.577776","path":"/api/v1/rag/temporal/evolution"}
+
+🔍 Testing: architecture
+
+🧪 Evolution Tracking - architecture
+--------------------------------------------------------------------------------
+❌ Error: HTTP 500: {"success":false,"error":"Evolution tracking failed: 400: Either timeline_id or service_name must be provided","error_code":"INTERNAL_ERROR","status_code":500,"details":null,"request_id":"fce898b7-a578-4242-85d2-36169a908e30","timestamp":"2025-10-26T22:13:18.585316","path":"/api/v1/rag/temporal/evolution"}
+
+🔍 Testing: configuration management
+
+🧪 Evolution Tracking - configuration management
+--------------------------------------------------------------------------------
+❌ Error: HTTP 500: {"success":false,"error":"Evolution tracking failed: 400: Either timeline_id or service_name must be provided","error_code":"INTERNAL_ERROR","status_code":500,"details":null,"request_id":"01ae9a66-fce5-41a3-be5d-3e9f550a6874","timestamp":"2025-10-26T22:13:18.597877","path":"/api/v1/rag/temporal/evolution"}
+
+================================================================================
+  Test 4: Period Comparison
+================================================================================
+📅 Comparing: 2025-09-26 to 2025-10-26
+
+🔍 Testing: architecture
+
+🧪 Period Comparison - architecture
+--------------------------------------------------------------------------------
+✅ Status: success
+
+📝 Answer:
+...
+
+⏱️  Execution Time: 0.00s
+
+🔍 Testing: testing
+
+🧪 Period Comparison - testing
+--------------------------------------------------------------------------------
+✅ Status: success
+
+📝 Answer:
+...
+
+⏱️  Execution Time: 0.00s
+
+🔍 Testing: configuration
+
+🧪 Period Comparison - configuration
+--------------------------------------------------------------------------------
+✅ Status: success
+
+📝 Answer:
+...
+
+⏱️  Execution Time: 0.00s
+
+================================================================================
+  Test 5: Drift Detection
+================================================================================
+
+🔍 Testing: testing strategy
+
+🧪 Drift Detection - testing strategy
+--------------------------------------------------------------------------------
+❌ Error: HTTP 404: {"detail":"Not Found"}
+
+🔍 Testing: architecture
+
+🧪 Drift Detection - architecture
+--------------------------------------------------------------------------------
+❌ Error: HTTP 404: {"detail":"Not Found"}
+
+🔍 Testing: configuration management
+
+🧪 Drift Detection - configuration management
+--------------------------------------------------------------------------------
+❌ Error: HTTP 404: {"detail":"Not Found"}
+
+================================================================================
+  Summary: Temporal RAG Impact Analysis
+================================================================================
+
+📊 Test Results:
+   Total Tests: 15
+   ✅ Successful: 3
+   ❌ Failed: 12
+   Success Rate: 20.0%
+
+🔍 Temporal Impact:
+
+💡 Key Insights:
+   1. Standard RAG: Provides current snapshot without temporal context
+   2. Point-in-Time RAG: Shows historical state at specific dates
+   3. Evolution Tracking: Reveals how information changed over time
+   4. Period Comparison: Highlights differences between time periods
+   5. Drift Detection: Identifies when information significantly changed
+
+🎯 Conclusion:
+   ⚠️ Some temporal features may need investigation
+   ℹ️ Review failed tests above for details

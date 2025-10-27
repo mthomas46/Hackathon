@@ -9,6 +9,8 @@ Confidence Levels:
 - MEDIUM (50-90% git_history): Most features available with warnings
 - LOW (1-50% git_history): Limited temporal features, heavy fallbacks
 - NONE (0% git_history): No temporal analysis, content-based only
+
+✅ UTC STANDARDIZATION: Uses ensure_utc_naive() for datetime operations.
 """
 
 import logging
@@ -24,6 +26,7 @@ from ...models.timeline import (
     TemporalConfidence,
     ConfidenceMetadata,
 )
+from ...utils.datetime_utils import ensure_utc_naive
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +184,7 @@ class TemporalConfidenceCalculator:
             can_compare_periods=True,
             fallback_strategy="minimal_fallback",
             warnings=[],
-            calculated_at=datetime.utcnow()
+            calculated_at=ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Phase 2
         )
     
     def _create_medium_confidence(
@@ -211,7 +214,7 @@ class TemporalConfidenceCalculator:
             can_compare_periods=True, # With limitations
             fallback_strategy="hybrid_with_warnings",
             warnings=warnings,
-            calculated_at=datetime.utcnow()
+            calculated_at=ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Phase 2
         )
     
     def _create_low_confidence(
@@ -242,7 +245,7 @@ class TemporalConfidenceCalculator:
             can_compare_periods=True,  # Content comparison only
             fallback_strategy="content_based_fallback",
             warnings=warnings,
-            calculated_at=datetime.utcnow()
+            calculated_at=ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Phase 2
         )
     
     def _create_none_confidence(
@@ -272,7 +275,7 @@ class TemporalConfidenceCalculator:
             can_compare_periods=False,
             fallback_strategy="no_temporal_features",
             warnings=warnings,
-            calculated_at=datetime.utcnow()
+            calculated_at=ensure_utc_naive(datetime.utcnow())  # ✅ UTC STANDARDIZATION Phase 2
         )
     
     async def check_pre_flight(

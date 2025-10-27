@@ -167,13 +167,17 @@ class TimePeriodRepository(BaseRepository[TimePeriodModel]):
         Returns:
             List of overlapping periods
         """
+        # ✅ FIX: Normalize timezone-aware datetimes to naive for DB comparison
+        start_naive = start_date.replace(tzinfo=None) if start_date.tzinfo else start_date
+        end_naive = end_date.replace(tzinfo=None) if end_date.tzinfo else end_date
+        
         result = await self.session.execute(
             select(self.model_class)
             .where(
                 and_(
                     self.model_class.timeline_id == timeline_id,
-                    self.model_class.start_date <= end_date,
-                    self.model_class.end_date >= start_date
+                    self.model_class.start_date <= end_naive,  # ✅ Use naive datetime
+                    self.model_class.end_date >= start_naive    # ✅ Use naive datetime
                 )
             )
             .order_by(self.model_class.sequence_number)

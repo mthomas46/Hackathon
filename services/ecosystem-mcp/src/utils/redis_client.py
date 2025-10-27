@@ -15,6 +15,7 @@ import redis.asyncio as redis
 from redis.exceptions import ResponseError
 
 from src.config import settings
+from src.config.registry import get_registry
 
 logger = logging.getLogger(__name__)
 
@@ -29,20 +30,10 @@ class RedisClient:
     - Consumer groups for parallel processing
     - Retry logic with dead letter queue
     - Persistent queues (survives restarts)
+    
+    ✅ PHASE 2: Migrated to use configuration registry
+    Stream names and consumer groups now loaded from service_registry.yaml
     """
-    
-    # Stream names
-    INGESTION_STREAM = "ingestion_queue"
-    EMBEDDING_STREAM = "embedding_queue"
-    RETRY_STREAM = "retry_queue"  # 🆕 Transient failures with retry logic
-    FAILED_STREAM = "failed_queue"  # Dead letter queue (permanent failures)
-    
-    # Consumer group name
-    CONSUMER_GROUP = "workers"
-    
-    # Retry configuration
-    MAX_RETRIES = 5  # 🆕 Increased from 3 to 5
-    RETRY_BACKOFF_BASE = 2  # 🆕 Exponential base (2^n minutes)
     
     def __init__(self, redis_url: str | None = None):
         """
@@ -51,11 +42,31 @@ class RedisClient:
         Args:
             redis_url: Redis connection string (uses settings if None)
         """
+        # Load configuration from registry
+        registry = get_registry()
+        
+        # Stream names from registry (was hardcoded)
+        self.INGESTION_STREAM = registry.redis.streams.ingestion.name
+        self.EMBEDDING_STREAM = registry.redis.streams.embedding.name
+        self.RETRY_STREAM = registry.redis.streams.retry.name
+        self.FAILED_STREAM = registry.redis.streams.dead_letter.name
+        
+        # Consumer group name from registry (was hardcoded)
+        # ✅ This prevents today's consumer group mismatch issue!
+        self.CONSUMER_GROUP = registry.redis.streams.ingestion.consumer_group
+        
+        # Retry configuration from registry (was hardcoded)
+        self.MAX_RETRIES = registry.redis.retry.max_retries
+        self.RETRY_BACKOFF_BASE = registry.redis.retry.backoff_base
+        
+        # Connection settings
         self.redis_url = redis_url or settings.redis_url
         self.client: Optional[redis.Redis] = None
         self._connected = False
         
-        logger.info(f"Redis client initialized: {self._safe_url()}")
+        logger.info(f"✅ Redis client initialized from registry: {self._safe_url()}")
+        logger.debug(f"   Consumer group: {self.CONSUMER_GROUP}")
+        logger.debug(f"   Ingestion stream: {self.INGESTION_STREAM}")
     
     def _safe_url(self) -> str:
         """Return Redis URL with password redacted."""

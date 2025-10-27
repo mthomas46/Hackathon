@@ -573,17 +573,22 @@ class ContextAwareRAG:
         """
         from .temporal_rag_service import TemporalRAGService
         from uuid import UUID
+        from ...utils.datetime_utils import ensure_utc
+        
+        # ✅ FIX: Ensure dates are UTC-aware to prevent timezone comparison errors
+        start_date_utc = ensure_utc(start_date)
+        end_date_utc = ensure_utc(end_date)
         
         logger.info(
             f"⚖️ Comparison query: {query[:100]} "
-            f"({start_date.date()} to {end_date.date()})"
+            f"({start_date_utc.date()} to {end_date_utc.date()})"
         )
         
         temporal_rag = TemporalRAGService()
         return await temporal_rag.query_what_changed(
             query=query,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=start_date_utc,
+            end_date=end_date_utc,
             timeline_id=UUID(timeline_id) if timeline_id else None,
             service_name=service_name,
             limit=limit

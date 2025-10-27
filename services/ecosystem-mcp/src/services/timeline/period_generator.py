@@ -65,25 +65,30 @@ class PeriodGenerator:
             List of TimePeriodCreate objects
         """
         try:
+            # ✅ FIX: Handle both string and enum for period_strategy
+            strategy_value = strategy.value if hasattr(strategy, 'value') else str(strategy)
             self.logger.info(
-                f"Generating periods using {strategy.value} strategy "
+                f"Generating periods using {strategy_value} strategy "
                 f"from {start_date.date()} to {end_date.date()}"
             )
             
-            if strategy == PeriodStrategy.MONTHLY:
+            # ✅ FIX: Handle both string and enum values for comparison
+            strategy_str = str(strategy).lower() if isinstance(strategy, str) else strategy.value
+            
+            if strategy_str == "monthly":
                 periods = await self._generate_monthly_periods(
                     timeline_id, start_date, end_date
                 )
-            elif strategy == PeriodStrategy.QUARTERLY:
+            elif strategy_str == "quarterly":
                 periods = await self._generate_quarterly_periods(
                     timeline_id, start_date, end_date
                 )
-            elif strategy == PeriodStrategy.ADAPTIVE:
+            elif strategy_str == "adaptive":
                 periods = await self._generate_adaptive_periods(
                     timeline_id, service_name, start_date, end_date, repo_path
                 )
             else:
-                raise ValueError(f"Unknown strategy: {strategy}")
+                raise ValueError(f"Unknown strategy: {strategy} (type: {type(strategy)})")
             
             self.logger.info(f"Generated {len(periods)} periods")
             return periods

@@ -1,7 +1,10 @@
 """
 Configuration management for Ecosystem MCP Service.
 
-Loads configuration from environment variables with sensible defaults.
+Loads configuration from environment variables with defaults from service registry.
+
+✅ PHASE 2: Migrated to use configuration registry for critical defaults
+Database and Redis URLs now loaded from service_registry.yaml
 """
 
 import os
@@ -12,8 +15,37 @@ from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _get_registry_value(getter_func, fallback):
+    """
+    Get value from registry with fallback.
+    
+    Args:
+        getter_func: Function to get value from registry
+        fallback: Fallback value if registry unavailable
+    
+    Returns:
+        Value from registry or fallback
+    """
+    try:
+        from .config.registry import get_registry
+        registry = get_registry()
+        return getter_func(registry)
+    except Exception:
+        # Registry not available (e.g., during initial setup)
+        return fallback
+
+
 class Settings(BaseSettings):
-    """Application settings loaded from environment."""
+    """
+    Application settings loaded from environment.
+    
+    ✅ PHASE 2: Critical defaults now loaded from registry
+    - database_url: From registry.database.connection.url
+    - redis_url: From registry.redis.connection.url  
+    - chroma_collection_name: From registry.chromadb.collections.main.name
+    
+    Environment variables still override registry values.
+    """
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -28,27 +60,59 @@ class Settings(BaseSettings):
         description="Model selection strategy: 'auto' (intelligent), 'ollama-only' (local only), 'cloud-first' (prefer cloud)"
     )
 
-    # Database
+    # Database - ✅ Default from registry
     database_url: str = Field(
-        default="postgresql://ecosystem:ecosystem_password@localhost:5432/ecosystem_mcp",
-        description="PostgreSQL connection string"
+        default_factory=lambda: _get_registry_value(
+            lambda r: r.database.connection.url,
+            "postgresql://ecosystem:ecosystem_password@localhost:5432/ecosystem_mcp"
+        ),
+        description="PostgreSQL connection string (from registry or env)"
     )
-    database_pool_size: int = Field(default=20, ge=1, le=100)
-    database_max_overflow: int = Field(default=10, ge=0, le=50)
+    database_pool_size: int = Field(
+        default_factory=lambda: _get_registry_value(
+            lambda r: r.database.connection.pool_size,
+            20
+        ),
+        ge=1,
+        le=100
+    )
+    database_max_overflow: int = Field(
+        default_factory=lambda: _get_registry_value(
+            lambda r: r.database.connection.max_overflow,
+            10
+        ),
+        ge=0,
+        le=50
+    )
 
-    # Redis
+    # Redis - ✅ Default from registry
     redis_url: str = Field(
-        default="redis://localhost:6379/0",
-        description="Redis connection string"
+        default_factory=lambda: _get_registry_value(
+            lambda r: r.redis.connection.url,
+            "redis://localhost:6379/0"
+        ),
+        description="Redis connection string (from registry or env)"
     )
-    redis_max_connections: int = Field(default=50, ge=1, le=200)
+    redis_max_connections: int = Field(
+        default_factory=lambda: _get_registry_value(
+            lambda r: r.redis.connection.max_connections,
+            50
+        ),
+        ge=1,
+        le=200
+    )
 
-    # ChromaDB
+    # ChromaDB - ✅ Default from registry
     chroma_path: Path = Field(
         default=Path("./data/chroma_db"),
         description="Path to ChromaDB persistent storage"
     )
-    chroma_collection_name: str = Field(default="ecosystem_docs")
+    chroma_collection_name: str = Field(
+        default_factory=lambda: _get_registry_value(
+            lambda r: r.chromadb.collections.main.name,
+            "ecosystem_docs"
+        )
+    )
 
     # Ollama (Docker/Container)
     ollama_base_url: str = Field(

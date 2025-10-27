@@ -1,0 +1,455 @@
+# =============================================================================
+# ECOSYSTEM MCP SERVICE REGISTRY - BASELINE v1.0.0
+# =============================================================================
+# Single source of truth for all service naming and configuration
+# 
+# CRITICAL: All services MUST use this registry
+# Changes here require coordinated deployment
+# 
+# Created: 2025-10-26
+# Phase: 0 - Baseline (extracted from existing codebase)
+# =============================================================================
+
+version: "1.0.0"
+generated_at: "2025-10-26T23:00:00Z"
+environment: "development"  # development, test, production
+
+# =============================================================================
+# SERVICE IDENTITY
+# =============================================================================
+service_identity:
+  canonical_name: "ecosystem-mcp"
+  display_name: "Ecosystem MCP"
+  description: "Model Context Protocol service with RAG and document management"
+  version: "0.1.0"
+
+# =============================================================================
+# REDIS CONFIGURATION
+# =============================================================================
+redis:
+  connection:
+    url: "redis://localhost:6379/0"
+    host: "localhost"
+    port: 6379
+    database: 0
+    max_connections: 50
+    connection_timeout_seconds: 5
+    operation_timeout_seconds: 30
+  
+  # Stream names (MUST match across all services)
+  # 🚨 CRITICAL: These caused today's debugging session!
+  streams:
+    ingestion:
+      name: "ingestion_queue"
+      max_length: 10000
+      consumer_group: "workers"  # 🚨 Was "ingestion_group" in Redis, causing mismatch!
+      description: "Main ingestion job queue"
+      
+    embedding:
+      name: "embedding_queue"
+      max_length: 5000
+      consumer_group: "workers"
+      description: "Embedding generation queue"
+    
+    retry:
+      name: "retry_queue"
+      max_length: 50000
+      consumer_group: "workers"  # All streams use same consumer group
+      description: "Failed jobs awaiting retry"
+    
+    dead_letter:
+      name: "failed_queue"
+      max_length: 100000
+      consumer_group: "workers"
+      description: "Permanently failed jobs"
+  
+  # Retry configuration
+  retry:
+    max_retries: 5
+    backoff_base: 2  # Exponential backoff: 2^n minutes
+    backoff_max_minutes: 60
+
+# =============================================================================
+# POSTGRESQL CONFIGURATION
+# =============================================================================
+database:
+  connection:
+    host: "localhost"
+    port: 5432
+    database: "ecosystem_mcp"  # 🚨 Was sometimes "ecosystem" - causing confusion!
+    user: "ecosystem"
+    password: "ecosystem_password"  # TODO: Move to secrets management
+    pool_size: 20
+    max_overflow: 10
+    connection_timeout_seconds: 10
+    
+    # Full connection string (derived from above)
+    url: "postgresql://ecosystem:ecosystem_password@localhost:5432/ecosystem_mcp"
+  
+  # Container-specific overrides (when running in Docker)
+  container:
+    host: "postgres"  # Service name in docker-compose
+    url: "postgresql://ecosystem:ecosystem_password@postgres:5432/ecosystem_mcp"
+  
+  # Table names (for validation)
+  tables:
+    required:
+      - "documents"
+      - "ingestion_jobs"
+      - "git_commits"
+      - "embeddings"
+      - "failed_documents"
+      - "timelines"
+      - "time_periods"
+      - "document_periods"
+      - "query_evolution_nodes"
+    
+    # Column validation for critical tables
+    documents:
+      required_columns:
+        - "id"
+        - "content_hash"
+        - "file_path"
+        - "git_date"
+        - "git_author"
+        - "git_author_email"
+        - "git_commit_message"
+        - "metadata_version"
+        - "is_latest"
+        - "service_name"
+    
+    ingestion_jobs:
+      required_columns:
+        - "id"
+        - "mode"
+        - "status"
+        - "service_name"
+        - "created_at"
+        - "started_at"
+        - "completed_at"
+
+# =============================================================================
+# CHROMADB CONFIGURATION
+# =============================================================================
+chromadb:
+  connection:
+    path: "./data/chroma_db"
+    connection_timeout_seconds: 30
+  
+  collections:
+    main:
+      name: "ecosystem_docs"
+      distance_metric: "cosine"
+      embedding_dimension: 768  # Matches nomic-embed-text and BGE models
+
+# =============================================================================
+# OLLAMA CONFIGURATION
+# =============================================================================
+ollama:
+  # Docker/Container Ollama
+  container:
+    enabled: true
+    base_url: "http://localhost:11434"
+    host: "localhost"
+    port: 11434
+    timeout_seconds: 300
+    models:
+      small: "llama3.2:3b"
+      medium: "mistral:7b-instruct-q8_0"
+      embedding: "nomic-embed-text:latest"
+  
+  # Desktop Ollama (Native with GPU)
+  desktop:
+    enabled: true
+    base_url: "http://host.docker.internal:11434"
+    model: "llama3:latest"
+    use_for_rag: true
+    description: "Native desktop Ollama with GPU access for heavy workloads"
+  
+  # Performance settings
+  performance:
+    num_ctx: 2048
+    num_threads: 10
+    num_batch: 2048
+    keep_alive_minutes: 10
+    flash_attention: true
+    max_queue: 10
+    num_parallel: 2
+
+# =============================================================================
+# CURSOR IDE INTEGRATION
+# =============================================================================
+cursor:
+  enabled: false  # Premium tier - disabled by default
+  mcp_url: "http://host.docker.internal:3000"
+  model: "claude-4.5-sonnet"
+  complexity_threshold: 0.7
+  fallback_enabled: true
+
+# =============================================================================
+# EMBEDDING SERVICE CONFIGURATION
+# =============================================================================
+embedding_service:
+  enabled: true
+  base_url: "http://localhost:8001"
+  container_url: "http://embedding-service:8000"
+  model_name: "BAAI/bge-base-en-v1.5"
+  cache_enabled: true
+  cache_ttl_seconds: 2592000  # 30 days
+  timeout_seconds: 30
+
+# =============================================================================
+# SERVICE PORTS & ENDPOINTS
+# =============================================================================
+services:
+  ecosystem_mcp:
+    name: "ecosystem-mcp"
+    container_name: "ecosystem-mcp-service"
+    ports:
+      api: 8000
+      metrics: 9090
+    endpoints:
+      health: "/health"
+      ready: "/health/ready"
+      metrics: "/metrics"
+    network: "ecosystem-mcp"
+  
+  ecosystem_mcp_embedding:
+    name: "ecosystem-mcp-embedding"
+    container_name: "ecosystem-mcp-embedding"
+    ports:
+      api: 8001
+      internal: 8000  # Inside container
+    endpoints:
+      health: "/health"
+      embed: "/embed"
+    network: "ecosystem-mcp"
+  
+  ecosystem_mcp_dashboard:
+    name: "ecosystem-mcp-dashboard"
+    container_name: "ecosystem-mcp-dashboard"
+    ports:
+      ui: 8501
+    endpoints:
+      health: "/_stcore/health"
+    network: "ecosystem-mcp"
+  
+  # Infrastructure services
+  postgres:
+    name: "postgres"
+    container_name: "ecosystem-mcp-postgres"
+    image: "postgres:16-alpine"
+    ports:
+      main: 5432
+    network: "ecosystem-mcp"
+  
+  redis:
+    name: "redis"
+    container_name: "ecosystem-mcp-redis"
+    image: "redis:7-alpine"
+    ports:
+      main: 6379
+    network: "ecosystem-mcp"
+  
+  ollama:
+    name: "ollama"
+    container_name: "ecosystem-mcp-ollama"
+    image: "ollama/ollama:latest"
+    ports:
+      api: 11434
+    network: "ecosystem-mcp"
+
+# =============================================================================
+# WORKER CONFIGURATION
+# =============================================================================
+workers:
+  ingestion:
+    consumer_name_prefix: "worker"
+    consumer_group: "workers"  # MUST match redis.streams.ingestion.consumer_group
+    poll_interval_seconds: 5
+    batch_size: 1
+    max_retries: 3
+    timeout_seconds: 3600  # 1 hour per job
+    heartbeat_interval_seconds: 30
+  
+  retry:
+    consumer_name_prefix: "retry_worker"
+    consumer_group: "workers"  # MUST match redis.streams.retry.consumer_group
+    poll_interval_seconds: 10
+    batch_size: 10
+    circuit_breaker:
+      failure_threshold: 10
+      reset_timeout_seconds: 300
+
+# =============================================================================
+# DOCKER COMPOSE GENERATION
+# =============================================================================
+docker:
+  version: "3.8"
+  network:
+    name: "ecosystem-mcp"
+    driver: "bridge"
+  
+  volumes:
+    postgresql_data: "./data/postgresql"
+    redis_data: "./data/redis"
+    ollama_data: "./data/ollama"
+    chroma_data: "./data/chroma_db"
+    embedding_models: "./data/embedding_models"
+    backups: "./data/backups"
+  
+  # Resource limits
+  resources:
+    postgres:
+      mem_limit: "2g"
+      mem_reservation: "512m"
+    redis:
+      mem_limit: "512m"
+      mem_reservation: "256m"
+    ollama:
+      mem_limit: "30g"
+      mem_reservation: "8g"
+    embedding_service:
+      mem_limit: "4g"
+      mem_reservation: "2g"
+  
+  # Health check defaults
+  health_checks:
+    interval_seconds: 30
+    timeout_seconds: 10
+    retries: 5
+    start_period_seconds: 60
+
+# =============================================================================
+# VALIDATION RULES
+# =============================================================================
+validation:
+  preflight_checks:
+    # Critical checks that must pass
+    required:
+      - "redis_connection"
+      - "redis_streams_exist"
+      - "redis_consumer_groups_match"  # 🚨 Would have caught today's issue!
+      - "database_connection"
+      - "database_schema_valid"
+      - "database_name_matches"  # 🚨 Would catch "ecosystem" vs "ecosystem_mcp"
+    
+    # Optional checks (warnings only)
+    optional:
+      - "chromadb_connection"
+      - "ollama_connection"
+      - "embedding_service_connection"
+  
+  runtime_checks:
+    # Checks performed during operations
+    enabled: true
+    frequency_seconds: 60
+    checks:
+      - "stream_consumer_group_sync"
+      - "database_table_integrity"
+      - "port_availability"
+  
+  fail_fast:
+    # Immediately fail on critical mismatches
+    enabled: true
+    critical_mismatches:
+      - "consumer_group_name"
+      - "stream_name"
+      - "database_name"
+      - "required_table_missing"
+  
+  # Validation severity levels
+  severity:
+    critical: "CRITICAL"  # Blocks startup
+    high: "HIGH"          # Warning, allows startup
+    medium: "MEDIUM"      # Info only
+    low: "LOW"            # Debug only
+
+# =============================================================================
+# ENVIRONMENT-SPECIFIC OVERRIDES
+# =============================================================================
+environments:
+  development:
+    log_level: "DEBUG"
+    preflight_mode: "lenient"
+    fail_fast: false
+    redis:
+      connection:
+        url: "redis://localhost:6379/0"
+    database:
+      connection:
+        host: "localhost"
+  
+  test:
+    log_level: "INFO"
+    preflight_mode: "strict"
+    fail_fast: true
+    redis:
+      connection:
+        url: "redis://localhost:6379/1"  # Different DB for tests
+    database:
+      connection:
+        database: "ecosystem_mcp_test"
+  
+  production:
+    log_level: "INFO"
+    preflight_mode: "strict"
+    fail_fast: true
+    # Production values loaded from secrets
+
+# =============================================================================
+# METADATA & TRACKING
+# =============================================================================
+metadata:
+  baseline_created: "2025-10-26T23:00:00Z"
+  created_by: "LLM Agent - Phase 0"
+  source: "Extracted from existing codebase"
+  issues_found:
+    - "Consumer group mismatch: 'workers' in code vs 'ingestion_group' in Redis"
+    - "Database name inconsistency: 'ecosystem' vs 'ecosystem_mcp'"
+    - "Port hardcoding in 89 locations"
+    - "Service name variations: hyphen vs underscore"
+  fixes_needed: 237
+  priority_fixes:
+    - "Redis consumer group standardization"
+    - "Database name unification"
+    - "Port centralization"
+    - "Service name consistency"
+
+# =============================================================================
+# CHANGE LOG
+# =============================================================================
+changelog:
+  - version: "1.0.0"
+    date: "2025-10-26"
+    phase: "Phase 0 - Baseline"
+    changes:
+      - "Initial registry created from codebase audit"
+      - "Captured 237 hardcoded values"
+      - "Documented consumer group mismatch issue"
+      - "Identified 14 configuration flaws"
+    author: "LLM Agent"
+    notes: "Baseline extracted from working system. Consumer group mismatch noted but not fixed yet."
+
+# =============================================================================
+# NOTES
+# =============================================================================
+notes: |
+  This baseline registry represents the CURRENT STATE of the codebase as of
+  2025-10-26. It captures all hardcoded values that were causing issues,
+  including:
+  
+  1. The consumer group mismatch that caused 2 hours of debugging today
+  2. Database name inconsistencies (ecosystem vs ecosystem_mcp)
+  3. Port numbers scattered across multiple files
+  4. Service naming variations (hyphen vs underscore)
+  
+  Next Steps (Phase 1):
+  - Create registry loader (registry.py)
+  - Create Pydantic models for validation
+  - Write unit tests
+  - Begin migration of services to use registry
+  
+  ⚠️  WARNING: Do NOT use this registry yet! Services still use hardcoded values.
+  This is a baseline for migration planning only.
+
