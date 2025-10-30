@@ -196,6 +196,49 @@ def make_api_request(
             
             # Handle errors
             if response.status_code >= 400:
+                # 🔧 FIX #1: Handle rate limiting (HTTP 429)
+                if response.status_code == 429:
+                    # Extract rate limit headers
+                    limit = response.headers.get('X-RateLimit-Limit', 'unknown')
+                    remaining = response.headers.get('X-RateLimit-Remaining', '0')
+                    reset = response.headers.get('X-RateLimit-Reset', 'unknown')
+                    window = response.headers.get('X-RateLimit-Window', 'unknown')
+                    
+                    # Calculate time until reset
+                    try:
+                        reset_timestamp = int(reset)
+                        current_time = int(time.time())
+                        seconds_until_reset = max(0, reset_timestamp - current_time)
+                        minutes_until_reset = seconds_until_reset // 60
+                        
+                        if minutes_until_reset > 0:
+                            retry_msg = f"Try again in {minutes_until_reset} minute(s)"
+                        else:
+                            retry_msg = f"Try again in {seconds_until_reset} second(s)"
+                    except:
+                        retry_msg = "Try again shortly"
+                    
+                    if show_error:
+                        st.warning(f"⚠️ **Rate Limit Exceeded**")
+                        st.info(
+                            f"📊 **Rate Limit Status:**\n\n"
+                            f"- Limit: {limit} requests per {window} seconds\n"
+                            f"- Remaining: {remaining} requests\n"
+                            f"- {retry_msg}"
+                        )
+                        
+                        with st.expander("💡 Rate Limit Tips"):
+                            st.markdown("""
+                            **What can you do?**
+                            - Wait a moment before trying again
+                            - Reduce the frequency of requests
+                            - Use fewer API calls by leveraging caching
+                            - Check the rate limit status in the header
+                            """)
+                    
+                    return None
+                
+                # Handle other errors
                 error_msg = f"API Error {response.status_code}"
                 if isinstance(response_data, dict):
                     error_msg = response_data.get('detail', error_msg)

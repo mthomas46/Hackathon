@@ -35,6 +35,7 @@ python-dotenv>=1.0.0,<2.0.0       # .env file support
 # Data Processing
 PyYAML>=6.0.0,<7.0.0              # YAML parsing
 psutil>=5.9.0,<6.0.0              # System and process utilities
+chardet>=5.0.0,<6.0.0             # Character encoding detection
 
 # Logging & Monitoring
 structlog>=24.0.0,<25.0.0         # Structured logging

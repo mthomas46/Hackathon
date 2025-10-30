@@ -1,3 +1,17 @@
+---
+title: "Configuration Registry Deployment Guide"
+service: "ecosystem-mcp"
+category: "reference"
+tags: ['background', 'cache', 'caching', 'config', 'configuration', 'database', 'deployment', 'docker', 'documentation', 'health']
+related: ['INDEX.md', 'architecture/OVERVIEW.md', 'CODE_REFERENCE.md', 'API_ENDPOINTS_COMPLETE.md']
+status: "current"
+last_updated: "2025-10-28"
+audience: "developer"
+difficulty: "beginner"
+semantic_keywords: ['background', 'cache', 'caching', 'config', 'configuration']
+llm_search_hints: ['what is configuration registry deployment guide', 'how does configuration registry deployment guide work', 'guide to configuration registry deployment guide']
+---
+
 # Configuration Registry Deployment Guide
 
 **Version:** 1.0  

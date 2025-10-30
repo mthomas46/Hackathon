@@ -25,6 +25,7 @@ class RedisClient:
     Redis client with Streams support.
     
     Provides:
+    - Connection pooling (reuses TCP connections) ⚡ NEW
     - Producer: Add messages to streams
     - Consumer: Read messages from streams
     - Consumer groups for parallel processing
@@ -34,6 +35,10 @@ class RedisClient:
     ✅ PHASE 2: Migrated to use configuration registry
     Stream names and consumer groups now loaded from service_registry.yaml
     """
+    
+    # ⚡ QUICK WIN 1.2: Class-level connection pool (shared across all instances)
+    _connection_pool: Optional[redis.ConnectionPool] = None
+    _pool_lock = asyncio.Lock()
     
     def __init__(self, redis_url: str | None = None):
         """
@@ -64,7 +69,11 @@ class RedisClient:
         self.client: Optional[redis.Redis] = None
         self._connected = False
         
+        # ⚡ Max connections from settings (already exists!)
+        self.max_connections = settings.redis_max_connections
+        
         logger.info(f"✅ Redis client initialized from registry: {self._safe_url()}")
+        logger.info(f"   📊 Connection pool: max={self.max_connections} connections")
         logger.debug(f"   Consumer group: {self.CONSUMER_GROUP}")
         logger.debug(f"   Ingestion stream: {self.INGESTION_STREAM}")
     
@@ -78,30 +87,76 @@ class RedisClient:
             return f"{protocol}://{user}:***@{host}"
         return url
     
+    async def _get_or_create_pool(self) -> redis.ConnectionPool:
+        """
+        Get or create Redis connection pool (singleton).
+        
+        ⚡ Connection pool is shared across all RedisClient instances.
+        This dramatically reduces TCP handshake overhead.
+        
+        Returns:
+            Redis connection pool
+        """
+        if RedisClient._connection_pool is None:
+            async with RedisClient._pool_lock:
+                # Double-check after acquiring lock
+                if RedisClient._connection_pool is None:
+                    logger.info(f"🔧 Creating Redis connection pool (max={self.max_connections})")
+                    
+                    RedisClient._connection_pool = redis.ConnectionPool.from_url(
+                        self.redis_url,
+                        encoding="utf-8",
+                        decode_responses=True,
+                        max_connections=self.max_connections,
+                        socket_keepalive=True,
+                        socket_timeout=5.0,
+                        retry_on_timeout=True,
+                        health_check_interval=30  # Check health every 30s
+                    )
+                    
+                    logger.info("✅ Redis connection pool created")
+        
+        return RedisClient._connection_pool
+    
     async def connect(self) -> None:
-        """Connect to Redis."""
+        """Connect to Redis using connection pool."""
         if self._connected:
             return
         
-        self.client = await redis.from_url(
-            self.redis_url,
-            encoding="utf-8",
-            decode_responses=True,
-            max_connections=settings.redis_max_connections
-        )
+        # ⚡ Use connection pool instead of direct connection
+        pool = await self._get_or_create_pool()
+        self.client = redis.Redis(connection_pool=pool)
         
         # Create consumer groups for all streams
         await self._ensure_consumer_groups()
         
         self._connected = True
-        logger.info("Redis connected")
+        logger.info("Redis connected (using connection pool)")
     
     async def close(self) -> None:
-        """Close Redis connection."""
+        """Close Redis connection (but keep pool alive for reuse)."""
         if self.client:
             await self.client.close()
             self._connected = False
-        logger.info("Redis connection closed")
+        logger.info("Redis connection closed (pool remains active)")
+    
+    def get_pool_stats(self) -> Dict[str, Any]:
+        """
+        Get connection pool statistics.
+        
+        Returns:
+            Pool stats including active connections
+        """
+        if RedisClient._connection_pool is None:
+            return {"status": "not_initialized"}
+        
+        pool = RedisClient._connection_pool
+        return {
+            "max_connections": self.max_connections,
+            "in_use_connections": len(pool._in_use_connections) if hasattr(pool, '_in_use_connections') else "unknown",
+            "available_connections": len(pool._available_connections) if hasattr(pool, '_available_connections') else "unknown",
+            "status": "active"
+        }
     
     async def _ensure_consumer_groups(self) -> None:
         """
@@ -181,6 +236,10 @@ class RedisClient:
         """
         Read messages from stream using consumer group.
         
+        Tries two strategies:
+        1. Read new undelivered messages with XREADGROUP + ">"
+        2. Claim pending messages from dead consumers with XAUTOCLAIM
+        
         Args:
             stream: Stream name
             consumer_name: Unique consumer name
@@ -193,14 +252,35 @@ class RedisClient:
         if not self._connected:
             await self.connect()
         
-        # Read from stream
+        # Strategy 1: Try to read new undelivered messages
         messages = await self.client.xreadgroup(
             groupname=self.CONSUMER_GROUP,
             consumername=consumer_name,
-            streams={stream: ">"},
+            streams={stream: ">"},  # ">" reads new undelivered messages
             count=count,
             block=block
         )
+        
+        # Strategy 2: If no new messages, try to claim pending ones from dead consumers
+        if not messages:
+            logger.debug(f"No new messages, attempting to claim pending messages...")
+            try:
+                # XAUTOCLAIM returns: (next_id, [(message_id, data), ...], deleted_ids)
+                claimed = await self.client.xautoclaim(
+                    name=stream,
+                    groupname=self.CONSUMER_GROUP,
+                    consumername=consumer_name,
+                    min_idle_time=5000,  # Claim messages idle for 5+ seconds
+                    start_id="0-0",
+                    count=count
+                )
+                
+                if claimed and len(claimed) >= 2 and claimed[1]:
+                    # claimed[1] is the list of (message_id, data) tuples
+                    logger.info(f"✅ Claimed {len(claimed[1])} pending messages from dead consumers")
+                    messages = [(stream, claimed[1])]
+            except Exception as e:
+                logger.warning(f"Failed to claim pending messages: {e}")
         
         if not messages:
             return []

@@ -153,7 +153,23 @@ async def multi_pass_query(request: MultiPassRequest):
     try:
         multi_pass_service = get_multi_pass_service()
         
-        logger.info(f"Multi-pass query request: enhancements={request.use_enhancements}")
+        # Check if we have documents (fail fast if empty database)
+        from ...storage import get_database
+        from sqlalchemy import text
+        db = get_database()
+        async with db.session() as session:
+            result = await session.execute(text("SELECT COUNT(*) FROM documents WHERE is_latest = true"))
+            doc_count = result.scalar()
+        
+        if doc_count == 0:
+            logger.warning("Multi-pass query attempted with empty database")
+            raise HTTPException(
+                status_code=503,
+                detail="No documents available for multi-pass query. Please ingest documents first."
+            )
+        
+        logger.info(f"Multi-pass query request: enhancements={request.use_enhancements}, docs={doc_count}")
+        logger.info(f"Starting decomposition (num_passes={request.num_passes}, questions_per_section={request.num_secondary_questions})")
         
         result = await multi_pass_service.process_query(
             query=request.query,
@@ -164,6 +180,8 @@ async def multi_pass_query(request: MultiPassRequest):
             response_length=request.response_length,
             use_enhancements=request.use_enhancements
         )
+        
+        logger.info(f"Multi-pass query completed in {result.total_duration_seconds:.1f}s")
         
         # Create section summaries
         section_summaries = [

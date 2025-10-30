@@ -156,7 +156,9 @@ services:
       # Performance settings
       ENABLE_CACHE: "true"
       CACHE_TTL: 3600
-      RATE_LIMIT_ENABLED: "false"  # Disable for local dev
+      RATE_LIMIT_ENABLED: "true"  # ⚡ QUICK WIN #10: Enable rate limiting
+      RATE_LIMIT_REQUESTS: 100  # 100 requests
+      RATE_LIMIT_WINDOW: 60  # per minute
       # Preflight settings
       PREFLIGHT_MODE: "lenient"  # Allow startup even if Ollama is slow
       # Desktop Ollama (Tier 2) - GPU Enhanced
@@ -195,6 +197,15 @@ services:
     networks:
       - ecosystem-mcp
     restart: unless-stopped
+    # ⚡ QUICK WIN #9: Resource limits to prevent exhaustion
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'  # 4 CPU cores max
+          memory: 8G  # 8GB RAM max
+        reservations:
+          cpus: '2.0'  # Reserve 2 cores
+          memory: 4G  # Reserve 4GB
     logging:
       driver: "json-file"
       options:

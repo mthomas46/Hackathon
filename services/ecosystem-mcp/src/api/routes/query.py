@@ -386,36 +386,35 @@ async def list_contexts(request: Request):
         List of repository contexts with metadata
     """
     try:
-        async with get_database() as db:
-            # Query distinct repositories from documents table
-            from sqlalchemy import text
-            
-            query = text("""
-                SELECT DISTINCT
-                    d.service_name,
-                    d.repo_path,
-                    COUNT(DISTINCT d.id) as total_docs,
-                    COUNT(DISTINCT d.file_path) as total_files,
-                    array_agg(DISTINCT d.file_type) FILTER (WHERE d.file_type IS NOT NULL) as file_types
-                FROM documents d
-                WHERE d.is_latest = true
-                GROUP BY d.service_name, d.repo_path
-                ORDER BY total_docs DESC
-            """)
-            
-            result = await db.execute(query)
+        db = get_database()
+        # Query distinct repositories from documents table
+        from sqlalchemy import text
+        
+        query = text("""
+            SELECT DISTINCT
+                d.service_name,
+                COUNT(DISTINCT d.id) as total_docs,
+                COUNT(DISTINCT d.file_path) as total_files,
+                array_agg(DISTINCT d.original_format) FILTER (WHERE d.original_format IS NOT NULL) as file_types
+            FROM documents d
+            WHERE d.is_latest = true
+            GROUP BY d.service_name
+            ORDER BY total_docs DESC
+        """)
+        
+        async with db.session() as session:
+            result = await session.execute(query)
             rows = result.fetchall()
             
             contexts = []
             for row in rows:
                 service_name = row[0] or "unknown"
-                repo_path = row[1] or "/app"
-                total_docs = row[2]
-                total_files = row[3]
-                file_types = row[4] or []
+                total_docs = row[1]
+                total_files = row[2]
+                file_types = row[3] or []
                 
                 # Generate context ID
-                context_id = f"ctx_{service_name}_{hash(repo_path) % 10000}"
+                context_id = f"ctx_{service_name}"
                 
                 # Detect languages from file types
                 languages = []
@@ -429,7 +428,7 @@ async def list_contexts(request: Request):
                 contexts.append(ContextResponse(
                     context_id=context_id,
                     repo_name=service_name,
-                    repo_path=repo_path,
+                    repo_path=f"/app/{service_name}",  # Infer from service name
                     languages=languages,
                     primary_language=languages[0] if languages else None,
                     frameworks=[],  # TODO: Enhance with actual detection
@@ -502,26 +501,26 @@ async def get_context_documents(
         context = await get_context(request, context_id)
         
         # Query documents for this context
-        async with get_database() as db:
-            doc_repo = DocumentRepository(db)
-            documents = await doc_repo.get_by_service(context.repo_name, limit=limit)
-            
-            logger.info(f"📄 Retrieved {len(documents)} documents for context {context_id}")
-            
-            return [
-                DocumentResult(
-                    id=str(doc.id),
-                    service_name=doc.service_name,
-                    file_path=doc.file_path,
-                    file_type=doc.file_type,
-                    content_preview=doc.normalized_content[:500] if doc.normalized_content else "",
-                    word_count=len(doc.normalized_content.split()) if doc.normalized_content else 0,
-                    has_embedding=doc.embedding_id is not None,
-                    created_at=doc.created_at.isoformat(),
-                    updated_at=doc.updated_at.isoformat() if doc.updated_at else None
-                )
-                for doc in documents
-            ]
+        db = get_database()
+        doc_repo = DocumentRepository(db)
+        documents = await doc_repo.get_by_service(context.repo_name, limit=limit)
+        
+        logger.info(f"📄 Retrieved {len(documents)} documents for context {context_id}")
+        
+        return [
+            DocumentResult(
+                id=str(doc.id),
+                service_name=doc.service_name,
+                file_path=doc.file_path,
+                file_type=doc.file_type,
+                content_preview=doc.normalized_content[:500] if doc.normalized_content else "",
+                word_count=len(doc.normalized_content.split()) if doc.normalized_content else 0,
+                has_embedding=doc.embedding_id is not None,
+                created_at=doc.created_at.isoformat(),
+                updated_at=doc.updated_at.isoformat() if doc.updated_at else None
+            )
+            for doc in documents
+        ]
             
     except HTTPException:
         raise

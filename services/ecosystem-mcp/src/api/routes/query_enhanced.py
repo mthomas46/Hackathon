@@ -173,6 +173,31 @@ async def _process_rag_query(request: EnhancedQueryRequest) -> EnhancedQueryResp
     
     Supports optional enhancements (glossary, exclusions, multi-signal ranking).
     """
+    # Early return for empty database
+    try:
+        chroma_client = get_chroma_client()
+        collection = chroma_client.get_or_create_collection("documents")
+        doc_count = collection.count()
+        
+        if doc_count == 0:
+            logger.warning("RAG query attempted with empty database")
+            return EnhancedQueryResponse(
+                answer="⚠️ No documents found in the database. Please ingest documents before running RAG queries. You can use 'basic' mode for pure LLM queries without documents.",
+                mode="rag",
+                tier_used="none",
+                tier_requested=request.tier.value,
+                sources=[],
+                metadata={
+                    "error": "empty_database",
+                    "message": "No documents available for retrieval",
+                    "suggestion": "Run document ingestion first or use 'basic' mode",
+                    "document_count": 0
+                }
+            )
+    except Exception as e:
+        logger.error(f"Error checking document count: {e}")
+        # Continue anyway, let the query fail naturally if there's an issue
+    
     # Choose service based on use_enhancements flag
     if request.use_enhancements:
         rag_service = get_enhanced_rag_service()

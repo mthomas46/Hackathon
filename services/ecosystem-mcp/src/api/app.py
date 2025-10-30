@@ -26,7 +26,7 @@ from ..utils.redis_client import get_redis_client
 from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
-from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, config_validation, embeddings_admin, job_recovery, path_resolver, temporal_versioning, documentation_runs, job_progress, performance_optimization, cache_analytics, discovery, discovery_admin, orchestration, documentation, timeline, temporal_rag, maintenance, reports, consolidation, dynamic_rag, retry_admin, monitoring
+from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, config_validation, embeddings_admin, job_recovery, path_resolver, temporal_versioning, documentation_runs, job_progress, performance_optimization, cache_analytics, discovery, discovery_admin, orchestration, documentation, timeline, temporal_rag, maintenance, reports, consolidation, dynamic_rag, retry_admin, monitoring, context_aware_query
 from .routes import analysis as analysis_routes
 # embeddings import moved below to handle conditional loading
 from .middleware import RequestIDMiddleware, TimeoutMiddleware, MetricsMiddleware
@@ -193,22 +193,27 @@ async def lifespan(app: FastAPI):
         logger.info("  ✅ Retry worker started")
         
         # Detect and handle orphaned jobs on startup
-        # 🚨 TEMPORARILY DISABLED to prevent re-queuing actively processing jobs during debugging
-        # TODO: Re-enable with improved logic (check worker heartbeat, progress updates)
-        logger.info("  ⏭️  Orphaned job detection DISABLED (temporary)")
-        # try:
-        #     from ..services.ingestion.orphaned_job_detector import detect_orphaned_jobs
-        #     orphan_result = await detect_orphaned_jobs()
-        #     if orphan_result["orphaned_found"] > 0:
-        #         logger.warning(
-        #             f"  ⚠️  Orphaned jobs detected: {orphan_result['failed_old']} failed, "
-        #             f"{orphan_result['requeued_recent']} re-queued, "
-        #             f"{orphan_result['orphaned_found']} total orphaned"
-        #         )
-        #     else:
-        #         logger.info("  ✅ No orphaned jobs detected")
-        # except Exception as e:
-        #     logger.error(f"  ❌ Orphaned job detection failed: {e}", exc_info=True)
+        try:
+            from ..services.ingestion.orphaned_job_detector import detect_orphaned_jobs
+            orphan_result = await detect_orphaned_jobs()
+            if orphan_result["orphaned_found"] > 0:
+                logger.warning(
+                    f"  ⚠️  Orphaned jobs detected: {orphan_result['failed_old']} failed, "
+                    f"{orphan_result['requeued_recent']} re-queued, "
+                    f"{orphan_result['orphaned_found']} total orphaned"
+                )
+            else:
+                logger.info("  ✅ No orphaned jobs detected")
+        except Exception as e:
+            logger.error(f"  ❌ Orphaned job detection failed: {e}", exc_info=True)
+        
+        # 🆕 Start automatic cleanup service
+        try:
+            from ..services.maintenance.automatic_cleanup_service import start_cleanup_service
+            start_cleanup_service()
+            logger.info("  ✅ Automatic cleanup service started")
+        except Exception as e:
+            logger.error(f"  ❌ Failed to start automatic cleanup service: {e}", exc_info=True)
         
         logger.info("\n✅ ALL SERVICES INITIALIZED SUCCESSFULLY")
         
@@ -246,6 +251,14 @@ async def lifespan(app: FastAPI):
         logger.info("  ✅ Retry worker stopped")
     except Exception as e:
         logger.error(f"Error stopping retry worker: {e}")
+    
+    # 🆕 Stop automatic cleanup service
+    try:
+        from ..services.maintenance.automatic_cleanup_service import stop_cleanup_service
+        await stop_cleanup_service()
+        logger.info("  ✅ Automatic cleanup service stopped")
+    except Exception as e:
+        logger.error(f"Error stopping cleanup service: {e}")
     
     # Use cleanup_resources for graceful shutdown
     await cleanup_resources()
@@ -351,12 +364,34 @@ def create_app() -> FastAPI:
     app.include_router(health.router, tags=["Health"])
     app.include_router(infrastructure.router, prefix="/api/v1", tags=["Infrastructure"])  # ✅ Infrastructure monitoring
     app.include_router(monitoring.router, prefix="/api/v1/monitoring", tags=["Monitoring"])  # ✅ Metadata consistency monitoring
+    
+    # Worker management and health monitoring
+    from .routes import workers as workers_routes
+    app.include_router(workers_routes.router, prefix="/api/v1/admin", tags=["Workers"])  # ✅ Worker health monitoring
+    
     app.include_router(standard.router, tags=["Standard"])  # ✅ Standard ecosystem endpoints
     app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
     app.include_router(retry_admin.router, prefix="/api/v1/admin", tags=["Retry Admin"])  # 🆕 Phase 2.3
     app.include_router(search.router, prefix="/api/v1", tags=["Search"])
     app.include_router(ask.router, prefix="/api/v1", tags=["RAG"])  # ✅ RAG question answering
     app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
+    
+    # Document cleanup (uses intelligent filtering on existing docs)
+    from .routes import document_cleanup
+    app.include_router(
+        document_cleanup.router,
+        prefix="/api/v1/documents",
+        tags=["Document Cleanup"]
+    )
+    
+    # Document scoring (quality-based RAG weighting)
+    from .routes import document_scoring
+    app.include_router(
+        document_scoring.router,
+        prefix="/api/v1/documents",
+        tags=["Document Scoring"]
+    )
+    
     app.include_router(query.router, prefix="/api/v1", tags=["Query"])
     
     # Embeddings exploration and analysis (conditionally loaded)
@@ -429,8 +464,15 @@ def create_app() -> FastAPI:
     # Temporal RAG queries (Phase 2.1)
     app.include_router(temporal_rag.router, prefix="/api/v1/rag", tags=["Temporal RAG"])
     
+    # Context-Aware RAG queries
+    app.include_router(context_aware_query.router, prefix="/api/v1", tags=["Context-Aware RAG"])
+    
     # Documentation maintenance (Phase 2.2)
     app.include_router(maintenance.router, prefix="/api/v1/maintenance", tags=["Documentation Maintenance"])
+    
+    # 🆕 Automatic cleanup service management
+    from .routes import maintenance_cleanup
+    app.include_router(maintenance_cleanup.router, prefix="/api/v1", tags=["Automatic Cleanup"])
     
     # Advanced analysis features (Phase 3)
     app.include_router(analysis_routes.router, prefix="/api/v1/analysis", tags=["Advanced Analysis"])

@@ -563,15 +563,26 @@ class RetryWorker:
                     logger.error("No file_path in document_info")
                     return {"success": False}
                 
-                # Read file content
+                # 🛡️ SAFETY: Read file content with protection
+                from ...utils.file_safety import (
+                    safe_read_file,
+                    BinaryFileError,
+                    FileSizeError,
+                    FileTimeoutError
+                )
+                
                 full_path = Path(document_info.get("repo_path", "")) / file_path
                 
                 if not full_path.exists():
                     logger.error(f"File not found: {full_path}")
                     return {"success": False}
                 
-                with open(full_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
+                try:
+                    read_result = await safe_read_file(full_path)
+                    content = read_result["content"]
+                except (BinaryFileError, FileSizeError, FileTimeoutError) as e:
+                    logger.error(f"Cannot read file for retry: {e}")
+                    return {"success": False}
                 
                 # Process document
                 process_result = await processor._process_snapshot_document(

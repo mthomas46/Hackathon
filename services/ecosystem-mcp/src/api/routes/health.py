@@ -262,3 +262,56 @@ async def readiness():
             "redis": redis_ready
         }}
 
+
+@router.get(
+    "/deep",
+    summary="Deep health check with latency metrics",
+    description="Comprehensive health check with component latency, disk space, and degraded state detection"
+)
+async def deep_health_check():
+    """
+    Deep health check leveraging Phase 3.3 infrastructure.
+    
+    Returns comprehensive health status including:
+    - Component latency metrics
+    - Disk space monitoring
+    - Degraded state detection
+    - Embedding service health
+    
+    Returns:
+        Comprehensive health status with latency and disk metrics
+    """
+    from ...utils.deep_health_check import get_health_checker, initialize_health_checker
+    from ...storage.chromadb_client import get_chroma_client
+    
+    # Get or initialize health checker
+    checker = get_health_checker()
+    if not checker:
+        try:
+            checker = initialize_health_checker(
+                database=get_database(),
+                redis_client=get_redis_client(),
+                chroma_client=get_chroma_client(),
+                embedding_service_url="http://ecosystem-mcp-embedding:8001"
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize health checker: {e}")
+            # Fallback to basic health check
+            return {
+                "status": "degraded",
+                "error": "Health checker initialization failed",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+    
+    # Run comprehensive checks
+    try:
+        health_status = await checker.check_all()
+        return health_status
+    except Exception as e:
+        logger.error(f"Deep health check failed: {e}", exc_info=True)
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+

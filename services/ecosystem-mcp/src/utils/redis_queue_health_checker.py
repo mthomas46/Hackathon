@@ -98,7 +98,7 @@ async def check_redis_queue_health() -> Dict[str, Any]:
                 for job in queued_jobs:
                     postgres_jobs[str(job.id)] = {
                         "status": "queued",
-                        "created_at": job.created_at.isoformat() if job.created_at else None
+                        "started_at": job.started_at.isoformat() if job.started_at else None
                     }
             
             except Exception as e:

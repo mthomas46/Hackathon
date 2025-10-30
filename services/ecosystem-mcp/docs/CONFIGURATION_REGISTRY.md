@@ -1,3 +1,17 @@
+---
+title: "Configuration Registry System"
+service: "ecosystem-mcp"
+category: "reference"
+tags: ['background', 'cache', 'caching', 'config', 'configuration', 'database', 'deployment', 'docker', 'documentation', 'health']
+related: ['INDEX.md', 'architecture/OVERVIEW.md', 'CODE_REFERENCE.md', 'API_ENDPOINTS_COMPLETE.md']
+status: "current"
+last_updated: "2025-10-28"
+audience: "developer"
+difficulty: "intermediate"
+semantic_keywords: ['background', 'cache', 'caching', 'config', 'configuration']
+llm_search_hints: ['what is configuration registry system', 'how does configuration registry system work', 'guide to configuration registry system']
+---
+
 # Configuration Registry System
 
 **Version:** 1.0  

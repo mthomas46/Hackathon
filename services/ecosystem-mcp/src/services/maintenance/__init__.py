@@ -1,34 +1,36 @@
 """
-Documentation Maintenance Services (Phase 2.2 & 2.3)
+Maintenance services for the ecosystem.
 
-Services for maintaining documentation quality:
-- Staleness Detection: Find outdated docs
-- Coverage Analysis: Track documentation coverage
-- Consistency Checker: Find conflicting information
-- Automated Refresher: Auto-update docs
-- Quality Dashboard: Real-time quality metrics
-- Dependency Tracker: Track cross-references
-- Version Comparator: Compare document versions
-- Search Service: Advanced search and discovery
+Includes:
+- AutomaticCleanupService: Scheduled cleanup of orphaned jobs and old data
+- CoverageAnalyzer: Documentation coverage analysis
+- StalenessDetector: Detect stale documentation
+- ConsistencyChecker: Check documentation consistency
+- AutomatedRefresher: Automated documentation refresh
+- QualityDashboard: Documentation quality metrics
+- DependencyTracker: Track documentation dependencies
+- ExportService: Export documentation
+- VersionComparator: Compare documentation versions
 """
 
-from .staleness_detector import StalenessDetector
+from .automatic_cleanup_service import AutomaticCleanupService
 from .coverage_analyzer import CoverageAnalyzer
+from .staleness_detector import StalenessDetector
 from .consistency_checker import ConsistencyChecker
 from .automated_refresher import AutomatedRefresher
 from .quality_dashboard import QualityDashboard
 from .dependency_tracker import DependencyTracker
-from .version_comparator import VersionComparator
 from .export_service import ExportService
+from .version_comparator import VersionComparator
 
 __all__ = [
-    "StalenessDetector",
-    "CoverageAnalyzer",
-    "ConsistencyChecker",
-    "AutomatedRefresher",
-    "QualityDashboard",
-    "DependencyTracker",
-    "VersionComparator",
-    "ExportService",
+    'AutomaticCleanupService',
+    'CoverageAnalyzer',
+    'StalenessDetector',
+    'ConsistencyChecker',
+    'AutomatedRefresher',
+    'QualityDashboard',
+    'DependencyTracker',
+    'ExportService',
+    'VersionComparator',
 ]
-

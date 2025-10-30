@@ -45,6 +45,8 @@ class Database:
         Args:
             database_url: PostgreSQL connection string (uses settings if None)
         """
+        import os
+        
         self.database_url = database_url or settings.database_url
         
         # Convert postgresql:// to postgresql+asyncpg://
@@ -54,13 +56,28 @@ class Database:
                 "postgresql+asyncpg://"
             )
         
+        # ⚡ QUICK WIN 1.1: Dynamic pool sizing based on worker count
+        worker_count = int(os.getenv("WORKER_COUNT", "4"))
+        
+        # Calculate optimal pool size (5 connections per worker + buffer)
+        optimal_pool_size = worker_count * 5
+        self.pool_size = max(settings.database_pool_size, optimal_pool_size)
+        
+        # Double for burst capacity
+        self.max_overflow = self.pool_size * 2
+        
+        logger.info(
+            f"📊 Database pool sizing: {self.pool_size} + {self.max_overflow} overflow "
+            f"(workers={worker_count}, config_min={settings.database_pool_size})"
+        )
+        
         # Create async engine with connection pooling
         # Note: Don't specify poolclass for async engines - SQLAlchemy uses AsyncAdaptedQueuePool by default
         self.engine: AsyncEngine = create_async_engine(
             self.database_url,
             echo=settings.mcp_debug,
-            pool_size=settings.database_pool_size,
-            max_overflow=settings.database_max_overflow,
+            pool_size=self.pool_size,           # ← Dynamic
+            max_overflow=self.max_overflow,     # ← Dynamic
             pool_pre_ping=True,  # Verify connections before using
             pool_recycle=3600,   # Recycle connections after 1 hour
         )

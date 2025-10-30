@@ -42,6 +42,12 @@ class ChromaDBClient:
         # Single writer lock - CRITICAL for data integrity
         self._write_lock = asyncio.Lock()
         
+        # ⚡ QUICK WIN 1.4: Lock monitoring metrics (NEW)
+        self._lock_wait_times: List[float] = []
+        self._lock_acquisitions = 0
+        self._lock_contentions = 0  # Times we had to wait
+        self._max_wait_time = 0.0
+        
         # Circuit breaker for resilience
         self.circuit_breaker = CircuitBreaker(
             name="chromadb",
@@ -75,7 +81,7 @@ class ChromaDBClient:
             f"ChromaDB initialized: path={self.path}, "
             f"collection={self.collection_name}, "
             f"count={self.collection.count()} "
-            f"(with circuit breaker)"
+            f"(with circuit breaker and lock monitoring)"
         )
     
     async def add_embeddings(
@@ -398,3 +404,67 @@ async def close_chroma():
         _chroma_client = None
     logger.info("ChromaDB closed")
 
+
+    def get_lock_stats(self) -> Dict[str, Any]:
+        """
+        Get write lock statistics for bottleneck detection.
+        
+        Returns:
+            Dict with lock performance metrics
+        """
+        import statistics
+        
+        if not self._lock_wait_times:
+            return {
+                "lock_acquisitions": 0,
+                "lock_contentions": 0,
+                "avg_wait_ms": 0.0,
+                "max_wait_ms": 0.0,
+                "p50_wait_ms": 0.0,
+                "p95_wait_ms": 0.0,
+                "p99_wait_ms": 0.0,
+                "contention_rate": 0.0,
+                "status": "no_data"
+            }
+        
+        # Calculate percentiles
+        sorted_times = sorted(self._lock_wait_times)
+        n = len(sorted_times)
+        
+        def percentile(p):
+            k = (n - 1) * p
+            f = int(k)
+            c = f + 1
+            if c >= n:
+                return sorted_times[-1]
+            return sorted_times[f] + (k - f) * (sorted_times[c] - sorted_times[f])
+        
+        p50 = percentile(0.50)
+        p95 = percentile(0.95)
+        p99 = percentile(0.99)
+        
+        avg_wait = statistics.mean(self._lock_wait_times)
+        contention_rate = (self._lock_contentions / self._lock_acquisitions * 100) if self._lock_acquisitions > 0 else 0
+        
+        # Determine status
+        if p95 > 1.0:
+            status = "critical"  # 95th percentile > 1s
+        elif p95 > 0.5:
+            status = "warning"   # 95th percentile > 500ms
+        elif contention_rate > 50:
+            status = "high_contention"
+        else:
+            status = "healthy"
+        
+        return {
+            "lock_acquisitions": self._lock_acquisitions,
+            "lock_contentions": self._lock_contentions,
+            "avg_wait_ms": avg_wait * 1000,
+            "max_wait_ms": self._max_wait_time * 1000,
+            "p50_wait_ms": p50 * 1000,
+            "p95_wait_ms": p95 * 1000,
+            "p99_wait_ms": p99 * 1000,
+            "contention_rate": f"{contention_rate:.1f}%",
+            "status": status,
+            "samples": len(self._lock_wait_times)
+        }

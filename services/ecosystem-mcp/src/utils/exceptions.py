@@ -64,3 +64,45 @@ class ConfigError(EcosystemMCPError):
     """Configuration error."""
     pass
 
+
+# ⚡ PHASE 2: Additional specific exceptions for better error handling
+
+class RedisError(StorageError):
+    """Redis operation failed."""
+    pass
+
+
+class ProgressTrackingError(EcosystemMCPError):
+    """Progress tracking operation failed (non-critical)."""
+    pass
+
+
+class JobTimeoutError(IngestionError):
+    """Job exceeded timeout threshold."""
+    pass
+
+
+class WorkerHeartbeatError(EcosystemMCPError):
+    """Worker heartbeat update failed (non-critical)."""
+    pass
+
+
+class MetadataUpdateError(IngestionError):
+    """Job metadata update failed (non-critical)."""
+    pass
+
+
+class GitOperationError(EcosystemMCPError):
+    """Git operation failed."""
+    pass
+
+
+class FileProcessingError(IngestionError):
+    """File processing operation failed."""
+    pass
+
+
+class EmbeddingGenerationError(ModelError):
+    """Embedding generation failed."""
+    pass
+

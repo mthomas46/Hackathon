@@ -343,7 +343,7 @@ class SnapshotProcessor:
     
     async def _read_file(self, path: Path) -> str:
         """
-        Read file content asynchronously.
+        Read file content asynchronously with safety protections.
         
         Args:
             path: File path
@@ -352,13 +352,11 @@ class SnapshotProcessor:
             File content as string
         """
         try:
-            # Read in executor to avoid blocking
-            loop = asyncio.get_event_loop()
-            content = await loop.run_in_executor(
-                None,
-                lambda: path.read_text(encoding='utf-8', errors='ignore')
-            )
-            return content
+            # 🛡️ SAFETY: Use comprehensive file reading
+            from ...utils.file_safety import safe_read_file
+            
+            read_result = await safe_read_file(path)
+            return read_result["content"]
         except Exception as e:
             logger.error(f"❌ Failed to read {path}: {e}")
             raise

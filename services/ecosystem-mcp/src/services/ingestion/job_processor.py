@@ -27,6 +27,7 @@ from .commit_optimizer import get_commit_optimizer
 from ...utils.redis_client import get_redis_client
 from ...utils.datetime_utils import ensure_utc_naive
 from ..git.git_error_handler import get_git_error_handler, GitCorruptionError
+from ...utils.document_scorer import score_document
 
 logger = logging.getLogger(__name__)
 
@@ -152,8 +153,20 @@ class JobProcessor:
         try:
             self.redis_client = get_redis_client()
             logger.info(f"✅ Real-time progress tracking initialized for job {job_id}")
+        except (ConnectionError, TimeoutError) as e:
+            # ⚡ PHASE 2: Specific exception - Redis connection issues
+            logger.warning(
+                f"⚠️  Redis connection failed for progress tracking: {e}",
+                extra={"job_id": job_id, "error_type": type(e).__name__}
+            )
+            self.redis_client = None
         except Exception as e:
-            logger.warning(f"⚠️  Could not initialize Redis progress tracking: {e}")
+            # ⚡ Catch-all for unexpected errors with full context
+            logger.error(
+                f"❌ Unexpected error initializing progress tracking: {e}",
+                exc_info=True,
+                extra={"job_id": job_id}
+            )
             self.redis_client = None
     
     async def _update_progress(self, phase: str, current: int, total: int, **extra_data):
@@ -179,14 +192,25 @@ class JobProcessor:
                 ex=3600  # Expire after 1 hour
             )
             
-            # Also publish to pub/sub for real-time updates
-            await self.redis_client.publish(
-                f"job_progress_channel:{self.current_job_id}",
-                json.dumps(progress_data)
-            )
+            # ✅ FIX #3: Disable pub/sub for now (publish method not implemented)
+            # Real-time updates via pub/sub will be implemented when RedisClient.publish() is added
+            # await self.redis_client.publish(
+            #     f"job_progress_channel:{self.current_job_id}",
+            #     json.dumps(progress_data)
+            # )
             
+        except (ConnectionError, TimeoutError) as e:
+            # ⚡ PHASE 2: Specific exception - Redis unavailable (non-critical)
+            logger.debug(
+                f"Progress update skipped - Redis unavailable: {e}",
+                extra={"phase": phase, "progress": f"{current}/{total}"}
+            )
         except Exception as e:
-            logger.debug(f"Could not update progress: {e}")
+            # ⚡ Unexpected error - log with context but don't fail
+            logger.warning(
+                f"Failed to update progress tracking: {e}",
+                extra={"phase": phase, "current": current, "total": total}
+            )
     
     def calculate_optimal_batch_size(self, files: List[Dict[str, Any]]) -> int:
         """
@@ -337,8 +361,19 @@ class JobProcessor:
                         
                         logger.warning(f"Job {job.id} marked as failed due to timeout")
             
+            except ValueError as e:
+                # ⚡ PHASE 2: Validation error in timeout check
+                logger.error(
+                    f"Invalid timeout configuration: {e}",
+                    extra={"job_id": job.id, "timeout": self.job_timeout}
+                )
             except Exception as e:
-                logger.error(f"Failed to update job timeout status: {e}", exc_info=True)
+                # ⚡ Database or unexpected error
+                logger.error(
+                    f"Failed to update job timeout status: {e}",
+                    exc_info=True,
+                    extra={"job_id": job.id}
+                )
             
             return True
         
@@ -380,9 +415,18 @@ class JobProcessor:
                 
                 logger.debug(f"Worker heartbeat updated for job {job.id}")
         
+        except (ConnectionError, TimeoutError) as e:
+            # ⚡ PHASE 2: Database connection issue (non-critical)
+            logger.debug(
+                f"Heartbeat update skipped - database unavailable: {e}",
+                extra={"job_id": job.id}
+            )
         except Exception as e:
-            # Don't fail job if heartbeat update fails
-            logger.debug(f"Failed to update worker heartbeat: {e}")
+            # ⚡ Don't fail job if heartbeat update fails, but log with context
+            logger.warning(
+                f"Failed to update worker heartbeat: {e}",
+                extra={"job_id": job.id}
+            )
     
     async def _update_job_progress(
         self,
@@ -443,13 +487,37 @@ class JobProcessor:
                 
                 logger.debug(f"Updated job progress: {current_file_index}/{total_files} files ({metadata.get('progress_pct', 0)}%)")
                 
+        except (ConnectionError, TimeoutError) as e:
+            # ⚡ PHASE 2: Database unavailable (non-critical for progress updates)
+            logger.warning(
+                f"Progress metadata update skipped - database unavailable: {e}",
+                extra={
+                    "job_id": job.id if job else "unknown",
+                    "progress": f"{current_file_index}/{total_files}"
+                }
+            )
+        except (TypeError, AttributeError, KeyError) as e:
+            # ⚡ Data structure error - critical to log for debugging
+            logger.error(
+                f"Metadata structure error during progress update: {e}",
+                exc_info=True,
+                extra={
+                    "job_id": job.id if job else "unknown",
+                    "metadata_type": type(job.job_metadata).__name__ if job else "unknown",
+                    "current_file_index": current_file_index,
+                    "total_files": total_files
+                }
+            )
         except Exception as e:
-            # Don't fail the job if metadata update fails
-            logger.error(f"Failed to update job progress metadata: {type(e).__name__}: {e}", exc_info=True)
-            if 'current_job' in locals():
-                logger.error(f"Job ID: {current_job.id}")
-                logger.error(f"Job metadata type: {type(current_job.job_metadata)}")
-                logger.error(f"Job metadata value: {current_job.job_metadata}")
+            # ⚡ Unexpected error - log with full context
+            logger.error(
+                f"Failed to update job progress metadata: {type(e).__name__}: {e}",
+                exc_info=True,
+                extra={
+                    "job_id": job.id if job else "unknown",
+                    "progress": f"{current_file_index}/{total_files}"
+                }
+            )
             
             # Record failure in monitoring system
             try:
@@ -888,7 +956,7 @@ class JobProcessor:
                         # 🆕 PHASE 3.1a: Integrate retry for commit-level exceptions
                         try:
                             from .error_classifier import ErrorClassifier
-                            from ...utils.redis_client import get_redis_client
+                            # ✅ FIX #2: Use top-level get_redis_client import (no duplicate)
                             
                             classified_error = ErrorClassifier.classify(commit_result)
                             error_type_str = classified_error.value
@@ -1093,6 +1161,12 @@ class JobProcessor:
             all_files = []
             
             file_count = 0
+            # 🎯 INTELLIGENT FILTERING: Use smart file filter
+            from ...utils.intelligent_file_filter import get_intelligent_filter
+            
+            file_filter = get_intelligent_filter()
+            logger.info("✨ Using intelligent file filtering (prioritizes docs, skips logs/configs)")
+            
             for root, dirs, files in os.walk(repo_path):
                 # Skip common directories that shouldn't be processed
                 dirs[:] = [d for d in dirs if d not in {
@@ -1118,7 +1192,12 @@ class JobProcessor:
                         logger.debug(f"Skipping symlink/special file: {file}")
                         continue
                     
-                    # Skip binary files by extension
+                    # 🎯 INTELLIGENT FILTERING: Check if file should be processed
+                    if not file_filter.should_process(file_path):
+                        logger.debug(f"⏭️  Skipping (filtered): {file}")
+                        continue
+                    
+                    # Skip binary files by extension (backup check)
                     binary_extensions = {
                         '.so', '.pyc', '.pyd', '.dll', '.exe', '.bin', '.dat',
                         '.db', '.sqlite', '.sqlite3', '.whl', '.egg', '.jar',
@@ -1150,14 +1229,35 @@ class JobProcessor:
             
             logger.info(f"📊 Found {len(all_files)} files to process")
             
-            # 🛡️  SAFETY: Limit maximum files to prevent runaway processing
+            # 🎯 INTELLIGENT PRIORITIZATION: Sort files by priority
+            logger.info("✨ Prioritizing files (docs first, then code, then tests)...")
+            
+            # Convert back to Path objects for prioritization
+            file_paths = [repo_path / f for f in all_files]
+            
+            # Get statistics before prioritization
+            stats_before = file_filter.get_statistics(file_paths)
+            logger.info(f"   Priority distribution: {stats_before['by_priority']}")
+            logger.info(f"   Category distribution: {stats_before['by_category']}")
+            
+            # Apply priority-based sorting and limit
             MAX_FILES_PER_JOB = 10000
-            if len(all_files) > MAX_FILES_PER_JOB:
+            prioritized_paths = file_filter.filter_and_prioritize(
+                file_paths,
+                max_files=MAX_FILES_PER_JOB
+            )
+            
+            # Convert back to relative paths
+            all_files = [str(p.relative_to(repo_path)) for p in prioritized_paths]
+            
+            logger.info(f"✅ Prioritized to {len(all_files)} high-value files")
+            
+            if len(file_paths) > MAX_FILES_PER_JOB:
+                skipped = len(file_paths) - len(all_files)
                 logger.warning(
-                    f"⚠️  Too many files ({len(all_files)})! Limiting to {MAX_FILES_PER_JOB}. "
-                    f"Please use a more specific directory path."
+                    f"⚠️  Hit limit: {skipped} lower-priority files skipped. "
+                    f"Consider using more specific directory path."
                 )
-                all_files = all_files[:MAX_FILES_PER_JOB]
             
             result["total_documents"] = len(all_files)
             
@@ -1178,12 +1278,55 @@ class JobProcessor:
                     try:
                         full_path = repo_path / file_path
                         
-                        # Read file content
-                        try:
-                            content = full_path.read_text(encoding='utf-8', errors='ignore')
-                        except Exception as e:
-                            logger.debug(f"Skipping binary/unreadable file: {file_path}")
+                        # 🛡️ SAFETY: Use comprehensive file reading protection
+                        from ...utils.file_safety import (
+                            safe_read_file,
+                            BinaryFileError,
+                            EncodingError,
+                            FileSizeError,
+                            FileTimeoutError,
+                            is_binary_by_extension
+                        )
+                        
+                        # Quick extension check
+                        if is_binary_by_extension(full_path):
+                            logger.debug(f"⏭️  Skipping binary file (by extension): {file_path}")
                             result["skipped_documents"] += 1
+                            continue
+                        
+                        # Read file content safely
+                        try:
+                            read_result = await safe_read_file(
+                                full_path,
+                                max_size_mb=10,
+                                timeout_sec=30
+                            )
+                            content = read_result["content"]
+                            
+                            # Log any warnings
+                            if read_result.get("warnings"):
+                                for warning in read_result["warnings"]:
+                                    logger.debug(f"⚠️  {file_path}: {warning}")
+                            
+                        except BinaryFileError as e:
+                            logger.debug(f"⏭️  Skipping binary file: {file_path} - {e}")
+                            result["skipped_documents"] += 1
+                            continue
+                        except FileSizeError as e:
+                            logger.warning(f"⏭️  Skipping large file: {file_path} - {e}")
+                            result["skipped_documents"] += 1
+                            continue
+                        except FileTimeoutError as e:
+                            logger.warning(f"❌ Timeout reading file: {file_path} - {e}")
+                            result["failed_documents"] += 1
+                            continue
+                        except EncodingError as e:
+                            logger.warning(f"❌ Encoding error: {file_path} - {e}")
+                            result["failed_documents"] += 1
+                            continue
+                        except Exception as e:
+                            logger.warning(f"⏭️  Skipping unreadable file: {file_path} - {e}")
+                            result["failed_documents"] += 1
                             continue
                         
                         # Process the document
@@ -1515,8 +1658,10 @@ class JobProcessor:
             # Generate content hash for deduplication
             content_hash = hashlib.sha256(content.encode()).hexdigest()
             
-            # Normalize the document
+            # 🛡️ SAFETY: Normalize with timeout and fallback protection
             from ..processing.normalizer_factory import NormalizerFactory
+            from ...utils.file_safety import safe_normalize_content
+            
             normalizer_factory = NormalizerFactory()
             
             file_extension = Path(file_path).suffix
@@ -1525,13 +1670,22 @@ class JobProcessor:
             
             normalizer = normalizer_factory.get_normalizer(file_extension)
             
-            # Call with correct signature: content, file_path, metadata
-            norm_result = await normalizer.normalize(
+            # Safely normalize with timeout protection
+            safe_norm_result = await safe_normalize_content(
                 content=content,
                 file_path=file_path,
-                metadata={"ingestion_job_id": str(job.id), "mode": "snapshot"}
+                normalizer=normalizer,
+                timeout_sec=60
             )
-            normalized_content = norm_result["content"]
+            
+            normalized_content = safe_norm_result["content"]
+            
+            # Log normalization issues
+            if not safe_norm_result["success"]:
+                logger.warning(
+                    f"⚠️  Normalization fallback for {file_path}: "
+                    f"{safe_norm_result.get('error', 'unknown error')}"
+                )
             
             # Store in database
             db = get_database()
@@ -1735,8 +1889,12 @@ class JobProcessor:
                                 git_commit_sha = None
                                 logger.warning(f"⚠️  [COMMIT-3] Proceeding without git commit reference for {file_path}")
                     
+                    # ✅ FIX #1: Define service_name from repo_path
+                    service_name = Path(job.repo_path).name if job.repo_path else "unknown"
+                    logger.debug(f"🔍 [SERVICE_NAME] Using service_name: {service_name}")
+                    
                     document = DocumentModel(
-                        service_name=service_name,  # ✅ FIX #4: Use actual service_name, not mode
+                        service_name=service_name,  # ✅ Now properly defined
                         file_path=file_path,
                         original_format=file_extension,
                         original_content=content[:10000] if len(content) <= 10000 else content[:10000] + "...",
@@ -1757,6 +1915,22 @@ class JobProcessor:
                     await session.commit()
                     should_generate_embedding = True
                     is_new_document = True
+                    
+                    # 📊 Score document for RAG weighting
+                    try:
+                        score_result = score_document(
+                            content=normalized_content,
+                            file_path=file_path,
+                            category=doc_metadata.get("category")
+                        )
+                        document.quality_score = score_result.total_score
+                        document.quality_grade = score_result.quality_grade
+                        document.score_breakdown = score_result.breakdown
+                        await session.commit()
+                        logger.debug(f"📊 Scored {file_path}: {score_result.total_score:.1f} (Grade {score_result.quality_grade})")
+                    except Exception as score_error:
+                        logger.warning(f"Failed to score document {file_path}: {score_error}")
+                        # Don't fail ingestion if scoring fails
                 
                 # Generate embedding if needed
                 embedding_generated = False
@@ -1817,7 +1991,7 @@ class JobProcessor:
                             if git_date_str:
                                 try:
                                     # Parse ISO date and convert to timestamp
-                                    from datetime import datetime
+                                    # ✅ FIX #2: Use top-level datetime import (no duplicate import)
                                     git_date_dt = datetime.fromisoformat(git_date_str.replace('Z', '+00:00'))
                                     git_date_timestamp = git_date_dt.timestamp()
                                     logger.debug(f"   Converted git_date to timestamp: {git_date_str} -> {git_date_timestamp}")
@@ -1908,7 +2082,7 @@ class JobProcessor:
                             )
                             
                             try:
-                                from ...utils.redis_client import get_redis_client
+                                # ✅ FIX #2: Use top-level get_redis_client import
                                 redis_client = get_redis_client()
                                 
                                 document_info = {
@@ -1943,7 +2117,7 @@ class JobProcessor:
                             )
                             
                             try:
-                                from ...utils.redis_client import get_redis_client
+                                # ✅ FIX #2: Use top-level get_redis_client import
                                 redis_client = get_redis_client()
                                 
                                 document_info = {
@@ -2219,7 +2393,7 @@ class JobProcessor:
             # 🆕 PHASE 1.1: Integrate retry for file read failures
             if files_failed_read:
                 from .error_classifier import ErrorClassifier
-                from ...utils.redis_client import get_redis_client
+                # ✅ FIX #2: Use top-level get_redis_client import
                 
                 for failed_file_info in files_failed_read:
                     try:
@@ -2413,7 +2587,7 @@ class JobProcessor:
                     # 🆕 PHASE 1.2: Integrate retry for processing errors
                     try:
                         from .error_classifier import ErrorClassifier
-                        from ...utils.redis_client import get_redis_client
+                        # ✅ FIX #2: Use top-level get_redis_client import
                         
                         error_msg = file_result.get('error', 'Unknown processing error')
                         
@@ -2787,7 +2961,7 @@ class JobProcessor:
                     # 🆕 PHASE 3.2: Integrate retry for corrupt commit errors
                     try:
                         from .error_classifier import ErrorClassifier
-                        from ...utils.redis_client import get_redis_client
+                        # ✅ FIX #2: Use top-level get_redis_client import
                         
                         # Classify the corruption error
                         error_exception = Exception(error_classification['error_message'])
@@ -3128,7 +3302,7 @@ class JobProcessor:
             # 🆕 PHASE 1.3: Integrate retry for normalization failures
             if failed_normalizations:
                 from .error_classifier import ErrorClassifier
-                from ...utils.redis_client import get_redis_client
+                # ✅ FIX #2: Use top-level get_redis_client import
                 
                 for failed_norm in failed_normalizations:
                     try:
@@ -3286,7 +3460,7 @@ class JobProcessor:
                         # 🆕 PHASE 2.1: Integrate retry for document preparation failures
                         try:
                             from .error_classifier import ErrorClassifier
-                            from ...utils.redis_client import get_redis_client
+                            # ✅ FIX #2: Use top-level get_redis_client import
                             
                             # Classify the error
                             classified_error = ErrorClassifier.classify(e)
@@ -3394,7 +3568,7 @@ class JobProcessor:
             # 🆕 PHASE 2.2: Integrate retry for batch processing exceptions
             try:
                 from .error_classifier import ErrorClassifier
-                from ...utils.redis_client import get_redis_client
+                # ✅ FIX #2: Use top-level get_redis_client import
                 
                 # Classify the batch error
                 classified_error = ErrorClassifier.classify(e)

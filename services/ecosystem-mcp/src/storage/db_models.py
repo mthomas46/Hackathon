@@ -59,6 +59,11 @@ class DocumentModel(Base):
     embedding_id = Column(UUID(as_uuid=True), ForeignKey("embeddings.id"))
     doc_metadata = Column(JSONB, nullable=False, default=dict)
     
+    # Document quality score (0-100, for RAG weighting)
+    quality_score = Column(Float, nullable=True, index=True)
+    quality_grade = Column(String(1), nullable=True)  # S, A, B, C, D, F
+    score_breakdown = Column(JSONB, nullable=True)  # Detailed scoring breakdown
+    
     # Relationships
     commit = relationship("GitCommitModel", back_populates="documents")
     embedding = relationship("EmbeddingModel", back_populates="document", uselist=False, foreign_keys="[EmbeddingModel.document_id]")
