@@ -57,6 +57,24 @@ class AskRequest(BaseModel):
         default=None,
         description="Previous conversation for follow-up questions"
     )
+    
+    # ✨ PHASE 3: Enhancement control parameters
+    use_enhancements: Optional[bool] = Field(
+        default=True,
+        description="Enable Phase 3 enhancements (hybrid search, query rewriting, etc.)"
+    )
+    enable_hybrid_search: Optional[bool] = Field(
+        default=None,
+        description="Enable hybrid search (semantic + BM25)"
+    )
+    enable_query_rewriting: Optional[bool] = Field(
+        default=None,
+        description="Enable query rewriting for better understanding"
+    )
+    enable_context_optimization: Optional[bool] = Field(
+        default=None,
+        description="Enable context optimization for relevance"
+    )
 
 
 class Source(BaseModel):
@@ -166,13 +184,17 @@ async def ask_question(request_data: AskRequest, request: Request):
         # Get RAG service
         rag_service = get_rag_service()
         
-        # Generate answer
+        # Generate answer (Phase 3: pass enhancement parameters)
         result = await rag_service.ask(
             question=question,
             n_results=request_data.n_results,
             context=context,
             prefer_recent=request_data.prefer_recent,
-            temperature=request_data.temperature
+            temperature=request_data.temperature,
+            use_enhancements=request_data.use_enhancements,
+            enable_hybrid_search=request_data.enable_hybrid_search,
+            enable_query_rewriting=request_data.enable_query_rewriting,
+            enable_context_optimization=request_data.enable_context_optimization
         )
         
         # Format response

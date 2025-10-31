@@ -1,0 +1,1002 @@
+{
+  "timestamp": "2025-10-30T13:39:23.644972",
+  "type": "baseline",
+  "results": [
+    {
+      "question_id": "Q1",
+      "question": "What is an ingestion job?",
+      "category": "simple",
+      "result": {
+        "answer": "Based on the context, an ingestion job refers to a process that involves reading documents from a Git repository, processing them, and storing the processed data in a database or other storage system. This process can be triggered by various events, such as new commits being pushed to the repository or changes to existing files.\n\nIn the context of the Ecosystem-MCP microservices documentation system, an ingestion job is likely a task that runs in the background to collect and process data from multiple sources, such as Git repositories, into a centralized database. The job may involve tasks like:\n\n1. Cloning the Git repository\n2. Processing files (e.g., extracting metadata, parsing content)\n3. Storing processed data in a database or storage system\n4. Tracking progress and error handling\n\nThe Ingestion Job Repository (Source 9) provides CRUD operations for tracking these ingestion jobs, allowing developers to create, read, update, and delete job records. The Ingestion Service (Source 10) wraps the JobProcessor infrastructure and provides a clean interface for tests and API routes, making it easier to manage and coordinate ingestion jobs.",
+        "sources": [
+          {
+            "id": 1,
+            "file_path": "src/services/ingestion/__init__.py",
+            "relevance_score": 0.304,
+            "adjusted_score": 0.454,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:03:16.616169"
+          },
+          {
+            "id": 2,
+            "file_path": "src/models/ingestion.py",
+            "relevance_score": 0.304,
+            "adjusted_score": 0.454,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:02:18.834173"
+          },
+          {
+            "id": 3,
+            "file_path": "INGESTION_MONITORING_77a0086c.md",
+            "relevance_score": 0.303,
+            "adjusted_score": 0.453,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:03:33.139822"
+          },
+          {
+            "id": 4,
+            "file_path": "services/ecosystem-mcp/docs/features/INGESTION_WORKER_COMPLETE.md",
+            "relevance_score": 0.293,
+            "adjusted_score": 0.443,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T15:15:41.355793"
+          },
+          {
+            "id": 5,
+            "file_path": "INGESTION_WORKER_COMPLETE_ANALYSIS_AND_SOLUTION.md",
+            "relevance_score": 0.292,
+            "adjusted_score": 0.442,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:02:28.543179"
+          },
+          {
+            "id": 6,
+            "file_path": "INGESTION_TEST_COMPREHENSIVE_FLAW_REPORT.md",
+            "relevance_score": 0.291,
+            "adjusted_score": 0.441,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:03:42.981697"
+          },
+          {
+            "id": 7,
+            "file_path": "INGESTION_WORKER_COMPLETE.md",
+            "relevance_score": 0.288,
+            "adjusted_score": 0.438,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T14:55:54.526049"
+          },
+          {
+            "id": 8,
+            "file_path": "INGESTION_STATUS_FIX.md",
+            "relevance_score": 0.269,
+            "adjusted_score": 0.419,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:52.204875"
+          },
+          {
+            "id": 9,
+            "file_path": "src/storage/repositories/ingestion_job_repository.py",
+            "relevance_score": 0.267,
+            "adjusted_score": 0.417,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:02:36.977662"
+          },
+          {
+            "id": 10,
+            "file_path": "src/services/ingestion/ingestion_service.py",
+            "relevance_score": 0.253,
+            "adjusted_score": 0.403,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:03:20.652391"
+          }
+        ],
+        "confidence": 0.427,
+        "metadata": {
+          "documents_used": 10,
+          "temperature": 0.7,
+          "prefer_recent": true,
+          "top_score": 0.4541155338287354
+        },
+        "request_id": "81f38e8e-79aa-4e37-8593-b4a3e0dea7be",
+        "_meta": {
+          "elapsed_seconds": 9.2,
+          "status": "success"
+        }
+      }
+    },
+    {
+      "question_id": "Q2",
+      "question": "What is ChromaDB?",
+      "category": "simple",
+      "result": {
+        "answer": "I'm an intelligent assistant for the Ecosystem-MCP microservices documentation system. I can provide answers based on the provided context.\n\nAccording to the context, ChromaDB appears to be a database or storage system used by the Ecosystem-MCP service. It seems to support vector storage and similarity search, with a single-writer pattern implemented to prevent index corruption.",
+        "sources": [
+          {
+            "id": 1,
+            "file_path": "CHROMADB_CONTENT_FIX.md",
+            "relevance_score": 0.343,
+            "adjusted_score": 0.493,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:58:52.484907"
+          },
+          {
+            "id": 2,
+            "file_path": "FORCE_UPDATE_FEATURE.md",
+            "relevance_score": 0.339,
+            "adjusted_score": 0.489,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:08.419777"
+          },
+          {
+            "id": 3,
+            "file_path": "FINAL_EMBEDDINGS_STATUS.md",
+            "relevance_score": 0.335,
+            "adjusted_score": 0.485,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:00:52.596753"
+          },
+          {
+            "id": 4,
+            "file_path": "scripts/update_chromadb_metadata.py",
+            "relevance_score": 0.334,
+            "adjusted_score": 0.484,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:00:37.153387"
+          },
+          {
+            "id": 5,
+            "file_path": "docs/features/INGESTION_FAILURE_INVESTIGATION_COMPLETE.md",
+            "relevance_score": 0.332,
+            "adjusted_score": 0.482,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:25:09.193964"
+          },
+          {
+            "id": 6,
+            "file_path": "COMPLETE_FIX_SUMMARY.md",
+            "relevance_score": 0.327,
+            "adjusted_score": 0.477,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:01:14.813948"
+          },
+          {
+            "id": 7,
+            "file_path": "check_chroma_directly.py",
+            "relevance_score": 0.325,
+            "adjusted_score": 0.475,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:12.489827"
+          },
+          {
+            "id": 8,
+            "file_path": "fix_chromadb_dimensions.py",
+            "relevance_score": 0.313,
+            "adjusted_score": 0.463,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:01:11.359004"
+          },
+          {
+            "id": 9,
+            "file_path": "docs/investigations/QUICK_REFERENCE_CHROMADB_METADATA_FIX.md",
+            "relevance_score": 0.306,
+            "adjusted_score": 0.456,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:07:35.946648"
+          },
+          {
+            "id": 10,
+            "file_path": "storage/chromadb_client.py",
+            "relevance_score": 0.297,
+            "adjusted_score": 0.447,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T04:46:45.434192"
+          }
+        ],
+        "confidence": 0.447,
+        "metadata": {
+          "documents_used": 10,
+          "temperature": 0.7,
+          "prefer_recent": true,
+          "top_score": 0.4930924415588379
+        },
+        "request_id": "f0e1e3b3-760f-4936-b492-466e0d16a754",
+        "_meta": {
+          "elapsed_seconds": 7.51,
+          "status": "success"
+        }
+      }
+    },
+    {
+      "question_id": "Q3",
+      "question": "Why is it slow?",
+      "category": "vague",
+      "result": {
+        "answer": "The system is slow due to several reasons:\n\n1. **No Background Worker**: The system doesn't have a background worker to process jobs asynchronously, which leads to a significant bottleneck.\n2. **Individual Database Operations**: Each database operation takes a long time to complete, causing delays and inefficiencies.\n3. **Limited Parallelism**: The system only processes 3 files in parallel, leaving many resources idle and opportunities for improvement untapped.\n4. **No Streaming for Large Files**: Large files are processed sequentially, which can take a long time and slow down the overall performance.\n\nTo address these issues, we need to implement a background worker, batch database operations, increase parallelism, and optimize memory usage to speed up the processing of large files.",
+        "sources": [
+          {
+            "id": 1,
+            "file_path": "QUICK_WINS_PHASE1.5.md",
+            "relevance_score": 0.366,
+            "adjusted_score": 0.516,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:01:54.256105"
+          },
+          {
+            "id": 2,
+            "file_path": "COMPREHENSIVE_PERFORMANCE_AUDIT.md",
+            "relevance_score": 0.366,
+            "adjusted_score": 0.516,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T14:54:27.212404"
+          },
+          {
+            "id": 3,
+            "file_path": "services/ecosystem-mcp/docs/api/RAG_PERFORMANCE_OPTIMIZATION_GUIDE.md",
+            "relevance_score": 0.365,
+            "adjusted_score": 0.515,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T15:16:58.685805"
+          },
+          {
+            "id": 4,
+            "file_path": "services/ecosystem-mcp/docs/architecture/PERFORMANCE_COMPARISON_ANALYSIS.md",
+            "relevance_score": 0.363,
+            "adjusted_score": 0.513,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T15:16:05.161659"
+          },
+          {
+            "id": 5,
+            "file_path": "MULTI_PASS_REMAINING_OPTIMIZATIONS.md",
+            "relevance_score": 0.362,
+            "adjusted_score": 0.512,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:00:42.481364"
+          },
+          {
+            "id": 6,
+            "file_path": "OPTIMIZATION_QUICK_REFERENCE.md",
+            "relevance_score": 0.361,
+            "adjusted_score": 0.511,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:02:04.788969"
+          },
+          {
+            "id": 7,
+            "file_path": "RAG_PERFORMANCE_OPTIMIZATION_GUIDE.md",
+            "relevance_score": 0.361,
+            "adjusted_score": 0.511,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T14:56:56.319997"
+          },
+          {
+            "id": 8,
+            "file_path": "PERFORMANCE_COMPARISON_ANALYSIS.md",
+            "relevance_score": 0.357,
+            "adjusted_score": 0.507,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T14:55:33.800151"
+          },
+          {
+            "id": 9,
+            "file_path": "generated_docs_deep/PERFORMANCE.md",
+            "relevance_score": 0.351,
+            "adjusted_score": 0.501,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:00:51.007191"
+          },
+          {
+            "id": 10,
+            "file_path": "PERFORMANCE_OPTIMIZATION_PLAN.md",
+            "relevance_score": 0.341,
+            "adjusted_score": 0.491,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:58:51.154844"
+          }
+        ],
+        "confidence": 0.458,
+        "metadata": {
+          "documents_used": 10,
+          "temperature": 0.7,
+          "prefer_recent": true,
+          "top_score": 0.515842342376709
+        },
+        "request_id": "6fa36775-cee5-435d-9cdc-c5a663486bcf",
+        "_meta": {
+          "elapsed_seconds": 8.86,
+          "status": "success"
+        }
+      }
+    },
+    {
+      "question_id": "Q4",
+      "question": "How does it work?",
+      "category": "vague",
+      "result": {
+        "answer": "I am an intelligent assistant for the Ecosystem-MCP microservices documentation system. I help users assess their platform readiness, identify gaps, and create a plan to bridge those gaps.\n\nHere's how I work:\n\n1. **Assessment**: You provide me with your current ecosystem of 25+ services, which includes various microservices, AI/LLM integrations, intelligence services, document ecosystems, user interfaces, and more.\n2. **Gap Analysis**: I analyze your current ecosystem and identify the critical gaps that need to be filled in order to achieve a fully functional platform. These gaps include things like vector database, graph database, unified MCP server, multi-agent orchestration, and 24/7 automation.\n3. **Feasibility Verdict**: Based on my analysis, I provide a feasibility verdict on whether your ecosystem can support day-to-day usage, human-in-the-loop approvals, hierarchical MCP with feedback loops, and other features that require continuous improvement.\n4. **Plan Creation**: I help you create a plan to bridge the gaps and achieve 100% platform readiness. This plan includes specific steps, timelines, and resources needed to complete each task.\n\nMy goal is to provide you with a comprehensive assessment of your ecosystem's readiness for a fully functional platform, along with a clear plan to get there.",
+        "sources": [
+          {
+            "id": 1,
+            "file_path": "docs/archive/future-refinements/local_llm_platform_architecture.md",
+            "relevance_score": 0.403,
+            "adjusted_score": 0.553,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:15:34.894235"
+          },
+          {
+            "id": 2,
+            "file_path": "IMPLEMENTATION_READY.md",
+            "relevance_score": 0.402,
+            "adjusted_score": 0.552,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:28.180923"
+          },
+          {
+            "id": 3,
+            "file_path": "audit_verification_test/reports/Ecosystem_Validation_Report.md",
+            "relevance_score": 0.402,
+            "adjusted_score": 0.552,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:02:50.931833"
+          },
+          {
+            "id": 4,
+            "file_path": "CIRCUIT_BREAKER_INVESTIGATION.md",
+            "relevance_score": 0.4,
+            "adjusted_score": 0.55,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:14.138149"
+          },
+          {
+            "id": 5,
+            "file_path": "generated_docs_deep/COMPREHENSIVE_DOCUMENTATION.md",
+            "relevance_score": 0.399,
+            "adjusted_score": 0.549,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:00:59.303023"
+          },
+          {
+            "id": 6,
+            "file_path": "docs/planning/ENHANCED_REFACTORING_PLAN_ALL_SERVICES.md",
+            "relevance_score": 0.392,
+            "adjusted_score": 0.542,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:25:39.113034"
+          },
+          {
+            "id": 7,
+            "file_path": ".ci_test/lib/python3.13/site-packages/nltk/test/ccg_semantics.doctest",
+            "relevance_score": 0.392,
+            "adjusted_score": 0.542,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:53:00.134083"
+          },
+          {
+            "id": 8,
+            "file_path": "docs/archive/future-refinements/platform_readiness_assessment.md",
+            "relevance_score": 0.38,
+            "adjusted_score": 0.53,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:15:49.629082"
+          }
+        ],
+        "confidence": 0.476,
+        "metadata": {
+          "documents_used": 8,
+          "temperature": 0.7,
+          "prefer_recent": true,
+          "top_score": 0.5529588103294373
+        },
+        "request_id": "e6743771-7415-4243-a917-3aad862d4f03",
+        "_meta": {
+          "elapsed_seconds": 11.03,
+          "status": "success"
+        }
+      }
+    },
+    {
+      "question_id": "Q5",
+      "question": "How to fix ChromaDB connection error?",
+      "category": "technical",
+      "result": {
+        "answer": "Based on the provided documentation, there are several ways to approach this question. Here's one possible solution:\n\n1. Check the ChromaDB connection settings:\n\t* Ensure that the `CHROMA_DB_URL` environment variable is set correctly.\n\t* Verify that the database URL is valid and points to a working ChromaDB instance.\n2. Investigate the error message:\n\t* If you're seeing an error message like \"ChromaDB connection refused\" or \"ChromaDB: Unable to connect\", it may indicate that there's an issue with the connection itself.\n3. Check for network issues:\n\t* Ensure that your machine can connect to the ChromaDB instance using other tools, such as `telnet` or `ping`.\n\t* Verify that any firewalls or proxy servers are configured correctly.\n4. Review the logs:\n\t* Look for any error messages or warnings in the system logs related to ChromaDB connections.\n5. Restart the service:\n\t* If all else fails, try restarting the Ecosystem MCP Service to see if it resolves the issue.\n\nHere's a sample Python script that you can use to test the connection:\n\n```python\nimport os\n\nCHROMA_DB_URL = os.environ.get('CHROMA_DB_URL')\n\ntry:\n    from chromadb import Client\n\n    client = Client(CHROMA_DB_URL)\n    client.ping()\n    print(\"\u2705 ChromaDB connected successfully!\")\nexcept Exception as e:\n    print(f\"\u274c Error connecting to ChromaDB: {e}\")\n```\n\nThis script will attempt to connect to the ChromaDB instance using the provided URL. If the connection is successful, it will print a success message; otherwise, it will print an error message with details about the issue.",
+        "sources": [
+          {
+            "id": 1,
+            "file_path": "docs/investigations/FIXES_COMPLETE_FINAL_SUMMARY.md",
+            "relevance_score": 0.313,
+            "adjusted_score": 0.463,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:07:37.131612"
+          },
+          {
+            "id": 2,
+            "file_path": "FORCE_UPDATE_FEATURE.md",
+            "relevance_score": 0.308,
+            "adjusted_score": 0.458,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:08.419777"
+          },
+          {
+            "id": 3,
+            "file_path": "BREAKTHROUGH_SUMMARY.md",
+            "relevance_score": 0.304,
+            "adjusted_score": 0.454,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:56.311603"
+          },
+          {
+            "id": 4,
+            "file_path": "docs/features/INGESTION_FAILURE_INVESTIGATION_COMPLETE.md",
+            "relevance_score": 0.301,
+            "adjusted_score": 0.451,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:25:09.193964"
+          },
+          {
+            "id": 5,
+            "file_path": "FINAL_EMBEDDINGS_STATUS.md",
+            "relevance_score": 0.298,
+            "adjusted_score": 0.448,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:00:52.596753"
+          },
+          {
+            "id": 6,
+            "file_path": "fix_chromadb_dimensions.py",
+            "relevance_score": 0.292,
+            "adjusted_score": 0.442,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:01:11.359004"
+          },
+          {
+            "id": 7,
+            "file_path": "COMPLETE_FIX_SUMMARY.md",
+            "relevance_score": 0.29,
+            "adjusted_score": 0.44,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:01:14.813948"
+          },
+          {
+            "id": 8,
+            "file_path": "storage/chromadb_client.py",
+            "relevance_score": 0.286,
+            "adjusted_score": 0.436,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T04:46:45.434192"
+          },
+          {
+            "id": 9,
+            "file_path": "src/storage/chromadb_client.py",
+            "relevance_score": 0.282,
+            "adjusted_score": 0.432,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:02:26.690497"
+          },
+          {
+            "id": 10,
+            "file_path": "docs/investigations/QUICK_REFERENCE_CHROMADB_METADATA_FIX.md",
+            "relevance_score": 0.267,
+            "adjusted_score": 0.417,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:07:35.946648"
+          }
+        ],
+        "confidence": 0.432,
+        "metadata": {
+          "documents_used": 10,
+          "temperature": 0.7,
+          "prefer_recent": true,
+          "top_score": 0.46340116262435915
+        },
+        "request_id": "05566ab4-3eea-45dd-89e8-13b222274548",
+        "_meta": {
+          "elapsed_seconds": 12.77,
+          "status": "success"
+        }
+      }
+    },
+    {
+      "question_id": "Q6",
+      "question": "What does the BM25 algorithm do?",
+      "category": "technical",
+      "result": {
+        "answer": "I think there may be some confusion here!\n\nThe text you provided is about optimizing a system for processing files in a Git repository, not about the BM25 algorithm.\n\nBM25 (Best Match 25) is an algorithm used in information retrieval and search engines to rank documents based on their relevance to a query. It's a popular algorithm for ranking documents in search results.\n\nIf you're interested in learning more about the BM25 algorithm, I'd be happy to help!",
+        "sources": [
+          {
+            "id": 1,
+            "file_path": "docs/archive/future-refinements/hierarchical_mcp_training_pipeline.md",
+            "relevance_score": 0.337,
+            "adjusted_score": 0.487,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:15:53.402757"
+          },
+          {
+            "id": 2,
+            "file_path": "UNIFIED_MULTI_SIGNAL_CONFIG_SYSTEM.md",
+            "relevance_score": 0.336,
+            "adjusted_score": 0.486,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:58:58.951996"
+          },
+          {
+            "id": 3,
+            "file_path": "EMBEDDING_MODEL_EFFICIENCY_ANALYSIS.md",
+            "relevance_score": 0.333,
+            "adjusted_score": 0.483,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:00:50.943530"
+          },
+          {
+            "id": 4,
+            "file_path": "docs/archive/future-refinements/advanced_llm_architecture_patterns.md",
+            "relevance_score": 0.331,
+            "adjusted_score": 0.481,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:15:31.064819"
+          },
+          {
+            "id": 5,
+            "file_path": "docs/archive/future-refinements/platform_readiness_assessment.md",
+            "relevance_score": 0.329,
+            "adjusted_score": 0.479,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:15:49.629082"
+          },
+          {
+            "id": 6,
+            "file_path": "PHASE3_DEPLOYMENT_SUCCESS.md",
+            "relevance_score": 0.329,
+            "adjusted_score": 0.479,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:07.197680"
+          },
+          {
+            "id": 7,
+            "file_path": ".ci_test/lib/python3.13/site-packages/nltk/translate/ibm5.py",
+            "relevance_score": 0.326,
+            "adjusted_score": 0.476,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:54:18.817568"
+          },
+          {
+            "id": 8,
+            "file_path": "docs/archive/future-refinements/local_llm_platform_architecture.md",
+            "relevance_score": 0.324,
+            "adjusted_score": 0.474,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:15:34.894235"
+          },
+          {
+            "id": 9,
+            "file_path": "PHASE3_IMPLEMENTATION_PLAN.md",
+            "relevance_score": 0.313,
+            "adjusted_score": 0.463,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:00:23.954079"
+          }
+        ],
+        "confidence": 0.443,
+        "metadata": {
+          "documents_used": 9,
+          "temperature": 0.7,
+          "prefer_recent": true,
+          "top_score": 0.4865903496742249
+        },
+        "request_id": "8c66afbb-5c83-41fe-8020-0c49440cacb1",
+        "_meta": {
+          "elapsed_seconds": 8.15,
+          "status": "success"
+        }
+      }
+    },
+    {
+      "question_id": "Q7",
+      "question": "How does the ingestion worker process documents and what database does it use?",
+      "category": "complex",
+      "result": {
+        "answer": "The ingestion worker processes documents by polling Redis streams for new ingestion jobs, then processing them asynchronously using a JobProcessor. It coordinates the entire ingestion pipeline from Git \u2192 Database \u2192 ChromaDB.\n\nAccording to the documentation, the ingestion worker uses PostgreSQL as its database for storing documents, and ChromaDB for storing embeddings.",
+        "sources": [
+          {
+            "id": 1,
+            "file_path": "INGESTION_WORKER_INVESTIGATION_COMPLETE.md",
+            "relevance_score": 0.254,
+            "adjusted_score": 0.404,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:03:45.454657"
+          },
+          {
+            "id": 2,
+            "file_path": "INGESTION_WORKER_CRITICAL_ISSUE.md",
+            "relevance_score": 0.251,
+            "adjusted_score": 0.401,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:02:39.422878"
+          },
+          {
+            "id": 3,
+            "file_path": "services/ecosystem-mcp/docs/features/INGESTION_WORKER_PLAN.md",
+            "relevance_score": 0.249,
+            "adjusted_score": 0.399,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T15:15:42.142742"
+          },
+          {
+            "id": 4,
+            "file_path": "src/services/ingestion/job_processor.py",
+            "relevance_score": 0.246,
+            "adjusted_score": 0.396,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:03:14.892312"
+          },
+          {
+            "id": 5,
+            "file_path": "services/ecosystem-mcp/docs/features/INGESTION_COMPLETE.md",
+            "relevance_score": 0.245,
+            "adjusted_score": 0.395,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T15:15:35.697082"
+          },
+          {
+            "id": 6,
+            "file_path": "services/ingestion/job_processor.py",
+            "relevance_score": 0.244,
+            "adjusted_score": 0.394,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T04:46:43.823058"
+          },
+          {
+            "id": 7,
+            "file_path": "services/ecosystem-mcp/docs/features/INGESTION_WORKER_COMPLETE.md",
+            "relevance_score": 0.242,
+            "adjusted_score": 0.392,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T15:15:41.355793"
+          },
+          {
+            "id": 8,
+            "file_path": "INGESTION_WORKER_PLAN.md",
+            "relevance_score": 0.238,
+            "adjusted_score": 0.388,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T14:56:02.332231"
+          },
+          {
+            "id": 9,
+            "file_path": "INGESTION_WORKER_COMPLETE.md",
+            "relevance_score": 0.232,
+            "adjusted_score": 0.382,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T14:55:54.526049"
+          },
+          {
+            "id": 10,
+            "file_path": "src/services/ingestion/ingestion_worker.py",
+            "relevance_score": 0.227,
+            "adjusted_score": 0.377,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:03:21.075404"
+          }
+        ],
+        "confidence": 0.402,
+        "metadata": {
+          "documents_used": 10,
+          "temperature": 0.7,
+          "prefer_recent": true,
+          "top_score": 0.4040676593780518
+        },
+        "request_id": "61f183c1-e5e6-4799-acce-869be2a6c134",
+        "_meta": {
+          "elapsed_seconds": 8.0,
+          "status": "success"
+        }
+      }
+    },
+    {
+      "question_id": "Q8",
+      "question": "What are the differences between semantic search and keyword search?",
+      "category": "complex",
+      "result": {
+        "answer": "According to the documentation, the main difference between semantic search and keyword search is that semantic search understands the meaning and context of a query, whereas keyword search simply matches keywords.\n\nHere's a summary:\n\n**Keyword Search:**\n\n* Matches exact words or phrases\n* Ignores context and meaning\n* Returns documents with exact keyword matches\n\n**Semantic Search:**\n\n* Understands the meaning and context of a query\n* Retrieves documents based on semantic similarity\n* Considers relationships between concepts and entities\n* Provides more relevant results, even if the query is reworded or has different wording",
+        "sources": [
+          {
+            "id": 1,
+            "file_path": ".ci_test/lib/python3.13/site-packages/nltk/test/corpus.doctest",
+            "relevance_score": 0.335,
+            "adjusted_score": 0.485,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:52:49.911003"
+          },
+          {
+            "id": 2,
+            "file_path": "src/services/search/search_service.py",
+            "relevance_score": 0.331,
+            "adjusted_score": 0.481,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:03:44.235658"
+          },
+          {
+            "id": 3,
+            "file_path": "ADVANCED_RETRIEVAL_ACCURACY_ANALYSIS.md",
+            "relevance_score": 0.327,
+            "adjusted_score": 0.477,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:25.118528"
+          },
+          {
+            "id": 4,
+            "file_path": "src/api/routes/search.py",
+            "relevance_score": 0.326,
+            "adjusted_score": 0.476,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T15:03:00.961179"
+          },
+          {
+            "id": 5,
+            "file_path": "OPTIONAL_USER_CONFIGS_FOR_RAG_ACCURACY.md",
+            "relevance_score": 0.323,
+            "adjusted_score": 0.473,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:00:32.042614"
+          },
+          {
+            "id": 6,
+            "file_path": "docs/archive/SEARCHABLE_INDEX.json",
+            "relevance_score": 0.319,
+            "adjusted_score": 0.469,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:08:07.056713"
+          },
+          {
+            "id": 7,
+            "file_path": "NEW_INFRASTRUCTURE_PAGES.md",
+            "relevance_score": 0.301,
+            "adjusted_score": 0.451,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T14:54:23.536751"
+          },
+          {
+            "id": 8,
+            "file_path": "services/ecosystem-mcp/docs/development/NEW_INFRASTRUCTURE_PAGES.md",
+            "relevance_score": 0.299,
+            "adjusted_score": 0.449,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T15:15:20.864292"
+          },
+          {
+            "id": 9,
+            "file_path": "tests/integration/test_semantic_search_workflow.py",
+            "relevance_score": 0.277,
+            "adjusted_score": 0.427,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:03:52.003742"
+          },
+          {
+            "id": 10,
+            "file_path": "docs/VECTORIZATION_IMPLEMENTATION_SUMMARY.md",
+            "relevance_score": 0.277,
+            "adjusted_score": 0.427,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:05:03.449584"
+          }
+        ],
+        "confidence": 0.443,
+        "metadata": {
+          "documents_used": 10,
+          "temperature": 0.7,
+          "prefer_recent": true,
+          "top_score": 0.4851140022277832
+        },
+        "request_id": "405e5c67-0707-4081-9234-ae9df0f2e099",
+        "_meta": {
+          "elapsed_seconds": 8.69,
+          "status": "success"
+        }
+      }
+    },
+    {
+      "question_id": "Q9",
+      "question": "How do I start the ingestion worker?",
+      "category": "how_to",
+      "result": {
+        "answer": "To start the ingestion worker, you can try the following steps:\n\n1. Clear Redis queues:\n```\ndocker-compose exec redis redis-cli DEL ingestion_queue\n```\n2. Find and review ingestion worker code:\n\t* Check if there are any errors or issues in the ingestion worker code.\n\t* Review the code to ensure it is running correctly.\n3. Add debug logging to worker:\n\t* Add logging statements to the worker code to help diagnose the issue.\n4. Test with a single simple document:\n\t* Create a simple document and test the worker with it.\n\t* Check if the worker processes the document correctly.\n\nIf these steps don't work, you can also try restarting the service with fresh code if needed.",
+        "sources": [
+          {
+            "id": 1,
+            "file_path": "INGESTION_WORKER_PLAN.md",
+            "relevance_score": 0.289,
+            "adjusted_score": 0.439,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T14:56:02.332231"
+          },
+          {
+            "id": 2,
+            "file_path": "docker/start-services.sh",
+            "relevance_score": 0.284,
+            "adjusted_score": 0.434,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T14:59:03.305926"
+          },
+          {
+            "id": 3,
+            "file_path": "INGESTION_WORKER_ROOT_CAUSE_ANALYSIS.md",
+            "relevance_score": 0.282,
+            "adjusted_score": 0.432,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:03:46.759570"
+          },
+          {
+            "id": 4,
+            "file_path": "INGESTION_WORKER_INVESTIGATION_COMPLETE.md",
+            "relevance_score": 0.279,
+            "adjusted_score": 0.429,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:03:45.454657"
+          },
+          {
+            "id": 5,
+            "file_path": "NEW_FEATURES_QUICK_START.md",
+            "relevance_score": 0.279,
+            "adjusted_score": 0.429,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:19.516149"
+          },
+          {
+            "id": 6,
+            "file_path": "WORKER_LIFECYCLE_AUDIT.md",
+            "relevance_score": 0.278,
+            "adjusted_score": 0.428,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:01:28.172816"
+          },
+          {
+            "id": 7,
+            "file_path": "INGESTION_WORKER_FIX_PLAN.md",
+            "relevance_score": 0.278,
+            "adjusted_score": 0.428,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:02:49.822249"
+          },
+          {
+            "id": 8,
+            "file_path": "INGESTION_WORKER_CRITICAL_ISSUE.md",
+            "relevance_score": 0.277,
+            "adjusted_score": 0.427,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:02:39.422878"
+          },
+          {
+            "id": 9,
+            "file_path": "INGESTION_WORKER_FINAL_REPORT.md",
+            "relevance_score": 0.261,
+            "adjusted_score": 0.411,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:03:50.326521"
+          },
+          {
+            "id": 10,
+            "file_path": "INGESTION_WORKER_STUCK_SUMMARY.md",
+            "relevance_score": 0.258,
+            "adjusted_score": 0.408,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:03:36.211450"
+          }
+        ],
+        "confidence": 0.42,
+        "metadata": {
+          "documents_used": 10,
+          "temperature": 0.7,
+          "prefer_recent": true,
+          "top_score": 0.4392481088638306
+        },
+        "request_id": "7954476a-e569-4258-8e56-8182934f4de1",
+        "_meta": {
+          "elapsed_seconds": 9.29,
+          "status": "success"
+        }
+      }
+    },
+    {
+      "question_id": "Q10",
+      "question": "How to configure the RAG system for better accuracy?",
+      "category": "how_to",
+      "result": {
+        "answer": "To configure the RAG system for better accuracy, I would recommend the following:\n\n1. **Mount the configuration files**: Ensure that the `.rag-config` directory is mounted in the Docker container, so that the service can access the necessary configuration files.\n2. **Configure exclusions**: Identify and remove noise patterns from the query results by configuring exclusions based on file types (e.g., logs, tests), content (e.g., irrelevant keywords), or metadata (e.g., timestamps).\n3. **Boost relevant terms**: Use the glossary to boost relevant terms and concepts related to the domain, such as RAG, LLM, embedding, and semantic search.\n4. **Optimize templates**: Configure template-based optimization for specific query patterns, such as \"architecture\" or \"testing strategy.\"\n5. **Prioritize documents**: Set up path-based document prioritization based on file types, content, or metadata to focus on the most relevant documents.\n6. **Tune multi-pass ranking**: Adjust the multi-pass ranking algorithm to optimize the combination of signals (semantic, glossary, quality, priority, and recency) for better query results.\n\nBy configuring these enhancements, you should be able to improve the accuracy and relevance of your RAG system's query results.",
+        "sources": [
+          {
+            "id": 1,
+            "file_path": "COMPLETE_SYSTEM_VALIDATION_FINAL_REPORT.md",
+            "relevance_score": 0.29,
+            "adjusted_score": 0.44,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:02:54.522404"
+          },
+          {
+            "id": 2,
+            "file_path": "docs/archive/SYNTHESIS_COMPARISON_BEFORE_AFTER.md",
+            "relevance_score": 0.289,
+            "adjusted_score": 0.439,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:09:04.934807"
+          },
+          {
+            "id": 3,
+            "file_path": "RAG_PERFORMANCE_OPTIMIZATION_GUIDE.md",
+            "relevance_score": 0.289,
+            "adjusted_score": 0.439,
+            "recency_days": 3,
+            "updated_at": "2025-10-27T14:56:56.319997"
+          },
+          {
+            "id": 4,
+            "file_path": "RAG_TIER_AND_LENGTH_ISSUES.md",
+            "relevance_score": 0.288,
+            "adjusted_score": 0.438,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:01:04.897821"
+          },
+          {
+            "id": 5,
+            "file_path": "docs/features/FINAL_COMPREHENSIVE_RAG_COMPARISON.md",
+            "relevance_score": 0.288,
+            "adjusted_score": 0.438,
+            "recency_days": 0,
+            "updated_at": "2025-10-30T05:24:17.771735"
+          },
+          {
+            "id": 6,
+            "file_path": "RAG_ENHANCEMENT_MASTER_PLAN.md",
+            "relevance_score": 0.28,
+            "adjusted_score": 0.43,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:01:16.954213"
+          },
+          {
+            "id": 7,
+            "file_path": "IMPLEMENTATION_PLAN_CRITICAL_ANALYSIS.md",
+            "relevance_score": 0.272,
+            "adjusted_score": 0.422,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:59.167272"
+          },
+          {
+            "id": 8,
+            "file_path": "RAG_SYSTEM_COMPLETE.md",
+            "relevance_score": 0.265,
+            "adjusted_score": 0.415,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T22:59:30.219496"
+          },
+          {
+            "id": 9,
+            "file_path": "PHASE_1_2_3_IMPLEMENTATION_COMPLETE.md",
+            "relevance_score": 0.255,
+            "adjusted_score": 0.405,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:00:45.987657"
+          },
+          {
+            "id": 10,
+            "file_path": "RAG_ENHANCEMENT_PROOF_COMPLETE.md",
+            "relevance_score": 0.255,
+            "adjusted_score": 0.405,
+            "recency_days": 4,
+            "updated_at": "2025-10-25T23:02:09.720215"
+          }
+        ],
+        "confidence": 0.42,
+        "metadata": {
+          "documents_used": 10,
+          "temperature": 0.7,
+          "prefer_recent": true,
+          "top_score": 0.44011070728302004
+        },
+        "request_id": "5a0ce1d3-d3d5-4942-9692-2f8c04a92d05",
+        "_meta": {
+          "elapsed_seconds": 11.32,
+          "status": "success"
+        }
+      }
+    }
+  ]
+}

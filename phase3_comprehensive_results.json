@@ -1,0 +1,92 @@
+[
+  {
+    "question_id": "Q1",
+    "question": "What is ChromaDB?",
+    "category": "simple",
+    "runs": {
+      "standard": {
+        "success": true,
+        "elapsed": 11.198032140731812,
+        "confidence": 58.5,
+        "sources": 10,
+        "answer_length": 250
+      },
+      "phase1_2_first": {
+        "success": true,
+        "elapsed": 13.38570761680603,
+        "confidence": 62.8,
+        "sources": 10,
+        "answer_length": 436
+      },
+      "phase1_2_cached": {
+        "success": true,
+        "elapsed": 11.40581727027893,
+        "confidence": 62.4,
+        "sources": 10,
+        "answer_length": 347
+      }
+    },
+    "cache_speedup_pct": 14.791077193717475,
+    "vs_standard_speedup_pct": -1.8555503943529492
+  },
+  {
+    "question_id": "Q2",
+    "question": "What is BM25?",
+    "category": "simple",
+    "runs": {
+      "standard": {
+        "success": true,
+        "elapsed": 8.793917179107666,
+        "confidence": 62.5,
+        "sources": 10,
+        "answer_length": 387
+      },
+      "phase1_2_first": {
+        "success": true,
+        "elapsed": 13.105700254440308,
+        "confidence": 59.4,
+        "sources": 10,
+        "answer_length": 659
+      },
+      "phase1_2_cached": {
+        "success": true,
+        "elapsed": 13.285343885421753,
+        "confidence": 59.6,
+        "sources": 10,
+        "answer_length": 726
+      }
+    },
+    "cache_speedup_pct": -1.3707289766571666,
+    "vs_standard_speedup_pct": -51.07424387603614
+  },
+  {
+    "question_id": "Q3",
+    "question": "How does ingestion work?",
+    "category": "technical",
+    "runs": {
+      "standard": {
+        "success": true,
+        "elapsed": 8.397304058074951,
+        "confidence": 65.1,
+        "sources": 10,
+        "answer_length": 1466
+      },
+      "phase1_2_first": {
+        "success": true,
+        "elapsed": 15.208892822265625,
+        "confidence": 66.9,
+        "sources": 10,
+        "answer_length": 1281
+      },
+      "phase1_2_cached": {
+        "success": true,
+        "elapsed": 13.92424988746643,
+        "confidence": 67.8,
+        "sources": 10,
+        "answer_length": 1150
+      }
+    },
+    "cache_speedup_pct": 8.44665650426896,
+    "vs_standard_speedup_pct": -65.81809817969733
+  }
+]

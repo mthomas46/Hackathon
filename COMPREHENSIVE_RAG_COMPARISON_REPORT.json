@@ -1,0 +1,1525 @@
+{
+  "timestamp": "2025-10-31T00:53:32.210874",
+  "summary": {
+    "avg_standard_time": 9.67,
+    "avg_phase1_phase2_time": 17.14,
+    "avg_phase1_phase2_phase3_time": 16.21,
+    "avg_standard_confidence": 42.7,
+    "avg_phase1_phase2_confidence": 66.0,
+    "avg_phase1_phase2_phase3_confidence": 65.3,
+    "cache_speedup_percent": 5.4
+  },
+  "results": [
+    {
+      "question_id": "Q1",
+      "question": "What is Docker?",
+      "category": "simple",
+      "difficulty": "easy",
+      "results": {
+        "standard": {
+          "answer": "Based on the context, it appears that Docker is a containerization platform that allows you to create and manage isolated environments for applications. In this specific context, Docker is used by the Ecosystem-MCP microservices documentation system to provide a way to run, stop, restart, pause, and unpause containers, as well as view logs and resource statistics.\n\nIn general, Docker provides a lightweight and portable way to package, ship, and run applications in containers. Containers are isolated from each other and from the host machine, allowing for better security, scalability, and manageability of applications.",
+          "confidence": 43.1,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "docs/ecosystem/01_build_guide.md",
+              "relevance_score": 0.463,
+              "adjusted_score": 0.463,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:05:52.328636"
+            },
+            {
+              "id": 2,
+              "file_path": "PHASE_2_IMPLEMENTATION_COMPLETE.md",
+              "relevance_score": 0.462,
+              "adjusted_score": 0.462,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:03:34.516461"
+            },
+            {
+              "id": 3,
+              "file_path": "src/api/routes/containers.py",
+              "relevance_score": 0.457,
+              "adjusted_score": 0.457,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T15:02:50.805220"
+            },
+            {
+              "id": 4,
+              "file_path": "services/ecosystem-mcp/docs/api/CONTAINER_MANAGEMENT_FEATURE.md",
+              "relevance_score": 0.456,
+              "adjusted_score": 0.456,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:16:55.550777"
+            },
+            {
+              "id": 5,
+              "file_path": "services/ecosystem-mcp/docs/architecture/CONTAINER_MANAGEMENT_AND_DOCUMENTS_FIX_COMPLETE.md",
+              "relevance_score": 0.455,
+              "adjusted_score": 0.455,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:16:08.358828"
+            },
+            {
+              "id": 6,
+              "file_path": "docs/docker/docker_standardization_unification.md",
+              "relevance_score": 0.451,
+              "adjusted_score": 0.451,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:06:00.726926"
+            },
+            {
+              "id": 7,
+              "file_path": "docs/docker/readme.md",
+              "relevance_score": 0.44,
+              "adjusted_score": 0.44,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:06:04.285689"
+            },
+            {
+              "id": 8,
+              "file_path": "CONTAINER_MANAGEMENT_FEATURE.md",
+              "relevance_score": 0.439,
+              "adjusted_score": 0.439,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:56:42.637578"
+            }
+          ],
+          "elapsed_seconds": 10.96,
+          "status": "success"
+        },
+        "phase1_phase2_nocache": {
+          "answer": "I'm an intelligent assistant for the Ecosystem-MCP microservices documentation system!\n\nBased on the context, I can tell you that Docker is a containerization platform that allows us to run multiple isolated services (containers) on a single host operating system. In this case, we're using Docker Compose to manage and deploy our microservices.\n\nDocker provides a lightweight and portable way to package an application's code, libraries, and dependencies into a single container image. This image can then be run on any system that has Docker installed, without requiring the application to be recompiled or modified for the specific host environment.\n\nIn this context, we're using Docker Compose to define and run multiple services (containers) as part of our Ecosystem-MCP microservices architecture.",
+          "confidence": 64.5,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "docs/docker/readme.md",
+              "relevance_score": 0.012,
+              "adjusted_score": 0.012,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "docker/Dockerfile",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "docs/docker/docker_standardization_unification.md",
+              "relevance_score": 0.012,
+              "adjusted_score": 0.012,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "docker/mcp-base/Dockerfile.enhanced",
+              "relevance_score": 0.005,
+              "adjusted_score": 0.005,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "src/api/routes/containers.py",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "docs/archive/deployment-reports/docker_service_test_results.md",
+              "relevance_score": 0.007,
+              "adjusted_score": 0.007,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "DOCKER_VOLUME_MOUNTS_EXPLAINED.md",
+              "relevance_score": 0.008,
+              "adjusted_score": 0.008,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "CONTAINER_MANAGEMENT_FEATURE.md",
+              "relevance_score": 0.014,
+              "adjusted_score": 0.014,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 9,
+              "file_path": "docker/docker-requirements.txt",
+              "relevance_score": 0.005,
+              "adjusted_score": 0.005,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 10,
+              "file_path": "docs/docker/DOCKER_COMPOSE_UPDATED.md",
+              "relevance_score": 0.006,
+              "adjusted_score": 0.006,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What is Docker?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.012152391546162402
+          },
+          "elapsed_seconds": 11.68,
+          "status": "success"
+        },
+        "phase1_phase2_phase3_cached": {
+          "answer": "Based on the context, it appears that Docker refers to a containerization platform that allows you to package, ship, and run applications in isolated environments called containers.\n\nIn the given documentation, Docker is used as an infrastructure layer for deploying and managing microservices. The documentation provides instructions for building and running Docker images, configuring environment variables, and verifying the health of services.",
+          "confidence": 63.2,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "docs/docker/readme.md",
+              "relevance_score": 0.012,
+              "adjusted_score": 0.012,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "docker/Dockerfile",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "docs/docker/docker_standardization_unification.md",
+              "relevance_score": 0.012,
+              "adjusted_score": 0.012,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "docker/mcp-base/Dockerfile.enhanced",
+              "relevance_score": 0.005,
+              "adjusted_score": 0.005,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "src/api/routes/containers.py",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "docs/archive/deployment-reports/docker_service_test_results.md",
+              "relevance_score": 0.007,
+              "adjusted_score": 0.007,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "DOCKER_VOLUME_MOUNTS_EXPLAINED.md",
+              "relevance_score": 0.008,
+              "adjusted_score": 0.008,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "CONTAINER_MANAGEMENT_FEATURE.md",
+              "relevance_score": 0.014,
+              "adjusted_score": 0.014,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 9,
+              "file_path": "docker/docker-requirements.txt",
+              "relevance_score": 0.005,
+              "adjusted_score": 0.005,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 10,
+              "file_path": "docs/docker/DOCKER_COMPOSE_UPDATED.md",
+              "relevance_score": 0.006,
+              "adjusted_score": 0.006,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What is Docker?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.012152391546162402
+          },
+          "elapsed_seconds": 10.62,
+          "status": "success"
+        }
+      },
+      "confidence_improvement_p12": 21.4,
+      "confidence_improvement_p123": 20.1,
+      "time_change_p12": 6.6,
+      "time_change_p123": -3.1,
+      "cache_speedup": 9.1
+    },
+    {
+      "question_id": "Q2",
+      "question": "What is PostgreSQL?",
+      "category": "simple",
+      "difficulty": "easy",
+      "results": {
+        "standard": {
+          "answer": "Based on the provided documentation, PostgreSQL is a database system that can be explored and managed through the Ecosystem-MCP microservices documentation system. It seems to support features such as listing tables, viewing table details, executing SELECT queries, monitoring active connections and query durations, and displaying locks and blocking queries.",
+          "confidence": 44.0,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "src/storage/database.py",
+              "relevance_score": 0.48,
+              "adjusted_score": 0.48,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T15:02:24.136963"
+            },
+            {
+              "id": 2,
+              "file_path": "CRITICAL_IMPROVEMENTS.md",
+              "relevance_score": 0.48,
+              "adjusted_score": 0.48,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:55:24.739854"
+            },
+            {
+              "id": 3,
+              "file_path": "storage/database.py",
+              "relevance_score": 0.48,
+              "adjusted_score": 0.48,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T04:46:45.406719"
+            },
+            {
+              "id": 4,
+              "file_path": "tests/TEST_DATABASE_GUIDE.md",
+              "relevance_score": 0.48,
+              "adjusted_score": 0.48,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:59:17.264462"
+            },
+            {
+              "id": 5,
+              "file_path": "DEBUGGING_SESSION_COMPLETE.md",
+              "relevance_score": 0.478,
+              "adjusted_score": 0.478,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:53:47.777413"
+            },
+            {
+              "id": 6,
+              "file_path": ".ci_test/lib/python3.13/site-packages/pygments/lexers/_postgres_builtins.py",
+              "relevance_score": 0.467,
+              "adjusted_score": 0.467,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:47:28.352097"
+            },
+            {
+              "id": 7,
+              "file_path": "src/api/routes/postgres_admin.py",
+              "relevance_score": 0.461,
+              "adjusted_score": 0.461,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T15:02:44.247977"
+            },
+            {
+              "id": 8,
+              "file_path": "FUNCTIONAL_TEST_EXECUTION_REPORT.md",
+              "relevance_score": 0.46,
+              "adjusted_score": 0.46,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:02:00.144688"
+            },
+            {
+              "id": 9,
+              "file_path": "services/ecosystem-mcp/docs/api/DATABASE_EXPLORERS_FEATURE.md",
+              "relevance_score": 0.457,
+              "adjusted_score": 0.457,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:16:39.835277"
+            },
+            {
+              "id": 10,
+              "file_path": "DATABASE_EXPLORERS_FEATURE.md",
+              "relevance_score": 0.452,
+              "adjusted_score": 0.452,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:53:58.803818"
+            }
+          ],
+          "elapsed_seconds": 7.49,
+          "status": "success"
+        },
+        "phase1_phase2_nocache": {
+          "answer": "A microservices documentation system!\n\nI'm an intelligent assistant, here to help with any questions or tasks related to the Ecosystem-MCP microservices documentation system.\n\nIt seems like there's a critical issue with the system that needs immediate attention. Let me summarize what I've seen:\n\n1. **Database Configuration**: The database configuration is incorrect, causing the service to fail to start.\n2. **Preflight Checks**: Preflight checks are too strict and need to be made less stringent for development.\n3. **Table Creation**: Table creation is missing, which would cause runtime errors if not fixed.\n4. **Migration System**: There's no migration system in place, making future-proofing a challenge.\n5. **Health Test Script**: A health test script needs to be created to verify the service's status.\n6. **Minimal Mode**: The service doesn't have a minimal mode for development.\n\nTo get the service running quickly, I recommend executing Priority 1 + 2 fixes first. This will allow us to at least start the service and then focus on fixing the other issues.\n\nWhat would you like me to help with next?",
+          "confidence": 63.5,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": ".ci_test/lib/python3.13/site-packages/pygments/lexers/sql.py",
+              "relevance_score": 0.013,
+              "adjusted_score": 0.013,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "CRITICAL_IMPROVEMENTS.md",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "DATABASE_EXPLORERS_FEATURE.md",
+              "relevance_score": 0.015,
+              "adjusted_score": 0.015,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "POSTGRES_EXPLORER_FIX.md",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "services/ecosystem-mcp/docs/api/POSTGRES_EXPLORER_FIX.md",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": ".ci_test/lib/python3.13/site-packages/pygments/lexers/_postgres_builtins.py",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "src/api/routes/postgres_admin.py",
+              "relevance_score": 0.012,
+              "adjusted_score": 0.012,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "services/ecosystem-mcp/docs/api/DATABASE_EXPLORERS_FEATURE.md",
+              "relevance_score": 0.015,
+              "adjusted_score": 0.015,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 9,
+              "file_path": "services/ecosystem-mcp/docs/guides/CRITICAL_IMPROVEMENTS.md",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 10,
+              "file_path": "generate_embeddings_now.py",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What is PostgreSQL?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.012960558350917058
+          },
+          "elapsed_seconds": 13.82,
+          "status": "success"
+        },
+        "phase1_phase2_phase3_cached": {
+          "answer": "It seems like I've got my work cut out for me!\n\nAs an intelligent assistant for the Ecosystem-MCP microservices documentation system, I'll do my best to help you tackle these issues. Let's break them down:\n\n1. **Database Config**: We need to fix the database configuration issue by ensuring that the `.env` file matches the `docker-compose.yml` file.\n\n2. **Preflight Strictness**: To make preflight checks less strict, we can modify the `app.py` file to show all issues and not fail fast during development.\n\n3. **Table Creation**: We need to add table creation to the `init_database()` function to ensure that tables are created automatically when the database is initialized.\n\n4. **Migration System**: To implement a migration system, we'll use Alembic to create migrations for our database.\n\n5. **Health Test Script**: A health test script can be added to verify the service's health and detect any issues.\n\n6. **Minimal Mode**: We can add an environment variable `MINIMAL_MODE` to skip preflight checks during development.\n\nAs for the deeper issues, we should consider implementing:\n\n1. **Configuration Management**: To manage configuration files effectively, we can use a single source of truth or create a validation script.\n\n2. **Development vs Production**: By using separate `.env` files for development and production environments, we can ensure that our environment-specific overrides are in place.\n\n3. **State Management**: We should implement version checks in our database to detect and fix stale data automatically.\n\n4. **Error Reporting**: To improve error reporting, we can add actionable suggestions for fixes to our error messages.\n\n5. **Testing**: By using mocking and dependency injection, we can test components in isolation and ensure that our code is reliable.\n\nFor the architectural improvements, we should consider:\n\n1. **Dependency Injection**: We can use a dependency injection framework to manage dependencies between components.\n\n2. **Circuit Breaker Pattern**: To implement circuit breakers for external services, we can use a library like `circuitbreaker`.\n\n3. **Health Check Levels**: By implementing health check levels, we can detect issues and provide actionable information.\n\n4. **Graceful Degradation**: We should consider implementing graceful degradation to ensure that our service can continue running with reduced functionality when necessary.\n\nAs for the quick win script, it seems like a simple script to generate embeddings for existing documents in PostgreSQL.",
+          "confidence": 63.9,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": ".ci_test/lib/python3.13/site-packages/pygments/lexers/sql.py",
+              "relevance_score": 0.013,
+              "adjusted_score": 0.013,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "CRITICAL_IMPROVEMENTS.md",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "DATABASE_EXPLORERS_FEATURE.md",
+              "relevance_score": 0.015,
+              "adjusted_score": 0.015,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "POSTGRES_EXPLORER_FIX.md",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "services/ecosystem-mcp/docs/api/POSTGRES_EXPLORER_FIX.md",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": ".ci_test/lib/python3.13/site-packages/pygments/lexers/_postgres_builtins.py",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "src/api/routes/postgres_admin.py",
+              "relevance_score": 0.012,
+              "adjusted_score": 0.012,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "services/ecosystem-mcp/docs/api/DATABASE_EXPLORERS_FEATURE.md",
+              "relevance_score": 0.015,
+              "adjusted_score": 0.015,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 9,
+              "file_path": "services/ecosystem-mcp/docs/guides/CRITICAL_IMPROVEMENTS.md",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 10,
+              "file_path": "generate_embeddings_now.py",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What is PostgreSQL?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.012960558350917058
+          },
+          "elapsed_seconds": 18.36,
+          "status": "success"
+        }
+      },
+      "confidence_improvement_p12": 19.5,
+      "confidence_improvement_p123": 19.9,
+      "time_change_p12": 84.5,
+      "time_change_p123": 145.1,
+      "cache_speedup": -32.9
+    },
+    {
+      "question_id": "Q3",
+      "question": "How does the ingestion pipeline work?",
+      "category": "technical",
+      "difficulty": "medium",
+      "results": {
+        "standard": {
+          "answer": "The ingestion pipeline is a microservices-based system that processes document ingestion jobs from Redis streams. Here's a high-level overview of how it works:\n\n1. **Git Integration**: The pipeline starts by integrating with a Git repository using the `GitService` class. This service retrieves files from the repository and stores them in memory.\n2. **Document Processing**: The pipeline then normalizes and processes the retrieved documents using the `DocumentProcessing` class. This class applies various transformations to the documents, such as extracting metadata, tokenizing text, and generating embeddings.\n3. **Database Operations**: The processed documents are then stored in a database using the `DatabaseOperations` class. This class handles CRUD (Create, Read, Update, Delete) operations on the documents.\n4. **Embedding Service**: The pipeline also generates embeddings for each document using the `EmbeddingService` class. Embeddings are dense vectors that capture the semantic meaning of the text.\n5. **ChromaDB Operations**: The generated embeddings are then stored in ChromaDB, a distributed key-value store, using the `ChromaDBOperations` class.\n6. **Ingestion Worker**: The pipeline is powered by an `IngestionWorker` class that runs in the background and polls Redis streams for new ingestion jobs. When a job is received, the worker coordinates the entire ingestion process from start to finish.\n\nThe pipeline also includes various monitoring and logging mechanisms to track its performance and detect potential issues.",
+          "confidence": 39.800000000000004,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "INGESTION_WORKER_COMPLETE_ANALYSIS_AND_SOLUTION.md",
+              "relevance_score": 0.395,
+              "adjusted_score": 0.395,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:02:28.543179"
+            },
+            {
+              "id": 2,
+              "file_path": "INGESTION_PIPELINE_SUCCESS.md",
+              "relevance_score": 0.395,
+              "adjusted_score": 0.395,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:54:46.566378"
+            },
+            {
+              "id": 3,
+              "file_path": "INGESTION_IMPROVEMENTS_COMPLETE.md",
+              "relevance_score": 0.394,
+              "adjusted_score": 0.394,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:00:32.811172"
+            },
+            {
+              "id": 4,
+              "file_path": "services/ecosystem-mcp/docs/features/INGESTION_WORKER_PLAN.md",
+              "relevance_score": 0.394,
+              "adjusted_score": 0.394,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:15:42.142742"
+            },
+            {
+              "id": 5,
+              "file_path": "INGESTION_WORKER_PLAN.md",
+              "relevance_score": 0.391,
+              "adjusted_score": 0.391,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:56:02.332231"
+            },
+            {
+              "id": 6,
+              "file_path": "tests/test_ingestion_e2e.py",
+              "relevance_score": 0.389,
+              "adjusted_score": 0.389,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:03:15.081179"
+            },
+            {
+              "id": 7,
+              "file_path": "services/ecosystem-mcp/docs/features/INGESTION_WORKER_COMPLETE.md",
+              "relevance_score": 0.384,
+              "adjusted_score": 0.384,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:15:41.355793"
+            },
+            {
+              "id": 8,
+              "file_path": "INGESTION_WORKER_COMPLETE.md",
+              "relevance_score": 0.379,
+              "adjusted_score": 0.379,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:55:54.526049"
+            },
+            {
+              "id": 9,
+              "file_path": "src/services/ingestion/ingestion_worker.py",
+              "relevance_score": 0.377,
+              "adjusted_score": 0.377,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T15:03:21.075404"
+            },
+            {
+              "id": 10,
+              "file_path": "tests/test_ingestion_pipeline.py",
+              "relevance_score": 0.373,
+              "adjusted_score": 0.373,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:03:02.865858"
+            }
+          ],
+          "elapsed_seconds": 11.79,
+          "status": "success"
+        },
+        "phase1_phase2_nocache": {
+          "answer": "Based on the provided sources, here's a step-by-step overview of how the Ecosystem-MCP ingestion pipeline works:\n\n1. **Job Creation**: The ingestion pipeline starts with job creation, where a new job is created and added to the Redis stream.\n2. **Worker Polling**: The `IngestionWorker` class polls the Redis stream for new jobs and processes them asynchronously using the `JobProcessor`.\n3. **Git Extraction**: The `JobProcessor` reads commits from the Git repository and extracts files from each commit.\n4. **Document Normalization**: The extracted files are normalized to markdown format using a normalization process.\n5. **Embedding Generation**: The normalized documents are then used to generate embeddings using Ollama, an embedding generation service.\n6. **Storage**: The generated embeddings and corresponding metadata (commit, author, date) are stored in PostgreSQL + ChromaDB.\n\nThe pipeline also includes various features such as:\n\n* Automatic job polling\n* Error handling with retries\n* Batch processing\n* Performance optimization\n\nAdditionally, the `JobProcessor` class has several methods that help coordinate the pipeline stages, including:\n* `_finalize_result()` to track progress and finalize results\n* `_check_metadata_completeness()` to ensure metadata completeness\n* `_filter_files()` to filter files based on certain criteria\n\nOverall, the ingestion pipeline is designed to efficiently process large volumes of data from Git commits, normalize documents, generate embeddings, and store them in a scalable database.",
+          "confidence": 70.7,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "INGESTION_WORKER_PLAN.md",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "INGESTION_WORKER_COMPLETE.md",
+              "relevance_score": 0.013,
+              "adjusted_score": 0.013,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "INGESTION_PIPELINE_SUCCESS.md",
+              "relevance_score": 0.013,
+              "adjusted_score": 0.013,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "services/ingestion/ingestion_worker.py",
+              "relevance_score": 0.013,
+              "adjusted_score": 0.013,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "tests/test_ingestion_e2e.py",
+              "relevance_score": 0.012,
+              "adjusted_score": 0.012,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "src/ingestion/pipeline.py",
+              "relevance_score": 0.013,
+              "adjusted_score": 0.013,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "src/services/ingestion/job_processor.py",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "services/ingestion/job_processor.py",
+              "relevance_score": 0.01,
+              "adjusted_score": 0.01,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 8,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "How does the ingestion pipeline work?",
+              "how does OR Department of Energy OR Energy Department the ingestion OR document processing OR file indexing OR data ingestion pipeline OR grapevine OR word of mouth work?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.010596857790735341
+          },
+          "elapsed_seconds": 25.79,
+          "status": "success"
+        },
+        "phase1_phase2_phase3_cached": {
+          "answer": "The Ecosystem-MCP ingestion pipeline is a microservices-based system that processes document ingestion jobs from Redis streams. Here's an overview of how it works:\n\n1. **Job creation**: The pipeline receives new ingestion jobs via REST API, which are then stored in Redis streams.\n2. **Worker polling**: The Ingestion Worker module polls the Redis stream for new jobs and processes them asynchronously using the JobProcessor.\n3. **Git extraction**: The JobProcessor extracts commits from a Git repository and filters files by extension (e.g., `.md`, `.py`, `.yaml`).\n4. **Document normalization**: Normalizes documents to markdown format and enriches metadata (commit, author, date).\n5. **Embedding generation**: Generates embeddings using Ollama for each document.\n6. **Storage**: Stores the processed documents in PostgreSQL + ChromaDB.\n\nThe pipeline features:\n\n* Automatic job polling\n* Error handling with retries\n* Graceful shutdown\n* Job status tracking\n* Performance monitoring\n\nAdditionally, the system includes tests for end-to-end testing (E2E), robustness, and input validation to ensure the pipeline functions correctly.",
+          "confidence": 71.6,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "INGESTION_WORKER_PLAN.md",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "INGESTION_WORKER_COMPLETE.md",
+              "relevance_score": 0.013,
+              "adjusted_score": 0.013,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "INGESTION_PIPELINE_SUCCESS.md",
+              "relevance_score": 0.013,
+              "adjusted_score": 0.013,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "services/ingestion/ingestion_worker.py",
+              "relevance_score": 0.013,
+              "adjusted_score": 0.013,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "tests/test_ingestion_e2e.py",
+              "relevance_score": 0.012,
+              "adjusted_score": 0.012,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "src/ingestion/pipeline.py",
+              "relevance_score": 0.013,
+              "adjusted_score": 0.013,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "src/services/ingestion/job_processor.py",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "services/ingestion/job_processor.py",
+              "relevance_score": 0.01,
+              "adjusted_score": 0.01,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 8,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "How does the ingestion pipeline work?",
+              "how does OR Department of Energy OR Energy Department the ingestion OR document processing OR file indexing OR data ingestion pipeline OR grapevine OR word of mouth work?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.010596857790735341
+          },
+          "elapsed_seconds": 14.06,
+          "status": "success"
+        }
+      },
+      "confidence_improvement_p12": 30.9,
+      "confidence_improvement_p123": 31.8,
+      "time_change_p12": 118.7,
+      "time_change_p123": 19.3,
+      "cache_speedup": 45.5
+    },
+    {
+      "question_id": "Q4",
+      "question": "What are the differences between semantic and keyword search?",
+      "category": "complex",
+      "difficulty": "medium",
+      "results": {
+        "standard": {
+          "answer": "According to the documentation, the main difference between semantic and keyword search is that:\n\n**Semantic Search**: Understands the meaning and context of a query, not just the keywords. It can find semantically similar documents even with different wording. This type of search is better at understanding relationships between concepts.\n\n**Keyword Search**: Matches exact keywords or phrases in a document. It's faster but less accurate than semantic search.\n\nIn other words, keyword search looks for literal matches, while semantic search understands the meaning and context behind the query.",
+          "confidence": 43.8,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/test/corpus.doctest",
+              "relevance_score": 0.476,
+              "adjusted_score": 0.476,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T05:52:49.911003"
+            },
+            {
+              "id": 2,
+              "file_path": "src/api/routes/search.py",
+              "relevance_score": 0.473,
+              "adjusted_score": 0.473,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T15:03:00.961179"
+            },
+            {
+              "id": 3,
+              "file_path": "ADVANCED_RETRIEVAL_ACCURACY_ANALYSIS.md",
+              "relevance_score": 0.472,
+              "adjusted_score": 0.472,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T22:59:25.118528"
+            },
+            {
+              "id": 4,
+              "file_path": "OPTIONAL_USER_CONFIGS_FOR_RAG_ACCURACY.md",
+              "relevance_score": 0.469,
+              "adjusted_score": 0.469,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:00:32.042614"
+            },
+            {
+              "id": 5,
+              "file_path": "docs/archive/SEARCHABLE_INDEX.json",
+              "relevance_score": 0.468,
+              "adjusted_score": 0.468,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:08:07.056713"
+            },
+            {
+              "id": 6,
+              "file_path": "NEW_INFRASTRUCTURE_PAGES.md",
+              "relevance_score": 0.444,
+              "adjusted_score": 0.444,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:54:23.536751"
+            },
+            {
+              "id": 7,
+              "file_path": "services/ecosystem-mcp/docs/development/NEW_INFRASTRUCTURE_PAGES.md",
+              "relevance_score": 0.44,
+              "adjusted_score": 0.44,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:15:20.864292"
+            },
+            {
+              "id": 8,
+              "file_path": "docs/VECTORIZATION_IMPLEMENTATION_SUMMARY.md",
+              "relevance_score": 0.427,
+              "adjusted_score": 0.427,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:05:03.449584"
+            },
+            {
+              "id": 9,
+              "file_path": "tests/integration/test_semantic_search_workflow.py",
+              "relevance_score": 0.42,
+              "adjusted_score": 0.42,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:03:52.003742"
+            }
+          ],
+          "elapsed_seconds": 8.3,
+          "status": "success"
+        },
+        "phase1_phase2_nocache": {
+          "answer": "According to the context, there is a difference between **semantic search** and **keyword search**.\n\n**Semantic Search**:\n\n* Focuses on understanding the meaning of user queries\n* Returns documents that are semantically similar to the query, not just containing exact keywords\n* Can handle synonyms, misspellings, and related concepts\n\n**Keyword Search**:\n\n* Looks for exact matches of keywords in document titles, summaries, or contents\n* Misses related concepts, synonyms, and nuanced meanings\n* Requires precise matching of search terms\n\nIn other words, semantic search tries to understand the context and intent behind a query, while keyword search relies on exact matches.",
+          "confidence": 65.2,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "generate_history_search_only.py",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "src/services/dynamic_rag/document_finder.py",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "src/api/routes/search.py",
+              "relevance_score": 0.01,
+              "adjusted_score": 0.01,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "generated_docs/FEATURES.md",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "tests/integration/test_semantic_search_workflow.py",
+              "relevance_score": 0.014,
+              "adjusted_score": 0.014,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "docs/VECTORIZATION_IMPLEMENTATION_SUMMARY.md",
+              "relevance_score": 0.016,
+              "adjusted_score": 0.016,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "src/services/search/search_service.py",
+              "relevance_score": 0.01,
+              "adjusted_score": 0.01,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "src/services/rag/rag_service.py",
+              "relevance_score": 0.006,
+              "adjusted_score": 0.006,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 9,
+              "file_path": "docs/archive/SEARCHABLE_INDEX.json",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 10,
+              "file_path": "RAG_DEMO_SHOWCASE.md",
+              "relevance_score": 0.006,
+              "adjusted_score": 0.006,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What are the differences between semantic and keyword search?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.008893849920783523
+          },
+          "elapsed_seconds": 18.58,
+          "status": "success"
+        },
+        "phase1_phase2_phase3_cached": {
+          "answer": "According to the Ecosystem-MCP microservices documentation system, **semantic search** focuses on understanding the meaning of a query by analyzing its semantics, rather than just matching keywords. This approach considers context, synonyms, and related concepts to provide more accurate results.\n\nIn contrast, **keyword search** relies solely on exact phrase matches between the query and documents. While this method can be fast and efficient, it often misses relevant information that is not explicitly mentioned in the query.\n\nTo illustrate the difference, consider a search for \"machine learning\". A keyword search would return only documents containing the exact phrase \"machine learning\", missing related concepts like \"neural networks\" or \"AI algorithms\".\n\nOn the other hand, a semantic search would analyze the meaning of the query and retrieve documents that discuss machine learning, neural networks, AI algorithms, and other relevant topics, even if they don't contain the exact phrase. This approach provides a more comprehensive understanding of the topic.\n\nIn the context of RAG Answer Synthesis, a combination of both semantic and keyword search is used to provide accurate and relevant answers. The system first performs a semantic search to find relevant documents and then uses those results as input for the LLM generation phase.",
+          "confidence": 66.1,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "generate_history_search_only.py",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "src/services/dynamic_rag/document_finder.py",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "src/api/routes/search.py",
+              "relevance_score": 0.01,
+              "adjusted_score": 0.01,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "generated_docs/FEATURES.md",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "tests/integration/test_semantic_search_workflow.py",
+              "relevance_score": 0.014,
+              "adjusted_score": 0.014,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "docs/VECTORIZATION_IMPLEMENTATION_SUMMARY.md",
+              "relevance_score": 0.016,
+              "adjusted_score": 0.016,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "src/services/search/search_service.py",
+              "relevance_score": 0.01,
+              "adjusted_score": 0.01,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "src/services/rag/rag_service.py",
+              "relevance_score": 0.006,
+              "adjusted_score": 0.006,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 9,
+              "file_path": "docs/archive/SEARCHABLE_INDEX.json",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 10,
+              "file_path": "RAG_DEMO_SHOWCASE.md",
+              "relevance_score": 0.006,
+              "adjusted_score": 0.006,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What are the differences between semantic and keyword search?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.008893849920783523
+          },
+          "elapsed_seconds": 19.39,
+          "status": "success"
+        }
+      },
+      "confidence_improvement_p12": 21.4,
+      "confidence_improvement_p123": 22.3,
+      "time_change_p12": 123.9,
+      "time_change_p123": 133.6,
+      "cache_speedup": -4.4
+    },
+    {
+      "question_id": "Q5",
+      "question": "How to fix database connection errors?",
+      "category": "how_to",
+      "difficulty": "medium",
+      "results": {
+        "standard": {
+          "answer": "Based on the context, I would recommend the following steps to fix database connection errors:\n\n1. Fix Context-Aware Async:\n   - Update `services/ecosystem-mcp/src/api/routes/query.py` line 389 to: `db = get_database()`\n   - Also update line 505 in the same file.\n2. Cache Clear Duplicate Routes:\n   - Rename `/api/v1/admin/clear-cache` endpoint to `/api/v1/admin/clear-cache-prefix` (Line 1318)\n   - Change error return to HTTPException (Lines 1179-1183)\n\nPlease note that these steps are based on the context provided and might not cover all possible scenarios. It's always a good idea to test your code thoroughly after making changes.\n\nAdditional information:\n\n* If you're experiencing timeouts, consider implementing streaming for long queries.\n* You may also want to add better logging to identify slow steps in your code.\n* Finally, remember to update your documentation and testing suite to reflect the new changes.",
+          "confidence": 42.9,
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "HARDENING_PROGRESS.md",
+              "relevance_score": 0.458,
+              "adjusted_score": 0.458,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:54:10.609307"
+            },
+            {
+              "id": 2,
+              "file_path": "server.log",
+              "relevance_score": 0.453,
+              "adjusted_score": 0.453,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:57:05.635784"
+            },
+            {
+              "id": 3,
+              "file_path": "DEBUGGING_STRUGGLES_AND_SOLUTIONS.md",
+              "relevance_score": 0.451,
+              "adjusted_score": 0.451,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:53:50.120203"
+            },
+            {
+              "id": 4,
+              "file_path": "services/ecosystem-mcp/docs/guides/DEBUGGING_STRUGGLES_AND_SOLUTIONS.md",
+              "relevance_score": 0.451,
+              "adjusted_score": 0.451,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:16:19.078844"
+            },
+            {
+              "id": 5,
+              "file_path": "ALL_FIXES_VALIDATION_COMPLETE.md",
+              "relevance_score": 0.449,
+              "adjusted_score": 0.449,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:02:58.346887"
+            },
+            {
+              "id": 6,
+              "file_path": "config/service_registry.yaml",
+              "relevance_score": 0.449,
+              "adjusted_score": 0.449,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:59:07.596176"
+            },
+            {
+              "id": 7,
+              "file_path": "FIXES_VALIDATION_FINAL.md",
+              "relevance_score": 0.448,
+              "adjusted_score": 0.448,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:02:32.827789"
+            },
+            {
+              "id": 8,
+              "file_path": "services/ecosystem-mcp/docs/architecture/ISSUE_ROOT_CAUSE_AND_FIX.md",
+              "relevance_score": 0.443,
+              "adjusted_score": 0.443,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:15:59.980348"
+            },
+            {
+              "id": 9,
+              "file_path": "ISSUE_ROOT_CAUSE_AND_FIX.md",
+              "relevance_score": 0.436,
+              "adjusted_score": 0.436,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:55:02.482256"
+            },
+            {
+              "id": 10,
+              "file_path": "ISSUES_INVESTIGATION_REPORT.md",
+              "relevance_score": 0.43,
+              "adjusted_score": 0.43,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:02:20.305865"
+            }
+          ],
+          "elapsed_seconds": 9.81,
+          "status": "success"
+        },
+        "phase1_phase2_nocache": {
+          "answer": "To fix database connection errors, you can follow these steps:\n\n1. Check the database connection string in your code and ensure it is correct.\n2. Verify that the database server is running and accessible.\n3. Check for any syntax errors or typos in the SQL query being executed.\n4. Ensure that the database user account has the necessary permissions to connect to the database.\n5. Test the database connection using a tool like `psql` (for PostgreSQL) or `mysql` (for MySQL).\n6. If you are using a proxy or load balancer, ensure it is configured correctly to allow connections to the database.\n\nIn this specific context, the issue was caused by an incorrect SQL column name (`tablename`) in the query. The solution was to update the query to use the correct column name (`relname`), which fixed the 500 Internal Server Error and allowed the database connection to succeed.\n\nIf you are still experiencing issues after trying these steps, please provide more details about your specific error message and environment, and I'll be happy to help you troubleshoot!",
+          "confidence": 66.2,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "FIXES_VALIDATION_TEST.md",
+              "relevance_score": 0.015,
+              "adjusted_score": 0.015,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "FIXES_VALIDATION_FINAL.md",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "src/storage/database_session.py",
+              "relevance_score": 0.006,
+              "adjusted_score": 0.006,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "fix_database_schema.sh",
+              "relevance_score": 0.006,
+              "adjusted_score": 0.006,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "ALL_FIXES_VALIDATION_COMPLETE.md",
+              "relevance_score": 0.01,
+              "adjusted_score": 0.01,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "TABLE_BROWSER_FIX.md",
+              "relevance_score": 0.007,
+              "adjusted_score": 0.007,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "ISSUE_ROOT_CAUSE_AND_FIX.md",
+              "relevance_score": 0.015,
+              "adjusted_score": 0.015,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "services/ecosystem-mcp/docs/architecture/ISSUE_ROOT_CAUSE_AND_FIX.md",
+              "relevance_score": 0.015,
+              "adjusted_score": 0.015,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 9,
+              "file_path": "services/ecosystem-mcp/docs/api/POSTGRES_EXPLORER_FIX.md",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 10,
+              "file_path": "POSTGRES_EXPLORER_FIX.md",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "How to fix database connection errors?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.014520202020202018
+          },
+          "elapsed_seconds": 15.82,
+          "status": "success"
+        },
+        "phase1_phase2_phase3_cached": {
+          "answer": "Based on the context, it seems that the issue is with an incorrect SQL column name in a query used by the PostgreSQL Explorer. The exact error message is:\n\n```\n(sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedColumnError'>: \ncolumn \"tablename\" does not exist\n```\n\nTo fix this issue, you need to update all references from `tablename` to the actual column name used in PostgreSQL's `pg_stat_user_tables` system view, which is `relname`. You can do this by aliasing it as `tablename` in the SELECT statement.\n\nHere is an updated SQL query that should resolve the issue:\n\n```sql\nSELECT \n    schemaname,\n    relname as tablename,  -- Correct column name with alias\n    pg_size_pretty(pg_total_relation_size(schemaname||'.'||relname)) as size,\n    pg_total_relation_size(schemaname||'.'||relname) as size_bytes,\n    n_live_tup as row_count,\n    n_dead_tup as dead_rows,\n    last_vacuum,\n    last_autovacuum,\n    last_analyze,\n    last_autoanalyze\nFROM pg_stat_user_tables\nORDER BY pg_total_relation_size(schemaname||'.'||relname) DESC\n```\n\nAfter updating the SQL query, you should be able to access the PostgreSQL Explorer without encountering any errors.",
+          "confidence": 61.9,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "FIXES_VALIDATION_TEST.md",
+              "relevance_score": 0.015,
+              "adjusted_score": 0.015,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "FIXES_VALIDATION_FINAL.md",
+              "relevance_score": 0.011,
+              "adjusted_score": 0.011,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "src/storage/database_session.py",
+              "relevance_score": 0.006,
+              "adjusted_score": 0.006,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "fix_database_schema.sh",
+              "relevance_score": 0.006,
+              "adjusted_score": 0.006,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "ALL_FIXES_VALIDATION_COMPLETE.md",
+              "relevance_score": 0.01,
+              "adjusted_score": 0.01,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "TABLE_BROWSER_FIX.md",
+              "relevance_score": 0.007,
+              "adjusted_score": 0.007,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "ISSUE_ROOT_CAUSE_AND_FIX.md",
+              "relevance_score": 0.015,
+              "adjusted_score": 0.015,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "services/ecosystem-mcp/docs/architecture/ISSUE_ROOT_CAUSE_AND_FIX.md",
+              "relevance_score": 0.015,
+              "adjusted_score": 0.015,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 9,
+              "file_path": "services/ecosystem-mcp/docs/api/POSTGRES_EXPLORER_FIX.md",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 10,
+              "file_path": "POSTGRES_EXPLORER_FIX.md",
+              "relevance_score": 0.009,
+              "adjusted_score": 0.009,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "How to fix database connection errors?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.014520202020202018
+          },
+          "elapsed_seconds": 18.61,
+          "status": "success"
+        }
+      },
+      "confidence_improvement_p12": 23.3,
+      "confidence_improvement_p123": 19.0,
+      "time_change_p12": 61.3,
+      "time_change_p123": 89.7,
+      "cache_speedup": -17.6
+    }
+  ]
+}

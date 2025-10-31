@@ -26,7 +26,7 @@ from ..utils.redis_client import get_redis_client
 from ..utils.logging_config import configure_structured_logging
 from ..utils.log_rotation import setup_log_rotation
 
-from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, config_validation, embeddings_admin, job_recovery, path_resolver, temporal_versioning, documentation_runs, job_progress, performance_optimization, cache_analytics, discovery, discovery_admin, orchestration, documentation, timeline, temporal_rag, maintenance, reports, consolidation, dynamic_rag, retry_admin, monitoring, context_aware_query
+from .routes import health, admin, search, documents, query, logs, ollama, metrics, standard, ask, ollama_status, infrastructure, containers, redis_admin, postgres_admin, diagnostics, config_viewer, config_validation, embeddings_admin, job_recovery, path_resolver, temporal_versioning, documentation_runs, job_progress, performance_optimization, cache_analytics, discovery, discovery_admin, orchestration, documentation, timeline, temporal_rag, maintenance, reports, consolidation, dynamic_rag, retry_admin, monitoring, context_aware_query, rag_accuracy, cache_monitoring
 from .routes import analysis as analysis_routes
 # embeddings import moved below to handle conditional loading
 from .middleware import RequestIDMiddleware, TimeoutMiddleware, MetricsMiddleware
@@ -215,6 +215,15 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.error(f"  ❌ Failed to start automatic cleanup service: {e}", exc_info=True)
         
+        # 🆕 Build BM25 index for hybrid search (Phase 1)
+        try:
+            from ..services.rag import get_enhanced_rag_service
+            enhanced_rag = get_enhanced_rag_service()
+            await enhanced_rag.build_bm25_index()
+            logger.info("  ✅ BM25 index built for hybrid search")
+        except Exception as e:
+            logger.error(f"  ❌ Failed to build BM25 index: {e}", exc_info=True)
+        
         logger.info("\n✅ ALL SERVICES INITIALIZED SUCCESSFULLY")
         
         # Initialize metrics
@@ -374,6 +383,25 @@ def create_app() -> FastAPI:
     app.include_router(retry_admin.router, prefix="/api/v1/admin", tags=["Retry Admin"])  # 🆕 Phase 2.3
     app.include_router(search.router, prefix="/api/v1", tags=["Search"])
     app.include_router(ask.router, prefix="/api/v1", tags=["RAG"])  # ✅ RAG question answering
+    
+    # 🆕 RAG Accuracy Enhancements (Phase 1 + 2)
+    app.include_router(
+        rag_accuracy.router,
+        prefix="/api/v1",
+        tags=["RAG Accuracy"]
+    )
+    
+    # 🆕 Phase 3: Monitoring and Batch Processing
+    app.include_router(cache_monitoring.router, tags=["Cache Monitoring"])
+    logger.info("✅ Cache Monitoring routes registered (Phase 3)")
+    
+    try:
+        from .routes import batch_rag
+        app.include_router(batch_rag.router, tags=["Batch RAG"])
+        logger.info("✅ Batch RAG routes registered (Phase 3C)")
+    except Exception as e:
+        logger.warning(f"⚠️  Failed to load Batch RAG routes: {e}")
+    
     app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
     
     # Document cleanup (uses intelligent filtering on existing docs)

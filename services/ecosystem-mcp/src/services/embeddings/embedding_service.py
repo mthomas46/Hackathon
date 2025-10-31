@@ -13,6 +13,7 @@ import httpx
 
 from ..models.ollama_client import get_ollama_client
 from ...utils.circuit_breaker import CircuitBreakerOpenError
+from ...utils.cache_decorator import cache
 
 logger = logging.getLogger(__name__)
 
@@ -132,9 +133,10 @@ class EmbeddingService:
         else:
             logger.info("ℹ️  EmbeddingService initialized with Ollama backend (legacy)")
     
+    @cache(ttl=3600, key_prefix="embedding")  # ⚡ Cache for 1 hour
     async def generate_embedding(self, text: str) -> Dict[str, Any]:
         """
-        Generate embedding for a single text with smart retry and chunking.
+        Generate embedding for a single text with smart retry and chunking (CACHED).
         
         Routes to appropriate backend (FastEmbed service or Ollama).
         Includes smart retry logic with health checks to auto-recover from transient failures.

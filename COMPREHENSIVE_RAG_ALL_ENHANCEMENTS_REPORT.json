@@ -1,0 +1,2405 @@
+{
+  "timestamp": "2025-10-31T08:59:09.450003",
+  "summary": {
+    "Standard RAG": {
+      "avg_time": 10.212,
+      "avg_confidence": 42.42,
+      "avg_sources": 9.2
+    },
+    "Phase 1 Only": {
+      "avg_time": 19.534,
+      "avg_confidence": 66.22,
+      "avg_sources": 7.6
+    },
+    "Phase 1+2": {
+      "avg_time": 14.75,
+      "avg_confidence": 66.03999999999999,
+      "avg_sources": 4.6
+    },
+    "Phase 1+2+3 (All Enhancements)": {
+      "avg_time": 12.326,
+      "avg_confidence": 65.02000000000001,
+      "avg_sources": 4.6
+    }
+  },
+  "results": [
+    {
+      "question_id": "Q1",
+      "question": "What is Docker and how is it used in this project?",
+      "category": "technical",
+      "difficulty": "medium",
+      "configurations": [
+        {
+          "answer": "Docker is a containerization platform that allows you to package, ship, and run applications in containers. In the context of this project, Docker is used as a runtime environment for the Ecosystem-MCP microservices. The project uses the Docker SDK (docker-py) to interact with the Docker daemon and manage containers.\n\nThe Docker daemon provides a sandboxed environment for running containers, which allows the Ecosystem-MCP services to run in isolation from each other and from the host system. The Docker SDK is used to create, start, stop, restart, and manage containers, as well as access container logs and resource usage metrics.\n\nIn this project, Docker is used to:\n\n1. Run the Ecosystem-MCP microservices as separate containers.\n2. Manage container lifecycles (e.g., starting, stopping, restarting).\n3. Access container logs and resource usage metrics for monitoring and troubleshooting purposes.\n4. Provide a sandboxed environment for running containers, which helps to isolate dependencies and ensure consistent behavior.\n\nOverall, Docker provides a powerful toolset for managing and deploying microservices-based applications like Ecosystem-MCP.",
+          "confidence": 41.3,
+          "confidence_level": "Unknown",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "PHASE_1_IMPLEMENTATION_COMPLETE.md",
+              "relevance_score": 0.427,
+              "adjusted_score": 0.427,
+              "percentile_rank": 100,
+              "actual_score": 0.4266,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:02:25.198838"
+            },
+            {
+              "id": 2,
+              "file_path": "src/api/routes/containers.py",
+              "relevance_score": 0.425,
+              "adjusted_score": 0.425,
+              "percentile_rank": 85,
+              "actual_score": 0.4246,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T15:02:50.805220"
+            },
+            {
+              "id": 3,
+              "file_path": "docs/docker/readme.md",
+              "relevance_score": 0.423,
+              "adjusted_score": 0.423,
+              "percentile_rank": 71,
+              "actual_score": 0.4231,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:06:04.285689"
+            },
+            {
+              "id": 4,
+              "file_path": "services/ecosystem-mcp/docs/api/CONTAINER_MANAGEMENT_FEATURE.md",
+              "relevance_score": 0.421,
+              "adjusted_score": 0.421,
+              "percentile_rank": 57,
+              "actual_score": 0.4212,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:16:55.550777"
+            },
+            {
+              "id": 5,
+              "file_path": "docker/Dockerfile",
+              "relevance_score": 0.42,
+              "adjusted_score": 0.42,
+              "percentile_rank": 42,
+              "actual_score": 0.4198,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:59:03.863807"
+            },
+            {
+              "id": 6,
+              "file_path": "PHASE_2_IMPLEMENTATION_COMPLETE.md",
+              "relevance_score": 0.407,
+              "adjusted_score": 0.407,
+              "percentile_rank": 28,
+              "actual_score": 0.4068,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:03:34.516461"
+            },
+            {
+              "id": 7,
+              "file_path": "CONTAINER_MANAGEMENT_FEATURE.md",
+              "relevance_score": 0.406,
+              "adjusted_score": 0.406,
+              "percentile_rank": 14,
+              "actual_score": 0.4058,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:56:42.637578"
+            }
+          ],
+          "metadata": {
+            "documents_used": 7,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "top_score": 0.42664667367935183,
+            "cached": false,
+            "total_time_ms": 11470,
+            "retrieval_time_ms": 29,
+            "generation_time_ms": 11437
+          },
+          "elapsed_seconds": 11.48,
+          "status": "success",
+          "configuration_name": "Standard RAG",
+          "configuration_description": "Baseline semantic search only",
+          "configuration_settings": {}
+        },
+        {
+          "answer": "Based on the provided documentation, Docker is a containerization platform that allows you to run isolated, lightweight, and portable applications. In this project, Docker is used as the underlying technology for managing containers.\n\nThe Ecosystem-MCP microservices documentation system uses Docker SDK (docker-py) to interact with the Docker daemon. This allows the system to perform various operations on Docker containers, such as:\n\n* Starting, stopping, and restarting containers\n* Pausing and unpausing containers\n* Viewing logs and resource statistics for containers\n* Monitoring memory and CPU usage for containers\n\nThe project uses Docker sockets to access the Docker daemon, which is necessary for interacting with the container runtime. The `docker-compose.yml` file sets up a Docker environment by mounting the Docker socket and defining services that run within the containers.\n\nIn summary, Docker is used in this project as a foundation for containerization, allowing the system to manage and interact with containers in a flexible and portable manner.",
+          "confidence": 65.2,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "CONTAINER_MANAGEMENT_FEATURE.md",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.012,
+              "percentile_rank": 100,
+              "actual_score": 0.0119,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "PHASE_2_IMPLEMENTATION_COMPLETE.md",
+              "relevance_score": 0.8,
+              "adjusted_score": 0.012,
+              "percentile_rank": 80,
+              "actual_score": 0.0118,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "services/simulation-dashboard/README.md",
+              "relevance_score": 0.6,
+              "adjusted_score": 0.012,
+              "percentile_rank": 60,
+              "actual_score": 0.0116,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "docker/Dockerfile",
+              "relevance_score": 0.4,
+              "adjusted_score": 0.011,
+              "percentile_rank": 40,
+              "actual_score": 0.0111,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "services/ecosystem-mcp/docs/api/CONTAINER_MANAGEMENT_FEATURE.md",
+              "relevance_score": 0.2,
+              "adjusted_score": 0.011,
+              "percentile_rank": 20,
+              "actual_score": 0.0109,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 5,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What is Docker and how is it used in this project?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": false,
+              "context_optimization": false,
+              "metadata_filtering": false
+            },
+            "top_score": 0.011949685534591194
+          },
+          "elapsed_seconds": 10.27,
+          "status": "success",
+          "configuration_name": "Phase 1 Only",
+          "configuration_description": "Hybrid search + query rewriting + confidence",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": false,
+            "enable_context_optimization": false
+          }
+        },
+        {
+          "answer": "Based on the provided context, I can answer your question.\n\nDocker is a containerization platform that allows you to package, ship, and run applications in containers. In the context of this project, Docker is used for:\n\n1. **Containerization**: The project uses Docker to create isolated environments for different services or microservices. This allows developers to work on individual components independently without affecting other parts of the system.\n2. **Orchestration**: Docker Compose (Source 2) is used to manage and orchestrate multiple containers as a single application. This enables easy deployment, scaling, and management of complex systems.\n3. **Service-to-service communication**: Containers communicate with each other using networking configurations defined in the `docker-compose.yml` file (Source 1).\n4. **Development workflow**: The project uses Docker for local development, testing, and validation of services before deploying them to production environments.\n\nIn the specific context of this project, Docker is used to create a containerized environment for the MCP (MCP Base Image) service, which generates intelligent, contextual responses based on training documents from doc_store.",
+          "confidence": 68.1,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/project-simulation/docker-compose.dev.yml",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.006,
+              "percentile_rank": 100,
+              "actual_score": -0.8511,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "docs/docker/readme.md",
+              "relevance_score": 0.8,
+              "adjusted_score": 0.01,
+              "percentile_rank": 80,
+              "actual_score": -1.2968,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "docker/mcp-base/Dockerfile.enhanced",
+              "relevance_score": 0.6,
+              "adjusted_score": 0.009,
+              "percentile_rank": 60,
+              "actual_score": -3.1513,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "example_queries.csv",
+              "relevance_score": 0.4,
+              "adjusted_score": 0.007,
+              "percentile_rank": 40,
+              "actual_score": -3.1887,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "src/api/routes/containers.py",
+              "relevance_score": 0.2,
+              "adjusted_score": 0.01,
+              "percentile_rank": 20,
+              "actual_score": -3.455,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 5,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What is Docker and how is it used in this project?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.005751768867924528
+          },
+          "elapsed_seconds": 21.25,
+          "status": "success",
+          "configuration_name": "Phase 1+2",
+          "configuration_description": "All Phase 1 + reranking + context optimization",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": true,
+            "enable_context_optimization": true,
+            "enable_metadata_filtering": false
+          }
+        },
+        {
+          "answer": "Based on the provided context, Docker is a containerization platform that allows you to package, ship, and run applications in containers. In this project, Docker is used for:\n\n1. **Service Orchestration**: The `docker-compose.dev.yml` file defines services, volumes, and networks, which enables easy deployment and management of microservices.\n2. **Container Standardization**: The project uses standardized base images (e.g., `python:3.11-slim`) to ensure consistency across services.\n3. **Multi-stage Builds**: The `Dockerfile.enhanced` uses a multi-stage build pattern to optimize image size and improve build performance.\n4. **Container Health Checks**: The `healthcheck` endpoint in the `docker-compose.dev.yml` file monitors container health and performance.\n5. **Container Networking**: The project uses Docker networking features (e.g., `hackathon_simulation`) for service-to-service communication.\n\nBy using Docker, the project achieves:\n\n1. **Portability**: Containers can run consistently across different environments and platforms.\n2. **Isolation**: Containers provide isolation between services, ensuring that changes to one service do not affect others.\n3. **Efficiency**: Docker enables efficient use of resources by allowing multiple containers to share the same host machine.\n\nIn summary, Docker is a crucial component in this project, enabling the management, orchestration, and deployment of microservices in a consistent and scalable manner.",
+          "confidence": 67.8,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "services/project-simulation/docker-compose.dev.yml",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.006,
+              "percentile_rank": 100,
+              "actual_score": -0.8511,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "docs/docker/readme.md",
+              "relevance_score": 0.8,
+              "adjusted_score": 0.01,
+              "percentile_rank": 80,
+              "actual_score": -1.2968,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "docker/mcp-base/Dockerfile.enhanced",
+              "relevance_score": 0.6,
+              "adjusted_score": 0.009,
+              "percentile_rank": 60,
+              "actual_score": -3.1513,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "example_queries.csv",
+              "relevance_score": 0.4,
+              "adjusted_score": 0.007,
+              "percentile_rank": 40,
+              "actual_score": -3.1887,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "src/api/routes/containers.py",
+              "relevance_score": 0.2,
+              "adjusted_score": 0.01,
+              "percentile_rank": 20,
+              "actual_score": -3.455,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 5,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What is Docker and how is it used in this project?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.005751768867924528
+          },
+          "elapsed_seconds": 13.03,
+          "status": "success",
+          "configuration_name": "Phase 1+2+3 (All Enhancements)",
+          "configuration_description": "All features + caching (on repeat)",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": true,
+            "enable_context_optimization": true,
+            "enable_metadata_filtering": false
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "Q2",
+      "question": "How does the ingestion pipeline work?",
+      "category": "technical",
+      "difficulty": "medium",
+      "configurations": [
+        {
+          "answer": "The ingestion pipeline is a process that takes in files from a Git repository, processes them, and stores the processed data in a database and ChromaDB. Here's an overview of how it works:\n\n1. **Git Service Integration**: The pipeline starts by integrating with the Git service to retrieve files from a specific repository.\n2. **Document Processing**: The retrieved files are then passed through a document processing module that normalizes and processes them according to their file types (e.g., Markdown, Python, YAML, JSON).\n3. **Background Worker**: A background worker process is responsible for running the ingestion pipeline in the background. This ensures that the pipeline runs asynchronously and doesn't block the main thread.\n4. **Job Processing**: The background worker polls a Redis stream for new ingestion jobs and processes them one by one using a JobProcessor module.\n5. **Database Operations**: The processed data is then stored in a database, which is used to track the status of each file and any errors that may occur during processing.\n6. **ChromaDB Storage**: Finally, the processed data is also stored in ChromaDB for further querying and analysis.\n\nThe pipeline includes features such as error handling with retries, graceful shutdown, job status tracking, and performance monitoring to ensure reliable and efficient ingestion of files.",
+          "confidence": 39.800000000000004,
+          "confidence_level": "Unknown",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "INGESTION_WORKER_COMPLETE_ANALYSIS_AND_SOLUTION.md",
+              "relevance_score": 0.395,
+              "adjusted_score": 0.395,
+              "percentile_rank": 100,
+              "actual_score": 0.3952,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:02:28.543179"
+            },
+            {
+              "id": 2,
+              "file_path": "INGESTION_PIPELINE_SUCCESS.md",
+              "relevance_score": 0.395,
+              "adjusted_score": 0.395,
+              "percentile_rank": 90,
+              "actual_score": 0.395,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:54:46.566378"
+            },
+            {
+              "id": 3,
+              "file_path": "INGESTION_IMPROVEMENTS_COMPLETE.md",
+              "relevance_score": 0.394,
+              "adjusted_score": 0.394,
+              "percentile_rank": 80,
+              "actual_score": 0.3944,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:00:32.811172"
+            },
+            {
+              "id": 4,
+              "file_path": "services/ecosystem-mcp/docs/features/INGESTION_WORKER_PLAN.md",
+              "relevance_score": 0.394,
+              "adjusted_score": 0.394,
+              "percentile_rank": 70,
+              "actual_score": 0.3942,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:15:42.142742"
+            },
+            {
+              "id": 5,
+              "file_path": "INGESTION_WORKER_PLAN.md",
+              "relevance_score": 0.391,
+              "adjusted_score": 0.391,
+              "percentile_rank": 60,
+              "actual_score": 0.3907,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:56:02.332231"
+            },
+            {
+              "id": 6,
+              "file_path": "tests/test_ingestion_e2e.py",
+              "relevance_score": 0.389,
+              "adjusted_score": 0.389,
+              "percentile_rank": 50,
+              "actual_score": 0.3892,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:03:15.081179"
+            },
+            {
+              "id": 7,
+              "file_path": "services/ecosystem-mcp/docs/features/INGESTION_WORKER_COMPLETE.md",
+              "relevance_score": 0.384,
+              "adjusted_score": 0.384,
+              "percentile_rank": 40,
+              "actual_score": 0.3845,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:15:41.355793"
+            },
+            {
+              "id": 8,
+              "file_path": "INGESTION_WORKER_COMPLETE.md",
+              "relevance_score": 0.379,
+              "adjusted_score": 0.379,
+              "percentile_rank": 30,
+              "actual_score": 0.3785,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:55:54.526049"
+            },
+            {
+              "id": 9,
+              "file_path": "src/services/ingestion/ingestion_worker.py",
+              "relevance_score": 0.377,
+              "adjusted_score": 0.377,
+              "percentile_rank": 20,
+              "actual_score": 0.3771,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T15:03:21.075404"
+            },
+            {
+              "id": 10,
+              "file_path": "tests/test_ingestion_pipeline.py",
+              "relevance_score": 0.373,
+              "adjusted_score": 0.373,
+              "percentile_rank": 10,
+              "actual_score": 0.3729,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:03:02.865858"
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "top_score": 0.39518859386444094,
+            "cached": false,
+            "total_time_ms": 11275,
+            "retrieval_time_ms": 29,
+            "generation_time_ms": 11243
+          },
+          "elapsed_seconds": 11.28,
+          "status": "success",
+          "configuration_name": "Standard RAG",
+          "configuration_description": "Baseline semantic search only",
+          "configuration_settings": {}
+        },
+        {
+          "answer": "The ingestion pipeline is a series of steps that process document ingestion jobs from Redis streams. It works as follows:\n\n1. **Scanning for files**: The `IngestionPipeline` class scans for files in the specified repository path.\n2. **Queueing documents**: Each file found is added to a queue, which represents the set of documents to be processed.\n3. **Parallel processing**: The documents are processed in parallel using multiple threads or processes.\n4. **Embedding generation**: Each document is normalized and embedded into a vector representation using Ollama's embedding model.\n5. **Storage**: The generated embeddings are stored in PostgreSQL + ChromaDB for querying.\n\nThe pipeline uses various tools and services, such as:\n\n1. `GitService`: extracts commits from the Git repository\n2. `DocumentNormalizer`: normalizes documents to markdown format\n3. `EmbeddingGenerator`: generates embeddings using Ollama's model\n4. `ChromaDB`: stores the generated embeddings\n\nThe pipeline has several features, including:\n\n1. **Progress tracking**: keeps track of the progress of each job\n2. **Error handling with retries**: handles errors and retries failed operations\n3. **Batch processing**: processes documents in batches for performance optimization",
+          "confidence": 64.8,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "generated_docs_deep/COMPREHENSIVE_DOCUMENTATION.md",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.014,
+              "percentile_rank": 100,
+              "actual_score": 0.0139,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "services/ingestion/ingestion_worker.py",
+              "relevance_score": 0.9,
+              "adjusted_score": 0.013,
+              "percentile_rank": 90,
+              "actual_score": 0.0132,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "generated_docs_deep/FEATURES.md",
+              "relevance_score": 0.8,
+              "adjusted_score": 0.013,
+              "percentile_rank": 80,
+              "actual_score": 0.0131,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "docs/investigations/JOB_8C6F0C76_MONITORING_REPORT.md",
+              "relevance_score": 0.7,
+              "adjusted_score": 0.013,
+              "percentile_rank": 70,
+              "actual_score": 0.0128,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "INGESTION_WORKER_COMPLETE.md",
+              "relevance_score": 0.6,
+              "adjusted_score": 0.013,
+              "percentile_rank": 60,
+              "actual_score": 0.0127,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "INGESTION_PIPELINE_SUCCESS.md",
+              "relevance_score": 0.5,
+              "adjusted_score": 0.013,
+              "percentile_rank": 50,
+              "actual_score": 0.0126,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "services/ecosystem-mcp/docs/features/INGESTION_WORKER_COMPLETE.md",
+              "relevance_score": 0.4,
+              "adjusted_score": 0.013,
+              "percentile_rank": 40,
+              "actual_score": 0.0125,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "src/services/ingestion/ingestion_worker.py",
+              "relevance_score": 0.3,
+              "adjusted_score": 0.013,
+              "percentile_rank": 30,
+              "actual_score": 0.0125,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 9,
+              "file_path": "src/ingestion/pipeline.py",
+              "relevance_score": 0.2,
+              "adjusted_score": 0.012,
+              "percentile_rank": 20,
+              "actual_score": 0.0119,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 10,
+              "file_path": "services/ecosystem-mcp/src/services/ingestion/job_processor.py",
+              "relevance_score": 0.1,
+              "adjusted_score": 0.012,
+              "percentile_rank": 10,
+              "actual_score": 0.0119,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "How does the ingestion pipeline work?",
+              "how does OR Department of Energy OR Energy Department the ingestion OR document processing OR file indexing OR data ingestion pipeline OR grapevine OR word of mouth work?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": false,
+              "context_optimization": false,
+              "metadata_filtering": false
+            },
+            "top_score": 0.013937071399757965
+          },
+          "elapsed_seconds": 47.32,
+          "status": "success",
+          "configuration_name": "Phase 1 Only",
+          "configuration_description": "Hybrid search + query rewriting + confidence",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": false,
+            "enable_context_optimization": false
+          }
+        },
+        {
+          "answer": "Based on the provided context, I will answer your question about how the ingestion pipeline works.\n\nThe ingestion pipeline is a main orchestrator that coordinates scanning, parsing, normalizing, and storing documents. It is divided into five stages:\n\n1. **Scanning for files**: The pipeline starts by scanning for files.\n2. **Queueing documents**: The scanned files are then queued for processing.\n3. **Parallel processing**: The documents are processed in parallel, which allows for efficient handling of large volumes of data.\n4. **Embedding generation**: During this stage, embeddings are generated to facilitate search and retrieval operations.\n5. **Storage**: Finally, the processed documents are stored in a database, specifically PostgreSQL + ChromaDB.\n\nThe pipeline is orchestrated by the `IngestionPipeline` class in [Source 1]. This class coordinates all five stages of the pipeline and ensures that each stage is completed before moving on to the next one.\n\nIt's worth noting that there is another module involved in the ingestion process, which is the Job Processor. The Job Processor ([Sources 2-3]) takes care of orchestrating a single job's document ingestion pipeline. This includes stages such as reading commits from a Git repository, extracting files, normalizing documents, generating embeddings, and storing them in PostgreSQL + ChromaDB.\n\nIn summary, the ingestion pipeline is designed to efficiently process large volumes of data by scanning for files, queuing documents, parallel processing, generating embeddings, and storing the results.",
+          "confidence": 66.1,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "src/ingestion/pipeline.py",
+              "relevance_score": 0.289,
+              "adjusted_score": 0.013,
+              "percentile_rank": 100,
+              "actual_score": 2.8905,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "src/services/ingestion/job_processor.py",
+              "relevance_score": 0.292,
+              "adjusted_score": 0.009,
+              "percentile_rank": 66,
+              "actual_score": 2.924,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "services/ingestion/job_processor.py",
+              "relevance_score": 0.34,
+              "adjusted_score": 0.01,
+              "percentile_rank": 33,
+              "actual_score": 3.3956,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 3,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "How does the ingestion pipeline work?",
+              "how does OR Department of Energy OR Energy Department the ingestion OR document processing OR file indexing OR data ingestion pipeline OR grapevine OR word of mouth work?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.012533718689788052
+          },
+          "elapsed_seconds": 8.75,
+          "status": "success",
+          "configuration_name": "Phase 1+2",
+          "configuration_description": "All Phase 1 + reranking + context optimization",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": true,
+            "enable_context_optimization": true,
+            "enable_metadata_filtering": false
+          }
+        },
+        {
+          "answer": "Based on the provided context, the ingestion pipeline works as follows:\n\nThe main ingestion pipeline is orchestrated by the `IngestionPipeline` class in `src/ingestion/pipeline.py`. This class coordinates five stages of document ingestion: scanning for files, queueing documents, parallel processing, embedding generation, and storage.\n\nThe first stage involves scanning for files. The next stage queues the documents to be processed. The third stage performs parallel processing, which enables the pipeline to process multiple documents simultaneously.\n\nThe fourth stage generates embeddings for each document. Finally, the fifth stage stores the documents in a database or other storage system.\n\nIn addition to these stages, the `JobProcessor` class in `src/services/ingestion/job_processor.py` coordinates the ingestion pipeline for a single job. This involves reading commits from a Git repository, extracting files from each commit, normalizing documents to markdown, generating embeddings, and storing them in a database or other storage system.\n\nThe `JobProcessor` class also provides features such as progress tracking, error handling with retries, batch processing, and performance optimization. These features enable the pipeline to handle large volumes of data efficiently and reliably.\n\nOverall, the ingestion pipeline is designed to be flexible and scalable, allowing it to handle a wide range of document types and sizes while providing real-time feedback on its progress.",
+          "confidence": 62.7,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "src/ingestion/pipeline.py",
+              "relevance_score": 0.289,
+              "adjusted_score": 0.013,
+              "percentile_rank": 100,
+              "actual_score": 2.8905,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "src/services/ingestion/job_processor.py",
+              "relevance_score": 0.292,
+              "adjusted_score": 0.009,
+              "percentile_rank": 66,
+              "actual_score": 2.924,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "services/ingestion/job_processor.py",
+              "relevance_score": 0.34,
+              "adjusted_score": 0.01,
+              "percentile_rank": 33,
+              "actual_score": 3.3956,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 3,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "How does the ingestion pipeline work?",
+              "how does OR Department of Energy OR Energy Department the ingestion OR document processing OR file indexing OR data ingestion pipeline OR grapevine OR word of mouth work?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.012533718689788052
+          },
+          "elapsed_seconds": 7.69,
+          "status": "success",
+          "configuration_name": "Phase 1+2+3 (All Enhancements)",
+          "configuration_description": "All features + caching (on repeat)",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": true,
+            "enable_context_optimization": true,
+            "enable_metadata_filtering": false
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "Q3",
+      "question": "What are the differences between semantic and keyword search?",
+      "category": "conceptual",
+      "difficulty": "medium",
+      "configurations": [
+        {
+          "answer": "According to the provided documentation, the main differences between semantic and keyword search are:\n\n1. **Understanding meaning**: Semantic search understands the meaning and context of the query, whereas keyword search only matches exact words.\n2. **Synthesizing information**: Semantic search can synthesize information from semantically similar documents, whereas keyword search returns a list of matching documents without considering their relationships.\n\nIn summary, semantic search is more advanced than keyword search as it:\n\n* Understands the meaning and context of the query\n* Synthesizes information from related documents\n* Returns results that are relevant to the user's intent",
+          "confidence": 43.8,
+          "confidence_level": "Unknown",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/test/corpus.doctest",
+              "relevance_score": 0.476,
+              "adjusted_score": 0.476,
+              "percentile_rank": 100,
+              "actual_score": 0.4757,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:52:49.911003"
+            },
+            {
+              "id": 2,
+              "file_path": "src/api/routes/search.py",
+              "relevance_score": 0.473,
+              "adjusted_score": 0.473,
+              "percentile_rank": 88,
+              "actual_score": 0.4731,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T15:03:00.961179"
+            },
+            {
+              "id": 3,
+              "file_path": "ADVANCED_RETRIEVAL_ACCURACY_ANALYSIS.md",
+              "relevance_score": 0.472,
+              "adjusted_score": 0.472,
+              "percentile_rank": 77,
+              "actual_score": 0.4716,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T22:59:25.118528"
+            },
+            {
+              "id": 4,
+              "file_path": "OPTIONAL_USER_CONFIGS_FOR_RAG_ACCURACY.md",
+              "relevance_score": 0.469,
+              "adjusted_score": 0.469,
+              "percentile_rank": 66,
+              "actual_score": 0.4692,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:00:32.042614"
+            },
+            {
+              "id": 5,
+              "file_path": "docs/archive/SEARCHABLE_INDEX.json",
+              "relevance_score": 0.468,
+              "adjusted_score": 0.468,
+              "percentile_rank": 55,
+              "actual_score": 0.4685,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:08:07.056713"
+            },
+            {
+              "id": 6,
+              "file_path": "NEW_INFRASTRUCTURE_PAGES.md",
+              "relevance_score": 0.444,
+              "adjusted_score": 0.444,
+              "percentile_rank": 44,
+              "actual_score": 0.4436,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:54:23.536751"
+            },
+            {
+              "id": 7,
+              "file_path": "services/ecosystem-mcp/docs/development/NEW_INFRASTRUCTURE_PAGES.md",
+              "relevance_score": 0.44,
+              "adjusted_score": 0.44,
+              "percentile_rank": 33,
+              "actual_score": 0.4401,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:15:20.864292"
+            },
+            {
+              "id": 8,
+              "file_path": "docs/VECTORIZATION_IMPLEMENTATION_SUMMARY.md",
+              "relevance_score": 0.427,
+              "adjusted_score": 0.427,
+              "percentile_rank": 22,
+              "actual_score": 0.4275,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:05:03.449584"
+            },
+            {
+              "id": 9,
+              "file_path": "tests/integration/test_semantic_search_workflow.py",
+              "relevance_score": 0.42,
+              "adjusted_score": 0.42,
+              "percentile_rank": 11,
+              "actual_score": 0.4198,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:03:52.003742"
+            }
+          ],
+          "metadata": {
+            "documents_used": 9,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "top_score": 0.47570409774780276,
+            "cached": false,
+            "total_time_ms": 8773,
+            "retrieval_time_ms": 18,
+            "generation_time_ms": 8753
+          },
+          "elapsed_seconds": 8.78,
+          "status": "success",
+          "configuration_name": "Standard RAG",
+          "configuration_description": "Baseline semantic search only",
+          "configuration_settings": {}
+        },
+        {
+          "answer": "Based on the Ecosystem-MCP microservices documentation system, I can provide an explanation of the differences between semantic and keyword search.\n\n**Semantic Search:**\nIn a semantic search, the algorithm analyzes the meaning and context of the query text to retrieve relevant documents. This type of search is particularly useful when searching for content that requires understanding the nuances of language, such as in natural language processing (NLP) applications.\n\nIn our ecosystem, semantic search uses a model like `nomic-embed-text` (Ollama) to generate embeddings for both queries and documents. These embeddings are then compared using cosine similarity or other algorithms to rank the relevance of each document.\n\n**Keyword Search:**\nOn the other hand, keyword search relies solely on matching specific words or phrases in the query text with the same words or phrases in the documents. This type of search is commonly used in traditional information retrieval systems and databases.\n\nIn our ecosystem, keyword search can be performed using a simple string matching algorithm, such as exact matching or proximity-based searching. However, this approach may not capture the nuances of language and might return less relevant results compared to semantic search.\n\n**Key differences:**\n\n1. **Contextual understanding**: Semantic search attempts to understand the context and meaning of the query text, while keyword search relies solely on matching specific words.\n2. **Algorithmic complexity**: Semantic search algorithms are typically more complex and require significant computational resources, whereas keyword search algorithms are often simpler and more efficient.\n3. **Relevance ranking**: Semantic search returns results based on their relevance to the query context, while keyword search simply matches words and ranks documents by frequency of matching terms.\n\nIn summary, semantic search is a more advanced and context-aware approach that can provide more accurate and relevant results in situations where language nuances are crucial, while keyword search is a simpler and more efficient method suitable for basic information retrieval tasks.",
+          "confidence": 67.6,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "docs/VECTORIZATION_IMPLEMENTATION_SUMMARY.md",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.016,
+              "percentile_rank": 100,
+              "actual_score": 0.0159,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "services/ecosystem-mcp/docs/development/NEW_INFRASTRUCTURE_PAGES.md",
+              "relevance_score": 0.87,
+              "adjusted_score": 0.015,
+              "percentile_rank": 87,
+              "actual_score": 0.0152,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "NEW_INFRASTRUCTURE_PAGES.md",
+              "relevance_score": 0.75,
+              "adjusted_score": 0.015,
+              "percentile_rank": 75,
+              "actual_score": 0.015,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "tests/integration/test_semantic_search_workflow.py",
+              "relevance_score": 0.62,
+              "adjusted_score": 0.014,
+              "percentile_rank": 62,
+              "actual_score": 0.014,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "generated_docs_deep/FEATURES.md",
+              "relevance_score": 0.5,
+              "adjusted_score": 0.013,
+              "percentile_rank": 50,
+              "actual_score": 0.0129,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "horus_heresy_demo/reports/VECTORIZATION_GUIDE.md",
+              "relevance_score": 0.37,
+              "adjusted_score": 0.012,
+              "percentile_rank": 37,
+              "actual_score": 0.0119,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "ADVANCED_RETRIEVAL_ACCURACY_ANALYSIS.md",
+              "relevance_score": 0.25,
+              "adjusted_score": 0.011,
+              "percentile_rank": 25,
+              "actual_score": 0.0114,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "EMBEDDING_SERVICE_INVESTIGATION.md",
+              "relevance_score": 0.12,
+              "adjusted_score": 0.011,
+              "percentile_rank": 12,
+              "actual_score": 0.0112,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 8,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What are the differences between semantic and keyword search?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": false,
+              "context_optimization": false,
+              "metadata_filtering": false
+            },
+            "top_score": 0.015855532786885243
+          },
+          "elapsed_seconds": 14.67,
+          "status": "success",
+          "configuration_name": "Phase 1 Only",
+          "configuration_description": "Hybrid search + query rewriting + confidence",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": false,
+            "enable_context_optimization": false
+          }
+        },
+        {
+          "answer": "Based on the provided context, it appears that semantic search is a more advanced and sophisticated search mechanism compared to keyword search. Here's a breakdown of the differences:\n\n**Semantic Search**\n\n* Uses semantic search capabilities to find relevant information based on the meaning and context of queries\n* Utilizes techniques such as embeddings, relevance ranking, deduplication, Git history awareness, and topic matching (Source 2)\n* Integrates with Large Language Models (LLMs) like Ollama and Cursor for enhanced language understanding and generation (Source 4)\n\n**Keyword Search**\n\n* Not explicitly discussed in the provided context; however, it can be inferred that keyword search is a more basic form of searching that relies on exact matches or simple pattern matching\n* Lacks the advanced features and capabilities offered by semantic search\n\nIn summary, semantic search provides a more nuanced and accurate way to find relevant information by understanding the meaning and context of queries, whereas keyword search is a more basic and literal approach.\n\nReferences:\n[Source 2], [Source 4]",
+          "confidence": 67.1,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "generate_history_search_only.py",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.009,
+              "percentile_rank": 100,
+              "actual_score": -3.6014,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "src/services/dynamic_rag/document_finder.py",
+              "relevance_score": 0.8,
+              "adjusted_score": 0.011,
+              "percentile_rank": 80,
+              "actual_score": -3.8882,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "src/api/routes/search.py",
+              "relevance_score": 0.6,
+              "adjusted_score": 0.01,
+              "percentile_rank": 60,
+              "actual_score": -4.696,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "generated_docs/FEATURES.md",
+              "relevance_score": 0.4,
+              "adjusted_score": 0.009,
+              "percentile_rank": 40,
+              "actual_score": -5.0801,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "tests/integration/test_semantic_search_workflow.py",
+              "relevance_score": 0.2,
+              "adjusted_score": 0.014,
+              "percentile_rank": 20,
+              "actual_score": -5.4658,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 5,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What are the differences between semantic and keyword search?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.008893849920783523
+          },
+          "elapsed_seconds": 13.5,
+          "status": "success",
+          "configuration_name": "Phase 1+2",
+          "configuration_description": "All Phase 1 + reranking + context optimization",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": true,
+            "enable_context_optimization": true,
+            "enable_metadata_filtering": false
+          }
+        },
+        {
+          "answer": "Based on the provided context, I can answer your question about the differences between semantic and keyword search.\n\nSemantic search and keyword search are two distinct approaches used in ecosystem-mcp for information retrieval. While both methods aim to find relevant documents or information, they differ significantly in their approach:\n\n**Keyword Search:**\n\nEcosystem-mcp's keyword search is a traditional method that relies on exact matching of words or phrases in the query with those found in the document content. This approach focuses primarily on lexical similarity and does not consider the context, meaning, or relevance of the retrieved documents.\n\n**Semantic Search:**\n\nIn contrast, semantic search employs advanced techniques like embeddings, vector storage, and RAG (Retrieval Augmented Generation) to find relevant documents based on their meaning and context. Semantic search uses a combination of factors such as:\n\n1. **Embeddings**: This method generates numerical representations of words or phrases in the query and compares them with the embedded representations of document content.\n2. **Vector Storage**: The system stores these embedded representations in a vector space, enabling efficient querying and retrieval of relevant documents.\n3. **RAG (Retrieval Augmented Generation)**: RAG combines retrieval and generation to produce high-quality responses by using the retrieved documents as input for subsequent processing.\n\nSemantic search takes into account the relevance, context, and meaning of the documents, making it a more robust and accurate method compared to keyword search.\n\nSources:\n[Source 1] `generate_history_search_only.py` (Module Description)\n[Source 2] `src/services/dynamic_rag/document_finder.py` (Document Finder)\n[Source 4] `generated_docs/FEATURES.md` (Features of Ecosystem-mcp)\n\nPlease note that this answer is based on the provided context and might not be exhaustive or definitive.",
+          "confidence": 71.1,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "generate_history_search_only.py",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.009,
+              "percentile_rank": 100,
+              "actual_score": -3.6014,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "src/services/dynamic_rag/document_finder.py",
+              "relevance_score": 0.8,
+              "adjusted_score": 0.011,
+              "percentile_rank": 80,
+              "actual_score": -3.8882,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "src/api/routes/search.py",
+              "relevance_score": 0.6,
+              "adjusted_score": 0.01,
+              "percentile_rank": 60,
+              "actual_score": -4.696,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "generated_docs/FEATURES.md",
+              "relevance_score": 0.4,
+              "adjusted_score": 0.009,
+              "percentile_rank": 40,
+              "actual_score": -5.0801,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "tests/integration/test_semantic_search_workflow.py",
+              "relevance_score": 0.2,
+              "adjusted_score": 0.014,
+              "percentile_rank": 20,
+              "actual_score": -5.4658,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 5,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What are the differences between semantic and keyword search?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.008893849920783523
+          },
+          "elapsed_seconds": 13.16,
+          "status": "success",
+          "configuration_name": "Phase 1+2+3 (All Enhancements)",
+          "configuration_description": "All features + caching (on repeat)",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": true,
+            "enable_context_optimization": true,
+            "enable_metadata_filtering": false
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "Q4",
+      "question": "How to fix database connection errors?",
+      "category": "troubleshooting",
+      "difficulty": "easy",
+      "configurations": [
+        {
+          "answer": "The issues with database connections!\n\nTo fix database connection errors, I'd recommend the following:\n\n1. **Check the database credentials**: Verify that the database username, password, and host are correct.\n2. **Test the database connection**: Run a simple query to ensure the connection is working (e.g., `SELECT 1`).\n3. **Handle exceptions properly**: Implement proper error handling to catch and log any connection-related errors.\n4. **Check database availability**: Verify that the database is available and not experiencing downtime or maintenance.\n5. **Optimize queries**: Ensure that your queries are optimized for performance, as slow queries can cause connection issues.\n\nIn the context of the Ecosystem-MCP microservices documentation system, you might want to consider implementing a retry mechanism for failed database connections, as well as monitoring the database's performance and availability.\n\nRemember, it's essential to troubleshoot the root cause of the issue rather than just masking the symptoms. By following these steps, you should be able to identify and resolve the underlying problems causing your database connection errors!",
+          "confidence": 42.9,
+          "confidence_level": "Unknown",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "HARDENING_PROGRESS.md",
+              "relevance_score": 0.458,
+              "adjusted_score": 0.458,
+              "percentile_rank": 100,
+              "actual_score": 0.4577,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:54:10.609307"
+            },
+            {
+              "id": 2,
+              "file_path": "server.log",
+              "relevance_score": 0.453,
+              "adjusted_score": 0.453,
+              "percentile_rank": 90,
+              "actual_score": 0.4529,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:57:05.635784"
+            },
+            {
+              "id": 3,
+              "file_path": "DEBUGGING_STRUGGLES_AND_SOLUTIONS.md",
+              "relevance_score": 0.451,
+              "adjusted_score": 0.451,
+              "percentile_rank": 80,
+              "actual_score": 0.4514,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:53:50.120203"
+            },
+            {
+              "id": 4,
+              "file_path": "services/ecosystem-mcp/docs/guides/DEBUGGING_STRUGGLES_AND_SOLUTIONS.md",
+              "relevance_score": 0.451,
+              "adjusted_score": 0.451,
+              "percentile_rank": 70,
+              "actual_score": 0.4508,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:16:19.078844"
+            },
+            {
+              "id": 5,
+              "file_path": "ALL_FIXES_VALIDATION_COMPLETE.md",
+              "relevance_score": 0.449,
+              "adjusted_score": 0.449,
+              "percentile_rank": 60,
+              "actual_score": 0.4486,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:02:58.346887"
+            },
+            {
+              "id": 6,
+              "file_path": "config/service_registry.yaml",
+              "relevance_score": 0.449,
+              "adjusted_score": 0.449,
+              "percentile_rank": 50,
+              "actual_score": 0.4485,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:59:07.596176"
+            },
+            {
+              "id": 7,
+              "file_path": "FIXES_VALIDATION_FINAL.md",
+              "relevance_score": 0.448,
+              "adjusted_score": 0.448,
+              "percentile_rank": 40,
+              "actual_score": 0.4482,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:02:32.827789"
+            },
+            {
+              "id": 8,
+              "file_path": "services/ecosystem-mcp/docs/architecture/ISSUE_ROOT_CAUSE_AND_FIX.md",
+              "relevance_score": 0.443,
+              "adjusted_score": 0.443,
+              "percentile_rank": 30,
+              "actual_score": 0.443,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:15:59.980348"
+            },
+            {
+              "id": 9,
+              "file_path": "ISSUE_ROOT_CAUSE_AND_FIX.md",
+              "relevance_score": 0.436,
+              "adjusted_score": 0.436,
+              "percentile_rank": 20,
+              "actual_score": 0.4363,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 3,
+              "updated_at": "2025-10-27T14:55:02.482256"
+            },
+            {
+              "id": 10,
+              "file_path": "ISSUES_INVESTIGATION_REPORT.md",
+              "relevance_score": 0.43,
+              "adjusted_score": 0.43,
+              "percentile_rank": 10,
+              "actual_score": 0.4296,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:02:20.305865"
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "top_score": 0.4576981902122498,
+            "cached": false,
+            "total_time_ms": 9676,
+            "retrieval_time_ms": 16,
+            "generation_time_ms": 9659
+          },
+          "elapsed_seconds": 9.68,
+          "status": "success",
+          "configuration_name": "Standard RAG",
+          "configuration_description": "Baseline semantic search only",
+          "configuration_settings": {}
+        },
+        {
+          "answer": "It seems that you are referring to the database connection errors in the Ecosystem-MCP microservices documentation system. Based on the provided information, here's how to fix those issues:\n\n1. **Fix #1: Context-Aware Async**: Update the `get_database()` function to return a proper database object for the context-aware query endpoint.\n\nCode:\n```python\ndb = get_database()\ndoc_repo = DocumentRepository(db)\n```\n\n2. **Fix #2: Cache Clear Duplicate Routes**: Rename the duplicate `/clear-cache` route to `/clear-cache-prefix` and change the error handling to raise an `HTTPException`.\n\nCode:\n```python\n@router.post(\"/clear-cache-prefix\", ...)\nasync def clear_cache_by_prefix(prefix: str = ...):\n    ...\n    if error_occurred:\n        raise HTTPException(status_code=500, detail=\"Failed to clear cache\")\n```\n\n3. **Fix #3: Multi-Pass Quick Wins**: Add a check for empty database before starting the multi-pass query and raise an `HTTPException` with a 503 status code.\n\nCode:\n```python\ndoc_count = await db.execute_scalar(\"SELECT COUNT(*) FROM documents WHERE is_latest = true\")\nif doc_count == 0:\n    raise HTTPException(status_code=503, detail=\"No documents available for multi-pass query. Please ingest documents first.\")\n```\n\nAfter implementing these fixes, you can expect the database connection errors to be resolved, and the system should function as intended.",
+          "confidence": 69.1,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "DEBUGGING_SESSION_COMPLETE.md",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.017,
+              "percentile_rank": 100,
+              "actual_score": 0.0165,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "ISSUE_ROOT_CAUSE_AND_FIX.md",
+              "relevance_score": 0.88,
+              "adjusted_score": 0.015,
+              "percentile_rank": 88,
+              "actual_score": 0.0154,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "services/ecosystem-mcp/docs/architecture/ISSUE_ROOT_CAUSE_AND_FIX.md",
+              "relevance_score": 0.77,
+              "adjusted_score": 0.015,
+              "percentile_rank": 77,
+              "actual_score": 0.0149,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "FIXES_VALIDATION_TEST.md",
+              "relevance_score": 0.66,
+              "adjusted_score": 0.015,
+              "percentile_rank": 66,
+              "actual_score": 0.0145,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "DATABASE_SCHEMA_ISSUE_ROOT_CAUSE.md",
+              "relevance_score": 0.55,
+              "adjusted_score": 0.013,
+              "percentile_rank": 55,
+              "actual_score": 0.0127,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "CRITICAL_IMPROVEMENTS.md",
+              "relevance_score": 0.44,
+              "adjusted_score": 0.012,
+              "percentile_rank": 44,
+              "actual_score": 0.0122,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 7,
+              "file_path": "COMPLETE_ISSUES_RESOLUTION_FINAL.md",
+              "relevance_score": 0.33,
+              "adjusted_score": 0.012,
+              "percentile_rank": 33,
+              "actual_score": 0.0118,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 8,
+              "file_path": "services/ecosystem-mcp/DEBUGGING_SESSION_COMPLETE.md",
+              "relevance_score": 0.22,
+              "adjusted_score": 0.012,
+              "percentile_rank": 22,
+              "actual_score": 0.0116,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 9,
+              "file_path": "ISSUES_INVESTIGATION_REPORT.md",
+              "relevance_score": 0.11,
+              "adjusted_score": 0.011,
+              "percentile_rank": 11,
+              "actual_score": 0.0109,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 9,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "How to fix database connection errors?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": false,
+              "context_optimization": false,
+              "metadata_filtering": false
+            },
+            "top_score": 0.01650537634408602
+          },
+          "elapsed_seconds": 12.66,
+          "status": "success",
+          "configuration_name": "Phase 1 Only",
+          "configuration_description": "Hybrid search + query rewriting + confidence",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": false,
+            "enable_context_optimization": false
+          }
+        },
+        {
+          "answer": "According to the context, there are a few instances where database connection errors were encountered:\n\n1. In the `FIXES_VALIDATION_TEST.md` file, under Fix #1: Context-Aware Async Error, it is mentioned that a \"Database async context manager protocol error\" was encountered.\n2. In the `fix_database_schema.sh` script, there are commands to run Alembic migrations and apply SQL directly. It appears that these operations may have failed due to database connection issues.\n\nTo fix database connection errors, you can try the following:\n\n1. Check your database configuration file (`database.conf` or similar) for any typos, incorrect credentials, or invalid connections.\n2. Ensure that your application container (e.g., `ecosystem-mcp`) has the necessary dependencies installed and configured correctly to connect to your database.\n3. Run Alembic migrations in a controlled environment to test the migration process and identify any issues before applying them to your production database.\n\nAdditionally, you can refer to the `database_session.py` file (Source 3) for more information on how to set up a high-level interface for database operations with automatic retry logic, connection pooling, and error handling. This may help resolve any connection-related errors.\n\nRemember to verify the success rate of your fixes by running additional tests or verifying the database schema after applying the fixes.",
+          "confidence": 72.5,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "FIXES_VALIDATION_TEST.md",
+              "relevance_score": 0.826,
+              "adjusted_score": 0.015,
+              "percentile_rank": 100,
+              "actual_score": 0.8262,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "FIXES_VALIDATION_FINAL.md",
+              "relevance_score": 0.8,
+              "adjusted_score": 0.011,
+              "percentile_rank": 80,
+              "actual_score": -0.2596,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "src/storage/database_session.py",
+              "relevance_score": 0.6,
+              "adjusted_score": 0.006,
+              "percentile_rank": 60,
+              "actual_score": -0.424,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "fix_database_schema.sh",
+              "relevance_score": 0.4,
+              "adjusted_score": 0.006,
+              "percentile_rank": 40,
+              "actual_score": -0.6478,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "ALL_FIXES_VALIDATION_COMPLETE.md",
+              "relevance_score": 0.2,
+              "adjusted_score": 0.01,
+              "percentile_rank": 20,
+              "actual_score": -1.0722,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 5,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "How to fix database connection errors?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.014520202020202018
+          },
+          "elapsed_seconds": 13.7,
+          "status": "success",
+          "configuration_name": "Phase 1+2",
+          "configuration_description": "All Phase 1 + reranking + context optimization",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": true,
+            "enable_context_optimization": true,
+            "enable_metadata_filtering": false
+          }
+        },
+        {
+          "answer": "Based on the provided context from the documentation sources, I can answer your question as follows:\n\nTo fix database connection errors, you can refer to Fix #1: Context-Aware Async Error in the `FIXES_VALIDATION_TEST.md` file. According to this fix, the issue was caused by a database async context manager protocol error.\n\nThe fix suggests removing the `async with` statement and using the database directly instead. This is evident from the `__init__()` method in the `database_session.py` module (Source 3), which provides a high-level interface for database operations with automatic retry logic, connection pooling, and error handling.\n\nIn particular, the fix recommends replacing `async with db.session() as session:` with `db.session()` to properly establish a database session. This should resolve any issues related to database connection errors.\n\nPlease note that this answer is based on the provided context and may not be applicable in all situations. If you have further questions or concerns, please feel free to ask!",
+          "confidence": 70.5,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "FIXES_VALIDATION_TEST.md",
+              "relevance_score": 0.826,
+              "adjusted_score": 0.015,
+              "percentile_rank": 100,
+              "actual_score": 0.8262,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "FIXES_VALIDATION_FINAL.md",
+              "relevance_score": 0.8,
+              "adjusted_score": 0.011,
+              "percentile_rank": 80,
+              "actual_score": -0.2596,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "src/storage/database_session.py",
+              "relevance_score": 0.6,
+              "adjusted_score": 0.006,
+              "percentile_rank": 60,
+              "actual_score": -0.424,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "fix_database_schema.sh",
+              "relevance_score": 0.4,
+              "adjusted_score": 0.006,
+              "percentile_rank": 40,
+              "actual_score": -0.6478,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "ALL_FIXES_VALIDATION_COMPLETE.md",
+              "relevance_score": 0.2,
+              "adjusted_score": 0.01,
+              "percentile_rank": 20,
+              "actual_score": -1.0722,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 5,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "How to fix database connection errors?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.014520202020202018
+          },
+          "elapsed_seconds": 12.3,
+          "status": "success",
+          "configuration_name": "Phase 1+2+3 (All Enhancements)",
+          "configuration_description": "All features + caching (on repeat)",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": true,
+            "enable_context_optimization": true,
+            "enable_metadata_filtering": false
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "Q5",
+      "question": "What is the BM25 algorithm and why is it used?",
+      "category": "technical",
+      "difficulty": "hard",
+      "configurations": [
+        {
+          "answer": "I'm an intelligent assistant for the Ecosystem-MCP microservices documentation system, but I don't see any mention of the BM25 algorithm in the text. The text focuses on optimizing the performance of a file processing pipeline by implementing various optimizations such as dynamic batch sizing, early filtering, adaptive batch sizing, and connection reuse.\n\nBM25 is actually an algorithm used for information retrieval and ranking search results based on their relevance to a query. It's not directly related to the topic of this conversation.\n\nIf you have any further questions or would like me to help with something else, please feel free to ask!",
+          "confidence": 44.3,
+          "confidence_level": "Unknown",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "docs/archive/future-refinements/hierarchical_mcp_training_pipeline.md",
+              "relevance_score": 0.485,
+              "adjusted_score": 0.485,
+              "percentile_rank": 100,
+              "actual_score": 0.4854,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:15:53.402757"
+            },
+            {
+              "id": 2,
+              "file_path": "VALIDATION_AND_PLANNING_COMPLETE.md",
+              "relevance_score": 0.485,
+              "adjusted_score": 0.485,
+              "percentile_rank": 90,
+              "actual_score": 0.4852,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:01:21.716689"
+            },
+            {
+              "id": 3,
+              "file_path": "services/ecosystem-mcp/docs/architecture/IMPLEMENTATION_PLAN.md",
+              "relevance_score": 0.485,
+              "adjusted_score": 0.485,
+              "percentile_rank": 80,
+              "actual_score": 0.4851,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 0,
+              "updated_at": "2025-10-30T15:16:16.418800"
+            },
+            {
+              "id": 4,
+              "file_path": "ECOSYSTEM_MCP_TECHNICAL_DESIGN_DOCUMENT.md",
+              "relevance_score": 0.482,
+              "adjusted_score": 0.482,
+              "percentile_rank": 70,
+              "actual_score": 0.4819,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:00:41.484928"
+            },
+            {
+              "id": 5,
+              "file_path": "docs/archive/future-refinements/platform_readiness_assessment.md",
+              "relevance_score": 0.477,
+              "adjusted_score": 0.477,
+              "percentile_rank": 60,
+              "actual_score": 0.4765,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:15:49.629082"
+            },
+            {
+              "id": 6,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/translate/ibm5.py",
+              "relevance_score": 0.476,
+              "adjusted_score": 0.476,
+              "percentile_rank": 50,
+              "actual_score": 0.4764,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": "2025-10-30T05:54:18.817568"
+            },
+            {
+              "id": 7,
+              "file_path": "docs/archive/future-refinements/local_llm_platform_architecture.md",
+              "relevance_score": 0.47,
+              "adjusted_score": 0.47,
+              "percentile_rank": 40,
+              "actual_score": 0.4696,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:15:34.894235"
+            },
+            {
+              "id": 8,
+              "file_path": "PHASE3_DEPLOYMENT_SUCCESS.md",
+              "relevance_score": 0.469,
+              "adjusted_score": 0.469,
+              "percentile_rank": 30,
+              "actual_score": 0.4691,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T22:59:07.197680"
+            },
+            {
+              "id": 9,
+              "file_path": "docs/archive/future-refinements/advanced_llm_architecture_patterns.md",
+              "relevance_score": 0.466,
+              "adjusted_score": 0.466,
+              "percentile_rank": 20,
+              "actual_score": 0.4665,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:15:31.064819"
+            },
+            {
+              "id": 10,
+              "file_path": "PHASE3_IMPLEMENTATION_PLAN.md",
+              "relevance_score": 0.464,
+              "adjusted_score": 0.464,
+              "percentile_rank": 10,
+              "actual_score": 0.4643,
+              "score_type": "standard",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 5,
+              "updated_at": "2025-10-25T23:00:23.954079"
+            }
+          ],
+          "metadata": {
+            "documents_used": 10,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "top_score": 0.4854052305221558,
+            "cached": false,
+            "total_time_ms": 9832,
+            "retrieval_time_ms": 16,
+            "generation_time_ms": 9814
+          },
+          "elapsed_seconds": 9.84,
+          "status": "success",
+          "configuration_name": "Standard RAG",
+          "configuration_description": "Baseline semantic search only",
+          "configuration_settings": {}
+        },
+        {
+          "answer": "I think there may be some confusion here!\n\nThe text you provided doesn't mention the BM25 algorithm at all. It seems to be a documentation for a local LLM platform, discussing topics like architecture, implementation guides, and companion documents.\n\nBM25 is actually an algorithm used in natural language processing (NLP) and information retrieval (IR). It's a ranking function that estimates the relevance of a document to a query based on the frequency and proximity of terms. BM25 stands for \"Best Match 25\", and it's often used as part of search engines, like Elasticsearch or Apache Solr.\n\nIf you'd like to know more about BM25, I can provide you with some information!",
+          "confidence": 64.4,
+          "confidence_level": "Medium",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": "PHASE3_IMPLEMENTATION_PLAN.md",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.012,
+              "percentile_rank": 100,
+              "actual_score": 0.0119,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": "PHASE3_IMPLEMENTATION_PLAN.md",
+              "relevance_score": 0.83,
+              "adjusted_score": 0.012,
+              "percentile_rank": 83,
+              "actual_score": 0.0118,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": "docs/archive/future-refinements/advanced_llm_architecture_patterns.md",
+              "relevance_score": 0.66,
+              "adjusted_score": 0.011,
+              "percentile_rank": 66,
+              "actual_score": 0.0114,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": "generated_docs_deep/COMPREHENSIVE_DOCUMENTATION.md",
+              "relevance_score": 0.5,
+              "adjusted_score": 0.011,
+              "percentile_rank": 50,
+              "actual_score": 0.0111,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": "PHASE3_DEPLOYMENT_SUCCESS.md",
+              "relevance_score": 0.33,
+              "adjusted_score": 0.011,
+              "percentile_rank": 33,
+              "actual_score": 0.0111,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 6,
+              "file_path": "docs/archive/future-refinements/local_llm_platform_architecture.md",
+              "relevance_score": 0.16,
+              "adjusted_score": 0.011,
+              "percentile_rank": 16,
+              "actual_score": 0.0107,
+              "score_type": "hybrid",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 6,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What is the BM25 algorithm and why is it used?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": false,
+              "context_optimization": false,
+              "metadata_filtering": false
+            },
+            "top_score": 0.011949685534591194
+          },
+          "elapsed_seconds": 12.75,
+          "status": "success",
+          "configuration_name": "Phase 1 Only",
+          "configuration_description": "Hybrid search + query rewriting + confidence",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": false,
+            "enable_context_optimization": false
+          }
+        },
+        {
+          "answer": "I'm an intelligent assistant for the Ecosystem-MCP microservices documentation system. I can provide information based on the provided context.\n\nFrom the given context, I can see that there are no mentions of the BM25 algorithm. However, since you asked what it is and why it's used, I'll provide some general information about BM25.\n\nBM25 (Best Match 25) is a ranking function used in Information Retrieval (IR). It's designed to rank documents based on their relevance to a query. The BM25 algorithm takes into account the frequency of terms in the document and the collection as well as the term's importance within the query.\n\nThe BM25 algorithm was developed by Kamalika Chaudhuri, Vassilis Papavasiliou, John Shawe-Taylor, and others at Microsoft Research Cambridge. It's widely used in search engines, such as Apache Solr and Elasticsearch, to rank documents based on their relevance to a user's query.\n\nThe BM25 algorithm is particularly useful when there are many irrelevant documents in the collection, as it can help identify the most relevant documents by considering factors like term frequency, inverse document frequency, and document length.",
+          "confidence": 56.4,
+          "confidence_level": "Low",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/stem/porter.py",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.006,
+              "percentile_rank": 100,
+              "actual_score": -7.7269,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/app/chartparser_app.py",
+              "relevance_score": 0.8,
+              "adjusted_score": 0.005,
+              "percentile_rank": 80,
+              "actual_score": -8.4604,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/tag/hmm.py",
+              "relevance_score": 0.6,
+              "adjusted_score": 0.006,
+              "percentile_rank": 60,
+              "actual_score": -8.9849,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/stem/arlstem.py",
+              "relevance_score": 0.4,
+              "adjusted_score": 0.005,
+              "percentile_rank": 40,
+              "actual_score": -9.0989,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/tokenize/punkt.py",
+              "relevance_score": 0.2,
+              "adjusted_score": 0.006,
+              "percentile_rank": 20,
+              "actual_score": -9.2056,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 5,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What is the BM25 algorithm and why is it used?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.005578410145375811
+          },
+          "elapsed_seconds": 16.55,
+          "status": "success",
+          "configuration_name": "Phase 1+2",
+          "configuration_description": "All Phase 1 + reranking + context optimization",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": true,
+            "enable_context_optimization": true,
+            "enable_metadata_filtering": false
+          }
+        },
+        {
+          "answer": "I'm an intelligent assistant for the Ecosystem-MCP microservices documentation system. I can help with your question.\n\nThe BM25 algorithm, also known as Best Match 25, is a ranking function used in information retrieval, particularly in text search engines and recommender systems. It is designed to improve the relevance of search results by taking into account both the frequency of a query term within a document and the rarity of that term across the entire corpus.\n\nBM25 is widely used because it addresses some limitations of earlier ranking functions like TF-IDF (Term Frequency-Inverse Document Frequency). TF-IDF only considers the frequency of terms within individual documents, whereas BM25 also takes into account the rarity of those terms across the entire corpus. This makes BM25 more effective at ranking results that are highly relevant to a specific query.\n\nIn the context provided, it is likely that the Ecosystem-MCP microservices documentation system uses BM25 as part of its search functionality to provide accurate and relevant search results.",
+          "confidence": 53.0,
+          "confidence_level": "Low",
+          "sources": [
+            {
+              "id": 1,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/stem/porter.py",
+              "relevance_score": 1.0,
+              "adjusted_score": 0.006,
+              "percentile_rank": 100,
+              "actual_score": -7.7269,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": null
+            },
+            {
+              "id": 2,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/app/chartparser_app.py",
+              "relevance_score": 0.8,
+              "adjusted_score": 0.005,
+              "percentile_rank": 80,
+              "actual_score": -8.4604,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": null
+            },
+            {
+              "id": 3,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/tag/hmm.py",
+              "relevance_score": 0.6,
+              "adjusted_score": 0.006,
+              "percentile_rank": 60,
+              "actual_score": -8.9849,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": null,
+              "updated_at": null
+            },
+            {
+              "id": 4,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/stem/arlstem.py",
+              "relevance_score": 0.4,
+              "adjusted_score": 0.005,
+              "percentile_rank": 40,
+              "actual_score": -9.0989,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": null
+            },
+            {
+              "id": 5,
+              "file_path": ".ci_test/lib/python3.13/site-packages/nltk/tokenize/punkt.py",
+              "relevance_score": 0.2,
+              "adjusted_score": 0.006,
+              "percentile_rank": 20,
+              "actual_score": -9.2056,
+              "score_type": "reranked",
+              "quality_score": null,
+              "quality_grade": null,
+              "recency_days": 1,
+              "updated_at": null
+            }
+          ],
+          "metadata": {
+            "documents_used": 5,
+            "temperature": 0.7,
+            "prefer_recent": true,
+            "query_variants": [
+              "What is the BM25 algorithm and why is it used?"
+            ],
+            "enhancements_used": {
+              "hybrid_search": true,
+              "query_rewriting": true,
+              "confidence_scoring": true,
+              "reranking": true,
+              "context_optimization": true,
+              "metadata_filtering": false
+            },
+            "top_score": 0.005578410145375811
+          },
+          "elapsed_seconds": 15.45,
+          "status": "success",
+          "configuration_name": "Phase 1+2+3 (All Enhancements)",
+          "configuration_description": "All features + caching (on repeat)",
+          "configuration_settings": {
+            "enable_hybrid_search": true,
+            "enable_query_rewriting": true,
+            "enable_confidence_scoring": true,
+            "enable_reranking": true,
+            "enable_context_optimization": true,
+            "enable_metadata_filtering": false
+          }
+        }
+      ]
+    }
+  ]
+}

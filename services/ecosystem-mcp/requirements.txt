@@ -37,6 +37,13 @@ PyYAML>=6.0.0,<7.0.0              # YAML parsing
 psutil>=5.9.0,<6.0.0              # System and process utilities
 chardet>=5.0.0,<6.0.0             # Character encoding detection
 
+# RAG Accuracy Improvements (Phase 1)
+rank-bm25>=0.2.2,<0.3.0           # BM25 algorithm for hybrid search
+nltk>=3.8.0,<4.0.0                # Natural language toolkit for query rewriting
+sentence-transformers>=2.2.0,<3.0.0  # For cross-encoder reranking (Phase 2)
+scikit-learn>=1.3.0,<2.0.0        # For text vectorization and scoring
+python-multipart>=0.0.6,<1.0.0    # For file upload handling
+
 # Logging & Monitoring
 structlog>=24.0.0,<25.0.0         # Structured logging
 coloredlogs>=15.0.0,<16.0.0       # Colored logging
