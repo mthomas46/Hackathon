@@ -87,13 +87,10 @@ class ContextAwareRAG:
         tech_filter: Optional[List[str]] = None,
         language_filter: Optional[str] = None,
         time_range: Optional[timedelta] = None,
-        limit: int = 10,
-        generate_answer: bool = True  # ✨ PHASE 5: NEW - LLM answer generation
+        limit: int = 10
     ) -> Dict[str, Any]:
         """
-        Query with context filtering and optional LLM answer generation.
-        
-        ✨ PHASE 5: Now uses EnhancementPipeline and generates LLM answers!
+        Query with context filtering.
         
         Args:
             query: Query text
@@ -105,20 +102,19 @@ class ContextAwareRAG:
             language_filter: Optional programming language filter
             time_range: Optional time range for documents
             limit: Max results
-            generate_answer: Whether to generate LLM answer (NEW Phase 5 feature!)
         
         Returns:
-            Query results with context metadata and optional LLM answer
+            Query results with context metadata
         """
-        logger.info(f"🔍 Context-aware RAG query (Phase 5): {query[:100]}")
+        logger.info(f"🔍 Context-aware RAG query: {query[:100]}")
         
-        # Get hierarchical context if specified
+        # Get context if specified
         context = None
         if context_id:
             context = await self.context_manager.get_context(context_id)
             logger.info(f"   📍 Using context: {context.name if context else 'NOT FOUND'}")
         
-        # Build context-aware where clause
+        # Build ChromaDB where clause
         where = self._build_where_clause(
             repo_id=repo_id,
             context=context,
@@ -132,125 +128,11 @@ class ContextAwareRAG:
         if where:
             logger.info(f"   🎯 Filters: {list(where.keys())}")
         
-        # ===== ENHANCED MODE (if available and answer requested) =====
-        if self.use_enhancements and self.enhancement_pipeline and generate_answer:
-            logger.info(f"✨ Using EnhancementPipeline with context filtering")
-            return await self._query_with_enhancements(query, where, context, repo_id, service_filter, limit)
-        
-        # ===== LEGACY MODE (original behavior) =====
-        logger.info(f"📋 Using legacy context-aware query")
-        return await self._query_legacy(query, where, context, repo_id, context_id, context_level, service_filter, tech_filter, language_filter, time_range, limit, generate_answer)
-    
-    async def _query_with_enhancements(
-        self,
-        query: str,
-        where: Optional[Dict],
-        context: Optional[HierarchicalContext],
-        repo_id: Optional[str],
-        service_filter: Optional[str],
-        limit: int
-    ) -> Dict[str, Any]:
-        """Execute query using EnhancementPipeline (Phase 5)."""
-        try:
-            # Use context_aware_default preset
-            config = EnhancementConfig.context_aware_default()
-            
-            # Create pre-retrieval filter hook for context filtering
-            async def context_filter(ctx):
-                return where if where else {}
-            
-            hooks = EnhancementHooks(
-                pre_retrieval_filter=context_filter
-            )
-            
-            # Execute pipeline
-            result = await self.enhancement_pipeline.execute(
-                query=query,
-                n_results=limit,
-                config=config,
-                hooks=hooks
-            )
-            
-            documents = result.get("documents", [])
-            
-            if not documents:
-                return {
-                    "query": query,
-                    "answer": "No documents found matching the specified context filters.",
-                    "filters": {},
-                    "context_info": None,
-                    "results": [],
-                    "total": 0,
-                    "metadata": {
-                        "filters_applied": where is not None,
-                        "context_used": context is not None,
-                        "enhancement_mode": "pipeline_v1",
-                        "documents_found": 0
-                    }
-                }
-            
-            # Generate answer
-            answer = await self._generate_context_answer(documents, query, context, repo_id, service_filter)
-            
-            # Format results to match API schema
-            results = []
-            for i, doc in enumerate(documents, 1):
-                results.append({
-                    "content": doc.get("content", "")[:200],
-                    "metadata": doc.get("metadata", {}),
-                    "distance": doc.get("distance", 0.0),
-                    "relevance_score": doc.get("adjusted_score", 0.0),
-                    "vector_score": doc.get("adjusted_score", 0.0),
-                    "keyword_score": 0.0,
-                    "context": None
-                })
-            
-            return {
-                "query": query,
-                "answer": answer,  # Phase 5 NEW!
-                "filters": {},
-                "context_info": {
-                    "name": context.name if context else None,
-                    "level": context.level.name if context else None,
-                    "full_path": context.full_path if context else None,
-                    "file_count": context.level_files if context else None
-                } if context else None,
-                "results": results,
-                "total": len(results),
-                "metadata": {
-                    "filters_applied": where is not None,
-                    "context_used": context is not None,
-                    "enhancement_mode": "pipeline_v1",
-                    "enhancements_used": True,
-                    "documents_found": len(results)
-                }
-            }
-        
-        except Exception as e:
-            logger.error(f"Enhancement pipeline failed: {e}", exc_info=True)
-            raise
-    
-    async def _query_legacy(
-        self,
-        query: str,
-        where: Optional[Dict],
-        context: Optional[HierarchicalContext],
-        repo_id: Optional[str],
-        context_id: Optional[str],
-        context_level: Optional[ContextLevel],
-        service_filter: Optional[str],
-        tech_filter: Optional[List[str]],
-        language_filter: Optional[str],
-        time_range: Optional[timedelta],
-        limit: int,
-        generate_answer: bool
-    ) -> Dict[str, Any]:
-        """Execute query using legacy method (original behavior)."""
         # Generate query embedding
         embedding_result = await self.embedding_service.generate_embedding(query)
         query_embedding = embedding_result["embedding"] if isinstance(embedding_result, dict) else embedding_result
         
-        # Query ChromaDB
+        # Query ChromaDB with context
         try:
             results = await self.chromadb.query(
                 query_embeddings=[query_embedding],
@@ -259,6 +141,7 @@ class ContextAwareRAG:
             )
         except Exception as e:
             logger.warning(f"⚠️ ChromaDB query with filters failed, retrying without filters: {e}")
+            # Fallback: query without filters
             results = await self.chromadb.query(
                 query_embeddings=[query_embedding],
                 n_results=limit
@@ -270,21 +153,8 @@ class ContextAwareRAG:
         # Calculate relevance scores
         scored_results = self._calculate_relevance_scores(enhanced_results, query)
         
-        # Generate answer if requested
-        answer = None
-        if generate_answer and scored_results:
-            try:
-                docs_for_answer = [
-                    {"content": r.get("content", r.get("document", "")), "file_path": r.get("file_path", "Unknown")}
-                    for r in scored_results
-                ]
-                answer = await self._generate_context_answer(docs_for_answer, query, context, repo_id, service_filter)
-            except Exception as e:
-                logger.error(f"Failed to generate answer: {e}")
-        
         return {
             "query": query,
-            "answer": answer,
             "filters": {
                 "repo_id": repo_id,
                 "context_id": context_id,
@@ -304,64 +174,9 @@ class ContextAwareRAG:
             "total": len(scored_results),
             "metadata": {
                 "filters_applied": where is not None,
-                "context_used": context is not None,
-                "enhancement_mode": "legacy",
-                "answer_generated": answer is not None
+                "context_used": context is not None
             }
         }
-    
-    async def _generate_context_answer(
-        self,
-        documents: List[Dict[str, Any]],
-        query: str,
-        context: Optional[HierarchicalContext],
-        repo_id: Optional[str],
-        service_filter: Optional[str]
-    ) -> str:
-        """Generate LLM answer from context-filtered documents (NEW Phase 5 method)."""
-        if not documents:
-            return "No documents found matching the specified context filters."
-        
-        # Build context text
-        context_parts = []
-        for i, doc in enumerate(documents, 1):
-            content = doc.get("content", "")[:500]  # Limit content
-            context_parts.append(f"[Source {i}] {doc.get('file_path', 'Unknown')}\n{content}\n")
-        
-        context_text = "\n---\n\n".join(context_parts)
-        
-        # Build context description
-        context_desc = ""
-        if context:
-            context_desc = f"\n**Context:** {context.full_path} ({context.level.name})"
-        elif repo_id:
-            context_desc = f"\n**Context:** Repository '{repo_id}'"
-        elif service_filter:
-            context_desc = f"\n**Context:** Service '{service_filter}'"
-        
-        prompt = f"""You are analyzing code documentation.{context_desc}
-
-**Sources:**
-{context_text}
-
-**Question:** {query}
-
-**Instructions:** Answer using ONLY the provided sources. Provide a detailed answer (3-5 paragraphs).
-
-**Answer:**"""
-        
-        # Import Ollama router
-        from ..models.ollama_router import get_ollama_router
-        ollama_router = get_ollama_router()
-        
-        response = await ollama_router.generate(
-            prompt=prompt,
-            workload_type='rag',
-            temperature=0.7,
-            max_tokens=1000
-        )
-        
-        return response.get("response", "").strip() or f"Found {len(documents)} documents but failed to generate answer."
     
     def _build_where_clause(
         self,
