@@ -1,11 +1,7 @@
 """
-Document Finder - PHASE 7: Enhanced with Hybrid Search + Query Rewriting
+Document Finder (Phase 6.1)
 
-Finds relevant documents using:
-- PHASE 7: Hybrid search (semantic + BM25)
-- PHASE 7: Query rewriting (synonym expansion)
-- PHASE 7: Quality boost for better document selection
-- Original: Semantic search fallback
+Finds relevant documents using semantic search based on extracted topics.
 """
 
 import logging
@@ -47,10 +43,7 @@ class DocumentFinder:
     Finds relevant documents using semantic search and filtering.
     
     Features:
-    - ✨ PHASE 7: Hybrid search (semantic + BM25)
-    - ✨ PHASE 7: Query rewriting (synonym expansion)
-    - ✨ PHASE 7: Quality boost for document selection
-    - Semantic search via embeddings (fallback)
+    - Semantic search via embeddings
     - Relevance ranking
     - Deduplication
     - Git history awareness
@@ -58,53 +51,31 @@ class DocumentFinder:
     """
     
     def __init__(self):
-        # ✨ PHASE 7: Add enhancement services
-        try:
-            from ..rag.hybrid_search import get_hybrid_search_service
-            from ..rag.query_rewriter import get_query_rewriter
-            
-            self.hybrid_search = get_hybrid_search_service()
-            self.query_rewriter = get_query_rewriter()
-            self.enhancements_available = True
-            logger.info("✅ DocumentFinder initialized with hybrid search + query rewriting (Phase 7)")
-        except Exception as e:
-            logger.warning(f"⚠️  Could not load enhancement services: {e}. Falling back to semantic search only.")
-            self.hybrid_search = None
-            self.query_rewriter = None
-            self.enhancements_available = False
-            logger.info("DocumentFinder initialized (semantic search only)")
+        logger.info("DocumentFinder initialized")
     
     async def find_relevant_documents(
         self,
         search_terms: List[str],
         service_name: Optional[str] = None,
         limit: int = 50,
-        min_relevance: float = 0.5,
-        use_enhancements: bool = True  # ✨ PHASE 7: NEW parameter
+        min_relevance: float = 0.5
     ) -> List[RelevantDocument]:
         """
         Find documents relevant to the search terms.
-        
-        PHASE 7: Now supports hybrid search + query rewriting!
         
         Args:
             search_terms: List of terms to search for
             service_name: Optional service filter
             limit: Maximum number of documents
             min_relevance: Minimum relevance score (0.0-1.0)
-            use_enhancements: Whether to use hybrid search + query rewriting (PHASE 7)
         
         Returns:
             List of relevant documents sorted by relevance
         """
-        logger.info(f"Finding documents for {len(search_terms)} search terms (enhancements={use_enhancements})")
+        logger.info(f"Finding documents for {len(search_terms)} search terms")
         
         try:
-            # ✨ PHASE 7: Use enhanced search if available and enabled
-            if use_enhancements and self.enhancements_available:
-                return await self._enhanced_search(search_terms, service_name, limit, min_relevance)
-            
-            # Fallback: Original multi-strategy search
+            # Search using multiple strategies
             documents = []
             
             # Strategy 1: Semantic search via embeddings
@@ -151,117 +122,6 @@ class DocumentFinder:
         except Exception as e:
             logger.error(f"Error finding documents: {e}")
             raise
-    
-    async def _enhanced_search(
-        self,
-        search_terms: List[str],
-        service_name: Optional[str],
-        limit: int,
-        min_relevance: float
-    ) -> List[RelevantDocument]:
-        """
-        ✨ PHASE 7: Enhanced document finding with hybrid search + query rewriting.
-        
-        Flow:
-        1. Query rewriting - expand search terms with synonyms
-        2. Hybrid search - combine semantic + BM25 for each term
-        3. Deduplicate - remove duplicate documents
-        4. Quality ranking - prioritize high-quality documents
-        5. Limit - return top N results
-        """
-        logger.info(f"🚀 PHASE 7: Enhanced document finding (hybrid search + query rewriting)")
-        
-        try:
-            all_documents = []
-            
-            # Step 1: Query rewriting (expand search terms)
-            expanded_terms = []
-            for term in search_terms:
-                logger.debug(f"  Rewriting term: {term}")
-                try:
-                    rewrite_result = await self.query_rewriter.rewrite(
-                        term,
-                        enable_expansion=True,  # ✅ Expand synonyms
-                        enable_clarification=False,  # ❌ Terms already specific
-                        enable_decomposition=False  # ❌ Don't split
-                    )
-                    # Take top 2 queries per term to avoid explosion
-                    new_queries = rewrite_result.get("search_queries", [term])[:2]
-                    expanded_terms.extend(new_queries)
-                    logger.debug(f"    Expanded to: {new_queries}")
-                except Exception as e:
-                    logger.warning(f"  Query rewriting failed for '{term}': {e}. Using original.")
-                    expanded_terms.append(term)
-            
-            logger.info(f"  ✅ Expanded {len(search_terms)} terms → {len(expanded_terms)} search queries")
-            
-            # Step 2: Hybrid search for each expanded term
-            where_filter = {"service_name": service_name} if service_name else None
-            
-            for term in expanded_terms:
-                logger.debug(f"  Hybrid search: {term}")
-                try:
-                    results = await self.hybrid_search.search(
-                        query=term,
-                        n_results=limit,
-                        semantic_weight=0.7,  # 70% semantic
-                        keyword_weight=0.3,   # 30% keyword
-                        where=where_filter,
-                        quality_boost=True  # ✅ Quality-aware
-                    )
-                    all_documents.extend(results)
-                    logger.debug(f"    Found {len(results)} documents")
-                except Exception as e:
-                    logger.warning(f"  Hybrid search failed for '{term}': {e}")
-            
-            logger.info(f"  ✅ Hybrid search retrieved {len(all_documents)} total documents")
-            
-            # Step 3: Convert to RelevantDocument format and deduplicate
-            relevant_docs = []
-            seen_ids = set()
-            
-            for doc in all_documents:
-                doc_id = doc.get("id") or doc.get("document_id")
-                if doc_id and doc_id not in seen_ids:
-                    seen_ids.add(doc_id)
-                    
-                    # Convert to RelevantDocument
-                    relevant_doc = RelevantDocument(
-                        document_id=doc_id,
-                        file_path=doc.get("file_path", doc.get("metadata", {}).get("file_path", "unknown")),
-                        content=doc.get("content", doc.get("document", "")),
-                        relevance_score=doc.get("score", doc.get("distance", 0.5)),
-                        commit_count=doc.get("metadata", {}).get("commit_count", 0),
-                        last_modified=datetime.fromisoformat(doc.get("metadata", {}).get("last_modified", datetime.utcnow().isoformat())),
-                        ingestion_mode=doc.get("metadata", {}).get("ingestion_mode", "unknown"),
-                        matched_topics=search_terms[:3]  # Approximate
-                    )
-                    relevant_docs.append(relevant_doc)
-            
-            # Step 4: Filter by minimum relevance
-            filtered_docs = [
-                doc for doc in relevant_docs
-                if doc.relevance_score >= min_relevance
-            ]
-            
-            # Step 5: Sort by relevance (highest first)
-            sorted_docs = sorted(
-                filtered_docs,
-                key=lambda x: x.relevance_score,
-                reverse=True
-            )
-            
-            # Step 6: Limit results
-            result = sorted_docs[:limit]
-            
-            logger.info(f"✅ PHASE 7: Enhanced search found {len(result)} relevant documents")
-            
-            return result
-            
-        except Exception as e:
-            logger.error(f"❌ Enhanced search failed: {e}. Falling back to semantic search.")
-            # Fallback to semantic search
-            return await self._semantic_search(search_terms, service_name, limit)
     
     async def _semantic_search(
         self,

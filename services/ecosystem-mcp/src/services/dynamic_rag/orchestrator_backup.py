@@ -1,12 +1,7 @@
 """
-Dynamic Temporal RAG Orchestrator - PHASE 7: Enhanced Document Finding
+Dynamic Temporal RAG Orchestrator (Phase 6.4)
 
-Coordinates the entire dynamic temporal RAG flow:
-- Topic extraction
-- ✨ PHASE 7: Enhanced document finding (hybrid search + query rewriting)
-- Timeline construction
-- Answer synthesis
-- Citation formatting
+Coordinates the entire dynamic temporal RAG flow.
 """
 
 import logging
@@ -57,20 +52,16 @@ class DynamicTemporalRAGOrchestrator:
         query: str,
         service_name: Optional[str] = None,
         citation_format: str = "markdown",
-        use_cache: bool = True,
-        use_enhancements: bool = True  # ✨ PHASE 7: NEW parameter
+        use_cache: bool = True
     ) -> Dict:
         """
         Execute the complete dynamic temporal RAG flow.
-        
-        PHASE 7: Now supports enhanced document finding!
         
         Args:
             query: User's natural language query
             service_name: Optional service filter
             citation_format: Citation format (markdown/html/plain)
             use_cache: Whether to use cached timelines
-            use_enhancements: Whether to use hybrid search + query rewriting (PHASE 7)
         
         Returns:
             Complete response with answer, timeline, and citations
@@ -86,14 +77,13 @@ class DynamicTemporalRAGOrchestrator:
             if not topics.all_topics:
                 return self._generate_no_topics_response(query)
             
-            # Step 2: Find relevant documents (✨ PHASE 7: with enhancements)
-            logger.info(f"🔍 Step 2: Finding relevant documents (enhancements={use_enhancements})...")
+            # Step 2: Find relevant documents
+            logger.info("🔍 Step 2: Finding relevant documents...")
             search_terms = self.topic_extractor.get_search_terms(topics)
             documents = await self.document_finder.find_relevant_documents(
                 search_terms=search_terms,
                 service_name=service_name,
-                limit=50,
-                use_enhancements=use_enhancements  # ✨ PHASE 7: Pass flag
+                limit=50
             )
             
             if not documents:
