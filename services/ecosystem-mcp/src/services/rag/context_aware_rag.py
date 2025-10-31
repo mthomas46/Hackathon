@@ -195,8 +195,13 @@ class ContextAwareRAG:
             # Format results to match API schema
             results = []
             for i, doc in enumerate(documents, 1):
+                # Handle None content gracefully
+                content = doc.get("content") or doc.get("content_snippet") or ""
+                if content:
+                    content = content[:200]
+                
                 results.append({
-                    "content": doc.get("content", "")[:200],
+                    "content": content,
                     "metadata": doc.get("metadata", {}),
                     "distance": doc.get("distance", 0.0),
                     "relevance_score": doc.get("adjusted_score", 0.0),
@@ -325,7 +330,10 @@ class ContextAwareRAG:
         # Build context text
         context_parts = []
         for i, doc in enumerate(documents, 1):
-            content = doc.get("content", "")[:500]  # Limit content
+            # Handle None content gracefully
+            content = doc.get("content") or doc.get("content_snippet") or ""
+            if content:
+                content = content[:500]  # Limit content
             context_parts.append(f"[Source {i}] {doc.get('file_path', 'Unknown')}\n{content}\n")
         
         context_text = "\n---\n\n".join(context_parts)

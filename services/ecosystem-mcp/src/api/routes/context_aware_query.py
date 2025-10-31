@@ -102,11 +102,12 @@ class QueryResult(BaseModel):
 class ContextAwareQueryResponse(BaseModel):
     """Response for context-aware query."""
     query: str
+    answer: Optional[str] = None  # ✨ PHASE 5: NEW - LLM generated answer
     filters: dict
     context_info: Optional[ContextInfo]
     results: List[QueryResult]
     total: int
-    metadata: ResultMetadata
+    metadata: dict  # Changed from ResultMetadata to dict for flexibility
 
 
 class ContextSummary(BaseModel):
