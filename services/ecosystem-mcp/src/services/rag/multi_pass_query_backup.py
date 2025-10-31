@@ -1,18 +1,11 @@
 """
-Multi-Pass Query System - PHASE 6: Enhanced with Pipeline
+Multi-Pass Query System - Complex Query Decomposition & Synthesis
 
 Enables deep analysis of complex queries through:
 1. Query decomposition into major concepts/sections
 2. Secondary question generation for each section
 3. Multi-pass RAG execution with progress tracking
 4. Comprehensive synthesis of all results
-
-PHASE 6 Enhancements:
-- Uses EnhancementPipeline for N×M queries
-- Optimized multipass_default config (no reranking for N×M)
-- Hybrid search for better per-question coverage
-- Context optimization for token management
-- Per-question confidence tracking
 """
 
 import asyncio
@@ -26,9 +19,6 @@ import hashlib
 from .rag_service import get_rag_service
 from .enhanced_rag_service import get_enhanced_rag_service
 from ..models.ollama_router import get_ollama_router
-
-# ✨ PHASE 6: Import enhancement configuration
-from .enhancements import EnhancementConfig
 
 logger = logging.getLogger(__name__)
 
@@ -90,20 +80,10 @@ class MultiPassQueryService:
     """
     
     def __init__(self):
-        """
-        Initialize multi-pass query service with enhancement pipeline.
-        
-        PHASE 6: Now uses EnhancementPipeline with optimized multipass config.
-        """
+        """Initialize multi-pass query service."""
         self.rag_service = get_rag_service()
-        self.enhanced_rag_service = get_enhanced_rag_service()  # ✨ PHASE 6: NEW
         self.ollama_router = get_ollama_router()
-        
-        # ✨ PHASE 6: Pre-configured enhancement config for multi-pass
-        # Optimized for N×M queries: hybrid search ON, reranking OFF
-        self.multipass_enhancement_config = EnhancementConfig.multipass_default()
-        
-        logger.info("✅ MultiPassQueryService initialized with EnhancementPipeline (Phase 6)")
+        logger.info("MultiPassQueryService initialized")
     
     async def process_query(
         self,
@@ -113,8 +93,7 @@ class MultiPassQueryService:
         n_results: int = 10,
         temperature: float = 0.7,
         response_length: int = 1000,
-        use_enhancements: bool = True,  # ✨ PHASE 6: Changed default to True!
-        enhancement_config: Optional[EnhancementConfig] = None,  # ✨ PHASE 6: NEW parameter
+        use_enhancements: bool = False,
         progress_callback: Optional[callable] = None
     ) -> MultiPassResult:
         """
@@ -135,18 +114,13 @@ class MultiPassQueryService:
         """
         start_time = datetime.now()
         
-        # ✨ PHASE 6: Select RAG service and config
+        # Select RAG service based on enhancements flag
         if use_enhancements:
-            logger.info("✨ Using EnhancedRAGService with multipass_default config")
-            rag_service = self.enhanced_rag_service
-            # Use custom config or default multipass config
-            config = enhancement_config or self.multipass_enhancement_config
-            logger.info(f"   Config: hybrid_search={config.enable_hybrid_search}, "
-                       f"reranking={config.enable_reranking} (optimized for N×M)")
+            logger.info("🎨 Using EnhancedRAGService with optional config")
+            rag_service = get_enhanced_rag_service()
         else:
-            logger.info("📊 Using standard RAGService (no enhancements)")
-            rag_service = self.rag_service
-            config = None
+            logger.info("📊 Using standard RAGService")
+            rag_service = get_rag_service()
         
         logger.info(
             f"Starting multi-pass query: passes={num_passes}, "
@@ -179,7 +153,7 @@ class MultiPassQueryService:
             logger.info(f"  → All {len(all_questions)} RAG queries will execute simultaneously")
             logger.info(f"  → Using {'Enhanced' if use_enhancements else 'Standard'} RAG service")
             
-            # Create tasks for all sections (pass rag_service and config)
+            # Create tasks for all sections (pass rag_service)
             section_tasks = [
                 self._process_section(
                     section_idx,
@@ -188,8 +162,7 @@ class MultiPassQueryService:
                     n_results,
                     temperature,
                     response_length,
-                    rag_service,  # Pass the selected RAG service
-                    config  # ✨ PHASE 6: Pass enhancement config
+                    rag_service  # Pass the selected RAG service
                 )
                 for section_idx, section in enumerate(sections)
             ]
@@ -539,13 +512,10 @@ Provide exactly {num_questions} questions:"""
         n_results: int,
         temperature: float,
         response_length: int,
-        rag_service=None,  # Accept RAG service as parameter
-        config: Optional[EnhancementConfig] = None  # ✨ PHASE 6: Accept enhancement config
+        rag_service=None  # Accept RAG service as parameter
     ) -> SectionResult:
         """
         Process a single section by answering all its questions.
-        
-        PHASE 6: Now supports EnhancementConfig for optimized multi-pass queries.
         
         Args:
             section_idx: Section index
@@ -553,9 +523,6 @@ Provide exactly {num_questions} questions:"""
             all_questions: All secondary questions
             n_results: Documents per query
             temperature: LLM temperature
-            response_length: Response length
-            rag_service: RAG service to use (standard or enhanced)
-            config: Optional enhancement config (PHASE 6)
         
         Returns:
             SectionResult with all answers
@@ -609,24 +576,12 @@ Provide exactly {num_questions} questions:"""
                     f"{question.question[:60]}..."
                 )
                 
-                # ✨ PHASE 6: Use enhanced or standard RAG service
-                if config:
-                    # Enhanced RAG with multipass config
-                    rag_result = await rag_service.ask_enhanced(
-                        question=question.question,
-                        n_results=adaptive_n,
-                        temperature=temperature,
-                        response_length=response_length,
-                        **asdict(config)  # Pass config as kwargs
-                    )
-                else:
-                    # Standard RAG
-                    rag_result = await rag_service.ask(
-                        question=question.question,
-                        n_results=adaptive_n,
-                        temperature=temperature,
-                        response_length=response_length
-                    )
+                rag_result = await rag_service.ask(
+                    question=question.question,
+                    n_results=adaptive_n,  # ✅ Adaptive!
+                    temperature=temperature,
+                    response_length=response_length
+                )
                 
                 # Extract enhancement metadata for aggregation
                 metadata = rag_result.get('metadata', {})
