@@ -163,15 +163,39 @@ class ContextAwareRAG:
                 pre_retrieval_filter=context_filter
             )
             
-            # Execute pipeline
-            result = await self.enhancement_pipeline.execute(
-                query=query,
-                n_results=limit,
-                config=config,
-                hooks=hooks
-            )
+            # Execute pipeline with graceful fallback for metadata errors
+            try:
+                result = await self.enhancement_pipeline.execute(
+                    query=query,
+                    n_results=limit,
+                    config=config,
+                    hooks=hooks
+                )
+                
+                documents = result.get("documents", [])
             
-            documents = result.get("documents", [])
+            except Exception as metadata_error:
+                # Gracefully handle ChromaDB metadata errors (e.g., missing service_name field)
+                error_str = str(metadata_error).lower()
+                if "error finding id" in error_str or "metadata" in error_str:
+                    logger.warning(
+                        f"⚠️  Metadata filter error: {metadata_error}. Retrying without filters..."
+                    )
+                    # Retry without the problematic where clause
+                    hooks_no_filter = EnhancementHooks()  # No pre-retrieval filter
+                    result = await self.enhancement_pipeline.execute(
+                        query=query,
+                        n_results=limit,
+                        config=config,
+                        hooks=hooks_no_filter
+                    )
+                    documents = result.get("documents", [])
+                    logger.info(
+                        f"✅ Pipeline retrieved {len(documents)} documents (without filters)"
+                    )
+                else:
+                    # Re-raise if not a metadata error
+                    raise
             
             if not documents:
                 return {
