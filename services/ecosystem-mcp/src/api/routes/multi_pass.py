@@ -60,8 +60,8 @@ class MultiPassRequest(BaseModel):
         description="Target response length in tokens (affects verbosity)"
     )
     use_enhancements: bool = Field(
-        default=False,
-        description="Use enhanced RAG with optional config (glossary, exclusions, templates, priorities)"
+        default=True,  # ✨ PHASE 8: Changed from False to True (Phase 6 default)
+        description="Use enhanced RAG with optional config (hybrid search, N×M optimization)"
     )
     stream: bool = Field(
         default=False,

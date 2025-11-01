@@ -72,6 +72,10 @@ class ContextAwareQueryRequest(BaseModel):
         le=50,
         description="Maximum results to return"
     )
+    use_enhancements: bool = Field(
+        default=True,
+        description="Enable Phase 5 enhancements (hybrid search, query rewriting, LLM answers)"
+    )
 
 
 class ContextInfo(BaseModel):

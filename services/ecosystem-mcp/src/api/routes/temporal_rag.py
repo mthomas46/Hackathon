@@ -57,6 +57,10 @@ class TemporalQueryRequest(BaseModel):
         le=50,
         description="Maximum results to return"
     )
+    use_enhancements: bool = Field(
+        default=True,
+        description="Enable Phase 4 enhancements (hybrid search, query rewriting, context optimization)"
+    )
     
     @field_validator('as_of_date', mode='before')
     @classmethod

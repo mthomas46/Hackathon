@@ -60,7 +60,7 @@ class EnhancedQueryRequest(BaseModel):
         description="LLM tier: 'auto', 'cursor', 'desktop', or 'docker'"
     )
     use_enhancements: bool = Field(
-        default=False,
+        default=True,  # ✨ PHASE 8: Changed from False to True
         description="Use enhanced RAG with optional config (glossary, exclusions, multi-signal ranking)"
     )
     context_id: Optional[str] = Field(

@@ -22,7 +22,8 @@ async def dynamic_temporal_query(
     query: str = Query(..., description="Natural language query"),
     service_name: Optional[str] = Query(None, description="Optional service filter"),
     citation_format: str = Query("markdown", description="Citation format (markdown/html/plain)"),
-    use_cache: bool = Query(True, description="Use cached timelines if available")
+    use_cache: bool = Query(True, description="Use cached timelines if available"),
+    use_enhancements: bool = Query(True, description="Enable Phase 7 enhancements (hybrid search, query rewriting)")  # ✨ PHASE 8
 ):
     """
     Execute a dynamic temporal RAG query.
@@ -46,7 +47,8 @@ async def dynamic_temporal_query(
             query=query,
             service_name=service_name,
             citation_format=citation_format,
-            use_cache=use_cache
+            use_cache=use_cache,
+            use_enhancements=use_enhancements  # ✨ PHASE 8
         )
         
         if not result.get('success'):
