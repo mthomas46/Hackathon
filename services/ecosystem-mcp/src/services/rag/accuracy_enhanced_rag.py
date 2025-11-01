@@ -405,6 +405,21 @@ class AccuracyEnhancedRAG(RAGService):
             "contradiction_detection": config.enable_contradiction_detection,
             "difficulty_estimation": config.enable_difficulty_estimation
         }
+    
+    def _format_answer_with_confidence(
+        self,
+        answer: str,
+        confidence: float,
+        confidence_level: str
+    ) -> str:
+        """
+        Format answer with confidence indication.
+        
+        NOTE: In Phase 2 refactoring, answer formatting is now handled by the pipeline.
+        This method is kept for backward compatibility with legacy code.
+        """
+        # Simple pass-through - confidence formatting can be added later if needed
+        return answer
 
 
 # Singleton instance

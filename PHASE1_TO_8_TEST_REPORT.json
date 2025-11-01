@@ -1,0 +1,68 @@
+{
+  "summary": {
+    "total": 8,
+    "passed": 3,
+    "failed": 5,
+    "warned": 0,
+    "success_rate": "37.5%"
+  },
+  "results": [
+    {
+      "phase": "0",
+      "test": "API Health Check",
+      "status": "PASS",
+      "details": "API is healthy",
+      "timestamp": "2025-11-01T08:52:11.754563"
+    },
+    {
+      "phase": "3",
+      "test": "Standard RAG Enhanced Mode",
+      "status": "FAIL",
+      "details": "HTTP 404",
+      "timestamp": "2025-11-01T08:52:11.758235"
+    },
+    {
+      "phase": "3",
+      "test": "Standard RAG Legacy Mode",
+      "status": "FAIL",
+      "details": "HTTP 404",
+      "timestamp": "2025-11-01T08:52:11.761291"
+    },
+    {
+      "phase": "4",
+      "test": "Temporal RAG Enhanced Mode",
+      "status": "PASS",
+      "details": "10 sources",
+      "timestamp": "2025-11-01T08:52:27.543836"
+    },
+    {
+      "phase": "5",
+      "test": "Context-Aware Enhanced + LLM",
+      "status": "PASS",
+      "details": "8 results, has LLM answer",
+      "timestamp": "2025-11-01T08:52:34.268823"
+    },
+    {
+      "phase": "6",
+      "test": "Multi-Pass N\u00d7M Optimization",
+      "status": "FAIL",
+      "details": "HTTP 404",
+      "timestamp": "2025-11-01T08:52:34.274156"
+    },
+    {
+      "phase": "7",
+      "test": "Dynamic Temporal Hybrid Search",
+      "status": "FAIL",
+      "details": "HTTP 405",
+      "timestamp": "2025-11-01T08:52:34.277402"
+    },
+    {
+      "phase": "8",
+      "test": "API Default Enhanced Mode",
+      "status": "FAIL",
+      "details": "HTTP 404",
+      "timestamp": "2025-11-01T08:52:34.280089"
+    }
+  ],
+  "timestamp": "2025-11-01T08:52:34.280776"
+}
