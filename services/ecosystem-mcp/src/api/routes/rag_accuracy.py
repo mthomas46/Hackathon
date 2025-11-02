@@ -76,77 +76,95 @@ class RAGQueryResponse(BaseModel):
 @router.post("/rag/ask/enhanced", response_model=RAGQueryResponse, tags=["RAG Accuracy"])
 async def ask_enhanced_rag(request: EnhancedRAGQueryRequest):
     """
-    Ask a question using accuracy-enhanced RAG (Phase 1 + Phase 2).
+    [DEPRECATED] Ask a question using accuracy-enhanced RAG.
+    
+    **⚠️ DEPRECATION NOTICE:**
+    This endpoint is deprecated. Please use `/api/v1/ask` with `use_enhancements=True` instead.
+    This endpoint is maintained for backward compatibility only.
+    
+    **Migration Example:**
+    ```json
+    // OLD (this endpoint):
+    POST /api/v1/rag/ask/enhanced
+    {
+      "question": "How does ingestion work?",
+      "enable_hybrid_search": true,
+      "enable_reranking": true
+    }
+    
+    // NEW (recommended):
+    POST /api/v1/ask
+    {
+      "question": "How does ingestion work?",
+      "use_enhancements": true
+    }
+    ```
     
     **Phase 1 Enhancements:**
     - 🔄 **Hybrid Search**: Combines semantic (embeddings) + keyword (BM25) search
-    - 📝 **Query Rewriting**: Expands synonyms, clarifies vague queries, decomposes complex queries
-    - 📊 **Confidence Scoring**: Multi-factor confidence assessment (retrieval, quality, alignment, consensus, completeness)
+    - 📝 **Query Rewriting**: Expands synonyms, clarifies vague queries
+    - 📊 **Confidence Scoring**: Multi-factor confidence assessment
     
     **Phase 2 Enhancements:**
-    - 🎯 **Cross-Encoder Reranking**: More accurate document ranking using cross-encoder models
-    - 🎨 **Context Optimization**: Smart selection and ordering of document chunks for LLM
-    - 🎛️  **Metadata Filtering**: Intelligent filtering based on query intent and document quality
-    
-    **Expected: +35-55% accuracy improvement (with Phase 2 enabled)**
-    
-    **Example (Phase 1 only):**
-    ```json
-    {
-      "question": "How does ingestion work?",
-      "n_results": 10,
-      "enable_hybrid_search": true,
-      "enable_query_rewriting": true,
-      "enable_confidence_scoring": true
-    }
-    ```
-    
-    **Example (Phase 1 + Phase 2):**
-    ```json
-    {
-      "question": "How does ingestion work?",
-      "n_results": 10,
-      "enable_hybrid_search": true,
-      "enable_query_rewriting": true,
-      "enable_confidence_scoring": true,
-      "enable_reranking": true,
-      "enable_context_optimization": true,
-      "enable_metadata_filtering": true,
-      "quality_threshold": 75.0
-    }
-    ```
+    - 🎯 **Cross-Encoder Reranking**: More accurate document ranking
+    - 🎨 **Context Optimization**: Smart selection and ordering
+    - 🎛️  **Metadata Filtering**: Intelligent filtering
     """
     try:
+        logger.warning(f"⚠️  Using deprecated /rag/ask/enhanced endpoint. Migrate to /api/v1/ask")
         logger.info(f"🚀 Enhanced RAG query: {request.question[:60]}...")
         
-        enhanced_rag = get_enhanced_rag_service()
+        # Build EnhancementConfig from request parameters
+        from ...services.rag.enhancements import EnhancementConfig
         
-        result = await enhanced_rag.ask_enhanced(
-            question=request.question,
-            n_results=request.n_results,
-            context=request.context,
-            prefer_recent=request.prefer_recent,
-            temperature=request.temperature,
-            response_length=request.response_length,
-            # Phase 1
+        config = EnhancementConfig(
             enable_hybrid_search=request.enable_hybrid_search,
             enable_query_rewriting=request.enable_query_rewriting,
-            enable_confidence_scoring=request.enable_confidence_scoring,
-            semantic_weight=request.semantic_weight,
-            keyword_weight=request.keyword_weight,
-            # Phase 2
             enable_reranking=request.enable_reranking,
             enable_context_optimization=request.enable_context_optimization,
             enable_metadata_filtering=request.enable_metadata_filtering,
-            quality_threshold=request.quality_threshold,
-            context_strategy=request.context_strategy,
-            # Phase 5R
+            enable_confidence_scoring=request.enable_confidence_scoring,
             enable_intent_classification=request.enable_intent_classification,
-            enable_llm_intent=request.enable_llm_intent,
-            # Phase 7R
             enable_contradiction_detection=request.enable_contradiction_detection,
-            enable_difficulty_estimation=request.enable_difficulty_estimation
+            semantic_weight=request.semantic_weight,
+            keyword_weight=request.keyword_weight,
+            quality_threshold=request.quality_threshold or 0.7,
+            context_strategy=request.context_strategy
         )
+        
+        # Get RAG service (now uses EnhancementPipeline)
+        rag_service = get_rag_service()
+        
+        # Convert context to correct format
+        context = None
+        if request.context:
+            context = [
+                {"question": turn.get("question"), "answer": turn.get("answer")}
+                for turn in request.context
+            ]
+        
+        # Call unified ask method
+        result = await rag_service.ask(
+            question=request.question,
+            n_results=request.n_results,
+            context=context,
+            prefer_recent=request.prefer_recent,
+            temperature=request.temperature,
+            use_enhancements=True,
+            enable_hybrid_search=config.enable_hybrid_search,
+            enable_query_rewriting=config.enable_query_rewriting,
+            enable_context_optimization=config.enable_context_optimization
+        )
+        
+        # Add deprecation warning to metadata
+        if "metadata" not in result:
+            result["metadata"] = {}
+        
+        result["metadata"]["deprecation_warning"] = (
+            "This endpoint is deprecated. Use /api/v1/ask with use_enhancements=True instead."
+        )
+        result["metadata"]["migration_url"] = "/api/v1/ask"
+        result["metadata"]["enhancement_mode"] = "pipeline_v1_legacy_compat"
         
         return RAGQueryResponse(**result)
         
