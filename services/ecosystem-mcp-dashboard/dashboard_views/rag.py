@@ -471,7 +471,7 @@ def show(api_base_url: str):
             except Exception as e:
                 st.error(f"❌ **Error:** {str(e)}")
     
-    elif submitted:
+    elif query_type == "standard" and submitted and not question:
         st.warning("⚠️ Please enter a question")
     
     # Query history
