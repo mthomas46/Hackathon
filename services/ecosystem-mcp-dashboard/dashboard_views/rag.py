@@ -137,6 +137,10 @@ def show(api_base_url: str):
         """)
     
     # Query form based on type
+    # Initialize submitted to avoid UnboundLocalError
+    submitted = False
+    question = ""
+    
     if query_type == "standard":
         with st.form("rag_query_form"):
             question = st.text_area(
