@@ -96,7 +96,7 @@ st.sidebar.markdown("### 📊 OVERVIEW")
 overview_pages = ["🏠 Home", "🏥 Health & Infrastructure", "🔬 Diagnostics"]
 
 st.sidebar.markdown("### 🔍 QUERY & SEARCH")
-query_pages = ["🤖 RAG Query", "🎯 Enhanced Query", "🔬 Multi-Pass RAG Query", "⏰ Temporal RAG", "🧠 Context-Aware RAG", "📚 Document Search"]
+query_pages = ["🤖 RAG Query", "🎯 Enhanced Query", "🔬 Multi-Pass RAG Query", "🌊 Streaming RAG", "🔗 Multi-Hop Reasoning", "⏰ Temporal RAG", "🧠 Context-Aware RAG", "📚 Document Search"]
 
 st.sidebar.markdown("### 📥 DATA MANAGEMENT")
 data_pages = ["📚 Documents", "📥 Ingestion Manager", "⚡ Mode Comparison", "🔄 Job Recovery", "⚙️ Worker Monitor", "🔄 Retry Queue", "💀 Dead Letter Queue"]
@@ -294,6 +294,12 @@ elif page == "🎯 Enhanced Query":
 elif page == "🔬 Multi-Pass RAG Query":
     from dashboard_views import rag_multi_pass
     rag_multi_pass.show(api_base_url)
+elif page == "🌊 Streaming RAG":
+    from dashboard_views import rag_streaming
+    rag_streaming.show(api_base_url)
+elif page == "🔗 Multi-Hop Reasoning":
+    from dashboard_views import rag_multihop
+    rag_multihop.show(api_base_url)
 elif page == "⏰ Temporal RAG":
     from dashboard_views import temporal_rag_query
     temporal_rag_query.show(api_base_url)
