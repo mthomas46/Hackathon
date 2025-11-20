@@ -172,7 +172,7 @@ class CitationManager:
         style: str = "endnotes"
     ) -> str:
         """
-        Format citations as a documentation section.
+        Format citations as a documentation section with document details.
         
         Args:
             artifact_id: Artifact ID
@@ -181,7 +181,8 @@ class CitationManager:
         Returns:
             Formatted citations section in markdown
         """
-        citations = await self.get_citations_for_artifact(artifact_id)
+        # Get citations with enriched document information
+        citations = await self._get_citations_with_document_details(artifact_id)
         
         if not citations:
             return ""
@@ -195,8 +196,65 @@ class CitationManager:
         else:
             return self._format_endnotes(citations)
     
+    async def _get_citations_with_document_details(self, artifact_id: UUID) -> List[Dict[str, Any]]:
+        """
+        Get citations with enriched document information (file_path, service_name).
+        
+        Args:
+            artifact_id: Artifact ID
+        
+        Returns:
+            List of citations with document details
+        """
+        from sqlalchemy import select
+        from ...storage import get_database
+        from ...storage.models_documentation import DocumentationCitationModel
+        from ...storage.db_models import DocumentModel
+        
+        db = get_database()
+        
+        async with db.session() as session:
+            # Join citations with documents to get file_path
+            query = select(
+                DocumentationCitationModel,
+                DocumentModel.file_path,
+                DocumentModel.service_name
+            ).join(
+                DocumentModel,
+                DocumentationCitationModel.document_id == DocumentModel.id
+            ).where(
+                DocumentationCitationModel.artifact_id == artifact_id
+            ).order_by(
+                DocumentationCitationModel.section_name,
+                DocumentationCitationModel.citation_order
+            )
+            
+            result = await session.execute(query)
+            rows = result.all()
+            
+            return [
+                {
+                    "id": str(row[0].id),
+                    "artifact_id": str(row[0].artifact_id),
+                    "document_id": str(row[0].document_id),
+                    "section_name": row[0].section_name,
+                    "relevance_score": row[0].relevance_score,
+                    "excerpt": row[0].excerpt,
+                    "start_line": row[0].start_line,
+                    "end_line": row[0].end_line,
+                    "citation_order": row[0].citation_order,
+                    "created_at": row[0].created_at.isoformat() if row[0].created_at else None,
+                    # Enriched fields
+                    "file_path": row[1],  # From DocumentModel
+                    "service_name": row[2]  # From DocumentModel
+                }
+                for row in rows
+            ]
+    
     def _format_endnotes(self, citations: List[Dict[str, Any]]) -> str:
-        """Format citations as endnotes."""
+        """Format citations as endnotes with document details."""
+        import os
+        
         lines = [
             "---",
             "",
@@ -222,10 +280,21 @@ class CitationManager:
                 relevance = citation["relevance_score"]
                 relevance_pct = int(relevance * 100)
                 
-                line = f"{idx}. Document `{citation['document_id'][:8]}...` (relevance: {relevance_pct}%)"
+                # Extract filename from file_path
+                file_path = citation.get("file_path", "Unknown")
+                filename = os.path.basename(file_path) if file_path != "Unknown" else "Unknown"
                 
-                if citation["excerpt"]:
-                    excerpt = citation["excerpt"][:100]
+                # Format: filename (relevance) [document_id]
+                doc_id_short = citation['document_id'][:8]
+                line = f"{idx}. **{filename}** (relevance: {relevance_pct}%) [`{doc_id_short}`]"
+                
+                # Add file path as subdued info
+                if file_path != "Unknown":
+                    line += f"\n   📄 `{file_path}`"
+                
+                # Add excerpt if available
+                if citation.get("excerpt"):
+                    excerpt = citation["excerpt"][:150].replace("\n", " ")
                     line += f"\n   > {excerpt}..."
                 
                 lines.append(line)
@@ -239,14 +308,18 @@ class CitationManager:
         return "\n".join(lines)
     
     def _format_footnotes(self, citations: List[Dict[str, Any]]) -> str:
-        """Format citations as footnotes."""
-        # Simplified footnote format
+        """Format citations as footnotes with document names."""
+        import os
         lines = []
         
         for idx, citation in enumerate(citations, 1):
+            file_path = citation.get("file_path", "Unknown")
+            filename = os.path.basename(file_path) if file_path != "Unknown" else "Unknown"
+            doc_id_short = citation['document_id'][:8]
+            
             lines.append(
-                f"[^{idx}]: Source: `{citation['document_id'][:8]}...` "
-                f"(relevance: {int(citation['relevance_score'] * 100)}%)"
+                f"[^{idx}]: **{filename}** [`{doc_id_short}`] - "
+                f"relevance: {int(citation['relevance_score'] * 100)}%"
             )
         
         return "\n".join(lines)
