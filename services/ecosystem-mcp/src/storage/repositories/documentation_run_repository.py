@@ -188,13 +188,13 @@ class DocumentationRunRepository(BaseRepository[DocumentationRunModel]):
         self.session.add(artifact)
         await self.session.flush()
         
-        # Update run totals
+        # Update run totals using func.coalesce to handle NULL values
         await self.session.execute(
             sql_update(DocumentationRunModel)
             .where(DocumentationRunModel.id == run_id)
             .values(
-                total_artifacts=DocumentationRunModel.total_artifacts + 1,
-                total_words=DocumentationRunModel.total_words + word_count
+                total_artifacts=func.coalesce(DocumentationRunModel.total_artifacts, 0) + 1,
+                total_words=func.coalesce(DocumentationRunModel.total_words, 0) + word_count
             )
         )
         await self.session.flush()
