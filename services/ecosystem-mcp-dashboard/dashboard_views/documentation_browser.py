@@ -33,6 +33,12 @@ def show():
     st.title("📚 Documentation Browser")
     st.write("Browse and manage documentation generation runs")
     
+    # Check if we should switch to documents tab
+    if st.session_state.get('view_run_documents', False):
+        default_tab = 1  # Documents tab
+    else:
+        default_tab = 0  # Run History tab
+    
     # Create tabs
     tab1, tab2, tab3 = st.tabs([
         "📋 Run History",
@@ -356,17 +362,22 @@ def show_documents_tab():
     
     # Check if a run is selected
     if 'selected_run_id' not in st.session_state or not st.session_state.get('view_run_documents', False):
-        st.info("👈 Select a run from the Run History tab to view its documents")
+        st.info("👈 Click 'View Documents' on any run from the Run History tab")
+        st.info("💡 **Tip:** After clicking 'View Documents', switch to this tab to see the content")
         logger.info("ℹ️  No run selected for document viewing")
         return
     
     run_id = st.session_state['selected_run_id']
     logger.info(f"📄 Loading documents for run: {run_id}")
     
+    # Show run info
+    st.info(f"📋 Viewing documents for run: `{run_id}`")
+    
     # Clear view flag
     if st.button("⬅️ Back to Run History"):
         logger.info("⬅️ Returning to run history")
         st.session_state['view_run_documents'] = False
+        del st.session_state['selected_run_id']
         st.rerun()
     
     # Fetch documents

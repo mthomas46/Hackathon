@@ -627,27 +627,27 @@ async def get_document_content(document_id: str):
     try:
         db = get_database()
         async with db.session() as session:
-            query = """
-                SELECT id, title, filename, content, content_size, word_count, created_at
-                FROM generated_documents
-                WHERE id = :doc_id
-            """
+            # Use DocumentationArtifactModel instead of non-existent generated_documents table
+            from src.storage.models_documentation import DocumentationArtifactModel
+            from sqlalchemy import select
             
-            from sqlalchemy import text
-            result = await session.execute(text(query), {"doc_id": UUID(document_id)})
-            row = result.fetchone()
+            query = select(DocumentationArtifactModel).filter(
+                DocumentationArtifactModel.id == UUID(document_id)
+            )
+            result = await session.execute(query)
+            artifact = result.scalar_one_or_none()
             
-            if not row:
+            if not artifact:
                 raise HTTPException(status_code=404, detail="Document not found")
             
             return DocumentContentResponse(
-                id=str(row[0]),
-                title=row[1],
-                filename=row[2],
-                content=row[3],
-                content_size=row[4],
-                word_count=row[5],
-                created_at=row[6]
+                id=str(artifact.id),
+                title=artifact.title,
+                filename=f"{artifact.artifact_type}_{artifact.pass_number}.md",
+                content=artifact.content,
+                content_size=len(artifact.content),
+                word_count=artifact.word_count,
+                created_at=artifact.created_at
             )
     
     except ValueError:

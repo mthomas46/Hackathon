@@ -765,8 +765,18 @@ class AdaptiveDocumentationOrchestrator:
                     relevance = citation["relevance_score"]
                     relevance_pct = int(relevance * 100)
                     
+                    # Get document metadata
                     doc_id = str(citation["document_id"])[:8] if citation.get("document_id") else "unknown"
-                    line = f"{idx}. Document `{doc_id}...` (relevance: {relevance_pct}%)"
+                    metadata = citation.get("metadata", {})
+                    
+                    # Extract document name from metadata
+                    doc_name = metadata.get("filename", metadata.get("file_path", ""))
+                    if doc_name:
+                        # Clean up the filename (remove path, keep just the filename)
+                        doc_name = doc_name.split("/")[-1] if "/" in doc_name else doc_name
+                        line = f"{idx}. **{doc_name}** (ID: `{doc_id}...`, relevance: {relevance_pct}%)"
+                    else:
+                        line = f"{idx}. Document `{doc_id}...` (relevance: {relevance_pct}%)"
                     
                     content = citation.get("content", "")
                     if content:
