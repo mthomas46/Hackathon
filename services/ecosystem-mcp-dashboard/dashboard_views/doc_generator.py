@@ -355,6 +355,24 @@ def show(api_base_url: str):
         
         config = st.session_state.doc_config
         
+        # ============================================================================
+        # PRE-GENERATION VALIDATIONS
+        # ============================================================================
+        st.markdown("### ✅ Pre-Generation Checks")
+        
+        validation_passed = True
+        
+        # Check 1: Service Filter Validation
+        service_filter = config.get('service_filter', '')
+        if not service_filter or service_filter == 'All services' or service_filter.lower() == 'unknown':
+            st.error("❌ **Service Filter Required:** Please specify a valid service name (e.g., 'adminservice')")
+            st.info("💡 Go to **Repository Discovery** to see available services")
+            validation_passed = False
+        else:
+            st.success(f"✅ Service filter set to: '{service_filter}'")
+        
+        st.markdown("---")
+        
         # Show configuration summary
         st.markdown("### 📋 Generation Plan")
         
