@@ -631,7 +631,14 @@ class AdaptiveDocumentationOrchestrator:
                             "document_id": src.get("document_id", src.get("id")),
                             "relevance_score": src.get("relevance_score", src.get("score", 0.0)),
                             "content": src.get("content", src.get("text", "")),
-                            "metadata": src.get("metadata", {})  # Include metadata (filename, file_path, etc.)
+                            # Construct metadata from RAG source fields
+                            "metadata": {
+                                "file_path": src.get("file_path"),
+                                "quality_score": src.get("quality_score"),
+                                "quality_grade": src.get("quality_grade"),
+                                "recency_days": src.get("recency_days"),
+                                "updated_at": src.get("updated_at")
+                            }
                         }
                         for src in section["sources"]
                     ])
