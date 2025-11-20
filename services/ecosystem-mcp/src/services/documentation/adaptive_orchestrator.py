@@ -184,33 +184,33 @@ class AdaptiveDocumentationOrchestrator:
             )
             logger.info(f"✅ Assembly complete: {len(documentation.get('content', ''))} characters")
             
-            # Phase 5: Save artifacts to database using DocumentationRunManager
+            # Phase 5: Save artifacts to database using repository
             logger.info(f"💾 Phase 5: Saving artifacts to database...")
             try:
-                from ...services.documentation.run_manager import DocumentationRunManager
+                from ...storage.repositories.documentation_run_repository import DocumentationRunRepository
                 
-                # Use the run manager to properly save artifacts
+                # Use the repository to properly save artifacts
                 # This automatically updates run totals (total_artifacts, total_words)
-                manager = DocumentationRunManager()
-                
-                word_count = len(documentation["content"].split())
-                
-                artifact = await manager.repository.add_artifact(
-                    run_id=run_id,
-                    artifact_type="synthesis",
-                    pass_number=1,
-                    pass_type="adaptive",
-                    title=f"{service_name} - {template_name}",
-                    content=documentation["content"],
-                    component_name=service_name,
-                    format="markdown",
-                    word_count=word_count,
-                    quality_score=1.0  # Could calculate based on sections/citations
-                )
-                
-                await manager.session.commit()
-                logger.info(f"✅ Saved artifact: {artifact.title} (ID: {artifact.id})")
-                logger.info(f"✅ Run totals automatically updated: 1 artifact, {word_count} words")
+                async with get_database().session() as session:
+                    repository = DocumentationRunRepository(session)
+                    word_count = len(documentation["content"].split())
+                    
+                    artifact = await repository.add_artifact(
+                        run_id=run_id,
+                        artifact_type="synthesis",
+                        pass_number=1,
+                        pass_type="adaptive",
+                        title=f"{service_name} - {template_name}",
+                        content=documentation["content"],
+                        component_name=service_name,
+                        format="markdown",
+                        word_count=word_count,
+                        quality_score=1.0  # Could calculate based on sections/citations
+                    )
+                    
+                    await session.commit()
+                    logger.info(f"✅ Saved artifact: {artifact.title} (ID: {artifact.id})")
+                    logger.info(f"✅ Run totals automatically updated: 1 artifact, {word_count} words")
                 
             except Exception as e:
                 logger.error(f"⚠️ Failed to save artifacts: {e}", exc_info=True)
