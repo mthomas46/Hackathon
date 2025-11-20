@@ -15,6 +15,14 @@ import pandas as pd
 from datetime import datetime
 import json
 import os
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # Get API URL from session state, environment, or default
 API_URL = st.session_state.get("api_url") or os.getenv("API_BASE_URL", "http://ecosystem-mcp-service:8000")
@@ -46,8 +54,10 @@ def show_run_history():
     """Show list of documentation runs."""
     st.subheader("📋 Documentation Run History")
     
+    logger.info("📋 Loading documentation run history")
+    
     # Filters
-    col1, col2, col3 = st.columns([2, 2, 1])
+    col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
     
     with col1:
         status_filter = st.selectbox(
@@ -60,11 +70,21 @@ def show_run_history():
         limit = st.number_input("Results per page", min_value=10, max_value=100, value=20)
     
     with col3:
+        run_id_filter = st.text_input(
+            "Filter by Run ID",
+            placeholder="Enter run ID or partial ID...",
+            key="run_id_filter"
+        )
+    
+    with col4:
         if st.button("🔄 Refresh"):
+            logger.info("🔄 Refresh button clicked")
             st.rerun()
     
     # Fetch runs
     try:
+        logger.info(f"🔍 Fetching runs: status={status_filter}, limit={limit}, run_id_filter={run_id_filter}")
+        
         params = {"limit": limit, "offset": 0}
         if status_filter != "All":
             params["status"] = status_filter
@@ -77,26 +97,41 @@ def show_run_history():
         
         if response.status_code == 200:
             runs = response.json()
+            logger.info(f"✅ Retrieved {len(runs)} runs from API")
+            
+            # Apply run ID filter if provided
+            if run_id_filter:
+                original_count = len(runs)
+                runs = [r for r in runs if run_id_filter.lower() in r['id'].lower()]
+                logger.info(f"🔍 Filtered by run ID: {original_count} → {len(runs)} runs")
             
             if not runs:
                 st.info("📭 No documentation runs found")
+                logger.warning("📭 No runs match the current filters")
                 return
             
             st.success(f"✅ Found {len(runs)} runs")
+            logger.info(f"📊 Displaying {len(runs)} runs")
             
             # Display runs
             for run in runs:
                 display_run_card(run)
         
         else:
-            st.error(f"❌ Failed to fetch runs: HTTP {response.status_code}")
+            error_msg = f"Failed to fetch runs: HTTP {response.status_code}"
+            st.error(f"❌ {error_msg}")
+            logger.error(f"❌ {error_msg}")
     
     except Exception as e:
-        st.error(f"❌ Error: {str(e)}")
+        error_msg = f"Error fetching runs: {str(e)}"
+        st.error(f"❌ {error_msg}")
+        logger.exception(f"❌ {error_msg}")
 
 
 def display_run_card(run: dict):
     """Display a run as an expandable card."""
+    logger.debug(f"🎴 Displaying run card for: {run['id'][:8]}...")
+    
     # Status badge
     status_colors = {
         "pending": "🟡",
@@ -137,17 +172,20 @@ def display_run_card(run: dict):
         
         with col_btn1:
             if st.button("📄 View Documents", key=f"view_{run['id']}"):
+                logger.info(f"📄 User clicked View Documents for run: {run['id']}")
                 st.session_state['selected_run_id'] = run['id']
                 st.session_state['view_run_documents'] = True
                 st.rerun()
         
         with col_btn2:
             if st.button("📊 Details", key=f"details_{run['id']}"):
+                logger.info(f"📊 User clicked Details for run: {run['id']}")
                 show_run_details(run['id'])
         
         with col_btn3:
             if run['status'] == 'completed' and run['total_documents'] > 0:
                 if st.button("📥 Export ZIP", key=f"export_{run['id']}"):
+                    logger.info(f"📥 User clicked Export ZIP for run: {run['id']}")
                     export_run_as_zip(run['id'], run['name'])
         
         with col_btn4:
@@ -212,6 +250,9 @@ def show_run_details(run_id: str):
             
             st.markdown("### 📊 Run Details")
             
+            # Show Run ID prominently
+            st.code(f"Run ID: {run['id']}", language=None)
+            
             col1, col2 = st.columns(2)
             
             with col1:
@@ -233,6 +274,31 @@ def show_run_details(run_id: str):
                 
                 if run.get('output_directory'):
                     st.text(f"Output: {run['output_directory']}")
+            
+            # Display Metadata with Sections
+            if run.get('metadata'):
+                st.markdown("---")
+                st.markdown("### 📝 Generated Sections")
+                
+                metadata = run['metadata']
+                
+                # Show section count
+                total_sections = metadata.get('total_sections', 0)
+                st.info(f"📄 **{total_sections}** section(s) generated")
+                
+                # Display each section (without nested expanders)
+                sections = metadata.get('sections', [])
+                if sections:
+                    for idx, section in enumerate(sections, 1):
+                        st.markdown(f"**{idx}. {section.get('title', 'Untitled')}**")
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            st.text(f"Type: {section.get('type', 'N/A')}")
+                        with col_b:
+                            st.text(f"Word Count: {section.get('word_count', 0):,}")
+                        st.markdown("")  # Add spacing
+                else:
+                    st.warning("No section details available")
         
         else:
             st.error(f"❌ Failed to fetch run details: HTTP {response.status_code}")
@@ -291,12 +357,15 @@ def show_documents_tab():
     # Check if a run is selected
     if 'selected_run_id' not in st.session_state or not st.session_state.get('view_run_documents', False):
         st.info("👈 Select a run from the Run History tab to view its documents")
+        logger.info("ℹ️  No run selected for document viewing")
         return
     
     run_id = st.session_state['selected_run_id']
+    logger.info(f"📄 Loading documents for run: {run_id}")
     
     # Clear view flag
     if st.button("⬅️ Back to Run History"):
+        logger.info("⬅️ Returning to run history")
         st.session_state['view_run_documents'] = False
         st.rerun()
     

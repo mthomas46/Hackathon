@@ -287,6 +287,33 @@ class DocumentationRunRepository(BaseRepository[DocumentationRunModel]):
             "by_type": by_type
         }
     
+    async def list_runs(
+        self,
+        status: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[DocumentationRunModel]:
+        """
+        List documentation runs with optional filtering.
+        
+        Args:
+            status: Optional status filter
+            limit: Maximum number of results
+            offset: Offset for pagination
+        
+        Returns:
+            List of run models
+        """
+        query = select(DocumentationRunModel)
+        
+        if status:
+            query = query.where(DocumentationRunModel.status == status)
+        
+        query = query.order_by(DocumentationRunModel.created_at.desc()).limit(limit).offset(offset)
+        
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+    
     async def delete_run(self, run_id: UUID) -> bool:
         """
         Delete a run and all its artifacts.

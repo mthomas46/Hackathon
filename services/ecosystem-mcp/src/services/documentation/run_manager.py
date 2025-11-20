@@ -75,7 +75,21 @@ class DocumentationRunManager:
         
         # Generate plan_id and repo_id from repo_path
         plan_id = snapshot_id or str(uuid4())
-        repo_id = repo_path  # Use repo_path as repo_id
+        
+        # Check if repo_id exists in repository_contexts, otherwise set to None
+        # repo_id has a foreign key constraint but is nullable
+        from ...storage.models_analysis import RepositoryContextModel
+        from sqlalchemy import select
+        
+        query = select(RepositoryContextModel.repo_id).filter(
+            RepositoryContextModel.repo_id == repo_path
+        )
+        result = await self.session.execute(query)
+        existing_repo = result.scalar_one_or_none()
+        
+        repo_id = existing_repo if existing_repo else None
+        if not existing_repo:
+            logger.warning(f"Repository context not found for path '{repo_path}', setting repo_id to None")
         
         # Extract total_passes from config
         total_passes = config.get("passes", 5)
@@ -83,7 +97,7 @@ class DocumentationRunManager:
         # Create run using actual repository API
         run = await self.repository.create_run(
             plan_id=plan_id,
-            repo_id=repo_id,
+            repo_id=repo_id,  # Will be None if repo context doesn't exist
             status="pending",
             total_passes=total_passes,
             config=config
@@ -298,6 +312,26 @@ class DocumentationRunManager:
             Statistics dictionary
         """
         return await self.repository.get_run_statistics(run_id)
+    
+    async def list_runs(
+        self,
+        status: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[DBDocumentationRunModel]:
+        """
+        List documentation runs with optional filtering.
+        
+        Args:
+            status: Optional status filter ('pending', 'running', 'completed', 'failed')
+            limit: Maximum number of results
+            offset: Offset for pagination
+        
+        Returns:
+            List of runs
+        """
+        logger.info(f"Listing runs: status={status}, limit={limit}, offset={offset}")
+        return await self.repository.list_runs(status=status, limit=limit, offset=offset)
 
 
 # Singleton instance (optional)
