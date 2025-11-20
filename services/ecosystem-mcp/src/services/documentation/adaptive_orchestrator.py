@@ -16,7 +16,7 @@ from typing import Dict, List, Optional, Any
 from uuid import UUID, uuid4
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from ...services.templates.template_manager import get_template_manager
 from ...services.templates.template_validator import get_template_validator
@@ -112,7 +112,6 @@ class AdaptiveDocumentationOrchestrator:
         if create_new_run:
             async with get_database().session() as session:
                 # Query for repo_id from repository_contexts (foreign key constraint)
-                from sqlalchemy import select
                 from ...storage.models_analysis import RepositoryContextModel
                 
                 query = select(RepositoryContextModel.repo_id).filter(
@@ -185,41 +184,33 @@ class AdaptiveDocumentationOrchestrator:
             )
             logger.info(f"✅ Assembly complete: {len(documentation.get('content', ''))} characters")
             
-            # Phase 5: Save artifacts to database
+            # Phase 5: Save artifacts to database using DocumentationRunManager
             logger.info(f"💾 Phase 5: Saving artifacts to database...")
             try:
-                from ...storage.models_documentation import DocumentationArtifactModel
+                from ...services.documentation.run_manager import DocumentationRunManager
                 
-                async with get_database().session() as session:
-                    # Save the main documentation artifact
-                    artifact = DocumentationArtifactModel(
-                        id=uuid4(),
-                        run_id=run_id,
-                        title=f"{service_name} - {template_name}",
-                        artifact_type="synthesis",  # Using 'synthesis' as the artifact type
-                        pass_number=1,
-                        pass_type="adaptive",
-                        component_name=service_name,
-                        content=documentation["content"],
-                        format="markdown",
-                        word_count=len(documentation["content"].split()),
-                        quality_score=1.0,  # Could calculate based on sections/citations
-                        created_at=datetime.utcnow()
-                    )
-                    session.add(artifact)
-                    await session.commit()
-                    logger.info(f"✅ Saved artifact: {artifact.title} (ID: {artifact.id})")
+                # Use the run manager to properly save artifacts
+                # This automatically updates run totals (total_artifacts, total_words)
+                manager = DocumentationRunManager()
                 
-                # Update run with artifact count
-                async with get_database().session() as session:
-                    query = select(DocumentationRunModel).filter(DocumentationRunModel.id == run_id)
-                    result = await session.execute(query)
-                    run = result.scalar_one_or_none()
-                    if run:
-                        run.total_artifacts = 1
-                        run.total_words = len(documentation["content"].split())
-                        await session.commit()
-                        logger.info(f"✅ Updated run metrics: 1 artifact, {run.total_words} words")
+                word_count = len(documentation["content"].split())
+                
+                artifact = await manager.repository.add_artifact(
+                    run_id=run_id,
+                    artifact_type="synthesis",
+                    pass_number=1,
+                    pass_type="adaptive",
+                    title=f"{service_name} - {template_name}",
+                    content=documentation["content"],
+                    component_name=service_name,
+                    format="markdown",
+                    word_count=word_count,
+                    quality_score=1.0  # Could calculate based on sections/citations
+                )
+                
+                await manager.session.commit()
+                logger.info(f"✅ Saved artifact: {artifact.title} (ID: {artifact.id})")
+                logger.info(f"✅ Run totals automatically updated: 1 artifact, {word_count} words")
                 
             except Exception as e:
                 logger.error(f"⚠️ Failed to save artifacts: {e}", exc_info=True)
