@@ -208,7 +208,9 @@ class AdaptiveDocumentationOrchestrator:
                         quality_score=1.0  # Could calculate based on sections/citations
                     )
                     
+                    logger.info(f"🔄 About to commit transaction...")
                     await session.commit()
+                    logger.info(f"✅ Transaction committed successfully")
                     logger.info(f"✅ Saved artifact: {artifact.title} (ID: {artifact.id})")
                     logger.info(f"✅ Run totals automatically updated: 1 artifact, {word_count} words")
                 
