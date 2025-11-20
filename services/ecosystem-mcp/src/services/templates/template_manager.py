@@ -50,6 +50,62 @@ class TemplateManager:
         self.cache: Dict[str, Dict[str, Any]] = {}
         logger.info("TemplateManager initialized")
     
+    def _get_fallback_template(self, template_name: str, category: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Provide fallback template structure when template not found in database.
+        
+        Args:
+            template_name: Requested template name
+            category: Optional category
+            
+        Returns:
+            Fallback template dictionary
+        """
+        logger.warning(f"⚠️ Using fallback template for '{template_name}'")
+        # Default structure for common templates with complete fields
+        return {
+            "id": f"fallback-{template_name}",
+            "name": template_name,
+            "category": category or "backend",
+            "version": "1.0.0",
+            "structure": {
+                "sections": [
+                    {
+                        "name": "overview",
+                        "title": "Overview",
+                        "description": "High-level overview of the service/component",
+                        "prompt": "Provide a high-level overview of this codebase, including its purpose, key features, and main technologies used.",
+                        "required": True,
+                        "sections": []
+                    },
+                    {
+                        "name": "architecture",
+                        "title": "Architecture",
+                        "description": "Technical architecture and design",
+                        "prompt": "Describe the technical architecture, main components, and how they interact with each other.",
+                        "required": True,
+                        "sections": []
+                    },
+                    {
+                        "name": "api",
+                        "title": "API Reference",
+                        "description": "API endpoints and usage",
+                        "prompt": "Generate an API reference documenting the main endpoints, request/response formats, and usage examples.",
+                        "required": True,
+                        "sections": []
+                    }
+                ]
+            },
+            "render_options": {
+                "include_toc": True,
+                "include_metadata": True
+            },
+            "target_framework": None,
+            "target_audience": "developers",
+            "is_active": True,
+            "is_public": True
+        }
+    
     async def load_template(
         self,
         template_name: str,
@@ -87,23 +143,26 @@ class TemplateManager:
             template_model = result.scalar_one_or_none()
             
             if not template_model:
-                raise ValueError(f"Template not found: {template_name}")
-            
-            template_dict = {
-                "id": str(template_model.id),
-                "name": template_model.name,
-                "category": template_model.category,
-                "version": template_model.version,
-                "structure": template_model.structure,
-                "render_options": template_model.render_options or {},
-                "target_framework": template_model.target_framework,
-                "target_audience": template_model.target_audience,
-            }
+                # ✨ FALLBACK: Provide default template structure if not in database
+                logger.warning(f"⚠️ Template '{template_name}' not found in database, using fallback structure")
+                template_dict = self._get_fallback_template(template_name, category)
+                logger.info(f"✅ Fallback template '{template_name}' loaded with {len(template_dict['structure']['sections'])} sections")
+            else:
+                template_dict = {
+                    "id": str(template_model.id),
+                    "name": template_model.name,
+                    "category": template_model.category,
+                    "version": template_model.version,
+                    "structure": template_model.structure,
+                    "render_options": template_model.render_options or {},
+                    "target_framework": template_model.target_framework,
+                    "target_audience": template_model.target_audience,
+                }
+                logger.info(f"✅ Template '{template_name}' loaded from database with {len(template_dict['structure']['sections'])} sections")
             
             # Cache it
             self.cache[cache_key] = template_dict
             
-            logger.info(f"Template '{template_name}' loaded from database")
             return template_dict
     
     async def create_template(

@@ -273,13 +273,22 @@ async def create_documentation_run(
             
             # ✨ CRITICAL FIX: Extract service_name from multiple possible sources
             # The UI may pass it in metadata OR as service_filter
+            service_name_from_metadata = metadata.get("service_name")
+            service_name_from_filter = metadata.get("service_filter")
+            service_name_from_path = request.source_directory.split("/")[-1] if request.source_directory else None
+            
             service_name = (
-                metadata.get("service_name") or 
-                metadata.get("service_filter") or 
-                request.source_directory.split("/")[-1] if request.source_directory else 
+                service_name_from_metadata or 
+                service_name_from_filter or 
+                service_name_from_path or
                 "unknown"
             )
-            logger.info(f"🔍 Resolved service_name: {service_name}")
+            
+            logger.info(f"🔍 Service Name Resolution:")
+            logger.info(f"   - From metadata: {service_name_from_metadata}")
+            logger.info(f"   - From filter: {service_name_from_filter}")
+            logger.info(f"   - From path: {service_name_from_path}")
+            logger.info(f"   ✅ Final: {service_name}")
             
             metadata.update({
                 "name": request.name,

@@ -348,18 +348,21 @@ class AdaptiveDocumentationOrchestrator:
         logger.info(f"📝 Generating {len(template_sections)} sections...")
         
         for section in template_sections:
-            if not section["required"] and not config.get("include_optional_sections", False):
-                logger.debug(f"⏭️  Skipping optional section: {section['name']}")
+            # ✅ DEFENSIVE: Use .get() with default value to handle missing "required" field
+            is_required = section.get("required", True)  # Default to True if not specified
+            
+            if not is_required and not config.get("include_optional_sections", False):
+                logger.debug(f"⏭️  Skipping optional section: {section.get('name', 'unnamed')}")
                 continue
             
             log_id = await self.transparency_logger.start_action(
                 run_id=run_id,
                 phase="generation",
                 action_type="generate_section",
-                action_description=f"Generating section: {section['name']}",
+                action_description=f"Generating section: {section.get('name', 'unnamed')}",
                 input_data={
-                    "section": section["name"],
-                    "required": section["required"]
+                    "section": section.get("name", "unnamed"),
+                    "required": is_required
                 }
             )
             

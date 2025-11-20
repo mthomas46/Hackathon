@@ -10,7 +10,7 @@ Plus manual tier selection with automatic fallback.
 """
 
 import logging
-from typing import Optional, Literal
+from typing import Optional, Literal, List, Dict, Any
 from enum import Enum
 
 from fastapi import APIRouter, HTTPException, Query
