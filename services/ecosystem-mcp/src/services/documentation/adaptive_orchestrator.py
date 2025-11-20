@@ -623,14 +623,15 @@ class AdaptiveDocumentationOrchestrator:
                 content_parts.append(section["content"])
                 content_parts.append("\n\n")
                 
-                # Collect citations
+                # Collect citations with metadata for better formatting
                 if section.get("sources"):
                     all_citations.extend([
                         {
                             "section_name": section["name"],
                             "document_id": src.get("document_id", src.get("id")),
                             "relevance_score": src.get("relevance_score", src.get("score", 0.0)),
-                            "content": src.get("content", src.get("text", ""))
+                            "content": src.get("content", src.get("text", "")),
+                            "metadata": src.get("metadata", {})  # Include metadata (filename, file_path, etc.)
                         }
                         for src in section["sources"]
                     ])
@@ -762,21 +763,28 @@ class AdaptiveDocumentationOrchestrator:
                     relevance_pct = int(relevance * 100)
                     
                     # Get document metadata
-                    doc_id = str(citation["document_id"])[:8] if citation.get("document_id") else "unknown"
+                    doc_id = str(citation.get("document_id", "unknown"))[:8]
                     metadata = citation.get("metadata", {})
                     
-                    # Extract document name from metadata
-                    doc_name = metadata.get("filename", metadata.get("file_path", ""))
-                    if doc_name:
-                        # Clean up the filename (remove path, keep just the filename)
-                        doc_name = doc_name.split("/")[-1] if "/" in doc_name else doc_name
-                        line = f"{idx}. **{doc_name}** (ID: `{doc_id}...`, relevance: {relevance_pct}%)"
+                    # Extract document name from metadata (try multiple fields)
+                    file_path = metadata.get("file_path", metadata.get("filename", metadata.get("source", "")))
+                    
+                    if file_path and file_path != "Unknown":
+                        # Extract filename from path
+                        import os
+                        filename = os.path.basename(file_path)
+                        
+                        # Format: filename (relevance) [ID] + file path
+                        line = f"{idx}. **{filename}** (relevance: {relevance_pct}%) [`{doc_id}`]"
+                        line += f"\n   📄 `{file_path}`"
                     else:
+                        # Fallback format
                         line = f"{idx}. Document `{doc_id}...` (relevance: {relevance_pct}%)"
                     
+                    # Add excerpt
                     content = citation.get("content", "")
                     if content:
-                        excerpt = content[:100].replace("\n", " ")
+                        excerpt = content[:150].replace("\n", " ")
                         line += f"\n   > {excerpt}..."
                     
                     lines.append(line)
