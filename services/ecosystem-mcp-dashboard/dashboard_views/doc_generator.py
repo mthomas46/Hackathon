@@ -610,28 +610,64 @@ def show(api_base_url: str):
     with tab3:
         st.header("📄 Generated Documentation")
         
-        if not st.session_state.generation_results:
-            st.info("No documentation generated yet. Configure and generate first.")
-            st.stop()
-        
         # Show link to saved run if persisted
         if st.session_state.get('last_doc_run_id'):
             run_id = st.session_state['last_doc_run_id']
-            st.success(f"""
-            💾 **This documentation is saved in the database!**
             
-            Run ID: `{run_id}`
+            # Add option to fetch from database instead of using session state
+            col1, col2 = st.columns([3, 1])
             
-            📚 **Browse in:** Documentation Browser → Run History
-            📥 **Export as ZIP** from the Documentation Browser
-            🔍 **View all documents** with metadata and search
-            """)
+            with col1:
+                st.info(f"""
+                💾 **Last Generated Run:** `{run_id}`
+                
+                📚 **Browse in:** Documentation Browser → Run History
+                🔍 **Filter by:** `{run_id[:8]}`
+                """)
             
-            if st.button("🗑️ Clear Saved Run Reference"):
-                del st.session_state['last_doc_run_id']
-                st.rerun()
+            with col2:
+                if st.button("🔄 Refresh", help="Fetch latest from database"):
+                    # Fetch documents from database
+                    try:
+                        response = httpx.get(
+                            f"{api_base_url}/api/v1/documentation/runs/{run_id}/documents",
+                            params={"limit": 100},
+                            timeout=30.0
+                        )
+                        
+                        if response.status_code == 200:
+                            documents = response.json()
+                            
+                            # Update session state with fresh data
+                            st.session_state.generation_results = {}
+                            for doc in documents:
+                                # Fetch full content
+                                content_response = httpx.get(
+                                    f"{api_base_url}/api/v1/documentation/documents/{doc['id']}",
+                                    timeout=30.0
+                                )
+                                if content_response.status_code == 200:
+                                    content_data = content_response.json()
+                                    st.session_state.generation_results[doc['title']] = content_data['content']
+                            
+                            st.success(f"✅ Refreshed! Loaded {len(documents)} document(s)")
+                            st.rerun()
+                        else:
+                            st.error(f"Failed to fetch: HTTP {response.status_code}")
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+                
+                if st.button("🗑️ Clear", help="Clear session results"):
+                    st.session_state.generation_results = {}
+                    if 'last_doc_run_id' in st.session_state:
+                        del st.session_state['last_doc_run_id']
+                    st.rerun()
             
             st.markdown("---")
+        
+        if not st.session_state.generation_results:
+            st.info("No documentation in session. Configure and generate first, or click Refresh above to load from database.")
+            st.stop()
         
         # Display each section
         for section, content in st.session_state.generation_results.items():

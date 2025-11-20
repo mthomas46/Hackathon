@@ -153,7 +153,44 @@ def display_run_card(run: dict):
     duration = run.get("duration_seconds")
     duration_str = f"{duration}s" if duration else "N/A"
     
-    with st.expander(f"{status_icon} **{run['name']}** ({run['status']}) - {run['total_documents']} docs"):
+    # Generate meaningful display name
+    run_name = run.get('name', 'Unknown')
+    source_dir = run.get('source_directory', '')
+    
+    # Extract service name from source_directory or use name
+    if source_dir and source_dir != 'Unknown':
+        # Get last part of path as service name
+        service_name = source_dir.split('/')[-1] if '/' in source_dir else source_dir
+    elif run_name != 'Unknown':
+        service_name = run_name
+    else:
+        # Try to get from description or repo_id
+        description = run.get('description', '')
+        if description:
+            service_name = description[:30]
+        else:
+            # Use short run ID as fallback
+            service_name = f"Run {run['id'][:8]}"
+    
+    # Format timestamp
+    created_at = run.get('created_at', '')
+    if created_at:
+        try:
+            from datetime import datetime
+            dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            time_str = dt.strftime('%m/%d %H:%M')
+        except:
+            time_str = created_at[:16]
+    else:
+        time_str = "Unknown time"
+    
+    # Build display title
+    doc_count = run['total_documents']
+    status = run['status']
+    
+    display_title = f"{status_icon} **{service_name}** • {time_str} • {status} • {doc_count} docs"
+    
+    with st.expander(display_title):
         col1, col2 = st.columns([2, 1])
         
         with col1:
