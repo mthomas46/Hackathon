@@ -4,6 +4,7 @@ Repository for documentation run operations.
 Provides CRUD operations for tracking documentation generation runs and artifacts.
 """
 
+import logging
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -14,6 +15,8 @@ from sqlalchemy.orm import selectinload
 
 from ..models_documentation import DocumentationRunModel, DocumentationArtifactModel
 from .base import BaseRepository
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentationRunRepository(BaseRepository[DocumentationRunModel]):
@@ -189,7 +192,8 @@ class DocumentationRunRepository(BaseRepository[DocumentationRunModel]):
         await self.session.flush()
         
         # Update run totals using func.coalesce to handle NULL values
-        await self.session.execute(
+        logger.info(f"Updating run {run_id} totals: +1 artifact, +{word_count} words")
+        result = await self.session.execute(
             sql_update(DocumentationRunModel)
             .where(DocumentationRunModel.id == run_id)
             .values(
@@ -198,6 +202,7 @@ class DocumentationRunRepository(BaseRepository[DocumentationRunModel]):
             )
         )
         await self.session.flush()
+        logger.info(f"Run totals UPDATE affected {result.rowcount} rows")
         
         return artifact
     
