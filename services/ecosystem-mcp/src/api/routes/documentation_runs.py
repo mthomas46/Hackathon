@@ -79,6 +79,8 @@ async def _generate_documentation_background(
             raise TimeoutError("Documentation generation exceeded 5 minute timeout")
         
         # Update run with results
+        # NOTE: total_artifacts and total_words are already updated by the repository
+        # during artifact creation. DO NOT overwrite them here!
         async with db.session() as session:
             await session.execute(
                 update(DocumentationRunModel)
@@ -86,9 +88,9 @@ async def _generate_documentation_background(
                 .values(
                     status="completed",
                     completed_at=datetime.utcnow(),
-                    passes_completed=config.get("passes", 1),
-                    total_artifacts=result.get("sections_generated", 0),
-                    total_words=result.get("total_words", 0)
+                    passes_completed=config.get("passes", 1)
+                    # ✅ REMOVED: total_artifacts and total_words
+                    # These are maintained by DocumentationRunRepository.add_artifact()
                 )
             )
             await session.commit()
