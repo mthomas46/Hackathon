@@ -388,7 +388,11 @@ def show(api_base_url: str):
         
         # Start button
         if not st.session_state.get("generating", False):
-            if st.button("🚀 Start Generation", type="primary", use_container_width=True):
+            if st.button("🚀 Start Generation", type="primary", use_container_width=True, disabled=not validation_passed):
+                if not validation_passed:
+                    st.error("❌ Cannot start generation. Please fix validation errors above.")
+                    st.stop()
+                
                 st.session_state.generating = True
                 st.session_state.generation_start_time = time.time()
                 st.session_state.generation_results = {}
@@ -463,9 +467,10 @@ def show(api_base_url: str):
                         "success": bool(pass_content)
                     })
                 
-                # Combine pass results
+                # Combine pass results with run ID header
                 if section_content:
-                    st.session_state.generation_results[section] = "\n\n".join(section_content)
+                    content_with_id = f"<!-- Section: {section} | Run ID: {generation_run_id} -->\n\n" + "\n\n".join(section_content)
+                    st.session_state.generation_results[section] = content_with_id
                     section_time = time.time() - section_start
                     st.success(f"✅ {section} complete ({pass_count} passes, {section_time:.1f}s)")
                 else:
@@ -610,6 +615,11 @@ def show(api_base_url: str):
     with tab3:
         st.header("📄 Generated Documentation")
         
+        # Display current generation run ID if available
+        if st.session_state.get('current_generation_run_id'):
+            gen_run_id = st.session_state['current_generation_run_id']
+            st.code(f"🆔 Generation Run ID: {gen_run_id}", language="text")
+        
         # Show link to saved run if persisted
         if st.session_state.get('last_doc_run_id'):
             run_id = st.session_state['last_doc_run_id']
@@ -619,7 +629,7 @@ def show(api_base_url: str):
             
             with col1:
                 st.info(f"""
-                💾 **Last Generated Run:** `{run_id}`
+                💾 **Last Saved to Database:** `{run_id}`
                 
                 📚 **Browse in:** Documentation Browser → Run History
                 🔍 **Filter by:** `{run_id[:8]}`
