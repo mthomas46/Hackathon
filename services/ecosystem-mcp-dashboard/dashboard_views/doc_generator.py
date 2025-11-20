@@ -436,6 +436,16 @@ def show(api_base_url: str):
         if st.session_state.get("generating", False):
             st.info("🔄 Generation in progress...")
             
+            # Generate unique run ID for tracking
+            import uuid
+            if 'current_generation_run_id' not in st.session_state:
+                st.session_state.current_generation_run_id = str(uuid.uuid4())
+            
+            generation_run_id = st.session_state.current_generation_run_id
+            
+            # Display run ID prominently
+            st.info(f"🆔 **Generation Run ID:** `{generation_run_id}`")
+            
             # Progress tracking
             progress_bar = st.progress(0)
             status_text = st.empty()
