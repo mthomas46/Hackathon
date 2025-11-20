@@ -478,7 +478,8 @@ def show(api_base_url: str):
                         api_base_url=api_base_url,
                         section=section,
                         pass_name=pass_name,
-                        config=config
+                        config=config,
+                        run_id=generation_run_id
                     )
                     
                     if pass_content:
