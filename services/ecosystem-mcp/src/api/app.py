@@ -192,13 +192,30 @@ async def lifespan(app: FastAPI):
         await retry_worker.start()
         logger.info("  ✅ Retry worker started")
         
+        # ✅ SOLUTION #1: Start documentation worker
+        from ..services.documentation import start_documentation_worker
+        await start_documentation_worker()
+        logger.info("  ✅ Documentation worker started")
+        
+        # 🧹 Start job cleanup service
+        try:
+            from ..services.ingestion.job_cleanup_service import get_cleanup_service
+            cleanup_service = get_cleanup_service()
+            await cleanup_service.start()
+            logger.info("  ✅ Job cleanup service started")
+        except Exception as e:
+            logger.error(f"  ❌ Job cleanup service failed to start: {e}", exc_info=True)
+        
         # Detect and handle orphaned jobs on startup
         try:
             from ..services.ingestion.orphaned_job_detector import detect_orphaned_jobs
             orphan_result = await detect_orphaned_jobs()
             if orphan_result["orphaned_found"] > 0:
                 logger.warning(
-                    f"  ⚠️  Orphaned jobs detected: {orphan_result['failed_old']} failed, "
+                    f"  ⚠️  Orphaned jobs detected: "
+                    f"{orphan_result['failed_old']} failed (old), "
+                    f"{orphan_result['failed_max_retries']} failed (max retries), "
+                    f"{orphan_result['failed_timeout']} failed (timeout), "
                     f"{orphan_result['requeued_recent']} re-queued, "
                     f"{orphan_result['orphaned_found']} total orphaned"
                 )
@@ -206,6 +223,15 @@ async def lifespan(app: FastAPI):
                 logger.info("  ✅ No orphaned jobs detected")
         except Exception as e:
             logger.error(f"  ❌ Orphaned job detection failed: {e}", exc_info=True)
+        
+        # 🏥 Start worker health monitor (auto-restart on hang)
+        try:
+            from ..services.ingestion.worker_health_monitor import get_health_monitor
+            health_monitor = get_health_monitor()
+            await health_monitor.start()
+            logger.info("  ✅ Worker health monitor started")
+        except Exception as e:
+            logger.error(f"  ❌ Worker health monitor failed to start: {e}", exc_info=True)
         
         # 🆕 Start automatic cleanup service
         try:
@@ -516,6 +542,22 @@ def create_app() -> FastAPI:
     
     # Documentation run management
     app.include_router(documentation_runs.router, prefix="/api/v1/documentation", tags=["Documentation Runs"])
+    
+    # 🆕 Template management (Adaptive Documentation - Phase 2)
+    try:
+        from .routes import templates
+        app.include_router(templates.router, tags=["Templates"])
+        logger.info("✅ Template management routes registered")
+    except Exception as e:
+        logger.warning(f"⚠️  Failed to load Template routes: {e}")
+    
+    # 🆕 Adaptive Documentation Generation (Phase 4)
+    try:
+        from .routes import adaptive_documentation
+        app.include_router(adaptive_documentation.router, tags=["Adaptive Documentation"])
+        logger.info("✅ Adaptive documentation routes registered")
+    except Exception as e:
+        logger.warning(f"⚠️  Failed to load Adaptive Documentation routes: {e}")
     
     # Discovery and processing plans (Phase 1)
     app.include_router(discovery.router, prefix="/api/v1", tags=["Discovery"])

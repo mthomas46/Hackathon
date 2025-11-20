@@ -48,6 +48,9 @@ class IngestRequest(BaseModel):
     resolve_host_path: bool = Field(default=True, description="Automatically resolve host paths and find git root")
     target_subdirectory: Optional[str] = Field(default=None, description="Specific subdirectory to target (relative to repo root)")
     force_update: bool = Field(default=False, description="Force update of existing documents in ChromaDB (useful for fixing truncated content)")
+    use_file_filter: bool = Field(default=True, description="Enable intelligent file filtering (recommended). Disable to process all files regardless of type.")
+    force_metadata_enrichment: bool = Field(default=False, description="Force git metadata enrichment even for already-ingested commits")
+    skip_existing_commits: bool = Field(default=True, description="Skip commits that have already been fully ingested (disable to re-process all commits)")
 
 
 class IngestResponse(BaseModel):
@@ -151,6 +154,19 @@ async def start_ingestion(
         if request.force_update:
             job_metadata['force_update'] = True
             logger.info(f"🔄 Force update enabled - will re-process existing documents")
+        
+        # Add file filter setting to metadata
+        job_metadata['use_file_filter'] = request.use_file_filter
+        if not request.use_file_filter:
+            logger.warning(f"⚠️  File filtering DISABLED - will process ALL files")
+        
+        # Add metadata enrichment flags
+        job_metadata['force_metadata_enrichment'] = request.force_metadata_enrichment
+        job_metadata['skip_existing_commits'] = request.skip_existing_commits
+        if request.force_metadata_enrichment:
+            logger.info(f"📝 Force metadata enrichment enabled - will analyze git metadata even for existing commits")
+        if not request.skip_existing_commits:
+            logger.info(f"🔄 Skip existing commits disabled - will re-process all commits")
         
         # Create job in database
         db = get_database()
@@ -1559,7 +1575,7 @@ async def get_data_stats():
         embedding_count = await chroma.count()
         
         # Get cache key count
-        cache_stats = await get_cache_stats()
+        cache_stats = get_cache_stats()  # NOT async - remove await
         cache_key_count = cache_stats.get("total_keys", 0)
         
         return {
@@ -1604,4 +1620,34 @@ async def invalidate_rag_config_cache():
         
     except Exception as e:
         logger.error(f"Failed to invalidate RAG config cache: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/workers/health-monitor/status",
+    response_model=Dict[str, Any],
+    summary="Get worker health monitor status",
+    description="Get status of the automatic worker health monitoring system"
+)
+async def get_health_monitor_status():
+    """
+    Get worker health monitor status.
+    
+    Returns:
+        Health monitor status including:
+        - Running state
+        - Health check statistics
+        - Restart history
+        - Time since last restart
+    """
+    try:
+        from ...services.ingestion.worker_health_monitor import get_health_monitor
+        
+        monitor = get_health_monitor()
+        status = await monitor.get_status()
+        
+        return status
+        
+    except Exception as e:
+        logger.error(f"Failed to get health monitor status: {e}")
         raise HTTPException(status_code=500, detail=str(e))

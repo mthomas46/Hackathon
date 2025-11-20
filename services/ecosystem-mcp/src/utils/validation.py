@@ -18,10 +18,37 @@ from .exceptions import ValidationError
 
 # Allowed file extensions for document ingestion
 ALLOWED_EXTENSIONS = {
-    '.md', '.txt', '.rst', '.adoc',  # Docs
-    '.py', '.js', '.ts', '.java', '.go', '.rs',  # Code
-    '.json', '.yaml', '.yml', '.toml', '.xml',  # Config
-    '.html', '.css', '.scss',  # Web
+    # Documentation
+    '.md', '.txt', '.rst', '.adoc', '.asciidoc',
+    
+    # General purpose languages
+    '.py', '.js', '.ts', '.java', '.go', '.rs',
+    
+    # JVM languages
+    '.scala', '.kt', '.clj', '.groovy',
+    
+    # Other languages
+    '.rb', '.php', '.swift', '.dart', '.lua',
+    
+    # Build & project files (SBT, Maven, Gradle, etc.)
+    '.sbt', '.gradle', '.maven', '.pom',
+    
+    # Configuration files (framework-specific)
+    '.conf', '.properties', '.config', '.ini',  # Application configs
+    '.json', '.yaml', '.yml', '.toml', '.xml',  # Data formats
+    '.hocon',  # Typesafe config (Play Framework)
+    
+    # Web & frontend
+    '.html', '.css', '.scss', '.less', '.jsx', '.tsx', '.vue',
+    
+    # Scripts & queries
+    '.sql', '.sh', '.bash', '.zsh', '.fish',
+    
+    # API definitions
+    '.graphql', '.proto', '.avro', '.thrift', '.apib',  # API Blueprint
+    
+    # Special files (no extension)
+    'routes', 'Dockerfile', 'Makefile', 'Jenkinsfile', 'Vagrantfile',
 }
 
 # Maximum content lengths
@@ -62,6 +89,37 @@ def sanitize_html(text: str) -> str:
         sanitized = re.sub(pattern, '', sanitized, flags=re.IGNORECASE | re.DOTALL)
     
     return sanitized
+
+
+def validate_file_extension(file_path: str, strict: bool = True) -> bool:
+    """
+    Check if file extension is allowed for ingestion.
+    
+    Args:
+        file_path: Path to file
+        strict: If False, allow all extensions (disable filtering)
+    
+    Returns:
+        True if file is allowed
+    
+    Examples:
+        >>> validate_file_extension("app.scala")
+        True
+        >>> validate_file_extension("data.bin", strict=False)
+        True
+    """
+    if not strict:
+        # Disable filtering - allow all files
+        return True
+    
+    path = Path(file_path)
+    
+    # Check special files with no extension
+    if path.name in ALLOWED_EXTENSIONS:
+        return True
+    
+    # Check file extension
+    return path.suffix.lower() in ALLOWED_EXTENSIONS
 
 
 def validate_path(file_path: str, base_dir: Optional[Path] = None) -> Path:

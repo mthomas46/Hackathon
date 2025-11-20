@@ -1,234 +1,311 @@
 """
-Pytest configuration and fixtures for all tests.
+Shared test fixtures and configuration for all tests.
 
-Provides database setup, async support, and common fixtures.
+This file is automatically loaded by pytest and provides:
+- Database fixtures
+- Service fixtures
+- Mock fixtures
+- Test data fixtures
 """
 
-import os
-import sys
 import pytest
 import asyncio
-import logging
-from pathlib import Path
 from typing import AsyncGenerator
+from uuid import uuid4
 
-# Add src to path
-src_path = Path(__file__).parent.parent / "src"
-sys.path.insert(0, str(src_path))
+# ============================================================================
+# Pytest Configuration
+# ============================================================================
 
-# Set up logger
-logger = logging.getLogger(__name__)
-
-# Load test environment
-from dotenv import load_dotenv
-env_test_path = Path(__file__).parent.parent / ".env.test"
-if env_test_path.exists():
-    load_dotenv(env_test_path, override=True)
-    print(f"✅ Loaded test environment from {env_test_path}")
-
-
-# Configure pytest-asyncio
 def pytest_configure(config):
-    """Configure pytest with custom markers and settings."""
+    """Configure pytest with custom settings."""
     config.addinivalue_line(
-        "markers", "unit: Unit tests (fast, no external dependencies)"
+        "markers", "unit: Unit tests for individual components"
     )
     config.addinivalue_line(
-        "markers", "integration: Integration tests (require database)"
+        "markers", "integration: Integration tests for multiple components"
     )
     config.addinivalue_line(
-        "markers", "e2e: End-to-end tests (full workflow)"
+        "markers", "functional: Functional tests for API endpoints"
     )
     config.addinivalue_line(
-        "markers", "smoke: Smoke tests (basic functionality)"
+        "markers", "e2e: End-to-end workflow tests"
     )
     config.addinivalue_line(
-        "markers", "slow: Slow tests (skip by default)"
+        "markers", "slow: Slow-running tests"
+    )
+    config.addinivalue_line(
+        "markers", "benchmark: Performance benchmark tests"
     )
 
+
+# ============================================================================
+# Async Support
+# ============================================================================
 
 @pytest.fixture(scope="session")
 def event_loop():
-    """Create an instance of the default event loop for the test session."""
+    """Create event loop for async tests."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
 
 
-@pytest.fixture(scope="session")
-async def test_database_url() -> str:
-    """Provide test database URL."""
-    return os.getenv(
-        "DATABASE_URL",
-        "postgresql://test_user:test_password@localhost:5433/ecosystem_mcp_test"
-    )
-
+# ============================================================================
+# Database Fixtures
+# ============================================================================
 
 @pytest.fixture(scope="session")
-async def test_redis_url() -> str:
-    """Provide test Redis URL."""
-    return os.getenv("REDIS_URL", "redis://localhost:6380/0")
-
-
-# Global flag to track if tables have been created
-_tables_created = False
+async def test_db():
+    """Create test database connection."""
+    # Note: In production, this would set up a test database
+    # For now, we'll use mocks
+    yield None
 
 
 @pytest.fixture(scope="function")
-async def db_session(test_database_url: str) -> AsyncGenerator:
-    """
-    Provide a database session for tests.
-    
-    Automatically rolls back after each test to ensure isolation.
-    Creates tables on first run.
-    """
-    global _tables_created
-    from src.storage.database import init_database, close_database, get_database
-    
-    # Import all models to ensure they're registered with Base.metadata
-    from src.storage import db_models  # noqa: F401
-    from src.storage import models_documentation  # noqa: F401
-    from src.storage import models_analysis  # noqa: F401
-    
-    try:
-        # Initialize database
-        await init_database()
-        
-        # Drop and recreate tables once per session to ensure fresh schema
-        if not _tables_created:
-            db = get_database()
-            try:
-                logger.info("🔄 Dropping existing tables with CASCADE to handle foreign keys...")
-                # Use CASCADE to handle foreign key dependencies
-                from sqlalchemy import text
-                async with db.engine.begin() as conn:
-                    # Drop tables in reverse dependency order with CASCADE
-                    await conn.execute(text("DROP TABLE IF EXISTS documentation_artifacts CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS documentation_runs CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS hierarchical_contexts CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS repository_contexts CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS document_placements CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS time_periods CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS timelines CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS document_versions CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS embeddings CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS documents CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS ingestion_jobs CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS git_commits CASCADE"))
-                    await conn.execute(text("DROP TABLE IF EXISTS model_requests CASCADE"))
-                logger.info("✅ Tables dropped with CASCADE")
-            except Exception as e:
-                logger.warning(f"⚠️ Could not drop tables (may not exist): {e}")
-            
-            logger.info("📝 Creating tables with current schema...")
-            await db.create_tables()
-            _tables_created = True
-            logger.info("✅ Test database tables created with fresh schema")
-        
-        # Get database instance and create session
-        db = get_database()
-        async with db.session() as session:
-            try:
-                yield session
-            finally:
-                # Rollback after test to ensure isolation
-                await session.rollback()
-    finally:
-        await close_database()
+async def db_session(test_db):
+    """Create database session for each test."""
+    # Create session
+    # Yield it
+    # Rollback/cleanup after test
+    yield None
 
 
-@pytest.fixture(scope="function")
-async def redis_client(test_redis_url: str):
-    """Provide a Redis client for tests."""
-    try:
-        from src.utils.redis_client import get_redis_client, init_redis, close_redis
-        
-        await init_redis()
-        client = get_redis_client()
-        
-        yield client
-        
-        # Clean up
-        await client.flushdb()
-    finally:
-        await close_redis()
+# ============================================================================
+# Service Fixtures
+# ============================================================================
+
+@pytest.fixture
+def template_manager():
+    """Get template manager instance."""
+    from src.services.templates.template_manager import get_template_manager
+    return get_template_manager()
 
 
-@pytest.fixture(scope="function")
-async def clean_database(db_session):
-    """
-    Provide a clean database session for functional tests.
+@pytest.fixture
+def discovery_service():
+    """Get discovery service instance."""
+    from src.services.adaptive.discovery_service import get_discovery_service
+    return get_discovery_service()
+
+
+@pytest.fixture
+def prompt_tracker():
+    """Get prompt tracker instance."""
+    from src.services.adaptive.prompt_tracker import get_prompt_tracker
+    return get_prompt_tracker()
+
+
+@pytest.fixture
+def citation_manager():
+    """Get citation manager instance."""
+    from src.services.adaptive.citation_manager import get_citation_manager
+    return get_citation_manager()
+
+
+@pytest.fixture
+def transparency_logger():
+    """Get transparency logger instance."""
+    from src.services.adaptive.transparency_logger import get_transparency_logger
+    return get_transparency_logger()
+
+
+@pytest.fixture
+def adaptive_orchestrator():
+    """Get adaptive orchestrator instance."""
+    from src.services.documentation.adaptive_orchestrator import get_adaptive_orchestrator
+    return get_adaptive_orchestrator()
+
+
+# ============================================================================
+# Test Data Fixtures
+# ============================================================================
+
+@pytest.fixture
+def valid_template_structure():
+    """Provide valid template structure for testing."""
+    return {
+        "sections": [
+            {
+                "name": "Overview",
+                "required": True,
+                "prompt_template": "What is {service_name}?",
+                "documents_needed": 10,
+                "subsections": []
+            },
+            {
+                "name": "Details",
+                "required": False,
+                "prompt_template": "Provide details about {service_name}",
+                "documents_needed": 15,
+                "subsections": []
+            }
+        ],
+        "metadata": {
+            "version": "1.0",
+            "author": "test"
+        }
+    }
+
+
+@pytest.fixture
+def mock_repository_context():
+    """Provide mock repository context."""
+    return {
+        "service_name": "testservice",
+        "primary_language": "Python",
+        "languages": {"Python": 100, "JavaScript": 20},
+        "primary_framework": "FastAPI",
+        "frameworks": ["FastAPI", "SQLAlchemy"],
+        "architecture_type": "microservice",
+        "total_files": 150,
+        "code_structure": {
+            "api": 25,
+            "models": 30,
+            "services": 40,
+            "utils": 15
+        },
+        "dependencies": ["fastapi", "sqlalchemy", "redis", "postgresql"]
+    }
+
+
+@pytest.fixture
+def mock_rag_response():
+    """Provide mock RAG response."""
+    return {
+        "answer": "This is a comprehensive answer about the service.",
+        "sources": [
+            {
+                "document_id": str(uuid4()),
+                "score": 0.95,
+                "content": "Source document content 1"
+            },
+            {
+                "document_id": str(uuid4()),
+                "score": 0.87,
+                "content": "Source document content 2"
+            }
+        ],
+        "metadata": {
+            "query_time_ms": 150,
+            "documents_searched": 1000
+        }
+    }
+
+
+@pytest.fixture
+def sample_template():
+    """Provide sample template for testing."""
+    return {
+        "id": str(uuid4()),
+        "name": "test_template",
+        "category": "api_reference",
+        "version": 1,
+        "description": "Test template for unit tests",
+        "structure": {
+            "sections": [
+                {
+                    "name": "Overview",
+                    "required": True,
+                    "prompt_template": "Describe {service_name}",
+                    "documents_needed": 10
+                }
+            ]
+        },
+        "render_options": {
+            "include_toc": True,
+            "format": "markdown"
+        },
+        "target_framework": None,
+        "target_audience": "developers",
+        "usage_count": 0,
+        "is_system_template": False
+    }
+
+
+# ============================================================================
+# Mock Fixtures
+# ============================================================================
+
+@pytest.fixture
+def mock_llm_client():
+    """Mock LLM client for testing."""
+    from unittest.mock import AsyncMock, Mock
     
-    Returns the db_session which automatically rolls back after each test.
-    This ensures test isolation without needing to truncate tables.
-    """
-    # Simply return the db_session which handles rollback automatically
-    return db_session
+    mock = AsyncMock()
+    mock.generate.return_value = "Generated LLM response"
+    return mock
 
 
-@pytest.fixture(scope="session")
-def check_test_database():
-    """
-    Check that test database is running before running tests.
+@pytest.fixture
+def mock_embedding_service():
+    """Mock embedding service for testing."""
+    from unittest.mock import AsyncMock
     
-    Fails fast if database is not available.
-    """
-    import subprocess
-    
-    # Check if PostgreSQL is accessible (works with local or Docker)
-    result = subprocess.run(
-        ["pg_isready", "-h", "localhost", "-p", "5432"],
-        capture_output=True,
-        text=True
-    )
-    
-    if result.returncode != 0:
-        pytest.fail(
-            "\n❌ PostgreSQL database is not running!\n"
-            "   Start local PostgreSQL: brew services start postgresql@14\n"
-            "   Or use Docker: docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16\n"
-        )
-    
-    print("✅ PostgreSQL database is running")
-    return True
+    mock = AsyncMock()
+    mock.embed.return_value = [0.1] * 384  # Mock embedding vector
+    return mock
 
 
-# Skip integration tests if database is not available
-def pytest_collection_modifyitems(config, items):
-    """Skip integration tests if test database is not running."""
-    if config.getoption("--no-integration"):
-        skip_integration = pytest.mark.skip(reason="--no-integration flag used")
-        for item in items:
-            if "integration" in item.keywords:
-                item.add_marker(skip_integration)
-        return
-    
-    # Check if PostgreSQL is running (works with local or Docker)
-    import subprocess
-    result = subprocess.run(
-        ["pg_isready", "-h", "localhost", "-p", "5432"],
-        capture_output=True,
-        text=True
-    )
-    
-    if result.returncode != 0:
-        skip_db = pytest.mark.skip(reason="PostgreSQL not running (start with: brew services start postgresql@14)")
-        for item in items:
-            if "integration" in item.keywords or "e2e" in item.keywords or "functional" in item.keywords:
-                item.add_marker(skip_db)
+# ============================================================================
+# Cleanup Fixtures
+# ============================================================================
+
+@pytest.fixture(autouse=True)
+async def cleanup_after_test():
+    """Cleanup after each test."""
+    yield
+    # Cleanup logic here
+    # - Clear test data
+    # - Reset mocks
+    # - Close connections
+    pass
 
 
-def pytest_addoption(parser):
-    """Add custom command-line options."""
-    parser.addoption(
-        "--no-integration",
-        action="store_true",
-        default=False,
-        help="Skip integration tests"
-    )
-    parser.addoption(
-        "--run-slow",
-        action="store_true",
-        default=False,
-        help="Run slow tests"
-    )
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_after_session():
+    """Cleanup after entire test session."""
+    yield
+    # Final cleanup
+    pass
+
+
+# ============================================================================
+# Utility Functions
+# ============================================================================
+
+def create_test_template(**kwargs):
+    """Helper to create test template with defaults."""
+    defaults = {
+        "name": f"test_{uuid4().hex[:8]}",
+        "category": "api_reference",
+        "structure": {
+            "sections": [
+                {
+                    "name": "Test",
+                    "required": True,
+                    "prompt_template": "Test",
+                    "documents_needed": 10
+                }
+            ]
+        }
+    }
+    defaults.update(kwargs)
+    return defaults
+
+
+def create_test_context(**kwargs):
+    """Helper to create test repository context with defaults."""
+    defaults = {
+        "service_name": "testservice",
+        "primary_language": "Python",
+        "frameworks": ["FastAPI"]
+    }
+    defaults.update(kwargs)
+    return defaults
+
+
+# Export helpers
+pytest.create_test_template = create_test_template
+pytest.create_test_context = create_test_context

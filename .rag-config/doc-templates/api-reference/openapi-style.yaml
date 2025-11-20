@@ -1,0 +1,242 @@
+# API Reference Template (OpenAPI-style)
+# Production-ready template for documenting REST APIs
+
+name: "api_reference_openapi_style"
+category: "api_reference"
+version: 1
+description: "Comprehensive API documentation template following OpenAPI conventions"
+target_framework: null  # Works with any framework
+target_audience: "developers"
+
+structure:
+  sections:
+    - name: "Overview"
+      order: 1
+      required: true
+      subsections:
+        - "Purpose"
+        - "Base URL"
+        - "API Version"
+        - "Authentication"
+      prompt_template: |
+        Provide a comprehensive overview of the {service_name} API.
+        
+        Include:
+        - Primary purpose and use cases
+        - Base URL and versioning scheme
+        - Authentication methods supported
+        - Key features and capabilities
+        
+        Target audience: API consumers and integration developers.
+        Style: Professional, clear, and concise.
+      validation:
+        min_words: 100
+        max_words: 300
+        must_include:
+          - "API"
+          - "authentication"
+    
+    - name: "Authentication"
+      order: 2
+      required: true
+      subsections:
+        - "Methods Supported"
+        - "Obtaining Credentials"
+        - "Token Format"
+        - "Token Expiration"
+      prompt_template: |
+        Describe authentication for the {service_name} API.
+        
+        Focus on:
+        - Authentication schemes available (Bearer token, API key, OAuth, etc.)
+        - How to obtain credentials
+        - Token/key format and usage
+        - Security best practices
+        - Token expiration and refresh
+        
+        Provide code examples showing how to authenticate.
+      validation:
+        min_words: 150
+        must_include_code_example: true
+        must_include:
+          - "token"
+          - "header"
+    
+    - name: "Endpoints"
+      order: 3
+      required: true
+      format: "grouped_by_resource"
+      prompt_template: |
+        Document all API endpoints for {service_name}.
+        
+        For each endpoint:
+        - HTTP method (GET, POST, PUT, DELETE, PATCH)
+        - Full path with parameters
+        - Description of what it does
+        - Required parameters (path, query, header)
+        - Optional parameters
+        - Request body schema (if applicable)
+        - Response schema with status codes
+        - Example curl commands
+        
+        Group endpoints by resource (e.g., Users, Orders, Products).
+        Include common error responses.
+      validation:
+        min_endpoints: 1
+        must_include_examples: true
+        must_include_error_codes: true
+        must_include:
+          - "curl"
+          - "response"
+    
+    - name: "Request/Response Examples"
+      order: 4
+      required: true
+      prompt_template: |
+        Provide detailed request and response examples for key endpoints in {service_name}.
+        
+        For each major operation:
+        - Show complete curl command
+        - Show request body (if applicable) in JSON
+        - Show successful response with actual data
+        - Show error responses
+        
+        Use realistic example data.
+      validation:
+        min_words: 200
+        must_include_code_example: true
+        must_include:
+          - "```"
+          - "json"
+    
+    - name: "Data Models"
+      order: 5
+      required: false
+      subsections:
+        - "Request Models"
+        - "Response Models"
+        - "Common Types"
+      prompt_template: |
+        Document data models used in the {service_name} API.
+        
+        For each model:
+        - Model name and purpose
+        - Fields with types and descriptions
+        - Required vs optional fields
+        - Validation rules
+        - Example JSON representation
+        
+        Include nested objects and arrays where applicable.
+      validation:
+        must_include_json_schema: true
+        must_include:
+          - "type"
+          - "required"
+    
+    - name: "Error Codes"
+      order: 6
+      required: true
+      format: "table"
+      prompt_template: |
+        List all error codes and their meanings for {service_name}.
+        
+        Format as a table with columns:
+        | HTTP Status | Error Code | Message | Description | Resolution |
+        
+        Include:
+        - Standard HTTP errors (400, 401, 403, 404, 500, etc.)
+        - Custom application error codes
+        - How to resolve each error
+      validation:
+        min_errors: 5
+        format: "table"
+        must_include:
+          - "400"
+          - "401"
+          - "500"
+    
+    - name: "Rate Limiting"
+      order: 7
+      required: true
+      prompt_template: |
+        Describe rate limiting for the {service_name} API.
+        
+        Include:
+        - Rate limits per endpoint or global limits
+        - Time windows (per minute, hour, day)
+        - HTTP headers returned (X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset)
+        - How to handle 429 (Too Many Requests) responses
+        - Strategies for staying within limits
+      validation:
+        min_words: 100
+        must_include:
+          - "rate"
+          - "limit"
+          - "429"
+    
+    - name: "Pagination"
+      order: 8
+      required: false
+      prompt_template: |
+        Explain pagination for list endpoints in {service_name}.
+        
+        Include:
+        - Pagination parameters (page, limit, offset, cursor)
+        - Default page size
+        - Maximum page size
+        - Response metadata (total count, next/previous page links)
+        - Example requests with pagination
+      validation:
+        min_words: 80
+    
+    - name: "Webhooks"
+      order: 9
+      required: false
+      prompt_template: |
+        Document webhook functionality in {service_name}.
+        
+        Include:
+        - Available webhook events
+        - How to register webhook URLs
+        - Payload format for each event
+        - Webhook security (signatures, validation)
+        - Retry logic and failure handling
+      validation:
+        min_words: 100
+    
+    - name: "API Changelog"
+      order: 10
+      required: false
+      prompt_template: |
+        Document API version history and changes for {service_name}.
+        
+        For each version:
+        - Version number
+        - Release date
+        - Breaking changes (highlighted)
+        - New endpoints or features
+        - Deprecated endpoints
+        - Bug fixes
+        
+        Use reverse chronological order (newest first).
+      validation:
+        min_versions: 1
+        format: "chronological"
+
+formatting:
+  header_style: "atx"  # Use # for headers
+  code_fence: "```"
+  list_style: "unordered"
+  table_alignment: "left"
+  emphasis_style: "**"
+
+render_options:
+  include_toc: true
+  toc_depth: 3
+  include_citations: true
+  citation_style: "endnotes"
+  include_diagrams: false
+  include_code_examples: true
+  code_language_default: "bash"
+  syntax_highlighting: true
+

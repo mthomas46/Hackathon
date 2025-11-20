@@ -83,7 +83,8 @@ def show_path_validator_widget(
         "Path to Validate",
         value=default_path,
         key=f"{key_prefix}_path_input",
-        help="Enter a path on your host machine or in the container"
+        placeholder="/work/your-project-name",
+        help="Enter a CONTAINER path (e.g., /work/adminservice). All projects in /work are accessible."
     )
     
     col1, col2 = st.columns([3, 1])
@@ -179,28 +180,28 @@ def show_path_suggestions(api_base_url: str, key_prefix: str = "path_suggestions
         common_paths = [
             {
                 "label": "🏠 Hackathon Project",
-                "path": "/Users/mykalthomas/Documents/work/Hackathon",
-                "description": "Main project directory"
+                "path": "/work/Hackathon",
+                "description": "Main project directory (use container path)"
             },
             {
-                "label": "🧠 Ecosystem MCP",
-                "path": "/Users/mykalthomas/Documents/work/Hackathon/services/ecosystem-mcp",
-                "description": "Ecosystem MCP service"
+                "label": "🔐 AuthService",
+                "path": "/work/authservice",
+                "description": "Authentication service"
             },
             {
-                "label": "📊 Dashboard",
-                "path": "/Users/mykalthomas/Documents/work/Hackathon/services/ecosystem-mcp-dashboard",
-                "description": "Dashboard service"
+                "label": "🔐 AdminService",
+                "path": "/work/adminservice",
+                "description": "Admin service"
             },
             {
-                "label": "⚡ Embedding Service",
-                "path": "/Users/mykalthomas/Documents/work/Hackathon/services/ecosystem-mcp-embedding",
-                "description": "Embedding service"
+                "label": "🧠 All Projects in /work",
+                "path": "/work",
+                "description": "Browse all projects"
             },
             {
-                "label": "📦 Container /app",
-                "path": "/app",
-                "description": "Mounted workspace in container"
+                "label": "📦 Example: DangerRoom",
+                "path": "/work/DangerRoom",
+                "description": "Example project path format"
             }
         ]
         

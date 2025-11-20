@@ -174,7 +174,7 @@ def show():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        page_size = st.select slider(
+        page_size = st.select_slider(
             "Items per page",
             options=[10, 25, 50, 100],
             value=50,

@@ -86,18 +86,23 @@ class IntelligentFileFilter:
     - Smart defaults for common patterns
     """
     
-    def __init__(self, custom_rules: Optional[List[FileFilterRule]] = None):
+    def __init__(self, custom_rules: Optional[List[FileFilterRule]] = None, enabled: bool = True):
         """
         Initialize filter with default + custom rules.
         
         Args:
             custom_rules: Additional custom rules to apply
+            enabled: If False, disable all filtering (accept all files)
         """
+        self.enabled = enabled
         self.rules = self._build_default_rules()
         if custom_rules:
             self.rules.extend(custom_rules)
         
-        logger.info(f"Intelligent file filter initialized with {len(self.rules)} rules")
+        if enabled:
+            logger.info(f"Intelligent file filter initialized with {len(self.rules)} rules")
+        else:
+            logger.info("Intelligent file filter DISABLED - all files will be processed")
     
     def _build_default_rules(self) -> List[FileFilterRule]:
         """Build comprehensive default filtering rules."""
@@ -180,16 +185,36 @@ class IntelligentFileFilter:
                           "TypeScript source"),
             FileFilterRule(".java", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
                           "Java source"),
+            FileFilterRule(".scala", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
+                          "Scala source"),
+            FileFilterRule(".kt", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
+                          "Kotlin source"),
+            FileFilterRule(".groovy", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
+                          "Groovy source"),
+            FileFilterRule(".clj", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
+                          "Clojure source"),
             FileFilterRule(".go", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
                           "Go source"),
             FileFilterRule(".rs", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
                           "Rust source"),
+            FileFilterRule(".rb", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
+                          "Ruby source"),
+            FileFilterRule(".php", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
+                          "PHP source"),
+            FileFilterRule(".swift", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
+                          "Swift source"),
+            FileFilterRule(".dart", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
+                          "Dart source"),
             FileFilterRule(".cpp", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
                           "C++ source"),
             FileFilterRule(".c", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
                           "C source"),
             FileFilterRule(".h", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
                           "C/C++ header"),
+            FileFilterRule(".sh", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
+                          "Shell script"),
+            FileFilterRule(".sql", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
+                          "SQL script"),
         ])
         
         # API definitions
@@ -198,8 +223,34 @@ class IntelligentFileFilter:
                           "GraphQL schema"),
             FileFilterRule(".proto", FilePriority.MEDIUM, FileCategory.SOURCE_CODE,
                           "Protocol buffer"),
+            FileFilterRule(".apib", FilePriority.MEDIUM, FileCategory.DOCUMENTATION,
+                          "API Blueprint specification"),
             FileFilterRule("openapi", FilePriority.MEDIUM, FileCategory.DOCUMENTATION,
                           "OpenAPI specification"),
+        ])
+        
+        # Build files (SBT, Gradle, Maven, etc.)
+        rules.extend([
+            FileFilterRule(".sbt", FilePriority.HIGH, FileCategory.CONFIGURATION,
+                          "SBT build definition"),
+            FileFilterRule("build.sbt", FilePriority.HIGH, FileCategory.CONFIGURATION,
+                          "SBT build file"),
+            FileFilterRule(".gradle", FilePriority.MEDIUM, FileCategory.CONFIGURATION,
+                          "Gradle build script"),
+            FileFilterRule("pom.xml", FilePriority.MEDIUM, FileCategory.CONFIGURATION,
+                          "Maven POM file"),
+        ])
+        
+        # Framework-specific files (Play, Spring, etc.)
+        rules.extend([
+            FileFilterRule("routes", FilePriority.HIGH, FileCategory.CONFIGURATION,
+                          "Play Framework routes"),
+            FileFilterRule("application.conf", FilePriority.HIGH, FileCategory.CONFIGURATION,
+                          "Application configuration"),
+            FileFilterRule("/conf/", FilePriority.MEDIUM, FileCategory.CONFIGURATION,
+                          "Configuration directory"),
+            FileFilterRule(".properties", FilePriority.MEDIUM, FileCategory.CONFIGURATION,
+                          "Properties file"),
         ])
         
         # ============================================================
@@ -244,7 +295,7 @@ class IntelligentFileFilter:
                           "Output file"),
         ])
         
-        # Configuration (low value for RAG)
+        # Low-value configuration (skip for security/noise)
         rules.extend([
             FileFilterRule(".env", FilePriority.SKIP, FileCategory.CONFIGURATION,
                           "Environment config (skip for security)"),
@@ -252,12 +303,7 @@ class IntelligentFileFilter:
                           "INI config (low RAG value)"),
             FileFilterRule(".cfg", FilePriority.SKIP, FileCategory.CONFIGURATION,
                           "Config file (low RAG value)"),
-            FileFilterRule(".conf", FilePriority.SKIP, FileCategory.CONFIGURATION,
-                          "Config file (low RAG value)"),
-            FileFilterRule("config.json", FilePriority.SKIP, FileCategory.CONFIGURATION,
-                          "Config file"),
-            FileFilterRule("settings.json", FilePriority.SKIP, FileCategory.CONFIGURATION,
-                          "Settings file"),
+            # NOTE: .conf and .properties are handled above in framework-specific section
         ])
         
         # Build artifacts
@@ -352,12 +398,13 @@ class IntelligentFileFilter:
         """
         Determine if file should be processed.
         
-        Args:
-            path: File path
-        
         Returns:
-            True if file should be processed, False if should skip
+            True if file should be processed, False if it should be skipped
         """
+        # If filtering is disabled, process everything
+        if not self.enabled:
+            return True
+        
         priority, category, reason = self.classify_file(path)
         
         if priority == FilePriority.SKIP:
@@ -454,17 +501,21 @@ class IntelligentFileFilter:
 # Convenience Functions
 # ============================================================
 
-def get_intelligent_filter(custom_rules: Optional[List[FileFilterRule]] = None) -> IntelligentFileFilter:
+def get_intelligent_filter(
+    custom_rules: Optional[List[FileFilterRule]] = None,
+    enabled: bool = True
+) -> IntelligentFileFilter:
     """
     Get an intelligent file filter instance.
     
     Args:
         custom_rules: Optional custom rules
+        enabled: If False, disable all filtering (process all files)
     
     Returns:
         IntelligentFileFilter instance
     """
-    return IntelligentFileFilter(custom_rules)
+    return IntelligentFileFilter(custom_rules, enabled=enabled)
 
 
 def create_custom_rule(

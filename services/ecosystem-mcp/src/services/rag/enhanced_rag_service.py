@@ -74,7 +74,8 @@ class EnhancedRAGService(RAGService):
         context: Optional[List[Dict[str, Any]]] = None,
         prefer_recent: bool = True,
         temperature: float = 0.7,
-        response_length: int = 1000
+        response_length: int = 1000,
+        service_name: Optional[str] = None  # For cache invalidation
     ) -> Dict[str, Any]:
         """
         Answer question with optional enhancements.
@@ -151,14 +152,19 @@ class EnhancedRAGService(RAGService):
         else:
             context_text = self._build_context(documents)
         
-        # Step 5: Generate answer (standard)
+        # Step 5: Generate answer (standard) with service context
+        service_name = None
+        if documents and len(documents) > 0:
+            service_name = documents[0].get('service_name')
+        
         answer = await self._generate_answer(
             question=question,
             context=context_text,
             conversation_history=context,
             temperature=temperature,
             retrieved_documents=documents,
-            max_tokens=response_length
+            max_tokens=response_length,
+            service_name=service_name
         )
         
         # Step 6: Format response with enhancement metadata

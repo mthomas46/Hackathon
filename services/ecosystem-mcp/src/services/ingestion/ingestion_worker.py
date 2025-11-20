@@ -661,6 +661,10 @@ class IngestionWorker:
             logger.info(f"🔍 Consumer group: {redis.CONSUMER_GROUP}")
             logger.info(f"🔍 Consumer name: worker-{self.worker_id}")
             
+            # 🛡️ PROTECTION: Ensure consumer group exists before reading
+            # This prevents NOGROUP errors after manual stream deletion
+            await redis.ensure_consumer_group_exists(redis.INGESTION_STREAM)
+            
             # Read from ingestion stream with timeout to prevent hangs
             logger.info(f"🔍 Calling redis.read_from_stream() with 3s timeout...")
             try:
@@ -805,6 +809,31 @@ class IngestionWorker:
                 await repo.update(job)
                 await session.commit()
                 logger.info(f"📍 Job updates saved")
+                
+                # ✨ Option 3: Invalidate RAG cache after successful ingestion
+                if result["success"]:
+                    try:
+                        from ..rag.cache_invalidation import get_cache_invalidation_service
+                        
+                        cache_service = get_cache_invalidation_service()
+                        service_name = job.job_metadata.get('service_name') if job.job_metadata else None
+                        
+                        if service_name:
+                            deleted_count = await cache_service.invalidate_service_cache(service_name)
+                            logger.info(
+                                f"✅ Cache invalidation: Cleared {deleted_count} entries "
+                                f"for service '{service_name}' after ingestion"
+                            )
+                        else:
+                            # Fallback: invalidate all RAG cache if no service name
+                            deleted_count = await cache_service.invalidate_all_rag_cache()
+                            logger.info(
+                                f"✅ Cache invalidation: Cleared {deleted_count} RAG entries "
+                                f"(no service name specified)"
+                            )
+                    except Exception as e:
+                        logger.error(f"⚠️ Cache invalidation failed: {e}", exc_info=True)
+                        # Don't fail the job if cache invalidation fails
                 
                 # ⚡ PHASE 2 ITEM 2.3: Publish job event for dashboard
                 if result["success"]:

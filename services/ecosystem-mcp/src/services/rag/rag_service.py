@@ -86,14 +86,16 @@ class RAGService:
         n_results: int,
         prefer_recent: bool,
         temperature: float,
-        response_length: int
+        response_length: int,
+        doc_hash: str = ""  # Document state hash for auto-invalidation
     ) -> Optional[Dict[str, Any]]:
         """
         Get cached answer for a question.
         
-        PHASE 4R: Cache complete answer by question only (NOT context).
+        PHASE 4R: Cache complete answer by question + document state.
+        Cache key includes document hash to auto-invalidate when docs change.
         """
-        logger.debug(f"💾 Answer cache MISS for: {question[:60]}...")
+        logger.debug(f"💾 Answer cache check (doc_hash={doc_hash[:8]}...)")
         return None
     
     async def ask(
@@ -108,7 +110,9 @@ class RAGService:
         use_enhancements: Optional[bool] = None,
         enable_hybrid_search: Optional[bool] = None,
         enable_query_rewriting: Optional[bool] = None,
-        enable_context_optimization: Optional[bool] = None
+        enable_context_optimization: Optional[bool] = None,
+        # ✨ Cache invalidation: Service name for document hash scoping
+        service_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Answer a question using RAG.
@@ -130,12 +134,18 @@ class RAGService:
             enable_hybrid_search: Enable hybrid search (default: True)
             enable_query_rewriting: Enable query rewriting (default: True)
             enable_context_optimization: Enable context optimization (default: True)
+            service_name: Service name for cache scoping (enables auto-invalidation)
         
         Returns:
             Dict with answer, sources, and metadata
         """
         logger.info(f"📝 RAG query: {question[:100]}...")
         start_time = time.time()
+        
+        # Get document hash for cache key versioning (Option 2: Auto-invalidation)
+        cache_service = self._get_cache_invalidation_service()
+        doc_hash = await cache_service.get_document_hash(service_name=service_name)
+        logger.debug(f"Document hash for cache: {doc_hash}")
         
         # ✨ PHASE 3: Determine whether to use enhancements
         should_use_enhancements = (
@@ -151,7 +161,8 @@ class RAGService:
                 n_results=n_results,
                 prefer_recent=prefer_recent,
                 temperature=temperature,
-                response_length=response_length
+                response_length=response_length,
+                doc_hash=doc_hash  # Include document hash for auto-invalidation
             )
             cache_check_time = time.time() - cached_start
             
@@ -199,8 +210,9 @@ class RAGService:
                 from ...utils.cache_decorator import get_cache_client
                 cache_client = get_cache_client()
                 if cache_client:
-                    cache_key = f"rag_answer_v2:{question}:{n_results}:{prefer_recent}:{temperature}:{response_length}"
+                    cache_key = f"rag_answer_v2:{question}:{n_results}:{prefer_recent}:{temperature}:{response_length}:{doc_hash}"
                     await cache_client.set(cache_key, result, ttl=1800)
+                    logger.debug(f"💾 Cached answer with doc_hash={doc_hash}")
                     logger.debug(f"   💾 Answer cached for future queries")
             except Exception as cache_error:
                 logger.warning(f"Failed to cache answer: {cache_error}")
@@ -275,13 +287,20 @@ class RAGService:
         # Generate answer using enhanced documents
         generation_start = time.time()
         context_text = self._build_context(documents)
+        
+        # Extract service_name from documents if not explicitly provided
+        service_name = None
+        if documents and len(documents) > 0:
+            service_name = documents[0].get('service_name')
+        
         answer = await self._generate_answer(
             question=question,
             context=context_text,
             conversation_history=context,
             temperature=temperature,
             retrieved_documents=documents,
-            max_tokens=response_length
+            max_tokens=response_length,
+            service_name=service_name
         )
         generation_time = time.time() - generation_start
         logger.debug(f"   Generation: {generation_time:.3f}s")
@@ -578,9 +597,10 @@ class RAGService:
         conversation_history: Optional[List[Dict[str, Any]]] = None,
         temperature: float = 0.7,
         retrieved_documents: Optional[List[Dict[str, Any]]] = None,
-        max_tokens: int = 1000
+        max_tokens: int = 1000,
+        service_name: Optional[str] = None
     ) -> str:
-        """Generate answer using LLM."""
+        """Generate answer using LLM with optional service-specific context."""
         # Build conversation history
         history_text = ""
         if conversation_history:
@@ -592,7 +612,8 @@ class RAGService:
             question=question,
             context=context,
             history=history_text,
-            max_tokens=max_tokens
+            max_tokens=max_tokens,
+            service_name=service_name
         )
         
         # Generate response
@@ -607,8 +628,15 @@ class RAGService:
         
         return response.get("response", "").strip()
     
-    def _build_prompt(self, question: str, context: str, history: str = "", max_tokens: int = 1000) -> str:
-        """Build RAG prompt for LLM."""
+    def _build_prompt(
+        self, 
+        question: str, 
+        context: str, 
+        history: str = "", 
+        max_tokens: int = 1000,
+        service_name: Optional[str] = None
+    ) -> str:
+        """Build RAG prompt for LLM with optional service-specific context."""
         # Length instruction based on max_tokens
         if max_tokens <= 200:
             length_instruction = "Be VERY BRIEF and concise, limiting your answer to key points only (1-2 short paragraphs)."
@@ -621,18 +649,29 @@ class RAGService:
         else:
             length_instruction = "Provide an EXTREMELY DETAILED and exhaustive answer (10+ paragraphs minimum)."
         
-        prompt = f"""You are an intelligent assistant for the Ecosystem-MCP microservices documentation system.
+        # Build system identity dynamically based on service name
+        if service_name:
+            system_identity = f"You are a documentation assistant for the {service_name} service."
+        else:
+            system_identity = "You are a documentation assistant for this codebase."
+        
+        prompt = f"""{system_identity}
 
 Your role is to answer questions accurately based on the provided context from indexed documentation.
 
-GUIDELINES:
-1. Answer based ONLY on the provided context
-2. If the context doesn't contain the answer, say "I don't have enough information"
-3. Cite sources using [Source N] notation when referencing information
-4. {length_instruction}
-5. If information is outdated, mention the update date
-6. Prioritize recent information when conflicting information exists
-7. Structure your answer with clear sections and headings when appropriate
+⚠️ CRITICAL RULES - YOU MUST FOLLOW THESE:
+1. Answer based ONLY on the provided context below - DO NOT use your general knowledge
+2. If the context is empty, minimal, or doesn't contain specific information to answer the question, you MUST respond with EXACTLY: "I don't have enough information to answer that question."
+3. DO NOT make up, invent, or hallucinate any information not explicitly in the context
+4. DO NOT provide generic or example answers - only factual information from the context
+5. If unsure about any detail, say "I don't have enough information" instead of guessing
+
+FORMATTING GUIDELINES:
+- Cite sources using [Source N] notation when referencing information
+- {length_instruction}
+- If information is outdated, mention the update date
+- Prioritize recent information when conflicting information exists
+- Structure your answer with clear sections and headings when appropriate
 
 """
         

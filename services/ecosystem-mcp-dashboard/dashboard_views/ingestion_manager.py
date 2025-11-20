@@ -140,17 +140,30 @@ def show(api_base_url: str):
                 )
                 
                 if path_method == "Enter Path":
+                    st.info("💡 **Use Container Paths:** All projects are mounted at `/work/<project-name>`")
                     repo_path = st.text_input(
                         "Repository Path",
-                        value="/Users/mykalthomas/Documents/work/Hackathon",
-                        help="Path on your host machine (e.g., ~/projects/my-repo). Git root will be auto-detected."
+                        value="/work/Hackathon",
+                        placeholder="/work/your-project-name",
+                        help="Use CONTAINER paths (e.g., /work/adminservice). Do NOT use host paths like /Users/..."
                     )
                     
                     # Show path suggestions
-                    with st.expander("💡 Common Path Examples"):
+                    with st.expander("💡 Available Projects at /work"):
                         st.markdown("""
-                        **macOS:**
-                        - `/Users/USERNAME/Documents/projects`
+                        **Container Paths (Use These!):**
+                        - `/work/Hackathon` - Main Hackathon project
+                        - `/work/authservice` - Authentication service
+                        - `/work/adminservice` - Admin service
+                        - `/work/DangerRoom` - Example project
+                        - `/work/<any-project>` - Any project in your work directory
+                        
+                        **❌ Don't Use Host Paths:**
+                        - ~~`/Users/mykalthomas/Documents/work/...`~~ (These don't exist in container!)
+                        
+                        **Why Container Paths?**
+                        Your entire `/Users/mykalthomas/Documents/work` directory is mounted at `/work` in the container.
+                        This gives you access to ALL projects without individual mounts!
                         - `/Users/USERNAME/Developer`
                         - `~/Documents/work`
                         
@@ -269,8 +282,9 @@ def show(api_base_url: str):
                 
                 repo_path = st.text_input(
                     "Repository Path",
-                    value="/host",
-                    help="Path inside the container. Use /host for the mounted project directory."
+                    value="/work/Hackathon",
+                    placeholder="/work/your-project-name",
+                    help="Path inside the container. Use /work/<project-name> for any project."
                 )
                 resolve_host_path = False
                 
@@ -288,57 +302,6 @@ def show(api_base_url: str):
                         st.session_state.manual_target_subdirectory = manual_subdir.strip('/')
                     else:
                         st.session_state.manual_target_subdirectory = None
-            
-            # Phase 8: Processing mode selector (snapshot vs git_history)
-            st.markdown("### ⚡ Processing Mode")
-            
-            processing_mode = st.radio(
-                "Choose processing mode",
-                options=["snapshot", "git_history"],
-                format_func=lambda x: {
-                    "snapshot": "🚀 Snapshot Mode (Fast: 5-15 min for 5K files)",
-                    "git_history": "📚 Git History Mode (Complete: 2-4 hours for 5K files)"
-                }[x],
-                help="""
-                **Snapshot Mode (Recommended for most use cases):**
-                - ⚡ 10-100× faster processing
-                - 📸 Processes current file state only
-                - ✅ Perfect for: Initial setup, periodic updates, non-Git repos
-                - ❌ No historical version tracking
-                
-                **Git History Mode (For complete versioning):**
-                - 📚 Full commit history processing
-                - 🕐 Version tracking for all changes
-                - ✅ Perfect for: Historical analysis, version tracking
-                - ⚠️  Significantly slower (2-4 hours vs 5-15 min)
-                """
-            )
-            
-            # Show speed comparison
-            if processing_mode == "snapshot":
-                st.success("""
-                ✅ **Snapshot Mode Selected**
-                
-                **Expected Speed for Your Repository:**
-                - 1,000 files: ~2-3 minutes
-                - 5,000 files: ~5-15 minutes
-                - 10,000 files: ~10-30 minutes
-                - 50,000 files: ~1-2 hours
-                
-                **10-100× faster than Git History mode!**
-                """)
-            else:
-                st.info("""
-                📚 **Git History Mode Selected**
-                
-                **Expected Speed for Your Repository:**
-                - 1,000 files: ~30-45 minutes
-                - 5,000 files: ~2-4 hours
-                - 10,000 files: ~4-8 hours
-                - 50,000 files: ~20-40 hours
-                
-                Processes full Git commit history for complete versioning.
-                """)
             
             # PHASE 10: Sub-job orchestration toggle
             st.markdown("### 🚀 Advanced Options")
@@ -375,21 +338,126 @@ def show(api_base_url: str):
                 st.info("ℹ️ **Standard Processing** - Job will process sequentially")
             
             # Ingestion mode (quick/full/incremental/enriched/snapshot - existing)
+            st.markdown("### 📋 Ingestion Type")
+            
             mode = st.selectbox(
-                "Ingestion Type",
+                "Choose how to process your repository:",
                 options=["enriched", "snapshot", "quick", "full", "incremental"],
-                index=0,  # Default to enriched (best of both worlds)
+                index=1,  # Default to snapshot (fastest, most common)
+                format_func=lambda x: {
+                    "snapshot": "📸 Snapshot Mode - Current files only (FASTEST: 5-15 min)",
+                    "enriched": "✨ Enriched Mode - Current files + git metadata (Fast: 10-20 min)",
+                    "quick": "⚡ Quick History - Last 10 commits (Slow: 30-60 min)",
+                    "full": "📚 Full History - All commits (VERY SLOW: 2-4 hours)",
+                    "incremental": "🔄 Incremental - Only new/changed files"
+                }[x],
                 help="""
-                - **enriched**: ✨ Current files + git metadata (RECOMMENDED) - Fast with context
-                - **snapshot**: Current files only, no git (fastest but no history)
-                - **quick**: Last 10 commits with full history
-                - **full**: All commits with complete history
-                - **incremental**: Only process new/changed files
+                **📸 Snapshot Mode** (RECOMMENDED for most use cases):
+                - ⚡ Fastest option (5-15 min for 5K files)
+                - 📸 Processes current file state only
+                - ✅ Perfect for: Initial setup, periodic updates, current documentation
+                - ❌ No historical version tracking or git metadata
                 
-                💡 **Enriched mode** is recommended: gets file ownership, last modified date, 
-                and commit messages while being ~8x faster than full mode!
+                **✨ Enriched Mode** (Good balance):
+                - Fast with context (10-20 min for 5K files)
+                - Gets file ownership, last modified date, commit messages
+                - ✅ Perfect for: When you need some git context without full history
+                - ⚠️  Requires git repository
+                
+                **⚡ Quick History Mode** (Git history - last 10 commits):
+                - Processes last 10 commits with full history
+                - ⚠️  SLOWER: 30-60 min for 5K files
+                - ✅ Perfect for: Recent version tracking
+                - Shows complete git history for recent commits
+                
+                **📚 Full History Mode** (Complete git history):
+                - Processes ALL commits in repository
+                - 🐌 VERY SLOW: 2-4 hours for 5K files
+                - ✅ Perfect for: Complete historical analysis
+                - Provides full version tracking across all time
+                
+                **🔄 Incremental Mode**:
+                - Only processes new or changed files
+                - Requires previous ingestion to exist
                 """
             )
+            
+            # Show clear information about what was selected
+            if mode == "snapshot":
+                st.success("""
+                ✅ **Snapshot Mode Selected - No Git History**
+                
+                **What you'll get:**
+                - Current state of all files
+                - No git commits or version history
+                - No author/date information
+                
+                **Expected Speed:**
+                - 1,000 files: ~2-3 minutes
+                - 5,000 files: ~5-15 minutes
+                - 10,000 files: ~10-30 minutes
+                
+                **10-100× faster than git history modes!**
+                """)
+            elif mode == "enriched":
+                st.info("""
+                ✨ **Enriched Mode Selected - Light Git Metadata**
+                
+                **What you'll get:**
+                - Current state of all files
+                - File ownership and last modified info
+                - Last commit message for each file
+                - NO full git history or version tracking
+                
+                **Expected Speed:**
+                - 1,000 files: ~5-10 minutes
+                - 5,000 files: ~10-20 minutes
+                - 10,000 files: ~20-40 minutes
+                
+                **~8× faster than full history mode!**
+                """)
+            elif mode == "quick":
+                st.warning("""
+                ⚡ **Quick History Mode Selected - Last 10 Commits**
+                
+                **What you'll get:**
+                - Full git history for last 10 commits
+                - Version tracking for recent changes
+                - Author, date, and commit info
+                
+                **Expected Speed:**
+                - 1,000 files: ~15-30 minutes
+                - 5,000 files: ~30-60 minutes
+                - 10,000 files: ~1-2 hours
+                
+                **This will process git history and be slower!**
+                """)
+            elif mode == "full":
+                st.error("""
+                📚 **Full History Mode Selected - ALL COMMITS**
+                
+                **What you'll get:**
+                - Complete git history for entire repository
+                - Full version tracking across all time
+                - Complete author, date, and commit info
+                
+                **Expected Speed:**
+                - 1,000 files: ~30-45 minutes
+                - 5,000 files: ~2-4 hours
+                - 10,000 files: ~4-8 hours
+                - 50,000 files: ~20-40 hours
+                
+                **⚠️  This is VERY SLOW and processes full git history!**
+                """)
+            else:  # incremental
+                st.info("""
+                🔄 **Incremental Mode Selected**
+                
+                **What you'll get:**
+                - Only new or changed files since last ingestion
+                - Faster than full re-ingestion
+                - Requires previous ingestion to exist
+                """)
             
             # Service name (for filtering)
             service_name = st.text_input(
@@ -400,16 +468,58 @@ def show(api_base_url: str):
             
             # Advanced options
             with st.expander("⚙️ Advanced Options"):
+                st.markdown("### 🔍 File Filtering")
+                
+                use_file_filter = st.checkbox(
+                    "Enable intelligent file filtering",
+                    value=True,
+                    help="""
+                    **Enabled (Recommended):**
+                    - Automatically prioritizes valuable files (docs, source code)
+                    - Skips low-value files (logs, build artifacts, caches)
+                    - Faster processing and better RAG quality
+                    
+                    **Disabled (Process Everything):**
+                    - Processes ALL files regardless of type
+                    - Useful for repos with non-standard file structures
+                    - May include noise (logs, configs, binaries)
+                    - Use for: Scala/Play/JVM projects, custom frameworks
+                    """
+                )
+                
+                if use_file_filter:
+                    st.success("""
+                    ✅ **Smart Filtering Enabled**
+                    
+                    **Will process:** Documentation (.md, .txt), Source code (.scala, .py, .java, etc.), 
+                    Framework files (.sbt, routes, application.conf), API specs (.graphql, .proto, .apib)
+                    
+                    **Will skip:** Logs (.log), Build output (target/, dist/), Dependencies (node_modules, .m2)
+                    """)
+                else:
+                    st.warning("""
+                    ⚠️ **All Files Mode**
+                    
+                    Processing ALL files including logs, build artifacts, and caches.
+                    This may slow down ingestion and reduce RAG quality.
+                    
+                    **Recommended for:** Projects with unusual file structures or when you need complete coverage.
+                    """)
+                
+                st.markdown("---")
+                st.markdown("### 📁 Legacy Pattern Filters (Deprecated)")
+                st.caption("⚠️ Note: These are deprecated. Use the file filter toggle above instead.")
+                
                 file_patterns = st.text_area(
                     "File Patterns (one per line)",
                     value="*.py\n*.md\n*.yaml\n*.json",
-                    help="File patterns to include in ingestion"
+                    help="[DEPRECATED] File patterns to include in ingestion"
                 )
                 
                 exclude_patterns = st.text_area(
                     "Exclude Patterns (one per line)",
                     value="__pycache__\n*.pyc\nvenv\nnode_modules",
-                    help="Patterns to exclude from ingestion"
+                    help="[DEPRECATED] Patterns to exclude from ingestion"
                 )
                 
                 max_file_size_mb = st.number_input(
@@ -671,9 +781,9 @@ def show(api_base_url: str):
                     request_data = {
                         "repo_path": resolved_path,
                         "mode": mode,
-                        "processing_mode": processing_mode,  # Phase 8: snapshot vs git_history
                         "use_subjobs": use_subjobs,  # Phase 10: sub-job orchestration
-                        "resolve_host_path": False  # Already resolved, don't re-resolve
+                        "resolve_host_path": False,  # Already resolved, don't re-resolve
+                        "use_file_filter": use_file_filter  # File filtering toggle
                     }
                     
                     # Add target_subdirectory if user confirmed subdirectory-only ingestion
@@ -1346,12 +1456,24 @@ docker exec ecosystem-mcp-service df -h
                             with header_col1:
                                 st.markdown(f"**Job ID:** `{job.get('job_id')}`")
                                 
-                                # Phase 8: Show processing mode with appropriate icon
-                                processing_mode = job.get('processing_mode', 'git_history')  # Default for old jobs
-                                mode_icon = "🚀" if processing_mode == "snapshot" else "📚"
-                                mode_label = "Snapshot (Fast)" if processing_mode == "snapshot" else "Git History (Complete)"
-                                st.markdown(f"**Processing:** {mode_icon} {mode_label}")
-                                st.markdown(f"**Type:** {mode}")
+                                # Show ingestion mode with appropriate icon and context
+                                mode_icons = {
+                                    "snapshot": "📸",
+                                    "enriched": "✨",
+                                    "quick": "⚡",
+                                    "full": "📚",
+                                    "incremental": "🔄"
+                                }
+                                mode_labels = {
+                                    "snapshot": "Snapshot (Current files only)",
+                                    "enriched": "Enriched (Files + git metadata)",
+                                    "quick": "Quick History (Last 10 commits)",
+                                    "full": "Full History (All commits)",
+                                    "incremental": "Incremental (Changed files)"
+                                }
+                                mode_icon = mode_icons.get(mode, "❓")
+                                mode_label = mode_labels.get(mode, mode.capitalize())
+                                st.markdown(f"**Mode:** {mode_icon} {mode_label}")
                             with header_col2:
                                 # Copy job ID button
                                 if st.button("📋 Copy ID", key=f"copy_{idx}"):

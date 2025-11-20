@@ -66,9 +66,9 @@ def show_active_processes():
                 # Show metadata if available
                 metadata = process.get("metadata", {})
                 if metadata:
-                    with st.expander("📋 Details", expanded=False):
-                        for key, value in metadata.items():
-                            st.markdown(f"**{key}:** {value}")
+                    st.markdown("**📋 Details:**")
+                    for key, value in metadata.items():
+                        st.markdown(f"  - **{key}:** {value}")
                 
                 # Action buttons
                 col1, col2 = st.columns(2)

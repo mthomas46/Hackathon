@@ -1,0 +1,349 @@
+# SRE Runbook Template
+# Production-ready template for operational documentation
+
+name: "runbook_sre_style"
+category: "runbook"
+version: 1
+description: "Comprehensive operational runbook following SRE best practices"
+target_framework: null
+target_audience: "operators"
+
+structure:
+  sections:
+    - name: "Service Overview"
+      order: 1
+      required: true
+      subsections:
+        - "Service Name"
+        - "Team/Owner"
+        - "SLA/SLO"
+        - "Dependencies"
+      prompt_template: |
+        Provide operational overview for {service_name}.
+        
+        Include:
+        - Service purpose (1-2 sentences)
+        - Owning team and contacts
+        - SLA commitments (uptime, latency)
+        - Critical dependencies (databases, external APIs, other services)
+        - Deployment environment
+        
+        Keep it concise - operators need quick reference.
+      validation:
+        min_words: 100
+        max_words: 300
+        must_include_owner: true
+        must_include:
+          - "SLA"
+          - "dependencies"
+    
+    - name: "Architecture Summary"
+      order: 2
+      required: true
+      subsections:
+        - "Component Diagram"
+        - "Data Flow"
+        - "Infrastructure"
+      prompt_template: |
+        Describe architecture from an operational perspective for {service_name}.
+        
+        Focus on:
+        - Key components and their roles
+        - Data flow (simplified for troubleshooting)
+        - Infrastructure (servers, containers, databases)
+        - Scalability model (horizontal/vertical)
+        - Critical paths and failure modes
+        
+        Avoid implementation details - focus on operational impact.
+      validation:
+        min_words: 200
+        must_include_diagram: true
+    
+    - name: "Deployment"
+      order: 3
+      required: true
+      subsections:
+        - "Deployment Process"
+        - "Rollback Procedure"
+        - "Deployment Checklist"
+        - "Zero-Downtime Strategy"
+      prompt_template: |
+        Document deployment process for {service_name}.
+        
+        Include:
+        - Deployment command/script
+        - Pre-deployment checks
+        - Deployment steps (in order)
+        - Post-deployment validation
+        - Rollback command and process
+        - Estimated downtime (if any)
+        - Approval requirements
+        
+        Provide exact commands to copy/paste.
+      validation:
+        min_words: 300
+        must_include_commands: true
+        must_include_rollback: true
+        must_include:
+          - "deploy"
+          - "rollback"
+          - "validation"
+    
+    - name: "Monitoring & Alerts"
+      order: 4
+      required: true
+      subsections:
+        - "Key Metrics"
+        - "Alert Definitions"
+        - "Dashboard Links"
+        - "Log Locations"
+      prompt_template: |
+        Document monitoring for {service_name}.
+        
+        Key metrics to monitor:
+        - Response time / latency
+        - Error rate
+        - Request rate / throughput
+        - Resource usage (CPU, memory, disk)
+        - Queue depth (if applicable)
+        
+        For each alert:
+        - Alert name
+        - Threshold
+        - Severity
+        - Response time (how quickly to respond)
+        
+        Include:
+        - Dashboard URL
+        - Log file locations or query
+      validation:
+        min_metrics: 3
+        must_include_dashboard_link: true
+        must_include:
+          - "alert"
+          - "metric"
+          - "dashboard"
+    
+    - name: "Health Checks"
+      order: 5
+      required: true
+      subsections:
+        - "Health Endpoint"
+        - "Readiness Check"
+        - "Liveness Check"
+        - "Dependency Checks"
+      prompt_template: |
+        Document health checks for {service_name}.
+        
+        Health endpoint:
+        - URL path
+        - Expected response
+        - Response time threshold
+        
+        How to verify service health:
+        - Curl command
+        - Expected output
+        - What each check validates
+        
+        Common failure modes:
+        - Symptoms
+        - Root causes
+        - Quick diagnosis commands
+      validation:
+        min_words: 200
+        must_include_curl_example: true
+        must_include:
+          - "health"
+          - "curl"
+          - "200"
+    
+    - name: "Troubleshooting"
+      order: 6
+      required: true
+      format: "problem_solution_pairs"
+      subsections:
+        - "Common Issues"
+        - "Diagnostic Commands"
+        - "Log Analysis"
+        - "Performance Issues"
+      prompt_template: |
+        Document common issues and solutions for {service_name}.
+        
+        For each known issue:
+        1. **Symptom**: What the user/system sees
+        2. **Root Cause**: Why it happens
+        3. **Resolution**: Step-by-step fix
+        4. **Prevention**: How to avoid in future
+        
+        Include diagnostic commands:
+        - How to check logs
+        - How to verify database connections
+        - How to test external dependencies
+        - How to check resource usage
+        
+        Use numbered steps for resolution procedures.
+      validation:
+        min_issues: 5
+        must_include_commands: true
+        format: "numbered_steps"
+        must_include:
+          - "symptom"
+          - "resolution"
+    
+    - name: "Incident Response"
+      order: 7
+      required: true
+      subsections:
+        - "Severity Levels"
+        - "Escalation Path"
+        - "Communication Plan"
+        - "Post-Incident Review"
+      prompt_template: |
+        Document incident response for {service_name}.
+        
+        Severity levels:
+        - SEV1 (Critical): Impact and response time
+        - SEV2 (High): Impact and response time
+        - SEV3 (Medium): Impact and response time
+        - SEV4 (Low): Impact and response time
+        
+        Escalation path:
+        1. On-call engineer (how to page)
+        2. Team lead
+        3. Director/VP
+        4. Vendor support (if applicable)
+        
+        Communication channels:
+        - Slack channel for incidents
+        - Email distribution list
+        - Status page (if exists)
+        
+        Post-incident: Link to postmortem template.
+      validation:
+        must_include_contacts: true
+        must_include_severity_levels: true
+        must_include:
+          - "escalation"
+          - "SEV1"
+          - "communication"
+    
+    - name: "Scaling & Capacity"
+      order: 8
+      required: true
+      subsections:
+        - "Current Capacity"
+        - "Scaling Triggers"
+        - "Scaling Procedure"
+        - "Resource Limits"
+      prompt_template: |
+        Document scaling for {service_name}.
+        
+        Current capacity:
+        - Number of instances
+        - CPU/Memory per instance
+        - Maximum throughput
+        - Current utilization
+        
+        When to scale:
+        - CPU threshold
+        - Memory threshold
+        - Request rate threshold
+        - Queue depth threshold
+        
+        How to scale:
+        - Manual scaling commands
+        - Auto-scaling configuration
+        - Validation after scaling
+        - Cost implications
+      validation:
+        min_words: 200
+        must_include_current_capacity: true
+        must_include:
+          - "scale"
+          - "capacity"
+          - "threshold"
+    
+    - name: "Disaster Recovery"
+      order: 9
+      required: true
+      subsections:
+        - "Backup Strategy"
+        - "Recovery Time Objective (RTO)"
+        - "Recovery Point Objective (RPO)"
+        - "Recovery Procedure"
+      prompt_template: |
+        Document disaster recovery for {service_name}.
+        
+        Backup:
+        - What is backed up
+        - Backup frequency (hourly, daily, weekly)
+        - Backup location (region, provider)
+        - Retention period
+        - How to verify backups
+        
+        RTO: Maximum acceptable downtime
+        RPO: Maximum acceptable data loss
+        
+        Recovery steps:
+        1. Assess damage
+        2. Restore from backup
+        3. Validate data integrity
+        4. Resume operations
+        5. Monitor for issues
+        
+        Include exact commands and expected duration.
+      validation:
+        must_include_rto: true
+        must_include_rpo: true
+        must_include:
+          - "backup"
+          - "restore"
+          - "RTO"
+          - "RPO"
+    
+    - name: "Security & Compliance"
+      order: 10
+      required: false
+      prompt_template: |
+        Document security and compliance considerations for {service_name}.
+        
+        Include:
+        - Access control (who can access what)
+        - Secrets management (where credentials are stored)
+        - Compliance requirements (GDPR, HIPAA, SOC2, etc.)
+        - Audit logging
+        - Data encryption (at rest, in transit)
+        - Vulnerability scanning
+      validation:
+        min_words: 150
+    
+    - name: "Runbook Changelog"
+      order: 11
+      required: true
+      prompt_template: |
+        Track changes to this runbook.
+        
+        Format:
+        | Date | Change | Author | Ticket |
+        
+        Keep this updated with every significant change.
+      validation:
+        min_entries: 1
+        format: "table"
+
+formatting:
+  header_style: "atx"
+  code_fence: "```"
+  list_style: "ordered"  # Runbooks benefit from numbered steps
+  emphasis_style: "**"
+  callout_style: "❗"  # For critical warnings
+
+render_options:
+  include_toc: true
+  toc_depth: 2
+  include_citations: false
+  include_diagrams: true
+  highlight_critical_sections: true
+  include_timestamps: true
+  code_language_default: "bash"
+

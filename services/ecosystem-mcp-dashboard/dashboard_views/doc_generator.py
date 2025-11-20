@@ -90,6 +90,37 @@ def show(api_base_url: str):
             
             st.markdown("---")
             
+            # Service selection (CRITICAL FOR FILTERING)
+            st.markdown("### 🎯 Service Selection")
+            st.warning("⚠️ **IMPORTANT**: Select which service's documents to use for generation")
+            
+            service_name = st.selectbox(
+                "Target Service",
+                options=["adminservice", "Hackathon", "All Services (No Filter)"],
+                index=0,  # Default to adminservice
+                help="""
+                **Choose which service to generate documentation for:**
+                - **adminservice**: Use only adminservice documents (Scala/Play Framework)
+                - **Hackathon**: Use only Hackathon/ecosystem-mcp documents
+                - **All Services**: Query across all services (may mix results)
+                
+                ⚠️ If you recently ingested new documents, make sure to select the correct service!
+                """
+            )
+            
+            # Show what's in the database
+            st.caption(f"📊 Currently in database: Hackathon (955 docs), adminservice (868 docs)")
+            
+            # Convert to API format
+            service_filter = None if service_name == "All Services (No Filter)" else service_name
+            
+            if service_filter:
+                st.success(f"✅ Will query **{service_filter}** documents only")
+            else:
+                st.info("ℹ️ Will query across all services")
+            
+            st.markdown("---")
+            
             # Documentation sections
             st.markdown("### 📚 Sections to Generate")
             
@@ -288,6 +319,7 @@ def show(api_base_url: str):
                 # Save config
                 st.session_state.doc_config = {
                     "directory": directory,
+                    "service_filter": service_filter,  # Add service filter
                     "sections": sections,
                     "passes": pass_names,
                     "queries_per_pass": queries_per_pass,
@@ -325,6 +357,12 @@ def show(api_base_url: str):
         
         # Show configuration summary
         st.markdown("### 📋 Generation Plan")
+        
+        # Show service filter prominently
+        if config.get('service_filter'):
+            st.success(f"🎯 **Target Service:** {config['service_filter']}")
+        else:
+            st.warning("⚠️ **No service filter** - queries will span all services")
         
         col1, col2, col3 = st.columns(3)
         
@@ -765,17 +803,23 @@ def generate_pass(api_base_url: str, section: str, pass_name: str, config: Dict[
                 st.write(f"  ⏳ Query {q_idx+1}/{len(questions)}: {question[:60]}... (attempt {retry_count+1})")
                 
                 # Call multi-pass RAG API with tier and extended timeout
+                query_payload = {
+                    "question": question,
+                    "mode": "rag",  # Full RAG mode
+                    "tier": tier,  # Desktop/auto/docker
+                    "n_results": config['n_results'],
+                    "temperature": config['temperature'],
+                    "max_tokens": max_tokens,
+                    "max_retries": max_retries
+                }
+                
+                # Add service filter if configured
+                if config.get('service_filter'):
+                    query_payload["service_name"] = config['service_filter']
+                
                 response = httpx.post(
                     f"{api_base_url}/api/v1/query/enhanced",  # Use enhanced endpoint for tier support
-                    json={
-                        "question": question,
-                        "mode": "rag",  # Full RAG mode
-                        "tier": tier,  # Desktop/auto/docker
-                        "n_results": config['n_results'],
-                        "temperature": config['temperature'],
-                        "max_tokens": max_tokens,
-                        "max_retries": max_retries
-                    },
+                    json=query_payload,
                     timeout=query_timeout  # Configurable timeout (default 5min)
                 )
                 

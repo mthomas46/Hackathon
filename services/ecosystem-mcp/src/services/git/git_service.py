@@ -15,6 +15,7 @@ import git
 from ...models.git_commit import GitCommit, GitCommitMetadata, FileChange
 from ...config import settings
 from ...utils.exceptions import ValidationError
+from .safe_git_operations import get_safe_git_operations
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,9 @@ class GitService:
             logger.error(f"Invalid git repository: {self.repo_path}")
             from ...utils.exceptions import ValidationError
             raise ValidationError(f"Not a git repository: {self.repo_path}")
+        
+        # Initialize safe operations wrapper
+        self.safe_ops = get_safe_git_operations()
     
     async def get_file_history(
         self,
@@ -347,6 +351,8 @@ class GitService:
         """
         Synchronous implementation of get_files_at_commit.
         
+        Uses git ls-tree command with timeout protection to prevent hangs.
+        
         Args:
             commit_sha: Git commit SHA
             target_subdirectory: Optional subdirectory to filter files
@@ -354,31 +360,55 @@ class GitService:
         Returns:
             List of file paths (filtered by subdirectory if specified)
         """
+        # Check if commit is blacklisted
+        if self.safe_ops.is_blacklisted(commit_sha):
+            logger.debug(f"Skipping blacklisted commit {commit_sha[:8]}")
+            return []
+        
+        def _get_files():
+            """Inner function for timeout-protected execution."""
+            try:
+                # Use native git ls-tree command (fast, reliable)
+                args = ['-r', '--name-only', commit_sha]
+                
+                # Normalize target_subdirectory
+                if target_subdirectory:
+                    subdirectory = target_subdirectory.strip('/')
+                    logger.info(f"Filtering files for subdirectory: {subdirectory}")
+                    args.append(subdirectory)
+                
+                # Execute git ls-tree with timeout protection
+                output = self.repo.git.ls-tree(*args)
+                files = output.strip().split('\n') if output else []
+                
+                # Filter empty strings
+                files = [f for f in files if f]
+                
+                if target_subdirectory:
+                    logger.info(f"Found {len(files)} files in {subdirectory}")
+                
+                return files
+                
+            except git.GitCommandError as e:
+                logger.error(f"Git ls-tree failed for {commit_sha}: {e}")
+                return []
+            except git.BadName:
+                logger.error(f"Invalid commit SHA: {commit_sha}")
+                return []
+        
+        # Execute with timeout protection (30s max per commit)
         try:
-            commit = self.repo.commit(commit_sha)
-            files = []
-            
-            # Normalize target_subdirectory (remove leading/trailing slashes)
-            if target_subdirectory:
-                target_subdirectory = target_subdirectory.strip('/')
-                logger.info(f"Filtering files for subdirectory: {target_subdirectory}")
-            
-            for item in commit.tree.traverse():
-                if item.type == 'blob':  # File (not directory)
-                    # If target_subdirectory specified, only include files in that directory
-                    if target_subdirectory:
-                        # Check if file path starts with target subdirectory
-                        if item.path.startswith(target_subdirectory + '/') or item.path == target_subdirectory:
-                            files.append(item.path)
-                    else:
-                        files.append(item.path)
-            
-            if target_subdirectory:
-                logger.info(f"Found {len(files)} files in {target_subdirectory}")
-            
-            return files
-        except git.BadName:
-            logger.error(f"Invalid commit SHA: {commit_sha}")
+            return asyncio.run(
+                self.safe_ops.safe_git_operation(
+                    operation=_get_files,
+                    operation_name=f"get_files({commit_sha[:8]})",
+                    commit_sha=commit_sha,
+                    timeout=30,
+                    fallback_value=[]
+                )
+            )
+        except Exception as e:
+            logger.error(f"Failed to get files for {commit_sha}: {e}")
             return []
     
     def _commit_to_model(
@@ -439,8 +469,13 @@ class GitService:
                 deletions = sum(d.diff.decode('utf-8', errors='ignore').count('\n-') 
                               for d in diff if d.diff)
             else:
-                # First commit
-                files_changed = len(list(commit.tree.traverse()))
+                # First commit - use git ls-tree instead of tree.traverse() to avoid C-level hangs
+                try:
+                    output = self.repo.git.ls_tree('-r', '--name-only', commit.hexsha)
+                    files_changed = len(output.strip().split('\n')) if output else 0
+                except Exception:
+                    files_changed = 0
+                
                 insertions = 0
                 deletions = 0
             

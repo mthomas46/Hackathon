@@ -57,6 +57,24 @@ REQUIRED_METADATA_BY_MODE = {
 CURRENT_METADATA_VERSION = 1
 
 
+def _get_service_name_from_job(job: IngestionJobModel) -> str:
+    """
+    Helper function to derive service name from job.
+    
+    IngestionJobModel doesn't have a service_name attribute,
+    so we derive it from repo_path or use mode as fallback.
+    
+    Args:
+        job: Ingestion job model
+    
+    Returns:
+        Service name (derived from repo_path or mode)
+    """
+    if job.repo_path:
+        return Path(job.repo_path).name
+    return job.mode or "unknown"
+
+
 class JobProcessor:
     """
     Processes ingestion jobs by coordinating the entire pipeline.
@@ -114,10 +132,11 @@ class JobProcessor:
         import os
         import asyncio
         if max_concurrent_commits is None:
-            # Auto-tune: 2× CPU cores, capped at 20
+            # Auto-tune: 1× CPU cores, capped at 10 to reduce database lock contention
+            # ⚠️ REDUCED FROM 2×CPU/20 to 1×CPU/10 to prevent database deadlocks
             cpu_count = os.cpu_count() or 4
-            self.max_concurrent_commits = min(cpu_count * 2, 20)
-            logger.info(f"🎯 Auto-tuned parallelism: {self.max_concurrent_commits} concurrent commits (CPU count: {cpu_count})")
+            self.max_concurrent_commits = min(cpu_count, 10)
+            logger.info(f"🎯 Auto-tuned parallelism: {self.max_concurrent_commits} concurrent commits (CPU count: {cpu_count}) - Reduced for DB stability")
         else:
             self.max_concurrent_commits = max_concurrent_commits
         
@@ -675,7 +694,7 @@ class JobProcessor:
                     sha=git_commit_sha,
                     author=git_metadata.get("last_commit_author", "Unknown"),
                     author_email=git_metadata.get("last_commit_author_email", ""),
-                    date=datetime.fromisoformat(git_metadata["last_commit_date"]) if git_metadata.get("last_commit_date") else datetime.now(),
+                    date=ensure_utc_naive(datetime.fromisoformat(git_metadata["last_commit_date"])) if git_metadata.get("last_commit_date") else ensure_utc_naive(datetime.now()),
                     message=git_metadata.get("last_commit_message", "")
                 )
                 
@@ -912,8 +931,8 @@ class JobProcessor:
                     commit_results = []
                     for task in done:
                         try:
-                            result = task.result()
-                            commit_results.append(result)
+                            task_result = task.result()  # ✅ FIX: Use task_result instead of result to avoid shadowing
+                            commit_results.append(task_result)
                         except Exception as e:
                             logger.error(f"Task failed with exception: {e}")
                             commit_results.append(e)
@@ -972,7 +991,7 @@ class JobProcessor:
                                 document_info = {
                                     "commit_index": idx,
                                     "mode": job.mode,
-                                    "service_name": job.service_name,
+                                    "service_name": _get_service_name_from_job(job),
                                     "repo_path": job.repo_path,
                                     "retry_context": "commit_processing_exception"
                                 }
@@ -1161,11 +1180,19 @@ class JobProcessor:
             all_files = []
             
             file_count = 0
-            # 🎯 INTELLIGENT FILTERING: Use smart file filter
+            # 🎯 INTELLIGENT FILTERING: Use smart file filter (can be disabled via job metadata)
             from ...utils.intelligent_file_filter import get_intelligent_filter
             
-            file_filter = get_intelligent_filter()
-            logger.info("✨ Using intelligent file filtering (prioritizes docs, skips logs/configs)")
+            # Check if file filtering should be disabled
+            use_file_filter = True
+            if job.job_metadata and isinstance(job.job_metadata, dict):
+                use_file_filter = job.job_metadata.get('use_file_filter', True)
+            
+            file_filter = get_intelligent_filter(enabled=use_file_filter)
+            if use_file_filter:
+                logger.info("✨ Using intelligent file filtering (prioritizes docs, skips logs/configs)")
+            else:
+                logger.info("📂 File filtering DISABLED - processing ALL files")
             
             for root, dirs, files in os.walk(repo_path):
                 # Skip common directories that shouldn't be processed
@@ -1707,6 +1734,9 @@ class JobProcessor:
                 logger.info(f"🔍 [PHASE2-CHECK] git_metadata exists: {git_metadata is not None}")
                 logger.info(f"🔍 [PHASE2-CHECK] job.mode: {job.mode}")
                 
+                # Import datetime utils for timezone conversion
+                from ...utils.datetime_utils import ensure_utc_naive
+                
                 git_date_value = None
                 git_author_value = None
                 git_author_email_value = None
@@ -1724,8 +1754,8 @@ class JobProcessor:
                     logger.info(f"🔍 [PHASE2-GIT] Checking last_commit_date: {git_metadata.get('last_commit_date', 'NONE')}")
                     if git_metadata.get("last_commit_date"):
                         try:
-                            git_date_value = datetime.fromisoformat(git_metadata["last_commit_date"])
-                            logger.info(f"✅ [PHASE2-GIT] Parsed git_date: {git_date_value}")
+                            git_date_value = ensure_utc_naive(datetime.fromisoformat(git_metadata["last_commit_date"]))
+                            logger.info(f"✅ [PHASE2-GIT] Parsed git_date (UTC naive): {git_date_value}")
                         except Exception as e:
                             logger.warning(f"❌ [PHASE2-GIT] Failed to parse git_date: {e}")
     
@@ -1739,8 +1769,8 @@ class JobProcessor:
                     if not git_date_value and git_metadata.get("file_mtime"):
                         logger.info(f"🔍 [PHASE2-FALLBACK1] Using file_mtime: {git_metadata.get('file_mtime')}")
                         try:
-                            git_date_value = datetime.fromisoformat(git_metadata["file_mtime"])
-                            logger.info(f"✅ [PHASE2-FALLBACK1] Parsed mtime: {git_date_value}")
+                            git_date_value = ensure_utc_naive(datetime.fromisoformat(git_metadata["file_mtime"]))
+                            logger.info(f"✅ [PHASE2-FALLBACK1] Parsed mtime (UTC naive): {git_date_value}")
                         except Exception as e:
                             logger.warning(f"❌ [PHASE2-FALLBACK1] Failed to parse file_mtime: {e}")
                 
@@ -1752,8 +1782,8 @@ class JobProcessor:
                         logger.info(f"🔍 [PHASE2-FALLBACK2] Full path: {full_path}")
                         if os.path.exists(full_path):
                             mtime = os.path.getmtime(full_path)
-                            git_date_value = datetime.fromtimestamp(mtime)
-                            logger.info(f"✅ [PHASE2-FALLBACK2] Using file mtime: {git_date_value}")
+                            git_date_value = ensure_utc_naive(datetime.fromtimestamp(mtime))
+                            logger.info(f"✅ [PHASE2-FALLBACK2] Using file mtime (UTC naive): {git_date_value}")
                         else:
                             logger.warning(f"⚠️  [PHASE2-FALLBACK2] File does not exist: {full_path}")
                     except Exception as e:
@@ -2035,7 +2065,20 @@ class JobProcessor:
                         
                         # Update document with embedding reference
                         document.embedding_id = embedding_record.id
-                        await session.commit()
+                        
+                        # ⏱️ CRITICAL FIX: Add timeout to prevent infinite database lock waits
+                        try:
+                            await asyncio.wait_for(
+                                session.commit(),
+                                timeout=30.0  # 30 second timeout for commit
+                            )
+                        except asyncio.TimeoutError:
+                            logger.error(
+                                f"⏱️ Database commit timeout ({file_path}) - possible lock contention. "
+                                f"Rolling back and enqueueing for retry."
+                            )
+                            await session.rollback()
+                            raise  # Re-raise to trigger retry logic below
                         
                         embedding_generated = True
                         logger.info(
@@ -2088,7 +2131,7 @@ class JobProcessor:
                                 document_info = {
                                     "file_path": file_path,
                                     "mode": job.mode,
-                                    "service_name": job.service_name,
+                                    "service_name": _get_service_name_from_job(job),
                                     "repo_path": job.repo_path,
                                     "content_hash": content_hash,
                                     "retry_context": "embedding_generation_failure"
@@ -2123,7 +2166,7 @@ class JobProcessor:
                                 document_info = {
                                     "file_path": file_path,
                                     "mode": job.mode,
-                                    "service_name": job.service_name,
+                                    "service_name": _get_service_name_from_job(job),
                                     "repo_path": job.repo_path,
                                     "retry_context": "embedding_generation_permanent_failure"
                                 }
@@ -2179,7 +2222,7 @@ class JobProcessor:
                     document_info = {
                         "file_path": file_path,
                         "mode": job.mode,
-                        "service_name": job.service_name,
+                        "service_name": _get_service_name_from_job(job),
                         "repo_path": job.repo_path,
                         "content_hash": content_hash if 'content_hash' in locals() else None,
                         "retry_context": "snapshot_document_processing"
@@ -2213,7 +2256,7 @@ class JobProcessor:
                     document_info = {
                         "file_path": file_path,
                         "mode": job.mode,
-                        "service_name": job.service_name,
+                        "service_name": _get_service_name_from_job(job),
                         "repo_path": job.repo_path,
                         "retry_context": "snapshot_document_processing"
                     }
@@ -2307,16 +2350,23 @@ class JobProcessor:
         
         try:
             # 🚀 OPTIMIZATION 1: Check if commit already fully ingested
-            commit_check = await self.commit_optimizer.check_commit_already_ingested(commit.sha)
+            # Can be disabled with force_metadata_enrichment flag
+            force_enrichment = job.job_metadata.get('force_metadata_enrichment', False) if job.job_metadata else False
+            skip_existing_commits = job.job_metadata.get('skip_existing_commits', True) if job.job_metadata else True
             
-            if commit_check["already_ingested"]:
-                logger.info(
-                    f"⏭️  Skipping commit {commit.sha[:8]}: Already ingested "
-                    f"({commit_check['document_count']} documents on "
-                    f"{commit_check['ingested_at'].strftime('%Y-%m-%d')})"
-                )
-                result["skipped"] = commit_check["document_count"]
-                return result
+            if skip_existing_commits and not force_enrichment:
+                commit_check = await self.commit_optimizer.check_commit_already_ingested(commit.sha)
+                
+                if commit_check["already_ingested"]:
+                    logger.info(
+                        f"⏭️  Skipping commit {commit.sha[:8]}: Already ingested "
+                        f"({commit_check['document_count']} documents on "
+                        f"{commit_check['ingested_at'].strftime('%Y-%m-%d')})"
+                    )
+                    result["skipped"] = commit_check["document_count"]
+                    return result
+            elif force_enrichment:
+                logger.info(f"📝 Force enrichment enabled: Processing commit {commit.sha[:8]} for metadata updates")
             
             # Get target_subdirectory from job metadata if specified
             target_subdirectory = job.job_metadata.get('target_subdirectory') if job.job_metadata else None
@@ -2420,7 +2470,7 @@ class JobProcessor:
                             document_info = {
                                 "file_path": str(file_path),
                                 "mode": job.mode,
-                                "service_name": job.service_name,
+                                "service_name": _get_service_name_from_job(job),
                                 "repo_path": job.repo_path,
                                 "retry_context": "file_read_failure"
                             }
@@ -2446,7 +2496,7 @@ class JobProcessor:
                             document_info = {
                                 "file_path": str(file_path),
                                 "mode": job.mode,
-                                "service_name": job.service_name,
+                                "service_name": _get_service_name_from_job(job),
                                 "repo_path": job.repo_path,
                                 "retry_context": "file_read_permanent_failure"
                             }
@@ -2607,7 +2657,7 @@ class JobProcessor:
                             document_info = {
                                 "file_path": str(file_path_str),
                                 "mode": job.mode,
-                                "service_name": job.service_name,
+                                "service_name": _get_service_name_from_job(job),
                                 "repo_path": job.repo_path,
                                 "retry_context": "processing_error"
                             }
@@ -2633,7 +2683,7 @@ class JobProcessor:
                             document_info = {
                                 "file_path": str(file_path_str),
                                 "mode": job.mode,
-                                "service_name": job.service_name,
+                                "service_name": _get_service_name_from_job(job),
                                 "repo_path": job.repo_path,
                                 "retry_context": "processing_permanent_error"
                             }
@@ -2924,16 +2974,23 @@ class JobProcessor:
         
         try:
             # OPTIMIZATION 1: Check if commit already fully ingested
-            commit_check = await self.commit_optimizer.check_commit_already_ingested(commit.sha)
+            # Can be disabled with force_metadata_enrichment flag
+            force_enrichment = job.job_metadata.get('force_metadata_enrichment', False) if job.job_metadata else False
+            skip_existing_commits = job.job_metadata.get('skip_existing_commits', True) if job.job_metadata else True
             
-            if commit_check["already_ingested"]:
-                logger.info(
-                    f"⏭️  Skipping commit {commit.sha[:8]}: Already ingested "
-                    f"({commit_check['document_count']} documents on "
-                    f"{commit_check['ingested_at'].strftime('%Y-%m-%d')})"
-                )
-                result["skipped"] = commit_check["document_count"]
-                return result
+            if skip_existing_commits and not force_enrichment:
+                commit_check = await self.commit_optimizer.check_commit_already_ingested(commit.sha)
+                
+                if commit_check["already_ingested"]:
+                    logger.info(
+                        f"⏭️  Skipping commit {commit.sha[:8]}: Already ingested "
+                        f"({commit_check['document_count']} documents on "
+                        f"{commit_check['ingested_at'].strftime('%Y-%m-%d')})"
+                    )
+                    result["skipped"] = commit_check["document_count"]
+                    return result
+            elif force_enrichment:
+                logger.info(f"📝 Force enrichment enabled: Processing commit {commit.sha[:8]} for metadata updates")
             
             # Get and filter files with error handling
             target_subdirectory = job.job_metadata.get('target_subdirectory') if job.job_metadata else None
@@ -2980,7 +3037,7 @@ class JobProcessor:
                             document_info = {
                                 "commit_sha": commit.sha,
                                 "mode": job.mode,
-                                "service_name": job.service_name,
+                                "service_name": _get_service_name_from_job(job),
                                 "repo_path": job.repo_path,
                                 "retry_context": "corrupt_commit_error"
                             }
@@ -3006,7 +3063,7 @@ class JobProcessor:
                             document_info = {
                                 "commit_sha": commit.sha,
                                 "mode": job.mode,
-                                "service_name": job.service_name,
+                                "service_name": _get_service_name_from_job(job),
                                 "repo_path": job.repo_path,
                                 "retry_context": "corrupt_commit_permanent_error"
                             }
@@ -3325,7 +3382,7 @@ class JobProcessor:
                             document_info = {
                                 "file_path": str(file_path),
                                 "mode": job.mode,
-                                "service_name": job.service_name,
+                                "service_name": _get_service_name_from_job(job),
                                 "repo_path": job.repo_path,
                                 "retry_context": "normalization_failure"
                             }
@@ -3351,7 +3408,7 @@ class JobProcessor:
                             document_info = {
                                 "file_path": str(file_path),
                                 "mode": job.mode,
-                                "service_name": job.service_name,
+                                "service_name": _get_service_name_from_job(job),
                                 "repo_path": job.repo_path,
                                 "retry_context": "normalization_permanent_failure"
                             }
@@ -3480,7 +3537,7 @@ class JobProcessor:
                                 document_info = {
                                     "file_path": str(file_path),
                                     "mode": job.mode,
-                                    "service_name": job.service_name,
+                                    "service_name": _get_service_name_from_job(job),
                                     "repo_path": job.repo_path,
                                     "retry_context": "document_preparation_failure"
                                 }
@@ -3506,7 +3563,7 @@ class JobProcessor:
                                 document_info = {
                                     "file_path": str(file_path),
                                     "mode": job.mode,
-                                    "service_name": job.service_name,
+                                    "service_name": _get_service_name_from_job(job),
                                     "repo_path": job.repo_path,
                                     "retry_context": "document_preparation_permanent_failure"
                                 }
@@ -3590,7 +3647,7 @@ class JobProcessor:
                             document_info = {
                                 "file_path": str(file_path),
                                 "mode": job.mode,
-                                "service_name": job.service_name,
+                                "service_name": _get_service_name_from_job(job),
                                 "repo_path": job.repo_path,
                                 "retry_context": "batch_processing_failure"
                             }
@@ -3623,7 +3680,7 @@ class JobProcessor:
                             document_info = {
                                 "file_path": str(file_path),
                                 "mode": job.mode,
-                                "service_name": job.service_name,
+                                "service_name": _get_service_name_from_job(job),
                                 "repo_path": job.repo_path,
                                 "retry_context": "batch_processing_permanent_failure"
                             }

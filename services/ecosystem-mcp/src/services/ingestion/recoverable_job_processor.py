@@ -272,6 +272,29 @@ class RecoverableJobProcessor(RecoverableJob):
         }
         
         try:
+            # 🚀 OPTIMIZATION: Check if commit already fully ingested
+            # Can be disabled with force_metadata_enrichment flag
+            force_enrichment = job.job_metadata.get('force_metadata_enrichment', False) if job.job_metadata else False
+            skip_existing_commits = job.job_metadata.get('skip_existing_commits', True) if job.job_metadata else True
+            
+            if skip_existing_commits and not force_enrichment:
+                # Import CommitOptimizer
+                from .commit_optimizer import get_commit_optimizer
+                commit_optimizer = get_commit_optimizer()
+                
+                commit_check = await commit_optimizer.check_commit_already_ingested(commit.sha)
+                
+                if commit_check["already_ingested"]:
+                    logger.info(
+                        f"⏭️  Skipping commit {commit.sha[:8]}: Already ingested "
+                        f"({commit_check['document_count']} documents on "
+                        f"{commit_check['ingested_at'].strftime('%Y-%m-%d')})"
+                    )
+                    result["skipped"] = commit_check["document_count"]
+                    return result
+            elif force_enrichment:
+                logger.info(f"📝 Force enrichment enabled: Processing commit {commit.sha[:8]} for metadata updates")
+            
             # Get files changed in this commit
             files = await self.git_service.get_files_in_commit(commit.sha)
             

@@ -1,0 +1,358 @@
+# Architecture Documentation Template (C4 Model)
+# Production-ready template for architecture documentation
+
+name: "architecture_c4_style"
+category: "architecture"
+version: 1
+description: "Comprehensive architecture documentation following C4 Model principles"
+target_framework: null
+target_audience: "architects"
+
+structure:
+  sections:
+    - name: "System Context"
+      order: 1
+      required: true
+      diagram_type: "c4_context"
+      prompt_template: |
+        Describe the system context for {service_name}.
+        
+        System boundary:
+        - What the system does (high-level purpose)
+        - Who uses it (users, personas, external systems)
+        - What it integrates with (external systems)
+        - Key interactions and data flows
+        
+        Focus on:
+        - External actors and their roles
+        - External systems and integrations
+        - System boundaries (what's in vs out of scope)
+        
+        This is the big picture view for stakeholders.
+      validation:
+        min_words: 200
+        must_include_diagram: true
+        must_include:
+          - "users"
+          - "external"
+          - "integrates"
+    
+    - name: "Container View"
+      order: 2
+      required: true
+      diagram_type: "c4_container"
+      prompt_template: |
+        Describe containers (deployable units) in {service_name}.
+        
+        For each container:
+        - Name and purpose
+        - Technology stack
+        - Responsibilities
+        - Data stores it uses
+        - Communication protocols
+        - Deployment unit
+        
+        Containers might include:
+        - Web applications
+        - Mobile apps
+        - APIs
+        - Databases
+        - Message queues
+        - File storage
+        
+        Show how containers communicate.
+      validation:
+        min_containers: 1
+        must_include_diagram: true
+        must_include:
+          - "container"
+          - "technology"
+          - "communication"
+    
+    - name: "Component View"
+      order: 3
+      required: true
+      diagram_type: "c4_component"
+      prompt_template: |
+        Describe components within key containers of {service_name}.
+        
+        For major containers, break down into components:
+        - Component name and purpose
+        - Responsibilities
+        - Interfaces it exposes
+        - Dependencies on other components
+        - Key design patterns used
+        
+        Focus on:
+        - Separation of concerns
+        - Component boundaries
+        - Component interactions
+        
+        This is for developers who need to understand internal structure.
+      validation:
+        must_include_diagram: true
+        must_include:
+          - "component"
+          - "responsibility"
+          - "interface"
+    
+    - name: "Code Organization"
+      order: 4
+      required: false
+      prompt_template: |
+        Describe code organization for {service_name}.
+        
+        Directory structure:
+        - Top-level directories and their purpose
+        - Key modules/packages
+        - Configuration files
+        - Test organization
+        
+        Coding conventions:
+        - Naming conventions
+        - File organization patterns
+        - Module structure
+        
+        This helps new developers navigate the codebase.
+      validation:
+        min_words: 200
+        must_include:
+          - "directory"
+          - "module"
+    
+    - name: "Data Architecture"
+      order: 5
+      required: true
+      prompt_template: |
+        Describe data architecture for {service_name}.
+        
+        Databases and storage:
+        - Database type (SQL, NoSQL, cache, etc.)
+        - Schema design
+        - Key tables/collections
+        - Relationships and foreign keys
+        - Indexing strategy
+        - Partitioning/sharding
+        
+        Data flow:
+        - How data enters the system
+        - Data transformations
+        - Data persistence strategy
+        - Data archival/retention
+        
+        Include ER diagrams if applicable.
+      validation:
+        min_words: 300
+        must_include:
+          - "database"
+          - "schema"
+          - "data flow"
+    
+    - name: "Security Architecture"
+      order: 6
+      required: true
+      prompt_template: |
+        Describe security architecture for {service_name}.
+        
+        Authentication:
+        - Authentication method
+        - Identity providers
+        - Session management
+        
+        Authorization:
+        - Authorization model (RBAC, ABAC, etc.)
+        - Permission structure
+        - Access control enforcement points
+        
+        Security controls:
+        - Network security (firewalls, VPCs)
+        - Data encryption (at rest, in transit)
+        - Secrets management
+        - API security
+        - Audit logging
+        - Input validation
+        
+        Threat model considerations.
+      validation:
+        min_words: 200
+        must_include_auth: true
+        must_include:
+          - "authentication"
+          - "authorization"
+          - "encryption"
+    
+    - name: "Quality Attributes"
+      order: 7
+      required: true
+      prompt_template: |
+        Describe quality attributes and trade-offs for {service_name}.
+        
+        Performance:
+        - Latency targets
+        - Throughput targets
+        - Performance optimization strategies
+        
+        Scalability:
+        - Horizontal vs vertical scaling
+        - Load balancing strategy
+        - Capacity planning
+        
+        Availability:
+        - Uptime target (e.g., 99.9%)
+        - Redundancy and failover
+        - Disaster recovery
+        
+        Maintainability:
+        - Code quality practices
+        - Testing strategy
+        - Documentation approach
+        
+        Testability:
+        - Testing layers (unit, integration, E2E)
+        - Test coverage targets
+        - CI/CD integration
+        
+        Trade-offs:
+        - What was prioritized and why
+        - What was sacrificed and the rationale
+      validation:
+        min_words: 300
+        must_include:
+          - "performance"
+          - "scalability"
+          - "availability"
+    
+    - name: "Deployment Architecture"
+      order: 8
+      required: true
+      prompt_template: |
+        Describe deployment architecture for {service_name}.
+        
+        Infrastructure:
+        - Cloud provider or on-premise
+        - Regions and availability zones
+        - Network topology
+        - Load balancers
+        - CDN (if applicable)
+        
+        Deployment model:
+        - Containerization (Docker, Kubernetes)
+        - Orchestration
+        - CI/CD pipeline
+        - Blue-green or canary deployments
+        
+        Environments:
+        - Development
+        - Staging
+        - Production
+        - Configuration differences
+      validation:
+        min_words: 200
+        must_include:
+          - "deployment"
+          - "infrastructure"
+          - "environment"
+    
+    - name: "Architecture Decisions"
+      order: 9
+      required: true
+      format: "adr"
+      prompt_template: |
+        Document key architecture decisions for {service_name}.
+        
+        For each significant decision:
+        
+        **Decision**: What was decided
+        
+        **Context**: Why this decision was needed
+        
+        **Options Considered**: What alternatives were evaluated
+        
+        **Decision**: What was chosen
+        
+        **Consequences**: Positive and negative outcomes
+        
+        **Status**: Accepted, Deprecated, Superseded
+        
+        Focus on decisions with long-term impact:
+        - Technology choices
+        - Architectural patterns
+        - Integration approaches
+        - Data storage decisions
+      validation:
+        min_decisions: 3
+        format: "adr"
+        must_include:
+          - "context"
+          - "decision"
+          - "consequences"
+    
+    - name: "Integration Points"
+      order: 10
+      required: false
+      prompt_template: |
+        Document integration points for {service_name}.
+        
+        For each integration:
+        - External system name
+        - Integration type (API, message queue, file transfer, etc.)
+        - Data exchanged
+        - Frequency
+        - Failure handling
+        - Circuit breakers or retry logic
+        
+        Include diagrams showing integration flows.
+      validation:
+        min_words: 150
+    
+    - name: "Technology Stack"
+      order: 11
+      required: true
+      prompt_template: |
+        List the complete technology stack for {service_name}.
+        
+        Programming languages:
+        - Primary language and version
+        - Supporting languages
+        
+        Frameworks:
+        - Web frameworks
+        - Testing frameworks
+        - ORM/database libraries
+        
+        Infrastructure:
+        - Servers/containers
+        - Databases
+        - Message queues
+        - Caching layers
+        
+        Tools:
+        - Build tools
+        - Monitoring tools
+        - Deployment tools
+        
+        Include version numbers for critical dependencies.
+      validation:
+        min_words: 100
+        must_include:
+          - "language"
+          - "framework"
+          - "version"
+
+formatting:
+  header_style: "atx"
+  diagram_format: "mermaid"
+  code_fence: "```"
+  list_style: "unordered"
+  emphasis_style: "**"
+
+render_options:
+  include_toc: true
+  toc_depth: 3
+  include_diagrams: true
+  diagram_tool: "mermaid"
+  include_citations: true
+  citation_style: "endnotes"
+  include_timestamps: false
+  syntax_highlighting: true
+

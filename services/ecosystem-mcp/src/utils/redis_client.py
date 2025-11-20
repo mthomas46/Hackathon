@@ -187,6 +187,57 @@ class RedisClient:
                 else:
                     raise
     
+    async def ensure_consumer_group_exists(self, stream_name: str) -> bool:
+        """
+        Explicitly check and ensure consumer group exists for a stream.
+        
+        This is useful for auto-recovery after manual stream deletion.
+        
+        Args:
+            stream_name: Name of the stream to check
+        
+        Returns:
+            True if group exists or was created, False on error
+        """
+        try:
+            # First, check if the group exists
+            try:
+                groups = await self.client.xinfo_groups(stream_name)
+                for group in groups:
+                    group_name = group.get(b"name", group.get("name"))
+                    if group_name == self.CONSUMER_GROUP or group_name == self.CONSUMER_GROUP.encode():
+                        logger.debug(f"✅ Consumer group '{self.CONSUMER_GROUP}' exists for {stream_name}")
+                        return True
+            except ResponseError as e:
+                if "no such key" in str(e).lower():
+                    # Stream doesn't exist yet, will be created
+                    logger.info(f"Stream {stream_name} doesn't exist yet, will be created")
+                else:
+                    raise
+            
+            # Group doesn't exist, create it
+            logger.warning(f"⚠️  Consumer group '{self.CONSUMER_GROUP}' missing for {stream_name}, creating...")
+            await self.client.xgroup_create(
+                stream_name,
+                self.CONSUMER_GROUP,
+                id="0",
+                mkstream=True
+            )
+            logger.info(f"✅ Created consumer group '{self.CONSUMER_GROUP}' for {stream_name}")
+            return True
+            
+        except ResponseError as e:
+            if "BUSYGROUP" in str(e):
+                # Group was created by another process, that's fine
+                logger.info(f"✅ Consumer group '{self.CONSUMER_GROUP}' exists for {stream_name}")
+                return True
+            else:
+                logger.error(f"❌ Failed to ensure consumer group for {stream_name}: {e}")
+                return False
+        except Exception as e:
+            logger.error(f"❌ Error checking consumer group for {stream_name}: {e}")
+            return False
+    
     async def add_to_stream(
         self,
         stream: str,
