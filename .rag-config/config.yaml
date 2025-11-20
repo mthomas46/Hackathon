@@ -4,7 +4,7 @@
 # Feature flags (enable/disable individual features)
 features_enabled:
   glossary: true          # Boost documents mentioning domain terms
-  exclusions: true        # Filter out noise (logs, tests, etc.)
+  exclusions: false       # ⚠️ DISABLED - Was filtering out too many documents
   templates: true         # Pre-optimized query structures (Phase 3)
   priorities: true        # User-defined priority documents (Phase 3)
   feedback: false         # Learn from user feedback (Phase 3)
