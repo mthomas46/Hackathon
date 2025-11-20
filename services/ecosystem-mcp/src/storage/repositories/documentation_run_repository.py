@@ -191,18 +191,23 @@ class DocumentationRunRepository(BaseRepository[DocumentationRunModel]):
         self.session.add(artifact)
         await self.session.flush()
         
-        # Update run totals using func.coalesce to handle NULL values
+        # Update run totals by fetching and modifying the run object directly
+        # This ensures the ORM properly tracks and commits the changes
         logger.info(f"Updating run {run_id} totals: +1 artifact, +{word_count} words")
+        
         result = await self.session.execute(
-            sql_update(DocumentationRunModel)
-            .where(DocumentationRunModel.id == run_id)
-            .values(
-                total_artifacts=func.coalesce(DocumentationRunModel.total_artifacts, 0) + 1,
-                total_words=func.coalesce(DocumentationRunModel.total_words, 0) + word_count
-            )
+            select(DocumentationRunModel).where(DocumentationRunModel.id == run_id)
         )
-        await self.session.flush()
-        logger.info(f"Run totals UPDATE affected {result.rowcount} rows")
+        run = result.scalar_one_or_none()
+        
+        if run:
+            # Update using ORM - handles NULL values automatically
+            run.total_artifacts = (run.total_artifacts or 0) + 1
+            run.total_words = (run.total_words or 0) + word_count
+            await self.session.flush()
+            logger.info(f"✅ Run totals updated: artifacts={run.total_artifacts}, words={run.total_words}")
+        else:
+            logger.warning(f"⚠️ Run {run_id} not found for total update")
         
         return artifact
     
