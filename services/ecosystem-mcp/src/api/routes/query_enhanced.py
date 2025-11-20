@@ -71,6 +71,11 @@ class EnhancedQueryRequest(BaseModel):
         default=None,
         description="Service name for filtering documents (e.g., 'adminservice', 'ecosystem-mcp')"
     )
+    # Context flags for intelligent filtering
+    context: Optional[List[Dict[str, Any]]] = Field(
+        default=None,
+        description="Context flags for intelligent filtering (e.g., [{'doc_generation': True}])"
+    )
     n_results: int = Field(
         default=10,
         ge=1,

@@ -891,7 +891,9 @@ def generate_pass(api_base_url: str, section: str, pass_name: str, config: Dict[
                     "n_results": config['n_results'],
                     "temperature": config['temperature'],
                     "max_tokens": max_tokens,
-                    "max_retries": max_retries
+                    "max_retries": max_retries,
+                    # ✨ Context flag for doc generation - skips test exclusions
+                    "context": [{"doc_generation": True}]
                 }
                 
                 # Add service filter if configured
