@@ -67,6 +67,10 @@ class EnhancedQueryRequest(BaseModel):
         default=None,
         description="[PHASE 9] Repository context ID for filtered queries (optional)"
     )
+    service_name: Optional[str] = Field(
+        default=None,
+        description="Service name for filtering documents (e.g., 'adminservice', 'ecosystem-mcp')"
+    )
     n_results: int = Field(
         default=10,
         ge=1,
@@ -211,7 +215,8 @@ async def _process_rag_query(request: EnhancedQueryRequest) -> EnhancedQueryResp
         question=request.question,
         n_results=request.n_results,
         temperature=request.temperature,
-        response_length=request.response_length
+        response_length=request.response_length,
+        service_name=request.service_name  # Pass service filter to RAG
     )
     
     # Handle None result (RAG service error)
