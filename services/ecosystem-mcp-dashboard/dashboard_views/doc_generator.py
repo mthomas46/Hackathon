@@ -842,7 +842,7 @@ def show(api_base_url: str):
                 """)
 
 
-def generate_pass(api_base_url: str, section: str, pass_name: str, config: Dict[str, Any]) -> str:
+def generate_pass(api_base_url: str, section: str, pass_name: str, config: Dict[str, Any], run_id: str = None) -> str:
     """
     Generate documentation for a single pass with enhanced error handling and tier support.
     
@@ -851,10 +851,16 @@ def generate_pass(api_base_url: str, section: str, pass_name: str, config: Dict[
         section: Section name (e.g., "OVERVIEW")
         pass_name: Pass name (e.g., "initial", "deep_dive")
         config: Configuration dictionary
+        run_id: Optional run ID for tracking
     
     Returns:
         Generated content for this pass
     """
+    # Add run ID header if provided
+    pass_content = []
+    if run_id:
+        pass_content.append(f"<!-- Pass: {pass_name} | Section: {section} | Run ID: {run_id} -->")
+    
     # Generate questions based on section and pass
     questions = generate_questions(section, pass_name, config['queries_per_pass'])
     
