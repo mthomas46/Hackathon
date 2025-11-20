@@ -191,7 +191,8 @@ class RAGService:
                     enable_hybrid_search=enable_hybrid_search,
                     enable_query_rewriting=enable_query_rewriting,
                     enable_context_optimization=enable_context_optimization,
-                    start_time=start_time
+                    start_time=start_time,
+                    service_name=service_name
                 )
             else:
                 logger.info("📋 Using legacy RAG flow")
@@ -234,7 +235,8 @@ class RAGService:
         enable_hybrid_search: Optional[bool],
         enable_query_rewriting: Optional[bool],
         enable_context_optimization: Optional[bool],
-        start_time: float
+        start_time: float,
+        service_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Answer using enhancement pipeline (PHASE 3).
@@ -262,13 +264,25 @@ class RAGService:
                    f"rewriting={config.enable_query_rewriting}, "
                    f"context_opt={config.enable_context_optimization}")
         
+        # Create filter hook for service_name filtering
+        async def service_filter_hook(ctx):
+            """Return where clause for service filtering."""
+            if service_name:
+                # NOTE: ChromaDB metadata uses "service" not "service_name"
+                return {"service": service_name}
+            return {}
+        
+        hooks = EnhancementHooks(
+            pre_retrieval_filter=service_filter_hook
+        )
+        
         # Execute pipeline (retrieval + enhancement only)
         pipeline_start = time.time()
         result = await self.enhancement_pipeline.execute(
             query=question,
             n_results=n_results,
             config=config,
-            hooks=EnhancementHooks(),  # No custom hooks needed
+            hooks=hooks,
             generation_context={"conversation_history": context} if context else None
         )
         pipeline_time = time.time() - pipeline_start
