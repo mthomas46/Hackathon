@@ -561,8 +561,18 @@ def show(api_base_url: str):
             # Persist documentation run if enabled
             if config.get('persist_run', False):
                 with st.spinner("💾 Saving documentation to database..."):
+                    # 📊 Display what we're about to send
+                    st.info(f"""
+                    **Creating Documentation Run:**
+                    - Service: `{config.get('service_filter', 'unknown')}`
+                    - Directory: `{config['directory']}`
+                    - Sections: {len(st.session_state.generation_results)}
+                    - Template: `{config.get('template_name', 'manual_generation')}`
+                    """)
+                    
                     try:
                         # Create documentation run
+                        # ✅ CRITICAL FIX: Include metadata with service_filter and template info
                         run_response = httpx.post(
                             f"{api_base_url}/api/v1/documentation/runs",
                             json={
@@ -574,7 +584,18 @@ def show(api_base_url: str):
                                 "tier": config.get('tier', 'auto'),
                                 "num_passes": len(config['passes']),
                                 "questions_per_pass": config['queries_per_pass'],
-                                "created_by": "dashboard_user"
+                                "created_by": "dashboard_user",
+                                # ✨ ADD METADATA to ensure proper service tracking
+                                "metadata": {
+                                    "service_filter": config.get('service_filter'),  # CRITICAL: from UI dropdown
+                                    "service_name": config.get('service_filter'),    # Redundant but ensures compatibility
+                                    "template_name": config.get('template_name', 'manual_generation'),
+                                    "category": config.get('category', 'backend'),
+                                    "transparency_mode": config.get('transparency_mode', 'normal'),
+                                    "sections": config.get('sections', []),
+                                    "generation_method": "manual_ui_upload",  # Track that this is manual flow
+                                    "auto_start": False  # Explicitly disable auto-generation
+                                }
                             },
                             timeout=30.0
                         )

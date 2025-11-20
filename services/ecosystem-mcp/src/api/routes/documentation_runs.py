@@ -290,6 +290,32 @@ async def create_documentation_run(
             logger.info(f"   - From path: {service_name_from_path}")
             logger.info(f"   ✅ Final: {service_name}")
             
+            # ✅ VALIDATION: Check if service has documents in database
+            if service_name and service_name != "unknown":
+                try:
+                    from ...storage.chromadb_client import get_chroma_client
+                    chroma = get_chroma_client()
+                    
+                    # Quick check: try to get documents for this service
+                    test_results = await chroma.query_embeddings(
+                        query_embedding=[0.0] * 384,  # Dummy embedding
+                        n_results=1,
+                        where={"service": service_name}
+                    )
+                    
+                    doc_count = len(test_results.get("ids", [[]])[0]) if test_results else 0
+                    
+                    if doc_count == 0:
+                        logger.warning(f"⚠️ No documents found for service '{service_name}' in ChromaDB")
+                        logger.warning(f"   Generation may produce 'I don't have enough information' responses")
+                        logger.warning(f"   Consider ingesting the repository first")
+                    else:
+                        logger.info(f"✅ Service '{service_name}' has documents in database")
+                        
+                except Exception as e:
+                    logger.warning(f"⚠️ Could not validate service documents: {e}")
+                    # Don't fail hard - validation is advisory only
+            
             metadata.update({
                 "name": request.name,
                 "description": request.description,
