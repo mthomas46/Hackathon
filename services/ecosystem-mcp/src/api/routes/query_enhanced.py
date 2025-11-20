@@ -221,7 +221,8 @@ async def _process_rag_query(request: EnhancedQueryRequest) -> EnhancedQueryResp
         n_results=request.n_results,
         temperature=request.temperature,
         response_length=request.response_length,
-        service_name=request.service_name  # Pass service filter to RAG
+        service_name=request.service_name,  # Pass service filter to RAG
+        context=request.context  # Pass context flags (e.g., doc_generation)
     )
     
     # Handle None result (RAG service error)

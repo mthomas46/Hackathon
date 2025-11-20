@@ -271,13 +271,23 @@ async def create_documentation_run(
             transparency_mode = metadata.get("transparency_mode", "normal")
             logger.info(f"📍 Transparency mode: {transparency_mode}")
             
+            # ✨ CRITICAL FIX: Extract service_name from multiple possible sources
+            # The UI may pass it in metadata OR as service_filter
+            service_name = (
+                metadata.get("service_name") or 
+                metadata.get("service_filter") or 
+                request.source_directory.split("/")[-1] if request.source_directory else 
+                "unknown"
+            )
+            logger.info(f"🔍 Resolved service_name: {service_name}")
+            
             metadata.update({
                 "name": request.name,
                 "description": request.description,
                 "created_by": request.created_by,
                 # Add template/service info if available
                 "template_name": metadata.get("template_name", "api_reference"),
-                "service_name": metadata.get("service_name", "unknown"),
+                "service_name": service_name,  # Use resolved service name
                 "category": metadata.get("category", "backend")
             })
             
@@ -306,7 +316,7 @@ async def create_documentation_run(
                 background_tasks.add_task(
                     _generate_documentation_background,
                     str(run.id),
-                    metadata.get("service_name", "unknown"),
+                    service_name,  # Use resolved service_name variable
                     metadata.get("template_name", "api_reference"),
                     metadata.get("category", "backend"),
                     config
